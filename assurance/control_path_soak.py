@@ -19,11 +19,7 @@ from runtime.core.models import (
     CapitalSnapshot,
     Decision,
 )
-from runtime.core.persistent import (
-    PersistentExecutionFence,
-    PersistentIdempotencyStore,
-    PersistentLedger,
-)
+from runtime.core.persistent import PersistentExecutionFence
 from runtime.core.reconcile import ReconciliationResult
 from runtime.core.reconcile import Reconciler
 from runtime.core.state import RuntimeStateMachine
@@ -107,13 +103,13 @@ class DeterministicBroker:
         )
 
 
-def _executor(lock_path: Path, broker, root: Path) -> CapitalPlaneExecutor:
+def _executor(lock_path: Path, broker, root: Path, idempotency: IdempotencyStore, ledger: InMemoryLedger, fence):
     return CapitalPlaneExecutor(
         broker,
         journal=AppendOnlyJournal(root / "events.ndjson"),
-        ledger=PersistentLedger(root / "ledger.json"),
-        idempotency=PersistentIdempotencyStore(root / "idempotency.json"),
-        fence=PersistentExecutionFence(root / "fence.txt"),
+        ledger=ledger,
+        idempotency=idempotency,
+        fence=fence,
         state=RuntimeStateMachine(),
         reconciler=Reconciler(),
         source_hash="soak-source",
@@ -123,11 +119,14 @@ def _executor(lock_path: Path, broker, root: Path) -> CapitalPlaneExecutor:
 
 
 async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]:
-    """Deterministic non-live control-path soak. It uses a local broker stub only.
+    """Deterministic non-live control-path soak using a local broker stub only.
 
     The executor stays in LIVE mode because the capital executor deliberately
     forbids alternate broker-submission modes. No network or real capital is used.
-    This proves repeated control-path invariants, not elapsed-time production SLOs.
+    Idempotency/ledger stores are in-memory here to keep 3,600 cycles fast; their
+    persistence/reload semantics are covered by dedicated tests. Persistent fencing
+    remains active across executor recreation. This proves repeated control-path
+    invariants, not elapsed-time production SLOs.
     """
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
@@ -140,14 +139,17 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
             encoding="utf-8",
         )
         broker = DeterministicBroker()
-        executor = _executor(lock, broker, root)
+        idempotency = IdempotencyStore()
+        ledger = InMemoryLedger()
+        fence = PersistentExecutionFence(root / "fence.txt")
+        executor = _executor(lock, broker, root, idempotency, ledger, fence)
         blocked = 0
         recovered = 0
         rejected = 0
         accepted = 0
         for second in range(iterations):
             if second and second % 211 == 0:
-                executor = _executor(lock, broker, root)
+                executor = _executor(lock, broker, root, idempotency, ledger, fence)
                 executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
                 restart_auth = _context(sequence=second)
                 if not executor.clear_kill_switch_with_fresh_authorization(restart_auth):
@@ -239,9 +241,8 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 if reconciliation.healthy:
                     return {"passed": False, "reason": "RECONCILIATION_FAILURE_ACCEPTED"}
 
-        stores = PersistentIdempotencyStore(root / "idempotency.json")
-        total_effects = sum(r.economic_effect_count for r in stores._records.values())
-        unknown_records = sum(1 for r in stores._records.values() if r.broker_outcome_unknown)
+        total_effects = sum(r.economic_effect_count for r in idempotency._records.values())
+        unknown_records = sum(1 for r in idempotency._records.values() if r.broker_outcome_unknown)
         passed = total_effects == broker.economic_effects and unknown_records >= 1
         return {
             "passed": passed,
