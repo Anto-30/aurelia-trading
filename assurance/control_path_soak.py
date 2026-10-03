@@ -137,17 +137,18 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
             encoding="utf-8",
         )
         broker = DeterministicBroker()
+        journal = MemoryJournal()
         idempotency = IdempotencyStore()
         ledger = InMemoryLedger()
         fence = ExecutionFence()
-        executor = _executor(lock, broker, root, idempotency, ledger, fence)
+        executor = _executor(lock, broker, journal, idempotency, ledger, fence)
         blocked = 0
         recovered = 0
         rejected = 0
         accepted = 0
         for second in range(iterations):
             if second and second % 211 == 0:
-                executor = _executor(lock, broker, root, idempotency, ledger, fence)
+                executor = _executor(lock, broker, journal, idempotency, ledger, fence)
                 executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
                 restart_auth = _context(sequence=second)
                 if not executor.clear_kill_switch_with_fresh_authorization(restart_auth):
