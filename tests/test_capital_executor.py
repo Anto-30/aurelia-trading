@@ -76,6 +76,18 @@ def context(*, issued_at=None):
     )
 
 
+class UnknownBroker(FakeBroker):
+    async def submit_authorized_order(self, payload):
+        self.calls += 1
+        await asyncio.sleep(0)
+        return BrokerResult(
+            outcome=BrokerOutcome.UNKNOWN,
+            request_id=f"REQ-{self.calls}",
+            raw_class="TEST_UNKNOWN",
+            broker_timestamp=datetime.now(UTC),
+        )
+
+
 class FakeBroker:
     def __init__(self):
         self.calls = 0
@@ -152,6 +164,27 @@ class CapitalExecutorHardeningTests(unittest.IsolatedAsyncioTestCase):
             self.assertFalse(outcome.allowed)
             self.assertIn("NON_LIVE_BROKER_SUBMISSION_FORBIDDEN", outcome.reasons)
             self.assertEqual(broker.calls, 0)
+
+    async def test_unknown_outcome_blocks_blind_retry(self):
+        with tempfile.TemporaryDirectory() as td:
+            lock = Path(td) / "LIVE_LOCK.yaml"
+            self.write_live_release(lock)
+            broker = UnknownBroker()
+            executor = make_executor(lock, broker)
+            executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
+            auth = context()
+            self.assertTrue(executor.clear_kill_switch_with_fresh_authorization(auth))
+
+            intent = build_intent(auth, proposal_id="P1", mode="LIVE")
+            token = executor.fence.acquire("test")
+            first = await executor.execute(intent, auth, token)
+            second = await executor.execute(intent, auth, token)
+
+            self.assertEqual(first.status, "RECOVERY_REQUIRED")
+            self.assertIn("BROKER_OUTCOME_UNKNOWN", first.reasons)
+            self.assertEqual(second.status, "RECOVERY_REQUIRED")
+            self.assertIn("BROKER_OUTCOME_UNKNOWN_REQUIRES_RECONCILIATION", second.reasons)
+            self.assertEqual(broker.calls, 1)
 
     async def test_duplicate_concurrent_intent_has_one_broker_effect(self):
         with tempfile.TemporaryDirectory() as td:
