@@ -1,0 +1,24 @@
+version: "1.0.0"
+manifest_id: "AURELIA-RELEASE"
+purpose: "Immutable identity of a certified candidate."
+
+required_identity:
+  - source_commit
+  - strategy_hash
+  - model_hash
+  - dataset_hashes
+  - calibration_version
+  - risk_configuration_hash
+  - probability_policy_hash
+  - broker_configuration_hash
+  - execution_configuration_hash
+  - knowledge_snapshot
+  - dependency_versions
+  - test_suite_version
+  - certification_result
+  - build_hash
+  - artifact_hash
+  - deployment_hash
+  - runtime_config_hash
+
+revalidation_rule: "Any material identity change invalidates the applicable certification evidence."

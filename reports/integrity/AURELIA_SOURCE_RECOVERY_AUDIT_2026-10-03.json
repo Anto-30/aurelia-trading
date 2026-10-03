@@ -1,0 +1,53 @@
+{
+  "audit_date": "2026-10-03",
+  "repository": "Anto-30/aurelia-trading",
+  "branch": "aurelia-final-assurance-2026-10-03",
+  "scope": "authoritative AURELIA v1.27 source recovery and implementation-level completion precondition",
+  "historical_reference": {
+    "source": "Notion page: Aurelia trading systems",
+    "packages": [
+      "Aurelia_Autonomous_MultiAgent_Build_v1.27.zip",
+      "aurelia-v1.27-safe.zip"
+    ],
+    "recorded_release_date": "2026-09-20",
+    "recorded_tests": "93 passed / 0 failed",
+    "recorded_live_lock": "LIVE_LOCK.yaml live_trading_enabled=false"
+  },
+  "fresh_recheck": {
+    "github_main": "RUNTIME_NOT_PRESENT",
+    "github_assurance_branch": "ASSURANCE_AND_DOCUMENTATION_ONLY",
+    "github_commit_search_v1_27": "NO_MATCHES",
+    "github_commit_search_deriv_adapter": "NO_MATCHES",
+    "github_secondary_repo": "README_ONLY_NO_RUNTIME",
+    "notion_direct_search": "HISTORICAL_REFERENCE_ONLY",
+    "notion_agent_session_indexing": "PLAN_GATED_NOT_USED",
+    "dropbox_shared_links": "NONE",
+    "railway": "PROJECT_EXISTS_ZERO_SERVICES",
+    "supabase": "PROJECT_INACTIVE; TABLE_INSPECTION_TIMED_OUT; NO_SCHEMA_CONCLUSION",
+    "vercel": "NO_AURELIA_PROJECT_IDENTIFIED",
+    "remote_desktop": "NO_CONNECTED_DEVICE"
+  },
+  "recovery_routes": {
+    "files_library": "NOT_RECOVERED",
+    "dropbox": "NO_MATCHES",
+    "notion": "REFERENCE_ONLY_NO_PACKAGE",
+    "github_primary_repo": "ASSURANCE_PLANE_ONLY",
+    "github_secondary_repo": "README_ONLY",
+    "public_web": "NO_EXACT_MATCH",
+    "remote_desktop": "NO_CONNECTED_DEVICE",
+    "railway": "PROJECT_EXISTS_ZERO_SERVICES",
+    "vercel": "NO_AURELIA_PROJECT",
+    "supabase": "PROJECT_INACTIVE"
+  },
+  "authoritative_runtime_present": false,
+  "certification_mode": "FAIL_CLOSED",
+  "final_execution_authorization": false,
+  "live_execution_allowed": false,
+  "live_orders": 0,
+  "prohibited_actions": [
+    "guess_missing_source",
+    "promote_docs_only_to_runtime_evidence",
+    "enable_live_execution_to_compensate_for_missing_evidence"
+  ],
+  "next_required_artifact": "complete v1.27-safe source archive or complete authoritative source tree"
+}
