@@ -94,6 +94,22 @@ def _current_evidence(path: Path) -> dict[str, Any] | None:
 
         if record.get("invariants_failed"):
             return None
+
+        provenance = record.get("provenance")
+        if not isinstance(provenance, dict):
+            return None
+        for key in ("origin", "issuer", "source_commit", "generated_at_utc"):
+            value = provenance.get(key)
+            if not isinstance(value, str) or not value.strip():
+                return None
+        if str(provenance.get("origin")).lower() not in {"ci", "research", "runtime"}:
+            return None
+        provenance_generated = datetime.fromisoformat(
+            str(provenance["generated_at_utc"]).replace("Z", "+00:00")
+        )
+        if provenance_generated.tzinfo is None or provenance_generated > now:
+            return None
+
         if record["record_hash"] != _evidence_payload_hash(record):
             return None
 
