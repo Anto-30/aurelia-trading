@@ -76,18 +76,6 @@ def context(*, issued_at=None):
     )
 
 
-class UnknownBroker(FakeBroker):
-    async def submit_authorized_order(self, payload):
-        self.calls += 1
-        await asyncio.sleep(0)
-        return BrokerResult(
-            outcome=BrokerOutcome.UNKNOWN,
-            request_id=f"REQ-{self.calls}",
-            raw_class="TEST_UNKNOWN",
-            broker_timestamp=datetime.now(UTC),
-        )
-
-
 class FakeBroker:
     def __init__(self):
         self.calls = 0
@@ -101,6 +89,18 @@ class FakeBroker:
             broker_transaction_id="TX-1",
             contract_id="C-1",
             raw_class="TEST_ACCEPTED",
+            broker_timestamp=datetime.now(UTC),
+        )
+
+
+class UnknownBroker(FakeBroker):
+    async def submit_authorized_order(self, payload):
+        self.calls += 1
+        await asyncio.sleep(0)
+        return BrokerResult(
+            outcome=BrokerOutcome.UNKNOWN,
+            request_id=f"REQ-{self.calls}",
+            raw_class="TEST_UNKNOWN",
             broker_timestamp=datetime.now(UTC),
         )
 
