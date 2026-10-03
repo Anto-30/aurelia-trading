@@ -21,12 +21,25 @@ MANDATORY_DOCUMENTS = (
     "docs/AURELIA_RESEARCH_GOVERNANCE.yaml",
     "docs/AURELIA_RELEASE_MANIFEST.yaml",
     "docs/AURELIA_STATUS_MODEL.yaml",
+    "docs/AURELIA_CONTROL_HARDENING_2026-10-03.yaml",
+    "docs/AURELIA_ADVERSARIAL_SOAK_PROTOCOL_2026-10-03.md",
+    "docs/AURELIA_STAKE_POLICY_2026-10-03.md",
+    "docs/AURELIA_RESEARCH_QUALITY_CONTROLS_2026-10-03.md",
 )
 
 IMPLEMENTATION_MARKERS = (
     "research/r100_prospective_oos_archiver.py",
     "capital",
     "execution",
+)
+
+HARDENING_MARKERS = (
+    "assurance/aurelia_hardening.py",
+    "assurance/adversarial_matrix.py",
+    "assurance/evidence_writer.py",
+    "assurance/research_quality.py",
+    "assurance/soak_protocol.py",
+    "assurance/operational_hardening.py",
 )
 
 
@@ -51,6 +64,16 @@ def evaluate_repository(root: Path) -> list[GateResult]:
             "PASS" if not docs_missing else "FAIL",
             "All assurance documents present." if not docs_missing
             else f"Missing: {', '.join(docs_missing)}",
+        )
+    )
+
+    hardening_missing = [p for p in HARDENING_MARKERS if not _exists(root, p)]
+    results.append(
+        GateResult(
+            "HARDENING_CONTRACTS",
+            "PASS" if not hardening_missing else "FAIL",
+            "All hardening contracts present." if not hardening_missing
+            else f"Missing: {', '.join(hardening_missing)}",
         )
     )
 
