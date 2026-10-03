@@ -52,6 +52,8 @@ def validate_level1(
     oos_stats = calculate_statistics(oos_returns)
     if is_stats.expectancy is None or oos_stats.expectancy is None:
         return "NO_EVIDENCE"
+    if cost_adjusted_oos_expectancy is not None and cost_adjusted_oos_expectancy <= 0:
+        return "COST_ERODED"
     if is_stats.expectancy == 0 or oos_stats.expectancy == 0:
         return "OOS_FAILED"
     if is_stats.expectancy * oos_stats.expectancy <= 0:
