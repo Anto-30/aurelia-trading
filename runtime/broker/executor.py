@@ -289,6 +289,13 @@ class CapitalPlaneExecutor:
                 intent.intent_id,
                 existing.broker_transaction_id,
             )
+        if existing.broker_outcome_unknown:
+            return ExecutionOutcome(
+                False,
+                "RECOVERY_REQUIRED",
+                ("BROKER_OUTCOME_UNKNOWN_REQUIRES_RECONCILIATION",),
+                intent.intent_id,
+            )
 
         self._log(
             "INTENT_CREATED",
@@ -324,6 +331,7 @@ class CapitalPlaneExecutor:
             )
 
         if result.outcome == BrokerOutcome.UNKNOWN:
+            self.idempotency.record_unknown_outcome(intent.intent_id)
             try:
                 self.state.transition(RuntimeState.RECOVERY)
             except ValueError:
