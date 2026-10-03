@@ -101,7 +101,7 @@ class DeterministicBroker:
         )
 
 
-def _executor(lock_path: Path, broker, root: Path, idempotency: IdempotencyStore, ledger: InMemoryLedger, fence):
+def _executor(lock_path: Path, broker, journal, idempotency: IdempotencyStore, ledger: InMemoryLedger, fence):
     return CapitalPlaneExecutor(
         broker,
         journal=journal,
