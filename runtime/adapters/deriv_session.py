@@ -58,13 +58,16 @@ def get_authenticated_ws_url(
 ) -> AuthenticatedWebSocketUrl:
     token = bearer_token if bearer_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
     application_id = app_id if app_id is not None else os.getenv("DERIV_APP_ID", "")
+    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
     if not account_id:
         raise DerivSessionError("ACCOUNT_ID_REQUIRED")
     if not token:
         raise DerivSessionError("DERIV_BEARER_TOKEN_MISSING")
+    if auth_mode == "pat" and not application_id:
+        raise DerivSessionError("DERIV_APP_ID_MISSING")
 
     headers = {"Authorization": f"Bearer {token}"}
-    if application_id:
+    if auth_mode == "pat":
         headers["Deriv-App-ID"] = application_id
 
     request = Request(
