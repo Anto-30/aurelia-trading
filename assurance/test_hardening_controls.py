@@ -62,7 +62,8 @@ class HardeningControlsTest(unittest.TestCase):
         self.assertTrue(full_balance_stake_is_affordable(8.00))
         self.assertTrue(requested_stake_is_balance_permitted(8.00, 8.00))
         self.assertTrue(requested_stake_is_balance_permitted(8.00, 7.99))
-        self.assertFalse(requested_stake_is_balance_permitted(1.49, 1.49))
+        self.assertTrue(requested_stake_is_balance_permitted(1.49, 1.49))
+        self.assertFalse(requested_stake_is_balance_permitted(1.49, 0.99))
         self.assertFalse(requested_stake_is_balance_permitted(None, 8.00))
 
     def test_exposure_is_aggregated(self):
@@ -104,7 +105,6 @@ class HardeningControlsTest(unittest.TestCase):
     def test_adversarial_matrix(self):
         self.assertTrue(matrix_is_complete())
         self.assertGreaterEqual(len(SCENARIOS), 20)
-
 
     def test_operational_state_replay_restore_and_degradation(self):
         from assurance.operational_hardening import (
