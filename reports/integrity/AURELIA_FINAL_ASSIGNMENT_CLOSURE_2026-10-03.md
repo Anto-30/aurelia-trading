@@ -3,6 +3,7 @@
 Date: 2026-10-03 EAT
 Repository: Anto-30/aurelia-trading
 Assurance branch: aurelia-final-assurance-2026-10-03
+Final assurance commit: 51cb6f09f58bc712263bb0bde6074bf18ce1832c
 
 ## Assignment status
 
@@ -25,8 +26,8 @@ LIVE_ORDERS = 0
 - Supabase project is INACTIVE; a schema inspection timed out, so no schema/state inference is claimed.
 - Vercel connected workspace exposes no AURELIA deployment.
 - Remote Desktop Commander has zero connected devices.
-- The original five assurance tests were independently executed; after the corrective assurance change, the suite was expanded and must be freshly executed before the new commit is treated as tested evidence.
-- Certification logic remains fail-closed when actual implementation markers are absent.
+- Corrected assurance suite: 5 tests passed, 0 failed, executed locally from the post-fix assurance files fetched from the target GitHub branch.
+- Certification logic remains fail-closed when actual implementation markers are absent; fresh execution returned CERTIFICATION_RESULT=NOT_READY.
 
 ## Corrective assurance work
 
@@ -45,3 +46,7 @@ The source is the primary recovery blocker, but the downstream certification gat
 ## Corrective recheck
 
 See reports/integrity/AURELIA_SOURCE_RECOVERY_RECHECK_2026-10-03.md for the fresh recovery sweep, tool limitations, and assurance correction.
+
+## Portable evidence
+
+A corrected evidence package was generated after the post-fix tests and fail-closed certification check.
