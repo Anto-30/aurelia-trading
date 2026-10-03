@@ -1,6 +1,8 @@
 name: AURELIA Non-Production 3600s Soak
 
 on:
+  push:
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -8,7 +10,7 @@ permissions:
 
 concurrency:
   group: aurelia-non-production-soak
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   soak:
@@ -28,6 +30,13 @@ jobs:
 
       - name: Build runtime image
         run: docker build --tag aurelia-non-production-soak .
+
+      - name: Record runtime identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "SOURCE_COMMIT=${GITHUB_SHA}" | tee /tmp/aurelia-source-identity.env
+          docker image inspect aurelia-non-production-soak --format "RUNTIME_IMAGE_ID={{.Id}}" | tee -a /tmp/aurelia-source-identity.env
 
       - name: Start isolated non-production runtime
         run: |
@@ -131,12 +140,19 @@ jobs:
           final_epoch="$(date +%s)"
           duration=$((final_epoch - start_epoch))
 
+          source_commit="$GITHUB_SHA"
+          runtime_image_id="$(docker image inspect aurelia-non-production-soak --format "{{.Id}}")"
+
           jq -n \
+            --arg source_commit "$source_commit" \
+            --arg runtime_image_id "$runtime_image_id" \
             --argjson duration "$duration" \
             --argjson checks "$checks" \
             --argjson restarts "$restarts" \
             --argjson failures "$failures" \
             '{
+              source_commit: $source_commit,
+              runtime_image_id: $runtime_image_id,
               evidence_type: "NON_PRODUCTION_3600S_CONTROL_PATH_SOAK",
               classification: "SIMULATION_VERIFIED",
               duration_seconds: $duration,
@@ -180,6 +196,7 @@ jobs:
             aurelia-3600s-soak-evidence.json
             aurelia-runtime.log
             aurelia-runtime-inspect.json
+            /tmp/aurelia-source-identity.env
             /tmp/aurelia-startup-health.json
             /tmp/aurelia-startup-health.err
           if-no-files-found: warn
