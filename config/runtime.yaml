@@ -5,7 +5,8 @@ probability:
   max_trade_probability: 0.75
   clipping: false
 stake:
-  execution_minimum_stake: 1.50
+  starting_stake: 1.00
+  execution_minimum_stake: 1.00
   stake_ceiling: authoritative_verified_available_balance
 health:
   market_data_max_age_seconds: 5
