@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environments and secrets
+.env
+.env.*
+*.env
+secrets/
+
+# Local runtime state and generated artifacts
+state/
+artifacts/
+*.ndjson
+
+# Local virtual environments
+.venv/
+venv/
+env/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
