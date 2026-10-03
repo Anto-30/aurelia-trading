@@ -62,3 +62,8 @@ This is the browsable map of the current AURELIA implementation on `main`.
 - Deployment/auth workflows: `.github/workflows/`
 
 Historical archives and old branches are not the current source of truth.
+
+## External access and current state
+
+- External access state: `data/runtime/AURELIA_EXTERNAL_ACCESS_STATE.json`
+- Current source-of-truth repository state is directly readable from the remote `main` branch.
