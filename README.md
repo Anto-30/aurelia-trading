@@ -14,6 +14,8 @@ AURELIA is an autonomous trading platform for research, validation, risk control
 
 The current repository state is authoritative for the implementation. Historical archives and old branches are not the current source of truth.
 
+Current operational state: `docs/AURELIA_CURRENT_OPERATIONAL_STATE_2026-10-03.md`. The repository is browsable from `main`; remote GitHub read/write access has been verified for the current engineering integration. This does not grant capital authority.
+
 ## Architecture
 
 - Capital plane: `capital/`
