@@ -2,7 +2,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from threading import Lock
 @dataclass(frozen=True)
-class IntentRecord: intent_id:str; broker_transaction_id:str|None; economic_effect_count:int
+class IntentRecord:
+ intent_id:str
+ broker_transaction_id:str|None
+ economic_effect_count:int
+ broker_outcome_unknown:bool=False
 class IdempotencyStore:
  def __init__(self): self._records={}; self._lock=Lock()
  def get(self,i):
@@ -16,11 +20,18 @@ class IdempotencyStore:
    c=self._records.get(i)
    if c is None: raise KeyError(i)
    if c.broker_transaction_id and c.broker_transaction_id!=tx: raise RuntimeError("BROKER_TRANSACTION_CONFLICT")
-   self._records[i]=IntentRecord(i,tx,c.economic_effect_count); return self._records[i]
+   self._records[i]=IntentRecord(i,tx,c.economic_effect_count,False); return self._records[i]
  def record_economic_effect(self,i):
   with self._lock:
    c=self._records.get(i)
    if c is None: raise KeyError(i)
    if c.economic_effect_count>=1: raise RuntimeError("DUPLICATE_ECONOMIC_EFFECT")
-   self._records[i]=IntentRecord(i,c.broker_transaction_id,1); return self._records[i]
+   self._records[i]=IntentRecord(i,c.broker_transaction_id,1,c.broker_outcome_unknown); return self._records[i]
+ def record_unknown_outcome(self,i):
+  with self._lock:
+   c=self._records.get(i)
+   if c is None: raise KeyError(i)
+   if c.broker_transaction_id:
+    return c
+   self._records[i]=IntentRecord(i,None,c.economic_effect_count,True); return self._records[i]
  def economic_effect_count(self,i): c=self.get(i); return 0 if c is None else c.economic_effect_count
