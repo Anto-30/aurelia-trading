@@ -3,7 +3,8 @@
 Date: 2026-10-03 EAT
 Repository: Anto-30/aurelia-trading
 Assurance branch: aurelia-final-assurance-2026-10-03
-Final assurance commit: 5364b0da78d17bc4389cba79569afc72dd86bfdc
+Pre-closure assurance commit: 5364b0da78d17bc4389cba79569afc72dd86bfdc
+Closure-provenance correction commit: THIS COMMIT
 
 ## Assignment status
 
