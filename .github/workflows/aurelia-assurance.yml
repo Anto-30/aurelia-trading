@@ -15,12 +15,19 @@ jobs:
           python-version: "3.13"
       - name: Install runtime dependencies
         run: pip install -r requirements.txt
+      - name: Compile runtime and tests
+        run: python -m compileall -q runtime tests assurance
       - name: Run assurance tests
         run: python -m unittest discover -s assurance -p 'test_*.py' -v
       - name: Run runtime tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
       - name: Run hardening tests
         run: python -m unittest assurance.test_hardening_controls -v
+      - name: Verify public Deriv market-data WebSocket
+        env:
+          AURELIA_VERIFY_DERIV_PUBLIC: "true"
+          AURELIA_RUN_ONCE: "true"
+        run: python -m runtime.main
       - name: Run repository certification gate
         id: certification
         continue-on-error: true
