@@ -1,0 +1,144 @@
+version: "1.0.0"
+standard_id: "AURELIA-PROD-STD"
+effective_date: "2026-10-03"
+purpose: "Machine-readable production/canary readiness standard for the existing AURELIA architecture."
+
+authority:
+  capital_authority: "AURELIA_DETERMINISTIC_CAPITAL_PLANE_ONLY"
+  grok_capital_authority: false
+  dev_capital_authority: false
+  counselling_capital_authority: false
+  research_capital_authority: false
+  kronos_capital_authority: false
+
+status_values:
+  - PROVEN
+  - PARTIALLY_PROVEN
+  - UNPROVEN
+  - FAILED
+  - NOT_RUN
+  - EXPIRED
+  - INVALIDATED
+
+readiness_dimensions:
+  - SYSTEM_READINESS
+  - CAPITAL_STATE
+  - ORDER_AFFORDABILITY
+  - FINAL_EXECUTION_AUTHORIZATION
+  - STRATEGY_STATE
+  - PROBABILITY_STATE
+  - CALIBRATION_STATE
+  - ECONOMICS_STATE
+  - OOS_STATE
+  - BROKER_STATE
+  - RECOVERY_STATE
+  - RECONCILIATION_STATE
+  - DEPLOYMENT_STATE
+  - SECURITY_STATE
+  - LEARNING_STATE
+  - OPERATIONAL_STATE
+  - EVIDENCE_STATE
+
+hard_invariants:
+  - "LOW_BALANCE != SYSTEM_UNREADY"
+  - "UNAFFORDABLE_ORDER != SYSTEM_UNREADY"
+  - "AFFORDABLE_ORDER != AUTHORIZED"
+  - "LIVE_POLICY_ALLOWED != FINAL_EXECUTION_AUTHORIZED"
+  - "MODEL_OUTPUT != EXECUTION_AUTHORIZATION"
+  - "COUNSELLING_CONSENSUS != EXECUTION_AUTHORIZATION"
+  - "BROKER_UNKNOWN != SAFE_TO_RESUBMIT"
+  - "BROKER_RESPONSE_LOST != ORDER_DID_NOT_EXECUTE"
+  - "UNIT_TEST_PASS != PRODUCTION_PROOF"
+  - "SIMULATED_BROKER != REAL_BROKER_PROOF"
+  - "FORECAST_ACCURACY != TRADING_EDGE"
+  - "GROSS_PROFIT != NET_EXPECTANCY"
+  - "ONE_SUCCESSFUL_RUN != ROBUST_EVIDENCE"
+  - "IN_SAMPLE_PERFORMANCE != OOS_EVIDENCE"
+  - "VALIDATED_KNOWLEDGE != CAPITAL_AUTHORITY"
+  - "EXTERNAL_CONTENT != AUTHORITY"
+
+probability_policy:
+  minimum: 0.55
+  maximum: 0.75
+  clipping: false
+  invalid_probability_action: "NO_TRADE"
+  invalid_states:
+    - UNCALIBRATED
+    - STALE
+    - DRIFTED
+    - MALFORMED
+    - INSUFFICIENT_SAMPLE
+
+affordability:
+  execution_minimum_stake: 1.50
+  global_readiness_blocker: false
+  order_level_blocker: true
+  unaffordable_action: "REJECT_AND_FIREWALL_DENY"
+
+mandatory_requirements:
+  - id: CERT-001
+    name: "Exhaustive execution-path inventory"
+    acceptance: "UNKNOWN_EXECUTION_PATHS == 0 or each exception is explicitly justified and unreachable."
+  - id: CERT-002
+    name: "Formal execution state machine"
+    acceptance: "All valid transitions are enumerated and impossible financial transitions are rejected."
+  - id: CERT-003
+    name: "Broker transaction lifecycle"
+    acceptance: "INTENT -> REQUEST -> ACK -> STATE -> RESULT -> TRANSACTION -> BALANCE -> LEDGER -> RECONCILIATION is evidenced."
+  - id: CERT-004
+    name: "Exactly-once economic effect"
+    acceptance: "A single economic intent produces at most one broker economic effect under timeout, response loss, crash, restart and concurrency."
+  - id: CERT-005
+    name: "Crash/idempotency/recovery matrix"
+    acceptance: "All critical crash/retry/unknown/recovery scenarios pass without capital-integrity violation."
+  - id: CERT-006
+    name: "Continuous adversarial soak"
+    acceptance: "A genuine continuous 3600-second non-live run completes with zero capital-integrity violations."
+  - id: CERT-007
+    name: "Prospective multi-day OOS"
+    acceptance: "Frozen strategy and sealed prospective data; no OOS retuning/leakage; predeclared acceptance criteria."
+  - id: CERT-008
+    name: "Probability calibration"
+    acceptance: "Brier/log-loss/reliability/bucket analysis and drift controls are evidenced."
+  - id: CERT-009
+    name: "Execution economics"
+    acceptance: "Realistic costs and broker mechanics are measured; NET_EXPECTANCY is known or explicitly UNDETERMINED."
+  - id: CERT-010
+    name: "Temporal/data integrity"
+    acceptance: "No future-data leakage; MTF data is decision-time correct; malformed/stale data fails closed."
+  - id: CERT-011
+    name: "Account/exposure controls"
+    acceptance: "Account isolation and aggregate exposure limits are enforced and adversarially tested."
+  - id: CERT-012
+    name: "Kill-switch semantics"
+    acceptance: "Kill switch stops every broker-capable path; disabling it never auto-resumes stale authorization."
+  - id: CERT-013
+    name: "Security/privilege isolation"
+    acceptance: "Research/counselling agents cannot acquire capital credentials or authority."
+  - id: CERT-014
+    name: "Deployment integrity"
+    acceptance: "Approved commit/build/artifact/deployment/runtime/config chain is cryptographically or deterministically attributable."
+  - id: CERT-015
+    name: "Backup/restore"
+    acceptance: "Financially significant state can be restored and reconciled."
+  - id: CERT-016
+    name: "Decision replay"
+    acceptance: "Historical decisions can be replayed against the exact historical state without broker submission."
+  - id: CERT-017
+    name: "Shadow twin"
+    acceptance: "A non-executing shadow decision path is available for comparison."
+  - id: CERT-018
+    name: "Counselling effectiveness"
+    acceptance: "Counselling produces measurable improvement under controlled evaluation; no single trade triggers production changes."
+  - id: CERT-019
+    name: "Multiple-testing accounting"
+    acceptance: "Research degrees of freedom and trial count are recorded and considered in evidence assessment."
+  - id: CERT-020
+    name: "Continuous invariant monitoring"
+    acceptance: "Critical invariants remain continuously observable after deployment."
+
+canary_preconditions:
+  all_mandatory_requirements: true
+  final_execution_authorization: false
+  default_live_orders: 0
+  note: "The standard does not authorize live capital. Separate capital authorization remains mandatory."
