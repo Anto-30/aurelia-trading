@@ -1,0 +1,20 @@
+name: AURELIA Assurance
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  assurance-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run assurance contract tests
+        run: python -m unittest discover -s assurance -p 'test_*.py' -v
+      - name: Run repository certification gate
+        run: python -m assurance.certification_gate
