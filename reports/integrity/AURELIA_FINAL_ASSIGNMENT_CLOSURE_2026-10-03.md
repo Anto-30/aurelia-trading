@@ -16,23 +16,21 @@ LIVE_ORDERS = 0
 
 ## Evidence completed
 
-- Five assurance contract tests executed independently in the container: 5 passed, 0 failed.
-- Certification logic executed against the assurance branch: NOT_READY because the actual AURELIA implementation is absent.
-- Current assurance branch tree rechecked after final commits: assurance/documentation only; no production runtime.
-- Historical qualification-sync branch rechecked: no production runtime.
-- Separate Anto-30/Aurelia-trading- repository rechecked: README only.
-- Exact source/archive names searched across connected storage and workspace routes: no authoritative runtime recovered.
-- Outlook mailbox searched for archive names and AURELIA terms, including attachment-filtered searches: no matches.
-- Dropbox shared links: none.
-- Railway AURELIA-Production-Worker: production environment exists, zero services.
-- Supabase connected project: INACTIVE.
-- Vercel connected team: only Tales & Trails projects.
-- Remote Desktop Commander: zero connected devices.
-- Public web exact-match searches: no results.
+- Fresh GitHub repository and branch recheck completed; no authoritative production runtime was found.
+- GitHub commit searches scoped to this repository returned no matches for the historical v1.27 package identifier or distinctive runtime path deriv_adapter.
+- Historical Notion page rechecked directly; it still records the v1.27 package names and historical live-lock state, but the package bytes are not exposed.
+- Historical Notion agent/session indexing remains plan-gated; this limitation does not overturn the direct-page finding.
+- Dropbox shared-link inventory is empty.
+- Railway AURELIA-Production-Worker has a production environment and zero services.
+- Supabase project is INACTIVE; a schema inspection timed out, so no schema/state inference is claimed.
+- Vercel connected workspace exposes no AURELIA deployment.
+- Remote Desktop Commander has zero connected devices.
+- The original five assurance tests were independently executed; after the corrective assurance change, the suite was expanded and must be freshly executed before the new commit is treated as tested evidence.
+- Certification logic remains fail-closed when actual implementation markers are absent.
 
-## Historical source reference
+## Corrective assurance work
 
-The connected Notion record identifies Aurelia_Autonomous_MultiAgent_Build_v1.27.zip and aurelia-v1.27-safe.zip as the historical v1.27 source-of-truth packages and records the live lock as disabled. The actual package bytes are not exposed through the connected recovery routes.
+The assurance helper blind_resubmit_allowed() was hardened so it never permits blind economic resubmission. The test suite was expanded to exercise every mandatory authorization control and the probability/affordability boundaries.
 
 ## Integrity decision
 
@@ -40,8 +38,10 @@ The missing runtime has not been reconstructed from summaries or documentation. 
 
 ## Remaining dependency
 
-Implementation-level certification can only proceed from the authoritative v1.27-safe runtime source/tree. Once accessible, required downstream evidence is: source hash and existing-suite execution; full execution-path audit; broker lifecycle; crash/idempotency/concurrency; 3600-second adversarial soak; prospective OOS; probability calibration; net execution economics; deployment-artifact integrity; credential isolation; controlled canary; final certification.
+Implementation-level certification requires the authoritative runtime source/tree. After recovery, the required downstream evidence remains: source integrity and existing-suite execution; complete execution-path audit; broker lifecycle; crash/idempotency/concurrency; 3600-second adversarial soak; prospective OOS; probability calibration; net execution economics; deployment-artifact integrity; credential isolation; controlled canary; and final certification.
 
-## Portable evidence
+The source is the primary recovery blocker, but the downstream certification gates are also independently unproven until they are exercised against the recovered implementation.
 
-Final evidence package SHA-256: d813590f2e5c6978c7bbf1fe8b26a4ce47f2979d2f821418055249fd85591d36
+## Corrective recheck
+
+See reports/integrity/AURELIA_SOURCE_RECOVERY_RECHECK_2026-10-03.md for the fresh recovery sweep, tool limitations, and assurance correction.
