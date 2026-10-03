@@ -1,8 +1,8 @@
 """Strict evidence-bundle validation for AURELIA certification.
 
-Evidence files must be produced by real runtime/research operations. The
-validator never creates passing evidence and never treats a placeholder as
-proof.
+Evidence artifacts must be produced by genuine runtime/research operations.
+The validator never creates passing evidence and never treats placeholders as
+proof. Every evidence envelope hash is recomputed before it can pass.
 """
 from __future__ import annotations
 
@@ -10,6 +10,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from .evidence_writer import payload_sha256
 
 REQUIRED_RUNTIME_MARKERS = (
     "services/adapters/deriv_adapter.py",
@@ -76,6 +78,11 @@ def _base_valid(record: dict[str, Any], now: datetime) -> tuple[bool, str]:
 
     if record.get("invariants_failed"):
         return False, "invariants_failed is non-empty"
+
+    supplied_hash = record["record_hash"]
+    unsigned = {k: v for k, v in record.items() if k != "record_hash"}
+    if supplied_hash != payload_sha256(unsigned):
+        return False, "record_hash mismatch"
     return True, "valid"
 
 
@@ -134,12 +141,12 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
         )
     if name == "deployment.json":
         return (
-            record.get("source_commit")
-            and record.get("build_hash")
-            and record.get("artifact_hash")
-            and record.get("deployment_id")
-            and record.get("runtime_hash")
-            and record.get("config_hash")
+            bool(record.get("source_commit"))
+            and bool(record.get("build_hash"))
+            and bool(record.get("artifact_hash"))
+            and bool(record.get("deployment_id"))
+            and bool(record.get("runtime_hash"))
+            and bool(record.get("config_hash"))
             and record.get("runtime_matches_artifact") is True,
             "deployment lineage incomplete",
         )
