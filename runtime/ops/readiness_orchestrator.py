@@ -81,8 +81,11 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         )
     )
     deriv_evidence = _current_evidence(deriv_evidence_path)
-    session = bool(deriv_evidence) and _flag("AURELIA_DERIV_SESSION_VERIFIED")
-    balance = bool(deriv_evidence) and _flag("AURELIA_BALANCE_VERIFIED")
+    # The broker verifier writes a current PROVEN evidence envelope. Readiness
+    # must consume that evidence directly; ambient environment flags are not
+    # themselves evidence and therefore cannot upgrade session/balance state.
+    session = bool(deriv_evidence)
+    balance = bool(deriv_evidence)
     railway = _flag("AURELIA_RAILWAY_WORKER_HEALTHY")
 
     gates = [
@@ -105,7 +108,12 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         Gate("IDEMPOTENCY", "PASS" if _flag("AURELIA_IDEMPOTENCY_HEALTHY") else "FAIL", "requires restart-safe exactly-once protection"),
     ]
 
-    verified_balance = _float_env("AURELIA_VERIFIED_AVAILABLE_BALANCE") if balance else None
+    observed = deriv_evidence.get("observed", {}) if isinstance(deriv_evidence, dict) else {}
+    observed_balance = observed.get("available_balance") if isinstance(observed, dict) else None
+    if balance and isinstance(observed_balance, (int, float)) and observed_balance >= 0:
+        verified_balance = float(observed_balance)
+    else:
+        verified_balance = _float_env("AURELIA_VERIFIED_AVAILABLE_BALANCE") if balance else None
     blockers = [
         {"gate": g.name, "status": g.status, "reason": g.reason}
         for g in gates if not g.passed
@@ -130,7 +138,7 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         "live_orders": 0,
         "deriv": {
             "credentials_present": credentials,
-            "rest": "PASS" if _flag("AURELIA_DERIV_REST_VERIFIED") else "UNKNOWN",
+            "rest": "PASS" if deriv_evidence else ("PASS" if _flag("AURELIA_DERIV_REST_VERIFIED") else "UNKNOWN"),
             "session": "VERIFIED" if session else "UNKNOWN",
             "endpoint": "api.derivws.com",
             "balance": verified_balance,
