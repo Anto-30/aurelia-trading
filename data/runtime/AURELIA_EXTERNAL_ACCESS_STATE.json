@@ -1,9 +1,10 @@
 {
   "schema": "aurelia.external_access_state.v1",
-  "generated_at_utc": "2026-10-03T20:05:00+03:00",
+  "generated_at_utc": "2026-10-03T22:32:00Z",
   "repository": "Anto-30/aurelia-trading",
   "canonical_branch": "main",
-  "main_tip_at_verification": "6667c36531145f3393f6984ae3b9fdef1c3d56e0",
+  "main_tip_at_verification": "c8ad431ca0e5a8472cc6c904181dad903cd9c3e1",
+  "assurance_validated_commit": "fce6effab5c3e8ea793856a598c3d89433b3a917",
   "github": {
     "repository_permission": {
       "admin": true,
@@ -31,7 +32,7 @@
     "canonical_endpoint": "api.derivws.com",
     "legacy_endpoint_policy": "DIAGNOSTIC_ONLY",
     "repository_path_implementation": "VERIFIED_BY_CODE_INSPECTION",
-    "runtime_session_balance": "OPERATOR_REPORTED_VERIFIED; NOT EXECUTED BY THIS GITHUB INTEGRATION",
+    "runtime_session_balance": "NOT_INDEPENDENTLY_VERIFIED_THIS_CYCLE",
     "independent_authenticated_runtime_check": false
   },
   "capital": {
@@ -51,6 +52,13 @@
   "security": {
     "secret_values_committed": false,
     "credential_values_in_artifact": false
+  },
+  "assurance": {
+    "run_id": 37158183664,
+    "job_id": 111305879006,
+    "conclusion": "success",
+    "deriv_authenticated_step": "SKIPPED_NOT_CONFIGURED",
+    "railway_deploy": "NOT_EXECUTED"
   },
   "note": "Repository and infrastructure observations only. This artifact never grants capital authority and does not convert operator-reported broker evidence into independent broker verification."
 }
