@@ -97,9 +97,6 @@ def requested_stake_is_balance_permitted(
 ) -> bool:
     """Affordability permits a request up to 100% of verified available balance.
     
-    For low balances (< 2.0), stake must be strictly less than balance.
-    For normal balances (>= 2.0), stake can equal balance.
-    
     Args:
         balance: Verified available balance
         requested_stake: Proposed stake amount
@@ -115,11 +112,7 @@ def requested_stake_is_balance_permitted(
     if requested_stake < minimum_stake or requested_stake <= 0:
         return False
     
-    # For low balances, enforce strict inequality: stake < balance
-    if balance < 2.0:
-        return requested_stake < balance
-    
-    # For normal balances, allow stake <= balance
+    # Stake is permitted if it's within balance
     return requested_stake <= balance
 
 def full_balance_stake_is_affordable(

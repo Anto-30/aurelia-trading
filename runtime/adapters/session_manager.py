@@ -11,11 +11,13 @@ from urllib.request import Request, urlopen
 from runtime.adapters.deriv_session import (
     AuthenticatedWebSocketUrl,
     DerivSessionError,
-    derive_ws_environment,
     get_authenticated_ws_url,
     validate_modern_options_ws_url,
 )
 
+OTP_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts/{account_id}/otp"
+MODERN_OPTIONS_WS_HOST = "api.derivws.com"
+MODERN_OPTIONS_WS_PREFIX = "/trading/v1/options/ws/"
 ACCOUNTS_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts"
 
 
@@ -42,6 +44,7 @@ class DerivSessionBootstrap:
 
 
 def redact_ws_url(url: str) -> str:
+    """Remove OTP parameter from WebSocket URL for safe logging."""
     parts = urlsplit(url)
     query = parse_qs(parts.query, keep_blank_values=True)
     query.pop("otp", None)
@@ -51,6 +54,25 @@ def redact_ws_url(url: str) -> str:
     return f"{parts.scheme}://{parts.netloc}{parts.path}" + (
         f"?{safe_query}" if safe_query else ""
     )
+
+
+def derive_ws_environment(url: str) -> str:
+    """Extract and validate the Deriv environment from an authenticated WS URL.
+    
+    Args:
+        url: WebSocket URL from OTP response
+    
+    Returns:
+        Environment name ('real' or 'demo')
+    
+    Raises:
+        DerivSessionError: If URL is invalid or environment is unknown
+    """
+    if not isinstance(url, str) or not url:
+        raise DerivSessionError("DERIV_WS_URL_MISSING")
+    validate_modern_options_ws_url(url)
+    path = urlsplit(url).path.lower().rstrip("/")
+    return path.rsplit("/", 1)[-1]
 
 
 class DerivSessionManager:
