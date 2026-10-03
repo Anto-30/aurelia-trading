@@ -83,21 +83,22 @@ async def main() -> None:
     HealthHandler.health = health
     HealthHandler.state = machine.state
 
-    startup = event_envelope(
-        event_type="RUNTIME_STARTUP",
-        event_id="RUNTIME_STARTUP:1",
-        correlation_id="runtime",
-        payload={
-            "runtime_version": "0.1.0-baseline-2026-10-03",
-            "config_hash": config_hash,
-            "live_trading_enabled": release.live_trading_enabled,
-            "final_execution_authorization": release.final_execution_authorization,
-            "capital_plane_mode": release.capital_plane_mode,
-        },
-        source_hash="runtime-baseline",
-        config_hash=config_hash,
+    journal.append(
+        event_envelope(
+            event_type="RUNTIME_STARTUP",
+            event_id="RUNTIME_STARTUP:1",
+            correlation_id="runtime",
+            payload={
+                "runtime_version": "0.1.0-baseline-2026-10-03",
+                "config_hash": config_hash,
+                "live_trading_enabled": release.live_trading_enabled,
+                "final_execution_authorization": release.final_execution_authorization,
+                "capital_plane_mode": release.capital_plane_mode,
+            },
+            source_hash="runtime-baseline",
+            config_hash=config_hash,
+        )
     )
-    journal.append(startup)
 
     print(
         json.dumps(
@@ -115,19 +116,22 @@ async def main() -> None:
 
     async def public_probe() -> None:
         adapter = DerivAdapter()
-        try:
-            symbol_count = await adapter.connect_public()
-            journal.append(
-                event_envelope(
-                    event_type="PUBLIC_MARKET_DATA_VERIFIED",
-                    event_id=f"PUBLIC_MARKET_DATA_VERIFIED:{symbol_count}",
-                    correlation_id="market-probe",
-                    payload={"active_symbol_count": symbol_count},
-                    source_hash="runtime-baseline",
-                    config_hash=config_hash,
-                )
+        symbol_count = await adapter.connect_public()
+        journal.append(
+            event_envelope(
+                event_type="PUBLIC_MARKET_DATA_VERIFIED",
+                event_id=f"PUBLIC_MARKET_DATA_VERIFIED:{symbol_count}",
+                correlation_id="market-probe",
+                payload={"active_symbol_count": symbol_count},
+                source_hash="runtime-baseline",
+                config_hash=config_hash,
             )
-            health.dependencies_ok = True
+        )
+        health.dependencies_ok = True
+
+    if os.getenv("AURELIA_VERIFY_DERIV_PUBLIC", "false").lower() == "true":
+        try:
+            await public_probe()
         except Exception as exc:
             health.critical_unknowns.add("DERIV_PUBLIC_MARKET_DATA")
             journal.append(
@@ -141,8 +145,9 @@ async def main() -> None:
                 )
             )
 
-    if os.getenv("AURELIA_VERIFY_DERIV_PUBLIC", "false").lower() == "true":
-        await public_probe()
+    if os.getenv("AURELIA_RUN_ONCE", "false").lower() == "true":
+        server.shutdown()
+        return
 
     supervisor = RuntimeSupervisor(interval_seconds=5)
 
@@ -170,9 +175,8 @@ async def main() -> None:
     try:
         while True:
             health.process_heartbeat = datetime.now(timezone.utc)
-            # This baseline intentionally stays capital-protected. Future live
-            # releases must change the reviewed LIVE_LOCK and evidence state;
-            # runtime code does not self-authorize.
+            # This baseline intentionally remains capital-protected. Runtime
+            # code cannot self-authorize by changing execution state.
             health.kill_switch_off = False
             health.broker_session = False
             health.market_data_fresh = False
