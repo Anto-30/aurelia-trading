@@ -28,11 +28,14 @@ def build_evidence(
     started_at_utc: str,
     ended_at_utc: str,
     status: str,
+    provenance: Mapping[str, Any],
     valid_until_utc: str | None = None,
     result: str = "UNPROVEN",
     invariants_checked: list[str] | None = None,
     invariants_failed: list[str] | None = None,
 ) -> dict[str, Any]:
+    if not isinstance(provenance, Mapping):
+        raise TypeError("EVIDENCE_PROVENANCE_REQUIRED")
     record = {
         "evidence_id": evidence_id,
         "source_hash": source_hash,
@@ -47,6 +50,7 @@ def build_evidence(
         "result": result,
         "invariants_checked": invariants_checked or [],
         "invariants_failed": invariants_failed or [],
+        "provenance": dict(provenance),
     }
     record["record_hash"] = payload_sha256(record)
     return record
@@ -67,6 +71,7 @@ def main() -> int:
     parser.add_argument("--started-at", required=True)
     parser.add_argument("--ended-at", required=True)
     parser.add_argument("--status", required=True)
+    parser.add_argument("--provenance-json", required=True)
     parser.add_argument("--result", default="UNPROVEN")
     args = parser.parse_args()
     record = build_evidence(
@@ -79,6 +84,7 @@ def main() -> int:
         started_at_utc=args.started_at,
         ended_at_utc=args.ended_at,
         status=args.status,
+        provenance=json.loads(args.provenance_json),
         result=args.result,
     )
     write_evidence(Path(args.out), record)
