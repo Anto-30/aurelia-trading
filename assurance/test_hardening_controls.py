@@ -106,5 +106,22 @@ class HardeningControlsTest(unittest.TestCase):
         self.assertGreaterEqual(len(SCENARIOS), 20)
 
 
+    def test_operational_state_replay_restore_and_degradation(self):
+        from assurance.operational_hardening import (
+            backup_restore_reconciled,
+            canonical_state_hash,
+            decision_replay_matches,
+            no_silent_degradation,
+        )
+        state = {"symbol": "R_100", "probability": 0.60, "decision_time": "2026-10-03T10:00:00Z"}
+        self.assertEqual(canonical_state_hash(state), canonical_state_hash(dict(state)))
+        self.assertTrue(decision_replay_matches(state, dict(state)))
+        self.assertFalse(decision_replay_matches(state, {**state, "probability": 0.61}))
+        self.assertTrue(backup_restore_reconciled(8.0, 8.0, ["tx1"], ["tx1"]))
+        self.assertFalse(backup_restore_reconciled(8.0, 7.9, ["tx1"], ["tx1"]))
+        self.assertTrue(no_silent_degradation(subsystem_states={"broker": "AVAILABLE", "data": "VALID"}))
+        self.assertFalse(no_silent_degradation(subsystem_states={"broker": "DEGRADED"}))
+
+
 if __name__ == "__main__":
     unittest.main()
