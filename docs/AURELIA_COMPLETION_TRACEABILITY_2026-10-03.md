@@ -14,7 +14,7 @@ The following cannot be truthfully marked PASS by source code alone: authenticat
 
 ## Capital boundary
 
-The current release remains permanently non-live. No code path in this baseline may override config/LIVE_LOCK.yaml. A verified low balance is an order-affordability condition, not a global readiness blocker. The broker minimum stake remains $1.50 at order level.
+The current release remains permanently non-live. No code path in this baseline may override config/LIVE_LOCK.yaml. A verified low balance is an order-affordability condition, not a global readiness blocker. The current execution minimum stake is $1.00 at order level. This does not authorize capital movement; affordability, risk, firewall, reconciliation, live policy and final authorization remain separate gates.
 
 ## Non-claims
 
