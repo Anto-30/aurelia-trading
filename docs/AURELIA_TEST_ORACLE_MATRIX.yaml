@@ -1,0 +1,119 @@
+version: "1.0.0"
+matrix_id: "AURELIA-TEST-ORACLE"
+principle: "Define expected behavior before executing the scenario."
+
+scenario_template:
+  required_fields:
+    - scenario_id
+    - initial_state
+    - fault
+    - expected_state_transition
+    - expected_authorization
+    - expected_capital_effect
+    - expected_broker_effect
+    - expected_ledger_effect
+    - expected_reconciliation
+    - expected_recovery
+    - expected_final_state
+    - invariant_result
+
+critical_scenarios:
+  - scenario_id: EXEC-UNKNOWN-001
+    initial_state: SUBMITTED
+    fault: "Broker executes; response is lost"
+    expected_state_transition: "SUBMITTED -> UNKNOWN -> RECOVERY -> CONFIRMED"
+    expected_authorization: "No new authorization created from uncertainty alone"
+    expected_capital_effect: "Exactly one economic effect"
+    expected_broker_effect: "One broker transaction maximum"
+    expected_ledger_effect: "One transaction ledger entry"
+    expected_reconciliation: "Broker transaction and ledger agree"
+    expected_recovery: "Discover existing broker transaction before any retry"
+    expected_final_state: RECONCILED
+    invariant_result: "NO_DUPLICATE_ECONOMIC_EFFECT"
+
+  - scenario_id: EXEC-CRASH-001
+    initial_state: AUTHORIZED
+    fault: "Process crash immediately before/after submission boundary"
+    expected_state_transition: "Recovery determined from persisted intent + broker state"
+    expected_authorization: "Fresh authorization required if prior authorization expired"
+    expected_capital_effect: "At most one economic effect"
+    expected_broker_effect: "No blind resubmission"
+    expected_ledger_effect: "No duplicate entry"
+    expected_reconciliation: "Final broker/ledger consistency"
+    expected_recovery: "Crash-safe deterministic recovery"
+    expected_final_state: RECONCILED
+    invariant_result: "NO_DUPLICATE_ECONOMIC_EFFECT"
+
+  - scenario_id: EXEC-CONC-001
+    initial_state: CREATED
+    fault: "Two workers receive the same intent simultaneously"
+    expected_state_transition: "One execution owner; duplicate path rejected"
+    expected_authorization: "No second capital authorization"
+    expected_capital_effect: "At most one economic effect"
+    expected_broker_effect: "One broker submission maximum"
+    expected_ledger_effect: "One financial effect"
+    expected_reconciliation: "Consistent"
+    expected_recovery: "Duplicate worker exits deterministically"
+    expected_final_state: RECONCILED
+    invariant_result: "ONE_INTENT_AT_MOST_ONE_EFFECT"
+
+  - scenario_id: DATA-MTF-001
+    initial_state: SIGNAL_PENDING
+    fault: "Higher-timeframe candle is incomplete at decision timestamp"
+    expected_state_transition: "Signal invalidated or delayed"
+    expected_authorization: "No execution"
+    expected_capital_effect: "Zero"
+    expected_broker_effect: "Zero"
+    expected_ledger_effect: "Zero"
+    expected_reconciliation: "Not applicable"
+    expected_recovery: "Wait for valid closed data"
+    expected_final_state: NO_TRADE
+    invariant_result: "NO_FUTURE_DATA_LEAK"
+
+  - scenario_id: CAPITAL-001
+    initial_state: READY_FOR_ORDER
+    fault: "Verified balance below minimum stake"
+    expected_state_transition: "Order affordability -> UNAFFORDABLE"
+    expected_authorization: "System readiness remains independent"
+    expected_capital_effect: "Zero"
+    expected_broker_effect: "Zero"
+    expected_ledger_effect: "No financial entry"
+    expected_reconciliation: "No broker transaction"
+    expected_recovery: "No submission until affordable"
+    expected_final_state: ORDER_REJECTED
+    invariant_result: "LOW_BALANCE_NOT_SYSTEM_UNREADY"
+
+  - scenario_id: KILL-001
+    initial_state: EXECUTION_CAPABLE
+    fault: "Kill switch enabled"
+    expected_state_transition: "All broker-capable routes -> STOPPED"
+    expected_authorization: "No execution authorization remains usable"
+    expected_capital_effect: "Zero new effect"
+    expected_broker_effect: "Zero new submission"
+    expected_ledger_effect: "No new trade"
+    expected_reconciliation: "Existing state still reconciled"
+    expected_recovery: "Disable does not resume stale intents"
+    expected_final_state: HALTED
+    invariant_result: "KILL_SWITCH_EFFECTIVE"
+
+chaos_fault_domains:
+  - market_data
+  - network
+  - broker
+  - websocket
+  - database
+  - queue
+  - worker
+  - clock
+  - configuration
+  - deployment
+  - resource_limits
+  - authentication
+  - reconciliation
+
+soak_acceptance:
+  actual_elapsed_seconds_minimum: 3600
+  continuous: true
+  capital_integrity_violations_maximum: 0
+  duplicate_economic_effects_maximum: 0
+  unauthorized_execution_count_maximum: 0
