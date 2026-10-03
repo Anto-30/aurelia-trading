@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -18,6 +19,8 @@ from runtime.core.models import (
     LedgerEvent,
     OrderIntent,
     RuntimeState,
+    AuthorizationContext,
+    utc_now,
 )
 from runtime.core.reconcile import Reconciler, ReconciliationResult
 from runtime.core.release_gate import read_live_release
@@ -67,6 +70,8 @@ class CapitalPlaneExecutor:
         self.config_hash = config_hash
         self.live_lock_path = Path(live_lock_path)
         self.kill_switch = True
+        self._kill_switch_activated_at = utc_now()
+        self._execution_lock = asyncio.Lock()
 
     def _log(self, event_type: str, payload: dict) -> None:
         event_id = f"{event_type}:{len(self.journal.read_all()) + 1}"
@@ -85,6 +90,7 @@ class CapitalPlaneExecutor:
 
     def activate_kill_switch(self, reason: str) -> None:
         self.kill_switch = True
+        self._kill_switch_activated_at = utc_now()
         self.fence.revoke()
         if self.state.state not in {RuntimeState.CAPITAL_PROTECTED, RuntimeState.SHUTDOWN}:
             try:
@@ -93,10 +99,63 @@ class CapitalPlaneExecutor:
                 pass
         self._log("KILL_SWITCH_ACTIVATED", {"reason": reason})
 
-    def clear_kill_switch_with_fresh_authorization(self, authorization_present: bool) -> bool:
-        if not authorization_present:
+    def clear_kill_switch_with_fresh_authorization(
+        self,
+        authorization: AuthorizationContext | bool,
+    ) -> bool:
+        """Clear only with a fresh, currently valid full authorization issued after the kill."""
+        if not isinstance(authorization, AuthorizationContext):
+            self._log(
+                "KILL_SWITCH_CLEAR_BLOCKED",
+                {"reason": "FRESH_AUTHORIZATION_OBJECT_REQUIRED"},
+            )
             return False
+        if not self.kill_switch:
+            return False
+        if not self.release_allows_live():
+            self._log(
+                "KILL_SWITCH_CLEAR_BLOCKED",
+                {"reason": "LIVE_RELEASE_NOT_ENABLED"},
+            )
+            return False
+        if not authorization.final_execution_authorization or not authorization.is_current():
+            self._log(
+                "KILL_SWITCH_CLEAR_BLOCKED",
+                {"reason": "AUTHORIZATION_INVALID_OR_EXPIRED"},
+            )
+            return False
+        if not all(
+            (
+                authorization.account.account_type == "real",
+                authorization.capital.is_valid(),
+                authorization.risk_approved,
+                authorization.firewall_approved,
+                authorization.reconciliation_healthy,
+            )
+        ):
+            self._log(
+                "KILL_SWITCH_CLEAR_BLOCKED",
+                {"reason": "AUTHORIZATION_CONTROL_CHAIN_INCOMPLETE"},
+            )
+            return False
+        if self._kill_switch_activated_at is None:
+            self._log(
+                "KILL_SWITCH_CLEAR_BLOCKED",
+                {"reason": "KILL_SWITCH_ACTIVATION_TIME_UNKNOWN"},
+            )
+            return False
+        if authorization.authorization_issued_at <= self._kill_switch_activated_at:
+            self._log(
+                "KILL_SWITCH_CLEAR_BLOCKED",
+                {"reason": "AUTHORIZATION_PREDATES_KILL_SWITCH"},
+            )
+            return False
+
         self.kill_switch = False
+        self._log(
+            "KILL_SWITCH_CLEARED",
+            {"authorization_id": authorization.authorization_id},
+        )
         return True
 
     def release_allows_live(self) -> bool:
@@ -176,7 +235,31 @@ class CapitalPlaneExecutor:
         context: AuthorizationContext,
         fence_token,
     ) -> ExecutionOutcome:
-        if intent.execution_mode == "LIVE" and not self.release_allows_live():
+        async with self._execution_lock:
+            return await self._execute_serialized(intent, context, fence_token)
+
+    async def _execute_serialized(
+        self,
+        intent: OrderIntent,
+        context: AuthorizationContext,
+        fence_token,
+    ) -> ExecutionOutcome:
+        if intent.execution_mode != "LIVE":
+            self._log(
+                "PRE_SUBMISSION_BLOCKED",
+                {
+                    "intent_id": intent.intent_id,
+                    "reasons": ("NON_LIVE_BROKER_SUBMISSION_FORBIDDEN",),
+                },
+            )
+            return ExecutionOutcome(
+                False,
+                "BLOCKED",
+                ("NON_LIVE_BROKER_SUBMISSION_FORBIDDEN",),
+                intent.intent_id,
+            )
+
+        if not self.release_allows_live():
             self._log(
                 "PRE_SUBMISSION_BLOCKED",
                 {"intent_id": intent.intent_id, "reasons": ("LIVE_LOCK_ACTIVE",)},
