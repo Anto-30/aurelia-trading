@@ -10,6 +10,8 @@ This is the browsable map of the current AURELIA implementation on `main`.
 - Runtime configuration: `config/runtime.yaml`
 - Runtime entry point: `runtime/main.py`
 - Readiness orchestrator: `runtime/ops/readiness_orchestrator.py`
+- Source-of-truth metadata: `AURELIA_SOURCE_OF_TRUTH.json`
+- Operational handoff: `docs/AURELIA_OPERATIONAL_HANDOFF_2026-10-03.md`
 
 ## Capital and execution
 
@@ -52,8 +54,11 @@ This is the browsable map of the current AURELIA implementation on `main`.
 ## Operational documentation
 
 - Modern Deriv path: `docs/AURELIA_MODERN_DERIV_PATH_2026-10-03.md`
+- Deriv authentication verification: `docs/AURELIA_DERIV_AUTH_VERIFICATION_2026-10-03.md`
+- Operational handoff: `docs/AURELIA_OPERATIONAL_HANDOFF_2026-10-03.md`
 - Stake policy: `docs/AURELIA_STAKE_POLICY_2026-10-03.md`
 - Runtime baseline: `docs/AURELIA_RUNTIME_BASELINE_2026-10-03.md`
+- Status model: `docs/AURELIA_STATUS_MODEL.yaml`
 - Deployment/auth workflows: `.github/workflows/`
 
 Historical archives and old branches are not the current source of truth.
