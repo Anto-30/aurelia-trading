@@ -219,6 +219,14 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                         "passed": False,
                         "reason": "CONCURRENT_IDEMPOTENCY_STATUS",
                         "statuses": sorted((first.status, second_result.status)),
+                        "first_reasons": first.reasons,
+                        "second_reasons": second_result.reasons,
+                        "broker_calls_delta": broker.calls - before_calls,
+                        "intent_id": intent.intent_id,
+                        "proposal_id": intent.proposal_id,
+                        "kill_switch": executor.kill_switch,
+                        "fence_valid": executor.fence.valid(token),
+                        "auth_current": auth.is_current(),
                     }
                 accepted += int(first.status == "ACCEPTED") + int(second_result.status == "ACCEPTED")
                 recovered += int(first.status == "RECOVERY_REQUIRED") + int(second_result.status == "RECOVERY_REQUIRED")
