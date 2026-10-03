@@ -312,6 +312,7 @@ class CapitalPlaneExecutor:
                 {"proposal_id": intent.proposal_id, "stake": intent.stake}
             )
         except Exception as exc:
+            self.idempotency.record_unknown_outcome(intent.intent_id)
             try:
                 self.state.transition(RuntimeState.RECOVERY)
             except ValueError:
