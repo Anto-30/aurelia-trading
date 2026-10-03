@@ -104,11 +104,17 @@ async def run() -> int:
             artifact_hash=artifact_hash,
             config_hash=load_config_hash(ROOT),
             data_hash=data_hash,
-            environment="real",
+            environment="ci",
             started_at_utc=started.isoformat(),
             ended_at_utc=ended.isoformat(),
             status="CURRENT",
             valid_until_utc=(ended + timedelta(minutes=5)).isoformat(),
+            provenance={
+                "origin": "ci",
+                "issuer": f"github-actions:{os.getenv('GITHUB_RUN_ID', 'LOCAL')}",
+                "source_commit": source_hash,
+                "generated_at_utc": ended.isoformat(),
+            },
             result="PROVEN",
             invariants_checked=[
                 "exact_real_account_binding",
