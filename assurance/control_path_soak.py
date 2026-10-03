@@ -84,16 +84,19 @@ class DeterministicBroker:
 
     async def submit_authorized_order(self, payload):
         self.calls += 1
-        sequence = self.calls
-        await asyncio.sleep(0)
-        if sequence % 29 == 0:
-            return BrokerResult(BrokerOutcome.UNKNOWN, f"UNKNOWN-{sequence}", raw_class="SOAK_UNKNOWN")
-        if sequence % 37 == 0:
-            raise TimeoutError("SOAK_TIMEOUT")
-        if sequence % 41 == 0:
-            return BrokerResult(BrokerOutcome.REJECTED, f"REJECTED-{sequence}", raw_class="SOAK_REJECTED")
-        self.economic_effects += 1
         proposal_id = str(payload["proposal_id"])
+        try:
+            cycle = int(proposal_id.rsplit("-", 1)[-1])
+        except ValueError:
+            cycle = -1
+        await asyncio.sleep(0)
+        if cycle > 0 and cycle % 29 == 0:
+            return BrokerResult(BrokerOutcome.UNKNOWN, f"UNKNOWN-{cycle}", raw_class="SOAK_UNKNOWN")
+        if cycle > 0 and cycle % 37 == 0:
+            raise TimeoutError("SOAK_TIMEOUT")
+        if cycle > 0 and cycle % 41 == 0:
+            return BrokerResult(BrokerOutcome.REJECTED, f"REJECTED-{cycle}", raw_class="SOAK_REJECTED")
+        self.economic_effects += 1
         return BrokerResult(
             BrokerOutcome.ACCEPTED,
             f"ACCEPTED-{sequence}",
