@@ -28,5 +28,7 @@
   "probability_max": 0.75,
   "probability_clipping": false,
   "secret_policy": "secret_values_must_not_be_committed_or_logged",
-  "note": "Current branch HEAD is resolved directly from main; this file intentionally does not self-reference a commit SHA."
+  "github_main_tip_verified": "47d929d950988f09e23ede1784d70f9c4d257d8b",
+  "github_main_tip_verified_at_utc": "2026-10-03T15:37:00Z",
+  "note": "Current source is resolved from main. The recorded commit is an observation of the main tip at verification time, not a self-referential commit identity."
 }
