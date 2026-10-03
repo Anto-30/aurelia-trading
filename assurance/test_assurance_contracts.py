@@ -32,23 +32,50 @@ class AssuranceContractsTest(unittest.TestCase):
         )
 
     def test_full_authorization_requires_all_controls(self):
-        self.assertTrue(final_execution_authorized(self._valid()))
-        denied = self._valid()
-        denied = AuthorizationInputs(**{**denied.__dict__, "risk_approved": False})
-        self.assertFalse(final_execution_authorized(denied))
+        valid = self._valid()
+        self.assertTrue(final_execution_authorized(valid))
+
+        boolean_controls = (
+            "account_is_real",
+            "broker_session_verified",
+            "market_data_valid",
+            "strategy_valid",
+            "probability_valid",
+            "risk_approved",
+            "capital_authorized",
+            "stake_affordable",
+            "execution_firewall_approved",
+            "kill_switch_off",
+            "reconciliation_healthy",
+            "configuration_matched",
+        )
+        for field in boolean_controls:
+            denied = AuthorizationInputs(**{**valid.__dict__, field: False})
+            with self.subTest(field=field):
+                self.assertFalse(final_execution_authorized(denied))
+
+        stale = AuthorizationInputs(**{**valid.__dict__, "stale_authorization": True})
+        unknown = AuthorizationInputs(**{**valid.__dict__, "unknown_broker_state": True})
+        self.assertFalse(final_execution_authorized(stale))
+        self.assertFalse(final_execution_authorized(unknown))
 
     def test_probability_is_not_clipped(self):
+        self.assertFalse(probability_policy_valid(None))
+        self.assertFalse(probability_policy_valid(0.549999))
+        self.assertTrue(probability_policy_valid(0.55))
         self.assertTrue(probability_policy_valid(0.75))
+        self.assertFalse(probability_policy_valid(0.750001))
         self.assertFalse(probability_policy_valid(0.82))
 
     def test_low_balance_is_not_system_readiness_blocker(self):
         self.assertFalse(capital_readiness_blocker_for_balance(1.45))
         self.assertEqual(order_affordability(1.45), "UNAFFORDABLE")
+        self.assertEqual(order_affordability(1.50), "AFFORDABLE")
         self.assertEqual(order_affordability(None), "UNKNOWN")
 
-    def test_unknown_broker_state_forbids_blind_resubmit(self):
+    def test_blind_resubmission_is_never_permitted(self):
         self.assertFalse(blind_resubmit_allowed(broker_state_unknown=True))
-        self.assertTrue(blind_resubmit_allowed(broker_state_unknown=False))
+        self.assertFalse(blind_resubmit_allowed(broker_state_unknown=False))
 
     def test_invalid_state_transitions_are_rejected(self):
         s = ExecutionState()
