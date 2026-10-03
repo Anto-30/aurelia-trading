@@ -115,7 +115,7 @@ class CertificationEvidenceTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             status, detail = validate_evidence_bundle(Path(d))
             self.assertEqual(status, "BLOCKED")
-            self.assertIn("Missing evidence artifacts", detail)
+            self.assertIn("missing evidence artifact", detail)
 
     def test_passing_bundle(self):
         with tempfile.TemporaryDirectory() as d:
