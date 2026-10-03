@@ -1,0 +1,60 @@
+{
+  "report_id": "AURELIA_ASSURANCE_BASELINE_2026-10-03",
+  "date": "2026-10-03",
+  "repository": "Anto-30/aurelia-trading",
+  "branch": "aurelia-final-assurance-2026-10-03",
+  "live_execution_allowed": false,
+  "final_execution_authorization": false,
+  "live_orders": 0,
+  "source_synced": false,
+  "fresh_deriv_balance": {
+    "status": "BLOCKED",
+    "reason": "No Deriv credentials available in the current runtime",
+    "last_known_balance_usd": 1.45,
+    "freshness": "UNVERIFIED",
+    "deposit_2_usd_confirmed": false
+  },
+  "implemented_in_this_branch": [
+    "AURELIA production certification standard",
+    "AURELIA constitution",
+    "test-oracle matrix",
+    "assurance programme",
+    "security threat model",
+    "counterfactual and near-miss framework",
+    "research governance",
+    "release manifest specification",
+    "multi-dimensional status model",
+    "execution-neutral invariant predicates",
+    "execution state-machine contract",
+    "typed evidence/near-miss/experiment records",
+    "repository certification gate",
+    "GitHub Actions assurance workflow"
+  ],
+  "local_verification": {
+    "assurance_contract_tests": "PASS",
+    "details": [
+      "full authorization requires all controls",
+      "probability is not clipped",
+      "low balance is not a system-readiness blocker",
+      "unknown broker state forbids blind resubmission",
+      "invalid execution-state transitions are rejected"
+    ]
+  },
+  "not_proven_by_this_branch": [
+    "real AURELIA source integration",
+    "fresh broker balance",
+    "multi-day prospective OOS collection",
+    "3600-second continuous soak",
+    "real broker lifecycle",
+    "exactly-once economic effect against broker",
+    "crash/restart matrix against the real core",
+    "quantitative probability calibration",
+    "measured net execution economics",
+    "production deployment integrity",
+    "runtime credential isolation",
+    "actual counselling effectiveness",
+    "real canary"
+  ],
+  "next_blocking_gate": "Sync actual AURELIA implementation into a controlled source branch before claiming implementation-level certification evidence.",
+  "safety_posture": "No live gate flips and no broker submission permitted by this work."
+}
