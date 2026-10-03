@@ -15,6 +15,7 @@ from runtime.core.invariants import (
     no_research_capital_authority,
 )
 from runtime.core.journal import AppendOnlyJournal
+from runtime.core.limits import ExecutionLimits
 from runtime.core.models import (
     AccountIdentity,
     AuthorizationContext,
@@ -77,11 +78,17 @@ class TestControls(unittest.TestCase):
         from assurance.aurelia_invariants import capital_readiness_blocker_for_balance
         self.assertFalse(capital_readiness_blocker_for_balance(1))
 
+    def test_stake_policy_uses_one_dollar_floor(self):
+        limits = ExecutionLimits()
+        self.assertEqual(limits.minimum_stake, 1.00)
+        self.assertTrue(limits.validate(1.00, 1.45)[0])
+        self.assertFalse(limits.validate(1.00, 0.99)[0])
+
     def test_full_balance_ceiling(self):
         from assurance.aurelia_hardening import requested_stake_is_balance_permitted
         self.assertTrue(requested_stake_is_balance_permitted(8, 8))
         self.assertFalse(requested_stake_is_balance_permitted(8, 8.01))
-        self.assertFalse(requested_stake_is_balance_permitted(1.49, 1.49))
+        self.assertTrue(requested_stake_is_balance_permitted(1.49, 1.49))
 
     def test_demo_blocked(self):
         gate, _ = authorization_gate(

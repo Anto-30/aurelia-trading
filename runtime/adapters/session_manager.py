@@ -11,6 +11,7 @@ from urllib.request import Request, urlopen
 from runtime.adapters.deriv_session import (
     AuthenticatedWebSocketUrl,
     DerivSessionError,
+    derive_ws_environment,
     get_authenticated_ws_url,
     validate_modern_options_ws_url,
 )
@@ -50,12 +51,6 @@ def redact_ws_url(url: str) -> str:
     return f"{parts.scheme}://{parts.netloc}{parts.path}" + (
         f"?{safe_query}" if safe_query else ""
     )
-
-
-def derive_ws_environment(url: str) -> str:
-    validate_modern_options_ws_url(url)
-    path = urlsplit(url).path.lower().rstrip("/")
-    return path.rsplit("/", 1)[-1]
 
 
 class DerivSessionManager:

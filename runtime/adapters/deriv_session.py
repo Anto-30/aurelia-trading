@@ -49,6 +49,12 @@ def validate_modern_options_ws_url(
     return True
 
 
+def derive_ws_environment(url: str) -> str:
+    """Derive the authenticated environment from an already-validated URL."""
+    validate_modern_options_ws_url(url)
+    return urlsplit(url).path.rstrip("/").rsplit("/", 1)[-1].lower()
+
+
 def get_authenticated_ws_url(
     account_id: str,
     *,

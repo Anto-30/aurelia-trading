@@ -3,9 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
+
 @dataclass(frozen=True)
 class ExecutionLimits:
-    minimum_stake: float = 1.50
+    minimum_stake: float = 1.00
     maximum_stake: float | None = None
 
     def validate(self, stake: float, verified_balance: float) -> tuple[bool, str]:
