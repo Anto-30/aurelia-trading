@@ -10,6 +10,7 @@ AURELIA is an autonomous trading platform for research, validation, risk control
 - Repository map: `AURELIA_REPOSITORY_MAP.md`
 - Source-of-truth metadata: `AURELIA_SOURCE_OF_TRUTH.json`
 - Operational readiness engine: `runtime/ops/readiness_orchestrator.py`
+- Operational handoff: `docs/AURELIA_OPERATIONAL_HANDOFF_2026-10-03.md`
 
 The current repository state is authoritative for the implementation. Historical archives and old branches are not the current source of truth.
 
@@ -31,7 +32,7 @@ The current repository state is authoritative for the implementation. Historical
 
 ## Deriv integration
 
-The canonical Options API path is the current Deriv API under `api.derivws.com`:
+The canonical Options API path is the current Deriv API under `api.derivws.com`.
 
 1. Authorized REST credential.
 2. Exact account inventory and binding.
@@ -40,6 +41,8 @@ The canonical Options API path is the current Deriv API under `api.derivws.com`:
 5. Session/account/currency/environment verification.
 6. Fresh broker balance.
 7. Capital snapshot.
+
+Detailed path definition: `docs/AURELIA_MODERN_DERIV_PATH_2026-10-03.md`.
 
 Legacy `ws.derivws.com`/Binary WS v3 endpoints are diagnostic-only and must not be used as a production fallback.
 
@@ -74,5 +77,9 @@ Run runtime tests with:
 Run the readiness report with:
 
 `python -m runtime.ops.readiness_orchestrator`
+
+Run the non-trading Deriv authentication verifier when its authorized environment secrets are configured:
+
+`python scripts/verify_deriv_session.py`
 
 A readiness report must not be interpreted as live authorization unless every mandatory control is independently verified and `config/LIVE_LOCK.yaml` permits capital movement.

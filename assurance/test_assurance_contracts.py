@@ -69,8 +69,9 @@ class AssuranceContractsTest(unittest.TestCase):
 
     def test_low_balance_is_not_system_readiness_blocker(self):
         self.assertFalse(capital_readiness_blocker_for_balance(1.45))
-        self.assertEqual(order_affordability(1.45), "UNAFFORDABLE")
-        self.assertEqual(order_affordability(1.50), "AFFORDABLE")
+        self.assertEqual(order_affordability(1.45), "AFFORDABLE")
+        self.assertEqual(order_affordability(0.99), "UNAFFORDABLE")
+        self.assertEqual(order_affordability(1.00), "AFFORDABLE")
         self.assertEqual(order_affordability(None), "UNKNOWN")
 
     def test_blind_resubmission_is_never_permitted(self):
