@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+
+from runtime.adapters.session_manager import DerivSessionManager
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -83,6 +85,7 @@ async def main() -> None:
     HealthHandler.health = health
     HealthHandler.state = machine.state
     public_probe_failed = False
+    authenticated_probe_failed = False
 
     journal.append(
         event_envelope(
@@ -147,10 +150,75 @@ async def main() -> None:
                 )
             )
 
+    async def authenticated_probe() -> None:
+        manager = DerivSessionManager(
+            expected_loginid=os.getenv("DERIV_EXPECTED_LOGINID") or None,
+            expected_environment=os.getenv("DERIV_ENVIRONMENT", "real"),
+            expected_currency=os.getenv("DERIV_EXPECTED_CURRENCY", "USD"),
+        )
+        bootstrap = manager.bootstrap(
+            bearer_token=os.getenv("DERIV_AUTH_TOKEN") or None,
+            app_id=os.getenv("DERIV_APP_ID") or None,
+        )
+        adapter = DerivAdapter(
+            ws_url=bootstrap.websocket.url,
+            expected_loginid=bootstrap.binding.loginid,
+            expected_currency=bootstrap.binding.currency,
+            environment=bootstrap.binding.environment,
+            auth_token="",
+        )
+        try:
+            account = await adapter.connect()
+            snapshot = await adapter.get_balance()
+            if account.loginid != bootstrap.binding.loginid:
+                raise RuntimeError("DERIV_RUNTIME_ACCOUNT_BINDING_MISMATCH")
+            if snapshot.currency != bootstrap.binding.currency:
+                raise RuntimeError("DERIV_RUNTIME_CURRENCY_MISMATCH")
+            journal.append(
+                event_envelope(
+                    event_type="AUTHENTICATED_DERIV_SESSION_VERIFIED",
+                    event_id="AUTHENTICATED_DERIV_SESSION_VERIFIED:1",
+                    correlation_id="deriv-auth-probe",
+                    payload={
+                        "endpoint": "api.derivws.com",
+                        "environment": account.environment,
+                        "currency": snapshot.currency,
+                        "balance_source": "deriv:balance",
+                        "capital_authority_granted": False,
+                    },
+                    source_hash="runtime-baseline",
+                    config_hash=config_hash,
+                )
+            )
+            health.broker_session = True
+            health.capital_fresh = snapshot.is_valid()
+            health.dependencies_ok = True
+        finally:
+            await adapter.close()
+
+    if os.getenv("AURELIA_VERIFY_DERIV_AUTH", "false").lower() == "true":
+        try:
+            await authenticated_probe()
+        except Exception as exc:
+            authenticated_probe_failed = True
+            health.critical_unknowns.add("DERIV_AUTHENTICATED_SESSION")
+            journal.append(
+                event_envelope(
+                    event_type="AUTHENTICATED_DERIV_SESSION_UNKNOWN",
+                    event_id="AUTHENTICATED_DERIV_SESSION_UNKNOWN:1",
+                    correlation_id="deriv-auth-probe",
+                    payload={"error_class": type(exc).__name__},
+                    source_hash="runtime-baseline",
+                    config_hash=config_hash,
+                )
+            )
+
     if os.getenv("AURELIA_RUN_ONCE", "false").lower() == "true":
         server.shutdown()
         if public_probe_failed:
             raise RuntimeError("PUBLIC_DERIV_TRANSPORT_VERIFICATION_FAILED")
+        if authenticated_probe_failed:
+            raise RuntimeError("AUTHENTICATED_DERIV_SESSION_VERIFICATION_FAILED")
         return
 
     supervisor = RuntimeSupervisor(interval_seconds=5)
