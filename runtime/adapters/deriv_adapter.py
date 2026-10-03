@@ -4,10 +4,17 @@ import os
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
+from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_ws_url
+from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
 from runtime.core.circuit import CircuitBreaker
 from runtime.core.events import sha256
-from runtime.core.models import AccountIdentity, BrokerOutcome, BrokerResult, CapitalSnapshot, MarketTick
-from runtime.adapters.deriv_ws import DerivWebSocketTransport, DerivTransportError
+from runtime.core.models import (
+    AccountIdentity,
+    BrokerOutcome,
+    BrokerResult,
+    CapitalSnapshot,
+    MarketTick,
+)
 
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
@@ -18,7 +25,7 @@ class DerivProtocolError(RuntimeError):
 
 
 class DerivAdapter:
-    """Transport-only Deriv adapter using a single-reader WebSocket transport."""
+    """Transport-only Deriv Options API boundary for AURELIA."""
 
     def __init__(
         self,
@@ -31,8 +38,12 @@ class DerivAdapter:
         timeout_seconds: float = 10.0,
     ):
         self.ws_url = ws_url or os.getenv("DERIV_WS_URL", "")
-        self.auth_token = auth_token if auth_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
-        self.expected_loginid = expected_loginid or os.getenv("DERIV_EXPECTED_LOGINID", "")
+        self.auth_token = (
+            auth_token if auth_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
+        )
+        self.expected_loginid = (
+            expected_loginid or os.getenv("DERIV_EXPECTED_LOGINID", "")
+        )
         self.expected_currency = expected_currency
         self.environment = environment
         self.timeout_seconds = timeout_seconds
@@ -42,28 +53,54 @@ class DerivAdapter:
         self.circuit = CircuitBreaker()
         self._subscription_keys: set[str] = set()
 
+    def _validate_environment_url(self, url: str) -> None:
+        lowered = url.lower()
+        expected = self.environment.lower()
+        if expected == "real" and "/real" not in lowered:
+            raise DerivProtocolError("AUTHENTICATED_URL_ENVIRONMENT_MISMATCH")
+        if expected in {"demo", "virtual"} and "/demo" not in lowered:
+            raise DerivProtocolError("AUTHENTICATED_URL_ENVIRONMENT_MISMATCH")
+
     async def connect(self) -> AccountIdentity:
         if not self.ws_url:
             raise DerivProtocolError("DERIV_AUTHENTICATED_WS_URL_MISSING")
+        self._validate_environment_url(self.ws_url)
         try:
-            self.transport = DerivWebSocketTransport(self.ws_url, timeout_seconds=self.timeout_seconds)
+            self.transport = DerivWebSocketTransport(
+                self.ws_url,
+                timeout_seconds=self.timeout_seconds,
+            )
             await self.transport.connect()
+
             if self.auth_token:
                 reply = await self.transport.request({"authorize": self.auth_token})
-                auth = reply.get("authorize") or {}
+                identity_payload = reply.get("authorize") or {}
             else:
                 reply = await self.transport.request({"balance": 1})
-                auth = reply.get("balance") or {}
-            loginid = str(auth.get("loginid") or auth.get("login_id") or "")
-            currency = str(auth.get("currency") or "")
+                identity_payload = reply.get("balance") or {}
+
+            loginid = str(
+                identity_payload.get("loginid")
+                or identity_payload.get("login_id")
+                or ""
+            )
+            currency = str(identity_payload.get("currency") or "")
             if not loginid:
                 raise DerivProtocolError("ACCOUNT_IDENTITY_UNVERIFIED")
-            account_type = "demo" if self.environment.lower() in {"demo", "virtual"} else "real"
             if self.expected_loginid and loginid != self.expected_loginid:
                 raise DerivProtocolError("ACCOUNT_IDENTITY_MISMATCH")
             if currency and currency != self.expected_currency:
                 raise DerivProtocolError("CURRENCY_MISMATCH")
-            self.account = AccountIdentity(loginid, account_type, currency or self.expected_currency, self.environment)
+
+            account_type = (
+                "demo" if self.environment.lower() in {"demo", "virtual"} else "real"
+            )
+            self.account = AccountIdentity(
+                loginid=loginid,
+                account_type=account_type,
+                currency=currency or self.expected_currency,
+                environment=self.environment,
+            )
             self.authorized = True
             self.circuit.record_success()
             return self.account
@@ -71,8 +108,30 @@ class DerivAdapter:
             await self.close()
             raise
 
+    async def connect_from_otp(
+        self,
+        account_id: str,
+        *,
+        bearer_token: str | None = None,
+        app_id: str | None = None,
+    ) -> AccountIdentity:
+        try:
+            session = get_authenticated_ws_url(
+                account_id,
+                bearer_token=bearer_token,
+                app_id=app_id,
+            )
+        except DerivSessionError as exc:
+            raise DerivProtocolError(str(exc)) from exc
+        self.ws_url = session.url
+        self.auth_token = ""
+        return await self.connect()
+
     async def connect_public(self) -> int:
-        transport = DerivWebSocketTransport(PUBLIC_WS_URL, timeout_seconds=self.timeout_seconds)
+        transport = DerivWebSocketTransport(
+            PUBLIC_WS_URL,
+            timeout_seconds=self.timeout_seconds,
+        )
         await transport.connect()
         try:
             reply = await transport.request({"active_symbols": "brief"})
@@ -83,13 +142,12 @@ class DerivAdapter:
     async def reconnect(self, fresh_ws_url: str | None = None) -> None:
         if self.transport is None:
             raise DerivProtocolError("BROKER_SESSION_NOT_CONNECTED")
-        # Deriv OTP URLs are short-lived/one-use. Never reuse the old URL.
         if not fresh_ws_url:
             raise DerivProtocolError("FRESH_AUTHENTICATED_WS_URL_REQUIRED")
+        self._validate_environment_url(fresh_ws_url)
         try:
             await self.transport.reconnect(fresh_url=fresh_ws_url)
             self.ws_url = fresh_ws_url
-            # Revalidate account identity and currency after reconnect.
             await self.get_balance()
         except Exception:
             self.authorized = False
@@ -127,7 +185,9 @@ class DerivAdapter:
         )
 
     async def active_symbols(self) -> list[dict[str, Any]]:
-        return list((await self.request({"active_symbols": "brief"})).get("active_symbols") or [])
+        return list(
+            (await self.request({"active_symbols": "brief"})).get("active_symbols") or []
+        )
 
     async def subscribe_ticks(self, symbol: str) -> AsyncIterator[MarketTick]:
         if self.transport is None:
@@ -149,12 +209,46 @@ class DerivAdapter:
         finally:
             self._subscription_keys.discard(key)
 
+    async def subscribe_balance(self) -> AsyncIterator[CapitalSnapshot]:
+        if self.transport is None or self.account is None:
+            raise DerivProtocolError("BROKER_SESSION_NOT_VERIFIED")
+        key = "balance"
+        async for message in self.transport.subscribe(key, {"balance": 1}):
+            result = message.get("balance") or {}
+            loginid = str(result.get("loginid") or self.account.loginid)
+            currency = str(result.get("currency") or self.account.currency)
+            if loginid != self.account.loginid or currency != self.account.currency:
+                raise DerivProtocolError("ACCOUNT_IDENTITY_CHANGED")
+            yield CapitalSnapshot(
+                balance=float(result["balance"]),
+                currency=currency,
+                available_balance=float(result["balance"]),
+                captured_at=datetime.now(timezone.utc),
+                source="deriv:balance_subscription",
+                account=self.account,
+            )
+
+    async def subscribe_transactions(self) -> AsyncIterator[dict[str, Any]]:
+        if self.transport is None:
+            raise DerivProtocolError("BROKER_SESSION_NOT_CONNECTED")
+        async for message in self.transport.subscribe(
+            "transactions",
+            {"transaction": 1},
+        ):
+            transaction = message.get("transaction")
+            if transaction:
+                yield dict(transaction)
+
     async def request_proposal(self, parameters: dict[str, Any]) -> str:
         required = ("contract_type", "currency", "underlying_symbol")
         missing = [key for key in required if not parameters.get(key)]
         if missing:
-            raise DerivProtocolError("PROPOSAL_PARAMETERS_MISSING:" + ",".join(missing))
-        proposal = (await self.request({"proposal": 1, **parameters})).get("proposal") or {}
+            raise DerivProtocolError(
+                "PROPOSAL_PARAMETERS_MISSING:" + ",".join(missing)
+            )
+        proposal = (
+            await self.request({"proposal": 1, **parameters})
+        ).get("proposal") or {}
         proposal_id = str(proposal.get("id") or "")
         if not proposal_id:
             raise DerivProtocolError("PROPOSAL_ID_MISSING_FROM_BROKER")
@@ -169,14 +263,24 @@ class DerivAdapter:
         if not proposal_id:
             raise DerivProtocolError("ORDER_REQUIRES_BROKER_PROPOSAL_ID")
         try:
-            reply = await self.request({"buy": str(proposal_id), "price": payload["stake"]})
+            reply = await self.request(
+                {"buy": str(proposal_id), "price": payload["stake"]}
+            )
         except Exception:
-            return BrokerResult(BrokerOutcome.UNKNOWN, "unknown", raw_class="SUBMISSION_RESPONSE_UNKNOWN")
+            return BrokerResult(
+                BrokerOutcome.UNKNOWN,
+                "unknown",
+                raw_class="SUBMISSION_RESPONSE_UNKNOWN",
+            )
         buy = reply.get("buy") or {}
         transaction_id = str(buy.get("transaction_id") or "") or None
         contract_id = str(buy.get("contract_id") or "") or None
         if not transaction_id and not contract_id:
-            return BrokerResult(BrokerOutcome.UNKNOWN, "unknown", raw_class="BROKER_ACCEPTANCE_UNRESOLVED")
+            return BrokerResult(
+                BrokerOutcome.UNKNOWN,
+                "unknown",
+                raw_class="BROKER_ACCEPTANCE_UNRESOLVED",
+            )
         return BrokerResult(
             BrokerOutcome.ACCEPTED,
             "buy",
@@ -186,15 +290,62 @@ class DerivAdapter:
             broker_timestamp=datetime.now(timezone.utc),
         )
 
+    async def resolve_unknown_order(
+        self,
+        *,
+        transaction_id: str | None = None,
+        contract_id: str | None = None,
+    ) -> dict[str, Any]:
+        statement = await self.statement(limit=100)
+        portfolio = await self.portfolio()
+        transaction = None
+        contract = None
+
+        if transaction_id:
+            transaction = next(
+                (
+                    row
+                    for row in statement
+                    if str(row.get("transaction_id") or row.get("id") or "")
+                    == str(transaction_id)
+                ),
+                None,
+            )
+
+        if contract_id:
+            contract = next(
+                (
+                    row
+                    for row in portfolio
+                    if str(row.get("contract_id") or row.get("id") or "")
+                    == str(contract_id)
+                ),
+                None,
+            )
+
+        return {
+            "known": transaction is not None or contract is not None,
+            "transaction": transaction,
+            "contract": contract,
+            "recovery_requires_reconciliation": True,
+        }
+
     async def get_contract_status(self, contract_id: str) -> dict[str, Any]:
-        reply = await self.request({"proposal_open_contract": 1, "contract_id": int(contract_id)})
+        reply = await self.request(
+            {"proposal_open_contract": 1, "contract_id": int(contract_id)}
+        )
         return dict(reply.get("proposal_open_contract") or {})
 
     async def portfolio(self) -> list[dict[str, Any]]:
         reply = await self.request({"portfolio": 1})
         return list(reply.get("portfolio", {}).get("contracts") or [])
 
-    async def statement(self, *, limit: int = 100, action_type: str | None = None) -> list[dict[str, Any]]:
+    async def statement(
+        self,
+        *,
+        limit: int = 100,
+        action_type: str | None = None,
+    ) -> list[dict[str, Any]]:
         payload: dict[str, Any] = {"statement": 1, "limit": limit}
         if action_type:
             payload["action_type"] = action_type
