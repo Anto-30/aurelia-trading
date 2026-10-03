@@ -145,7 +145,7 @@ def calculate_statistics(returns: Sequence[float]) -> Statistics:
     std = statistics.stdev(values) if n > 1 else None
     downside = math.sqrt(statistics.fmean([min(0.0, x) ** 2 for x in values]))
     gross_win, gross_loss = sum(wins), abs(sum(losses))
-    pf = gross_win / gross_loss if gross_loss > 0 else (math.inf if gross_win > 0 else None)
+    pf = gross_win / gross_loss if gross_loss > 0 else None
     equity, peak, max_dd = 1.0, 1.0, 0.0
     for x in values:
         equity *= 1.0 + x
