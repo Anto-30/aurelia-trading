@@ -55,7 +55,7 @@ def final_execution_authorized(x: AuthorizationInputs) -> bool:
     )
 
 
-def order_affordability(balance: Optional[float], minimum_stake: float = 1.50) -> str:
+def order_affordability(balance: Optional[float], minimum_stake: float = 1.00) -> str:
     """Return explicit affordability state; absence of balance is UNKNOWN."""
     if balance is None:
         return "UNKNOWN"
@@ -63,7 +63,7 @@ def order_affordability(balance: Optional[float], minimum_stake: float = 1.50) -
 
 
 def capital_readiness_blocker_for_balance(
-    balance: Optional[float], minimum_stake: float = 1.50
+    balance: Optional[float], minimum_stake: float = 1.00
 ) -> bool:
     """Low balance is never a global system-readiness blocker."""
     return False
