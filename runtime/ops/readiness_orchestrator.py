@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from dataclasses import dataclass
@@ -40,25 +41,85 @@ def _float_env(name: str) -> float | None:
     return value if value >= 0 else None
 
 
+def _evidence_payload_hash(record: dict[str, Any]) -> str:
+    unsigned = {key: value for key, value in record.items() if key != "record_hash"}
+    canonical = json.dumps(
+        unsigned,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def _current_evidence(path: Path) -> dict[str, Any] | None:
-    """Load a non-secret evidence envelope and reject expired/non-proven records."""
+    """Load and cryptographically validate broker evidence before readiness can use it."""
+    required = (
+        "evidence_id",
+        "source_hash",
+        "artifact_hash",
+        "config_hash",
+        "data_hash",
+        "environment",
+        "started_at_utc",
+        "ended_at_utc",
+        "status",
+        "result",
+        "record_hash",
+    )
     if not path.exists():
         return None
     try:
         record = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(record, dict):
             return None
-        if str(record.get("status", "")).upper() != "CURRENT":
+        if any(not isinstance(record.get(key), str) or not record[key].strip() for key in required):
             return None
-        if str(record.get("result", "")).upper() != "PROVEN":
+        if str(record["status"]).upper() not in {"CURRENT", "EXPIRING"}:
             return None
+        if str(record["result"]).upper() not in {"PASS", "PROVEN", "VALIDATED"}:
+            return None
+
+        started = datetime.fromisoformat(str(record["started_at_utc"]).replace("Z", "+00:00"))
+        ended = datetime.fromisoformat(str(record["ended_at_utc"]).replace("Z", "+00:00"))
+        now = datetime.now(timezone.utc)
+        if started.tzinfo is None or ended.tzinfo is None or ended < started or ended > now:
+            return None
+
         valid_until = record.get("valid_until_utc")
         if valid_until:
             expires = datetime.fromisoformat(str(valid_until).replace("Z", "+00:00"))
-            if expires <= datetime.now(timezone.utc):
+            if expires.tzinfo is None or expires <= now:
                 return None
+
+        if record.get("invariants_failed"):
+            return None
+        if record["record_hash"] != _evidence_payload_hash(record):
+            return None
+
+        observed = record.get("observed")
+        if not isinstance(observed, dict):
+            return None
+        if str(observed.get("account_loginid", "")).strip() == "":
+            return None
+        if str(observed.get("environment", "")).lower() != "real":
+            return None
+        if str(observed.get("currency", "")).strip() == "":
+            return None
+        available_balance = observed.get("available_balance")
+        if (
+            isinstance(available_balance, bool)
+            or not isinstance(available_balance, (int, float))
+            or available_balance < 0
+            or not __import__("math").isfinite(float(available_balance))
+        ):
+            return None
+        if record.get("capital_authority_granted") is True:
+            return None
+        if int(record.get("orders_submitted", 0)) != 0:
+            return None
         return record
-    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+    except (OSError, ValueError, TypeError, json.JSONDecodeError, OverflowError):
         return None
 
 
@@ -110,10 +171,11 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
 
     observed = deriv_evidence.get("observed", {}) if isinstance(deriv_evidence, dict) else {}
     observed_balance = observed.get("available_balance") if isinstance(observed, dict) else None
-    if balance and isinstance(observed_balance, (int, float)) and observed_balance >= 0:
-        verified_balance = float(observed_balance)
-    else:
-        verified_balance = _float_env("AURELIA_VERIFIED_AVAILABLE_BALANCE") if balance else None
+    verified_balance = (
+        float(observed_balance)
+        if balance and isinstance(observed_balance, (int, float)) and observed_balance >= 0
+        else None
+    )
     blockers = [
         {"gate": g.name, "status": g.status, "reason": g.reason}
         for g in gates if not g.passed
@@ -138,7 +200,7 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         "live_orders": 0,
         "deriv": {
             "credentials_present": credentials,
-            "rest": "PASS" if deriv_evidence else ("PASS" if _flag("AURELIA_DERIV_REST_VERIFIED") else "UNKNOWN"),
+            "rest": "PASS" if deriv_evidence else "UNKNOWN",
             "session": "VERIFIED" if session else "UNKNOWN",
             "endpoint": "api.derivws.com",
             "balance": verified_balance,
