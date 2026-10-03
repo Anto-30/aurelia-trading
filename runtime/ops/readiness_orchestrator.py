@@ -40,6 +40,28 @@ def _float_env(name: str) -> float | None:
     return value if value >= 0 else None
 
 
+def _current_evidence(path: Path) -> dict[str, Any] | None:
+    """Load a non-secret evidence envelope and reject expired/non-proven records."""
+    if not path.exists():
+        return None
+    try:
+        record = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(record, dict):
+            return None
+        if str(record.get("status", "")).upper() != "CURRENT":
+            return None
+        if str(record.get("result", "")).upper() != "PROVEN":
+            return None
+        valid_until = record.get("valid_until_utc")
+        if valid_until:
+            expires = datetime.fromisoformat(str(valid_until).replace("Z", "+00:00"))
+            if expires <= datetime.now(timezone.utc):
+                return None
+        return record
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        return None
+
+
 def evaluate(root: Path = ROOT) -> dict[str, Any]:
     now = datetime.now(timezone.utc)
     release: LiveReleaseState = read_live_release(root / "config" / "LIVE_LOCK.yaml")
@@ -52,14 +74,21 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         auth_mode != "pat" or app_present
     )
 
-    session = _flag("AURELIA_DERIV_SESSION_VERIFIED")
-    balance = _flag("AURELIA_BALANCE_VERIFIED")
+    deriv_evidence_path = Path(
+        os.getenv(
+            "AURELIA_DERIV_EVIDENCE_PATH",
+            str(root / "artifacts" / "deriv_authenticated_session.json"),
+        )
+    )
+    deriv_evidence = _current_evidence(deriv_evidence_path)
+    session = bool(deriv_evidence) and _flag("AURELIA_DERIV_SESSION_VERIFIED")
+    balance = bool(deriv_evidence) and _flag("AURELIA_BALANCE_VERIFIED")
     railway = _flag("AURELIA_RAILWAY_WORKER_HEALTHY")
 
     gates = [
         Gate("DERIV_CREDENTIALS", "PASS" if credentials else "FAIL", "presence only; secret values are never emitted"),
-        Gate("DERIV_SESSION", "PASS" if session else "UNKNOWN", "requires fresh authenticated modern Options WS evidence"),
-        Gate("BALANCE_FRESH", "PASS" if balance else "UNKNOWN", "requires fresh broker balance evidence"),
+        Gate("DERIV_SESSION", "PASS" if session else "UNKNOWN", "requires current PROVEN authenticated modern Options WS evidence"),
+        Gate("BALANCE_FRESH", "PASS" if balance else "UNKNOWN", "requires current PROVEN broker balance evidence"),
         Gate("RAILWAY_WORKER", "PASS" if railway else "FAIL", "requires an actual healthy Railway worker"),
         Gate("STRATEGY_LIVE_ELIGIBLE", "PASS" if _flag("AURELIA_STRATEGY_LIVE_ELIGIBLE") else "FAIL", "requires current qualification evidence"),
         Gate("PROSPECTIVE_OOS", "PASS" if _flag("AURELIA_PROSPECTIVE_OOS_PASS") else "FAIL", "requires valid prospective OOS evidence"),
@@ -107,6 +136,17 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
             "balance": verified_balance,
             "balance_fresh": balance,
             "balance_source": "DERIV_MODERN_OPTIONS_API" if balance else "UNKNOWN",
+            "evidence_path": str(deriv_evidence_path),
+            "evidence_record_hash": (
+                str(deriv_evidence.get("record_hash"))
+                if deriv_evidence
+                else None
+            ),
+            "evidence_valid_until_utc": (
+                deriv_evidence.get("valid_until_utc")
+                if deriv_evidence
+                else None
+            ),
         },
         "railway": {
             "worker": "HEALTHY" if railway else "NOT_DEPLOYED",
@@ -146,7 +186,19 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
 
 def main() -> int:
     report = evaluate()
+    output = Path(
+        os.getenv(
+            "AURELIA_READINESS_OUT",
+            str(ROOT / "data" / "runtime" / "AURELIA_READINESS.json"),
+        )
+    )
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(report, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+    )
     print(json.dumps(report, sort_keys=True, indent=2))
+    print(f"READINESS_ARTIFACT={output}")
     return 0 if report["final_execution_authorization"] else 2
 
 
