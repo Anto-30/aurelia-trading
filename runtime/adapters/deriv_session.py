@@ -4,7 +4,7 @@ import json
 import os
 from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
 OTP_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts/{account_id}/otp"
@@ -12,7 +12,8 @@ MODERN_OPTIONS_WS_HOST = "api.derivws.com"
 MODERN_OPTIONS_WS_PREFIX = "/trading/v1/options/ws/"
 
 
-class DerivSessionError(RuntimeError):
+class DerivSessionError(ValueError):
+    """Deriv session validation error - inherits from ValueError for test compatibility."""
     pass
 
 
@@ -26,12 +27,55 @@ class AuthenticatedWebSocketUrl:
         return self.url.split("?otp=", 1)[0] if "?otp=" in self.url else self.url
 
 
+def redact_ws_url(url: str) -> str:
+    """Remove OTP parameter from WebSocket URL for safe logging."""
+    parts = urlsplit(url)
+    query = parse_qs(parts.query, keep_blank_values=True)
+    query.pop("otp", None)
+    safe_query = "&".join(
+        f"{key}={value[-1]}" for key, value in query.items() if value
+    )
+    return f"{parts.scheme}://{parts.netloc}{parts.path}" + (
+        f"?{safe_query}" if safe_query else ""
+    )
+
+
+def derive_ws_environment(url: str) -> str:
+    """Extract and validate the Deriv environment from an authenticated WS URL.
+    
+    Args:
+        url: WebSocket URL from OTP response
+    
+    Returns:
+        Environment name ('real' or 'demo')
+    
+    Raises:
+        ValueError: If URL is invalid or environment is unknown
+    """
+    if not isinstance(url, str) or not url:
+        raise ValueError("DERIV_WS_URL_MISSING")
+    validate_modern_options_ws_url(url)
+    path = urlsplit(url).path.lower().rstrip("/")
+    return path.rsplit("/", 1)[-1]
+
+
 def validate_modern_options_ws_url(
     url: str,
     *,
     expected_environment: str | None = None,
 ) -> bool:
-    """Require the current Deriv Options WebSocket host and path."""
+    """Require the current Deriv Options WebSocket host and path.
+    
+    Args:
+        url: WebSocket URL to validate
+        expected_environment: Optional environment to verify against
+    
+    Returns:
+        True if valid
+    
+    Raises:
+        ValueError (via DerivSessionError): If URL is invalid
+    """
     if not isinstance(url, str) or not url:
         raise DerivSessionError("DERIV_WS_URL_MISSING")
     parts = urlsplit(url)
@@ -49,12 +93,6 @@ def validate_modern_options_ws_url(
     return True
 
 
-def derive_ws_environment(url: str) -> str:
-    """Derive the authenticated environment from an already-validated URL."""
-    validate_modern_options_ws_url(url)
-    return urlsplit(url).path.rstrip("/").rsplit("/", 1)[-1].lower()
-
-
 def get_authenticated_ws_url(
     account_id: str,
     *,
@@ -62,6 +100,20 @@ def get_authenticated_ws_url(
     app_id: str | None = None,
     timeout_seconds: float = 10.0,
 ) -> AuthenticatedWebSocketUrl:
+    """Request an authenticated WebSocket URL from Deriv OTP endpoint.
+    
+    Args:
+        account_id: Deriv account ID
+        bearer_token: Authentication token (or DERIV_AUTH_TOKEN env var)
+        app_id: Deriv app ID for PAT auth mode (or DERIV_APP_ID env var)
+        timeout_seconds: Request timeout
+    
+    Returns:
+        AuthenticatedWebSocketUrl with account_id and validated ws URL
+    
+    Raises:
+        DerivSessionError: If validation or request fails
+    """
     token = bearer_token if bearer_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
     application_id = app_id if app_id is not None else os.getenv("DERIV_APP_ID", "")
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
