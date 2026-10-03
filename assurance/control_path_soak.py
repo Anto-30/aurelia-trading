@@ -57,11 +57,15 @@ def _context(issued_at=None, expired=False):
             symbol="1",
             strategy_hash="strategy-hash",
             regime="SOAK",
-            side="CALL",
-            model_probability=0.60,
-            generated_at=now,
-            market_data_hash="market-hash",
-            requested_stake=1.0,
+            strategy_id="SOAK",
+            strategy_version="1",
+            strategy_hash="strategy-hash",
+            symbol="1",
+            direction="CALL",
+            probability=0.60,
+            decision_time=now,
+            market_snapshot_hash="market-hash",
+            risk_requested_stake=1.0,
         ),
         account=_account(),
         capital=_capital(),
@@ -93,12 +97,12 @@ class DeterministicBroker:
         if sequence % 41 == 0:
             return BrokerResult(BrokerOutcome.REJECTED, f"REJECTED-{sequence}", raw_class="SOAK_REJECTED")
         self.economic_effects += 1
-        intent_id = str(payload["intent_id"])
+        proposal_id = str(payload["proposal_id"])
         return BrokerResult(
             BrokerOutcome.ACCEPTED,
             f"ACCEPTED-{sequence}",
-            broker_transaction_id=f"TX-{intent_id}",
-            contract_id=f"C-{intent_id}",
+            broker_transaction_id=f"TX-{proposal_id}",
+            contract_id=f"C-{proposal_id}",
             raw_class="SOAK_ACCEPTED",
             broker_timestamp=datetime.now(UTC),
         )
@@ -142,8 +146,6 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
         recovered = 0
         rejected = 0
         accepted = 0
-        effect_count_before = 0
-
         for second in range(iterations):
             if second and second % 211 == 0:
                 executor = _executor(lock, broker, root)
@@ -164,17 +166,19 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 )
                 stale_intent = build_intent(stale, proposal_id=f"P-ST-{second}", mode="LIVE")
                 token = executor.fence.acquire(f"stale-{second}")
+                before_calls = broker.calls
                 result = await executor.execute(stale_intent, stale, token)
                 blocked += int(not result.allowed)
-                if result.allowed or broker.calls != effect_count_before + accepted:
+                if result.allowed or broker.calls != before_calls:
                     return {"passed": False, "reason": "STALE_AUTH_ESCAPED"}
 
             if second and second % 149 == 0:
                 executor.activate_kill_switch(f"SOAK_KILL_{second}")
                 killed_intent = build_intent(auth, proposal_id=f"P-KILL-{second}", mode="LIVE")
+                before_calls = broker.calls
                 result = await executor.execute(killed_intent, auth, executor.fence.acquire(f"kill-{second}"))
                 blocked += int(not result.allowed)
-                if result.allowed:
+                if result.allowed or broker.calls != before_calls:
                     return {"passed": False, "reason": "KILL_SWITCH_ESCAPED"}
                 executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
                 auth = _context()
@@ -185,26 +189,33 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
             token = executor.fence.acquire(f"owner-{second}")
 
             if second and second % 113 == 0:
+                before_calls = broker.calls
                 first, second_result = await asyncio.gather(
                     executor.execute(intent, auth, token),
                     executor.execute(intent, auth, token),
                 )
                 if first.allowed and second_result.allowed:
                     return {"passed": False, "reason": "CONCURRENT_DUPLICATE_EFFECT"}
+                if broker.calls != before_calls + 1:
+                    return {"passed": False, "reason": "CONCURRENT_SUBMISSION_COUNT"}
                 accepted += int(first.status == "ACCEPTED") + int(second_result.status == "ACCEPTED")
                 recovered += int(first.status == "RECOVERY_REQUIRED") + int(second_result.status == "RECOVERY_REQUIRED")
                 rejected += int(first.status == "REJECTED") + int(second_result.status == "REJECTED")
                 if broker.calls > second + 1 + recovered + rejected:
                     return {"passed": False, "reason": "BROKER_CALL_COUNT_DRIFT"}
             else:
+                before_calls = broker.calls
                 result = await executor.execute(intent, auth, token)
+                if broker.calls != before_calls + 1:
+                    return {"passed": False, "reason": "SUBMISSION_COUNT_DRIFT"}
                 accepted += int(result.status == "ACCEPTED")
                 recovered += int(result.status == "RECOVERY_REQUIRED")
                 rejected += int(result.status == "REJECTED")
 
-            if second % 29 == 0 and second != 0:
+            if second and second % 29 == 0:
+                before_calls = broker.calls
                 retry = await executor.execute(intent, auth, token)
-                if retry.status != "RECOVERY_REQUIRED":
+                if retry.status != "RECOVERY_REQUIRED" or broker.calls != before_calls:
                     return {"passed": False, "reason": "UNKNOWN_RETRY_ESCAPED"}
 
             if second and second % 181 == 0:
@@ -223,8 +234,6 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 )
                 if reconciliation.healthy:
                     return {"passed": False, "reason": "RECONCILIATION_FAILURE_ACCEPTED"}
-
-            effect_count_before = broker.calls
 
         stores = PersistentIdempotencyStore(root / "idempotency.json")
         total_effects = sum(r.economic_effect_count for r in stores._records.values())
