@@ -1,0 +1,68 @@
+{
+  "schema": "aurelia.readiness.snapshot.v1",
+  "generated_at_utc": "2026-10-03T19:59:00+03:00",
+  "repository": "Anto-30/aurelia-trading",
+  "canonical_branch": "main",
+  "source_of_truth": {
+    "branch": "main",
+    "default_branch": "main",
+    "main_tip_verified": "a3fc6b2ae9cc3682993862c71f5ddc153d623c64",
+    "note": "Branch tip must be re-read at time of use; this snapshot is not a live authorization."
+  },
+  "github": {
+    "read": "PASS",
+    "write": "PASS",
+    "admin": true,
+    "default_branch": "main"
+  },
+  "deriv": {
+    "canonical_host": "api.derivws.com",
+    "legacy_host_policy": "DIAGNOSTIC_ONLY",
+    "operator_reported_session": "VERIFIED",
+    "operator_reported_balance_usd": 1.45,
+    "independent_verification_by_connected_github_runtime": false,
+    "note": "No credential values, OTPs, or authenticated URLs are stored here."
+  },
+  "railway": {
+    "project_id": "da9da5a1-acd2-4af2-9fec-bf46e4d4252b",
+    "environment_id": "bb95dc97-ad27-4b3a-8fa0-cf52df555a38",
+    "project": "AURELIA-Production-Worker",
+    "service_count": 0,
+    "deployment_count": 0,
+    "worker": "NOT_DEPLOYED",
+    "blocker": "RAILWAY_ACCESS_OR_PLAN_REQUIRES_OWNER_ACTION"
+  },
+  "strategy": {
+    "live_eligible": false,
+    "prospective_oos": "INCOMPLETE",
+    "calibration": "UNCALIBRATED",
+    "economics": "UNDETERMINED",
+    "soak_3600s": "NOT_RUN"
+  },
+  "capital": {
+    "starting_stake_usd": 1,
+    "stake_ceiling": "authoritative_verified_available_balance",
+    "live_lock": true,
+    "final_execution_authorization": false,
+    "live_execution": "BLOCKED",
+    "live_orders": 0
+  },
+  "controls": {
+    "risk_warden": "PRESERVED",
+    "live_policy": "PRESERVED",
+    "capital_plane": "PRESERVED",
+    "execution_firewall": "PRESERVED",
+    "account_isolation": "PRESERVED",
+    "idempotency": "PRESERVED",
+    "reconciliation": "PRESERVED",
+    "watchdog": "PRESERVED",
+    "kill_switch": "PRESERVED"
+  },
+  "blockers": [
+    "RAILWAY_WORKER",
+    "PROSPECTIVE_OOS",
+    "CALIBRATION",
+    "ECONOMICS",
+    "SOAK_3600S"
+  ]
+}
