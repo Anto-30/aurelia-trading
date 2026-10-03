@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 from pathlib import Path
+
+from assurance.certification_evidence import validate_evidence_bundle
+from runtime.ops.readiness_orchestrator import _current_evidence
 
 ROOT = Path(__file__).resolve().parents[1]
 LIVE_LOCK_PATH = ROOT / "config" / "LIVE_LOCK.yaml"
@@ -13,7 +15,14 @@ SESSION_EVIDENCE_PATH = ROOT / "artifacts" / "deriv_authenticated_session.json"
 
 
 def _as_bool(value: str | None) -> bool:
-    return (value or "").strip().lower() in {"1", "true", "yes", "enabled", "verified", "pass"}
+    return (value or "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "enabled",
+        "verified",
+        "pass",
+    }
 
 
 def _read_live_lock(path: Path) -> dict[str, str]:
@@ -34,7 +43,7 @@ def _read_json(path: Path) -> dict:
         raise RuntimeError(f"missing required artifact: {path}")
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:  # pragma: no cover - defensive
+    except json.JSONDecodeError as exc:
         raise RuntimeError(f"invalid JSON in {path}") from exc
     if not isinstance(data, dict):
         raise RuntimeError(f"artifact {path} must be a JSON object")
@@ -64,7 +73,10 @@ def check_environment() -> None:
     if os.getenv("DERIV_ENVIRONMENT", "").strip().lower() != "real":
         raise RuntimeError("DERIV_ENVIRONMENT must be real for live trading")
 
-    if os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() == "pat" and not os.getenv("DERIV_APP_ID"):
+    if (
+        os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() == "pat"
+        and not os.getenv("DERIV_APP_ID")
+    ):
         raise RuntimeError("DERIV_APP_ID required when DERIV_AUTH_MODE=pat")
 
 
@@ -93,15 +105,21 @@ def check_readiness() -> None:
         raise RuntimeError(f"readiness blockers present: {blockers}")
 
 
+def check_certification_evidence() -> None:
+    status, detail = validate_evidence_bundle(ROOT)
+    if status != "PASS":
+        raise RuntimeError(f"strict certification evidence block: {detail}")
+
+
 def check_session_evidence() -> None:
-    evidence = _read_json(SESSION_EVIDENCE_PATH)
-    if str(evidence.get("status", "")).upper() != "CURRENT":
-        raise RuntimeError("session evidence is not current")
-    if str(evidence.get("result", "")).upper() != "PROVEN":
-        raise RuntimeError("session evidence is not proven")
+    evidence = _current_evidence(SESSION_EVIDENCE_PATH)
+    if evidence is None:
+        raise RuntimeError(
+            "session evidence is missing, expired, tampered, non-real, or otherwise invalid"
+        )
     if evidence.get("capital_authority_granted") is True:
         raise RuntimeError("live gate cannot approve capital authority during verification")
-    if evidence.get("orders_submitted", 0) != 0:
+    if int(evidence.get("orders_submitted", 0)) != 0:
         raise RuntimeError("verification evidence cannot show submitted orders")
 
 
@@ -111,7 +129,9 @@ def check_runtime_verification_flags() -> None:
     if not _as_bool(os.getenv("AURELIA_VERIFY_DERIV_AUTH")):
         raise RuntimeError("AURELIA_VERIFY_DERIV_AUTH must be true")
     if not _as_bool(os.getenv("AURELIA_RUN_ONCE")):
-        raise RuntimeError("AURELIA_RUN_ONCE must be true during live gate verification")
+        raise RuntimeError(
+            "AURELIA_RUN_ONCE must be true during live gate verification"
+        )
 
 
 def main() -> int:
@@ -119,9 +139,10 @@ def main() -> int:
         check_environment()
         check_live_lock()
         check_readiness()
+        check_certification_evidence()
         check_session_evidence()
         check_runtime_verification_flags()
-    except Exception as exc:  # pragma: no cover - CLI guard
+    except Exception as exc:
         return fail(str(exc))
 
     print("LIVE_RELEASE_GATE=ALLOW")
