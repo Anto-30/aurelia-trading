@@ -52,6 +52,12 @@ class ReadinessEvidenceTests(unittest.TestCase):
             },
             "orders_submitted": 0,
             "capital_authority_granted": False,
+            "provenance": {
+                "origin": "ci",
+                "issuer": "test-suite",
+                "source_commit": "TEST",
+                "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            },
         }
         canonical = json.dumps(
             record,
