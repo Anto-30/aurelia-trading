@@ -9,7 +9,6 @@ from runtime.broker.executor import CapitalPlaneExecutor
 from runtime.core.authority import build_intent
 from runtime.core.fencing import ExecutionFence
 from runtime.core.idempotency import IdempotencyStore
-from runtime.core.journal import AppendOnlyJournal
 from runtime.core.ledger import InMemoryLedger
 from runtime.core.models import (
     AccountIdentity,
@@ -19,7 +18,6 @@ from runtime.core.models import (
     CapitalSnapshot,
     Decision,
 )
-from runtime.core.persistent import PersistentExecutionFence
 from runtime.core.reconcile import ReconciliationResult
 from runtime.core.reconcile import Reconciler
 from runtime.core.state import RuntimeStateMachine
@@ -95,7 +93,7 @@ class DeterministicBroker:
         self.economic_effects += 1
         return BrokerResult(
             BrokerOutcome.ACCEPTED,
-            f"ACCEPTED-{sequence}",
+            f"ACCEPTED-{cycle}",
             broker_transaction_id=f"TX-{proposal_id}",
             contract_id=f"C-{proposal_id}",
             raw_class="SOAK_ACCEPTED",
