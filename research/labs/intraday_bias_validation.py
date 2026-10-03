@@ -38,6 +38,7 @@ def validate_level1(
     oos_observations: Sequence[ForwardObservation],
     adjusted_q_value: float | None,
     config: ValidationConfig = ValidationConfig(),
+    cost_adjusted_oos_expectancy: float | None = None,
 ) -> str:
     if len(observations) < config.min_total_observations:
         return "INSUFFICIENT_SAMPLE"
