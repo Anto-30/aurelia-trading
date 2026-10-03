@@ -78,3 +78,16 @@ jobs:
             echo "Certification remains NOT_READY/blocked until genuine evidence exists."
             echo "LIVE_EXECUTION remains BLOCKED and FINAL_EXECUTION_AUTHORIZATION remains FALSE."
           fi
+
+      - name: Verify live release gate remains fail-closed
+        if: always()
+        run: |
+          set +e
+          output="$(python scripts/live_release_gate.py 2>&1)"
+          status=$?
+          set -e
+          echo "$output"
+          test "$status" -eq 2
+          echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
+          echo "$output" | grep -q "REASON="
+
