@@ -86,6 +86,9 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertFalse(record["capital_authority_granted"])
         self.assertEqual(record["orders_submitted"], 0)
+        self.assertEqual(record["provenance"]["origin"], "ci")
+        self.assertEqual(record["provenance"]["source_commit"], "TEST")
+
 
     async def test_non_real_environment_is_blocked_for_real_evidence(self):
         with patch.dict(
