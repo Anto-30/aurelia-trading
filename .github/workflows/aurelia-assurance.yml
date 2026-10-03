@@ -1,31 +1,34 @@
 name: AURELIA Assurance
-
 on:
   push:
-    branches:
-      - "**"
+    branches: ["**"]
   pull_request:
-
 permissions:
   contents: read
-
 jobs:
-  assurance-contracts:
+  assurance:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run assurance contract tests
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+      - name: Run assurance tests
         run: python -m unittest discover -s assurance -p 'test_*.py' -v
-      - name: Run hardening assurance contracts
+      - name: Run runtime tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Run hardening tests
         run: python -m unittest assurance.test_hardening_controls -v
       - name: Run repository certification gate
         id: certification
         continue-on-error: true
         run: python -m assurance.certification_gate
       - name: Preserve fail-closed certification semantics
+        if: always()
         run: |
           if [ "${{ steps.certification.outcome }}" = "failure" ]; then
-            echo "Certification is NOT_READY or otherwise blocked."
-            echo "This does not fail the assurance test job; the certification gate itself remains fail-closed."
-            echo "Live execution remains blocked until the genuine runtime and evidence gates pass."
+            echo "Certification remains NOT_READY/blocked until genuine evidence exists."
+            echo "LIVE_EXECUTION remains BLOCKED and FINAL_EXECUTION_AUTHORIZATION remains FALSE."
           fi
