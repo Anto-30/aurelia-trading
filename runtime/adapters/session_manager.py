@@ -12,6 +12,7 @@ from runtime.adapters.deriv_session import (
     AuthenticatedWebSocketUrl,
     DerivSessionError,
     get_authenticated_ws_url,
+    validate_modern_options_ws_url,
 )
 
 ACCOUNTS_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts"
@@ -52,12 +53,9 @@ def redact_ws_url(url: str) -> str:
 
 
 def derive_ws_environment(url: str) -> str:
+    validate_modern_options_ws_url(url)
     path = urlsplit(url).path.lower().rstrip("/")
-    if path.endswith("/ws/real"):
-        return "real"
-    if path.endswith("/ws/demo"):
-        return "demo"
-    raise ValueError("UNKNOWN_DERIV_WS_ENVIRONMENT")
+    return path.rsplit("/", 1)[-1]
 
 
 class DerivSessionManager:
