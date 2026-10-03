@@ -130,13 +130,13 @@ async def run() -> int:
         print(f"DERIV_ACCOUNT_LOGINID={snapshot.account.loginid}")
         print(f"DERIV_ACCOUNT_ENVIRONMENT={snapshot.account.environment}")
         print(f"DERIV_ACCOUNT_CURRENCY={snapshot.currency}")
-        print(f"DERIV_BALANCE={snapshot.balance}")
+        print("DERIV_BALANCE_VERIFIED=true")
         print("DERIV_ORDERS_SUBMITTED=0")
         print("DERIV_CAPITAL_AUTHORITY_GRANTED=false")
         print(f"DERIV_EVIDENCE_PATH={OUTPUT}")
         print(f"DERIV_EVIDENCE_HASH={record['record_hash']}")
         return 0
-    except (DerivSessionManagerError, Exception) as exc:
+    except Exception as exc:
         print("DERIV_AUTH_SESSION=FAILED")
         print(f"DERIV_AUTH_SESSION_REASON={type(exc).__name__}")
         return 1
