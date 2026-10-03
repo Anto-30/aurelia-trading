@@ -224,3 +224,5 @@ jobs:
         run: |
           echo "FINAL_EXECUTION_AUTHORIZATION=false"
           echo "LIVE_EXECUTION=BLOCKED"
+
+# Deployment remains capital-protected until runtime verification succeeds.
