@@ -22,6 +22,7 @@ jobs:
       RAILWAY_SERVICE_NAME: aurelia-production-worker
       FINAL_EXECUTION_AUTHORIZATION: "false"
       LIVE_EXECUTION: "BLOCKED"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -38,19 +39,166 @@ jobs:
             echo "DEPLOYMENT_STATUS=CLI_AVAILABLE"
           fi
 
+      - name: Local container startup and health smoke test
+        run: |
+          docker build --tag aurelia-runtime-smoke .
+          docker run --detach --rm             --name aurelia-runtime-smoke             --publish 18080:8080             aurelia-runtime-smoke
+
+          cleanup() {
+            docker stop aurelia-runtime-smoke >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          ready=0
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:18080/health >/tmp/aurelia-health.json; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+
+          test "$ready" = "1"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("/tmp/aurelia-health.json").read_text())
+          assert payload["liveness"] is True, payload
+          assert payload["capital_can_open_new_exposure"] is False, payload
+          print(json.dumps(payload, sort_keys=True))
+          PY
+
       - name: Install Railway CLI
         if: steps.credential.outputs.available == 'true'
         run: npm install --global @railway/cli
 
-      - name: Verify Railway project access
+      - name: Verify Railway project access and required service
         if: steps.credential.outputs.available == 'true'
+        shell: bash
         run: |
           railway status             --project "$RAILWAY_PROJECT_ID"             --environment "$RAILWAY_ENVIRONMENT_ID"
+
+          service_json="$(railway status             --project "$RAILWAY_PROJECT_ID"             --environment "$RAILWAY_ENVIRONMENT_ID"             --json)"
+          export service_json
+
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          raw = os.environ["service_json"]
+          payload = json.loads(raw)
+          services = payload.get("services", []) if isinstance(payload, dict) else payload
+          names = {
+              item.get("name")
+              for item in services
+              if isinstance(item, dict) and item.get("name")
+          }
+          target = os.environ["RAILWAY_SERVICE_NAME"]
+          if target not in names:
+              print("BLOCKED_RAILWAY_SERVICE_MISSING")
+              print(f"Required service '{target}' does not exist in the target environment.")
+              print("Create the service after the Railway account plan is restored; do not create a substitute trading engine.")
+              sys.exit(2)
+
+          print(f"Railway service verified: {target}")
+          PY
 
       - name: Deploy AURELIA runtime
         if: steps.credential.outputs.available == 'true'
         run: |
           railway up             --project "$RAILWAY_PROJECT_ID"             --environment "$RAILWAY_ENVIRONMENT_ID"             --service "$RAILWAY_SERVICE_NAME"             --ci
+
+      - name: Wait for deployed health/startup state
+        if: steps.credential.outputs.available == 'true'
+        shell: bash
+        run: |
+          deadline=$((SECONDS + 360))
+          last_status="UNKNOWN"
+
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            deployment_json="$(railway deployment list               --project "$RAILWAY_PROJECT_ID"               --environment "$RAILWAY_ENVIRONMENT_ID"               --service "$RAILWAY_SERVICE_NAME"               --limit 1               --json)"
+            export deployment_json
+
+            status="$(python - <<'PY'
+            import json
+            import os
+
+            payload = json.loads(os.environ["deployment_json"])
+            if isinstance(payload, dict):
+                items = payload.get("deployments", [])
+            else:
+                items = payload
+            print(items[0].get("status", "UNKNOWN") if items else "UNKNOWN")
+            PY
+            )"
+            last_status="$status"
+            echo "Latest Railway deployment status: $status"
+
+            case "$status" in
+              SUCCESS)
+                break
+                ;;
+              FAILED|CRASHED|REMOVED|REMOVING)
+                echo "Railway deployment failed with terminal status: $status"
+                railway logs                   --project "$RAILWAY_PROJECT_ID"                   --environment "$RAILWAY_ENVIRONMENT_ID"                   --service "$RAILWAY_SERVICE_NAME"                   --latest                   --lines 200 || true
+                exit 1
+                ;;
+            esac
+
+            sleep 10
+          done
+
+          test "$last_status" = "SUCCESS"
+
+      - name: Verify Railway runtime health and replica state
+        if: steps.credential.outputs.available == 'true'
+        shell: bash
+        run: |
+          runtime_json="$(railway status             --project "$RAILWAY_PROJECT_ID"             --environment "$RAILWAY_ENVIRONMENT_ID"             --json)"
+          export runtime_json
+
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          payload = json.loads(os.environ["runtime_json"])
+          services = payload.get("services", []) if isinstance(payload, dict) else []
+          target = os.environ["RAILWAY_SERVICE_NAME"]
+          match = next((s for s in services if s.get("name") == target), None)
+
+          if not match:
+              print("RUNTIME_HEALTH_BLOCKED: service not present in Railway status.")
+              sys.exit(2)
+
+          deployment = match.get("latestDeployment") or match.get("latest_deployment") or {}
+          status = str(deployment.get("status", "")).upper()
+          replicas = match.get("numReplicas", match.get("replicas"))
+
+          if status != "SUCCESS":
+              print(f"RUNTIME_HEALTH_BLOCKED: latest deployment status={status!r}")
+              sys.exit(2)
+
+          if replicas is not None and int(replicas) < 1:
+              print(f"RUNTIME_HEALTH_BLOCKED: replicas={replicas}")
+              sys.exit(2)
+
+          print(f"RUNTIME_OPERATIONAL_CHECK=PASS service={target} deployment={status} replicas={replicas}")
+          PY
+
+          {
+            echo "## Railway deployment"
+            echo ""
+            echo "**Status:** DEPLOYED_AND_HEALTHCHECKED"
+            echo ""
+            echo "Local container startup and /health smoke test passed."
+            echo "Railway deployment reached SUCCESS and the service runtime/replica check passed."
+            echo ""
+            echo "**Capital authorization remains:** `FINAL_EXECUTION_AUTHORIZATION=false`"
+            echo "**Live execution remains:** `BLOCKED`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Record deployment state when external credential is unavailable
         if: steps.credential.outputs.available != 'true'
