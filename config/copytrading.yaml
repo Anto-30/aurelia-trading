@@ -1,0 +1,46 @@
+schema: aurelia.copytrading_research.v1
+
+# RESEARCH/SHADOW ONLY. Never authorize capital movement.
+capital_authority: false
+live_execution: BLOCKED
+external_execution_bot: MOFO
+signal_source: FOMO
+
+execution:
+  detection_latency_seconds:
+    min: 1.0
+    max: 5.0
+  max_chase_pct: 2.0
+  fee_bps: 50.0
+  base_failed_tx_rate: 0.01
+  max_market_impact_pct: 3.0
+  deterministic_seed: 42
+
+risk:
+  daily_drawdown_halt_pct: 3.0
+  weekly_drawdown_halt_pct: 6.0
+  base_position_pct: 1.0
+  hard_position_cap_pct: 2.0
+  max_global_exposure_pct: 10.0
+  max_token_exposure_pct: 2.0
+  max_trader_exposure_pct: 5.0
+  minimum_liquidity_usd: 50000.0
+  max_buy_tax_pct: 5.0
+  max_sell_tax_pct: 5.0
+  max_hold_minutes: 10.0
+  max_consecutive_failures: 3
+
+qualification:
+  minimum_copy_trades: 200
+  minimum_lead_signals: 1000
+  require_out_of_sample: true
+  require_walk_forward: true
+  require_monte_carlo: true
+  require_cost_and_slippage_model: true
+  require_live_shadow: true
+  require_adversarial_soak: true
+  minimum_profit_factor: 1.20
+  maximum_mdd_pct: 10.0
+  maximum_p95_entry_slippage_bps: 250.0
+  maximum_median_entry_delay_seconds: 5.0
+  maximum_failed_execution_pct: 2.0
