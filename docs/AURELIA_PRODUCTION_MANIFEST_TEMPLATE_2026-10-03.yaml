@@ -1,0 +1,13 @@
+schema: aurelia.production_manifest.v1
+runtime_commit: null
+source_hash: null
+strategy_hash: null
+config_hash: null
+risk_policy_hash: null
+broker_adapter_hash: null
+account_loginid: null
+account_currency: null
+authorization_id: null
+authorization_expires_at_utc: null
+live_trading_enabled: false
+final_execution_authorization: false

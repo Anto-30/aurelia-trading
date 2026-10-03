@@ -1,0 +1,9 @@
+[build]
+builder = "RAILPACK"
+
+[deploy]
+startCommand = "python -m runtime.main"
+healthcheckPath = "/health"
+healthcheckTimeout = 60
+restartPolicyType = "ALWAYS"
+restartPolicyMaxRetries = 10

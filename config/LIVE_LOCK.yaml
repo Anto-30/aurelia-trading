@@ -1,0 +1,9 @@
+schema: aurelia.live_lock.v1
+live_trading_enabled: false
+FINAL_EXECUTION_AUTHORIZATION: false
+LIVE_EXECUTION: BLOCKED
+capital_plane_mode: VERIFY_ONLY
+research_capital_authority: false
+external_repositories_capital_forbidden: true
+blind_resubmission: false
+kill_switch_independent: true

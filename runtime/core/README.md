@@ -1,0 +1,1 @@
+Core runtime controls: account and capital truth, authorization lease, invariants, execution fencing, idempotency, append-only events, reconciliation, health, state machine, circuit breaker, exposure aggregation.
