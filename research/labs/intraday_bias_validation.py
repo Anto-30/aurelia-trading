@@ -24,6 +24,13 @@ def chronological_split(observations: Sequence[ForwardObservation], *, is_end_ut
     return is_rows, oos_rows
 
 
+def _directional_max_drawdown(returns: Sequence[float]) -> float | None:
+    if not returns:
+        return None
+    stats = calculate_statistics(returns)
+    return stats.max_drawdown
+
+
 def validate_level1(
     *,
     observations: Sequence[ForwardObservation],
@@ -40,16 +47,21 @@ def validate_level1(
         return "IN_SAMPLE_ONLY"
 
     is_stats = calculate_statistics([x.raw_return for x in is_observations])
-    oos_stats = calculate_statistics([x.raw_return for x in oos_observations])
+    oos_returns = [x.raw_return for x in oos_observations]
+    oos_stats = calculate_statistics(oos_returns)
     if is_stats.expectancy is None or oos_stats.expectancy is None:
         return "NO_EVIDENCE"
     if is_stats.expectancy == 0 or oos_stats.expectancy == 0:
         return "OOS_FAILED"
     if is_stats.expectancy * oos_stats.expectancy <= 0:
         return "OOS_FAILED"
-    if oos_stats.max_drawdown is not None and oos_stats.max_drawdown > config.max_oos_drawdown:
+
+    direction = 1.0 if oos_stats.expectancy > 0 else -1.0
+    directional_oos_returns = [direction * x for x in oos_returns]
+    if _directional_max_drawdown(directional_oos_returns) is not None and _directional_max_drawdown(directional_oos_returns) > config.max_oos_drawdown:
         return "UNSTABLE"
-    return "ROBUST_BULLISH_PRIOR" if oos_stats.expectancy > 0 else "ROBUST_BEARISH_PRIOR"
+
+    return "ROBUST_BULLISH_PRIOR" if direction > 0 else "ROBUST_BEARISH_PRIOR"
 
 
 def classify_directional(
