@@ -4,10 +4,9 @@
 
 - Repository: `Anto-30/aurelia-trading`
 - Branch: `main`
-- Current main tip: `7c62c8c7810c5d7d8f2b5f413bcae8a2cce9afae`
 - Assurance-validated code baseline: `fce6effab5c3e8ea793856a598c3d89433b3a917`
 
-The current main tip contains evidence-state metadata refreshes after the assurance run. The assurance run itself validated the preceding hardened code baseline `fce6eff…`.
+This document is an operational state record. Commit identifiers in it refer to the evidence they actually validate; it does not attempt to encode a self-referential "current HEAD" value.
 
 ## Engineering verification
 
@@ -44,11 +43,20 @@ Environment: `production`
 
 Required service: `aurelia-production-worker`
 
-Current Railway inventory observed through the connected Railway control plane: **0 services**.
+Current Railway control-plane inventory: **0 services**.
 
-The Railway deployment workflow is present and fails closed when `RAILWAY_TOKEN` is unavailable. A previous deployment attempt for this exact project target was rejected because the Railway trial had expired and a plan was required.
+I made one final exact creation attempt using the existing project, production environment, repository `Anto-30/aurelia-trading`, branch `main`, and service name `aurelia-production-worker`.
 
-No Railway plan was purchased or activated by this work. No Railway token was invented or substituted.
+Railway rejected the request with:
+
+`Your trial has expired. Please select a plan to continue using Railway.`
+
+Therefore:
+
+- no service was created
+- no deployment was created
+- no Railway plan was purchased or activated
+- no Railway token was invented or substituted
 
 ## Deriv state
 
@@ -90,7 +98,7 @@ The following remain unproven and must come from real operations:
 | ENGINEERING_READY | PASS | VERIFIED by Assurance CI |
 | DEPLOYMENT_READY | PASS | VERIFIED configuration |
 | DEPLOYMENT_EXECUTED | FAIL/BLOCKED | NOT EXECUTED |
-| AUTHENTICATION_READY — CI | FAIL/BLOCKED | DERIV auth not configured |
+| AUTHENTICATION_READY — CI | FAIL/BLOCKED | Deriv auth not configured |
 | AUTHENTICATION_READY — production worker | BLOCKED | No worker deployment |
 | BROKER_EVIDENCE_READY | FAIL/BLOCKED | No real lifecycle executed this cycle |
 | PRODUCTION_SOAK_READY | PASS for harness | TESTED, non-production |
