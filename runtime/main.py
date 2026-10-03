@@ -82,6 +82,7 @@ async def main() -> None:
     )
     HealthHandler.health = health
     HealthHandler.state = machine.state
+    public_probe_failed = False
 
     journal.append(
         event_envelope(
@@ -133,6 +134,7 @@ async def main() -> None:
         try:
             await public_probe()
         except Exception as exc:
+            public_probe_failed = True
             health.critical_unknowns.add("DERIV_PUBLIC_MARKET_DATA")
             journal.append(
                 event_envelope(
@@ -147,6 +149,8 @@ async def main() -> None:
 
     if os.getenv("AURELIA_RUN_ONCE", "false").lower() == "true":
         server.shutdown()
+        if public_probe_failed:
+            raise RuntimeError("PUBLIC_DERIV_TRANSPORT_VERIFICATION_FAILED")
         return
 
     supervisor = RuntimeSupervisor(interval_seconds=5)
@@ -175,8 +179,6 @@ async def main() -> None:
     try:
         while True:
             health.process_heartbeat = datetime.now(timezone.utc)
-            # This baseline intentionally remains capital-protected. Runtime
-            # code cannot self-authorize by changing execution state.
             health.kill_switch_off = False
             health.broker_session = False
             health.market_data_fresh = False
