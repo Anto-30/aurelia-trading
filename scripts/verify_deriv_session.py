@@ -143,7 +143,7 @@ async def run() -> int:
         print("DERIV_ORDERS_SUBMITTED=0")
         print("DERIV_CAPITAL_AUTHORITY_GRANTED=false")
         print(f"DERIV_EVIDENCE_PATH={OUTPUT}")
-        print(f"DERIV_EVIDENCE_HASH={record['record_hash']}")
+        print(f"DERIV_EVIDENCE_HASH={enriched['record_hash']}")
         return 0
     except Exception as exc:
         print("DERIV_AUTH_SESSION=FAILED")
