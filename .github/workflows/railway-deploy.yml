@@ -31,8 +31,11 @@ jobs:
         run: |
           if [ -z "$RAILWAY_TOKEN" ]; then
             echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "Railway deployment skipped: RAILWAY_TOKEN is not configured."
+            echo "FINAL_EXECUTION_AUTHORIZATION=false"
+            echo "LIVE_EXECUTION=BLOCKED"
+            echo "::error::Railway deployment blocked: RAILWAY_TOKEN is not configured."
             echo "Configure a Railway project-scoped token in GitHub Actions secrets."
+            exit 12
           else
             echo "available=true" >> "$GITHUB_OUTPUT"
           fi
@@ -57,9 +60,7 @@ jobs:
           test "$LIVE_EXECUTION" = "BLOCKED"
 
       - name: Explicit capital protection marker
-        run: echo "FINAL_EXECUTION_AUTHORIZATION=false"
-
-      - name: Explicit capital protection marker
+        if: always()
         run: |
           echo "FINAL_EXECUTION_AUTHORIZATION=false"
           echo "LIVE_EXECUTION=BLOCKED"
