@@ -1,0 +1,1 @@
+The Deriv adapter is transport-only. It does not generate strategy signals or authorize capital. Authenticated trading requires a valid authenticated WebSocket session. Proposal IDs, transaction IDs, contract IDs, decision IDs, and intent IDs are separate identifiers.
