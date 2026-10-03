@@ -9,12 +9,13 @@ AURELIA is an autonomous trading platform for research, validation, risk control
 - Live-release control: `config/LIVE_LOCK.yaml`
 - Repository map: `AURELIA_REPOSITORY_MAP.md`
 - Source-of-truth metadata: `AURELIA_SOURCE_OF_TRUTH.json`
+- GitHub source-of-truth audit: `docs/AURELIA_GITHUB_SOURCE_OF_TRUTH_2026-10-03.md`
 - Operational readiness engine: `runtime/ops/readiness_orchestrator.py`
 - Operational handoff: `docs/AURELIA_OPERATIONAL_HANDOFF_2026-10-03.md`
 
 The current repository state is authoritative for the implementation. Historical archives and old branches are not the current source of truth.
 
-Current operational state: `docs/AURELIA_CURRENT_OPERATIONAL_STATE_2026-10-03.md`. The repository is browsable from `main`; remote GitHub read/write access has been verified for the current engineering integration. This does not grant capital authority.
+Current operational state: `docs/AURELIA_CURRENT_OPERATIONAL_STATE_2026-10-03.md`. The repository is browsable from `main`; remote GitHub repository-level read/write capability is verified by the connected engineering integration. This does not grant capital authority.
 
 ## Architecture
 
@@ -84,11 +85,15 @@ Run the non-trading Deriv authentication verifier when its authorized environmen
 
 `python scripts/verify_deriv_session.py`
 
+Run the repository source-of-truth regression:
+
+`python -m unittest tests.test_repository_source_of_truth -v`
+
 A readiness report must not be interpreted as live authorization unless every mandatory control is independently verified and `config/LIVE_LOCK.yaml` permits capital movement.
 
 ## External access state
 
 - Current non-secret infrastructure verification: `data/runtime/AURELIA_EXTERNAL_ACCESS_STATE.json`
 - This artifact distinguishes repository-level GitHub access, Railway deployment state, and operator-reported broker runtime evidence.
-- GitHub repository-level push capability is currently available to the connected engineering integration used for this verification.
-- Railway currently has no service/deployment in the existing project; deployment was rejected because the Railway trial has expired and a plan is required.
+- GitHub repository-level push capability is available to the connected engineering integration used for this verification.
+- Railway currently has no service/deployment in the existing project; deployment creation is blocked by the Railway account's expired trial/plan requirement.

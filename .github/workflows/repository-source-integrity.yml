@@ -1,0 +1,42 @@
+name: AURELIA Repository Source Integrity
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-repository-source-integrity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout canonical source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run repository source-of-truth tests
+        run: python -m unittest tests.test_repository_source_of_truth -v
+
+      - name: Run Deriv endpoint regression
+        run: python -m unittest tests.test_deriv_modern_endpoint_regression -v
+
+      - name: Capital protection markers
+        run: |
+          grep -F "FINAL_EXECUTION_AUTHORIZATION: false" config/LIVE_LOCK.yaml
+          grep -F "LIVE_EXECUTION: BLOCKED" config/LIVE_LOCK.yaml
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+          echo "LIVE_EXECUTION=BLOCKED"
