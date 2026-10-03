@@ -93,7 +93,7 @@ def stake_ceiling_from_verified_balance(balance: Optional[float]) -> Optional[fl
 def requested_stake_is_balance_permitted(
     balance: Optional[float],
     requested_stake: Optional[float],
-    minimum_stake: float = 1.50,
+    minimum_stake: float = 1.00,
 ) -> bool:
     """Affordability permits a request up to 100% of verified available balance."""
     if balance is None or requested_stake is None:
@@ -106,7 +106,7 @@ def requested_stake_is_balance_permitted(
 
 def full_balance_stake_is_affordable(
     balance: Optional[float],
-    minimum_stake: float = 1.50,
+    minimum_stake: float = 1.00,
 ) -> bool:
     ceiling = stake_ceiling_from_verified_balance(balance)
     return ceiling is not None and requested_stake_is_balance_permitted(
