@@ -25,19 +25,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check Railway credential availability
+      - name: Detect Railway deployment capability
         id: credential
         shell: bash
         run: |
           if [ -z "$RAILWAY_TOKEN" ]; then
             echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "FINAL_EXECUTION_AUTHORIZATION=false"
-            echo "LIVE_EXECUTION=BLOCKED"
-            echo "::error::Railway deployment blocked: RAILWAY_TOKEN is not configured."
-            echo "Configure a Railway project-scoped token in GitHub Actions secrets."
-            exit 12
+            echo "DEPLOYMENT_STATUS=BLOCKED_EXTERNAL_CREDENTIAL"
+            echo "REASON=RAILWAY_TOKEN is not configured; no Railway deployment will be attempted."
           else
             echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "DEPLOYMENT_STATUS=CLI_AVAILABLE"
           fi
 
       - name: Install Railway CLI
@@ -53,6 +51,20 @@ jobs:
         if: steps.credential.outputs.available == 'true'
         run: |
           railway up             --project "$RAILWAY_PROJECT_ID"             --environment "$RAILWAY_ENVIRONMENT_ID"             --service "$RAILWAY_SERVICE_NAME"             --ci
+
+      - name: Record deployment state when external credential is unavailable
+        if: steps.credential.outputs.available != 'true'
+        run: |
+          {
+            echo "## Railway deployment"
+            echo ""
+            echo "**Status:** BLOCKED_EXTERNAL_CREDENTIAL"
+            echo ""
+            echo "The repository CI cannot deploy because RAILWAY_TOKEN is not configured."
+            echo "The AURELIA capital-protection state remains unchanged."
+            echo ""
+            echo "**Important:** this is not a successful deployment. It is an explicit external-dependency block."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Assert capital protection
         run: |
