@@ -3,15 +3,16 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from assurance.certification_evidence import validate_evidence_bundle
 from runtime.ops.readiness_orchestrator import _current_evidence
 
-ROOT = Path(__file__).resolve().parents[1]
-import sys
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 LIVE_LOCK_PATH = ROOT / "config" / "LIVE_LOCK.yaml"
 READINESS_PATH = ROOT / "data" / "runtime" / "AURELIA_READINESS.json"
 SESSION_EVIDENCE_PATH = ROOT / "artifacts" / "deriv_authenticated_session.json"
