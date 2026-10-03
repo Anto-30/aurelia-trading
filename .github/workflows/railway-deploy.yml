@@ -1,0 +1,55 @@
+name: AURELIA Railway Deploy
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-railway-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ secrets.RAILWAY_TOKEN != '' }}
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: da9da5a1-acd2-4af2-9fec-bf46e4d4252b
+      RAILWAY_ENVIRONMENT_ID: bb95dc97-ad27-4b3a-8fa0-cf52df555a38
+      RAILWAY_SERVICE_NAME: aurelia-production-worker
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      LIVE_EXECUTION: "BLOCKED"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install --global @railway/cli
+
+      - name: Verify Railway project access
+        run: |
+          railway status             --project "$RAILWAY_PROJECT_ID"             --environment "$RAILWAY_ENVIRONMENT_ID"
+
+      - name: Deploy AURELIA runtime
+        run: |
+          railway up             --project "$RAILWAY_PROJECT_ID"             --environment "$RAILWAY_ENVIRONMENT_ID"             --service "$RAILWAY_SERVICE_NAME"             --ci
+
+      - name: Assert capital protection
+        run: |
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+
+  no_token:
+    if: ${{ secrets.RAILWAY_TOKEN == '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report external prerequisite without failing assurance
+        run: |
+          echo "Railway deployment skipped: GitHub secret RAILWAY_TOKEN is not configured."
+          echo "The secret must be a Railway project-scoped token for the AURELIA production project."
+          echo "No Railway or Deriv credential is embedded in source."
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+          echo "LIVE_EXECUTION=BLOCKED"
