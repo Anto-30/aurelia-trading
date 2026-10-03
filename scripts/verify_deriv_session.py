@@ -7,7 +7,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from assurance.evidence_writer import build_evidence, write_evidence
+from assurance.evidence_writer import build_evidence, payload_sha256, write_evidence
 from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.adapters.session_manager import DerivSessionManager, DerivSessionManagerError
 from runtime.core.events import canonical_json, sha256
@@ -124,6 +124,9 @@ async def run() -> int:
         enriched["observed"] = observed
         enriched["orders_submitted"] = 0
         enriched["capital_authority_granted"] = False
+        enriched["record_hash"] = payload_sha256(
+            {key: value for key, value in enriched.items() if key != "record_hash"}
+        )
         write_evidence(OUTPUT, enriched)
 
         print("DERIV_AUTH_SESSION=VERIFIED")
