@@ -1,57 +1,59 @@
 {
   "schema": "aurelia.readiness.v1",
+  "generated_at_utc": "2026-10-03T22:28:00Z",
   "mode": "AUTONOMOUS_EXECUTION_PREPARATION",
-  "generated_at_utc": "2026-10-03T18:00:00Z",
   "final_execution_authorization": false,
   "live_execution": "BLOCKED",
   "live_orders": 0,
+  "source_of_truth": {
+    "repository": "Anto-30/aurelia-trading",
+    "branch": "main",
+    "main_commit_sha": "fce6effab5c3e8ea793856a598c3d89433b3a917"
+  },
   "deriv": {
-    "credentials_present": true,
-    "rest": "PASS",
-    "session": "VERIFIED",
+    "credentials_present_in_current_ci_run": false,
+    "session": "NOT_CONFIGURED",
+    "rest": "CODE_PATH_VERIFIED",
     "endpoint": "api.derivws.com",
-    "balance": 1.45,
-    "balance_fresh": true,
-    "balance_source": "BROKER_VERIFIED",
-    "evidence_path": "artifacts/deriv_authenticated_session.json",
-    "evidence_record_hash": null,
-    "evidence_valid_until_utc": null
+    "balance": null,
+    "balance_fresh": false,
+    "balance_source": "UNAVAILABLE",
+    "real_broker_evidence": "UNAVAILABLE",
+    "orders_submitted": 0
   },
   "railway": {
-    "project": "NOT_DEPLOYED",
-    "service": "NOT_DEPLOYED",
-    "deployment": "NOT_DEPLOYED",
+    "project_id": "da9da5a1-acd2-4af2-9fec-bf46e4d4252b",
+    "environment_id": "bb95dc97-ad27-4b3a-8fa0-cf52df555a38",
+    "project": "AURELIA-Production-Worker",
+    "service": "NOT_PRESENT",
+    "deployment": "NOT_EXECUTED",
     "worker": "NOT_DEPLOYED",
-    "deriv_connectivity": "UNKNOWN",
-    "deployment_blocker": "Railway trial/plan requirement or missing deployment authorization"
-  },
-  "github": {
-    "main": "Anto-30/aurelia-trading",
-    "github_write": true,
-    "main_commit_sha": "0879e4bc9e5ac38714518b693b3227ef4e3c0063"
+    "plan": "NOT_VERIFIED",
+    "api_token": "ABSENT_OR_UNAVAILABLE",
+    "deriv_connectivity": "UNKNOWN"
   },
   "strategy_live_eligible": false,
   "evidence": {
     "prospective_oos": false,
     "calibration": false,
     "economics": false,
-    "soak_3600s": false
+    "soak_3600s": false,
+    "deployment_attestation": false,
+    "security_bypass_audit": false
   },
   "capital": {
     "starting_stake": 1.0,
     "execution_minimum_stake": 1.0,
-    "verified_balance": 1.45,
-    "stake_ceiling": "VERIFIED_AVAILABLE_BALANCE",
-    "current_stake": 1.0,
-    "dynamic_policy": "enabled but subordinate to fail-closed capital controls"
+    "verified_balance": null,
+    "stake_ceiling": "UNAVAILABLE_UNTIL_FRESH_BROKER_EVIDENCE"
   },
   "controls": {
-    "risk_warden": true,
-    "execution_firewall": true,
-    "exposure": true,
-    "reconciliation": true,
-    "watchdog": true,
-    "idempotency": true,
+    "risk_warden": "CODE_PATH_TESTED",
+    "execution_firewall": "CODE_PATH_TESTED",
+    "exposure": "CODE_PATH_TESTED",
+    "reconciliation": "CODE_PATH_TESTED",
+    "watchdog": "CODE_PATH_TESTED",
+    "idempotency": "CODE_PATH_TESTED",
     "kill_switch": true,
     "live_policy": false
   },
@@ -63,23 +65,53 @@
   },
   "blockers": [
     {
-      "gate": "STRATEGY_LIVE_ELIGIBLE",
-      "status": "FAIL",
-      "reason": "prospective OOS, calibration, economics, and soak evidence remain incomplete"
-    },
-    {
-      "gate": "RAILWAY_WORKER",
+      "gate": "RAILWAY_PLAN",
       "status": "BLOCKED",
-      "reason": "no active Railway deployment exists in the current project; deployment requires valid project/service authorization"
+      "reason": "Railway project has no service; prior deployment attempts were rejected by expired trial/plan requirement."
     },
     {
-      "gate": "FINAL_EXECUTION_AUTHORIZATION",
+      "gate": "RAILWAY_TOKEN",
+      "status": "BLOCKED",
+      "reason": "No usable Railway deployment token is available to the current CI workflow."
+    },
+    {
+      "gate": "RAILWAY_SERVICE",
+      "status": "BLOCKED",
+      "reason": "Required service aurelia-production-worker is not present."
+    },
+    {
+      "gate": "DERIV_AUTHENTICATION",
+      "status": "BLOCKED",
+      "reason": "Current Assurance run reported DERIV_AUTH_SESSION=NOT_CONFIGURED; no authenticated production session was established by this verification."
+    },
+    {
+      "gate": "REAL_BROKER_EVIDENCE",
+      "status": "BLOCKED",
+      "reason": "No authenticated real-broker transaction lifecycle was executed and reconciled in this cycle."
+    },
+    {
+      "gate": "SOAK_3600S",
+      "status": "BLOCKED",
+      "reason": "Control-path cycles are tested, but no continuous 3,600-second production-worker soak has been executed."
+    },
+    {
+      "gate": "STRATEGY_LIVE_ELIGIBILITY",
       "status": "FAIL",
-      "reason": "live lock is intentionally fail-closed; explicit final authorization remains false"
+      "reason": "Prospective OOS, calibration, net execution economics and related certification evidence remain incomplete."
+    },
+    {
+      "gate": "LIVE_RELEASE",
+      "status": "FAIL",
+      "reason": "config/LIVE_LOCK.yaml remains fail-closed with VERIFY_ONLY and FINAL_EXECUTION_AUTHORIZATION=false."
     }
   ],
-  "next_action": "Complete evidence pipeline, deploy/verify Railway worker, and only then re-evaluate live authorization.",
   "continue_hunting": true,
-  "last_verified": "2026-10-03T18:00:00Z",
-  "evidence_expiry": null
+  "evidence_semantics": {
+    "assurance_run_id": 37158183664,
+    "assurance_job_id": 111305879006,
+    "assurance_conclusion": "success",
+    "authenticated_deriv_step": "skipped",
+    "railway_deployment_claim": "not_claimed",
+    "production_soak_claim": "not_claimed"
+  }
 }
