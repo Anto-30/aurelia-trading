@@ -3,12 +3,12 @@ import unittest
 from pathlib import Path
 
 from research.labs.intraday_bias_measurement import (
-    Bar, bias_passport, bias_to_execution_command, benjamini_hochberg,
+    Bar, ForwardObservation, bias_passport, bias_to_execution_command, benjamini_hochberg,
     build_hourly_bars_from_ticks, calculate_statistics, generate_hourly_observations,
 )
 from research.labs.intraday_bias_archive import append_observations, seal_archive, verify_archive
 from research.labs.intraday_bias_cost_model import CostModel, cost_adjusted_statistics
-from research.labs.intraday_bias_validation import chronological_split, validate_level1
+from research.labs.intraday_bias_validation import chronological_split, classify_directional, validate_level1
 
 
 class IntradayBiasTests(unittest.TestCase):
@@ -97,6 +97,22 @@ class IntradayBiasTests(unittest.TestCase):
         self.assertTrue(m.RESEARCH_ONLY)
         self.assertFalse(m.CAPITAL_AUTHORITY)
         self.assertFalse(m.LIVE_EXECUTION)
+
+    def test_bearish_oos_classification_is_possible(self):
+        def obs(ret, i):
+            return ForwardObservation(
+                symbol="TEST", hour_bucket_utc=9,
+                signal_timestamp_utc=f"2020-01-01T{i:02d}:00:00Z",
+                entry_timestamp_utc=f"2020-01-01T{i:02d}:00:00Z",
+                exit_timestamp_utc=f"2020-01-01T{i+1:02d}:00:00Z",
+                entry_open=100.0, exit_open=100.0 * (1.0 + ret), raw_return=ret,
+            )
+        is_rows = [obs(-0.01, i) for i in range(120)]
+        oos_rows = [obs(-0.008, i + 120) for i in range(120)]
+        self.assertEqual(
+            classify_directional(is_observations=is_rows, oos_observations=oos_rows, adjusted_q_value=0.01),
+            "ROBUST_BEARISH_PRIOR",
+        )
 
 
 if __name__ == "__main__":
