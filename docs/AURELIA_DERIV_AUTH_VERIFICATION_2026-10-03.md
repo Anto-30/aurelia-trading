@@ -24,6 +24,6 @@ Required GitHub Actions secrets for real-account verification:
 - `DERIV_EXPECTED_CURRENCY` (normally `USD`)
 - `DERIV_APP_ID` when the token is a PAT
 
-OAuth access tokens do not require `DERIV_APP_ID`. PAT authentication does. Deriv's current documentation specifies the account-specific OTP endpoint and states that the OTP is short-lived and one-time, so AURELIA requests a fresh URL for each session bootstrap. citeturn714210search0turn714210search2
+OAuth access tokens do not require `DERIV_APP_ID`. PAT authentication does. Deriv's current API contract uses a short-lived, one-time account-specific OTP to establish the authenticated Options WebSocket session.
 
 The exact balance amount is retained only in the generated evidence object; the verifier does not print the amount to CI logs.
