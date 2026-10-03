@@ -85,3 +85,10 @@ Run the non-trading Deriv authentication verifier when its authorized environmen
 `python scripts/verify_deriv_session.py`
 
 A readiness report must not be interpreted as live authorization unless every mandatory control is independently verified and `config/LIVE_LOCK.yaml` permits capital movement.
+
+## External access state
+
+- Current non-secret infrastructure verification: `data/runtime/AURELIA_EXTERNAL_ACCESS_STATE.json`
+- This artifact distinguishes repository-level GitHub access, Railway deployment state, and operator-reported broker runtime evidence.
+- GitHub repository-level push capability is currently available to the connected engineering integration used for this verification.
+- Railway currently has no service/deployment in the existing project; deployment was rejected because the Railway trial has expired and a plan is required.
