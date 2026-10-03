@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from runtime.core.models import AccountIdentity, CapitalSnapshot
 from scripts.verify_deriv_session import run
+from assurance.evidence_writer import payload_sha256
 
 
 class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
@@ -71,10 +72,18 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
             new=AsyncMock(),
         ), patch(
             "scripts.verify_deriv_session.write_evidence",
+            side_effect=lambda path, record: captured.update(record=dict(record)),
         ):
             result = await run()
 
         self.assertEqual(result, 0)
+        record = captured["record"]
+        self.assertEqual(
+            record["record_hash"],
+            payload_sha256({key: value for key, value in record.items() if key != "record_hash"}),
+        )
+        self.assertFalse(record["capital_authority_granted"])
+        self.assertEqual(record["orders_submitted"], 0)
 
     async def test_non_real_environment_is_blocked_for_real_evidence(self):
         with patch.dict(
