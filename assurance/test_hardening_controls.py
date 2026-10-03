@@ -99,6 +99,12 @@ class HardeningControlsTest(unittest.TestCase):
             evidence_id="E1", source_hash="s", artifact_hash="a", config_hash="c", data_hash="d",
             environment="ci", started_at_utc="2026-10-03T10:00:00Z",
             ended_at_utc="2026-10-03T10:01:00Z", status="CURRENT",
+            provenance={
+                "origin": "ci",
+                "issuer": "test-suite",
+                "source_commit": "TEST",
+                "generated_at_utc": "2026-10-03T10:01:00Z",
+            },
         )
         self.assertEqual(record["record_hash"], payload_sha256({k:v for k,v in record.items() if k != "record_hash"}))
 
