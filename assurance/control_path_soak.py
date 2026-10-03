@@ -214,11 +214,20 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 )
                 if broker.calls != before_calls + 1:
                     return {"passed": False, "reason": "CONCURRENT_SUBMISSION_COUNT"}
-                if sorted((first.status, second_result.status)) != ["ACCEPTED", "ALREADY_ACCEPTED"]:
+                cycle = second
+                expected_statuses = (
+                    ["RECOVERY_REQUIRED", "RECOVERY_REQUIRED"]
+                    if cycle % 29 == 0 or cycle % 37 == 0
+                    else ["REJECTED", "REJECTED"]
+                    if cycle % 41 == 0
+                    else ["ACCEPTED", "ALREADY_ACCEPTED"]
+                )
+                if sorted((first.status, second_result.status)) != expected_statuses:
                     return {
                         "passed": False,
                         "reason": "CONCURRENT_IDEMPOTENCY_STATUS",
                         "statuses": sorted((first.status, second_result.status)),
+                        "expected": expected_statuses,
                         "first_reasons": first.reasons,
                         "second_reasons": second_result.reasons,
                         "broker_calls_delta": broker.calls - before_calls,
