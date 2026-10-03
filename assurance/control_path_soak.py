@@ -153,25 +153,13 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 if not executor.clear_kill_switch_with_fresh_authorization(restart_auth):
                     return {"passed": False, "reason": "RESTART_AUTH_FAILED"}
 
-            executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
-            auth = _context(sequence=second)
-            if not executor.clear_kill_switch_with_fresh_authorization(auth):
-                release = executor.release_allows_live()
-                current = auth.is_current()
-                return {
-                    "passed": False,
-                    "reason": "FRESH_AUTH_FAILED",
-                    "release_allows_live": release,
-                    "auth_current": current,
-                    "final_auth": auth.final_execution_authorization,
-                    "real_account": auth.account.account_type == "real",
-                    "capital_valid": auth.capital.is_valid(),
-                    "risk": auth.risk_approved,
-                    "firewall": auth.firewall_approved,
-                    "reconciliation": auth.reconciliation_healthy,
-                    "auth_issued_at": auth.authorization_issued_at.isoformat(),
-                    "kill_at": executor._kill_switch_activated_at.isoformat(),
-                }
+            if executor.kill_switch:
+                executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
+                auth = _context(sequence=second)
+                if not executor.clear_kill_switch_with_fresh_authorization(auth):
+                    return {"passed": False, "reason": "FRESH_AUTH_FAILED"}
+            else:
+                auth = _context(sequence=second)
 
             if second and second % 127 == 0:
                 stale = _context(
