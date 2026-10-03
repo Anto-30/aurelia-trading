@@ -8,7 +8,8 @@ from assurance.certification_evidence import (
     REQUIRED_RUNTIME_MARKERS,
     validate_evidence_bundle,
 )
-from assurance.certification_gate import _overall_status, evaluate_repository
+from assurance.certification_gate import _overall_status
+from assurance.evidence_writer import payload_sha256
 
 
 class CertificationEvidenceTest(unittest.TestCase):
@@ -17,8 +18,8 @@ class CertificationEvidenceTest(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
 
-    def _passing_record(self, filename: str) -> dict:
-        base = {
+    def _passing_record(self) -> dict:
+        record = {
             "evidence_id": "E-TEST",
             "source_hash": "s",
             "artifact_hash": "a",
@@ -29,10 +30,7 @@ class CertificationEvidenceTest(unittest.TestCase):
             "ended_at_utc": "2026-10-03T10:01:00Z",
             "status": "CURRENT",
             "result": "PROVEN",
-            "record_hash": "r",
             "invariants_failed": [],
-        }
-        base.update({
             "transaction_trace_complete": True,
             "broker_unknown_recovery_proven": True,
             "reconciliation_proven": True,
@@ -62,8 +60,9 @@ class CertificationEvidenceTest(unittest.TestCase):
             "runtime_hash": "a",
             "config_hash": "c",
             "runtime_matches_artifact": True,
-        })
-        return base
+        }
+        record["record_hash"] = payload_sha256(record)
+        return record
 
     def test_missing_bundle_blocks(self):
         with tempfile.TemporaryDirectory() as d:
@@ -77,21 +76,31 @@ class CertificationEvidenceTest(unittest.TestCase):
             for marker in REQUIRED_RUNTIME_MARKERS:
                 self._write(root, marker, "runtime")
             for relative in REQUIRED_EVIDENCE_FILES:
-                self._write(root, relative, json.dumps(self._passing_record(Path(relative).name)))
+                self._write(root, relative, json.dumps(self._passing_record()))
             status, detail = validate_evidence_bundle(root)
             self.assertEqual(status, "PASS", detail)
 
-    def test_live_execution_does_not_make_repository_certification_pass(self):
+    def test_tampered_evidence_hash_blocks(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            result = [
-                {"name": "ASSURANCE_DOCUMENTS", "status": "PASS", "detail": ""},
-                {"name": "HARDENING_CONTRACTS", "status": "PASS", "detail": ""},
-                {"name": "AURELIA_SOURCE_SYNC", "status": "PASS", "detail": ""},
-                {"name": "PRODUCTION_EVIDENCE", "status": "PASS", "detail": ""},
-                {"name": "LIVE_EXECUTION", "status": "BLOCKED", "detail": ""},
-            ]
-            self.assertEqual(_overall_status(result), "READY_FOR_CAPITAL_REVIEW")
+            for marker in REQUIRED_RUNTIME_MARKERS:
+                self._write(root, marker, "runtime")
+            record = self._passing_record()
+            record["stress_passed"] = False
+            self._write(root, "evidence/execution_economics.json", json.dumps(record))
+            status, detail = validate_evidence_bundle(root)
+            self.assertEqual(status, "BLOCKED")
+            self.assertIn("record_hash mismatch", detail)
+
+    def test_live_execution_block_is_not_repository_failure(self):
+        result = [
+            {"name": "ASSURANCE_DOCUMENTS", "status": "PASS", "detail": ""},
+            {"name": "HARDENING_CONTRACTS", "status": "PASS", "detail": ""},
+            {"name": "AURELIA_SOURCE_SYNC", "status": "PASS", "detail": ""},
+            {"name": "PRODUCTION_EVIDENCE", "status": "PASS", "detail": ""},
+            {"name": "LIVE_EXECUTION", "status": "BLOCKED", "detail": ""},
+        ]
+        self.assertEqual(_overall_status(result), "READY_FOR_CAPITAL_REVIEW")
 
 
 if __name__ == "__main__":
