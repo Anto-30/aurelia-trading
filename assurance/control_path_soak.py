@@ -25,6 +25,17 @@ from runtime.core.state import RuntimeStateMachine
 UTC = timezone.utc
 
 
+class MemoryJournal:
+    def __init__(self):
+        self.events = []
+
+    def append(self, event):
+        self.events.append(event)
+
+    def read_all(self):
+        return list(self.events)
+
+
 def _account():
     return AccountIdentity("CRSOAK", "real", "USD", "real")
 
