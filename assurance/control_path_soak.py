@@ -212,10 +212,14 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                     executor.execute(intent, auth, token),
                     executor.execute(intent, auth, token),
                 )
-                if first.allowed and second_result.allowed:
-                    return {"passed": False, "reason": "CONCURRENT_DUPLICATE_EFFECT"}
                 if broker.calls != before_calls + 1:
                     return {"passed": False, "reason": "CONCURRENT_SUBMISSION_COUNT"}
+                if sorted((first.status, second_result.status)) != ["ACCEPTED", "ALREADY_ACCEPTED"]:
+                    return {
+                        "passed": False,
+                        "reason": "CONCURRENT_IDEMPOTENCY_STATUS",
+                        "statuses": sorted((first.status, second_result.status)),
+                    }
                 accepted += int(first.status == "ACCEPTED") + int(second_result.status == "ACCEPTED")
                 recovered += int(first.status == "RECOVERY_REQUIRED") + int(second_result.status == "RECOVERY_REQUIRED")
                 rejected += int(first.status == "REJECTED") + int(second_result.status == "REJECTED")
