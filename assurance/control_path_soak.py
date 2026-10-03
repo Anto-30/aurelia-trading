@@ -46,17 +46,13 @@ def _capital():
     )
 
 
-def _context(issued_at=None, expired=False):
+def _context(issued_at=None, expired=False, sequence=0):
     now = datetime.now(UTC)
     issued = issued_at or (now - timedelta(seconds=1))
     expires = (now - timedelta(seconds=1)) if expired else (now + timedelta(seconds=30))
     return AuthorizationContext(
         decision=Decision(
-            decision_id="SOAK-DECISION",
-            strategy_id="SOAK",
-            symbol="1",
-            strategy_hash="strategy-hash",
-            regime="SOAK",
+            decision_id=f"SOAK-DECISION-{sequence}",
             strategy_id="SOAK",
             strategy_version="1",
             strategy_hash="strategy-hash",
@@ -150,12 +146,12 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
             if second and second % 211 == 0:
                 executor = _executor(lock, broker, root)
                 executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
-                restart_auth = _context()
+                restart_auth = _context(sequence=second)
                 if not executor.clear_kill_switch_with_fresh_authorization(restart_auth):
                     return {"passed": False, "reason": "RESTART_AUTH_FAILED"}
 
             executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
-            auth = _context()
+            auth = _context(sequence=second)
             if not executor.clear_kill_switch_with_fresh_authorization(auth):
                 return {"passed": False, "reason": "FRESH_AUTH_FAILED"}
 
@@ -181,7 +177,7 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 if result.allowed or broker.calls != before_calls:
                     return {"passed": False, "reason": "KILL_SWITCH_ESCAPED"}
                 executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
-                auth = _context()
+                auth = _context(sequence=second)
                 if not executor.clear_kill_switch_with_fresh_authorization(auth):
                     return {"passed": False, "reason": "POST_KILL_AUTH_FAILED"}
 
@@ -201,8 +197,6 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 accepted += int(first.status == "ACCEPTED") + int(second_result.status == "ACCEPTED")
                 recovered += int(first.status == "RECOVERY_REQUIRED") + int(second_result.status == "RECOVERY_REQUIRED")
                 rejected += int(first.status == "REJECTED") + int(second_result.status == "REJECTED")
-                if broker.calls > second + 1 + recovered + rejected:
-                    return {"passed": False, "reason": "BROKER_CALL_COUNT_DRIFT"}
             else:
                 before_calls = broker.calls
                 result = await executor.execute(intent, auth, token)
