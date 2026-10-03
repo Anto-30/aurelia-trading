@@ -163,7 +163,11 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                     issued_at=datetime.now(UTC) - timedelta(seconds=60),
                     expired=True,
                 )
-                stale_intent = build_intent(stale, proposal_id=f"P-ST-{second}", mode="LIVE")
+                stale_intent = build_intent(
+                    _context(sequence=second, issued_at=datetime.now(UTC) - timedelta(seconds=1)),
+                    proposal_id=f"P-ST-{second}",
+                    mode="LIVE",
+                )
                 token = executor.fence.acquire(f"stale-{second}")
                 before_calls = broker.calls
                 result = await executor.execute(stale_intent, stale, token)
