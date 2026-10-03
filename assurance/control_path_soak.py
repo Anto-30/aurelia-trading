@@ -104,7 +104,7 @@ class DeterministicBroker:
 def _executor(lock_path: Path, broker, root: Path, idempotency: IdempotencyStore, ledger: InMemoryLedger, fence):
     return CapitalPlaneExecutor(
         broker,
-        journal=AppendOnlyJournal(root / "events.ndjson"),
+        journal=journal,
         ledger=ledger,
         idempotency=idempotency,
         fence=fence,
