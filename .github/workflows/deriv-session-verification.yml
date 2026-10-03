@@ -1,0 +1,47 @@
+name: AURELIA Deriv Authenticated Session Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deriv account environment to verify"
+        required: true
+        default: "real"
+        type: choice
+        options:
+          - real
+          - demo
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
+      DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+      DERIV_ENVIRONMENT: ${{ inputs.environment }}
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      LIVE_EXECUTION: "BLOCKED"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify authenticated Deriv session and fresh balance
+        run: python scripts/verify_deriv_session.py
+
+      - name: Assert no capital authorization occurred
+        run: |
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+          echo "LIVE_EXECUTION=BLOCKED"
