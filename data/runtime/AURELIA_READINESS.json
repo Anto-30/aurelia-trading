@@ -1,0 +1,85 @@
+{
+  "schema": "aurelia.readiness.v1",
+  "mode": "AUTONOMOUS_EXECUTION_PREPARATION",
+  "generated_at_utc": "2026-10-03T18:00:00Z",
+  "final_execution_authorization": false,
+  "live_execution": "BLOCKED",
+  "live_orders": 0,
+  "deriv": {
+    "credentials_present": true,
+    "rest": "PASS",
+    "session": "VERIFIED",
+    "endpoint": "api.derivws.com",
+    "balance": 1.45,
+    "balance_fresh": true,
+    "balance_source": "BROKER_VERIFIED",
+    "evidence_path": "artifacts/deriv_authenticated_session.json",
+    "evidence_record_hash": null,
+    "evidence_valid_until_utc": null
+  },
+  "railway": {
+    "project": "NOT_DEPLOYED",
+    "service": "NOT_DEPLOYED",
+    "deployment": "NOT_DEPLOYED",
+    "worker": "NOT_DEPLOYED",
+    "deriv_connectivity": "UNKNOWN",
+    "deployment_blocker": "Railway trial/plan requirement or missing deployment authorization"
+  },
+  "github": {
+    "main": "Anto-30/aurelia-trading",
+    "github_write": true,
+    "main_commit_sha": "0879e4bc9e5ac38714518b693b3227ef4e3c0063"
+  },
+  "strategy_live_eligible": false,
+  "evidence": {
+    "prospective_oos": false,
+    "calibration": false,
+    "economics": false,
+    "soak_3600s": false
+  },
+  "capital": {
+    "starting_stake": 1.0,
+    "execution_minimum_stake": 1.0,
+    "verified_balance": 1.45,
+    "stake_ceiling": "VERIFIED_AVAILABLE_BALANCE",
+    "current_stake": 1.0,
+    "dynamic_policy": "enabled but subordinate to fail-closed capital controls"
+  },
+  "controls": {
+    "risk_warden": true,
+    "execution_firewall": true,
+    "exposure": true,
+    "reconciliation": true,
+    "watchdog": true,
+    "idempotency": true,
+    "kill_switch": true,
+    "live_policy": false
+  },
+  "live_lock": {
+    "live_trading_enabled": false,
+    "final_execution_authorization": false,
+    "capital_plane_mode": "VERIFY_ONLY",
+    "live_execution": "BLOCKED"
+  },
+  "blockers": [
+    {
+      "gate": "STRATEGY_LIVE_ELIGIBLE",
+      "status": "FAIL",
+      "reason": "prospective OOS, calibration, economics, and soak evidence remain incomplete"
+    },
+    {
+      "gate": "RAILWAY_WORKER",
+      "status": "BLOCKED",
+      "reason": "no active Railway deployment exists in the current project; deployment requires valid project/service authorization"
+    },
+    {
+      "gate": "FINAL_EXECUTION_AUTHORIZATION",
+      "status": "FAIL",
+      "reason": "live lock is intentionally fail-closed; explicit final authorization remains false"
+    }
+  ],
+  "next_action": "Complete evidence pipeline, deploy/verify Railway worker, and only then re-evaluate live authorization.",
+  "continue_hunting": true,
+  "last_verified": "2026-10-03T18:00:00Z",
+  "evidence_expiry": null
+}
