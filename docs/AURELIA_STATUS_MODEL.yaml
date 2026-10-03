@@ -1,4 +1,4 @@
-version: "1.0.0"
+version: "1.1.0"
 status_model_id: "AURELIA-STATUS"
 
 dimensions:
@@ -6,6 +6,7 @@ dimensions:
   CAPITAL_STATE: [VERIFIED, STALE, UNVERIFIED, UNKNOWN]
   ORDER_AFFORDABILITY: [AFFORDABLE, UNAFFORDABLE, UNKNOWN]
   FINAL_EXECUTION_AUTHORIZATION: [TRUE, FALSE, UNKNOWN]
+  STAKE_POLICY_STATE: [BALANCE_CEILING, RISK_LIMITED, UNAFFORDABLE, UNKNOWN]
   STRATEGY_STATE: [RESEARCH, VALIDATION, OOS, CANDIDATE, CANARY, PRODUCTION, MONITORED, DEGRADED, SUSPENDED, REVALIDATION, REINSTATED, RETIRED]
   PROBABILITY_STATE: [VALID, INVALID, STALE, DRIFTED, UNCALIBRATED, UNKNOWN]
   CALIBRATION_STATE: [VALIDATED, UNVALIDATED, DRIFTED, UNKNOWN]
@@ -19,12 +20,25 @@ dimensions:
   LEARNING_STATE: [OBSERVED, VALIDATED, APPROVED, DEPLOYED, EXPIRED, ROLLED_BACK, UNKNOWN]
   OPERATIONAL_STATE: [HEALTHY, DEGRADED, INCIDENT, UNKNOWN]
   EVIDENCE_STATE: [CURRENT, EXPIRING, EXPIRED, INVALIDATED, UNKNOWN]
+  DATA_INTEGRITY_STATE: [VALID, STALE, DUPLICATE, OUT_OF_ORDER, MALFORMED, MISMATCH, UNKNOWN]
+  EXPOSURE_STATE: [WITHIN_LIMIT, EXCEEDED, UNKNOWN]
+  CONFIGURATION_STATE: [MATCHED, DRIFTED, UNKNOWN]
+  SHADOW_STATE: [EQUIVALENT, DIVERGENT, UNKNOWN]
 
 semantics:
   low_balance_is_system_blocker: false
   unaffordable_order_is_system_blocker: false
   unaffordable_order_blocks_submission: true
+  verified_balance_is_affordability_ceiling: true
+  full_balance_stake_is_permitted_at_affordability_layer: true
+  full_balance_stake_is_implicitly_authorized: false
+  deterministic_risk_may_reduce_stake_below_balance: true
   unknown_broker_result_allows_blind_retry: false
   kill_switch_off_resumes_stale_authorization: false
   counselling_can_authorize_capital: false
   research_can_authorize_capital: false
+  model_probability_can_authorize_capital: false
+  expired_evidence_satisfies_gate: false
+  future_timestamp_satisfies_decision_input: false
+  duplicate_economic_effect_is_allowed: false
+  silent_degradation_is_allowed: false

@@ -1,0 +1,143 @@
+version: "1.0.0"
+standard_id: "AURELIA-CONTROL-HARDENING"
+effective_date: "2026-10-03"
+scope: "Assurance/control layer for the existing AURELIA architecture; no duplicate execution engine."
+
+principles:
+  evidence_not_narrative: true
+  fail_closed_on_unknown: true
+  no_source_reconstruction: true
+  no_live_authorization_from_assurance: true
+  no_research_or_counselling_capital_authority: true
+  no_blind_resubmission: true
+  no_silent_degradation: true
+  no_production_auto_rewrite: true
+
+stake_policy:
+  user_intent: "AURELIA may request a stake up to the full verified available account balance."
+  balance_ceiling_is:
+    source: "authoritative_verified_available_balance"
+    lower_than_balance_only_when: "deterministic risk, broker, contract, or policy controls require it"
+  minimum_stake: 1.50
+  low_balance_global_readiness_blocker: false
+  unaffordable_order_blocks_submission: true
+  full_balance_request_is_affordability_valid: true
+  full_balance_request_is_not_implicit_authorization: true
+  stale_or_unverified_balance_action: "NO_TRADE"
+  do_not_assume_deposit_change: true
+
+hardening_controls:
+  evidence_expiration:
+    required: true
+    states: ["CURRENT", "EXPIRING", "EXPIRED", "INVALIDATED", "UNKNOWN"]
+    expired_action: "REVALIDATE"
+  temporal_integrity:
+    future_data: "DENY"
+    timezone_required: true
+    out_of_order_event: "FAIL_CLOSED"
+  market_data_integrity:
+    stale: "NO_TRADE"
+    duplicate: "NO_TRADE"
+    malformed: "NO_TRADE"
+    symbol_mismatch: "NO_TRADE"
+  exposure_aggregation:
+    include: ["existing", "pending", "concurrent_intents", "correlated", "new_order"]
+    policy: "must_be_within_hard_limit"
+  kill_switch:
+    restart_preserves_state: true
+    stale_authorization_resumes: false
+    reset_requires_fresh_authorization: true
+  configuration_integrity:
+    approved_hash_required: true
+    runtime_hash_mismatch: "NO_TRADE"
+  privilege_isolation:
+    research_submit_order: false
+    counselling_submit_order: false
+    grok_submit_order: false
+    dev_submit_order: false
+    execution_plane_only: true
+  shadow_twin:
+    non_executing: true
+    divergence_action: "INVESTIGATE"
+  decision_replay:
+    exact_state_required: true
+    broker_submission: false
+  near_miss:
+    first_class_evidence: true
+    successful_trade_equivalence: false
+  multiple_testing:
+    trial_count_recorded: true
+    oos_reuse_exposed: true
+  drift:
+    probability: "MONITOR"
+    execution_quality: "MONITOR"
+    net_economics: "MONITOR"
+    material_drift_action: "SUSPEND_OR_REVIEW"
+  backup_restore:
+    restore_must_reconcile: true
+    duplicate_economic_effect_forbidden: true
+  monitoring:
+    silent_degradation: false
+    unknown_state: "BLOCK_OR_ESCALATE"
+
+certification_requirements:
+  - id: HARD-001
+    name: "Evidence expiration"
+    acceptance: "Expired or invalid evidence cannot satisfy certification gates."
+  - id: HARD-002
+    name: "Temporal integrity"
+    acceptance: "Every decision-time input is known and no timestamp is after decision time."
+  - id: HARD-003
+    name: "Market data integrity"
+    acceptance: "Stale, duplicate, malformed or mismatched inputs fail closed."
+  - id: HARD-004
+    name: "Aggregate exposure"
+    acceptance: "Authorization evaluates portfolio exposure, pending exposure and concurrency."
+  - id: HARD-005
+    name: "Kill switch persistence"
+    acceptance: "Restart does not clear a kill state and stale authorization cannot resume."
+  - id: HARD-006
+    name: "Configuration integrity"
+    acceptance: "Runtime configuration matches approved digest before authorization."
+  - id: HARD-007
+    name: "Credential/privilege boundary"
+    acceptance: "Research, counselling and engineering actors cannot submit capital actions."
+  - id: HARD-008
+    name: "Decision replay"
+    acceptance: "Material decisions replay from exact historical state without broker submission."
+  - id: HARD-009
+    name: "Shadow twin"
+    acceptance: "Non-executing shadow decisions are comparable to authorized decisions."
+  - id: HARD-010
+    name: "Near-miss evidence"
+    acceptance: "Prevented failures are immutable operational evidence."
+  - id: HARD-011
+    name: "Multiple-testing accounting"
+    acceptance: "Research trial count and OOS reuse are tracked."
+  - id: HARD-012
+    name: "Drift monitoring"
+    acceptance: "Material probability/execution/economic drift triggers review or suspension."
+  - id: HARD-013
+    name: "Backup/restore integrity"
+    acceptance: "Restoration produces a reconciled state without duplicate economic effect."
+  - id: HARD-014
+    name: "Exactly-once economic effect"
+    acceptance: "One intent produces at most one economic effect."
+  - id: HARD-015
+    name: "Evidence envelope"
+    acceptance: "Source/config/data/artifact hashes, timestamps, environment and result are machine-recorded."
+  - id: HARD-016
+    name: "Adversarial scenario matrix"
+    acceptance: "At least 20 named non-live adversarial scenarios are exercised."
+  - id: HARD-017
+    name: "Full-balance stake ceiling"
+    acceptance: "The affordability layer permits a requested stake up to 100% of authoritative verified available balance, while separate risk/authorization gates remain mandatory."
+
+prohibited_shortcuts:
+  - "Treat full-balance affordability as authorization."
+  - "Treat low balance as system readiness failure."
+  - "Use a cached UI balance as capital truth."
+  - "Retry an unknown broker outcome blindly."
+  - "Grant research/counselling/agent capital authority."
+  - "Rewrite a strategy during OOS validation."
+  - "Certify the missing runtime from documentation alone."

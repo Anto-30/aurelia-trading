@@ -74,6 +74,10 @@ affordability:
   global_readiness_blocker: false
   order_level_blocker: true
   unaffordable_action: "REJECT_AND_FIREWALL_DENY"
+  verified_balance_ceiling: true
+  full_balance_request_permitted: true
+  full_balance_request_is_authorization: false
+  stale_or_unverified_balance_action: "NO_TRADE"
 
 mandatory_requirements:
   - id: CERT-001
@@ -136,6 +140,51 @@ mandatory_requirements:
   - id: CERT-020
     name: "Continuous invariant monitoring"
     acceptance: "Critical invariants remain continuously observable after deployment."
+  - id: CERT-021
+    name: "Evidence expiration"
+    acceptance: "Expired, invalidated or unknown evidence cannot satisfy any readiness gate."
+  - id: CERT-022
+    name: "Temporal integrity"
+    acceptance: "All decision inputs are timestamped, timezone-aware and not after decision time."
+  - id: CERT-023
+    name: "Market data integrity"
+    acceptance: "Stale, duplicate, out-of-order, malformed or mismatched data fails closed."
+  - id: CERT-024
+    name: "Aggregate exposure"
+    acceptance: "Existing, pending, concurrent, correlated and new exposure are evaluated together."
+  - id: CERT-025
+    name: "Kill-switch persistence"
+    acceptance: "Restart preserves protective state and reset requires fresh authorization."
+  - id: CERT-026
+    name: "Configuration integrity"
+    acceptance: "Runtime configuration digest matches the approved configuration before authorization."
+  - id: CERT-027
+    name: "Decision replay"
+    acceptance: "Material decisions are replayable from exact historical state without broker submission."
+  - id: CERT-028
+    name: "Shadow-path equivalence"
+    acceptance: "Shadow decisions are non-executing and material divergence is captured for investigation."
+  - id: CERT-029
+    name: "Near-miss and incident evidence"
+    acceptance: "Rejected, unknown, timeout, recovery and reconciliation events are retained as first-class evidence."
+  - id: CERT-030
+    name: "Multiple-testing accounting"
+    acceptance: "Research trial count, search degrees of freedom and OOS reuse are recorded."
+  - id: CERT-031
+    name: "Drift controls"
+    acceptance: "Material probability, execution-quality or economic drift triggers review or suspension."
+  - id: CERT-032
+    name: "Backup/restore integrity"
+    acceptance: "Restored financial state is reconciled and cannot create duplicate economic effects."
+  - id: CERT-033
+    name: "Evidence envelope"
+    acceptance: "Source/config/data/artifact hashes, timestamps, environment and invariant outcomes are machine-recorded."
+  - id: CERT-034
+    name: "Adversarial matrix"
+    acceptance: "The named non-live fault matrix is exercised against the recovered runtime."
+  - id: CERT-035
+    name: "Full-balance affordability ceiling"
+    acceptance: "A requested stake may reach 100% of verified available balance at the affordability layer; separate risk and final authorization gates remain mandatory."
 
 canary_preconditions:
   all_mandatory_requirements: true
