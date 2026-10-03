@@ -1,4 +1,5 @@
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -31,36 +32,76 @@ class CertificationEvidenceTest(unittest.TestCase):
             "status": "CURRENT",
             "result": "PROVEN",
             "invariants_failed": [],
+            "provenance": {
+                "origin": "ci",
+                "issuer": "test-suite",
+                "source_commit": "TEST",
+                "generated_at_utc": "2026-10-03T10:01:00Z",
+            },
             "transaction_trace_complete": True,
             "broker_unknown_recovery_proven": True,
             "reconciliation_proven": True,
+            "broker_transaction_id": "TX-TEST",
+            "lifecycle_events": [
+                {"event": "INTENT"},
+                {"event": "REQUEST"},
+                {"event": "ACK"},
+                {"event": "STATE"},
+                {"event": "TRANSACTION"},
+                {"event": "RECONCILIATION"},
+            ],
             "critical_scenarios_passed": True,
+            "scenario_results": [
+                {"scenario_id": "UNKNOWN", "passed": True},
+                {"scenario_id": "CRASH", "passed": True},
+                {"scenario_id": "CONCURRENCY", "passed": True},
+            ],
             "blind_resubmissions": 0,
             "duplicate_economic_effects": 0,
             "duration_seconds": 3600,
+            "actual_elapsed_seconds": 3600,
+            "continuous": True,
+            "execution_mode": "VERIFY_ONLY",
+            "deployment_id": "DEPLOY-TEST",
+            "runtime_instance_id": "RUNTIME-TEST",
             "invariant_violations": 0,
             "silent_degradations": 0,
             "capital_authority_escapes": 0,
             "unresolved_unknown_states": 0,
             "sealed_prospective_data": True,
             "retuning_after_seal": False,
+            "multiple_testing_accounted": True,
+            "archive_hash": "ARCHIVE",
+            "strategy_version": "S-TEST",
+            "oos_window": "2026-01-01/2026-01-31",
             "min_trades_per_strategy_symbol_regime": 100,
             "calibration_validated": True,
             "drift_monitoring": True,
+            "sample_count": 1000,
+            "reliability_buckets": [
+                {"bucket": "0.55-0.60", "count": 100},
+                {"bucket": "0.60-0.65", "count": 100},
+                {"bucket": "0.65-0.70", "count": 100},
+            ],
             "brier_score": 0.2,
             "log_loss": 0.6,
             "net_expectancy_status": "KNOWN",
             "stress_passed": True,
+            "cost_components": {"spread": 0.01, "slippage": 0.01, "fees": 0.0},
+            "execution_model": "DERIV_OPTIONS_MEASURED",
             "credential_isolation_passed": True,
             "capital_bypass_audit_passed": True,
-            "source_commit": "commit",
-            "build_hash": "build",
-            "artifact_hash": "a",
-            "deployment_id": "deploy",
-            "runtime_hash": "a",
-            "config_hash": "c",
+            "audit_id": "AUDIT-TEST",
+            "auditor": "test-suite",
+            "scope": "capital-boundary",
+            "findings": [{"severity": "info", "count": 0}],
+            "critical_findings": 0,
             "runtime_matches_artifact": True,
         }
+        record["source_commit"] = "commit"
+        record["build_hash"] = "build"
+        record["deployment_id"] = "deploy"
+        record["runtime_hash"] = "runtime"
         record["record_hash"] = payload_sha256(record)
         return record
 
@@ -82,6 +123,32 @@ class CertificationEvidenceTest(unittest.TestCase):
             self._populate_passing_bundle(root)
             status, detail = validate_evidence_bundle(root)
             self.assertEqual(status, "PASS", detail)
+
+    def test_tracked_evidence_cannot_certify_itself(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            tracked = root / REQUIRED_EVIDENCE_FILES[0]
+            subprocess.run(["git", "add", str(tracked)], cwd=root, check=True)
+            status, detail = validate_evidence_bundle(root)
+            self.assertEqual(status, "BLOCKED")
+            self.assertIn("repository-tracked", detail)
+
+    def test_incomplete_domain_proof_blocks(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            path = root / "evidence/broker_lifecycle.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record.pop("lifecycle_events")
+            record["record_hash"] = payload_sha256(
+                {key: value for key, value in record.items() if key != "record_hash"}
+            )
+            path.write_text(json.dumps(record), encoding="utf-8")
+            status, detail = validate_evidence_bundle(root)
+            self.assertEqual(status, "BLOCKED")
+            self.assertIn("broker lifecycle", detail)
 
     def test_tampered_evidence_hash_blocks(self):
         with tempfile.TemporaryDirectory() as d:
