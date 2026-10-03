@@ -19,6 +19,18 @@ class RestartSafeOperationalTests(unittest.TestCase):
             second = PersistentIdempotencyStore(path)
             self.assertEqual(second.get("I1").broker_transaction_id, "TX1")
 
+    def test_unknown_broker_outcome_survives_reload(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "idempotency.json"
+            first = PersistentIdempotencyStore(path)
+            first.register_intent("I1")
+            first.record_unknown_outcome("I1")
+            second = PersistentIdempotencyStore(path)
+            record = second.get("I1")
+            self.assertIsNotNone(record)
+            self.assertTrue(record.broker_outcome_unknown)
+            self.assertIsNone(record.broker_transaction_id)
+
     def test_persistent_fence_survives_reload(self):
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "fence.txt"
