@@ -1,9 +1,9 @@
 {
   "schema": "aurelia.external_access_state.v1",
-  "generated_at_utc": "2026-10-03T18:37:00+03:00",
+  "generated_at_utc": "2026-10-03T20:05:00+03:00",
   "repository": "Anto-30/aurelia-trading",
   "canonical_branch": "main",
-  "main_tip_at_verification": "bfa15dc249388f0c93479e4d55123d551a78a7f8",
+  "main_tip_at_verification": "6667c36531145f3393f6984ae3b9fdef1c3d56e0",
   "github": {
     "repository_permission": {
       "admin": true,
@@ -13,7 +13,8 @@
     },
     "read": "PASS",
     "write": "PASS",
-    "default_branch": "main"
+    "default_branch": "main",
+    "branch_protection": "DISABLED"
   },
   "railway": {
     "project_id": "da9da5a1-acd2-4af2-9fec-bf46e4d4252b",
@@ -23,24 +24,33 @@
     "deployments_observed": 0,
     "worker_observed": false,
     "deployment_attempt": "REJECTED",
-    "blocker": "RAILWAY_TRIAL_EXPIRED_PLAN_REQUIRED"
+    "blocker": "RAILWAY_PLAN_OR_RESOURCE_ROLE_REQUIRED",
+    "github_actions_token_present": false
   },
   "deriv": {
     "canonical_endpoint": "api.derivws.com",
     "legacy_endpoint_policy": "DIAGNOSTIC_ONLY",
     "repository_path_implementation": "VERIFIED_BY_CODE_INSPECTION",
-    "runtime_session_balance": "OPERATOR_REPORTED_VERIFIED_NOT_REEXECUTED_BY_THIS_GITHUB_INTEGRATION"
+    "runtime_session_balance": "OPERATOR_REPORTED_VERIFIED; NOT EXECUTED BY THIS GITHUB INTEGRATION",
+    "independent_authenticated_runtime_check": false
   },
   "capital": {
-    "starting_stake_usd": 1.0,
+    "starting_stake_usd": 1,
     "live_lock": true,
     "final_execution_authorization": false,
     "live_execution": "BLOCKED",
     "live_orders": 0
   },
+  "qualification": {
+    "strategy_live_eligible": false,
+    "prospective_oos": "INCOMPLETE",
+    "calibration": "UNCALIBRATED",
+    "economics": "UNDETERMINED",
+    "soak_3600s": "NOT_RUN"
+  },
   "security": {
     "secret_values_committed": false,
     "credential_values_in_artifact": false
   },
-  "note": "This artifact records repository/infrastructure observations only. It does not grant capital authority and does not convert operator-reported broker evidence into independently verified evidence."
+  "note": "Repository and infrastructure observations only. This artifact never grants capital authority and does not convert operator-reported broker evidence into independent broker verification."
 }
