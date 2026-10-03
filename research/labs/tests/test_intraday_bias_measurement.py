@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from research.labs.intraday_bias_measurement import (
@@ -13,7 +14,11 @@ from research.labs.intraday_bias_validation import chronological_split, classify
 
 class IntradayBiasTests(unittest.TestCase):
     def bars(self, n=30):
-        return [Bar(f"2026-01-01T{i:02d}:00:00Z", 100.0 + i) for i in range(n)]
+        start = datetime(2026, 1, 1)
+        return [
+            Bar((start + timedelta(hours=i)).isoformat(timespec="seconds") + "Z", 100.0 + i)
+            for i in range(n)
+        ]
 
     def test_hourly_forward_experiment(self):
         obs = generate_hourly_observations(self.bars(), "TEST")
