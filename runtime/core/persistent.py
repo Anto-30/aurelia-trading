@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from pathlib import Path
 from threading import Lock
 
 from .fencing import FenceToken
 from .idempotency import IntentRecord
+from .models import LedgerEvent
 
 
 class PersistentIdempotencyStore:
-    '''Restart-safe idempotency state for a single durable writer.'''
+    """Restart-safe idempotency state."""
 
     def __init__(self, path: str | Path):
         self.path = Path(path)
@@ -22,20 +23,24 @@ class PersistentIdempotencyStore:
     def _load(self) -> None:
         if not self.path.exists():
             return
-        data = json.loads(self.path.read_text(encoding="utf-8"))
-        for item in data.get("records", []):
+        payload = json.loads(self.path.read_text(encoding="utf-8"))
+        for item in payload.get("records", []):
             record = IntentRecord(
-                item["intent_id"],
-                item.get("broker_transaction_id"),
-                int(item.get("economic_effect_count", 0)),
+                intent_id=item["intent_id"],
+                broker_transaction_id=item.get("broker_transaction_id"),
+                economic_effect_count=int(item.get("economic_effect_count", 0)),
             )
             self._records[record.intent_id] = record
 
     def _save(self) -> None:
         payload = {"version": 1, "records": [asdict(x) for x in self._records.values()]}
-        temporary = self.path.with_suffix(self.path.suffix + ".tmp")
-        temporary.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
-        temporary.replace(self.path)
+        temp = self.path.with_suffix(self.path.suffix + ".tmp")
+        temp.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+        temp.replace(self.path)
+
+    def get(self, intent_id: str) -> IntentRecord | None:
+        with self._lock:
+            return self._records.get(intent_id)
 
     def register_intent(self, intent_id: str) -> IntentRecord:
         with self._lock:
@@ -67,18 +72,14 @@ class PersistentIdempotencyStore:
             self._save()
             return updated
 
-    def get(self, intent_id: str) -> IntentRecord | None:
-        with self._lock:
-            return self._records.get(intent_id)
-
 
 class PersistentExecutionFence:
-    '''Restart-aware fence for a single durable writer.
+    """Durable generation fence for a single active executor.
 
-    Multi-replica production must replace this file primitive with an
-    external transactional lease/fencing service; the runtime never assumes
-    local files are sufficient for a distributed cluster.
-    '''
+    Multi-replica production still requires an external transactional lease or
+    fencing service. A local file is intentionally not treated as sufficient
+    for distributed execution.
+    """
 
     def __init__(self, path: str | Path):
         self.path = Path(path)
@@ -109,3 +110,51 @@ class PersistentExecutionFence:
             self._generation = max(self._generation, self._read_generation()) + 1
             self.path.write_text(str(self._generation), encoding="utf-8")
             return self._generation
+
+
+class PersistentLedger:
+    """Restart-safe append ledger backed by an atomic JSON replace."""
+
+    def __init__(self, path: str | Path):
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._lock = Lock()
+        self._events: dict[str, LedgerEvent] = {}
+        self._load()
+
+    def _load(self) -> None:
+        if not self.path.exists():
+            return
+        payload = json.loads(self.path.read_text(encoding="utf-8"))
+        for item in payload.get("events", []):
+            account = item["account"]
+            from .models import AccountIdentity
+            self._events[item["event_id"]] = LedgerEvent(
+                event_id=item["event_id"],
+                intent_id=item["intent_id"],
+                account=AccountIdentity(**account),
+                event_type=item["event_type"],
+                amount=float(item["amount"]),
+                currency=item["currency"],
+                occurred_at=__import__("datetime").datetime.fromisoformat(item["occurred_at"]),
+                broker_transaction_id=item.get("broker_transaction_id"),
+                metadata=item.get("metadata", {}),
+            )
+
+    def _save(self) -> None:
+        payload = {"version": 1, "events": [asdict(x) for x in self._events.values()]}
+        temp = self.path.with_suffix(self.path.suffix + ".tmp")
+        temp.write_text(json.dumps(payload, sort_keys=True, default=str), encoding="utf-8")
+        temp.replace(self.path)
+
+    def post(self, event: LedgerEvent) -> bool:
+        with self._lock:
+            if event.event_id in self._events:
+                return False
+            self._events[event.event_id] = event
+            self._save()
+            return True
+
+    def events(self) -> list[LedgerEvent]:
+        with self._lock:
+            return list(self._events.values())
