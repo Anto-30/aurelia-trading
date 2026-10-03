@@ -1,0 +1,21 @@
+schema: aurelia.runtime.v1
+runtime_version: 0.1.0-baseline-2026-10-03
+probability:
+  min_trade_probability: 0.55
+  max_trade_probability: 0.75
+  clipping: false
+stake:
+  execution_minimum_stake: 1.50
+  stake_ceiling: authoritative_verified_available_balance
+health:
+  market_data_max_age_seconds: 5
+  capital_max_age_seconds: 15
+  authorization_ttl_seconds: 30
+execution:
+  single_writer: true
+  blind_retry: false
+  duplicate_economic_effects: 0
+operations:
+  restart_policy: ALWAYS
+  healthcheck_path: /health
+  readiness_path: /ready
