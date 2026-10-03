@@ -62,11 +62,18 @@ def order_affordability(balance: Optional[float], minimum_stake: float = 1.50) -
     return "AFFORDABLE" if balance >= minimum_stake else "UNAFFORDABLE"
 
 
-def capital_readiness_blocker_for_balance(balance: Optional[float], minimum_stake: float = 1.50) -> bool:
+def capital_readiness_blocker_for_balance(
+    balance: Optional[float], minimum_stake: float = 1.50
+) -> bool:
     """Low balance is never a global system-readiness blocker."""
     return False
 
 
 def blind_resubmit_allowed(*, broker_state_unknown: bool) -> bool:
-    """Unknown broker outcomes never permit blind resubmission."""
-    return not broker_state_unknown
+    """Blind resubmission is never permitted.
+
+    A known broker state is not sufficient to justify a new economic action:
+    the caller must perform explicit recovery/reconciliation and establish a
+    new, authorized intent before any resubmission path can be considered.
+    """
+    return False
