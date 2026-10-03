@@ -1,0 +1,69 @@
+version: "1.0.0"
+research_governance_id: "AURELIA-RESEARCH-GOV"
+purpose: "Control research degrees of freedom and prevent false confidence."
+
+experiment_record:
+  required:
+    - experiment_id
+    - hypothesis_id
+    - objective
+    - dataset_hashes
+    - data_windows
+    - strategy_version
+    - model_version
+    - code_commit
+    - config_hash
+    - random_seeds
+    - search_space
+    - trial_count
+    - selection_rule
+    - oos_reservation
+    - result
+    - limitations
+
+research_budget:
+  compute: "bounded"
+  data_requests: "bounded"
+  backtests: "bounded"
+  model_variants: "bounded"
+  hyperparameter_search: "bounded"
+  external_tool_use: "bounded"
+  storage: "bounded"
+
+multiple_testing:
+  required: true
+  rule: "Evidence must account for repeated trials and selection effects."
+  oos_reuse_prohibited_without_registered_protocol: true
+
+strategy_states:
+  - RESEARCH
+  - VALIDATION
+  - OOS
+  - CANDIDATE
+  - CANARY
+  - PRODUCTION
+  - MONITORED
+  - DEGRADED
+  - SUSPENDED
+  - REVALIDATION
+  - REINSTATED
+  - RETIRED
+
+evidence_expiry:
+  material_changes_require_revalidation:
+    - strategy
+    - model
+    - data_pipeline
+    - calibration
+    - broker_execution
+    - cost_structure
+    - risk_policy
+    - account_configuration
+    - deployment
+    - execution_implementation
+
+invalid_claims:
+  - "FORECAST_ACCURACY == TRADING_EDGE"
+  - "GROSS_PROFIT == NET_EXPECTANCY"
+  - "ONE_WINNING_VARIANT == ROBUST_EVIDENCE"
+  - "ONE_RANDOM_SEED == ROBUST_EVIDENCE"
