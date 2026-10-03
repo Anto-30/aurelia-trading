@@ -11,8 +11,6 @@ from assurance.evidence_writer import payload_sha256
 
 class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
     async def test_missing_token_is_not_verified(self):
-        captured = {}
-
         with patch.dict(
             os.environ,
             {
@@ -48,6 +46,8 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
             ),
             safe_websocket_url="wss://api.derivws.com/trading/v1/options/ws/real",
         )
+
+        captured = {}
 
         with patch.dict(
             os.environ,
