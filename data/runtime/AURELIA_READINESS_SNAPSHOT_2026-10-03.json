@@ -1,12 +1,12 @@
 {
   "schema": "aurelia.readiness.snapshot.v1",
-  "generated_at_utc": "2026-10-03T19:59:00+03:00",
+  "generated_at_utc": "2026-10-03T20:10:00+03:00",
   "repository": "Anto-30/aurelia-trading",
   "canonical_branch": "main",
   "source_of_truth": {
     "branch": "main",
     "default_branch": "main",
-    "main_tip_verified": "a3fc6b2ae9cc3682993862c71f5ddc153d623c64",
+    "main_tip_verified": "f2cfbb3cddae5fd4a363d5ff34db23400bf8ad83",
     "note": "Branch tip must be re-read at time of use; this snapshot is not a live authorization."
   },
   "github": {
@@ -30,7 +30,7 @@
     "service_count": 0,
     "deployment_count": 0,
     "worker": "NOT_DEPLOYED",
-    "blocker": "RAILWAY_ACCESS_OR_PLAN_REQUIRES_OWNER_ACTION"
+    "blocker": "RAILWAY_PLAN_OR_RESOURCE_ROLE_REQUIRED"
   },
   "strategy": {
     "live_eligible": false,
