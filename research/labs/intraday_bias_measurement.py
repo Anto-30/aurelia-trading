@@ -131,6 +131,20 @@ def generate_hourly_observations(bars: Sequence[Bar], symbol: str) -> list[Forwa
         ))
     return observations
 
+def screen_hourly_multiple_testing(observations: Sequence[ForwardObservation]) -> dict[int, float | None]:
+    """Apply BH correction across the 24 hourly hypotheses for one symbol/data family."""
+    by_hour: dict[int, list[float]] = {hour: [] for hour in range(24)}
+    for observation in observations:
+        by_hour[observation.hour_bucket_utc].append(observation.raw_return)
+    raw_p_values = []
+    hours = list(range(24))
+    for hour in hours:
+        stats = calculate_statistics(by_hour[hour])
+        raw_p_values.append(stats.p_value if stats.p_value is not None else 1.0)
+    adjusted = benjamini_hochberg(raw_p_values)
+    return {hour: (adjusted[i] if by_hour[hour] else None) for i, hour in enumerate(hours)}
+
+
 def calculate_statistics(returns: Sequence[float]) -> Statistics:
     values = [_finite(float(x)) for x in returns]
     n = len(values)
