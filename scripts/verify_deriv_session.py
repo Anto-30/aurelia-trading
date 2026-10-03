@@ -120,7 +120,7 @@ async def run() -> int:
             },
             result="PROVEN",
             invariants_checked=[
-                "exact_real_account_binding",
+                f"exact_{expected_environment}_account_binding",
                 "authenticated_websocket_environment",
                 "account_identity_match",
                 "currency_match",
