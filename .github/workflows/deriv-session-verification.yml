@@ -6,7 +6,7 @@ on:
       environment:
         description: "Deriv account environment to verify"
         required: true
-        default: "real"
+        default: "demo"
         type: choice
         options:
           - real
@@ -45,3 +45,4 @@ jobs:
           test "$LIVE_EXECUTION" = "BLOCKED"
           echo "FINAL_EXECUTION_AUTHORIZATION=false"
           echo "LIVE_EXECUTION=BLOCKED"
+          test ! -f artifacts/deriv_authenticated_session.json || jq -e '.orders_submitted == 0 and .capital_authority_granted == false and .order_submission_permitted == false' artifacts/deriv_authenticated_session.json >/dev/null

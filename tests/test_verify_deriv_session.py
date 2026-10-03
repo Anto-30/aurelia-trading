@@ -90,18 +90,66 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(record["provenance"]["source_commit"], "TEST")
 
 
-    async def test_non_real_environment_is_blocked_for_real_evidence(self):
+    async def test_demo_session_verifies_without_authorizing_capital(self):
+        account = AccountIdentity(
+            loginid="CRDEMO",
+            account_type="demo",
+            currency="USD",
+            environment="demo",
+        )
+        snapshot = CapitalSnapshot(
+            balance=10000.0,
+            currency="USD",
+            available_balance=10000.0,
+            captured_at=datetime.now(timezone.utc),
+            source="deriv:balance",
+            account=account,
+        )
+        bootstrap = SimpleNamespace(
+            binding=account,
+            websocket=SimpleNamespace(
+                url="wss://api.derivws.com/trading/v1/options/ws/demo?otp=SECRET",
+                source="deriv:options:otp",
+            ),
+            safe_websocket_url="wss://api.derivws.com/trading/v1/options/ws/demo",
+        )
+        captured = {}
+
         with patch.dict(
             os.environ,
             {
                 "DERIV_AUTH_TOKEN": "TOKEN",
-                "DERIV_EXPECTED_LOGINID": "CRREAL",
+                "DERIV_EXPECTED_LOGINID": "CRDEMO",
                 "DERIV_ENVIRONMENT": "demo",
                 "DERIV_EXPECTED_CURRENCY": "USD",
+                "GITHUB_SHA": "TEST-DEMO",
+                "DERIV_EVIDENCE_OUT": "/tmp/aurelia-demo-test-evidence.json",
             },
             clear=True,
+        ), patch(
+            "scripts.verify_deriv_session.DerivSessionManager.bootstrap",
+            return_value=bootstrap,
+        ), patch(
+            "scripts.verify_deriv_session.DerivAdapter.connect",
+            new=AsyncMock(return_value=account),
+        ), patch(
+            "scripts.verify_deriv_session.DerivAdapter.get_balance",
+            new=AsyncMock(return_value=snapshot),
+        ), patch(
+            "scripts.verify_deriv_session.DerivAdapter.close",
+            new=AsyncMock(),
+        ), patch(
+            "scripts.verify_deriv_session.write_evidence",
+            side_effect=lambda path, record: captured.update(record=dict(record)),
         ):
-            self.assertEqual(await run(), 3)
+            result = await run()
+
+        self.assertEqual(result, 0)
+        record = captured["record"]
+        self.assertEqual(record["verification_scope"], "AUTHENTICATED_DERIV_DEMO_SESSION")
+        self.assertFalse(record["capital_authority_granted"])
+        self.assertFalse(record["order_submission_permitted"])
+        self.assertEqual(record["orders_submitted"], 0)
 
 
 if __name__ == "__main__":

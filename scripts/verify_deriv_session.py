@@ -35,9 +35,9 @@ async def run() -> int:
         print("DERIV_AUTH_SESSION=NOT_CONFIGURED")
         print("DERIV_AUTH_SESSION_REASON=EXPECTED_LOGINID_MISSING")
         return 2
-    if expected_environment != "real":
+    if expected_environment not in {"real", "demo"}:
         print("DERIV_AUTH_SESSION=BLOCKED")
-        print("DERIV_AUTH_SESSION_REASON=REAL_EVIDENCE_REQUIRES_REAL_ENVIRONMENT")
+        print("DERIV_AUTH_SESSION_REASON=UNSUPPORTED_ENVIRONMENT")
         return 3
 
     manager = DerivSessionManager(
@@ -55,7 +55,7 @@ async def run() -> int:
         binding = bootstrap.binding
         if binding.loginid != expected_loginid:
             raise RuntimeError("ACCOUNT_LOGINID_MISMATCH")
-        if binding.environment != "real":
+        if binding.environment != expected_environment:
             raise RuntimeError("ACCOUNT_ENVIRONMENT_MISMATCH")
         if binding.currency != expected_currency:
             raise RuntimeError("ACCOUNT_CURRENCY_MISMATCH")
@@ -64,15 +64,18 @@ async def run() -> int:
             ws_url=bootstrap.websocket.url,
             expected_loginid=expected_loginid,
             expected_currency=expected_currency,
-            environment="real",
+            environment=expected_environment,
         )
         account = await adapter.connect()
         snapshot: CapitalSnapshot = await adapter.get_balance()
 
         if account.loginid != expected_loginid:
             raise RuntimeError("CONNECTED_ACCOUNT_IDENTITY_MISMATCH")
-        if account.environment != "real" or account.account_type != "real":
-            raise RuntimeError("CONNECTED_ACCOUNT_NOT_REAL")
+        if account.environment != expected_environment:
+            raise RuntimeError("CONNECTED_ACCOUNT_ENVIRONMENT_MISMATCH")
+        expected_account_type = "real" if expected_environment == "real" else "demo"
+        if account.account_type != expected_account_type:
+            raise RuntimeError("CONNECTED_ACCOUNT_TYPE_MISMATCH")
         if not snapshot.is_valid():
             raise RuntimeError("CAPITAL_SNAPSHOT_INVALID")
 
@@ -104,7 +107,7 @@ async def run() -> int:
             artifact_hash=artifact_hash,
             config_hash=load_config_hash(ROOT),
             data_hash=data_hash,
-            environment="ci",
+            environment=f"ci-{expected_environment}",
             started_at_utc=started.isoformat(),
             ended_at_utc=ended.isoformat(),
             status="CURRENT",
@@ -123,6 +126,7 @@ async def run() -> int:
                 "currency_match",
                 "fresh_balance_snapshot",
                 "no_order_submission",
+                "capital_authority_not_granted",
             ],
             invariants_failed=[],
         )
@@ -130,6 +134,8 @@ async def run() -> int:
         enriched["observed"] = observed
         enriched["orders_submitted"] = 0
         enriched["capital_authority_granted"] = False
+        enriched["verification_scope"] = f"AUTHENTICATED_DERIV_{expected_environment.upper()}_SESSION"
+        enriched["order_submission_permitted"] = False
         enriched["record_hash"] = payload_sha256(
             {key: value for key, value in enriched.items() if key != "record_hash"}
         )
@@ -138,6 +144,7 @@ async def run() -> int:
         print("DERIV_AUTH_SESSION=VERIFIED")
         print(f"DERIV_ACCOUNT_LOGINID={snapshot.account.loginid}")
         print(f"DERIV_ACCOUNT_ENVIRONMENT={snapshot.account.environment}")
+        print(f"DERIV_VERIFICATION_SCOPE=AUTHENTICATED_DERIV_{expected_environment.upper()}_SESSION")
         print(f"DERIV_ACCOUNT_CURRENCY={snapshot.currency}")
         print("DERIV_BALANCE_VERIFIED=true")
         print("DERIV_ORDERS_SUBMITTED=0")
