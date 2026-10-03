@@ -55,3 +55,6 @@ jobs:
         run: |
           test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
           test "$LIVE_EXECUTION" = "BLOCKED"
+
+      - name: Explicit capital protection marker
+        run: echo "FINAL_EXECUTION_AUTHORIZATION=false"
