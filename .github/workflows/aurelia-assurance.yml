@@ -23,11 +23,20 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_*.py' -v
       - name: Run hardening tests
         run: python -m unittest assurance.test_hardening_controls -v
+      - name: Build clean runtime container
+        run: docker build --pull -t aurelia-runtime:ci .
       - name: Verify public Deriv market-data WebSocket
         env:
           AURELIA_VERIFY_DERIV_PUBLIC: "true"
           AURELIA_RUN_ONCE: "true"
         run: python -m runtime.main
+      - name: Verify clean worker health endpoint
+        run: |
+          python -m runtime.main >/tmp/aurelia-worker.log 2>&1 &
+          PID=$!
+          trap 'kill $PID || true' EXIT
+          sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:8080/health
       - name: Run repository certification gate
         id: certification
         continue-on-error: true
