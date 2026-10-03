@@ -29,6 +29,7 @@ class PersistentIdempotencyStore:
                 intent_id=item["intent_id"],
                 broker_transaction_id=item.get("broker_transaction_id"),
                 economic_effect_count=int(item.get("economic_effect_count", 0)),
+                broker_outcome_unknown=bool(item.get("broker_outcome_unknown", False)),
             )
             self._records[record.intent_id] = record
 
@@ -57,7 +58,22 @@ class PersistentIdempotencyStore:
             current = self._records[intent_id]
             if current.broker_transaction_id and current.broker_transaction_id != txid:
                 raise RuntimeError("BROKER_TRANSACTION_CONFLICT")
-            updated = IntentRecord(intent_id, txid, current.economic_effect_count)
+            updated = IntentRecord(intent_id, txid, current.economic_effect_count, False)
+            self._records[intent_id] = updated
+            self._save()
+            return updated
+
+    def record_unknown_outcome(self, intent_id: str) -> IntentRecord:
+        with self._lock:
+            current = self._records[intent_id]
+            if current.broker_transaction_id:
+                return current
+            updated = IntentRecord(
+                intent_id,
+                None,
+                current.economic_effect_count,
+                True,
+            )
             self._records[intent_id] = updated
             self._save()
             return updated
@@ -67,7 +83,12 @@ class PersistentIdempotencyStore:
             current = self._records[intent_id]
             if current.economic_effect_count >= 1:
                 raise RuntimeError("DUPLICATE_ECONOMIC_EFFECT")
-            updated = IntentRecord(intent_id, current.broker_transaction_id, 1)
+            updated = IntentRecord(
+                intent_id,
+                current.broker_transaction_id,
+                1,
+                current.broker_outcome_unknown,
+            )
             self._records[intent_id] = updated
             self._save()
             return updated
