@@ -4,25 +4,26 @@
 
 - Repository: `Anto-30/aurelia-trading`
 - Branch: `main`
-- Verified head commit: `e9d1f7a9a96cf9cdfbaec3aecb099c8a60112978`
+- Current main tip: `7c62c8c7810c5d7d8f2b5f413bcae8a2cce9afae`
+- Assurance-validated code baseline: `fce6effab5c3e8ea793856a598c3d89433b3a917`
 
-## Completed engineering work
+The current main tip contains evidence-state metadata refreshes after the assurance run. The assurance run itself validated the preceding hardened code baseline `fce6eff…`.
 
-The current branch contains the hardened capital boundary, strict evidence provenance, deterministic evidence hashing, broker unknown-outcome recovery, serialized execution, kill-switch freshness requirements, readiness evidence validation, and a fail-closed live-release gate.
+## Engineering verification
 
-The Assurance workflow on the verified head commit completed successfully with:
+The Assurance run `37158183664` / job `111305879006` completed successfully on commit `fce6eff…`.
 
-- 14 research tests
-- 32 assurance tests
-- 88 runtime tests
-- 12 hardening tests
-- clean runtime container build
-- public Deriv market-data WebSocket verification
-- worker health smoke test
-- certification-gate execution
-- standalone live-release fail-closed verification
+Verified by the run:
 
-Total: 146 automated tests.
+- research, assurance, runtime, and hardening test suites completed successfully
+- clean runtime container build completed successfully
+- public Deriv market-data WebSocket verification completed successfully
+- local worker /health smoke test completed successfully
+- certification gate executed and correctly reported production evidence as BLOCKED because required evidence artifacts were absent
+- live-release gate executed and correctly remained BLOCKED
+- authenticated Deriv real-account verification step was explicitly SKIPPED because CI authentication was not configured
+
+This establishes engineering/CI evidence. It does not establish production deployment, authenticated broker evidence, or live authorization.
 
 ## Current capital state
 
@@ -43,45 +44,76 @@ Environment: `production`
 
 Required service: `aurelia-production-worker`
 
-Current Railway inventory: no services.
+Current Railway inventory observed through the connected Railway control plane: **0 services**.
 
-The GitHub deployment workflow correctly fails closed when `RAILWAY_TOKEN` is unavailable. The latest deployment workflow therefore proves the external blocker was detected and capital protection remained intact; it does not represent a successful Railway deployment.
+The Railway deployment workflow is present and fails closed when `RAILWAY_TOKEN` is unavailable. A previous deployment attempt for this exact project target was rejected because the Railway trial had expired and a plan was required.
 
-Direct Railway mutation was also attempted for the exact repository/project/service target and was rejected by Railway because the account trial has expired and a plan must be selected.
+No Railway plan was purchased or activated by this work. No Railway token was invented or substituted.
+
+## Deriv state
+
+The repository implementation for the modern Deriv Options API path is verified by code inspection.
+
+Current production authentication status:
+
+`NOT_INDEPENDENTLY_VERIFIED_THIS_CYCLE`
+
+The Assurance run recorded:
+
+`DERIV_AUTH_SESSION=NOT_CONFIGURED`
+
+No private Deriv credential was exposed, committed, or fabricated.
+
+Historical/operator-reported balance information is not treated as current production proof.
 
 ## Remaining genuine evidence
 
-The following must come from real operations and must not be fabricated:
+The following remain unproven and must come from real operations:
 
 1. Authenticated real-account Deriv session and fresh balance.
-2. Broker proposal/order acknowledgement and broker transaction identifier.
+2. Real broker proposal/order acknowledgement and broker transaction identifier.
 3. Confirmed broker state and authoritative balance movement.
 4. Ledger posting and independent reconciliation.
 5. Unknown/timeout recovery and restart/reconnect recovery against the real broker.
-6. Genuine continuous 3,600-second non-live production-deployment soak.
-7. Prospective sealed OOS evidence with required Strategy x Symbol x Regime sample sizes.
-8. Calibration/drift evidence.
+6. Genuine continuous 3,600-second production-worker soak.
+7. Prospective sealed OOS evidence with required Strategy × Symbol × Regime sample sizes.
+8. Calibration and drift evidence.
 9. Measured net execution economics.
 10. Independent security/bypass audit.
 11. Build-to-running deployment attestation.
 12. Controlled canary evidence.
 
-## Exact external activation sequence
+## Current release verdict
 
-1. Activate a Railway plan so the existing project can create/deploy services.
-2. Provide Railway with permission to use the connected GitHub repository and create the exact service `aurelia-production-worker` in `production`.
-3. Configure `RAILWAY_TOKEN` as a protected GitHub Actions secret.
-4. Configure Deriv production credentials as protected Railway/GitHub secrets; never commit or paste them into source.
-5. Run the authenticated Deriv verification workflow.
-6. Deploy the worker while `LIVE_EXECUTION=BLOCKED`.
-7. Run the real deployment soak/recovery/evidence workflows.
-8. Review the sealed evidence bundle.
-9. Perform a separate capital authorization review.
-10. Do not enable live capital merely because CI, deployment, or a single successful trade passes.
+| Gate | Result | Evidence class |
+|---|---|---|
+| ENGINEERING_READY | PASS | VERIFIED by Assurance CI |
+| DEPLOYMENT_READY | PASS | VERIFIED configuration |
+| DEPLOYMENT_EXECUTED | FAIL/BLOCKED | NOT EXECUTED |
+| AUTHENTICATION_READY — CI | FAIL/BLOCKED | DERIV auth not configured |
+| AUTHENTICATION_READY — production worker | BLOCKED | No worker deployment |
+| BROKER_EVIDENCE_READY | FAIL/BLOCKED | No real lifecycle executed this cycle |
+| PRODUCTION_SOAK_READY | PASS for harness | TESTED, non-production |
+| PRODUCTION_SOAK_COMPLETED | FAIL/BLOCKED | NOT EXECUTED |
+| STRATEGY_LIVE_ELIGIBLE | FAIL/BLOCKED | Qualification evidence incomplete |
+| LIVE_AUTHORIZED | FAIL by design | VERIFIED fail-closed |
+
+## External activation sequence
+
+1. Activate the Railway plan externally.
+2. Enable the existing project to create exactly one `aurelia-production-worker` service in `production`.
+3. Configure `RAILWAY_TOKEN` as a protected secret; never place its value in source or chat.
+4. Configure Deriv production credentials through the secure secret mechanism expected by the runtime.
+5. Run authenticated Deriv verification.
+6. Deploy the existing worker while `LIVE_EXECUTION=BLOCKED`.
+7. Verify deployment lineage, runtime health, and protected state.
+8. Execute the genuine broker/recovery/evidence cycle.
+9. Run and observe the complete 3,600-second production-worker soak.
+10. Review the sealed evidence bundle and perform a separate capital authorization review.
 
 ## Non-negotiable controls
 
-Unknown broker outcome never becomes safe-to-retry by assumption.
+Unknown broker outcomes never become safe-to-retry by assumption.
 
 Verified balance controls affordability; it does not grant authority.
 
