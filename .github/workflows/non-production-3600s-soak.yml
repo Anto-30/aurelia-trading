@@ -23,6 +23,7 @@ jobs:
       AURELIA_VERIFY_DERIV_AUTH: "false"
       AURELIA_RUN_ONCE: "false"
       SOAK_SECONDS: "3600"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,17 +33,12 @@ jobs:
 
       - name: Start isolated non-production runtime
         run: |
-          docker run --detach --rm             --name aurelia-non-production-soak             --publish 18081:8080             --env PORT=8080             --env AURELIA_VERIFY_DERIV_PUBLIC=false             --env AURELIA_VERIFY_DERIV_AUTH=false             --env AURELIA_RUN_ONCE=false             aurelia-non-production-soak
+          docker run --detach             --name aurelia-non-production-soak             --publish 18081:8080             --env PORT=8080             --env AURELIA_VERIFY_DERIV_PUBLIC=false             --env AURELIA_VERIFY_DERIV_AUTH=false             --env AURELIA_RUN_ONCE=false             aurelia-non-production-soak
 
       - name: Execute 3600-second control-path soak
         shell: bash
         run: |
           set -euo pipefail
-
-          cleanup() {
-            docker stop aurelia-non-production-soak >/dev/null 2>&1 || true
-          }
-          trap cleanup EXIT
 
           start_epoch="$(date +%s)"
           end_epoch=$((start_epoch + SOAK_SECONDS))
@@ -63,15 +59,11 @@ jobs:
               exit 1
             fi
 
-            python - <<'PY'
-            import json
-            from pathlib import Path
-
-            p = json.loads(Path("/tmp/aurelia-health.json").read_text())
-            assert p["liveness"] is True, p
-            assert p["capital_can_open_new_exposure"] is False, p
-            assert p["state"] in {"CAPITAL_PROTECTED", "SELF_CHECK", "BOOT"}, p
-            PY
+            jq -e '
+              (.liveness == true) and
+              (.capital_can_open_new_exposure == false) and
+              (.state == "CAPITAL_PROTECTED" or .state == "SELF_CHECK" or .state == "BOOT")
+            ' /tmp/aurelia-health.json >/dev/null
 
             if [ "$now" -ge "$next_restart" ] && [ "$now" -lt "$end_epoch" ]; then
               echo "CONTROLLED_RESTART elapsed=${elapsed}s"
@@ -91,31 +83,24 @@ jobs:
           final_epoch="$(date +%s)"
           duration=$((final_epoch - start_epoch))
 
-          python - <<PY
-          import json
-          from pathlib import Path
+          jq -n             --argjson duration "$duration"             --argjson checks "$checks"             --argjson restarts "$restarts"             --argjson failures "$failures"             '{
+              evidence_type: "NON_PRODUCTION_3600S_CONTROL_PATH_SOAK",
+              classification: "SIMULATION_VERIFIED",
+              duration_seconds: $duration,
+              target_seconds: 3600,
+              health_checks: $checks,
+              controlled_restarts: $restarts,
+              health_check_failures: $failures,
+              authenticated_deriv_session: false,
+              real_broker_transaction: false,
+              real_capital_movement: false,
+              final_execution_authorization: false,
+              live_execution: "BLOCKED",
+              capital_can_open_new_exposure: false
+            }' > aurelia-3600s-soak-evidence.json
 
-          evidence = {
-              "evidence_type": "NON_PRODUCTION_3600S_CONTROL_PATH_SOAK",
-              "classification": "SIMULATION_VERIFIED",
-              "duration_seconds": ${duration},
-              "target_seconds": 3600,
-              "health_checks": ${checks},
-              "controlled_restarts": ${restarts},
-              "health_check_failures": ${failures},
-              "authenticated_deriv_session": False,
-              "real_broker_transaction": False,
-              "real_capital_movement": False,
-              "final_execution_authorization": False,
-              "live_execution": "BLOCKED",
-              "capital_can_open_new_exposure": False,
-          }
-          Path("aurelia-3600s-soak-evidence.json").write_text(
-              json.dumps(evidence, indent=2, sort_keys=True) + "\n"
-          )
-          assert ${duration} >= 3600, evidence
-          assert ${failures} == 0, evidence
-          PY
+          test "$duration" -ge 3600
+          test "$failures" -eq 0
 
       - name: Assert capital protection
         if: always()
@@ -123,7 +108,7 @@ jobs:
           test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
           test "$LIVE_EXECUTION" = "BLOCKED"
           if docker ps --format '{{.Names}}' | grep -qx 'aurelia-non-production-soak'; then
-            docker inspect aurelia-non-production-soak               --format 'container_running={{.State.Running}}'
+            docker inspect aurelia-non-production-soak --format 'container_running={{.State.Running}}'
           fi
 
       - name: Collect runtime diagnostics
@@ -131,6 +116,7 @@ jobs:
         run: |
           docker logs aurelia-non-production-soak > aurelia-runtime.log 2>&1 || true
           docker inspect aurelia-non-production-soak > aurelia-runtime-inspect.json 2>&1 || true
+          docker rm -f aurelia-non-production-soak >/dev/null 2>&1 || true
 
       - name: Upload non-production evidence
         if: always()
