@@ -46,27 +46,31 @@ Exact-name searches for the two historical v1.27 archives and distinctive AURELI
 
 ## Current conclusion
 
-The authoritative AURELIA runtime is **not currently accessible** through the connected execution routes.
+The historical v1.27-safe package is still not independently recovered from the connected storage/workspace records described above. That historical recovery question is separate from the current GitHub baseline.
 
-Therefore:
+The current repository `Anto-30/aurelia-trading` is, however, accessible on `main` and contains an explicit AURELIA runtime baseline, Deriv adapter/session implementation, assurance plane, tests, deployment workflows, and fail-closed release controls. Therefore implementation-level work can be performed against this current baseline and must be labeled as work on the current GitHub baseline, not as reconstruction of v1.27.
 
-- implementation-level repairs cannot be honestly completed;
-- implementation-level tests cannot be run;
-- broker lifecycle proof cannot be completed;
-- the 3600-second adversarial soak cannot be run against the real engine;
-- multi-day OOS and calibration cannot be rerun against the authoritative strategy implementation;
-- deployment/runtime integrity cannot be certified for the real engine.
+Current baseline status:
 
-The assurance branch must remain fail-closed.
+- current runtime source: accessible;
+- implementation-level inspection/repair: permitted;
+- implementation-level CI validation: permitted;
+- authenticated broker evidence: still external and credential-dependent;
+- production deployment evidence: still external and infrastructure-dependent;
+- historical v1.27 equivalence: NOT_PROVEN.
 
-## Required recovery artifact
+The assurance branch remains fail-closed for capital. No source recovery claim grants live authority.
 
-At least one of these must become accessible:
+## Historical recovery requirement
+
+If v1.27 equivalence or migration from the historical package is ever required, at least one of these must become accessible:
 
 1. The complete v1.27-safe source archive.
-2. A complete source-tree export of the current AURELIA runtime.
-3. A connected development machine containing the authoritative source tree.
-4. A synchronized Git repository containing the authoritative source.
+2. A complete source-tree export of that historical runtime.
+3. A connected development machine containing that historical source tree.
+4. A synchronized Git repository containing that historical source.
+
+The current GitHub baseline must not be retroactively represented as the recovered v1.27 package.
 
 ## Integrity checks after recovery
 
