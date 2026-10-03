@@ -1,8 +1,6 @@
 name: AURELIA Non-Production 3600s Soak
 
 on:
-  push:
-    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -33,7 +31,14 @@ jobs:
 
       - name: Start isolated non-production runtime
         run: |
-          docker run --detach             --name aurelia-non-production-soak             --publish 18081:8080             --env PORT=8080             --env AURELIA_VERIFY_DERIV_PUBLIC=false             --env AURELIA_VERIFY_DERIV_AUTH=false             --env AURELIA_RUN_ONCE=false             aurelia-non-production-soak
+          docker run --detach \
+            --name aurelia-non-production-soak \
+            --publish 18081:8080 \
+            --env PORT=8080 \
+            --env AURELIA_VERIFY_DERIV_PUBLIC=false \
+            --env AURELIA_VERIFY_DERIV_AUTH=false \
+            --env AURELIA_RUN_ONCE=false \
+            aurelia-non-production-soak
 
       - name: Wait for runtime health
         shell: bash
@@ -126,7 +131,12 @@ jobs:
           final_epoch="$(date +%s)"
           duration=$((final_epoch - start_epoch))
 
-          jq -n             --argjson duration "$duration"             --argjson checks "$checks"             --argjson restarts "$restarts"             --argjson failures "$failures"             '{
+          jq -n \
+            --argjson duration "$duration" \
+            --argjson checks "$checks" \
+            --argjson restarts "$restarts" \
+            --argjson failures "$failures" \
+            '{
               evidence_type: "NON_PRODUCTION_3600S_CONTROL_PATH_SOAK",
               classification: "SIMULATION_VERIFIED",
               duration_seconds: $duration,
