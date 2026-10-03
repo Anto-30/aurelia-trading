@@ -18,7 +18,9 @@ jobs:
       - name: Install runtime dependencies
         run: pip install -r requirements.txt
       - name: Compile runtime and tests
-        run: python -m compileall -q runtime tests assurance
+        run: python -m compileall -q runtime research tests assurance
+      - name: Run research-plane tests
+        run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
       - name: Run assurance tests
         run: python -m unittest discover -s assurance -p 'test_*.py' -v
       - name: Run runtime tests
