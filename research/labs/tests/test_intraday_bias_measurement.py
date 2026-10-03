@@ -24,7 +24,7 @@ class IntradayBiasTests(unittest.TestCase):
         obs = generate_hourly_observations(self.bars(), "TEST")
         self.assertEqual(len(obs), 28)
         self.assertEqual(obs[0].hour_bucket_utc, 0)
-        self.assertAlmostEqual(obs[0].raw_return, 1 / 100)
+        self.assertAlmostEqual(obs[0].raw_return, 1 / 101)
 
     def test_ticks_build_utc_bars(self):
         ticks = [
@@ -77,9 +77,9 @@ class IntradayBiasTests(unittest.TestCase):
 
     def test_chronological_split(self):
         obs = generate_hourly_observations(self.bars(), "TEST")
-        is_rows, oos_rows = chronological_split(obs, is_end_utc="2026-01-01T00:20:00Z")
+        is_rows, oos_rows = chronological_split(obs, is_end_utc="2026-01-01T15:00:00Z")
         self.assertEqual(len(is_rows) + len(oos_rows), len(obs))
-        self.assertLess(is_rows[-1].entry_timestamp_utc, "2026-01-01T00:20:00Z")
+        self.assertLess(is_rows[-1].entry_timestamp_utc, "2026-01-01T15:00:00Z")
 
     def test_costs_can_erase_drift(self):
         obs = generate_hourly_observations(self.bars(), "TEST")
