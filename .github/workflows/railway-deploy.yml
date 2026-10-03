@@ -1,0 +1,60 @@
+name: AURELIA Railway Deploy
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-railway-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: da9da5a1-acd2-4af2-9fec-bf46e4d4252b
+      RAILWAY_ENVIRONMENT_ID: bb95dc97-ad27-4b3a-8fa0-cf52df555a38
+      RAILWAY_SERVICE_NAME: aurelia-production-worker
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      LIVE_EXECUTION: "BLOCKED"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Railway credential availability
+        id: credential
+        shell: bash
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Railway deployment skipped: RAILWAY_TOKEN is not configured."
+            echo "Configure a Railway project-scoped token in GitHub Actions secrets."
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Railway CLI
+        if: steps.credential.outputs.available == 'true'
+        run: npm install --global @railway/cli
+
+      - name: Verify Railway project access
+        if: steps.credential.outputs.available == 'true'
+        run: |
+          railway status             --project "$RAILWAY_PROJECT_ID"             --environment "$RAILWAY_ENVIRONMENT_ID"
+
+      - name: Deploy AURELIA runtime
+        if: steps.credential.outputs.available == 'true'
+        run: |
+          railway up             --project "$RAILWAY_PROJECT_ID"             --environment "$RAILWAY_ENVIRONMENT_ID"             --service "$RAILWAY_SERVICE_NAME"             --ci
+
+      - name: Assert capital protection
+        run: |
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+
+      - name: Explicit capital protection marker
+        run: echo "FINAL_EXECUTION_AUTHORIZATION=false"
