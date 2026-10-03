@@ -35,6 +35,36 @@ jobs:
         run: |
           docker run --detach             --name aurelia-non-production-soak             --publish 18081:8080             --env PORT=8080             --env AURELIA_VERIFY_DERIV_PUBLIC=false             --env AURELIA_VERIFY_DERIV_AUTH=false             --env AURELIA_RUN_ONCE=false             aurelia-non-production-soak
 
+      - name: Wait for runtime health
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for attempt in $(seq 1 60); do
+            if ! docker ps --format '{{.Names}}' | grep -qx 'aurelia-non-production-soak'; then
+              echo "RUNTIME_CONTAINER_EXITED_BEFORE_HEALTH"
+              docker logs aurelia-non-production-soak 2>&1 || true
+              exit 1
+            fi
+
+            if curl --fail --silent --show-error http://127.0.0.1:18081/health >/tmp/aurelia-startup-health.json 2>/tmp/aurelia-startup-health.err; then
+              jq -e '
+                (.liveness == true) and
+                (.capital_can_open_new_exposure == false) and
+                (.state == "CAPITAL_PROTECTED" or .state == "SELF_CHECK" or .state == "BOOT")
+              ' /tmp/aurelia-startup-health.json >/dev/null
+              echo "RUNTIME_HEALTH_READY attempt=${attempt}"
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "RUNTIME_HEALTH_TIMEOUT"
+          cat /tmp/aurelia-startup-health.err 2>/dev/null || true
+          docker logs aurelia-non-production-soak 2>&1 || true
+          exit 1
+
       - name: Execute 3600-second control-path soak
         shell: bash
         run: |
@@ -56,6 +86,7 @@ jobs:
               failures=$((failures + 1))
               echo "HEALTH_CHECK_FAILED elapsed=${elapsed}s"
               cat /tmp/aurelia-health.json 2>/dev/null || true
+              docker logs aurelia-non-production-soak 2>&1 | tail -100 || true
               exit 1
             fi
 
@@ -70,6 +101,18 @@ jobs:
               docker restart aurelia-non-production-soak >/tmp/aurelia-restart.log
               restarts=$((restarts + 1))
               sleep 10
+
+              if ! curl --fail --silent --show-error --retry 10 --retry-delay 1 http://127.0.0.1:18081/health >/tmp/aurelia-post-restart-health.json; then
+                echo "POST_RESTART_HEALTH_FAILED elapsed=${elapsed}s"
+                docker logs aurelia-non-production-soak 2>&1 | tail -100 || true
+                exit 1
+              fi
+
+              jq -e '
+                (.liveness == true) and
+                (.capital_can_open_new_exposure == false)
+              ' /tmp/aurelia-post-restart-health.json >/dev/null
+
               next_restart=$((next_restart + 900))
             fi
 
@@ -127,5 +170,7 @@ jobs:
             aurelia-3600s-soak-evidence.json
             aurelia-runtime.log
             aurelia-runtime-inspect.json
+            /tmp/aurelia-startup-health.json
+            /tmp/aurelia-startup-health.err
           if-no-files-found: warn
           retention-days: 14
