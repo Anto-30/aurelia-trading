@@ -8,6 +8,8 @@ permissions:
 jobs:
   assurance:
     runs-on: ubuntu-latest
+    env:
+      DERIV_AUTH_CONFIGURED: ${{ secrets.DERIV_AUTH_TOKEN != '' && secrets.DERIV_EXPECTED_LOGINID != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -30,6 +32,32 @@ jobs:
           AURELIA_VERIFY_DERIV_PUBLIC: "true"
           AURELIA_RUN_ONCE: "true"
         run: python -m runtime.main
+      - name: Verify authenticated Deriv real-account session
+        if: env.DERIV_AUTH_CONFIGURED == 'true'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID }}
+          DERIV_EXPECTED_CURRENCY: "USD"
+          DERIV_ENVIRONMENT: "real"
+          DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
+        run: |
+          python scripts/verify_deriv_session.py
+
+      - name: Report authenticated Deriv prerequisite state
+        if: env.DERIV_AUTH_CONFIGURED != 'true'
+        run: |
+          echo "DERIV_AUTH_SESSION=NOT_CONFIGURED"
+          echo "Configure DERIV_AUTH_TOKEN and DERIV_EXPECTED_LOGINID as GitHub Actions secrets to run real-account session evidence."
+
+      - name: Upload authenticated Deriv evidence
+        if: always() && hashFiles('artifacts/deriv_authenticated_session.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: deriv-authenticated-session
+          path: artifacts/deriv_authenticated_session.json
+          if-no-files-found: error
+
       - name: Verify clean worker health endpoint
         run: |
           python -m runtime.main >/tmp/aurelia-worker.log 2>&1 &
