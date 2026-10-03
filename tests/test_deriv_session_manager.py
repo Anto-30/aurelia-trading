@@ -1,5 +1,6 @@
 import unittest
 
+from runtime.adapters.deriv_session import DerivSessionError
 from runtime.adapters.session_manager import (
     DerivSessionManager,
     derive_ws_environment,
@@ -21,7 +22,7 @@ class SessionManagerContractTests(unittest.TestCase):
         )
 
     def test_rejects_unknown_environment(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(DerivSessionError):
             derive_ws_environment("wss://api.derivws.com/trading/v1/options/ws/test?otp=abc")
 
     def test_redacts_otp_from_logs(self):
