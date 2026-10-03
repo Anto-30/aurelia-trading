@@ -46,6 +46,11 @@ This is the browsable map of the current AURELIA implementation on `main`.
 - Decision replay: `runtime/validation/decision_replay.py`
 - Strategy governance: `runtime/strategy/governance.py`
 - Prospective OOS archiver: `research/r100_prospective_oos_archiver.py`
+- Intraday bias measurement: `research/labs/intraday_bias_measurement.py`
+- Intraday bias archive: `research/labs/intraday_bias_archive.py`
+- Intraday bias validation: `research/labs/intraday_bias_validation.py`
+- Intraday bias cost model: `research/labs/intraday_bias_cost_model.py`
+- Intraday bias regression tests: `research/labs/tests/test_intraday_bias_measurement.py`
 - Assurance hardening: `assurance/aurelia_hardening.py`
 - Assurance invariants: `assurance/aurelia_invariants.py`
 - Adversarial matrix: `assurance/adversarial_matrix.py`
