@@ -70,7 +70,7 @@ probability_policy:
     - INSUFFICIENT_SAMPLE
 
 affordability:
-  execution_minimum_stake: 1.50
+  execution_minimum_stake: 1.00
   global_readiness_blocker: false
   order_level_blocker: true
   unaffordable_action: "REJECT_AND_FIREWALL_DENY"
