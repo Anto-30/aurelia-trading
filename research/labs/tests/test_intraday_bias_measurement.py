@@ -6,6 +6,7 @@ from pathlib import Path
 from research.labs.intraday_bias_measurement import (
     Bar, ForwardObservation, bias_passport, bias_to_execution_command, benjamini_hochberg,
     build_hourly_bars_from_ticks, calculate_statistics, generate_hourly_observations,
+    screen_hourly_multiple_testing,
 )
 from research.labs.intraday_bias_archive import append_observations, seal_archive, verify_archive
 from research.labs.intraday_bias_cost_model import CostModel, cost_adjusted_statistics
@@ -50,6 +51,12 @@ class IntradayBiasTests(unittest.TestCase):
         self.assertAlmostEqual(s.expectancy, 0.0333333333)
         self.assertGreater(s.profit_factor, 1)
 
+    def test_hourly_multiple_testing_screen(self):
+        obs = generate_hourly_observations(self.bars(), "TEST")
+        q_values = screen_hourly_multiple_testing(obs)
+        self.assertEqual(len(q_values), 24)
+        self.assertIsNotNone(q_values[0])
+
     def test_bh(self):
         q = benjamini_hochberg([0.01, 0.04, 0.5])
         self.assertTrue(all(0 <= x <= 1 for x in q))
@@ -64,6 +71,19 @@ class IntradayBiasTests(unittest.TestCase):
         self.assertFalse(p["trade_signal"])
         with self.assertRaises(RuntimeError):
             bias_to_execution_command(p)
+
+    def test_cost_erosion_is_a_validation_blocker(self):
+        obs = generate_hourly_observations(self.bars(250), "TEST")
+        self.assertEqual(
+            validate_level1(
+                observations=obs,
+                is_observations=obs[:150],
+                oos_observations=obs[150:],
+                adjusted_q_value=0.01,
+                cost_adjusted_oos_expectancy=0.0,
+            ),
+            "COST_ERODED",
+        )
 
     def test_validation_sample_gate(self):
         obs = generate_hourly_observations(self.bars(), "TEST")
