@@ -64,6 +64,12 @@ class CertificationEvidenceTest(unittest.TestCase):
         record["record_hash"] = payload_sha256(record)
         return record
 
+    def _populate_passing_bundle(self, root: Path) -> None:
+        for marker in REQUIRED_RUNTIME_MARKERS:
+            self._write(root, marker, "runtime")
+        for relative in REQUIRED_EVIDENCE_FILES:
+            self._write(root, relative, json.dumps(self._passing_record()))
+
     def test_missing_bundle_blocks(self):
         with tempfile.TemporaryDirectory() as d:
             status, detail = validate_evidence_bundle(Path(d))
@@ -73,21 +79,19 @@ class CertificationEvidenceTest(unittest.TestCase):
     def test_passing_bundle(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            for marker in REQUIRED_RUNTIME_MARKERS:
-                self._write(root, marker, "runtime")
-            for relative in REQUIRED_EVIDENCE_FILES:
-                self._write(root, relative, json.dumps(self._passing_record()))
+            self._populate_passing_bundle(root)
             status, detail = validate_evidence_bundle(root)
             self.assertEqual(status, "PASS", detail)
 
     def test_tampered_evidence_hash_blocks(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            for marker in REQUIRED_RUNTIME_MARKERS:
-                self._write(root, marker, "runtime")
-            record = self._passing_record()
+            self._populate_passing_bundle(root)
+            path = root / "evidence/execution_economics.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
             record["stress_passed"] = False
-            self._write(root, "evidence/execution_economics.json", json.dumps(record))
+            path.write_text(json.dumps(record), encoding="utf-8")
+
             status, detail = validate_evidence_bundle(root)
             self.assertEqual(status, "BLOCKED")
             self.assertIn("record_hash mismatch", detail)
