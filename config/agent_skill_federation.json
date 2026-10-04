@@ -144,7 +144,7 @@
       "name": "grok-build-official",
       "owner": "xAI",
       "repo": "xai-org/grok-build",
-      "pinned_commit": "6b01b5ed7b0de1efbf52f95bc7a3a3f9c9c4b5c5",
+      "pinned_commit": "2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8",
       "trust": "OFFICIAL",
       "capabilities": [
         "skills",
@@ -160,7 +160,7 @@
       "name": "playwright-agent-skills",
       "owner": "Microsoft",
       "repo": "microsoft/playwright.dev",
-      "pinned_commit": "0ef96c20927787b2a949ce7ce153ad0c39c7a6dd0",
+      "pinned_commit": "718ff450acfcb2fb1b006515a07c9412efe0bd88",
       "trust": "OFFICIAL",
       "capabilities": [
         "playwright-agent-skill",
