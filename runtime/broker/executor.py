@@ -26,6 +26,7 @@ from runtime.core.reconcile import Reconciler, ReconciliationResult
 from runtime.core.trade_certificate import TradeCertificate
 from runtime.ops.latency import LatencyMetrics
 from runtime.core.release_gate import read_live_release
+from runtime.core.production_controls import CircuitBreaker
 from runtime.core.state import RuntimeStateMachine
 
 
@@ -76,6 +77,7 @@ class CapitalPlaneExecutor:
         self._kill_switch_activated_at = utc_now()
         self._execution_lock = asyncio.Lock()
         self.latency = LatencyMetrics()
+        self.circuit_breaker = CircuitBreaker()
 
     def _log(self, event_type: str, payload: dict) -> None:
         event_id = f"{event_type}:{len(self.journal.read_all()) + 1}"
@@ -335,6 +337,42 @@ class CapitalPlaneExecutor:
             )
             return ExecutionOutcome(False, "BLOCKED", ("LIVE_LOCK_ACTIVE",), intent.intent_id)
 
+        # Re-read authoritative broker capital immediately before submission.
+        # Cached/dashboard state is never sufficient for a capital boundary.
+        try:
+            fresh_balance = await self.broker.get_balance()
+        except Exception as exc:
+            self.circuit_breaker.record_broker_failure()
+            self._log(
+                "PRE_SUBMISSION_BLOCKED",
+                {"intent_id": intent.intent_id, "reasons": ("BROKER_STATE_UNKNOWN", type(exc).__name__)},
+            )
+            return ExecutionOutcome(False, "RECOVERY_REQUIRED", ("BROKER_STATE_UNKNOWN",), intent.intent_id)
+        if not fresh_balance.is_valid():
+            self._log(
+                "PRE_SUBMISSION_BLOCKED",
+                {"intent_id": intent.intent_id, "reasons": ("BROKER_BALANCE_STALE_OR_INVALID",)},
+            )
+            return ExecutionOutcome(False, "BLOCKED", ("BROKER_BALANCE_STALE_OR_INVALID",), intent.intent_id)
+        if fresh_balance.account != context.account:
+            self._log(
+                "PRE_SUBMISSION_BLOCKED",
+                {"intent_id": intent.intent_id, "reasons": ("BROKER_ACCOUNT_IDENTITY_CHANGED",)},
+            )
+            return ExecutionOutcome(False, "BLOCKED", ("BROKER_ACCOUNT_IDENTITY_CHANGED",), intent.intent_id)
+        if fresh_balance.available_balance < intent.stake:
+            self._log(
+                "PRE_SUBMISSION_BLOCKED",
+                {"intent_id": intent.intent_id, "reasons": ("STAKE_NO_LONGER_AFFORDABLE",)},
+            )
+            return ExecutionOutcome(False, "BLOCKED", ("STAKE_NO_LONGER_AFFORDABLE",), intent.intent_id)
+        if not self.circuit_breaker.permit():
+            self._log(
+                "PRE_SUBMISSION_BLOCKED",
+                {"intent_id": intent.intent_id, "reasons": ("CIRCUIT_BREAKER_TRIPPED", self.circuit_breaker.reason)},
+            )
+            return ExecutionOutcome(False, "BLOCKED", ("CIRCUIT_BREAKER_TRIPPED",), intent.intent_id)
+
         violations = check_pre_submission_invariants(
             context=context,
             intent=intent,
@@ -438,6 +476,7 @@ class CapitalPlaneExecutor:
             )
 
         if result.outcome == BrokerOutcome.UNKNOWN:
+            self.circuit_breaker.record_broker_failure()
             self.idempotency.record_unknown_outcome(intent.intent_id)
             try:
                 self.state.transition(RuntimeState.RECOVERY)
@@ -488,6 +527,9 @@ class CapitalPlaneExecutor:
                 result.contract_id,
             )
 
+        self.circuit_breaker.record_broker_failure()
+        if self.circuit_breaker.tripped:
+            self.activate_kill_switch(self.circuit_breaker.reason or "BROKER_FAILURE_THRESHOLD")
         return ExecutionOutcome(
             False,
             "REJECTED",
@@ -515,9 +557,7 @@ class CapitalPlaneExecutor:
                 "reason": result.reason,
             },
         )
-        if not result.healthy and self.state.state != RuntimeState.CAPITAL_PROTECTED:
-            try:
-                self.state.transition(RuntimeState.CAPITAL_PROTECTED)
-            except ValueError:
-                pass
+        if not result.healthy:
+            self.circuit_breaker.record_reconciliation_failure()
+            self.activate_kill_switch("POST_TRADE_RECONCILIATION_FAILED")
         return result
