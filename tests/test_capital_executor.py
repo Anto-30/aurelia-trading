@@ -87,6 +87,9 @@ class FakeBroker:
     def __init__(self):
         self.calls = 0
 
+    async def get_balance(self):
+        return capital()
+
     async def submit_authorized_order(self, payload):
         self.calls += 1
         await asyncio.sleep(0)
