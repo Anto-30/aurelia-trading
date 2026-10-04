@@ -72,6 +72,7 @@ class PersistentAgentFederation:
         self.source_hash = source_hash
         self.lease_seconds = max(5.0, lease_seconds)
         self._lock = asyncio.Lock()
+        self._seen_messages_path = self.lease_path.with_name("federation-seen-messages.json")
 
     def _append(self, event_type: str, payload: dict[str, Any], correlation_id: str) -> None:
         event_id = f"{event_type}:{sha256({ 'payload': payload, 'correlation_id': correlation_id })[:20]}"
@@ -94,6 +95,21 @@ class PersistentAgentFederation:
         except (OSError, ValueError, json.JSONDecodeError):
             return {}
         return dict(payload.get("leases", {})) if isinstance(payload, dict) else {}
+
+    def _load_seen_messages(self) -> set[str]:
+        if not self._seen_messages_path.exists():
+            return set()
+        try:
+            payload = json.loads(self._seen_messages_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError, json.JSONDecodeError):
+            return set()
+        values = payload.get("message_ids", []) if isinstance(payload, dict) else []
+        return {str(value) for value in values}
+
+    def _save_seen_messages(self, message_ids: set[str]) -> None:
+        temp = self._seen_messages_path.with_suffix(".tmp")
+        temp.write_text(json.dumps({"version": 1, "message_ids": sorted(message_ids)}, sort_keys=True), encoding="utf-8")
+        temp.replace(self._seen_messages_path)
 
     def _save_leases(self, leases: dict[str, dict[str, str]]) -> None:
         temp = self.lease_path.with_suffix(self.lease_path.suffix + ".tmp")
@@ -162,7 +178,13 @@ class PersistentAgentFederation:
             priority=max(0, min(100, int(priority))),
             requires_response=requires_response,
         )
-        self._append("AGENT_MESSAGE", message.as_payload(), correlation_id)
+        async with self._lock:
+            seen = self._load_seen_messages()
+            if message.message_id in seen:
+                return message
+            seen.add(message.message_id)
+            self._save_seen_messages(seen)
+            self._append("AGENT_MESSAGE", message.as_payload(), correlation_id)
         return message
 
     def messages_for(self, agent: str, *, limit: int = 100) -> list[dict[str, Any]]:
