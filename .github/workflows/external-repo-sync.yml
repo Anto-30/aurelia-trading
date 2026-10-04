@@ -1,0 +1,68 @@
+name: AURELIA External Repository Sync Integrity
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "config/external_repo_federation.json"
+      - "skills/external-repo-federation/**"
+      - ".github/workflows/external-repo-sync.yml"
+  schedule:
+    - cron: "41 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate federation policy and source count
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("config/external_repo_federation.json").read_text())
+          assert p["global_controls"]["capital_authority"] is False
+          assert p["global_controls"]["live_order_submission"] is False
+          assert p["global_controls"]["secret_reading"] is False
+          assert p["global_controls"]["external_code_execution"] == "DENY_BY_DEFAULT"
+          assert len(p["repositories"]) == 39
+          assert all(x["source_url"].startswith("https://github.com/") for x in p["repositories"])
+          print("EXTERNAL_REPO_POLICY=PASS")
+          PY
+      - name: Sync public repository heads
+        run: |
+          set -euo pipefail
+          python - <<'PY' > /tmp/external-repo-sync.json
+          import json, subprocess
+          from pathlib import Path
+          p=json.loads(Path("config/external_repo_federation.json").read_text())
+          out=[]
+          for r in p["repositories"]:
+              try:
+                  head=subprocess.check_output(["git","ls-remote",r["source_url"],"HEAD"],text=True,timeout=20).strip()
+                  sha=head.split()[0] if head else None
+                  out.append({"repo":r["repo"],"reachable":bool(sha),"head_commit":sha})
+              except Exception as e:
+                  out.append({"repo":r["repo"],"reachable":False,"error":type(e).__name__})
+          print(json.dumps({"schema":"aurelia.external_repo_sync.v1","repositories":out},indent=2))
+          PY
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/external-repo-sync.json"))
+          bad=[r for r in x["repositories"] if not r.get("reachable")]
+          print("EXTERNAL_REPO_REACHABLE=%d/%d"%(len(x["repositories"])-len(bad),len(x["repositories"])))
+          if bad:
+              print("UNREACHABLE=", [r["repo"] for r in bad])
+              raise SystemExit(1)
+          PY
+      - name: Upload sync snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-external-repo-sync-${{ github.run_id }}
+          path: /tmp/external-repo-sync.json
+          retention-days: 30
