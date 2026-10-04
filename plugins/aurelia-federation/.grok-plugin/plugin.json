@@ -1,0 +1,9 @@
+{
+  "name": "aurelia-federation",
+  "version": "1.0.0",
+  "description": "Fail-closed AURELIA repair, evidence reconciliation, and cross-agent coordination skills.",
+  "skills": [
+    "./skills/aurelia-federated-repair",
+    "./skills/aurelia-evidence-reconciliation"
+  ]
+}
