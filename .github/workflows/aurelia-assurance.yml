@@ -42,6 +42,7 @@ jobs:
           DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID }}
+          DERIV_AUTH_MODE: "pat"
           DERIV_EXPECTED_CURRENCY: "USD"
           DERIV_ENVIRONMENT: "real"
           DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
