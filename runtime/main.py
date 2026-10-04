@@ -115,6 +115,7 @@ async def main() -> None:
             "GoogleAgentSkills",
             "GLM",
             "PlaywrightCLI",
+            "AURELIA",
         ),
         interval_seconds=float(os.getenv("AURELIA_AGENT_CYCLE_SECONDS", "15")),
         roundtable_seconds=float(os.getenv("AURELIA_AGENT_ROUNDTABLE_SECONDS", "60")),
