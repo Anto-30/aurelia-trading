@@ -11,7 +11,7 @@ from runtime.adapters.session_manager import DerivSessionManager
 from runtime.agent_federation import AgentFederationSupervisor, PersistentAgentFederation
 from runtime.autonomous_loop import AutonomousExecutionLoop, FederatedDecisionProvider
 from runtime.broker.executor import CapitalPlaneExecutor
-from runtime.core.idempotency import PersistentIdempotencyStore
+from runtime.core.persistent import PersistentIdempotencyStore
 from runtime.core.journal import AppendOnlyJournal
 from runtime.core.persistent import PersistentExecutionFence, PersistentLedger
 from runtime.core.reconcile import Reconciler
