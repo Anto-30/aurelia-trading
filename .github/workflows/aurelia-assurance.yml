@@ -9,7 +9,7 @@ jobs:
   assurance:
     runs-on: ubuntu-latest
     env:
-      DERIV_AUTH_CONFIGURED: \${{ secrets.DERIV_AUTH_TOKEN != '' && secrets.DERIV_EXPECTED_LOGINID != '' }}
+      DERIV_AUTH_CONFIGURED: ${{ secrets.DERIV_AUTH_TOKEN != '' && secrets.DERIV_APP_ID != '' && secrets.DERIV_EXPECTED_LOGINID != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
