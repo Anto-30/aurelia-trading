@@ -562,7 +562,7 @@ class FederatedDecisionProvider:
             "probability_calibrated": bool(report.get("evidence", {}).get("calibration")) and fresh,
             "probability_fresh": bool(report.get("evidence", {}).get("calibration")) and fresh,
             "probability_drift_ok": bool(report.get("evidence", {}).get("calibration")) and fresh,
-            "market_data_validated": bool(report.get("evidence", {}).get("market_data", True)) and fresh,
+            "market_data_validated": bool(report.get("evidence", {}).get("market_data", False)) and fresh,
             "exposure_approved": bool(controls.get("exposure")) and fresh,
         }
 
