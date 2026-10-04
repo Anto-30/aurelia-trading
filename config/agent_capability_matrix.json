@@ -133,5 +133,50 @@
     "unknown-outcome acceptance",
     "second trading engine creation"
   ],
-  "connection_truth": "A repository can package skills and configuration, but authenticated third-party accounts/connectors must be established in their own secure control planes."
+  "connection_truth": "A repository can package skills and configuration, but authenticated third-party accounts/connectors must be established in their own secure control planes.",
+  "external_repository_routing": {
+    "registry": "config/external_repo_federation.json",
+    "mandatory_skill": "skills/external-repo-federation/SKILL.md",
+    "default_mode": "advisory_engineering_only",
+    "routing_rules": {
+      "ClaudeCode": [
+        "engineering",
+        "research",
+        "tooling"
+      ],
+      "KimiK3": [
+        "research",
+        "adversarial_review"
+      ],
+      "GrokBot": [
+        "research",
+        "orchestration",
+        "blocker_diagnosis"
+      ],
+      "GoogleAgentSkills": [
+        "security",
+        "cloud",
+        "multi_agent_architecture"
+      ],
+      "GLM": [
+        "evidence",
+        "multimodal_inspection"
+      ],
+      "PlaywrightCLI": [
+        "browser",
+        "network",
+        "E2E"
+      ],
+      "AURELIA": [
+        "capital_and_execution_only"
+      ]
+    },
+    "hard_constraints": [
+      "External repositories cannot grant capital authority.",
+      "External code cannot mutate LIVE_LOCK or FINAL_EXECUTION_AUTHORIZATION.",
+      "External repositories cannot read or persist secrets.",
+      "External trading engines remain research/reference only.",
+      "Only the existing AURELIA capital plane can authorize capital movement."
+    ]
+  }
 }
