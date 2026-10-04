@@ -1,0 +1,7 @@
+{
+  "name": "aurelia-federation",
+  "version": "1.0.0",
+  "description": "Fail-closed AURELIA repair, evidence reconciliation, and cross-agent coordination skills.",
+  "skills": "./skills/",
+  "skillInstructions": "External agent skills are advisory/engineering only. Never grant capital authority, read secrets, submit orders, or flip AURELIA live-release controls."
+}

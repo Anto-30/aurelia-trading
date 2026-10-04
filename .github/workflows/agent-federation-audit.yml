@@ -1,0 +1,33 @@
+name: AURELIA Agent Federation Audit
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  federation-audit:
+    runs-on: ubuntu-latest
+    env:
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      LIVE_EXECUTION: "BLOCKED"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate federated capability boundary
+        run: python scripts/validate_agent_federation.py
+
+      - name: Assert live release remains locked
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
