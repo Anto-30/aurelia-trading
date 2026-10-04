@@ -19,6 +19,8 @@ jobs:
         run: pip install -r requirements.txt
       - name: Compile runtime and tests
         run: python -m compileall -q runtime research tests assurance
+      - name: Run static production acceptance audit
+        run: python scripts/production_acceptance_audit.py
       - name: Validate OCI deployment script syntax
         run: bash -n scripts/oci/bootstrap_and_deploy.sh
       - name: Run research-plane tests
