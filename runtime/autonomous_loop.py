@@ -269,6 +269,19 @@ class AutonomousExecutionLoop:
                 },
             )
         )
+        self.executor._log(
+            "CONTRACT_SETTLED",
+            {
+                "intent_id": intent.intent_id,
+                "contract_id": contract_id,
+                "symbol": intent.symbol,
+                "direction": intent.direction,
+                "stake": intent.stake,
+                "net_delta": net_delta,
+                "post_balance": post_balance.available_balance,
+                "reconciliation_healthy": reconciliation.healthy,
+            },
+        )
         if not reconciliation.healthy:
             self.executor.activate_kill_switch("POST_TRADE_RECONCILIATION_MISMATCH")
 

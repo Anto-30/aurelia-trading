@@ -446,6 +446,10 @@ class CapitalPlaneExecutor:
                 result.contract_id,
             )
 
+        self._log(
+            "BROKER_REJECTED",
+            {"intent_id": intent.intent_id},
+        )
         return ExecutionOutcome(
             False,
             "REJECTED",
