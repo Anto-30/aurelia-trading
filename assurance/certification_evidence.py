@@ -41,6 +41,7 @@ REQUIRED_EVIDENCE_FILES = (
     "evidence/execution_economics.json",
     "evidence/security_audit.json",
     "evidence/deployment.json",
+    "evidence/strategy_eligibility.json",
 )
 
 PASS_RESULTS = {"PASS", "PROVEN", "VALIDATED"}
@@ -288,6 +289,25 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
             and record.get("critical_findings", 1) == 0
         )
         return ok, "valid" if ok else "security/bypass audit incomplete"
+
+    if name == "strategy_eligibility.json":
+        strategies = record.get("strategies")
+        ok = (
+            record.get("qualification_passed") is True
+            and isinstance(strategies, list)
+            and len(strategies) > 0
+            and all(
+                isinstance(item, dict)
+                and item.get("qualified") is True
+                and isinstance(item.get("trade_count"), int)
+                and item.get("trade_count") >= 100
+                and isinstance(item.get("strategy_hash"), str)
+                and bool(item.get("strategy_hash"))
+                for item in strategies
+            )
+            and record.get("edge_removed") is True
+        )
+        return ok, "valid" if ok else "strategy live-eligibility evidence incomplete"
 
     if name == "deployment.json":
         ok = (
