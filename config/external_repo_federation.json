@@ -1,0 +1,504 @@
+{
+  "schema": "aurelia.external_repo_federation.v1",
+  "generated_date": "2026-10-04",
+  "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
+  "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
+  "sync_policy": "Weekly CI checks public reachability and current head commits. Head changes require review before becoming a pinned research baseline.",
+  "global_controls": {
+    "capital_authority": false,
+    "live_order_submission": false,
+    "live_lock_mutation": false,
+    "secret_reading": false,
+    "secret_logging": false,
+    "broker_transaction_write": false,
+    "external_code_execution": "DENY_BY_DEFAULT",
+    "production_deployment_authority": false
+  },
+  "repositories": [
+    {
+      "repo": "pingdotgg/t3code",
+      "category": "coding-agent",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/pingdotgg/t3code",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "python-poetry/poetry",
+      "category": "python-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/python-poetry/poetry",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "poem-web/poem",
+      "category": "rust-web-framework",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/poem-web/poem",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "Niko1221/Strata",
+      "category": "trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/Niko1221/Strata",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "JerBouma/AlgorithmicTrading",
+      "category": "algorithmic-trading",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/JerBouma/AlgorithmicTrading",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "coding-kitties/investing-algorithm-framework",
+      "category": "investing-framework",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/coding-kitties/investing-algorithm-framework",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "zed-industries/zed",
+      "category": "editor-platform",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/zed-industries/zed",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "zed-industries/extensions",
+      "category": "editor-extensions",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/zed-industries/extensions",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "zed-industries/python-environment-tools",
+      "category": "python-environment",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/zed-industries/python-environment-tools",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "zed-industries/notify",
+      "category": "notifications",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/zed-industries/notify",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "zed-industries/gh-workflow",
+      "category": "github-workflow",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/zed-industries/gh-workflow",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "zed-industries/yawc",
+      "category": "rust-client",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/zed-industries/yawc",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "zed-industries/codex-acp",
+      "category": "agent-protocol",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/zed-industries/codex-acp",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "zed-industries/superpowers",
+      "category": "agent-workflows",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/zed-industries/superpowers",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "zed-industries/font-kit",
+      "category": "font-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/zed-industries/font-kit",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "zed-industries/git-restore-mtime-action",
+      "category": "git-ci",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/zed-industries/git-restore-mtime-action",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "TauricResearch/TradingAgents",
+      "category": "multi-agent-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/TauricResearch/TradingAgents",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "HKUDS/Vibe-Trading",
+      "category": "AI-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/HKUDS/Vibe-Trading",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "freqtrade/freqtrade",
+      "category": "crypto-trading-framework",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/freqtrade/freqtrade",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "hsliuping/TradingAgents-CN",
+      "category": "multi-agent-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/hsliuping/TradingAgents-CN",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "Superalgos/Superalgos",
+      "category": "trading-platform",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/Superalgos/Superalgos",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "StockSharp/StockSharp",
+      "category": "algorithmic-trading-platform",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/StockSharp/StockSharp",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "QuantConnect/Lean",
+      "category": "algorithmic-trading-engine",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/QuantConnect/Lean",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "HKUDS/AI-Trader",
+      "category": "AI-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/HKUDS/AI-Trader",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "OpenByteInc/QuantDinger",
+      "category": "quant-trading-platform",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/OpenByteInc/QuantDinger",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "Mathieu2301/TradingView-API",
+      "category": "market-data-integration",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Mathieu2301/TradingView-API",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "simonlin1212/TradingAgents-astock",
+      "category": "equity-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/simonlin1212/TradingAgents-astock",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "pst-group/pysystemtrade",
+      "category": "systematic-trading",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/pst-group/pysystemtrade",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "stefan-jansen/machine-learning-for-trading",
+      "category": "ML-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/stefan-jansen/machine-learning-for-trading",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "nautechsystems/nautilus_trader",
+      "category": "event-driven-trading",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/nautechsystems/nautilus_trader",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "endless-sky/endless-sky",
+      "category": "unrelated-game-codebase",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/endless-sky/endless-sky",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "tradesdontlie/tradingview-mcp",
+      "category": "market-data-mcp",
+      "domain": "research",
+      "assigned_agents": [
+        "GrokBot",
+        "KimiK3",
+        "ClaudeCode"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/tradesdontlie/tradingview-mcp",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "je-suis-tm/quant-trading",
+      "category": "quant-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/je-suis-tm/quant-trading",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "jesse-ai/jesse",
+      "category": "trading-framework",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/jesse-ai/jesse",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "paperswithbacktest/awesome-systematic-trading",
+      "category": "systematic-trading-catalog",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/paperswithbacktest/awesome-systematic-trading",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "hummingbot/hummingbot",
+      "category": "algorithmic-trading-framework",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/hummingbot/hummingbot",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "marketcalls/openalgo",
+      "category": "broker-api",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/marketcalls/openalgo",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "NoFxAiOS/nofx",
+      "category": "AI-trading-framework",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/NoFxAiOS/nofx",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "fabston/TradingView-Webhook-Bot",
+      "category": "webhook-trading",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/fabston/TradingView-Webhook-Bot",
+      "head_commit": "SYNC_REQUIRED"
+    }
+  ]
+}
