@@ -21,9 +21,13 @@ OUTPUT = Path(os.getenv("DERIV_EVIDENCE_OUT", "artifacts/deriv_authenticated_ses
 
 async def run() -> int:
     started = datetime.now(timezone.utc)
-    token = os.getenv("DERIV_AUTH_TOKEN", "")
+    # Accept the canonical AURELIA names plus the operator-facing aliases
+    # used by the protected deployment environment. Values are never logged.
+    token = os.getenv("DERIV_AUTH_TOKEN") or os.getenv("DERIV_PAT", "")
     app_id = os.getenv("DERIV_APP_ID", "")
-    expected_loginid = os.getenv("DERIV_EXPECTED_LOGINID", "")
+    expected_loginid = os.getenv("DERIV_EXPECTED_LOGINID") or os.getenv(
+        "DERIV_AUTHORIZED_ACCOUNT_ID", ""
+    )
     expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "USD")
     expected_environment = os.getenv("DERIV_ENVIRONMENT", "real").lower()
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
