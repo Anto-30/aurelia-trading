@@ -28,6 +28,9 @@ jobs:
         uses: actions/checkout@v4
       - name: Sync agent skill layouts
         run: python scripts/agent_capability_sync.py
+      - name: Verify complete agent inventory assignments
+        run: python scripts/validate_agent_inventory.py
+
       - name: Verify continuous-agent safety boundary
         run: python scripts/agent_continuity_check.py
       - name: Assert capital protection
