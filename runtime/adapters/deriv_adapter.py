@@ -276,11 +276,16 @@ class DerivAdapter:
         buy = reply.get("buy") or {}
         transaction_id = str(buy.get("transaction_id") or "") or None
         contract_id = str(buy.get("contract_id") or "") or None
-        if not transaction_id and not contract_id:
+        # A capital-moving acceptance is not considered fully known until
+        # both broker identifiers are present. This prevents partial responses
+        # from being treated as confirmed economic effects.
+        if not transaction_id or not contract_id:
             return BrokerResult(
                 BrokerOutcome.UNKNOWN,
                 "unknown",
-                raw_class="BROKER_ACCEPTANCE_UNRESOLVED",
+                broker_transaction_id=transaction_id,
+                contract_id=contract_id,
+                raw_class="BROKER_ACCEPTANCE_PARTIAL",
             )
         return BrokerResult(
             BrokerOutcome.ACCEPTED,
