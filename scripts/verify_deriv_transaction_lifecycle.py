@@ -50,14 +50,17 @@ async def run() -> int:
     ):
         return fail("LIVE_RELEASE_GATE_NOT_ENABLED")
 
-    for name in (
-        "DERIV_AUTH_TOKEN",
-        "DERIV_EXPECTED_LOGINID",
-        "DERIV_EXPECTED_CURRENCY",
-        "DERIV_ENVIRONMENT",
-    ):
-        if not os.getenv(name):
-            return fail(f"REQUIRED_SECRET_OR_BINDING_MISSING:{name}")
+    token = os.getenv("DERIV_AUTH_TOKEN") or os.getenv("DERIV_PAT", "")
+    expected_loginid = os.getenv("DERIV_EXPECTED_LOGINID") or os.getenv(
+        "DERIV_AUTHORIZED_ACCOUNT_ID", ""
+    )
+    expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "USD")
+    if not token:
+        return fail("REQUIRED_SECRET_OR_BINDING_MISSING:DERIV_AUTH_TOKEN_OR_DERIV_PAT")
+    if not expected_loginid:
+        return fail("REQUIRED_SECRET_OR_BINDING_MISSING:DERIV_EXPECTED_LOGINID_OR_DERIV_AUTHORIZED_ACCOUNT_ID")
+    if not os.getenv("DERIV_ENVIRONMENT"):
+        return fail("REQUIRED_SECRET_OR_BINDING_MISSING:DERIV_ENVIRONMENT")
 
     if os.getenv("DERIV_ENVIRONMENT", "").lower() != "real":
         return fail("REAL_ACCOUNT_REQUIRED")
@@ -65,12 +68,12 @@ async def run() -> int:
     adapter: DerivAdapter | None = None
     try:
         manager = DerivSessionManager(
-            expected_loginid=os.environ["DERIV_EXPECTED_LOGINID"],
+            expected_loginid=expected_loginid,
             expected_environment="real",
-            expected_currency=os.environ["DERIV_EXPECTED_CURRENCY"],
+            expected_currency=expected_currency,
         )
         bootstrap = manager.bootstrap(
-            bearer_token=os.environ["DERIV_AUTH_TOKEN"],
+            bearer_token=token,
             app_id=os.getenv("DERIV_APP_ID") or None,
         )
         adapter = DerivAdapter(
@@ -105,7 +108,7 @@ async def run() -> int:
 
         account = await adapter.connect()
         if (
-            account.loginid != os.environ["DERIV_EXPECTED_LOGINID"]
+            account.loginid != expected_loginid
             or account.account_type != "real"
         ):
             return fail("ACCOUNT_BINDING_MISMATCH")
@@ -269,7 +272,7 @@ async def run() -> int:
                 ),
                 config_hash=load_config_hash(ROOT),
                 data_hash=data_hash,
-                environment="production-real",
+                    environment="ci",
                 started_at_utc=prior.captured_at.isoformat(),
                 ended_at_utc=ended.isoformat(),
                 status="CURRENT",
@@ -556,7 +559,7 @@ async def run() -> int:
             ),
             config_hash=load_config_hash(ROOT),
             data_hash=data_hash,
-            environment="production-real",
+            environment="production",
             started_at_utc=prior.captured_at.isoformat(),
             ended_at_utc=ended.isoformat(),
             status="CURRENT",
