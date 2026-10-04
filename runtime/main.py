@@ -5,6 +5,7 @@ import json
 import os
 
 from runtime.adapters.session_manager import DerivSessionManager
+from runtime.agent_federation import AgentFederationSupervisor, PersistentAgentFederation
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -87,6 +88,53 @@ async def main() -> None:
     HealthHandler.state = machine.state
     public_probe_failed = False
     authenticated_probe_failed = False
+
+    federation = PersistentAgentFederation(
+        journal_path=os.getenv(
+            "AURELIA_FEDERATION_JOURNAL_PATH",
+            "/tmp/aurelia/agent-federation.ndjson",
+        ),
+        lease_path=os.getenv(
+            "AURELIA_FEDERATION_LEASE_PATH",
+            "/tmp/aurelia/agent-federation-leases.json",
+        ),
+        task_path=os.getenv(
+            "AURELIA_FEDERATION_TASK_PATH",
+            "/tmp/aurelia/agent-federation-tasks.json",
+        ),
+        config_hash=config_hash,
+        source_hash="runtime-baseline",
+        lease_seconds=float(os.getenv("AURELIA_AGENT_LEASE_SECONDS", "45")),
+    )
+    federation_supervisor = AgentFederationSupervisor(
+        federation,
+        agents=(
+            "ClaudeCode",
+            "KimiK3",
+            "GrokBot",
+            "GoogleAgentSkills",
+            "GLM",
+            "PlaywrightCLI",
+        ),
+        interval_seconds=float(os.getenv("AURELIA_AGENT_CYCLE_SECONDS", "15")),
+        roundtable_seconds=float(os.getenv("AURELIA_AGENT_ROUNDTABLE_SECONDS", "60")),
+    )
+    federation_supervisor.start()
+    journal.append(
+        event_envelope(
+            event_type="AGENT_FEDERATION_STARTED",
+            event_id="AGENT_FEDERATION_STARTED:1",
+            correlation_id="agent-federation",
+            payload={
+                "capital_authority": False,
+                "persistent": True,
+                "restartable": True,
+                "agents": list(federation_supervisor.agents),
+            },
+            source_hash="runtime-baseline",
+            config_hash=config_hash,
+        )
+    )
 
     journal.append(
         event_envelope(
@@ -222,6 +270,7 @@ async def main() -> None:
             )
 
     if os.getenv("AURELIA_RUN_ONCE", "false").lower() == "true":
+        await federation_supervisor.stop()
         server.shutdown()
         if public_probe_failed:
             raise RuntimeError("PUBLIC_DERIV_TRANSPORT_VERIFICATION_FAILED")
@@ -330,6 +379,7 @@ async def main() -> None:
         if continuous_runtime is not None:
             await continuous_runtime.stop()
         supervisor.stop()
+        await federation_supervisor.stop()
         server.shutdown()
 
 
