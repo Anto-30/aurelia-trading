@@ -57,12 +57,12 @@ jobs:
           retention-days: 7
 
   authenticated-deriv-evidence:
-    if: ${{ secrets.DERIV_AUTH_TOKEN != '' && secrets.DERIV_EXPECTED_LOGINID != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
     env:
+      DERIV_AUTH_CONFIGURED: ${{ secrets.DERIV_AUTH_TOKEN != '' && secrets.DERIV_EXPECTED_LOGINID != '' && secrets.DERIV_APP_ID != '' }}
       AURELIA_VERIFY_DERIV_PUBLIC: "true"
       AURELIA_VERIFY_DERIV_AUTH: "true"
       AURELIA_RUN_ONCE: "true"
@@ -78,10 +78,16 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install -r requirements.txt
+      - name: Report authenticated prerequisite state
+        if: env.DERIV_AUTH_CONFIGURED != 'true'
+        run: |
+          echo "DERIV_AUTH_SESSION=NOT_CONFIGURED"
+          echo "Authenticated Deriv evidence is skipped because required protected secrets are not configured."
       - name: Verify authenticated Deriv session
+        if: env.DERIV_AUTH_CONFIGURED == 'true'
         run: python scripts/verify_deriv_session.py
       - name: Upload authenticated evidence
-        if: always()
+        if: always() && env.DERIV_AUTH_CONFIGURED == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: deriv-authenticated-evidence-${{ github.run_id }}
@@ -90,12 +96,12 @@ jobs:
           retention-days: 7
 
   whatsapp-alert-smoke:
-    if: ${{ secrets.TWILIO_ACCOUNT_SID != '' && (secrets.TWILIO_AUTH_TOKEN != '' || (secrets.TWILIO_API_KEY != '' && secrets.TWILIO_API_SECRET != '')) && secrets.TWILIO_WHATSAPP_FROM != '' && secrets.AURELIA_WHATSAPP_TO != '' && secrets.TWILIO_CONTENT_SID != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
     env:
+      TWILIO_CONFIGURED: ${{ secrets.TWILIO_ACCOUNT_SID != '' && (secrets.TWILIO_AUTH_TOKEN != '' || (secrets.TWILIO_API_KEY != '' && secrets.TWILIO_API_SECRET != '')) && secrets.TWILIO_WHATSAPP_FROM != '' && secrets.AURELIA_WHATSAPP_TO != '' && secrets.TWILIO_CONTENT_SID != '' }}
       AURELIA_WHATSAPP_ALERTS: "true"
       TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
       TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
@@ -111,5 +117,9 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install -r requirements.txt
+      - name: Report WhatsApp prerequisite state
+        if: env.TWILIO_CONFIGURED != 'true'
+        run: echo "WHATSAPP_ALERTS=OPTIONAL_NOT_CONFIGURED"
       - name: Send WhatsApp smoke alert
+        if: env.TWILIO_CONFIGURED == 'true'
         run: python scripts/test_whatsapp_alert.py
