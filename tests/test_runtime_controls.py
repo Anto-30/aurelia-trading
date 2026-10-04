@@ -1,7 +1,11 @@
 from datetime import datetime, timedelta, timezone
+import json
+import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
+from runtime.autonomous_loop import FederatedDecisionProvider
 from runtime.core.authority import authorization_gate, decision_economics_gate, probability_is_valid
 from runtime.core.capabilities import Capability, RESEARCH_CAPABILITIES
 from runtime.core.events import event_envelope, sha256
@@ -346,6 +350,36 @@ class TestControls(unittest.TestCase):
         machine.transition(RuntimeState.VERIFIED)
         machine.transition(RuntimeState.HEALTHY)
         self.assertEqual(machine.state, RuntimeState.HEALTHY)
+
+    def test_federated_control_snapshot_rejects_missing_market_data_evidence(self):
+        report = {
+            "generated_at_utc": datetime.now(UTC).isoformat(),
+            "final_execution_authorization": False,
+            "live_execution": "BLOCKED",
+            "controls": {
+                "risk_warden": True,
+                "execution_firewall": True,
+                "reconciliation": True,
+                "exposure": True,
+            },
+            "evidence": {
+                "calibration": True,
+            },
+        }
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as handle:
+            json.dump(report, handle)
+            path = handle.name
+        try:
+            provider = FederatedDecisionProvider(None)
+            with patch.dict(
+                os.environ,
+                {"AURELIA_READINESS_PATH": path, "AURELIA_READINESS_MAX_AGE_SECONDS": "30"},
+                clear=False,
+            ):
+                controls = provider.control_snapshot(decision=None, tick=None, capital=None)
+            self.assertFalse(controls["market_data_validated"])
+        finally:
+            os.unlink(path)
 
     def test_runtime_health_requires_fresh_capital_market_data_and_reconciliation(self):
         health = HealthSnapshot(datetime.now(UTC))
