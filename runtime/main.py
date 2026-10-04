@@ -304,7 +304,11 @@ async def main() -> None:
     continuous_runtime = None
     if os.getenv("AURELIA_CONTINUOUS_RUNTIME", "true").strip().lower() == "true":
         try:
-            continuous_runtime = await start_continuous_runtime(machine)
+            continuous_runtime = await start_continuous_runtime(
+                machine,
+                federation=federation,
+                federation_supervisor=federation_supervisor,
+            )
             if continuous_runtime.execution_loop is not None:
                 refresh_runtime_health(
                     health,
