@@ -93,6 +93,12 @@ A readiness report must not be interpreted as live authorization unless every ma
 - GitHub repository-level push capability is currently available to the connected engineering integration used for this verification.
 - Railway currently has no service/deployment in the existing project; deployment was rejected because the Railway trial has expired and a plan is required.
 
+## External repository federation
+
+AURELIA maintains a governed registry at config/external_repo_federation.json for the external repositories used as research, engineering, tooling, or reference sources. These sources are not vendored into the capital or execution planes. The registry assigns each source a mode (RESEARCH_ONLY, SANDBOX_ONLY, TOOLCHAIN_ONLY, or REFERENCE_ONLY) and maps sources to the appropriate agents.
+
+The weekly .github/workflows/external-repo-sync.yml workflow checks public reachability and records current head commits as an artifact. External source updates do not automatically become AURELIA dependencies or change execution behavior.
+
 ## Federated agent skills
 
 AURELIA maintains a pinned cross-agent engineering capability registry at `config/agent_skill_federation.json`. The registry covers Claude Code, Kimi K3/Kimi Code, Grok Bot, Google Agent Skills, GLM Skills, and Playwright CLI. All external capabilities are advisory/engineering-only and cannot authorize or submit capital-moving actions.
