@@ -1,0 +1,293 @@
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+
+from assurance.evidence_writer import build_evidence, payload_sha256, write_evidence
+from runtime.adapters.deriv_adapter import DerivAdapter
+from runtime.adapters.session_manager import DerivSessionManager
+from runtime.broker.executor import CapitalPlaneExecutor
+from runtime.core.events import canonical_json, sha256
+from runtime.core.fencing import ExecutionFence
+from runtime.core.idempotency import IdempotencyStore
+from runtime.core.journal import AppendOnlyJournal
+from runtime.core.ledger import InMemoryLedger
+from runtime.core.models import Decision, RuntimeState
+from runtime.core.reconcile import Reconciler
+from runtime.core.runtime_config import load_config_hash
+from runtime.core.state import RuntimeStateMachine
+
+
+ROOT = Path(__file__).resolve().parents[1]
+OUTPUT = Path(os.getenv("DERIV_LIFECYCLE_EVIDENCE_OUT", "artifacts/deriv_transaction_lifecycle.json"))
+INPUT = Path(os.getenv("AURELIA_LIVE_DECISION_ARTIFACT", "artifacts/live_canary_decision.json"))
+
+
+def fail(message: str) -> int:
+    print("DERIV_TRANSACTION_LIFECYCLE=BLOCKED")
+    print(f"REASON={message}")
+    return 2
+
+
+async def run() -> int:
+    lock = (ROOT / "config" / "LIVE_LOCK.yaml").read_text(encoding="utf-8") if (ROOT / "config" / "LIVE_LOCK.yaml").exists() else ""
+    if "live_trading_enabled: true" not in lock or "FINAL_EXECUTION_AUTHORIZATION: true" not in lock or "capital_plane_mode: LIVE" not in lock:
+        return fail("LIVE_RELEASE_GATE_NOT_ENABLED")
+
+    for name in ("DERIV_AUTH_TOKEN", "DERIV_EXPECTED_LOGINID", "DERIV_EXPECTED_CURRENCY", "DERIV_ENVIRONMENT"):
+        if not os.getenv(name):
+            return fail(f"REQUIRED_SECRET_OR_BINDING_MISSING:{name}")
+
+    if os.getenv("DERIV_ENVIRONMENT", "").lower() != "real":
+        return fail("REAL_ACCOUNT_REQUIRED")
+
+    try:
+        decision_payload = json.loads(INPUT.read_text(encoding="utf-8"))
+        if not isinstance(decision_payload, dict):
+            return fail("LIVE_DECISION_ARTIFACT_INVALID")
+        decision = Decision(**{
+            key: decision_payload[key]
+            for key in (
+                "decision_id",
+                "strategy_id",
+                "strategy_version",
+                "strategy_hash",
+                "symbol",
+                "direction",
+                "probability",
+                "decision_time",
+                "market_snapshot_hash",
+                "risk_requested_stake",
+                "rationale_codes",
+            )
+        })
+        params = decision_payload.get("proposal_parameters")
+        controls = decision_payload.get("controls")
+        if not isinstance(params, dict) or not isinstance(controls, dict):
+            return fail("LIVE_DECISION_ARTIFACT_MISSING_BROKER_TERMS_OR_CONTROLS")
+        if not all(controls.get(k) is True for k in (
+            "risk_approved", "firewall_approved", "reconciliation_healthy",
+            "final_execution_authorization", "live_trading_enabled",
+            "probability_calibrated", "probability_fresh", "probability_drift_ok",
+            "market_data_validated", "exposure_approved"
+        )):
+            return fail("CONTROL_SNAPSHOT_NOT_FULLY_APPROVED")
+
+        manager = DerivSessionManager(
+            expected_loginid=os.environ["DERIV_EXPECTED_LOGINID"],
+            expected_environment="real",
+            expected_currency=os.environ["DERIV_EXPECTED_CURRENCY"],
+        )
+        bootstrap = manager.bootstrap(
+            bearer_token=os.environ["DERIV_AUTH_TOKEN"],
+            app_id=os.getenv("DERIV_APP_ID") or None,
+        )
+        adapter = DerivAdapter(
+            ws_url=bootstrap.websocket.url,
+            expected_loginid=decision_payload["account_loginid"],
+            expected_currency=os.environ["DERIV_EXPECTED_CURRENCY"],
+            environment="real",
+        )
+
+        journal = AppendOnlyJournal(os.getenv("AURELIA_JOURNAL_PATH", "/tmp/aurelia/lifecycle.ndjson"))
+        ledger = InMemoryLedger()
+        idempotency = IdempotencyStore()
+        fence = ExecutionFence()
+        state = RuntimeStateMachine(RuntimeState.BROKER_CONNECTING)
+        reconciler = Reconciler()
+        source_hash = os.getenv("GITHUB_SHA", "LOCAL_UNPINNED")
+        executor = CapitalPlaneExecutor(
+            adapter,
+            journal=journal,
+            ledger=ledger,
+            idempotency=idempotency,
+            fence=fence,
+            state=state,
+            reconciler=reconciler,
+            source_hash=source_hash,
+            config_hash=load_config_hash(ROOT),
+            live_lock_path=ROOT / "config" / "LIVE_LOCK.yaml",
+        )
+
+        account = await adapter.connect()
+        if account.loginid != decision_payload["account_loginid"] or account.account_type != "real":
+            return fail("ACCOUNT_BINDING_MISMATCH")
+        prior = await adapter.get_balance()
+        proposal_id = await executor.prepare_proposal(params)
+        gate, prectx = await executor.preflight_authorization(
+            decision=decision,
+            capital=prior,
+            runtime_config_hash=load_config_hash(ROOT),
+            account=account,
+            risk_approved=True,
+            firewall_approved=True,
+            reconciliation_healthy=True,
+            final_execution_authorization=True,
+            live_trading_enabled=True,
+            probability_calibrated=True,
+            probability_fresh=True,
+            probability_drift_ok=True,
+            market_data_validated=True,
+            exposure_approved=True,
+        )
+        if not gate.allowed or prectx is None:
+            return fail("PREFLIGHT_AUTHORIZATION_REJECTED")
+        if not executor.clear_kill_switch_with_fresh_authorization(prectx):
+            return fail("KILL_SWITCH_CLEAR_REJECTED")
+
+        gate2, ctx, intent = await executor.authorize_and_build_intent(
+            decision=decision,
+            capital=prior,
+            runtime_config_hash=load_config_hash(ROOT),
+            account=account,
+            risk_approved=True,
+            firewall_approved=True,
+            reconciliation_healthy=True,
+            final_execution_authorization=True,
+            live_trading_enabled=True,
+            probability_calibrated=True,
+            probability_fresh=True,
+            probability_drift_ok=True,
+            market_data_validated=True,
+            exposure_approved=True,
+            proposal_id=proposal_id,
+            mode="LIVE",
+        )
+        if not gate2.allowed or ctx is None or intent is None:
+            return fail("FINAL_AUTHORIZATION_REJECTED")
+
+        token = fence.acquire("deriv-lifecycle-proof")
+        outcome = await executor.execute(intent, ctx, token)
+        if not outcome.allowed or not outcome.broker_transaction_id:
+            return fail(f"BROKER_EXECUTION_NOT_CONFIRMED:{outcome.status}")
+
+        statement = await adapter.statement(limit=100)
+        transaction_found = any(
+            str(row.get("transaction_id") or row.get("id") or "") == str(outcome.broker_transaction_id)
+            for row in statement
+        )
+        if not transaction_found:
+            return fail("BROKER_TRANSACTION_NOT_CONFIRMED_IN_STATEMENT")
+
+        portfolio = await adapter.portfolio()
+        candidate = next(
+            (row for row in portfolio if str(row.get("transaction_id") or "") == str(outcome.broker_transaction_id)),
+            None,
+        )
+        contract_id = str(candidate.get("contract_id")) if candidate and candidate.get("contract_id") else None
+        if contract_id is None:
+            return fail("BROKER_CONTRACT_NOT_BOUND")
+
+        final_status = None
+        deadline = asyncio.get_running_loop().time() + float(os.getenv("AURELIA_LIFECYCLE_TIMEOUT_SECONDS", "600"))
+        while asyncio.get_running_loop().time() < deadline:
+            final_status = await adapter.get_contract_status(contract_id)
+            status = str(final_status.get("status") or "").lower()
+            if final_status.get("is_sold") or status in {"sold", "closed", "won", "lost", "expired"}:
+                break
+            await asyncio.sleep(2)
+
+        if not final_status or not (final_status.get("is_sold") or str(final_status.get("status") or "").lower() in {"sold", "closed", "won", "lost", "expired"}):
+            return fail("CONTRACT_SETTLEMENT_NOT_CONFIRMED")
+
+        final_balance = await adapter.get_balance()
+        profit = final_status.get("profit")
+        payout = final_status.get("payout")
+        buy_price = final_status.get("buy_price")
+        try:
+            if profit is not None:
+                net_delta = float(profit)
+            elif payout is not None and buy_price is not None:
+                net_delta = float(payout) - float(buy_price)
+            else:
+                return fail("SETTLEMENT_ECONOMICS_NOT_RESOLVED")
+        except (TypeError, ValueError):
+            return fail("SETTLEMENT_ECONOMICS_INVALID")
+
+        reconciliation = await executor.reconcile(
+            broker_capital=final_balance,
+            prior_authoritative_balance=prior.available_balance,
+            explainable_delta=net_delta,
+        )
+        if not reconciliation.healthy:
+            return fail("POST_TRADE_RECONCILIATION_FAILED")
+
+        ended = datetime.now(timezone.utc)
+        observed = {
+            "account_loginid": account.loginid,
+            "environment": account.environment,
+            "currency": final_balance.currency,
+            "pre_trade_balance": prior.available_balance,
+            "post_trade_balance": final_balance.available_balance,
+            "proposal_id": proposal_id,
+            "broker_transaction_id": outcome.broker_transaction_id,
+            "contract_id": contract_id,
+            "contract_status": final_status.get("status"),
+            "profit": profit,
+            "payout": payout,
+            "buy_price": buy_price,
+            "net_delta": net_delta,
+            "reconciliation_difference": reconciliation.difference,
+            "reconciliation_healthy": reconciliation.healthy,
+            "orders_submitted": 1,
+            "capital_authority_granted": True,
+        }
+        data_hash = sha256(observed)
+        record = build_evidence(
+            evidence_id=f"DERIV_TRANSACTION_LIFECYCLE:{ended.strftime('%Y%m%dT%H%M%SZ')}",
+            source_hash=os.getenv("GITHUB_SHA", "LOCAL_UNPINNED"),
+            artifact_hash=sha256({"data_hash": data_hash, "config_hash": load_config_hash(ROOT)}),
+            config_hash=load_config_hash(ROOT),
+            data_hash=data_hash,
+            environment="production-real",
+            started_at_utc=prior.captured_at.isoformat(),
+            ended_at_utc=ended.isoformat(),
+            status="CURRENT",
+            valid_until_utc=(ended.replace(microsecond=0) + __import__("datetime").timedelta(minutes=30)).isoformat(),
+            provenance={
+                "origin": "runtime",
+                "issuer": "aurelia-live-lifecycle-verifier",
+                "source_commit": os.getenv("GITHUB_SHA", "LOCAL_UNPINNED"),
+                "generated_at_utc": ended.isoformat(),
+            },
+            result="PROVEN",
+            invariants_checked=[
+                "real_account_binding",
+                "fresh_pre_trade_balance",
+                "broker_proposal",
+                "authorized_buy",
+                "broker_transaction_confirmation",
+                "contract_binding",
+                "contract_settlement",
+                "post_trade_balance",
+                "capital_reconciliation",
+            ],
+            invariants_failed=[],
+        )
+        enriched = dict(record)
+        enriched["observed"] = observed
+        enriched["orders_submitted"] = 1
+        enriched["capital_authority_granted"] = True
+        enriched["verification_scope"] = "REAL_DERIV_TRANSACTION_LIFECYCLE"
+        enriched["order_submission_permitted"] = True
+        enriched["record_hash"] = payload_sha256({key: value for key, value in enriched.items() if key != "record_hash"})
+        write_evidence(OUTPUT, enriched)
+        print("DERIV_TRANSACTION_LIFECYCLE=PROVEN")
+        print(f"DERIV_EVIDENCE_PATH={OUTPUT}")
+        print(f"DERIV_TRANSACTION_ID={outcome.broker_transaction_id}")
+        print(f"DERIV_CONTRACT_ID={contract_id}")
+        print(f"POST_TRADE_BALANCE={final_balance.available_balance}")
+        print("CAPITAL_AUTHORITY=USED_BY_EXISTING_CAPITAL_PLANE")
+        return 0
+    finally:
+        try:
+            await adapter.close()
+        except Exception:
+            pass
+
+
+if __name__ == "__main__":
+    raise SystemExit(asyncio.run(run()))
