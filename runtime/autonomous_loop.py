@@ -422,6 +422,13 @@ class AutonomousExecutionLoop:
                 if decision is None:
                     continue
 
+                if decision.decision_time.tzinfo is None or decision.decision_time > tick.received_at:
+                    self.executor.activate_kill_switch("DECISION_TIME_INVALID")
+                    continue
+                if (tick.received_at - decision.decision_time).total_seconds() > 5:
+                    self.executor.activate_kill_switch("DECISION_STALE")
+                    continue
+
                 controls = self.decision_provider.control_snapshot(
                     decision=decision,
                     tick=tick,
@@ -439,8 +446,7 @@ class AutonomousExecutionLoop:
                         controls=controls,
                     )
                     if isinstance(result, LifecycleResult) and result.reconciliation_healthy:
-                        self.executor.kill_switch = True
-                        self.executor._kill_switch_activated_at = utc_now()
+                        self.executor.activate_kill_switch("TRADE_LIFECYCLE_COMPLETE")
                 except Exception:
                     self.executor.activate_kill_switch("AUTONOMOUS_LOOP_EXCEPTION")
 
@@ -458,6 +464,7 @@ class FederatedDecisionProvider:
         self.federation = federation
         self.consumer = consumer
         self._seen: set[str] = set()
+        self._proposal_parameters: dict[str, dict[str, Any]] = {}
 
     async def next_decision(self, *, tick, capital, account):
         messages = self.federation.messages_for(self.consumer, limit=100)
@@ -489,29 +496,68 @@ class FederatedDecisionProvider:
             except (KeyError, TypeError, ValueError):
                 self._seen.add(message_id)
                 continue
+            params = payload.get("proposal_parameters")
+            if not isinstance(params, dict):
+                self._seen.add(message_id)
+                continue
+            self._proposal_parameters[decision.decision_id] = dict(params)
             self._seen.add(message_id)
             return decision
         return None
 
     def proposal_parameters(self, *, decision, capital, account):
-        # Agents must provide the complete broker proposal terms. The loop does
-        # not invent a contract type, duration, barrier, or multiplier.
-        raise RuntimeError(
-            "DECISION_PROPOSAL_MUST_INCLUDE_BROKER_PARAMETERS"
-        )
+        params = self._proposal_parameters.pop(decision.decision_id, None)
+        if not isinstance(params, dict):
+            raise RuntimeError("DECISION_PROPOSAL_PARAMETERS_NOT_AVAILABLE")
+        required = ("contract_type", "currency", "underlying_symbol")
+        missing = [key for key in required if not params.get(key)]
+        if missing:
+            raise RuntimeError("PROPOSAL_PARAMETERS_MISSING:" + ",".join(missing))
+        if str(params.get("currency")) != account.currency:
+            raise RuntimeError("PROPOSAL_CURRENCY_MISMATCH")
+        if str(params.get("underlying_symbol")) != decision.symbol:
+            raise RuntimeError("PROPOSAL_SYMBOL_MISMATCH")
+        return dict(params)
 
     def control_snapshot(self, *, decision, tick, capital):
+        # Control authority is never accepted from an external agent. The
+        # runtime consumes the latest readiness artifact produced by AURELIA's
+        # own control plane and rejects stale/mismatched artifacts.
+        path = Path(
+            __import__("os").getenv(
+                "AURELIA_READINESS_PATH",
+                "data/runtime/AURELIA_READINESS.json",
+            )
+        )
+        try:
+            report = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError, json.JSONDecodeError):
+            return {key: False for key in (
+                "risk_approved", "firewall_approved", "reconciliation_healthy",
+                "final_execution_authorization", "live_trading_enabled",
+                "probability_calibrated", "probability_fresh", "probability_drift_ok",
+                "market_data_validated", "exposure_approved",
+            )}
+        max_age = float(__import__("os").getenv("AURELIA_READINESS_MAX_AGE_SECONDS", "30"))
+        try:
+            generated = datetime.fromisoformat(str(report["generated_at_utc"]).replace("Z", "+00:00"))
+            fresh = 0 <= (utc_now() - generated).total_seconds() <= max_age
+        except (KeyError, TypeError, ValueError):
+            fresh = False
+        controls = report.get("controls", {}) if isinstance(report, dict) else {}
+        final_ok = bool(report.get("final_execution_authorization"))
+        live_ok = str(report.get("live_execution", "")).upper() == "ENABLED"
         return {
-            "risk_approved": False,
-            "firewall_approved": False,
-            "reconciliation_healthy": False,
-            "final_execution_authorization": False,
-            "live_trading_enabled": False,
-            "probability_calibrated": False,
-            "probability_fresh": False,
-            "probability_drift_ok": False,
-            "market_data_validated": False,
-            "exposure_approved": False,
+            "risk_approved": bool(controls.get("risk_warden")) and fresh,
+            "firewall_approved": bool(controls.get("execution_firewall")) and fresh,
+            "reconciliation_healthy": bool(controls.get("reconciliation")) and fresh,
+            "final_execution_authorization": final_ok and fresh,
+            "live_trading_enabled": live_ok and fresh,
+            "probability_calibrated": bool(report.get("evidence", {}).get("calibration")) and fresh,
+            "probability_fresh": bool(report.get("evidence", {}).get("calibration")) and fresh,
+            "probability_drift_ok": bool(report.get("evidence", {}).get("calibration")) and fresh,
+            "market_data_validated": bool(report.get("evidence", {}).get("market_data", True)) and fresh,
+            "exposure_approved": bool(controls.get("exposure")) and fresh,
         }
 
 
