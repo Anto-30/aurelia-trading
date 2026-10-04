@@ -121,7 +121,7 @@ async def run() -> int:
             artifact_hash=artifact_hash,
             config_hash=load_config_hash(ROOT),
             data_hash=data_hash,
-            environment=f"ci-{expected_environment}",
+            environment="ci",
             started_at_utc=started.isoformat(),
             ended_at_utc=ended.isoformat(),
             status="CURRENT",
