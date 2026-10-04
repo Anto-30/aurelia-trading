@@ -457,6 +457,7 @@ class CapitalPlaneExecutor:
             )
 
         if result.outcome == BrokerOutcome.ACCEPTED:
+            self.circuit_breaker.record_success()
             self.idempotency.record_economic_effect(intent.intent_id)
             self.ledger.post(
                 LedgerEvent(

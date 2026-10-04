@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from runtime.core.release_gate import LiveReleaseState, read_live_release
+from assurance.certification_evidence import validate_evidence_file
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -165,16 +166,28 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
     balance = bool(deriv_evidence)
     persistent_worker = _flag("AURELIA_PERSISTENT_WORKER_HEALTHY") or _flag("AURELIA_RAILWAY_WORKER_HEALTHY")
 
+    evidence_specs = {
+        "STRATEGY_LIVE_ELIGIBLE": "evidence/strategy_eligibility.json",
+        "PROSPECTIVE_OOS": "evidence/prospective_oos.json",
+        "CALIBRATION": "evidence/calibration.json",
+        "ECONOMICS": "evidence/execution_economics.json",
+        "SOAK_3600S": "evidence/soak_3600s.json",
+    }
+    evidence_gates: dict[str, Gate] = {}
+    for name, relative in evidence_specs.items():
+        status, detail = validate_evidence_file(root, relative)
+        evidence_gates[name] = Gate(name, status, detail)
+
     gates = [
         Gate("DERIV_CREDENTIALS", "PASS" if credentials else "FAIL", "presence only; secret values are never emitted"),
         Gate("DERIV_SESSION", "PASS" if session else "UNKNOWN", "requires current PROVEN authenticated modern Options WS evidence"),
         Gate("BALANCE_FRESH", "PASS" if balance else "UNKNOWN", "requires current PROVEN broker balance evidence"),
         Gate("PERSISTENT_WORKER", "PASS" if persistent_worker else "FAIL", "requires an actual healthy persistent execution worker"),
-        Gate("STRATEGY_LIVE_ELIGIBLE", "PASS" if _flag("AURELIA_STRATEGY_LIVE_ELIGIBLE") else "FAIL", "requires current qualification evidence"),
-        Gate("PROSPECTIVE_OOS", "PASS" if _flag("AURELIA_PROSPECTIVE_OOS_PASS") else "FAIL", "requires valid prospective OOS evidence"),
-        Gate("CALIBRATION", "PASS" if _flag("AURELIA_CALIBRATION_PASS") else "FAIL", "requires calibration and drift evidence"),
-        Gate("ECONOMICS", "PASS" if _flag("AURELIA_ECONOMICS_PASS") else "FAIL", "requires net execution economics"),
-        Gate("SOAK_3600S", "PASS" if _flag("AURELIA_SOAK_3600S_PASS") else "FAIL", "requires actual 3600-second runtime evidence"),
+        evidence_gates["STRATEGY_LIVE_ELIGIBLE"],
+        evidence_gates["PROSPECTIVE_OOS"],
+        evidence_gates["CALIBRATION"],
+        evidence_gates["ECONOMICS"],
+        evidence_gates["SOAK_3600S"],
         Gate("MARKET_DATA", "PASS" if _flag("AURELIA_MARKET_DATA_VALIDATED") else "FAIL", "requires validated decision-time market data"),
         Gate("PROBABILITY", "PASS" if _flag("AURELIA_PROBABILITY_VALID") else "FAIL", "requires valid, calibrated, fresh probability"),
         Gate("RISK_WARDEN", "PASS" if _flag("AURELIA_RISK_WARDEN_PASS") else "FAIL", "requires deterministic risk approval"),
@@ -239,12 +252,12 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
             "legacy_railway": "HEALTHY" if _flag("AURELIA_RAILWAY_WORKER_HEALTHY") else "NOT_CONFIGURED",
             "deriv_connectivity": "PASS" if _flag("AURELIA_PERSISTENT_WORKER_DERIV_CONNECTED") or _flag("AURELIA_RAILWAY_DERIV_CONNECTED") else "UNKNOWN",
         },
-        "strategy_live_eligible": _flag("AURELIA_STRATEGY_LIVE_ELIGIBLE"),
+        "strategy_live_eligible": evidence_gates["STRATEGY_LIVE_ELIGIBLE"].passed,
         "evidence": {
-            "prospective_oos": _flag("AURELIA_PROSPECTIVE_OOS_PASS"),
-            "calibration": _flag("AURELIA_CALIBRATION_PASS"),
-            "economics": _flag("AURELIA_ECONOMICS_PASS"),
-            "soak_3600s": _flag("AURELIA_SOAK_3600S_PASS"),
+            "prospective_oos": evidence_gates["PROSPECTIVE_OOS"].passed,
+            "calibration": evidence_gates["CALIBRATION"].passed,
+            "economics": evidence_gates["ECONOMICS"].passed,
+            "soak_3600s": evidence_gates["SOAK_3600S"].passed,
         },
         "capital": {
             "starting_stake": 1.0,

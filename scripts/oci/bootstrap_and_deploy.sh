@@ -169,6 +169,23 @@ printf "%s\n" "$health" | grep -q '"capital_can_open_new_exposure": false'
 sudo docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx "AURELIA_AUTONOMOUS_LOOP=$AUTONOMOUS_LOOP"
 sudo docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx "AURELIA_VERIFY_DERIV_AUTH=$VERIFY_DERIV_AUTH"
 
+# Persist deployment lineage without exposing environment secret values.
+image_id="$(sudo docker inspect "$CONTAINER" --format '{{.Image}}')"
+runtime_source_hash="$(find "$RELEASE_DIR" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}')"
+runtime_health_hash="$(printf '%s' "$health" | sha256sum | awk '{print $1}')"
+cat <<EOF | sudo tee "$DATA_DIR/DEPLOYMENT_LINEAGE.json" >/dev/null
+{
+  "schema": "aurelia.deployment_lineage.v1",
+  "source_commit": "$SHA",
+  "runtime_source_hash": "$runtime_source_hash",
+  "runtime_artifact_hash": "$image_id",
+  "runtime_health_hash": "$runtime_health_hash",
+  "deployment_mode": "$DEPLOYMENT_MODE",
+  "generated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
+EOF
+sudo chmod 600 "$DATA_DIR/DEPLOYMENT_LINEAGE.json"
+
 sudo ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
 printf "%s\n" "$SHA" | sudo tee "$DATA_DIR/DEPLOYED_SOURCE_SHA" >/dev/null
 printf "%s\n" "$health" | sudo tee "$DATA_DIR/LAST_HEALTH.json" >/dev/null
