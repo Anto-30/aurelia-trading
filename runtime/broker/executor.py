@@ -226,6 +226,7 @@ class CapitalPlaneExecutor:
             probability_drift_ok=probability_drift_ok,
             market_data_validated=market_data_validated,
             exposure_approved=exposure_approved,
+            execution_mode=mode,
         )
         self._log(
             "AUTHORIZATION_DECISION",
