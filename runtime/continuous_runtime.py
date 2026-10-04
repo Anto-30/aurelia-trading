@@ -5,7 +5,6 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.adapters.session_manager import DerivSessionManager
@@ -17,6 +16,7 @@ from runtime.core.journal import AppendOnlyJournal
 from runtime.core.persistent import PersistentExecutionFence, PersistentLedger
 from runtime.core.reconcile import Reconciler
 from runtime.core.runtime_config import load_config_hash
+from runtime.core.models import RuntimeState
 from runtime.core.state import RuntimeStateMachine
 
 ROOT = Path(__file__).resolve().parents[1]
