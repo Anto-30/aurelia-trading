@@ -492,6 +492,12 @@ class FederatedDecisionProvider:
                     market_snapshot_hash=str(payload["market_snapshot_hash"]),
                     risk_requested_stake=float(payload["risk_requested_stake"]),
                     rationale_codes=tuple(payload.get("rationale_codes", ())),
+                    average_win=(float(payload["average_win"]) if payload.get("average_win") is not None else None),
+                    average_loss=(float(payload["average_loss"]) if payload.get("average_loss") is not None else None),
+                    execution_cost=float(payload.get("execution_cost", 0.0)),
+                    slippage_cost=float(payload.get("slippage_cost", 0.0)),
+                    quote_cost=float(payload.get("quote_cost", 0.0)),
+                    expected_value=(float(payload["expected_value"]) if payload.get("expected_value") is not None else None),
                 )
             except (KeyError, TypeError, ValueError):
                 self._seen.add(message_id)
