@@ -1,0 +1,1210 @@
+{
+  "schema": "aurelia.agent_plugin_inventory.v1",
+  "generated": "2026-10-04",
+  "plugin_groups": 54,
+  "total_skill_entries": 497,
+  "global_rule": "Plugin capability availability does not grant capital authority. Connector/account authentication is separate from plugin installation.",
+  "plugins": [
+    {
+      "plugin": "ai-graphic-design",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "GrokBot"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/ai-graphic-design/ai-graphic-design"
+      ]
+    },
+    {
+      "plugin": "airtable",
+      "skill_count": 3,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/airtable/airtable-cli",
+        "skills://plugins/airtable/airtable-filters",
+        "skills://plugins/airtable/airtable-overview"
+      ]
+    },
+    {
+      "plugin": "app-69491eceef3c8191beb70788b7840429",
+      "skill_count": 27,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-earnings-preview",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-catalyst-monitor",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-company-brief",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-country-analysis",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-country-sector-analysis",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-cross-sector",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-earnings-digest",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-earnings-quality-screen",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-earnings-reaction",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-g7-comparison",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-investment-memo",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-moat-governance-review",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-peer-comparables",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-post-ipo-day1",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-post-ipo-day14",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-post-ipo-day179",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-post-ipo-day365",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-pre-ipo-analysis",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-quick-take",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-regional-comparison",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-risk-assessment",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-scenario-analysis",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-sector-analysis",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-sector-playbook",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-thematic-research",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-valuation-snapshot",
+        "skills://plugins/app-69491eceef3c8191beb70788b7840429/bigdata-variant-perception"
+      ]
+    },
+    {
+      "plugin": "app-6996e5762c508191846b87c57edbbebe",
+      "skill_count": 2,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-6996e5762c508191846b87c57edbbebe/build-mcp-apps",
+        "skills://plugins/app-6996e5762c508191846b87c57edbbebe/use-alpic"
+      ]
+    },
+    {
+      "plugin": "app-69b31dc2110c8191b8b47dc98fe5a052",
+      "skill_count": 6,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-69b31dc2110c8191b8b47dc98fe5a052/clean-up-dropbox-content",
+        "skills://plugins/app-69b31dc2110c8191b8b47dc98fe5a052/collect-files-with-request",
+        "skills://plugins/app-69b31dc2110c8191b8b47dc98fe5a052/find-dropbox-content",
+        "skills://plugins/app-69b31dc2110c8191b8b47dc98fe5a052/inspect-dropbox-file",
+        "skills://plugins/app-69b31dc2110c8191b8b47dc98fe5a052/organize-dropbox-folder",
+        "skills://plugins/app-69b31dc2110c8191b8b47dc98fe5a052/share-dropbox-content"
+      ]
+    },
+    {
+      "plugin": "app-69ea4ed2cf7c8191b742ef3622479ddd",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-69ea4ed2cf7c8191b742ef3622479ddd/Search"
+      ]
+    },
+    {
+      "plugin": "app-69f271663a288191ac98f46bed7cb032",
+      "skill_count": 6,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-69f271663a288191ac98f46bed7cb032/tavily-best-practices",
+        "skills://plugins/app-69f271663a288191ac98f46bed7cb032/tavily-crawl",
+        "skills://plugins/app-69f271663a288191ac98f46bed7cb032/tavily-extract",
+        "skills://plugins/app-69f271663a288191ac98f46bed7cb032/tavily-map",
+        "skills://plugins/app-69f271663a288191ac98f46bed7cb032/tavily-research",
+        "skills://plugins/app-69f271663a288191ac98f46bed7cb032/tavily-search"
+      ]
+    },
+    {
+      "plugin": "app-6a172fe86f5481919f73cbc3bc3ad5bb",
+      "skill_count": 3,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-6a172fe86f5481919f73cbc3bc3ad5bb/cmc-crypto-data",
+        "skills://plugins/app-6a172fe86f5481919f73cbc3bc3ad5bb/cmc-crypto-research",
+        "skills://plugins/app-6a172fe86f5481919f73cbc3bc3ad5bb/cmc-market-report"
+      ]
+    },
+    {
+      "plugin": "app-6a2baf2fad748191812393c3e00308ef",
+      "skill_count": 13,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge",
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge-content",
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge-derivatives",
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge-earnings",
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge-fundamentals",
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge-intel",
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge-market-data",
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge-portfolio",
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge-quant",
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge-research",
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge-technical",
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge-value-investing",
+        "skills://plugins/app-6a2baf2fad748191812393c3e00308ef/longbridge-watchlist"
+      ]
+    },
+    {
+      "plugin": "app-6a314a73f8ac819195b0d55e36b9c609",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-6a314a73f8ac819195b0d55e36b9c609/firecrawl"
+      ]
+    },
+    {
+      "plugin": "app-6a3293e129088191abf0875820e839da",
+      "skill_count": 17,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/ad-multiplier",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/ai-host-video",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/faceless-video",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/higgsfield",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/motion-craft",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/narrator",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/subtitles",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/thumbnail-generation",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/ugc-product-video",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/ugc-review-video",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/ugc-try-on-video",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/ugc-tutorial-video",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/ugc-unboxing-video",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/ugc-website-video",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/video-editing",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/website-builder",
+        "skills://plugins/app-6a3293e129088191abf0875820e839da/youtube-script"
+      ]
+    },
+    {
+      "plugin": "app-6a49590bf6348191a16c0b87ca6b01b4",
+      "skill_count": 15,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-capture",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-ci-capture",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-continue",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-curate",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-defrag",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-ingest",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-lifecycle",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-literary-analysis",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-metadata-search",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-notes",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-onboarding",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-reflect",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-research",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-schema",
+        "skills://plugins/app-6a49590bf6348191a16c0b87ca6b01b4/memory-tasks"
+      ]
+    },
+    {
+      "plugin": "app-6a502589384081919c5decf93496c9d1",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-6a502589384081919c5decf93496c9d1/use-railway"
+      ]
+    },
+    {
+      "plugin": "app-6a514c90130c8191bb9a04df335d5ac6",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-6a514c90130c8191bb9a04df335d5ac6/sixtyfour"
+      ]
+    },
+    {
+      "plugin": "app-6a5fa5cb200c8191a1ad881b8e64f0ce",
+      "skill_count": 3,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-6a5fa5cb200c8191a1ad881b8e64f0ce/the-fly-company-research",
+        "skills://plugins/app-6a5fa5cb200c8191a1ad881b8e64f0ce/the-fly-news-and-market-brief",
+        "skills://plugins/app-6a5fa5cb200c8191a1ad881b8e64f0ce/the-fly-stock-screening"
+      ]
+    },
+    {
+      "plugin": "app-6a7762af20c881919eadbba72de11a09",
+      "skill_count": 5,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/app-6a7762af20c881919eadbba72de11a09/counterparty-map",
+        "skills://plugins/app-6a7762af20c881919eadbba72de11a09/guidance-vs-delivery",
+        "skills://plugins/app-6a7762af20c881919eadbba72de11a09/insider-actions",
+        "skills://plugins/app-6a7762af20c881919eadbba72de11a09/moat-and-peers",
+        "skills://plugins/app-6a7762af20c881919eadbba72de11a09/revenue-segmentation"
+      ]
+    },
+    {
+      "plugin": "base44",
+      "skill_count": 5,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/base44/base44-cli",
+        "skills://plugins/base44/base44-remote-dev",
+        "skills://plugins/base44/base44-sandbox",
+        "skills://plugins/base44/base44-sdk",
+        "skills://plugins/base44/base44-troubleshooter"
+      ]
+    },
+    {
+      "plugin": "build-web-apps",
+      "skill_count": 6,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/build-web-apps/frontend-app-builder",
+        "skills://plugins/build-web-apps/frontend-testing-debugging",
+        "skills://plugins/build-web-apps/react-best-practices",
+        "skills://plugins/build-web-apps/shadcn",
+        "skills://plugins/build-web-apps/stripe-best-practices",
+        "skills://plugins/build-web-apps/supabase-postgres-best-practices"
+      ]
+    },
+    {
+      "plugin": "build-web-data-visualization",
+      "skill_count": 18,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/build-web-data-visualization/accessibility-and-inclusive-visualization",
+        "skills://plugins/build-web-data-visualization/canvas2d-data-visualization",
+        "skills://plugins/build-web-data-visualization/d3-data-visualization",
+        "skills://plugins/build-web-data-visualization/dashboards-and-real-time-visualization",
+        "skills://plugins/build-web-data-visualization/data-visualization",
+        "skills://plugins/build-web-data-visualization/gantt-chart-visualization",
+        "skills://plugins/build-web-data-visualization/geospatial-and-cartographic-visualization",
+        "skills://plugins/build-web-data-visualization/grammar-of-graphics-and-declarative-visualization",
+        "skills://plugins/build-web-data-visualization/node-link-and-diagram-layout",
+        "skills://plugins/build-web-data-visualization/react-and-nextjs-data-visualization",
+        "skills://plugins/build-web-data-visualization/reports-pdfs-and-slide-automation",
+        "skills://plugins/build-web-data-visualization/scrollytelling-and-parallax-data-visualization",
+        "skills://plugins/build-web-data-visualization/statistical-and-uncertainty-visualization",
+        "skills://plugins/build-web-data-visualization/testing-data-visualizations",
+        "skills://plugins/build-web-data-visualization/threejs-data-visualization",
+        "skills://plugins/build-web-data-visualization/typescript-data-visualization-engineering",
+        "skills://plugins/build-web-data-visualization/uml-and-software-architecture-visualization",
+        "skills://plugins/build-web-data-visualization/visualization-strategy-and-critique"
+      ]
+    },
+    {
+      "plugin": "c4-investigator",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/c4-investigator/c4-fake-trading-app-investigator"
+      ]
+    },
+    {
+      "plugin": "chatcut-desktop",
+      "skill_count": 17,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "GrokBot"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/chatcut-desktop/asset-import",
+        "skills://plugins/chatcut-desktop/chatcut-plugin-basics",
+        "skills://plugins/chatcut-desktop/create-motion-graphics",
+        "skills://plugins/chatcut-desktop/digital-human",
+        "skills://plugins/chatcut-desktop/export",
+        "skills://plugins/chatcut-desktop/known-errors",
+        "skills://plugins/chatcut-desktop/multicam-sync",
+        "skills://plugins/chatcut-desktop/music",
+        "skills://plugins/chatcut-desktop/product-help",
+        "skills://plugins/chatcut-desktop/shader-gen",
+        "skills://plugins/chatcut-desktop/talking-head-guide",
+        "skills://plugins/chatcut-desktop/transcription",
+        "skills://plugins/chatcut-desktop/verification",
+        "skills://plugins/chatcut-desktop/video-gen",
+        "skills://plugins/chatcut-desktop/video-translation",
+        "skills://plugins/chatcut-desktop/voice",
+        "skills://plugins/chatcut-desktop/widget-forms"
+      ]
+    },
+    {
+      "plugin": "coderabbit",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/coderabbit/code-review"
+      ]
+    },
+    {
+      "plugin": "codex-market-skills",
+      "skill_count": 10,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/codex-market-skills/cn-market-tape",
+        "skills://plugins/codex-market-skills/cn-stock-move-reason",
+        "skills://plugins/codex-market-skills/jp-stock-move-reason",
+        "skills://plugins/codex-market-skills/macro-news-check",
+        "skills://plugins/codex-market-skills/market-calendar-google",
+        "skills://plugins/codex-market-skills/market-daily-strategist",
+        "skills://plugins/codex-market-skills/stock-sentiment-analysis",
+        "skills://plugins/codex-market-skills/stock-technical-analysis",
+        "skills://plugins/codex-market-skills/us-stock-gamma-moomoo",
+        "skills://plugins/codex-market-skills/us-stock-move-reason"
+      ]
+    },
+    {
+      "plugin": "convex",
+      "skill_count": 8,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/convex/add",
+        "skills://plugins/convex/check-updates",
+        "skills://plugins/convex/convex-expert",
+        "skills://plugins/convex/convex-reviewer",
+        "skills://plugins/convex/domains",
+        "skills://plugins/convex/labs-quickstart",
+        "skills://plugins/convex/quickstart",
+        "skills://plugins/convex/quickstart-improve"
+      ]
+    },
+    {
+      "plugin": "data-analytics",
+      "skill_count": 20,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/data-analytics/analyze-data-quality",
+        "skills://plugins/data-analytics/build-dashboard",
+        "skills://plugins/data-analytics/build-report",
+        "skills://plugins/data-analytics/convert-to-doc",
+        "skills://plugins/data-analytics/convert-to-slides",
+        "skills://plugins/data-analytics/create-data-context",
+        "skills://plugins/data-analytics/design-kpis",
+        "skills://plugins/data-analytics/gather-business-context",
+        "skills://plugins/data-analytics/index",
+        "skills://plugins/data-analytics/jupyter-notebooks",
+        "skills://plugins/data-analytics/kpi-reporting",
+        "skills://plugins/data-analytics/market-sizing",
+        "skills://plugins/data-analytics/metric-diagnostics",
+        "skills://plugins/data-analytics/product-business-analysis",
+        "skills://plugins/data-analytics/publish-artifact-to-sites",
+        "skills://plugins/data-analytics/report-to-pdf",
+        "skills://plugins/data-analytics/schedule-refresh-jobs",
+        "skills://plugins/data-analytics/share-artifact-summary",
+        "skills://plugins/data-analytics/validate-data",
+        "skills://plugins/data-analytics/visualize-data"
+      ]
+    },
+    {
+      "plugin": "easy-cardz-nba-scout",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/easy-cardz-nba-scout/easy-cardz-nba-scout"
+      ]
+    },
+    {
+      "plugin": "email-love",
+      "skill_count": 14,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/email-love/braze-liquid",
+        "skills://plugins/email-love/customerio-liquid",
+        "skills://plugins/email-love/email-love-design-system-migration",
+        "skills://plugins/email-love/email-love-figma-builder",
+        "skills://plugins/email-love/email-love-figma-quality-gates",
+        "skills://plugins/email-love/email-love-template-repair",
+        "skills://plugins/email-love/hubspot-hubl",
+        "skills://plugins/email-love/iterable-handlebars",
+        "skills://plugins/email-love/klaviyo-django",
+        "skills://plugins/email-love/marketo-velocity",
+        "skills://plugins/email-love/moengage-jinja",
+        "skills://plugins/email-love/sailthru-zephyr",
+        "skills://plugins/email-love/sfmc-ampscript",
+        "skills://plugins/email-love/zeta-zml"
+      ]
+    },
+    {
+      "plugin": "endor-labs-agent-kit",
+      "skill_count": 12,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/endor-labs-agent-kit/ai-sast-remediation",
+        "skills://plugins/endor-labs-agent-kit/cicd-posture",
+        "skills://plugins/endor-labs-agent-kit/configuration-automation",
+        "skills://plugins/endor-labs-agent-kit/dependency-reviewer",
+        "skills://plugins/endor-labs-agent-kit/endor-agent-kit-setup",
+        "skills://plugins/endor-labs-agent-kit/findings-browser",
+        "skills://plugins/endor-labs-agent-kit/malware-responder",
+        "skills://plugins/endor-labs-agent-kit/oss-upgrade-investigator",
+        "skills://plugins/endor-labs-agent-kit/remediation-planning",
+        "skills://plugins/endor-labs-agent-kit/sca-remediation",
+        "skills://plugins/endor-labs-agent-kit/troubleshooting",
+        "skills://plugins/endor-labs-agent-kit/vulnerability-explainer"
+      ]
+    },
+    {
+      "plugin": "figma",
+      "skill_count": 14,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/figma/figma-code-connect",
+        "skills://plugins/figma/figma-create-new-file",
+        "skills://plugins/figma/figma-design-to-code",
+        "skills://plugins/figma/figma-generate-design",
+        "skills://plugins/figma/figma-generate-diagram",
+        "skills://plugins/figma/figma-generate-library",
+        "skills://plugins/figma/figma-generative-plugins",
+        "skills://plugins/figma/figma-implement-motion",
+        "skills://plugins/figma/figma-shaders",
+        "skills://plugins/figma/figma-swiftui",
+        "skills://plugins/figma/figma-use",
+        "skills://plugins/figma/figma-use-figjam",
+        "skills://plugins/figma/figma-use-motion",
+        "skills://plugins/figma/figma-use-slides"
+      ]
+    },
+    {
+      "plugin": "heytraders-codex",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/heytraders-codex/heytraders-browser"
+      ]
+    },
+    {
+      "plugin": "hubspot",
+      "skill_count": 4,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/hubspot/hubspot",
+        "skills://plugins/hubspot/hubspot-crm-data-hygiene",
+        "skills://plugins/hubspot/hubspot-customer-prep",
+        "skills://plugins/hubspot/hubspot-pipeline-health"
+      ]
+    },
+    {
+      "plugin": "hugging-face",
+      "skill_count": 11,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/hugging-face/hf-cli",
+        "skills://plugins/hugging-face/huggingface-community-evals",
+        "skills://plugins/hugging-face/huggingface-datasets",
+        "skills://plugins/hugging-face/huggingface-gradio",
+        "skills://plugins/hugging-face/huggingface-jobs",
+        "skills://plugins/hugging-face/huggingface-llm-trainer",
+        "skills://plugins/hugging-face/huggingface-paper-publisher",
+        "skills://plugins/hugging-face/huggingface-papers",
+        "skills://plugins/hugging-face/huggingface-trackio",
+        "skills://plugins/hugging-face/transformers-js",
+        "skills://plugins/hugging-face/huggingface-vision-trainer"
+      ]
+    },
+    {
+      "plugin": "impeccable",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "GrokBot"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/impeccable/impeccable"
+      ]
+    },
+    {
+      "plugin": "investment-banking",
+      "skill_count": 23,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/investment-banking/buyer-investor-list",
+        "skills://plugins/investment-banking/capital-markets-issuance",
+        "skills://plugins/investment-banking/cim-builder",
+        "skills://plugins/investment-banking/cim-teardown",
+        "skills://plugins/investment-banking/company-tearsheet",
+        "skills://plugins/investment-banking/comps-valuation",
+        "skills://plugins/investment-banking/covenant-package-analyzer",
+        "skills://plugins/investment-banking/dcf-model-builder",
+        "skills://plugins/investment-banking/deal-process-tracker",
+        "skills://plugins/investment-banking/distressed-recovery-waterfall",
+        "skills://plugins/investment-banking/financials-normalizer",
+        "skills://plugins/investment-banking/ib-deck-qc",
+        "skills://plugins/investment-banking/investment-banking",
+        "skills://plugins/investment-banking/lbo-model-build",
+        "skills://plugins/investment-banking/meeting-prep",
+        "skills://plugins/investment-banking/memo-builder",
+        "skills://plugins/investment-banking/merger-model-builder",
+        "skills://plugins/investment-banking/model-audit-tieout",
+        "skills://plugins/investment-banking/pitch-deck-builder",
+        "skills://plugins/investment-banking/private-credit-underwriting",
+        "skills://plugins/investment-banking/scenario-sensitivity-generator",
+        "skills://plugins/investment-banking/three-statement-model-builder",
+        "skills://plugins/investment-banking/user-context"
+      ]
+    },
+    {
+      "plugin": "kling-ai-cli",
+      "skill_count": 3,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "GrokBot"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/kling-ai-cli/kling-ai",
+        "skills://plugins/kling-ai-cli/kling-ai-generate-image",
+        "skills://plugins/kling-ai-cli/kling-ai-generate-video"
+      ]
+    },
+    {
+      "plugin": "lcc-public",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/lcc-public/lifetime-core-aggressive-championship"
+      ]
+    },
+    {
+      "plugin": "mcp-precheck",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/mcp-precheck/mcp-precheck"
+      ]
+    },
+    {
+      "plugin": "murali-growth-screener-mobile",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/murali-growth-screener-mobile/murali-growth-screener"
+      ]
+    },
+    {
+      "plugin": "nightvision",
+      "skill_count": 4,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/nightvision/api-discovery",
+        "skills://plugins/nightvision/ci-cd-integration",
+        "skills://plugins/nightvision/scan-configuration",
+        "skills://plugins/nightvision/scan-triage"
+      ]
+    },
+    {
+      "plugin": "notion",
+      "skill_count": 4,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/notion/notion-knowledge-capture",
+        "skills://plugins/notion/notion-meeting-intelligence",
+        "skills://plugins/notion/notion-research-documentation",
+        "skills://plugins/notion/notion-spec-to-implementation"
+      ]
+    },
+    {
+      "plugin": "nvidia",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/nvidia/nvidia-skill-finder"
+      ]
+    },
+    {
+      "plugin": "open-design",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "GrokBot"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/open-design/open-design-mode"
+      ]
+    },
+    {
+      "plugin": "pixverse",
+      "skill_count": 38,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "GrokBot"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/pixverse/pixverse-ad-variants",
+        "skills://plugins/pixverse/pixverse-audio",
+        "skills://plugins/pixverse/pixverse-brand-system",
+        "skills://plugins/pixverse/pixverse-canvas",
+        "skills://plugins/pixverse/pixverse-captions",
+        "skills://plugins/pixverse/pixverse-character-sheet",
+        "skills://plugins/pixverse/pixverse-cinematic-story",
+        "skills://plugins/pixverse/pixverse-cover-art",
+        "skills://plugins/pixverse/pixverse-create-image",
+        "skills://plugins/pixverse/pixverse-create-video",
+        "skills://plugins/pixverse/pixverse-delivery",
+        "skills://plugins/pixverse/pixverse-explainer",
+        "skills://plugins/pixverse/pixverse-fashion-video",
+        "skills://plugins/pixverse/pixverse-game-trailer",
+        "skills://plugins/pixverse/pixverse-howto-video",
+        "skills://plugins/pixverse/pixverse-listing-images",
+        "skills://plugins/pixverse/pixverse-motion-design",
+        "skills://plugins/pixverse/pixverse-music-video",
+        "skills://plugins/pixverse/pixverse-podcast-clip",
+        "skills://plugins/pixverse/pixverse-presenter",
+        "skills://plugins/pixverse/pixverse-product-stills",
+        "skills://plugins/pixverse/pixverse-product-video",
+        "skills://plugins/pixverse/pixverse-ranking-video",
+        "skills://plugins/pixverse/pixverse-setup",
+        "skills://plugins/pixverse/pixverse-short-drama",
+        "skills://plugins/pixverse/pixverse-street-interview",
+        "skills://plugins/pixverse/pixverse-studio",
+        "skills://plugins/pixverse/pixverse-talking-head",
+        "skills://plugins/pixverse/pixverse-ugc-video",
+        "skills://plugins/pixverse/pixverse-unbox-video",
+        "skills://plugins/pixverse/pixverse-video-editing",
+        "skills://plugins/pixverse/pixverse-video-remake",
+        "skills://plugins/pixverse/pixverse-video-restyle",
+        "skills://plugins/pixverse/pixverse-video-script",
+        "skills://plugins/pixverse/pixverse-video-translate",
+        "skills://plugins/pixverse/pixverse-video-variants",
+        "skills://plugins/pixverse/pixverse-visual-recipes",
+        "skills://plugins/pixverse/pixverse-voiceover"
+      ]
+    },
+    {
+      "plugin": "plugin-management",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/plugin-management/plugin-management"
+      ]
+    },
+    {
+      "plugin": "public-equity-investing",
+      "skill_count": 23,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/public-equity-investing/catalyst-calendar",
+        "skills://plugins/public-equity-investing/company-tearsheet",
+        "skills://plugins/public-equity-investing/comps-valuation",
+        "skills://plugins/public-equity-investing/dcf-model-builder",
+        "skills://plugins/public-equity-investing/deck-report-qc",
+        "skills://plugins/public-equity-investing/earnings-deep-dive",
+        "skills://plugins/public-equity-investing/earnings-preview",
+        "skills://plugins/public-equity-investing/economic-impact-report",
+        "skills://plugins/public-equity-investing/equity-model-update",
+        "skills://plugins/public-equity-investing/event-driven-analyzer",
+        "skills://plugins/public-equity-investing/financials-normalizer",
+        "skills://plugins/public-equity-investing/idea-generation",
+        "skills://plugins/public-equity-investing/initiating-coverage",
+        "skills://plugins/public-equity-investing/long-short-pitch",
+        "skills://plugins/public-equity-investing/meeting-prep",
+        "skills://plugins/public-equity-investing/memo-builder",
+        "skills://plugins/public-equity-investing/model-audit-tieout",
+        "skills://plugins/public-equity-investing/portfolio-risk-management",
+        "skills://plugins/public-equity-investing/public-equity-investing",
+        "skills://plugins/public-equity-investing/scenario-sensitivity-generator",
+        "skills://plugins/public-equity-investing/thesis-tracker",
+        "skills://plugins/public-equity-investing/three-statement-model-builder",
+        "skills://plugins/public-equity-investing/user-context"
+      ]
+    },
+    {
+      "plugin": "remotion",
+      "skill_count": 12,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "GrokBot"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/remotion/remotion-best-practices",
+        "skills://plugins/remotion/remotion-captions",
+        "skills://plugins/remotion/remotion-create",
+        "skills://plugins/remotion/remotion-docs",
+        "skills://plugins/remotion/remotion-interactivity",
+        "skills://plugins/remotion/remotion-maps",
+        "skills://plugins/remotion/remotion-markup",
+        "skills://plugins/remotion/remotion-multimedia",
+        "skills://plugins/remotion/remotion-render",
+        "skills://plugins/remotion/remotion-saas",
+        "skills://plugins/remotion/remotion-studio",
+        "skills://plugins/remotion/remotion-upgrade"
+      ]
+    },
+    {
+      "plugin": "short-circuit-codex",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/short-circuit-codex/short-circuit"
+      ]
+    },
+    {
+      "plugin": "supabase",
+      "skill_count": 2,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/supabase/supabase",
+        "skills://plugins/supabase/supabase-postgres-best-practices"
+      ]
+    },
+    {
+      "plugin": "superdesign",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "GrokBot"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/superdesign/superdesign"
+      ]
+    },
+    {
+      "plugin": "superpowers",
+      "skill_count": 15,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/superpowers/brainstorming",
+        "skills://plugins/superpowers/diagnosing-superpowers",
+        "skills://plugins/superpowers/dispatching-parallel-agents",
+        "skills://plugins/superpowers/executing-plans",
+        "skills://plugins/superpowers/finishing-a-development-branch",
+        "skills://plugins/superpowers/receiving-code-review",
+        "skills://plugins/superpowers/requesting-code-review",
+        "skills://plugins/superpowers/subagent-driven-development",
+        "skills://plugins/superpowers/systematic-debugging",
+        "skills://plugins/superpowers/test-driven-development",
+        "skills://plugins/superpowers/using-git-worktrees",
+        "skills://plugins/superpowers/using-superpowers",
+        "skills://plugins/superpowers/verification-before-completion",
+        "skills://plugins/superpowers/writing-plans",
+        "skills://plugins/superpowers/writing-skills"
+      ]
+    },
+    {
+      "plugin": "twilio-developer-kit",
+      "skill_count": 55,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/twilio-developer-kit/twilio-account-setup",
+        "skills://plugins/twilio-developer-kit/twilio-agent-augmentation-architect",
+        "skills://plugins/twilio-developer-kit/twilio-agent-connect",
+        "skills://plugins/twilio-developer-kit/twilio-ai-agent-architect",
+        "skills://plugins/twilio-developer-kit/twilio-call-recordings",
+        "skills://plugins/twilio-developer-kit/twilio-cli-reference",
+        "skills://plugins/twilio-developer-kit/twilio-compliance-onboarding",
+        "skills://plugins/twilio-developer-kit/twilio-compliance-traffic",
+        "skills://plugins/twilio-developer-kit/twilio-conference-calls",
+        "skills://plugins/twilio-developer-kit/twilio-content-template-builder",
+        "skills://plugins/twilio-developer-kit/conversation-intelligence",
+        "skills://plugins/twilio-developer-kit/twilio-conversation-orchestrator",
+        "skills://plugins/twilio-developer-kit/twilio-conversations-classic-api",
+        "skills://plugins/twilio-developer-kit/twilio-customer-memory",
+        "skills://plugins/twilio-developer-kit/twilio-customer-support-architect",
+        "skills://plugins/twilio-developer-kit/twilio-debugging-observability",
+        "skills://plugins/twilio-developer-kit/twilio-email-deliverability-advisor",
+        "skills://plugins/twilio-developer-kit/twilio-email-send",
+        "skills://plugins/twilio-developer-kit/twilio-enterprise-knowledge",
+        "skills://plugins/twilio-developer-kit/twilio-iam-auth-setup",
+        "skills://plugins/twilio-developer-kit/twilio-identity-verification-advisor",
+        "skills://plugins/twilio-developer-kit/twilio-lookup-phone-intelligence",
+        "skills://plugins/twilio-developer-kit/twilio-marketing-promotions-advisor",
+        "skills://plugins/twilio-developer-kit/twilio-messaging-channel-advisor",
+        "skills://plugins/twilio-developer-kit/twilio-messaging-overview",
+        "skills://plugins/twilio-developer-kit/twilio-messaging-services",
+        "skills://plugins/twilio-developer-kit/twilio-messaging-webhooks",
+        "skills://plugins/twilio-developer-kit/twilio-notifications-alerts-advisor",
+        "skills://plugins/twilio-developer-kit/twilio-numbers-senders",
+        "skills://plugins/twilio-developer-kit/twilio-organizations-setup",
+        "skills://plugins/twilio-developer-kit/twilio-rcs-messaging",
+        "skills://plugins/twilio-developer-kit/twilio-regulatory-compliance-bundles",
+        "skills://plugins/twilio-developer-kit/twilio-reliability-patterns",
+        "skills://plugins/twilio-developer-kit/twilio-security-api-auth",
+        "skills://plugins/twilio-developer-kit/twilio-security-compliance-hipaa",
+        "skills://plugins/twilio-developer-kit/twilio-security-hardening",
+        "skills://plugins/twilio-developer-kit/twilio-send-message",
+        "skills://plugins/twilio-developer-kit/twilio-sendgrid-account-setup",
+        "skills://plugins/twilio-developer-kit/twilio-sendgrid-deliverability-advisor",
+        "skills://plugins/twilio-developer-kit/twilio-sendgrid-email-send",
+        "skills://plugins/twilio-developer-kit/twilio-sendgrid-email-settings",
+        "skills://plugins/twilio-developer-kit/twilio-sendgrid-engagement-quality",
+        "skills://plugins/twilio-developer-kit/twilio-sendgrid-inbound-parse",
+        "skills://plugins/twilio-developer-kit/twilio-sendgrid-suppressions",
+        "skills://plugins/twilio-developer-kit/twilio-sendgrid-webhooks",
+        "skills://plugins/twilio-developer-kit/twilio-isv-sms-best-practices",
+        "skills://plugins/twilio-developer-kit/twilio-sms-send-message",
+        "skills://plugins/twilio-developer-kit/twilio-taskrouter-routing",
+        "skills://plugins/twilio-developer-kit/twilio-verify-send-otp",
+        "skills://plugins/twilio-developer-kit/twilio-voice-conversation-relay",
+        "skills://plugins/twilio-developer-kit/twilio-voice-outbound-calls",
+        "skills://plugins/twilio-developer-kit/twilio-voice-twiml",
+        "skills://plugins/twilio-developer-kit/twilio-webhook-architecture",
+        "skills://plugins/twilio-developer-kit/twilio-whatsapp-manage-senders",
+        "skills://plugins/twilio-developer-kit/twilio-whatsapp-send-message"
+      ]
+    },
+    {
+      "plugin": "vercel",
+      "skill_count": 54,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/vercel/agent-browser",
+        "skills://plugins/vercel/agent-browser-verify",
+        "skills://plugins/vercel/ai-elements",
+        "skills://plugins/vercel/ai-gateway",
+        "skills://plugins/vercel/ai-generation-persistence",
+        "skills://plugins/vercel/ai-sdk",
+        "skills://plugins/vercel/auth",
+        "skills://plugins/vercel/bootstrap",
+        "skills://plugins/vercel/cdn-caching",
+        "skills://plugins/vercel/chat-sdk",
+        "skills://plugins/vercel/cms",
+        "skills://plugins/vercel/cron-jobs",
+        "skills://plugins/vercel/deployments-cicd",
+        "skills://plugins/vercel/email",
+        "skills://plugins/vercel/env-vars",
+        "skills://plugins/vercel/eve",
+        "skills://plugins/vercel/geist",
+        "skills://plugins/vercel/geistdocs",
+        "skills://plugins/vercel/investigation-mode",
+        "skills://plugins/vercel/json-render",
+        "skills://plugins/vercel/knowledge-update",
+        "skills://plugins/vercel/marketplace",
+        "skills://plugins/vercel/micro",
+        "skills://plugins/vercel/microfrontends",
+        "skills://plugins/vercel/ncc",
+        "skills://plugins/vercel/next-cache-components",
+        "skills://plugins/vercel/next-forge",
+        "skills://plugins/vercel/next-upgrade",
+        "skills://plugins/vercel/nextjs",
+        "skills://plugins/vercel/observability",
+        "skills://plugins/vercel/payments",
+        "skills://plugins/vercel/react-best-practices",
+        "skills://plugins/vercel/routing-middleware",
+        "skills://plugins/vercel/runtime-cache",
+        "skills://plugins/vercel/satori",
+        "skills://plugins/vercel/shadcn",
+        "skills://plugins/vercel/sign-in-with-vercel",
+        "skills://plugins/vercel/swr",
+        "skills://plugins/vercel/turbopack",
+        "skills://plugins/vercel/turborepo",
+        "skills://plugins/vercel/v0-dev",
+        "skills://plugins/vercel/vercel-agent",
+        "skills://plugins/vercel/vercel-api",
+        "skills://plugins/vercel/vercel-cli",
+        "skills://plugins/vercel/vercel-connect",
+        "skills://plugins/vercel/vercel-firewall",
+        "skills://plugins/vercel/vercel-flags",
+        "skills://plugins/vercel/vercel-functions",
+        "skills://plugins/vercel/vercel-queues",
+        "skills://plugins/vercel/vercel-sandbox",
+        "skills://plugins/vercel/vercel-services",
+        "skills://plugins/vercel/vercel-storage",
+        "skills://plugins/vercel/verification",
+        "skills://plugins/vercel/workflow"
+      ]
+    },
+    {
+      "plugin": "waldo",
+      "skill_count": 6,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/waldo/ad-intelligence",
+        "skills://plugins/waldo/archival-knowledge",
+        "skills://plugins/waldo/data-analysis",
+        "skills://plugins/waldo/social-intelligence",
+        "skills://plugins/waldo/trends-research",
+        "skills://plugins/waldo/web-research"
+      ]
+    },
+    {
+      "plugin": "windsor-ai",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "installed_via": "system_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://plugins/windsor-ai/windsor"
+      ]
+    }
+  ]
+}
