@@ -21,7 +21,8 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/feat/autonomous-loop-federated-runtime'
+    # Canonical deployment source is main; LIVE remains independently gated by LIVE_LOCK.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -37,7 +38,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$GITHUB_REF" = "refs/heads/feat/autonomous-loop-federated-runtime"
+          test "$GITHUB_REF" = "refs/heads/main"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           case "$DEPLOYMENT_MODE" in
             VERIFY_ONLY)
