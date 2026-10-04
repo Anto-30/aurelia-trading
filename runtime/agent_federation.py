@@ -307,8 +307,18 @@ class PersistentAgentFederation:
     ) -> AgentMessage:
         now = datetime.now(timezone.utc)
         recipients_tuple = tuple(sorted(set(recipients)))
+        if sender != "AURELIA" and any(
+            payload.get(key) is True
+            for key in (
+                "capital_authority",
+                "final_execution_authorization",
+                "live_trading_enabled",
+                "order_submission_permitted",
+            )
+        ):
+            raise PermissionError("EXTERNAL_AGENT_CAPITAL_AUTHORITY_FORBIDDEN")
         message = AgentMessage(
-            message_id=f"msg:{sha256({'sender': sender, 'recipients': recipients_tuple, 'message_type': message_type, 'payload': payload, 'created_at': now.isoformat()})}",
+            message_id=f"msg:{sha256({'sender': sender, 'recipients': recipients_tuple, 'message_type': message_type, 'payload': payload, 'correlation_id': correlation_id})}",
             sender=sender,
             recipients=recipients_tuple,
             message_type=message_type,
