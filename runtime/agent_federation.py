@@ -59,6 +59,7 @@ class AgentTask:
     created_at: datetime
     correlation_id: str
     status: str = "PENDING"
+    claimed_at: datetime | None = None
 
     def as_payload(self) -> dict[str, Any]:
         return {
@@ -70,6 +71,7 @@ class AgentTask:
             "created_at": self.created_at.isoformat(),
             "correlation_id": self.correlation_id,
             "status": self.status,
+            "claimed_at": self.claimed_at.isoformat() if self.claimed_at else None,
         }
 
 
@@ -221,6 +223,7 @@ class PersistentAgentFederation:
             selected = candidates[0]
             selected["status"] = "CLAIMED"
             selected["assigned_agent"] = agent
+            selected["claimed_at"] = datetime.now(timezone.utc).isoformat()
             self._save_tasks(tasks)
         self._append("AGENT_TASK_CLAIMED", selected, selected["correlation_id"])
         return AgentTask(
@@ -232,6 +235,11 @@ class PersistentAgentFederation:
             created_at=datetime.fromisoformat(selected["created_at"]),
             correlation_id=selected["correlation_id"],
             status="CLAIMED",
+            claimed_at=(
+                datetime.fromisoformat(selected["claimed_at"])
+                if selected.get("claimed_at")
+                else None
+            ),
         )
 
     async def complete_task(self, task_id: str, *, agent: str, status: str = "COMPLETED") -> bool:
@@ -246,6 +254,36 @@ class PersistentAgentFederation:
             self._save_tasks(tasks)
         self._append("AGENT_TASK_COMPLETED", {"task_id": task_id, "agent": agent, "status": status}, task_id)
         return True
+
+    async def recover_stale_tasks(self) -> tuple[str, ...]:
+        now = datetime.now(timezone.utc)
+        recovered: list[str] = []
+        async with self._lock:
+            tasks = self._load_tasks()
+            changed = False
+            for task in tasks:
+                if task.get("status") != "CLAIMED" or not task.get("claimed_at"):
+                    continue
+                try:
+                    claimed_at = datetime.fromisoformat(str(task["claimed_at"]))
+                except (TypeError, ValueError):
+                    continue
+                if now - claimed_at <= timedelta(seconds=self.lease_seconds):
+                    continue
+                task["status"] = "PENDING"
+                task["assigned_agent"] = None
+                task.pop("claimed_at", None)
+                recovered.append(str(task.get("task_id")))
+                changed = True
+            if changed:
+                self._save_tasks(tasks)
+        for task_id in recovered:
+            self._append(
+                "AGENT_TASK_REQUEUED",
+                {"task_id": task_id, "reason": "CLAIM_LEASE_EXPIRED"},
+                task_id,
+            )
+        return tuple(recovered)
 
     def pending_tasks(self, agent: str | None = None) -> list[dict[str, Any]]:
         rows = [
@@ -392,6 +430,7 @@ class AgentFederationSupervisor:
     async def _cycle(self) -> None:
         last_roundtable = datetime.min.replace(tzinfo=timezone.utc)
         while not self._stop.is_set():
+            await self.federation.recover_stale_tasks()
             stale = self.federation.stale_agents()
             for agent in stale:
                 if agent not in self.federation._stale_notified:
