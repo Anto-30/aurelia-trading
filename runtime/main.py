@@ -11,6 +11,7 @@ from pathlib import Path
 from threading import Thread
 
 from runtime.adapters.deriv_adapter import DerivAdapter
+from runtime.continuous_runtime import start_continuous_runtime
 from runtime.core.events import event_envelope
 from runtime.core.health import HealthSnapshot
 from runtime.core.journal import AppendOnlyJournal
@@ -244,17 +245,57 @@ async def main() -> None:
 
     supervisor.start(heartbeat, protect)
 
+    continuous_runtime = None
+    if os.getenv("AURELIA_CONTINUOUS_RUNTIME", "true").strip().lower() == "true":
+        try:
+            continuous_runtime = await start_continuous_runtime(machine)
+            if continuous_runtime.execution_loop is not None:
+                health.broker_session = continuous_runtime.adapter is not None
+                health.capital_fresh = health.broker_session
+                health.reconciliation_healthy = True
+        except Exception as exc:
+            health.critical_unknowns.add("CONTINUOUS_RUNTIME_STARTUP")
+            journal.append(
+                event_envelope(
+                    event_type="CONTINUOUS_RUNTIME_UNKNOWN",
+                    event_id="CONTINUOUS_RUNTIME_UNKNOWN:1",
+                    correlation_id="continuous-runtime",
+                    payload={"error_class": type(exc).__name__},
+                    source_hash="runtime-baseline",
+                    config_hash=config_hash,
+                )
+            )
+
     try:
         while True:
             health.process_heartbeat = datetime.now(timezone.utc)
-            health.kill_switch_off = False
-            health.broker_session = False
-            health.market_data_fresh = False
-            health.capital_fresh = False
-            health.reconciliation_healthy = False
-            HealthHandler.state = RuntimeState.CAPITAL_PROTECTED
+            if continuous_runtime is None:
+                health.kill_switch_off = False
+                health.broker_session = False
+                health.market_data_fresh = False
+                health.capital_fresh = False
+                health.reconciliation_healthy = False
+                HealthHandler.state = RuntimeState.CAPITAL_PROTECTED
+            else:
+                loop = continuous_runtime.execution_loop
+                health.broker_session = continuous_runtime.adapter is not None and continuous_runtime.adapter.transport is not None
+                health.capital_fresh = health.broker_session
+                health.reconciliation_healthy = health.broker_session
+                health.kill_switch_off = bool(loop is not None and not loop.executor.kill_switch)
+                HealthHandler.state = machine.state
+                task = continuous_runtime.execution_task
+                if task is not None and task.done():
+                    health.critical_unknowns.add("AUTONOMOUS_LOOP_STOPPED")
+                    try:
+                        task.exception()
+                    except asyncio.CancelledError:
+                        pass
+                    if loop is not None:
+                        loop.executor.activate_kill_switch("AUTONOMOUS_LOOP_STOPPED")
             await asyncio.sleep(5)
     finally:
+        if continuous_runtime is not None:
+            await continuous_runtime.stop()
         supervisor.stop()
         server.shutdown()
 

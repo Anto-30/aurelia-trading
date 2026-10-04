@@ -33,6 +33,7 @@ class ExecutionOutcome:
     reasons: tuple[str, ...]
     intent_id: str | None = None
     broker_transaction_id: str | None = None
+    contract_id: str | None = None
 
 
 class CapitalPlaneExecutor:
@@ -181,6 +182,11 @@ class CapitalPlaneExecutor:
         reconciliation_healthy: bool,
         final_execution_authorization: bool,
         live_trading_enabled: bool,
+        probability_calibrated: bool = False,
+        probability_fresh: bool = False,
+        probability_drift_ok: bool = False,
+        market_data_validated: bool = False,
+        exposure_approved: bool = False,
         proposal_id: str | None = None,
         mode: str = "LIVE",
     ) -> tuple[GateResult, AuthorizationContext | None, OrderIntent | None]:
@@ -215,6 +221,11 @@ class CapitalPlaneExecutor:
             reconciliation_healthy=reconciliation_healthy,
             final_execution_authorization=final_execution_authorization,
             live_trading_enabled=live_trading_enabled,
+            probability_calibrated=probability_calibrated,
+            probability_fresh=probability_fresh,
+            probability_drift_ok=probability_drift_ok,
+            market_data_validated=market_data_validated,
+            exposure_approved=exposure_approved,
         )
         self._log(
             "AUTHORIZATION_DECISION",
@@ -227,6 +238,60 @@ class CapitalPlaneExecutor:
         if not gate.allowed or ctx is None:
             return gate, None, None
         return gate, ctx, build_intent(ctx, proposal_id=proposal_id, mode=mode)
+
+    async def preflight_authorization(
+        self,
+        *,
+        decision: Decision,
+        capital: CapitalSnapshot,
+        runtime_config_hash: str,
+        account,
+        risk_approved: bool,
+        firewall_approved: bool,
+        reconciliation_healthy: bool,
+        final_execution_authorization: bool,
+        live_trading_enabled: bool,
+        probability_calibrated: bool = False,
+        probability_fresh: bool = False,
+        probability_drift_ok: bool = False,
+        market_data_validated: bool = False,
+        exposure_approved: bool = False,
+    ) -> tuple[GateResult, AuthorizationContext | None]:
+        """Evaluate a fresh live control chain before clearing the startup kill switch."""
+        release = read_live_release(self.live_lock_path)
+        if not release.may_move_capital:
+            return GateResult(
+                False,
+                ("LIVE_RELEASE_NOT_ENABLED", "CAPITAL_PLANE_VERIFY_ONLY"),
+            ), None
+
+        gate, context = authorization_gate(
+            decision=decision,
+            account=account,
+            capital=capital,
+            config_hash=self.config_hash,
+            runtime_config_hash=runtime_config_hash,
+            kill_switch_off=True,
+            risk_approved=risk_approved,
+            firewall_approved=firewall_approved,
+            reconciliation_healthy=reconciliation_healthy,
+            final_execution_authorization=final_execution_authorization,
+            live_trading_enabled=live_trading_enabled,
+            probability_calibrated=probability_calibrated,
+            probability_fresh=probability_fresh,
+            probability_drift_ok=probability_drift_ok,
+            market_data_validated=market_data_validated,
+            exposure_approved=exposure_approved,
+        )
+        self._log(
+            "PREFLIGHT_AUTHORIZATION",
+            {
+                "decision_id": decision.decision_id,
+                "allowed": gate.allowed,
+                "reasons": gate.reason_codes,
+            },
+        )
+        return gate, context
 
     async def execute(
         self,
@@ -378,8 +443,13 @@ class CapitalPlaneExecutor:
                 (),
                 intent.intent_id,
                 result.broker_transaction_id,
+                result.contract_id,
             )
 
+        self._log(
+            "BROKER_REJECTED",
+            {"intent_id": intent.intent_id},
+        )
         return ExecutionOutcome(
             False,
             "REJECTED",
