@@ -77,7 +77,7 @@ jobs:
       - name: Install runtime dependencies
         run: pip install -r requirements.txt
 
-      - name: Require authenticated Deriv bindings
+      - name: Report protected secret presence\n        run: python scripts/report_secret_presence.py\n\n      - name: Require authenticated Deriv bindings
         shell: bash
         run: |
           set -euo pipefail
