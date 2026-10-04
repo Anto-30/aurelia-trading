@@ -1,9 +1,9 @@
 {
   "schema": "aurelia.external_access_state.v1",
-  "snapshot_generated_at_utc": "2026-10-04T01:35:00+03:00",
+  "snapshot_generated_at_utc": "2026-10-04T14:33:00Z",
   "repository": "Anto-30/aurelia-trading",
   "canonical_branch": "main",
-  "assurance_validated_commit": "fce6effab5c3e8ea793856a598c3d89433b3a917",
+  "current_tip": "3389e630c9de05f14a05763a6456ad698aca7f81",
   "github": {
     "repository_permission": {
       "admin": true,
@@ -18,7 +18,7 @@
   },
   "railway": {
     "project_id": "da9da5a1-acd2-4af2-9fec-bf46e4d4252b",
-    "environment_id": "bb95dc97-ad27-4b3a-8fa0-cf52df555a38",
+    "environment_id": "bb95dc97-ad27-4b3a-8fa-cf52df555a38",
     "project": "AURELIA-Production-Worker",
     "services_observed": 0,
     "deployments_observed": 0,
@@ -46,21 +46,32 @@
   "qualification": {
     "strategy_live_eligible": false,
     "prospective_oos": "INCOMPLETE",
-    "calibration": "UNCALIBRATED",
-    "economics": "UNDETERMINED",
-    "soak_3600s": "NOT_RUN"
+    "calibration": "INCOMPLETE",
+    "economics": "INCOMPLETE",
+    "soak_3600s": "SIMULATION_VERIFIED",
+    "production_soak_3600s": "NOT_RUN"
+  },
+  "simulation_soak": {
+    "workflow_run_id": 37161897786,
+    "evidence_artifact_id": 11289281853,
+    "source_commit": "3389e630c9de05f14a05763a6456ad698aca7f81",
+    "runtime_image_id": "sha256:690bf3b41f130cccd301a9ec3b07c00742f2b5a8dd0057b6bc8a9cd8c4bc3796",
+    "duration_seconds": 3601,
+    "health_checks": 706,
+    "controlled_restarts": 3,
+    "health_check_failures": 0,
+    "classification": "SIMULATION_VERIFIED"
   },
   "security": {
     "secret_values_committed": false,
     "credential_values_in_artifact": false
   },
   "assurance": {
-    "run_id": 37158183664,
-    "job_id": 111305879006,
+    "run_id": 37161897822,
     "conclusion": "success",
-    "checked_commit": "fce6effab5c3e8ea793856a598c3d89433b3a917",
+    "checked_commit": "3389e630c9de05f14a05763a6456ad698aca7f81",
     "authenticated_deriv_step": "SKIPPED_NOT_CONFIGURED",
     "railway_deploy": "NOT_EXECUTED"
   },
-  "note": "Repository and infrastructure observations only. This artifact never grants capital authority and does not convert operator-reported broker evidence into independent broker verification."
+  "note": "Repository and infrastructure observations only. This artifact never grants capital authority and never converts simulation or operator-reported broker evidence into independent broker verification."
 }
