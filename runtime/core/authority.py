@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from math import isfinite
 
+from .economics import TradeEconomics
 from .models import (
     AccountIdentity,
     AuthorizationContext,
@@ -27,6 +28,34 @@ class GateResult:
 
 def probability_is_valid(probability: float) -> bool:
     return isfinite(probability) and MIN_PROBABILITY <= probability <= MAX_PROBABILITY
+
+
+def decision_economics_gate(decision: Decision) -> tuple[bool, str, float | None]:
+    if any(value is None for value in (decision.average_win, decision.average_loss)):
+        return False, "ECONOMICS_INPUTS_MISSING", None
+
+    economics = TradeEconomics(
+        probability=decision.probability,
+        average_win=float(decision.average_win),
+        average_loss=float(decision.average_loss),
+        execution_cost=float(decision.execution_cost),
+        slippage_cost=float(decision.slippage_cost),
+        quote_cost=float(decision.quote_cost),
+    )
+    allowed, reason = economics.gate()
+    computed = economics.expected_value if isfinite(economics.expected_value) else None
+    if decision.expected_value is not None:
+        try:
+            supplied = float(decision.expected_value)
+        except (TypeError, ValueError):
+            return False, "EXPECTED_VALUE_INVALID", computed
+        if not isfinite(supplied):
+            return False, "EXPECTED_VALUE_NON_FINITE", computed
+        if abs(supplied - economics.expected_value) > 1e-9:
+            return False, "EXPECTED_VALUE_MISMATCH", computed
+    if not allowed:
+        return False, reason, computed
+    return True, "EXPECTED_VALUE_POSITIVE", computed
 
 
 def requested_stake_is_permitted(
