@@ -27,3 +27,24 @@ Always preserve AGENTS.md, LIVE_LOCK, capability boundaries, Risk Warden, Execut
 Do not read, print, persist, or commit secrets. Do not flip LIVE_LOCK or FINAL_EXECUTION_AUTHORIZATION. Do not submit capital-moving orders during source installation, synchronization, comparison, or testing.
 
 Sync is metadata/evidence synchronization, not automatic code promotion. A source head change must be reviewed before becoming a new pinned research baseline.
+
+## Hermes / Railway source routing
+
+The following registered sources are intentionally consumed as governed capabilities, not copied into AURELIA runtime code:
+
+| Source | Mode | Primary AURELIA use |
+|---|---|---|
+| smfworks/hermes-ai-team | RESEARCH_ONLY | agent identity, memory/vault, self-improvement, research cadence, team rituals |
+| forcewake/hermes-conductor | SANDBOX_ONLY | controller-owned dispatch, isolated worktrees, evidence-gated completion, stale-base recovery |
+| Ardha-Eco-System/RUDR9 | SANDBOX_ONLY | role specialization, hard tool boundaries, Kanban DAGs, security/performance/review gates |
+| AlekseiUL/codex-plus-hermes-team | SANDBOX_ONLY | specialist routing, panel review, durable Kanban, side-effect policy |
+| diegomarino/kanban-task-threads | RESEARCH_ONLY | task-thread/context handoff patterns |
+| basilisk-labs/agentplane-hermes-plugin | SANDBOX_ONLY | Hermes/AgentPlane transport and terminal-attestation patterns |
+| railwayapp/docs | REFERENCE_ONLY | authoritative Railway deployment/IaC documentation |
+| railwayapp/cli | TOOLCHAIN_ONLY | Railway CLI, agent setup, MCP/IaC tooling |
+| vignesh07/clawdbot-railway-template | REFERENCE_ONLY | persistent-volume and health-endpoint deployment patterns only |
+
+Integration rule: AURELIA's existing PersistentAgentFederation remains the canonical in-process coordination layer. Hermes/AgentPlane/Kanban patterns may improve routing, worker isolation, evidence collection, and task lifecycle, but they must not create a competing capital authority, broker adapter, execution engine, or live-release controller.
+
+Railway sources may inform deployment automation and persistence design, but no external template may be deployed as AURELIA production infrastructure without repository review, CI evidence, secret-boundary review, and explicit deployment authorization.
+
