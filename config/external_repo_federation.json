@@ -512,6 +512,186 @@
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/arvin341az-glitch/RVG",
       "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "smfworks/hermes-ai-team",
+      "category": "hermes-agent-team-orchestration",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "KimiK3",
+        "GLM"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/smfworks/hermes-ai-team",
+      "head_commit": "SYNC_REQUIRED",
+      "capabilities": [
+        "agent-identity",
+        "persistent-memory-patterns",
+        "skills-curation",
+        "nightly-research",
+        "kanban-coordination",
+        "rituals",
+        "desktop-bot-pods"
+      ]
+    },
+    {
+      "repo": "forcewake/hermes-conductor",
+      "category": "multi-harness-agent-orchestration",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/forcewake/hermes-conductor",
+      "head_commit": "SYNC_REQUIRED",
+      "capabilities": [
+        "controller-owned-dispatch",
+        "worktree-isolation",
+        "evidence-gated-completion",
+        "stale-base-recovery",
+        "dependency-ordering",
+        "worker-lifecycle"
+      ]
+    },
+    {
+      "repo": "Ardha-Eco-System/RUDR9",
+      "category": "hermes-engineering-team",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "KimiK3",
+        "GoogleAgentSkills"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Ardha-Eco-System/RUDR9",
+      "head_commit": "SYNC_REQUIRED",
+      "capabilities": [
+        "role-specialization",
+        "tool-permission-boundaries",
+        "kanban-dag",
+        "security-review",
+        "performance-review",
+        "review-gates"
+      ]
+    },
+    {
+      "repo": "AlekseiUL/codex-plus-hermes-team",
+      "category": "hermes-mcp-specialist-bridge",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/AlekseiUL/codex-plus-hermes-team",
+      "head_commit": "SYNC_REQUIRED",
+      "capabilities": [
+        "specialist-routing",
+        "panel-consensus",
+        "durable-kanban",
+        "side-effect-policy",
+        "mcp-bridge",
+        "agent-discovery"
+      ]
+    },
+    {
+      "repo": "diegomarino/kanban-task-threads",
+      "category": "kanban-task-coordination",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/diegomarino/kanban-task-threads",
+      "head_commit": "SYNC_REQUIRED",
+      "capabilities": [
+        "task-threading",
+        "kanban-coordination",
+        "context-handoff"
+      ]
+    },
+    {
+      "repo": "basilisk-labs/agentplane-hermes-plugin",
+      "category": "agentplane-hermes-transport",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/basilisk-labs/agentplane-hermes-plugin",
+      "head_commit": "SYNC_REQUIRED",
+      "capabilities": [
+        "worker-lane-bridge",
+        "protocol-v2",
+        "terminal-attestation",
+        "task-projection",
+        "hermes-agentplane-adapter"
+      ]
+    },
+    {
+      "repo": "railwayapp/docs",
+      "category": "railway-platform-documentation",
+      "domain": "deployment",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/railwayapp/docs",
+      "head_commit": "SYNC_REQUIRED",
+      "capabilities": [
+        "railway-deployment",
+        "iac",
+        "service-configuration",
+        "secrets-preservation",
+        "staged-changes"
+      ]
+    },
+    {
+      "repo": "railwayapp/cli",
+      "category": "railway-cli-toolchain",
+      "domain": "deployment",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/railwayapp/cli",
+      "head_commit": "SYNC_REQUIRED",
+      "capabilities": [
+        "railway-cli",
+        "agent-setup",
+        "mcp-proxy",
+        "iac-cli",
+        "deployment-connectivity"
+      ]
+    },
+    {
+      "repo": "vignesh07/clawdbot-railway-template",
+      "category": "railway-persistent-agent-template",
+      "domain": "deployment",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/vignesh07/clawdbot-railway-template",
+      "head_commit": "SYNC_REQUIRED",
+      "capabilities": [
+        "railway-volume-persistence",
+        "health-endpoint-patterns",
+        "protected-setup",
+        "container-wrapper",
+        "persistent-agent-state"
+      ]
     }
   ]
 }
