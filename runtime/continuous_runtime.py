@@ -42,10 +42,16 @@ class ContinuousRuntime:
             await self.adapter.close()
 
 
-async def start_continuous_runtime(machine: RuntimeStateMachine) -> ContinuousRuntime:
+async def start_continuous_runtime(
+    machine: RuntimeStateMachine,
+    *,
+    federation: PersistentAgentFederation | None = None,
+    federation_supervisor: AgentFederationSupervisor | None = None,
+) -> ContinuousRuntime:
     config_hash = load_config_hash(ROOT)
     source_hash = os.getenv("GITHUB_SHA", "RUNTIME_UNPINNED")
-    federation = PersistentAgentFederation(
+    if federation is None:
+        federation = federation or PersistentAgentFederation(
         journal_path=os.getenv("AURELIA_FEDERATION_JOURNAL_PATH", "/tmp/aurelia/federation-events.ndjson"),
         lease_path=os.getenv("AURELIA_FEDERATION_LEASE_PATH", "/tmp/aurelia/federation-leases.json"),
         config_hash=config_hash,
@@ -62,13 +68,14 @@ async def start_continuous_runtime(machine: RuntimeStateMachine) -> ContinuousRu
                 agents = tuple(sorted(set(configured) | {"AURELIA"}))
         except (OSError, ValueError, json.JSONDecodeError):
             pass
-    federation_supervisor = AgentFederationSupervisor(
-        federation,
-        agents=agents,
-        interval_seconds=float(os.getenv("AURELIA_AGENT_HEARTBEAT_SECONDS", "15")),
-        roundtable_seconds=float(os.getenv("AURELIA_AGENT_ROUNDTABLE_SECONDS", "60")),
-    )
-    federation_supervisor.start()
+    if federation_supervisor is None:
+        federation_supervisor = AgentFederationSupervisor(
+            federation,
+            agents=agents,
+            interval_seconds=float(os.getenv("AURELIA_AGENT_HEARTBEAT_SECONDS", "15")),
+            roundtable_seconds=float(os.getenv("AURELIA_AGENT_ROUNDTABLE_SECONDS", "60")),
+        )
+        federation_supervisor.start()
     runtime = ContinuousRuntime(federation, federation_supervisor)
 
     if os.getenv("AURELIA_AUTONOMOUS_LOOP", "false").strip().lower() != "true":
