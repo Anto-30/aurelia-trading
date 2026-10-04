@@ -74,6 +74,12 @@ class Decision:
     market_snapshot_hash: str
     risk_requested_stake: float
     rationale_codes: tuple[str,...]=field(default_factory=tuple)
+    average_win: float | None = None
+    average_loss: float | None = None
+    execution_cost: float = 0.0
+    slippage_cost: float = 0.0
+    quote_cost: float = 0.0
+    expected_value: float | None = None
 
 
 @dataclass(frozen=True)
