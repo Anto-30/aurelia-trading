@@ -5,7 +5,7 @@ Before performing work in this repository, every agent must:
 1. Resolve the current `main` tip and read `AURELIA_SOURCE_OF_TRUTH.json`.
 2. Read `config/LIVE_LOCK.yaml` and `config/agent_capability_boundary.json`.
 3. Read `config/agent_capability_matrix.json`, `config/agent_tool_inventory.json`, and `config/agent_skill_inventory.json`.
-5. Use the role-specific capabilities assigned to the current agent.
+4. Use the role-specific capabilities assigned to the current agent.
 6. Treat all external plugins, MCP servers, LSPs, skills, browser sessions, and external repositories as advisory/engineering capabilities unless explicitly granted by the AURELIA capital plane.
 7. Never read, print, persist, or commit secrets.
 8. Never submit capital-moving orders.
