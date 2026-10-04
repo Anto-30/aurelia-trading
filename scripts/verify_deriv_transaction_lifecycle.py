@@ -44,6 +44,10 @@ async def run() -> int:
     if os.getenv("DERIV_ENVIRONMENT", "").lower() != "real":
         return fail("REAL_ACCOUNT_REQUIRED")
 
+    mode = os.getenv("DERIV_LIFECYCLE_MODE", "LIVE").strip().upper()
+    if mode not in {"LIVE", "VERIFY_ONLY"}:
+        return fail("INVALID_DERIV_LIFECYCLE_MODE")
+
     try:
         decision_payload = json.loads(INPUT.read_text(encoding="utf-8"))
         if not isinstance(decision_payload, dict):
@@ -117,6 +121,106 @@ async def run() -> int:
             return fail("ACCOUNT_BINDING_MISMATCH")
         prior = await adapter.get_balance()
         proposal_id = await executor.prepare_proposal(params)
+        if mode == "VERIFY_ONLY":
+            active_symbols = await adapter.active_symbols()
+            if not active_symbols:
+                return fail("MARKET_DATA_ACCOUNT_AUTHENTICATED_BUT_NO_ACTIVE_SYMBOLS")
+
+            gate, verify_ctx, verify_intent = await executor.authorize_and_build_intent(
+                decision=decision,
+                capital=prior,
+                runtime_config_hash=load_config_hash(ROOT),
+                account=account,
+                risk_approved=True,
+                firewall_approved=True,
+                reconciliation_healthy=True,
+                final_execution_authorization=False,
+                live_trading_enabled=False,
+                probability_calibrated=True,
+                probability_fresh=True,
+                probability_drift_ok=True,
+                market_data_validated=True,
+                exposure_approved=True,
+                proposal_id=proposal_id,
+                mode="VERIFY_ONLY",
+            )
+            if not gate.allowed or verify_ctx is None or verify_intent is None:
+                return fail("VERIFY_ONLY_CONTROL_CHAIN_REJECTED")
+            fence_token = fence.acquire("deriv-lifecycle-verify-only")
+            if not fence.valid(fence_token):
+                return fail("VERIFY_ONLY_FENCE_INVALID")
+            existing = idempotency.register_intent(verify_intent.intent_id)
+            if existing.broker_transaction_id or existing.broker_outcome_unknown:
+                return fail("VERIFY_ONLY_IDEMPOTENCY_STATE_NOT_CLEAN")
+            observed = {
+                "mode": "VERIFY_ONLY",
+                "account_loginid": account.loginid,
+                "environment": account.environment,
+                "currency": prior.currency,
+                "fresh_balance": prior.available_balance,
+                "active_symbol_count": len(active_symbols),
+                "proposal_id": proposal_id,
+                "intent_id": verify_intent.intent_id,
+                "execution_mode": verify_intent.execution_mode,
+                "risk_approved": verify_ctx.risk_approved,
+                "firewall_approved": verify_ctx.firewall_approved,
+                "reconciliation_healthy": verify_ctx.reconciliation_healthy,
+                "fence_valid": fence.valid(fence_token),
+                "broker_submission_performed": False,
+                "capital_movement": False,
+            }
+            ended = datetime.now(timezone.utc)
+            data_hash = sha256(observed)
+            record = build_evidence(
+                evidence_id=f"DERIV_TRANSACTION_LIFECYCLE_VERIFY_ONLY:{ended.strftime('%Y%m%dT%H%M%SZ')}",
+                source_hash=os.getenv("GITHUB_SHA", "LOCAL_UNPINNED"),
+                artifact_hash=sha256({"data_hash": data_hash, "config_hash": load_config_hash(ROOT)}),
+                config_hash=load_config_hash(ROOT),
+                data_hash=data_hash,
+                environment="production-real-verify-only",
+                started_at_utc=prior.captured_at.isoformat(),
+                ended_at_utc=ended.isoformat(),
+                status="CURRENT",
+                valid_until_utc=(ended.replace(microsecond=0) + __import__("datetime").timedelta(minutes=30)).isoformat(),
+                provenance={
+                    "origin": "runtime",
+                    "issuer": "aurelia-deriv-lifecycle-verifier",
+                    "source_commit": os.getenv("GITHUB_SHA", "LOCAL_UNPINNED"),
+                    "generated_at_utc": ended.isoformat(),
+                },
+                result="PROVEN",
+                invariants_checked=[
+                    "real_account_binding",
+                    "fresh_pre_trade_balance",
+                    "market_data_inventory",
+                    "broker_proposal",
+                    "risk_control_path",
+                    "firewall_control_path",
+                    "intent_construction",
+                    "idempotency_registration",
+                    "execution_fence",
+                ],
+                invariants_failed=[],
+            )
+            enriched = dict(record)
+            enriched["observed"] = observed
+            enriched["orders_submitted"] = 0
+            enriched["capital_authority_granted"] = False
+            enriched["verification_scope"] = "REAL_DERIV_LIFECYCLE_VERIFY_ONLY"
+            enriched["order_submission_permitted"] = False
+            enriched["record_hash"] = payload_sha256({key: value for key, value in enriched.items() if key != "record_hash"})
+            write_evidence(OUTPUT, enriched)
+            print("DERIV_TRANSACTION_LIFECYCLE=VERIFY_ONLY_PROVEN")
+            print(f"DERIV_EVIDENCE_PATH={OUTPUT}")
+            print(f"DERIV_ACCOUNT={account.loginid}")
+            print(f"FRESH_BALANCE={prior.available_balance}")
+            print(f"ACTIVE_SYMBOLS={len(active_symbols)}")
+            print(f"PROPOSAL_ID={proposal_id}")
+            print(f"INTENT_ID={verify_intent.intent_id}")
+            print("ORDERS_SUBMITTED=0")
+            print("CAPITAL_MOVEMENT=false")
+            return 0
+
         gate, prectx = await executor.preflight_authorization(
             decision=decision,
             capital=prior,

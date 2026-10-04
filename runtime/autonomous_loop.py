@@ -445,8 +445,8 @@ class AutonomousExecutionLoop:
                         account=capital.account,
                         controls=controls,
                     )
-                    if isinstance(result, LifecycleResult) and result.reconciliation_healthy:
-                        self.executor.activate_kill_switch("TRADE_LIFECYCLE_COMPLETE")
+                    if isinstance(result, LifecycleResult) and not result.reconciliation_healthy:
+                        self.executor.activate_kill_switch("TRADE_LIFECYCLE_RECONCILIATION_FAILED")
                 except Exception:
                     self.executor.activate_kill_switch("AUTONOMOUS_LOOP_EXCEPTION")
 
