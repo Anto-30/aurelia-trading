@@ -1,0 +1,144 @@
+{
+  "schema": "aurelia.agent_skill_federation.v1",
+  "generated_date": "2026-10-04",
+  "purpose": "Research/engineering capability federation. No external agent, skill, plugin, MCP server, hook, or marketplace entry may obtain capital authority.",
+  "default_policy": {
+    "external_code_execution": "DENY_BY_DEFAULT",
+    "capital_authority": false,
+    "production_deployment_authority": false,
+    "live_order_authority": false,
+    "secret_reading": "DENY",
+    "secret_logging": "DENY",
+    "source_pinning_required": true,
+    "community_sources": "RESEARCH_ONLY"
+  },
+  "sources": [
+    {
+      "name": "claude-agent-skills",
+      "owner": "Anthropic",
+      "repo": "anthropics/skills",
+      "pinned_commit": "8a1541c4a3ffa5a20a5a91de0dcf3f0bab1d1ef4",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "skill-development",
+        "document-skills",
+        "webapp-testing",
+        "agent-workflows"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "claude-code-official-plugins",
+      "owner": "Anthropic",
+      "repo": "anthropics/claude-plugins-official",
+      "pinned_commit": "d182ca456ca09d31d139f7d3818d1d333b103cce",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "plugin-structure",
+        "agent-development",
+        "hooks",
+        "MCP-integration"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "kimi-code",
+      "owner": "MoonshotAI",
+      "repo": "MoonshotAI/kimi-code",
+      "pinned_commit": "21406fb4c805cc8c715e6d1f16ad3fb5f25f4fe3",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "plugins",
+        "skills",
+        "agents",
+        "session-start",
+        "MCP"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "kimi-cli",
+      "owner": "MoonshotAI",
+      "repo": "MoonshotAI/kimi-cli",
+      "pinned_commit": "9ab1286b8fe4e6bcd116949a27ce5e0ac3389c82",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "agent-skills-format",
+        "skill-discovery"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "grok-plugin-marketplace",
+      "owner": "xAI",
+      "repo": "xai-org/plugin-marketplace",
+      "pinned_commit": "77a16ec85ded1c3b133f686bd2e1bea36090e124",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "plugins",
+        "skills",
+        "agents",
+        "hooks",
+        "MCP",
+        "LSP",
+        "marketplace-trust"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "awesome-grok-bot",
+      "owner": "Community",
+      "repo": "ZeroPointRepo/awesome-grok-bot",
+      "pinned_commit": "fa6ef78f4535cd3fb460925b7b6c3336103fbc3e",
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "capabilities": [
+        "ecosystem-discovery",
+        "plugin-catalog"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "google-agent-skills",
+      "owner": "Google",
+      "repo": "google/skills",
+      "pinned_commit": "1d77046ad3670d62227f50a8f53286f6c6cde08b",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "multi-agent-security",
+        "agent-gateway",
+        "cloud-architecture",
+        "agentic-analytics"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "glm-skills",
+      "owner": "ZhipuAI",
+      "repo": "zai-org/GLM-skills",
+      "pinned_commit": "2ecd31c37e75671a4767342ba3a68a84c8f1b848",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "OCR",
+        "document-analysis",
+        "multimodal-inspection",
+        "web-replication"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "playwright-cli",
+      "owner": "Microsoft",
+      "repo": "microsoft/playwright-cli",
+      "pinned_commit": "b85c7a736bb473bf55b584e54a09ffa698d6d871",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "browser-E2E",
+        "network-mocking",
+        "tracing",
+        "session-management",
+        "test-generation"
+      ],
+      "capital_authority": false
+    }
+  ]
+}
