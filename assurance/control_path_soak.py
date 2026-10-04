@@ -180,6 +180,10 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 auth = _context(sequence=second)
                 if not executor.clear_kill_switch_with_fresh_authorization(auth):
                     return {"passed": False, "reason": "FRESH_AUTH_FAILED"}
+                # Circuit-breaker recovery is an explicit operator/test action;
+                # clearing the kill switch alone must not silently reset it.
+                if executor.circuit_breaker.tripped:
+                    executor.circuit_breaker.reset()
             else:
                 auth = _context(sequence=second)
 
