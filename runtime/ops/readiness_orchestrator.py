@@ -254,6 +254,7 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         },
         "strategy_live_eligible": evidence_gates["STRATEGY_LIVE_ELIGIBLE"].passed,
         "evidence": {
+            "market_data": _flag("AURELIA_MARKET_DATA_VALIDATED"),
             "prospective_oos": evidence_gates["PROSPECTIVE_OOS"].passed,
             "calibration": evidence_gates["CALIBRATION"].passed,
             "economics": evidence_gates["ECONOMICS"].passed,
