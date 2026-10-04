@@ -67,6 +67,7 @@ jobs:
         run: |
           set -euo pipefail
           assurance_json="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow aurelia-assurance.yml --commit "$GITHUB_SHA" --limit 20 --json status,conclusion,event,databaseId)"
+          export assurance_json
           python - <<'PY'
           import json
           import os
