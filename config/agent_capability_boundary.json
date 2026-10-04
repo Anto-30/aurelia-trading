@@ -1,0 +1,109 @@
+{
+  "schema": "aurelia.agent_capability_boundary.v1",
+  "capital_authority": false,
+  "actors": {
+    "Grok": {
+      "role": "orchestration/research/blocker diagnosis",
+      "may": [
+        "decompose",
+        "research",
+        "propose",
+        "synchronize_skill_registry"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock"
+      ]
+    },
+    "ClaudeCode": {
+      "role": "engineering/review/repair",
+      "may": [
+        "inspect",
+        "modify_code",
+        "run_tests",
+        "review",
+        "document"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock"
+      ]
+    },
+    "KimiK3": {
+      "role": "parallel planning/sub-agent decomposition",
+      "may": [
+        "parallel_analysis",
+        "delegate_research",
+        "cross-check"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock"
+      ]
+    },
+    "GoogleAgentSkills": {
+      "role": "multi-agent security/cloud architecture",
+      "may": [
+        "threat_model",
+        "architecture_review",
+        "deployment_design"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock"
+      ]
+    },
+    "GLM": {
+      "role": "multimodal/document inspection",
+      "may": [
+        "inspect_images",
+        "inspect_pdfs",
+        "extract_tables",
+        "cross_validate_artifacts"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock"
+      ]
+    },
+    "PlaywrightCLI": {
+      "role": "browser/system UI verification",
+      "may": [
+        "browser_test",
+        "trace",
+        "network_assertions",
+        "session_tests"
+      ],
+      "may_not": [
+        "place_trades",
+        "approve_live_release",
+        "read_secrets"
+      ]
+    },
+    "AURELIA": {
+      "role": "sole capital/execution authority",
+      "may": [
+        "enforce_existing_capital_controls"
+      ],
+      "may_not": [
+        "self_bypass_live_lock",
+        "treat_simulation_as_production",
+        "accept_unknown_as_success"
+      ]
+    }
+  },
+  "non_negotiables": [
+    "FINAL_EXECUTION_AUTHORIZATION must remain false until independently certified gates are green.",
+    "LIVE_EXECUTION must remain BLOCKED during all federation and repair work.",
+    "External skills/plugins are advisory/engineering only.",
+    "No external repository may receive capital authority.",
+    "No secret values may be committed or logged.",
+    "Simulation evidence must never be relabeled as authenticated broker, transaction, production, or live evidence.",
+    "Every repair must be smallest-change, test-backed, and lineage-verifiable."
+  ]
+}
