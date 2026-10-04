@@ -1,0 +1,113 @@
+name: AURELIA Free Runtime Worker
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-free-runtime
+  cancel-in-progress: true
+
+jobs:
+  runtime-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      AURELIA_VERIFY_DERIV_PUBLIC: "true"
+      AURELIA_RUN_ONCE: "true"
+      AURELIA_VERIFY_DERIV_AUTH: "false"
+      AURELIA_CONTINUOUS_RUNTIME: "false"
+      DERIV_EXPECTED_CURRENCY: "USD"
+      DERIV_ENVIRONMENT: "real"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install runtime
+        run: pip install -r requirements.txt
+      - name: Run free public-market runtime probe
+        run: python -m runtime.main
+      - name: Run runtime tests
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+      - name: Run assurance tests
+        run: python -m unittest discover -s assurance -p "test_*.py" -v
+      - name: Preserve live fail-closed gate
+        run: |
+          set +e
+          output="$(python scripts/live_release_gate.py 2>&1)"
+          status=$?
+          set -e
+          echo "$output"
+          test "$status" -eq 2
+          echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
+      - name: Upload runtime journal
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-runtime-journal-${{ github.run_id }}
+          path: /tmp/aurelia/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  authenticated-deriv-evidence:
+    if: ${{ secrets.DERIV_AUTH_TOKEN != '' && secrets.DERIV_EXPECTED_LOGINID != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      AURELIA_VERIFY_DERIV_PUBLIC: "true"
+      AURELIA_VERIFY_DERIV_AUTH: "true"
+      AURELIA_RUN_ONCE: "true"
+      AURELIA_CONTINUOUS_RUNTIME: "false"
+      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
+      DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID }}
+      DERIV_EXPECTED_CURRENCY: "USD"
+      DERIV_ENVIRONMENT: "real"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements.txt
+      - name: Verify authenticated Deriv session
+        run: python scripts/verify_deriv_session.py
+      - name: Upload authenticated evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deriv-authenticated-evidence-${{ github.run_id }}
+          path: artifacts/deriv_authenticated_session.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  whatsapp-alert-smoke:
+    if: ${{ secrets.TWILIO_ACCOUNT_SID != '' && (secrets.TWILIO_AUTH_TOKEN != '' || (secrets.TWILIO_API_KEY != '' && secrets.TWILIO_API_SECRET != '')) && secrets.TWILIO_WHATSAPP_FROM != '' && secrets.AURELIA_WHATSAPP_TO != '' && secrets.TWILIO_CONTENT_SID != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      AURELIA_WHATSAPP_ALERTS: "true"
+      TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+      TWILIO_API_KEY: ${{ secrets.TWILIO_API_KEY }}
+      TWILIO_API_SECRET: ${{ secrets.TWILIO_API_SECRET }}
+      TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
+      AURELIA_WHATSAPP_TO: ${{ secrets.AURELIA_WHATSAPP_TO }}
+      TWILIO_CONTENT_SID: ${{ secrets.TWILIO_CONTENT_SID }}
+      TWILIO_HTTP_TIMEOUT_SECONDS: "8"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements.txt
+      - name: Send WhatsApp smoke alert
+        run: python scripts/test_whatsapp_alert.py
