@@ -132,7 +132,7 @@ class DerivSessionManager:
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> list[dict[str, Any]]:
-        token = bearer_token if bearer_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
+        token = bearer_token if bearer_token is not None else (os.getenv("DERIV_AUTH_TOKEN") or os.getenv("DERIV_PAT", ""))
         application_id = app_id if app_id is not None else os.getenv("DERIV_APP_ID", "")
         if not token:
             raise DerivSessionManagerError("DERIV_BEARER_TOKEN_MISSING")
