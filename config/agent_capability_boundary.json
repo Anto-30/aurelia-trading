@@ -14,7 +14,8 @@
         "authorize_capital",
         "submit_orders",
         "flip_live_lock"
-      ]
+      ],
+      "capital_authority": false
     },
     "ClaudeCode": {
       "role": "engineering/review/repair",
@@ -29,7 +30,8 @@
         "authorize_capital",
         "submit_orders",
         "flip_live_lock"
-      ]
+      ],
+      "capital_authority": false
     },
     "KimiK3": {
       "role": "parallel planning/sub-agent decomposition",
@@ -42,7 +44,8 @@
         "authorize_capital",
         "submit_orders",
         "flip_live_lock"
-      ]
+      ],
+      "capital_authority": false
     },
     "GoogleAgentSkills": {
       "role": "multi-agent security/cloud architecture",
@@ -55,7 +58,8 @@
         "authorize_capital",
         "submit_orders",
         "flip_live_lock"
-      ]
+      ],
+      "capital_authority": false
     },
     "GLM": {
       "role": "multimodal/document inspection",
@@ -69,7 +73,8 @@
         "authorize_capital",
         "submit_orders",
         "flip_live_lock"
-      ]
+      ],
+      "capital_authority": false
     },
     "PlaywrightCLI": {
       "role": "browser/system UI verification",
@@ -83,7 +88,8 @@
         "place_trades",
         "approve_live_release",
         "read_secrets"
-      ]
+      ],
+      "capital_authority": false
     },
     "AURELIA": {
       "role": "sole capital/execution authority",
@@ -94,7 +100,8 @@
         "self_bypass_live_lock",
         "treat_simulation_as_production",
         "accept_unknown_as_success"
-      ]
+      ],
+      "capital_authority": true
     }
   },
   "non_negotiables": [
