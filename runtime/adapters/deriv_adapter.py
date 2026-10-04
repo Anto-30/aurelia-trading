@@ -186,9 +186,20 @@ class DerivAdapter:
         )
 
     async def active_symbols(self) -> list[dict[str, Any]]:
-        return list(
+        rows = list(
             (await self.request({"active_symbols": "brief"})).get("active_symbols") or []
         )
+        # The current Options API renamed the legacy `symbol` response field
+        # to `underlying_symbol`. Normalize once at the broker boundary so
+        # older internal consumers remain stable without sending legacy fields
+        # back to Deriv.
+        normalized: list[dict[str, Any]] = []
+        for row in rows:
+            item = dict(row)
+            if item.get("underlying_symbol") and not item.get("symbol"):
+                item["symbol"] = item["underlying_symbol"]
+            normalized.append(item)
+        return normalized
 
     async def subscribe_ticks(self, symbol: str) -> AsyncIterator[MarketTick]:
         if self.transport is None:
