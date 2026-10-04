@@ -78,6 +78,7 @@ async def run() -> int:
             expected_loginid=bootstrap.binding.loginid,
             expected_currency=os.environ["DERIV_EXPECTED_CURRENCY"],
             environment="real",
+            auth_token="",
         )
 
         journal = AppendOnlyJournal(
