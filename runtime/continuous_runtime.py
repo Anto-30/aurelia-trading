@@ -86,8 +86,8 @@ async def start_continuous_runtime(
         )
         return runtime
 
-    token = os.getenv("DERIV_AUTH_TOKEN", "")
-    loginid = os.getenv("DERIV_EXPECTED_LOGINID", "")
+    token = os.getenv("DERIV_AUTH_TOKEN") or os.getenv("DERIV_PAT", "")
+    loginid = os.getenv("DERIV_EXPECTED_LOGINID") or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "")
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
     app_id = os.getenv("DERIV_APP_ID", "")
     if not token or not loginid:
