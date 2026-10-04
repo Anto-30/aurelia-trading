@@ -86,6 +86,43 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(len(restored.pending_tasks()), 1)
             self.assertEqual(restored.pending_tasks()[0]["task_id"], first.task_id)
 
+    async def test_logical_duplicate_message_is_suppressed(self):
+        with tempfile.TemporaryDirectory() as td:
+            federation = PersistentAgentFederation(
+                journal_path=f"{td}/events.ndjson",
+                lease_path=f"{td}/leases.json",
+                config_hash="cfg",
+                source_hash="src",
+            )
+            first = await federation.publish(
+                sender="ClaudeCode", recipients=["AURELIA"],
+                message_type="OBSERVATION", payload={"finding": "same"},
+                correlation_id="dedupe-1",
+            )
+            second = await federation.publish(
+                sender="ClaudeCode", recipients=["AURELIA"],
+                message_type="OBSERVATION", payload={"finding": "same"},
+                correlation_id="dedupe-1",
+            )
+            self.assertEqual(first.message_id, second.message_id)
+            self.assertEqual(len(federation.messages_for("AURELIA")), 1)
+
+    async def test_external_agent_cannot_claim_capital_authority(self):
+        with tempfile.TemporaryDirectory() as td:
+            federation = PersistentAgentFederation(
+                journal_path=f"{td}/events.ndjson",
+                lease_path=f"{td}/leases.json",
+                config_hash="cfg",
+                source_hash="src",
+            )
+            with self.assertRaises(PermissionError):
+                await federation.publish(
+                    sender="ClaudeCode", recipients=["AURELIA"],
+                    message_type="DECISION_PROPOSAL",
+                    payload={"capital_authority": True},
+                    correlation_id="authority-1",
+                )
+
     async def test_stale_agent_is_detectable_after_lease_expiry(self):
         with tempfile.TemporaryDirectory() as td:
             federation = PersistentAgentFederation(
