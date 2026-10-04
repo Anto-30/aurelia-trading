@@ -39,9 +39,9 @@ jobs:
       - name: Verify authenticated Deriv real-account session
         if: env.DERIV_AUTH_CONFIGURED == 'true'
         env:
-          DERIV_AUTH_TOKEN: \${{ secrets.DERIV_AUTH_TOKEN }}
-          DERIV_APP_ID: \${{ secrets.DERIV_APP_ID }}
-          DERIV_EXPECTED_LOGINID: \${{ secrets.DERIV_EXPECTED_LOGINID }}
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID }}
           DERIV_EXPECTED_CURRENCY: "USD"
           DERIV_ENVIRONMENT: "real"
           DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
@@ -76,7 +76,7 @@ jobs:
       - name: Preserve fail-closed certification semantics
         if: always()
         run: |
-          if [ "\${{ steps.certification.outcome }}" = "failure" ]; then
+          if [ "${{ steps.certification.outcome }}" = "failure" ]; then
             echo "Certification remains NOT_READY/blocked until genuine evidence exists."
             echo "LIVE_EXECUTION remains BLOCKED and FINAL_EXECUTION_AUTHORIZATION remains FALSE."
           fi
