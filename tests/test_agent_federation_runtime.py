@@ -123,6 +123,33 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
                     correlation_id="authority-1",
                 )
 
+    async def test_claimed_task_is_requeued_after_lease_expiry(self):
+        with tempfile.TemporaryDirectory() as td:
+            kwargs = dict(
+                journal_path=f"{td}/events.ndjson",
+                lease_path=f"{td}/leases.json",
+                task_path=f"{td}/tasks.json",
+                config_hash="cfg",
+                source_hash="src",
+                lease_seconds=5,
+            )
+            federation = PersistentAgentFederation(**kwargs)
+            task = await federation.enqueue_task(
+                task_type="RESEARCH",
+                payload={"x": 1},
+                correlation_id="recover-1",
+                assigned_agent="ClaudeCode",
+            )
+            claimed = await federation.claim_task("ClaudeCode")
+            self.assertEqual(claimed.task_id, task.task_id)
+            tasks = federation._load_tasks()
+            tasks[0]["claimed_at"] = "2000-01-01T00:00:00+00:00"
+            federation._save_tasks(tasks)
+
+            recovered = await federation.recover_stale_tasks()
+            self.assertEqual(recovered, (task.task_id,))
+            self.assertEqual(federation.pending_tasks()[0]["task_id"], task.task_id)
+
     async def test_stale_agent_is_detectable_after_lease_expiry(self):
         with tempfile.TemporaryDirectory() as td:
             federation = PersistentAgentFederation(
