@@ -94,6 +94,9 @@ class DeterministicBroker:
         self.calls = 0
         self.economic_effects = 0
 
+    async def get_balance(self):
+        return _capital()
+
     async def submit_authorized_order(self, payload):
         self.calls += 1
         proposal_id = str(payload["proposal_id"])
