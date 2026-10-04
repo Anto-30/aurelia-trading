@@ -61,6 +61,7 @@ def authorization_gate(
     market_data_validated: bool = False,
     exposure_approved: bool = False,
     authorization_ttl_seconds: float = 30.0,
+    execution_mode: str = "LIVE",
 ) -> tuple[GateResult, AuthorizationContext | None]:
     reasons: list[str] = []
 
@@ -99,14 +100,16 @@ def authorization_gate(
         reasons.append("RISK_WARDEN_REJECTED")
     if not firewall_approved:
         reasons.append("EXECUTION_FIREWALL_REJECTED")
-    if not kill_switch_off:
-        reasons.append("KILL_SWITCH_ON")
-    if not reconciliation_healthy:
-        reasons.append("RECONCILIATION_UNHEALTHY")
-    if not final_execution_authorization:
-        reasons.append("FINAL_EXECUTION_AUTHORIZATION_FALSE")
-    if not live_trading_enabled:
-        reasons.append("LIVE_TRADING_DISABLED")
+    if execution_mode not in {"LIVE", "VERIFY_ONLY"}:
+        reasons.append("INVALID_EXECUTION_MODE")
+
+    if execution_mode == "LIVE":
+        if not kill_switch_off:
+            reasons.append("KILL_SWITCH_ON")
+        if not final_execution_authorization:
+            reasons.append("FINAL_EXECUTION_AUTHORIZATION_FALSE")
+        if not live_trading_enabled:
+            reasons.append("LIVE_TRADING_DISABLED")
 
     if reasons:
         return GateResult(False, tuple(reasons)), None
@@ -122,11 +125,11 @@ def authorization_gate(
             authorization_id=f"auth:{decision.decision_id}:{int(now.timestamp() * 1000)}",
             authorization_issued_at=now,
             authorization_expires_at=now + timedelta(seconds=authorization_ttl_seconds),
-            kill_switch_off=True,
-            risk_approved=True,
-            firewall_approved=True,
-            reconciliation_healthy=True,
-            final_execution_authorization=True,
+            kill_switch_off=kill_switch_off,
+            risk_approved=risk_approved,
+            firewall_approved=firewall_approved,
+            reconciliation_healthy=reconciliation_healthy,
+            final_execution_authorization=final_execution_authorization,
         ),
     )
 
