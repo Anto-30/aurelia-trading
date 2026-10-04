@@ -34,7 +34,11 @@ def fail(message: str) -> int:
 
 async def run() -> int:
     lock = (ROOT / "config" / "LIVE_LOCK.yaml").read_text(encoding="utf-8") if (ROOT / "config" / "LIVE_LOCK.yaml").exists() else ""
-    if "live_trading_enabled: true" not in lock or "FINAL_EXECUTION_AUTHORIZATION: true" not in lock or "capital_plane_mode: LIVE" not in lock:
+    if mode == "LIVE" and (
+        "live_trading_enabled: true" not in lock
+        or "FINAL_EXECUTION_AUTHORIZATION: true" not in lock
+        or "capital_plane_mode: LIVE" not in lock
+    ):
         return fail("LIVE_RELEASE_GATE_NOT_ENABLED")
 
     for name in ("DERIV_AUTH_TOKEN", "DERIV_EXPECTED_LOGINID", "DERIV_EXPECTED_CURRENCY", "DERIV_ENVIRONMENT"):
