@@ -34,7 +34,6 @@ class WhatsAppAlertTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=False):
             for key in (
                 "TWILIO_CONTENT_SID",
-                "TWILIO_MESSAGING_SERVICE_SID",
                 "TWILIO_ALLOW_FREEFORM",
             ):
                 os.environ.pop(key, None)
@@ -55,7 +54,6 @@ class WhatsAppAlertTests(unittest.TestCase):
             from_address="whatsapp:+14155238886",
             to_address="whatsapp:+254714697623",
             content_sid="HX_TEST_CONTENT_SID",
-            messaging_service_sid="MG_TEST_MESSAGING_SERVICE",
             allow_freeform=False,
             status_callback_url=None,
             timeout_seconds=8.0,
@@ -94,7 +92,6 @@ class WhatsAppAlertTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "SENT")
         self.assertIn("ContentSid=HX_TEST_CONTENT_SID", captured["body"])
-        self.assertIn("MessagingServiceSid=MG_TEST_MESSAGING_SERVICE", captured["body"])
         self.assertIn("R_100", captured["body"])
 
     def test_healthy_reconciliation_is_filtered(self):
@@ -107,7 +104,6 @@ class WhatsAppAlertTests(unittest.TestCase):
             from_address="whatsapp:+14155238886",
             to_address="whatsapp:+254714697623",
             content_sid="HX_TEST_CONTENT_SID",
-            messaging_service_sid=None,
             allow_freeform=False,
             status_callback_url=None,
             timeout_seconds=8.0,
