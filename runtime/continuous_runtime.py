@@ -81,11 +81,27 @@ async def start_continuous_runtime(machine: RuntimeStateMachine) -> ContinuousRu
 
     token = os.getenv("DERIV_AUTH_TOKEN", "")
     loginid = os.getenv("DERIV_EXPECTED_LOGINID", "")
+    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
+    app_id = os.getenv("DERIV_APP_ID", "")
     if not token or not loginid:
         await federation.publish(
             sender="AURELIA", recipients=agents, message_type="BLOCKER",
             payload={"reason": "DERIV_AUTH_CONFIGURATION_MISSING", "capital_authority": False},
             correlation_id="deriv-auth", priority=95, requires_response=True,
+        )
+        return runtime
+    if auth_mode not in {"pat", "oauth"}:
+        await federation.publish(
+            sender="AURELIA", recipients=agents, message_type="BLOCKER",
+            payload={"reason": "DERIV_AUTH_MODE_INVALID", "capital_authority": False},
+            correlation_id="deriv-auth-mode", priority=95, requires_response=True,
+        )
+        return runtime
+    if auth_mode == "pat" and not app_id:
+        await federation.publish(
+            sender="AURELIA", recipients=agents, message_type="BLOCKER",
+            payload={"reason": "DERIV_APP_ID_REQUIRED_FOR_PAT", "capital_authority": False},
+            correlation_id="deriv-app-id", priority=95, requires_response=True,
         )
         return runtime
 
@@ -96,13 +112,14 @@ async def start_continuous_runtime(machine: RuntimeStateMachine) -> ContinuousRu
     )
     bootstrap = manager.bootstrap(
         bearer_token=token,
-        app_id=os.getenv("DERIV_APP_ID") or None,
+        app_id=app_id or None,
     )
     adapter = DerivAdapter(
         ws_url=bootstrap.websocket.url,
         expected_loginid=bootstrap.binding.loginid,
         expected_currency=bootstrap.binding.currency,
         environment=bootstrap.binding.environment,
+        auth_token="",
     )
     account = await adapter.connect()
     capital = await adapter.get_balance()
