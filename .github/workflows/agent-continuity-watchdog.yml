@@ -1,0 +1,40 @@
+name: AURELIA Agent Continuity Watchdog
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-agent-continuity-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  continuity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      LIVE_EXECUTION: "BLOCKED"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Sync agent skill layouts
+        run: python scripts/agent_capability_sync.py
+      - name: Verify complete agent inventory assignments
+        run: python scripts/validate_agent_inventory.py
+
+      - name: Verify continuous-agent safety boundary
+        run: python scripts/agent_continuity_check.py
+      - name: Assert capital protection
+        run: |
+          set -euo pipefail
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"

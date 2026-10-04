@@ -1,0 +1,16 @@
+{
+  "schema": "aurelia.agent_continuity_policy.v1",
+  "objective": "Continuously monitor and recover the research/engineering layer without granting continuous agents capital authority.",
+  "heartbeat_seconds": 900,
+  "required_checks": [
+    "canonical_main_tip_resolution",
+    "live_lock_assertion",
+    "agent_capability_boundary_assertion",
+    "external_source_pin_assertion",
+    "evidence_lineage_assertion",
+    "critical_workflow_health"
+  ],
+  "failure_behavior": "fail_closed_and_report",
+  "no_sleep_claim": "The continuity layer provides recurring monitoring and restart/recovery hooks. It does not claim that stateless agent sessions are literally immortal.",
+  "capital_authority": false
+}

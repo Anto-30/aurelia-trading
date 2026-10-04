@@ -139,6 +139,36 @@
         "test-generation"
       ],
       "capital_authority": false
+    },
+    {
+      "name": "grok-build-official",
+      "owner": "xAI",
+      "repo": "xai-org/grok-build",
+      "pinned_commit": "2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "skills",
+        "plugins",
+        "agents",
+        "hooks",
+        "MCP",
+        "LSP"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "playwright-agent-skills",
+      "owner": "Microsoft",
+      "repo": "microsoft/playwright.dev",
+      "pinned_commit": "718ff450acfcb2fb1b006515a07c9412efe0bd88",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "playwright-agent-skill",
+        "browser-E2E",
+        "tracing",
+        "session-management"
+      ],
+      "capital_authority": false
     }
   ]
 }
