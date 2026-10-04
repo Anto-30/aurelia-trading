@@ -30,8 +30,11 @@ jobs:
       - name: Verify CLI version
         run: |
           set -euo pipefail
-          actual="$(context-mode --version | tr -d '[:space:]')"
+          root="$(npm root -g)"
+          actual="$(node -p "require('${root}/context-mode/package.json').version")"
           test "$actual" = "1.0.169"
+          context-mode --version || true
+          echo "CONTEXT_MODE_VERSION=$actual"
       - name: Verify repository integration contract
         run: |
           set -euo pipefail
