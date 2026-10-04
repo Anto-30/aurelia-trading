@@ -79,7 +79,7 @@ async def run() -> int:
         adapter = DerivAdapter(
             ws_url=bootstrap.websocket.url,
             expected_loginid=bootstrap.binding.loginid,
-            expected_currency=os.environ["DERIV_EXPECTED_CURRENCY"],
+            expected_currency=expected_currency,
             environment="real",
             auth_token="",
         )
@@ -272,7 +272,7 @@ async def run() -> int:
                 ),
                 config_hash=load_config_hash(ROOT),
                 data_hash=data_hash,
-                    environment="ci",
+                environment="ci",
                 started_at_utc=prior.captured_at.isoformat(),
                 ended_at_utc=ended.isoformat(),
                 status="CURRENT",
