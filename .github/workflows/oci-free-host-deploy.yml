@@ -155,7 +155,7 @@ jobs:
              test -f /var/lib/aurelia/DEPLOYED_SOURCE_SHA
              test \"\$(cat /var/lib/aurelia/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
              sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_AUTONOMOUS_LOOP=false'
-             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_VERIFY_DERIV_AUTH=false'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_VERIFY_DERIV_AUTH=true'
              curl --fail --silent --show-error http://127.0.0.1:8080/health"
 
           test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
