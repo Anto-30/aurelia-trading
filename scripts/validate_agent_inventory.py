@@ -41,7 +41,7 @@ def main() -> None:
         assert provider["blocked_capital_action"] is True, provider["name"]
         assert all(agent in AGENTS for agent in provider["read_agents"])
         assert all(agent in AGENTS for agent in provider["write_agents"])
-        assert not set(provider["write_agents"]) - {"ClaudeCode"}
+        assert not set(provider["write_agents"]) - {"ClaudeCode", "GrokBot"}
         seen_tools += provider["tool_count"]
 
     assert seen_tools == tools["total_tool_definitions"]
