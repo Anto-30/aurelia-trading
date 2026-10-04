@@ -4,6 +4,7 @@ import asyncio
 import json
 import os
 from datetime import datetime, timezone
+from math import isfinite
 from pathlib import Path
 
 from assurance.evidence_writer import build_evidence, payload_sha256, write_evidence
