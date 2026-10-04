@@ -382,11 +382,9 @@ class AgentFederationSupervisor:
     async def _cycle(self) -> None:
         last_roundtable = datetime.min.replace(tzinfo=timezone.utc)
         while not self._stop.is_set():
-            await self.federation.register_agents(self.agents)
-            active = self.federation.active_agents()
             stale = self.federation.stale_agents()
             for agent in stale:
-                if agent not in self.federation.active_agents() and agent not in self.federation._stale_notified:
+                if agent not in self.federation._stale_notified:
                     self.federation._append(
                         "AGENT_STALE",
                         {"agent": agent, "action": "RECOVER_ON_NEXT_HEARTBEAT"},
@@ -394,6 +392,8 @@ class AgentFederationSupervisor:
                     )
                     self.federation._stale_notified.add(agent)
             self.federation._stale_notified.intersection_update(stale)
+            await self.federation.register_agents(self.agents)
+            active = self.federation.active_agents()
             if datetime.now(timezone.utc) - last_roundtable >= timedelta(seconds=self.roundtable_seconds):
                 await self.federation.broadcast_roundtable()
                 last_roundtable = datetime.now(timezone.utc)
