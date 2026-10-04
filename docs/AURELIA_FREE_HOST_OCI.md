@@ -42,6 +42,8 @@ The workflow is:
 
 The deployment workflow is manual by design. A green commit is not automatically promoted to the persistent host.
 
+The workflow input `deployment_mode` defaults to **VERIFY_ONLY**. **LIVE** is an explicit option, but the workflow itself cannot flip the lock; it only deploys a source revision whose `LIVE_LOCK` already authorizes capital movement.
+
 ## One-time GitHub secrets
 
 Create these repository secrets:
