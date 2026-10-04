@@ -5,6 +5,7 @@ import os
 
 SECRET_NAMES = (
     "DERIV_AUTH_TOKEN",
+    "DERIV_PAT",
     "DERIV_APP_ID",
     "DERIV_EXPECTED_LOGINID",
     "DERIV_EXPECTED_CURRENCY",
@@ -21,14 +22,10 @@ def main() -> int:
         print(f"{name}_PRESENT={'true' if present(name) else 'false'}")
 
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
-    deriv_core = all(
-        present(name)
-        for name in (
-            "DERIV_AUTH_TOKEN",
-            "DERIV_EXPECTED_LOGINID",
-            "DERIV_EXPECTED_CURRENCY",
-        )
-    )
+    auth_present = present("DERIV_AUTH_TOKEN") or present("DERIV_PAT")
+    login_present = present("DERIV_EXPECTED_LOGINID") or present("DERIV_AUTHORIZED_ACCOUNT_ID")
+    currency_present = present("DERIV_EXPECTED_CURRENCY")
+    deriv_core = auth_present and login_present and currency_present
     deriv_configured = deriv_core and (
         auth_mode != "pat" or present("DERIV_APP_ID")
     )
