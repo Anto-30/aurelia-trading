@@ -9,7 +9,7 @@ jobs:
   assurance:
     runs-on: ubuntu-latest
     env:
-      DERIV_AUTH_CONFIGURED: ${{ secrets.DERIV_AUTH_TOKEN != '' && secrets.DERIV_EXPECTED_LOGINID != '' }}
+      DERIV_AUTH_CONFIGURED: ${{ secrets.DERIV_AUTH_TOKEN != '' && secrets.DERIV_APP_ID != '' && secrets.DERIV_EXPECTED_LOGINID != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,6 +19,8 @@ jobs:
         run: pip install -r requirements.txt
       - name: Compile runtime and tests
         run: python -m compileall -q runtime research tests assurance
+      - name: Validate OCI deployment script syntax
+        run: bash -n scripts/oci/bootstrap_and_deploy.sh
       - name: Run research-plane tests
         run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
       - name: Run assurance tests
@@ -37,9 +39,9 @@ jobs:
       - name: Verify authenticated Deriv real-account session
         if: env.DERIV_AUTH_CONFIGURED == 'true'
         env:
-          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
-          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID }}
+          DERIV_AUTH_TOKEN: \${{ secrets.DERIV_AUTH_TOKEN }}
+          DERIV_APP_ID: \${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: \${{ secrets.DERIV_EXPECTED_LOGINID }}
           DERIV_EXPECTED_CURRENCY: "USD"
           DERIV_ENVIRONMENT: "real"
           DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
@@ -74,7 +76,7 @@ jobs:
       - name: Preserve fail-closed certification semantics
         if: always()
         run: |
-          if [ "${{ steps.certification.outcome }}" = "failure" ]; then
+          if [ "\${{ steps.certification.outcome }}" = "failure" ]; then
             echo "Certification remains NOT_READY/blocked until genuine evidence exists."
             echo "LIVE_EXECUTION remains BLOCKED and FINAL_EXECUTION_AUTHORIZATION remains FALSE."
           fi
@@ -90,4 +92,3 @@ jobs:
           test "$status" -eq 2
           echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
           echo "$output" | grep -q "REASON="
-

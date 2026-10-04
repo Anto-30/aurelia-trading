@@ -1,0 +1,113 @@
+name: AURELIA Deriv Verify-Only Lifecycle
+
+on:
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: Deriv symbol to validate; leave empty to use the first active symbol
+        required: false
+        default: ""
+        type: string
+      contract_type:
+        description: Deriv proposal contract type
+        required: true
+        default: CALL
+        type: string
+      duration:
+        description: Proposal duration
+        required: true
+        default: "1"
+        type: string
+      duration_unit:
+        description: Proposal duration unit
+        required: true
+        default: s
+        type: choice
+        options:
+          - s
+          - m
+          - h
+          - d
+          - t
+      stake:
+        description: Stake used only to request a proposal and construct a verify-only intent; no order is submitted
+        required: true
+        default: "1.0"
+        type: string
+      probability:
+        description: Synthetic verify-only probability within AURELIA hard policy 0.55-0.75
+        required: true
+        default: "0.60"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify-only:
+    if: github.ref == 'refs/heads/feat/autonomous-loop-federated-runtime'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
+      DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+      DERIV_ENVIRONMENT: "real"
+      DERIV_AUTH_MODE: ${{ secrets.DERIV_AUTH_MODE || 'pat' }}
+      DERIV_LIFECYCLE_MODE: "VERIFY_ONLY"
+      DERIV_VERIFY_SYMBOL: ${{ inputs.symbol }}
+      DERIV_VERIFY_CONTRACT_TYPE: ${{ inputs.contract_type }}
+      DERIV_VERIFY_DURATION: ${{ inputs.duration }}
+      DERIV_VERIFY_DURATION_UNIT: ${{ inputs.duration_unit }}
+      DERIV_VERIFY_STAKE: ${{ inputs.stake }}
+      DERIV_VERIFY_PROBABILITY: ${{ inputs.probability }}
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      LIVE_EXECUTION: "BLOCKED"
+      DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
+      DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+
+      - name: Require authenticated Deriv bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$DERIV_AUTH_TOKEN"
+          test -n "$DERIV_EXPECTED_LOGINID"
+          test -n "$DERIV_EXPECTED_CURRENCY"
+          if [ "${DERIV_AUTH_MODE,,}" = "pat" ]; then
+            test -n "$DERIV_APP_ID"
+          fi
+
+      - name: Verify authenticated real-account session
+        run: python scripts/verify_deriv_session.py
+
+      - name: Verify broker lifecycle without capital movement
+        run: python scripts/verify_deriv_transaction_lifecycle.py
+
+      - name: Assert verify-only invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+          jq -e '.orders_submitted == 0 and .capital_authority_granted == false and .order_submission_permitted == false' artifacts/deriv_authenticated_session.json >/dev/null
+          jq -e '.orders_submitted == 0 and .capital_authority_granted == false and .order_submission_permitted == false and .verification_scope == "REAL_DERIV_LIFECYCLE_VERIFY_ONLY"' artifacts/deriv_transaction_lifecycle.json >/dev/null
+
+      - name: Upload Deriv verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-deriv-verify-only-${{ github.sha }}
+          path: |
+            artifacts/deriv_authenticated_session.json
+            artifacts/deriv_transaction_lifecycle.json
+          if-no-files-found: error

@@ -53,6 +53,7 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
             os.environ,
             {
                 "DERIV_AUTH_TOKEN": "TOKEN",
+                "DERIV_APP_ID": "APP-ID-TEST",
                 "DERIV_EXPECTED_LOGINID": "CRREAL",
                 "DERIV_ENVIRONMENT": "real",
                 "DERIV_EXPECTED_CURRENCY": "USD",
@@ -119,6 +120,7 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
             os.environ,
             {
                 "DERIV_AUTH_TOKEN": "TOKEN",
+                "DERIV_APP_ID": "APP-ID-TEST",
                 "DERIV_EXPECTED_LOGINID": "CRDEMO",
                 "DERIV_ENVIRONMENT": "demo",
                 "DERIV_EXPECTED_CURRENCY": "USD",

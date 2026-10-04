@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from time import perf_counter
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -22,6 +23,8 @@ from runtime.core.models import (
     utc_now,
 )
 from runtime.core.reconcile import Reconciler, ReconciliationResult
+from runtime.core.trade_certificate import TradeCertificate
+from runtime.ops.latency import LatencyMetrics
 from runtime.core.release_gate import read_live_release
 from runtime.core.state import RuntimeStateMachine
 
@@ -72,6 +75,7 @@ class CapitalPlaneExecutor:
         self.kill_switch = True
         self._kill_switch_activated_at = utc_now()
         self._execution_lock = asyncio.Lock()
+        self.latency = LatencyMetrics()
 
     def _log(self, event_type: str, payload: dict) -> None:
         event_id = f"{event_type}:{len(self.journal.read_all()) + 1}"
@@ -226,6 +230,7 @@ class CapitalPlaneExecutor:
             probability_drift_ok=probability_drift_ok,
             market_data_validated=market_data_validated,
             exposure_approved=exposure_approved,
+            execution_mode=mode,
         )
         self._log(
             "AUTHORIZATION_DECISION",
@@ -345,6 +350,29 @@ class CapitalPlaneExecutor:
             )
             return ExecutionOutcome(False, "BLOCKED", reasons, intent.intent_id)
 
+        try:
+            certificate = TradeCertificate.from_authorization(
+                intent=intent,
+                authorization=context,
+                fence_token=fence_token,
+            )
+        except (TypeError, ValueError) as exc:
+            self._log(
+                "PRE_SUBMISSION_BLOCKED",
+                {
+                    "intent_id": intent.intent_id,
+                    "reasons": ("TRADE_CERTIFICATE_INVALID", type(exc).__name__),
+                },
+            )
+            return ExecutionOutcome(
+                False,
+                "BLOCKED",
+                ("TRADE_CERTIFICATE_INVALID",),
+                intent.intent_id,
+            )
+
+        self._log("TRADE_CERTIFICATE_ISSUED", certificate.as_payload())
+
         existing = self.idempotency.register_intent(intent.intent_id)
         if existing.broker_transaction_id:
             return ExecutionOutcome(
@@ -372,9 +400,22 @@ class CapitalPlaneExecutor:
             },
         )
 
+        broker_started = perf_counter()
         try:
             result = await self.broker.submit_authorized_order(
                 {"proposal_id": intent.proposal_id, "stake": intent.stake}
+            )
+            self.latency.observe(
+                "broker_submission",
+                (perf_counter() - broker_started) * 1000.0,
+            )
+            self._log(
+                "EXECUTION_LATENCY",
+                {
+                    "intent_id": intent.intent_id,
+                    "stage": "broker_submission",
+                    "metrics": self.latency.summary("broker_submission"),
+                },
             )
         except Exception as exc:
             self.idempotency.record_unknown_outcome(intent.intent_id)
@@ -446,10 +487,6 @@ class CapitalPlaneExecutor:
                 result.contract_id,
             )
 
-        self._log(
-            "BROKER_REJECTED",
-            {"intent_id": intent.intent_id},
-        )
         return ExecutionOutcome(
             False,
             "REJECTED",

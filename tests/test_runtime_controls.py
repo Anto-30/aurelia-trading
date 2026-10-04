@@ -2,11 +2,11 @@ from datetime import datetime, timedelta, timezone
 import tempfile
 import unittest
 
-from runtime.core.authority import authorization_gate, probability_is_valid
+from runtime.core.authority import authorization_gate, decision_economics_gate, probability_is_valid
 from runtime.core.capabilities import Capability, RESEARCH_CAPABILITIES
 from runtime.core.events import event_envelope, sha256
 from runtime.core.fencing import ExecutionFence
-from runtime.core.health import HealthSnapshot
+from runtime.core.health import HealthSnapshot, refresh_runtime_health
 from runtime.core.idempotency import IdempotencyStore
 from runtime.core.invariants import (
     check_pre_submission_invariants,
@@ -64,6 +64,12 @@ def dec(probability: float = 0.60, stake: float = 2.0) -> Decision:
         "markethash",
         stake,
         ("TEST",),
+        2.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.8,
     )
 
 
@@ -146,6 +152,72 @@ class TestControls(unittest.TestCase):
         self.assertIn("PROBABILITY_DRIFT_DETECTED_OR_UNVERIFIED", gate.reason_codes)
         self.assertIn("MARKET_DATA_NOT_VALIDATED", gate.reason_codes)
         self.assertIn("EXPOSURE_NOT_APPROVED", gate.reason_codes)
+
+    def test_live_economics_malformed_input_fails_closed(self):
+        decision = dec()
+        malformed = Decision(
+            decision.decision_id, decision.strategy_id, decision.strategy_version,
+            decision.strategy_hash, decision.symbol, decision.direction,
+            decision.probability, decision.decision_time, decision.market_snapshot_hash,
+            decision.risk_requested_stake, decision.rationale_codes,
+            decision.average_win, decision.average_loss, None, 0.0, 0.0, None,
+        )
+        allowed, reason, computed = decision_economics_gate(malformed)
+        self.assertFalse(allowed)
+        self.assertEqual(reason, "ECONOMICS_INPUTS_INVALID")
+        self.assertIsNone(computed)
+
+    def test_live_gate_requires_positive_expected_value(self):
+        negative = dec()
+        negative = Decision(
+            negative.decision_id, negative.strategy_id, negative.strategy_version,
+            negative.strategy_hash, negative.symbol, negative.direction,
+            0.55, negative.decision_time, negative.market_snapshot_hash,
+            negative.risk_requested_stake, negative.rationale_codes,
+            0.5, 1.0, 0.0, 0.0, 0.0, -0.175,
+        )
+        gate, _ = authorization_gate(
+            decision=negative,
+            account=ident(),
+            capital=cap(),
+            config_hash="h",
+            runtime_config_hash="h",
+            kill_switch_off=True,
+            risk_approved=True,
+            firewall_approved=True,
+            reconciliation_healthy=True,
+            final_execution_authorization=True,
+            live_trading_enabled=True,
+            probability_calibrated=True,
+            probability_fresh=True,
+            probability_drift_ok=True,
+            market_data_validated=True,
+            exposure_approved=True,
+        )
+        self.assertNotIn("PROBABILITY_OUTSIDE_HARD_POLICY", gate.reason_codes)
+        self.assertIn("EXPECTED_VALUE_NON_POSITIVE", gate.reason_codes)
+
+    def test_live_gate_requires_healthy_reconciliation(self):
+        gate, _ = authorization_gate(
+            decision=dec(),
+            account=ident(),
+            capital=cap(),
+            config_hash="h",
+            runtime_config_hash="h",
+            kill_switch_off=True,
+            risk_approved=True,
+            firewall_approved=True,
+            reconciliation_healthy=False,
+            final_execution_authorization=True,
+            live_trading_enabled=True,
+            probability_calibrated=True,
+            probability_fresh=True,
+            probability_drift_ok=True,
+            market_data_validated=True,
+            exposure_approved=True,
+        )
+        self.assertFalse(gate.allowed)
+        self.assertIn("RECONCILIATION_UNHEALTHY", gate.reason_codes)
 
     def test_full_gate_can_pass_only_with_all_validation_inputs(self):
         gate, ctx = authorization_gate(
@@ -274,6 +346,38 @@ class TestControls(unittest.TestCase):
         machine.transition(RuntimeState.VERIFIED)
         machine.transition(RuntimeState.HEALTHY)
         self.assertEqual(machine.state, RuntimeState.HEALTHY)
+
+    def test_runtime_health_requires_fresh_capital_market_data_and_reconciliation(self):
+        health = HealthSnapshot(datetime.now(UTC))
+        refresh_runtime_health(
+            health,
+            broker_session=True,
+            capital=cap(age=0),
+            market_data_received_at=datetime.now(UTC),
+            ledger_healthy=True,
+            reconciliation_healthy=True,
+            kill_switch_off=True,
+        )
+        self.assertTrue(health.broker_session)
+        self.assertTrue(health.capital_fresh)
+        self.assertTrue(health.market_data_fresh)
+        self.assertTrue(health.ledger_healthy)
+        self.assertTrue(health.reconciliation_healthy)
+        self.assertTrue(health.kill_switch_off)
+
+        refresh_runtime_health(
+            health,
+            broker_session=True,
+            capital=cap(age=30),
+            market_data_received_at=datetime.now(UTC) - timedelta(seconds=30),
+            ledger_healthy=True,
+            reconciliation_healthy=False,
+            kill_switch_off=False,
+        )
+        self.assertFalse(health.capital_fresh)
+        self.assertFalse(health.market_data_fresh)
+        self.assertFalse(health.reconciliation_healthy)
+        self.assertFalse(health.kill_switch_off)
 
     def test_health_unknown(self):
         health = HealthSnapshot(datetime.now(UTC))

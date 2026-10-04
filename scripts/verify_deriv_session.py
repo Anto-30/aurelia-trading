@@ -26,7 +26,17 @@ async def run() -> int:
     expected_loginid = os.getenv("DERIV_EXPECTED_LOGINID", "")
     expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "USD")
     expected_environment = os.getenv("DERIV_ENVIRONMENT", "real").lower()
+    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
     source_hash = os.getenv("GITHUB_SHA", "LOCAL_UNPINNED")
+
+    if auth_mode not in {"pat", "oauth"}:
+        print("DERIV_AUTH_SESSION=BLOCKED")
+        print("DERIV_AUTH_SESSION_REASON=UNSUPPORTED_AUTH_MODE")
+        return 3
+    if auth_mode == "pat" and not app_id:
+        print("DERIV_AUTH_SESSION=NOT_CONFIGURED")
+        print("DERIV_AUTH_SESSION_REASON=DERIV_APP_ID_MISSING_FOR_PAT")
+        return 2
 
     if not token:
         print("DERIV_AUTH_SESSION=NOT_CONFIGURED")
@@ -122,6 +132,7 @@ async def run() -> int:
             invariants_checked=[
                 f"exact_{expected_environment}_account_binding",
                 "authenticated_websocket_environment",
+                f"auth_mode_{auth_mode}",
                 "account_identity_match",
                 "currency_match",
                 "fresh_balance_snapshot",
