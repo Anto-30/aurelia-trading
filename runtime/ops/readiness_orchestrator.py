@@ -163,13 +163,13 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
     # themselves evidence and therefore cannot upgrade session/balance state.
     session = bool(deriv_evidence)
     balance = bool(deriv_evidence)
-    railway = _flag("AURELIA_RAILWAY_WORKER_HEALTHY")
+    persistent_worker = _flag("AURELIA_PERSISTENT_WORKER_HEALTHY") or _flag("AURELIA_RAILWAY_WORKER_HEALTHY")
 
     gates = [
         Gate("DERIV_CREDENTIALS", "PASS" if credentials else "FAIL", "presence only; secret values are never emitted"),
         Gate("DERIV_SESSION", "PASS" if session else "UNKNOWN", "requires current PROVEN authenticated modern Options WS evidence"),
         Gate("BALANCE_FRESH", "PASS" if balance else "UNKNOWN", "requires current PROVEN broker balance evidence"),
-        Gate("RAILWAY_WORKER", "PASS" if railway else "FAIL", "requires an actual healthy Railway worker"),
+        Gate("PERSISTENT_WORKER", "PASS" if persistent_worker else "FAIL", "requires an actual healthy persistent execution worker"),
         Gate("STRATEGY_LIVE_ELIGIBLE", "PASS" if _flag("AURELIA_STRATEGY_LIVE_ELIGIBLE") else "FAIL", "requires current qualification evidence"),
         Gate("PROSPECTIVE_OOS", "PASS" if _flag("AURELIA_PROSPECTIVE_OOS_PASS") else "FAIL", "requires valid prospective OOS evidence"),
         Gate("CALIBRATION", "PASS" if _flag("AURELIA_CALIBRATION_PASS") else "FAIL", "requires calibration and drift evidence"),
@@ -234,9 +234,10 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
                 else None
             ),
         },
-        "railway": {
-            "worker": "HEALTHY" if railway else "NOT_DEPLOYED",
-            "deriv_connectivity": "PASS" if _flag("AURELIA_RAILWAY_DERIV_CONNECTED") else "UNKNOWN",
+        "worker": {
+            "persistent": "HEALTHY" if persistent_worker else "NOT_DEPLOYED",
+            "legacy_railway": "HEALTHY" if _flag("AURELIA_RAILWAY_WORKER_HEALTHY") else "NOT_CONFIGURED",
+            "deriv_connectivity": "PASS" if _flag("AURELIA_PERSISTENT_WORKER_DERIV_CONNECTED") or _flag("AURELIA_RAILWAY_DERIV_CONNECTED") else "UNKNOWN",
         },
         "strategy_live_eligible": _flag("AURELIA_STRATEGY_LIVE_ELIGIBLE"),
         "evidence": {
