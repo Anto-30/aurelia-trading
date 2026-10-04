@@ -49,6 +49,30 @@ class AgentLease:
         return datetime.now(timezone.utc) < self.expires_at
 
 
+@dataclass(frozen=True)
+class AgentTask:
+    task_id: str
+    task_type: str
+    priority: int
+    assigned_agent: str | None
+    payload: dict[str, Any]
+    created_at: datetime
+    correlation_id: str
+    status: str = "PENDING"
+
+    def as_payload(self) -> dict[str, Any]:
+        return {
+            "task_id": self.task_id,
+            "task_type": self.task_type,
+            "priority": self.priority,
+            "assigned_agent": self.assigned_agent,
+            "payload": self.payload,
+            "created_at": self.created_at.isoformat(),
+            "correlation_id": self.correlation_id,
+            "status": self.status,
+        }
+
+
 class PersistentAgentFederation:
     """Durable advisory/engineering message bus for the registered agents.
 
@@ -64,6 +88,7 @@ class PersistentAgentFederation:
         config_hash: str,
         source_hash: str,
         lease_seconds: float = 45.0,
+        task_path: str | Path | None = None,
     ) -> None:
         self.journal = AppendOnlyJournal(journal_path)
         self.lease_path = Path(lease_path)
@@ -73,6 +98,9 @@ class PersistentAgentFederation:
         self.lease_seconds = max(5.0, lease_seconds)
         self._lock = asyncio.Lock()
         self._seen_messages_path = self.lease_path.with_name("federation-seen-messages.json")
+        self.task_path = Path(task_path) if task_path is not None else self.lease_path.with_name("federation-tasks.json")
+        self.task_path.parent.mkdir(parents=True, exist_ok=True)
+        self._stale_notified: set[str] = set()
 
     def _append(self, event_type: str, payload: dict[str, Any], correlation_id: str) -> None:
         event_id = f"{event_type}:{sha256({ 'payload': payload, 'correlation_id': correlation_id })[:20]}"
@@ -115,6 +143,118 @@ class PersistentAgentFederation:
         temp = self.lease_path.with_suffix(self.lease_path.suffix + ".tmp")
         temp.write_text(json.dumps({"version": 1, "leases": leases}, sort_keys=True), encoding="utf-8")
         temp.replace(self.lease_path)
+
+
+
+    def _load_tasks(self) -> list[dict[str, Any]]:
+        if not self.task_path.exists():
+            return []
+        try:
+            payload = json.loads(self.task_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError, json.JSONDecodeError):
+            return []
+        values = payload.get("tasks", []) if isinstance(payload, dict) else []
+        return [dict(value) for value in values if isinstance(value, dict)]
+
+    def _save_tasks(self, tasks: list[dict[str, Any]]) -> None:
+        temp = self.task_path.with_suffix(self.task_path.suffix + ".tmp")
+        temp.write_text(json.dumps({"version": 1, "tasks": tasks}, sort_keys=True), encoding="utf-8")
+        temp.replace(self.task_path)
+
+    def stale_agents(self) -> tuple[str, ...]:
+        leases = self._load_leases()
+        now = datetime.now(timezone.utc)
+        return tuple(sorted(
+            agent for agent, value in leases.items()
+            if datetime.fromisoformat(value["expires_at"]) <= now
+        ))
+
+    async def enqueue_task(
+        self,
+        *,
+        task_type: str,
+        payload: dict[str, Any],
+        correlation_id: str,
+        priority: int = 50,
+        assigned_agent: str | None = None,
+    ) -> AgentTask:
+        task_id = f"task:{sha256({'task_type': task_type, 'payload': payload, 'correlation_id': correlation_id, 'assigned_agent': assigned_agent})}"
+        task = AgentTask(
+            task_id=task_id,
+            task_type=task_type,
+            priority=max(0, min(100, int(priority))),
+            assigned_agent=assigned_agent,
+            payload=payload,
+            created_at=datetime.now(timezone.utc),
+            correlation_id=correlation_id,
+        )
+        async with self._lock:
+            tasks = self._load_tasks()
+            existing = next((x for x in tasks if x.get("task_id") == task_id), None)
+            if existing:
+                return AgentTask(**{
+                    "task_id": existing["task_id"],
+                    "task_type": existing["task_type"],
+                    "priority": int(existing.get("priority", 50)),
+                    "assigned_agent": existing.get("assigned_agent"),
+                    "payload": existing.get("payload", {}),
+                    "created_at": datetime.fromisoformat(existing["created_at"]),
+                    "correlation_id": existing["correlation_id"],
+                    "status": existing.get("status", "PENDING"),
+                })
+            tasks.append(task.as_payload())
+            self._save_tasks(tasks)
+        self._append("AGENT_TASK_ENQUEUED", task.as_payload(), task.correlation_id)
+        return task
+
+    async def claim_task(self, agent: str) -> AgentTask | None:
+        async with self._lock:
+            tasks = self._load_tasks()
+            candidates = [
+                x for x in tasks
+                if x.get("status") == "PENDING"
+                and (x.get("assigned_agent") in (None, agent))
+            ]
+            if not candidates:
+                return None
+            candidates.sort(key=lambda x: (-int(x.get("priority", 50)), x.get("created_at", "")))
+            selected = candidates[0]
+            selected["status"] = "CLAIMED"
+            selected["assigned_agent"] = agent
+            self._save_tasks(tasks)
+        self._append("AGENT_TASK_CLAIMED", selected, selected["correlation_id"])
+        return AgentTask(
+            task_id=selected["task_id"],
+            task_type=selected["task_type"],
+            priority=int(selected.get("priority", 50)),
+            assigned_agent=selected.get("assigned_agent"),
+            payload=selected.get("payload", {}),
+            created_at=datetime.fromisoformat(selected["created_at"]),
+            correlation_id=selected["correlation_id"],
+            status="CLAIMED",
+        )
+
+    async def complete_task(self, task_id: str, *, agent: str, status: str = "COMPLETED") -> bool:
+        if status not in {"COMPLETED", "FAILED", "BLOCKED"}:
+            raise ValueError("INVALID_TASK_STATUS")
+        async with self._lock:
+            tasks = self._load_tasks()
+            selected = next((x for x in tasks if x.get("task_id") == task_id), None)
+            if selected is None or selected.get("assigned_agent") != agent or selected.get("status") != "CLAIMED":
+                return False
+            selected["status"] = status
+            self._save_tasks(tasks)
+        self._append("AGENT_TASK_COMPLETED", {"task_id": task_id, "agent": agent, "status": status}, task_id)
+        return True
+
+    def pending_tasks(self, agent: str | None = None) -> list[dict[str, Any]]:
+        rows = [
+            x for x in self._load_tasks()
+            if x.get("status") == "PENDING"
+            and (agent is None or x.get("assigned_agent") in (None, agent))
+        ]
+        rows.sort(key=lambda x: (-int(x.get("priority", 50)), x.get("created_at", "")))
+        return rows
 
     async def heartbeat(self, agent: str) -> AgentLease:
         now = datetime.now(timezone.utc)
@@ -242,6 +382,16 @@ class AgentFederationSupervisor:
     async def _cycle(self) -> None:
         last_roundtable = datetime.min.replace(tzinfo=timezone.utc)
         while not self._stop.is_set():
+            stale = self.federation.stale_agents()
+            for agent in stale:
+                if agent not in self.federation._stale_notified:
+                    self.federation._append(
+                        "AGENT_STALE",
+                        {"agent": agent, "action": "RECOVER_ON_NEXT_HEARTBEAT"},
+                        correlation_id=f"agent:{agent}",
+                    )
+                    self.federation._stale_notified.add(agent)
+            self.federation._stale_notified.intersection_update(stale)
             await self.federation.register_agents(self.agents)
             active = self.federation.active_agents()
             if datetime.now(timezone.utc) - last_roundtable >= timedelta(seconds=self.roundtable_seconds):
@@ -268,6 +418,20 @@ class AgentFederationSupervisor:
                 priority=60,
                 requires_response=True,
             )
+            for domain, agent in (
+                ("research", "KimiK3"),
+                ("engineering", "ClaudeCode"),
+                ("orchestration", "GrokBot"),
+                ("security", "GoogleAgentSkills"),
+                ("evidence", "GLM"),
+            ):
+                await self.federation.enqueue_task(
+                    task_type=f"CONTINUOUS_{domain.upper()}",
+                    payload={"domain": domain, "status": "READY", "capital_authority": False},
+                    correlation_id=f"cycle:{int(datetime.now(timezone.utc).timestamp())}:{domain}",
+                    priority=55,
+                    assigned_agent=agent,
+                )
             try:
                 await asyncio.wait_for(self._stop.wait(), timeout=self.interval_seconds)
             except asyncio.TimeoutError:
