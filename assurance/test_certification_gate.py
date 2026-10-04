@@ -97,6 +97,16 @@ class CertificationEvidenceTest(unittest.TestCase):
             "findings": [{"severity": "info", "count": 0}],
             "critical_findings": 0,
             "runtime_matches_artifact": True,
+            "qualification_passed": True,
+            "strategies": [
+                {
+                    "strategy_id": "S-TEST",
+                    "qualified": True,
+                    "trade_count": 100,
+                    "strategy_hash": "strategy-hash",
+                }
+            ],
+            "edge_removed": True,
         }
         record["source_commit"] = "commit"
         record["build_hash"] = "build"
