@@ -45,7 +45,7 @@ permissions:
 
 jobs:
   verify-only:
-    if: github.ref == 'refs/heads/feat/autonomous-loop-federated-runtime'
+    # Verify-only is intentionally branch-independent so the current canonical main can be verified.\n    # Capital-moving execution remains independently blocked by LIVE_LOCK and FINAL_EXECUTION_AUTHORIZATION.\n    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
