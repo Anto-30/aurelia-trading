@@ -1,0 +1,56 @@
+name: AURELIA Context Mode Integrity
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".mcp.json"
+      - ".github/hooks/context-mode.json"
+      - "skills/context-mode/**"
+      - "config/context-mode.lock.json"
+      - ".github/workflows/context-mode-integrity.yml"
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install pinned context-mode
+        run: npm install -g context-mode@1.0.169
+      - name: Verify CLI version
+        run: |
+          set -euo pipefail
+          actual="$(context-mode --version | tr -d '[:space:]')"
+          test "$actual" = "1.0.169"
+      - name: Verify repository integration contract
+        run: |
+          set -euo pipefail
+          test -f .mcp.json
+          test -f .github/hooks/context-mode.json
+          test -f skills/context-mode/SKILL.md
+          test -f config/context-mode.lock.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          mcp=json.loads(Path(".mcp.json").read_text())
+          hooks=json.loads(Path(".github/hooks/context-mode.json").read_text())
+          lock=json.loads(Path("config/context-mode.lock.json").read_text())
+          assert mcp["mcpServers"]["context-mode"]["command"]=="context-mode"
+          assert hooks["version"]==1
+          assert set(hooks["hooks"])=={"preToolUse","postToolUse","sessionStart","userPromptSubmitted","agentStop","preCompact"}
+          assert lock["version"]=="1.0.169"
+          assert lock["capital_authority"] is False
+          assert lock["live_execution_authority"] is False
+          assert lock["secrets_access"] is False
+          print("CONTEXT_MODE_INTEGRITY=PASS")
+          PY
