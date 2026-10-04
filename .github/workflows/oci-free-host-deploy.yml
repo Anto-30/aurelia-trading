@@ -2,6 +2,15 @@ name: AURELIA OCI Always-Free Host Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      deployment_mode:
+        description: OCI runtime mode; LIVE is accepted only when the repository LIVE_LOCK is already enabled.
+        required: true
+        default: VERIFY_ONLY
+        type: choice
+        options:
+          - VERIFY_ONLY
+          - LIVE
 
 permissions:
   contents: read
@@ -16,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
+      DEPLOYMENT_MODE: ${{ inputs.deployment_mode }}
       FINAL_EXECUTION_AUTHORIZATION: "false"
       LIVE_EXECUTION: "BLOCKED"
 
@@ -32,12 +42,1139 @@ jobs:
           test "$GITHUB_REF" = "refs/heads/feat/autonomous-loop-federated-runtime"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
-          grep -Eq '^live_trading_enabled:[[:space:]]*false[[:space:]]*$' config/LIVE_LOCK.yaml
-          grep -Eq '^FINAL_EXECUTION_AUTHORIZATION:[[:space:]]*false[[:space:]]*$' config/LIVE_LOCK.yaml
-          grep -Eq '^LIVE_EXECUTION:[[:space:]]*BLOCKED[[:space:]]*$' config/LIVE_LOCK.yaml
-          grep -Eq '^capital_plane_mode:[[:space:]]*VERIFY_ONLY[[:space:]]*$' config/LIVE_LOCK.yaml
+          case "$DEPLOYMENT_MODE" in
+            VERIFY_ONLY)
+              grep -Eq '^live_trading_enabled:[[:space:]]*false[[:space:]]*          echo "LIVE_EXECUTION=BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+
+      - name: Require green AURELIA Assurance for this exact commit
+        env:
+          GH_TOKEN: \${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assurance_json="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow aurelia-assurance.yml \
+            --commit "$GITHUB_SHA" \
+            --limit 20 \
+            --json status,conclusion,event,databaseId)"
+          export assurance_json
+
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          runs = json.loads(os.environ["assurance_json"])
+          eligible = [
+              run for run in runs
+              if run.get("status") == "completed"
+              and run.get("conclusion") == "success"
+              and run.get("event") == "push"
+          ]
+
+          print(f"ASSURANCE_RUNS_FOUND={len(runs)}")
+          print(f"ASSURANCE_GREEN_PUSH_RUNS={len(eligible)}")
+
+          if not eligible:
+              print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PUSH_RUN_FOR_EXACT_COMMIT")
+              sys.exit(2)
+          PY
+
+      - name: Require OCI deployment secrets
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for name in OCI_HOST OCI_USER OCI_SSH_KEY OCI_KNOWN_HOSTS; do
+            test -n "$(printenv "$name")" || { echo "Missing required secret: $name"; exit 2; }
+          done
+
+      - name: Configure strict SSH
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$OCI_SSH_KEY" | tr -d '\r' > "$HOME/.ssh/aurelia_oci"
+          printf '%s\n' "$OCI_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/aurelia_oci" "$HOME/.ssh/known_hosts"
+
+          {
+            echo "Host aurelia-oci"
+            echo "  HostName $OCI_HOST"
+            echo "  User $OCI_USER"
+            echo "  Port 22"
+            echo "  IdentityFile ~/.ssh/aurelia_oci"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking yes"
+            echo "  UserKnownHostsFile ~/.ssh/known_hosts"
+            echo "  ServerAliveInterval 30"
+            echo "  ServerAliveCountMax 3"
+          } > "$HOME/.ssh/config"
+          chmod 600 "$HOME/.ssh/config"
+
+          ssh aurelia-oci -- true
+
+      - name: Package exact source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/aurelia-$GITHUB_SHA.tar.gz"
+          git archive --format=tar.gz --output="$archive" "$GITHUB_SHA"
+          test -s "$archive"
+          echo "AURELIA_ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Transfer exact source commit
+        run: |
+          set -euo pipefail
+          scp -F "$HOME/.ssh/config" "$AURELIA_ARCHIVE" "aurelia-oci:/tmp/aurelia-$GITHUB_SHA.tar.gz"
+
+      - name: Install and deploy the existing worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA
+             mkdir -p /tmp/aurelia-release-$GITHUB_SHA
+             tar -xzf /tmp/aurelia-$GITHUB_SHA.tar.gz -C /tmp/aurelia-release-$GITHUB_SHA
+             rm -f /tmp/aurelia-$GITHUB_SHA.tar.gz
+             sudo bash /tmp/aurelia-release-$GITHUB_SHA/scripts/oci/bootstrap_and_deploy.sh '$GITHUB_SHA'
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA"
+
+      - name: Verify running source and capital protection
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             test -f /var/lib/aurelia/DEPLOYED_SOURCE_SHA
+             test \"\$(cat /var/lib/aurelia/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_AUTONOMOUS_LOOP=false'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_VERIFY_DERIV_AUTH=true'
+             curl --fail --silent --show-error http://127.0.0.1:8080/health"
+
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+
+      - name: Deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## AURELIA OCI Always-Free Host"
+            echo ""
+            echo "**Source commit:** \`$GITHUB_SHA\`"
+            echo "**Assurance:** GREEN for exact commit"
+            echo "**Persistent worker:** deployed"
+            echo "**Autonomous execution loop:** disabled"
+            echo "**Authenticated Deriv runtime probe:** disabled in persistent worker"
+            echo "**Live execution:** BLOCKED"
+            echo "**Final execution authorization:** false"
+            echo ""
+            echo "This deployment is infrastructure-only. It does not grant capital authority or modify LIVE_LOCK."
+          } >> "$GITHUB_STEP_SUMMARY"
+ config/LIVE_LOCK.yaml
+              grep -Eq '^FINAL_EXECUTION_AUTHORIZATION:[[:space:]]*false[[:space:]]*          echo "LIVE_EXECUTION=BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+
+      - name: Require green AURELIA Assurance for this exact commit
+        env:
+          GH_TOKEN: \${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assurance_json="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow aurelia-assurance.yml \
+            --commit "$GITHUB_SHA" \
+            --limit 20 \
+            --json status,conclusion,event,databaseId)"
+          export assurance_json
+
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          runs = json.loads(os.environ["assurance_json"])
+          eligible = [
+              run for run in runs
+              if run.get("status") == "completed"
+              and run.get("conclusion") == "success"
+              and run.get("event") == "push"
+          ]
+
+          print(f"ASSURANCE_RUNS_FOUND={len(runs)}")
+          print(f"ASSURANCE_GREEN_PUSH_RUNS={len(eligible)}")
+
+          if not eligible:
+              print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PUSH_RUN_FOR_EXACT_COMMIT")
+              sys.exit(2)
+          PY
+
+      - name: Require OCI deployment secrets
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for name in OCI_HOST OCI_USER OCI_SSH_KEY OCI_KNOWN_HOSTS; do
+            test -n "$(printenv "$name")" || { echo "Missing required secret: $name"; exit 2; }
+          done
+
+      - name: Configure strict SSH
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$OCI_SSH_KEY" | tr -d '\r' > "$HOME/.ssh/aurelia_oci"
+          printf '%s\n' "$OCI_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/aurelia_oci" "$HOME/.ssh/known_hosts"
+
+          {
+            echo "Host aurelia-oci"
+            echo "  HostName $OCI_HOST"
+            echo "  User $OCI_USER"
+            echo "  Port 22"
+            echo "  IdentityFile ~/.ssh/aurelia_oci"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking yes"
+            echo "  UserKnownHostsFile ~/.ssh/known_hosts"
+            echo "  ServerAliveInterval 30"
+            echo "  ServerAliveCountMax 3"
+          } > "$HOME/.ssh/config"
+          chmod 600 "$HOME/.ssh/config"
+
+          ssh aurelia-oci -- true
+
+      - name: Package exact source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/aurelia-$GITHUB_SHA.tar.gz"
+          git archive --format=tar.gz --output="$archive" "$GITHUB_SHA"
+          test -s "$archive"
+          echo "AURELIA_ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Transfer exact source commit
+        run: |
+          set -euo pipefail
+          scp -F "$HOME/.ssh/config" "$AURELIA_ARCHIVE" "aurelia-oci:/tmp/aurelia-$GITHUB_SHA.tar.gz"
+
+      - name: Install and deploy the existing worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA
+             mkdir -p /tmp/aurelia-release-$GITHUB_SHA
+             tar -xzf /tmp/aurelia-$GITHUB_SHA.tar.gz -C /tmp/aurelia-release-$GITHUB_SHA
+             rm -f /tmp/aurelia-$GITHUB_SHA.tar.gz
+             sudo bash /tmp/aurelia-release-$GITHUB_SHA/scripts/oci/bootstrap_and_deploy.sh '$GITHUB_SHA'
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA"
+
+      - name: Verify running source and capital protection
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             test -f /var/lib/aurelia/DEPLOYED_SOURCE_SHA
+             test \"\$(cat /var/lib/aurelia/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_AUTONOMOUS_LOOP=false'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_VERIFY_DERIV_AUTH=true'
+             curl --fail --silent --show-error http://127.0.0.1:8080/health"
+
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+
+      - name: Deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## AURELIA OCI Always-Free Host"
+            echo ""
+            echo "**Source commit:** \`$GITHUB_SHA\`"
+            echo "**Assurance:** GREEN for exact commit"
+            echo "**Persistent worker:** deployed"
+            echo "**Autonomous execution loop:** disabled"
+            echo "**Authenticated Deriv runtime probe:** disabled in persistent worker"
+            echo "**Live execution:** BLOCKED"
+            echo "**Final execution authorization:** false"
+            echo ""
+            echo "This deployment is infrastructure-only. It does not grant capital authority or modify LIVE_LOCK."
+          } >> "$GITHUB_STEP_SUMMARY"
+ config/LIVE_LOCK.yaml
+              grep -Eq '^LIVE_EXECUTION:[[:space:]]*BLOCKED[[:space:]]*          echo "LIVE_EXECUTION=BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+
+      - name: Require green AURELIA Assurance for this exact commit
+        env:
+          GH_TOKEN: \${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assurance_json="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow aurelia-assurance.yml \
+            --commit "$GITHUB_SHA" \
+            --limit 20 \
+            --json status,conclusion,event,databaseId)"
+          export assurance_json
+
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          runs = json.loads(os.environ["assurance_json"])
+          eligible = [
+              run for run in runs
+              if run.get("status") == "completed"
+              and run.get("conclusion") == "success"
+              and run.get("event") == "push"
+          ]
+
+          print(f"ASSURANCE_RUNS_FOUND={len(runs)}")
+          print(f"ASSURANCE_GREEN_PUSH_RUNS={len(eligible)}")
+
+          if not eligible:
+              print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PUSH_RUN_FOR_EXACT_COMMIT")
+              sys.exit(2)
+          PY
+
+      - name: Require OCI deployment secrets
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for name in OCI_HOST OCI_USER OCI_SSH_KEY OCI_KNOWN_HOSTS; do
+            test -n "$(printenv "$name")" || { echo "Missing required secret: $name"; exit 2; }
+          done
+
+      - name: Configure strict SSH
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$OCI_SSH_KEY" | tr -d '\r' > "$HOME/.ssh/aurelia_oci"
+          printf '%s\n' "$OCI_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/aurelia_oci" "$HOME/.ssh/known_hosts"
+
+          {
+            echo "Host aurelia-oci"
+            echo "  HostName $OCI_HOST"
+            echo "  User $OCI_USER"
+            echo "  Port 22"
+            echo "  IdentityFile ~/.ssh/aurelia_oci"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking yes"
+            echo "  UserKnownHostsFile ~/.ssh/known_hosts"
+            echo "  ServerAliveInterval 30"
+            echo "  ServerAliveCountMax 3"
+          } > "$HOME/.ssh/config"
+          chmod 600 "$HOME/.ssh/config"
+
+          ssh aurelia-oci -- true
+
+      - name: Package exact source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/aurelia-$GITHUB_SHA.tar.gz"
+          git archive --format=tar.gz --output="$archive" "$GITHUB_SHA"
+          test -s "$archive"
+          echo "AURELIA_ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Transfer exact source commit
+        run: |
+          set -euo pipefail
+          scp -F "$HOME/.ssh/config" "$AURELIA_ARCHIVE" "aurelia-oci:/tmp/aurelia-$GITHUB_SHA.tar.gz"
+
+      - name: Install and deploy the existing worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA
+             mkdir -p /tmp/aurelia-release-$GITHUB_SHA
+             tar -xzf /tmp/aurelia-$GITHUB_SHA.tar.gz -C /tmp/aurelia-release-$GITHUB_SHA
+             rm -f /tmp/aurelia-$GITHUB_SHA.tar.gz
+             sudo bash /tmp/aurelia-release-$GITHUB_SHA/scripts/oci/bootstrap_and_deploy.sh '$GITHUB_SHA'
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA"
+
+      - name: Verify running source and capital protection
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             test -f /var/lib/aurelia/DEPLOYED_SOURCE_SHA
+             test \"\$(cat /var/lib/aurelia/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_AUTONOMOUS_LOOP=false'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_VERIFY_DERIV_AUTH=true'
+             curl --fail --silent --show-error http://127.0.0.1:8080/health"
+
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+
+      - name: Deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## AURELIA OCI Always-Free Host"
+            echo ""
+            echo "**Source commit:** \`$GITHUB_SHA\`"
+            echo "**Assurance:** GREEN for exact commit"
+            echo "**Persistent worker:** deployed"
+            echo "**Autonomous execution loop:** disabled"
+            echo "**Authenticated Deriv runtime probe:** disabled in persistent worker"
+            echo "**Live execution:** BLOCKED"
+            echo "**Final execution authorization:** false"
+            echo ""
+            echo "This deployment is infrastructure-only. It does not grant capital authority or modify LIVE_LOCK."
+          } >> "$GITHUB_STEP_SUMMARY"
+ config/LIVE_LOCK.yaml
+              grep -Eq '^capital_plane_mode:[[:space:]]*VERIFY_ONLY[[:space:]]*          echo "LIVE_EXECUTION=BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+
+      - name: Require green AURELIA Assurance for this exact commit
+        env:
+          GH_TOKEN: \${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assurance_json="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow aurelia-assurance.yml \
+            --commit "$GITHUB_SHA" \
+            --limit 20 \
+            --json status,conclusion,event,databaseId)"
+          export assurance_json
+
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          runs = json.loads(os.environ["assurance_json"])
+          eligible = [
+              run for run in runs
+              if run.get("status") == "completed"
+              and run.get("conclusion") == "success"
+              and run.get("event") == "push"
+          ]
+
+          print(f"ASSURANCE_RUNS_FOUND={len(runs)}")
+          print(f"ASSURANCE_GREEN_PUSH_RUNS={len(eligible)}")
+
+          if not eligible:
+              print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PUSH_RUN_FOR_EXACT_COMMIT")
+              sys.exit(2)
+          PY
+
+      - name: Require OCI deployment secrets
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for name in OCI_HOST OCI_USER OCI_SSH_KEY OCI_KNOWN_HOSTS; do
+            test -n "$(printenv "$name")" || { echo "Missing required secret: $name"; exit 2; }
+          done
+
+      - name: Configure strict SSH
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$OCI_SSH_KEY" | tr -d '\r' > "$HOME/.ssh/aurelia_oci"
+          printf '%s\n' "$OCI_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/aurelia_oci" "$HOME/.ssh/known_hosts"
+
+          {
+            echo "Host aurelia-oci"
+            echo "  HostName $OCI_HOST"
+            echo "  User $OCI_USER"
+            echo "  Port 22"
+            echo "  IdentityFile ~/.ssh/aurelia_oci"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking yes"
+            echo "  UserKnownHostsFile ~/.ssh/known_hosts"
+            echo "  ServerAliveInterval 30"
+            echo "  ServerAliveCountMax 3"
+          } > "$HOME/.ssh/config"
+          chmod 600 "$HOME/.ssh/config"
+
+          ssh aurelia-oci -- true
+
+      - name: Package exact source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/aurelia-$GITHUB_SHA.tar.gz"
+          git archive --format=tar.gz --output="$archive" "$GITHUB_SHA"
+          test -s "$archive"
+          echo "AURELIA_ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Transfer exact source commit
+        run: |
+          set -euo pipefail
+          scp -F "$HOME/.ssh/config" "$AURELIA_ARCHIVE" "aurelia-oci:/tmp/aurelia-$GITHUB_SHA.tar.gz"
+
+      - name: Install and deploy the existing worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA
+             mkdir -p /tmp/aurelia-release-$GITHUB_SHA
+             tar -xzf /tmp/aurelia-$GITHUB_SHA.tar.gz -C /tmp/aurelia-release-$GITHUB_SHA
+             rm -f /tmp/aurelia-$GITHUB_SHA.tar.gz
+             sudo bash /tmp/aurelia-release-$GITHUB_SHA/scripts/oci/bootstrap_and_deploy.sh '$GITHUB_SHA'
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA"
+
+      - name: Verify running source and capital protection
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             test -f /var/lib/aurelia/DEPLOYED_SOURCE_SHA
+             test \"\$(cat /var/lib/aurelia/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_AUTONOMOUS_LOOP=false'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_VERIFY_DERIV_AUTH=true'
+             curl --fail --silent --show-error http://127.0.0.1:8080/health"
+
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+
+      - name: Deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## AURELIA OCI Always-Free Host"
+            echo ""
+            echo "**Source commit:** \`$GITHUB_SHA\`"
+            echo "**Assurance:** GREEN for exact commit"
+            echo "**Persistent worker:** deployed"
+            echo "**Autonomous execution loop:** disabled"
+            echo "**Authenticated Deriv runtime probe:** disabled in persistent worker"
+            echo "**Live execution:** BLOCKED"
+            echo "**Final execution authorization:** false"
+            echo ""
+            echo "This deployment is infrastructure-only. It does not grant capital authority or modify LIVE_LOCK."
+          } >> "$GITHUB_STEP_SUMMARY"
+ config/LIVE_LOCK.yaml
+              ;;
+            LIVE)
+              grep -Eq '^live_trading_enabled:[[:space:]]*true[[:space:]]*          echo "LIVE_EXECUTION=BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+
+      - name: Require green AURELIA Assurance for this exact commit
+        env:
+          GH_TOKEN: \${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assurance_json="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow aurelia-assurance.yml \
+            --commit "$GITHUB_SHA" \
+            --limit 20 \
+            --json status,conclusion,event,databaseId)"
+          export assurance_json
+
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          runs = json.loads(os.environ["assurance_json"])
+          eligible = [
+              run for run in runs
+              if run.get("status") == "completed"
+              and run.get("conclusion") == "success"
+              and run.get("event") == "push"
+          ]
+
+          print(f"ASSURANCE_RUNS_FOUND={len(runs)}")
+          print(f"ASSURANCE_GREEN_PUSH_RUNS={len(eligible)}")
+
+          if not eligible:
+              print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PUSH_RUN_FOR_EXACT_COMMIT")
+              sys.exit(2)
+          PY
+
+      - name: Require OCI deployment secrets
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for name in OCI_HOST OCI_USER OCI_SSH_KEY OCI_KNOWN_HOSTS; do
+            test -n "$(printenv "$name")" || { echo "Missing required secret: $name"; exit 2; }
+          done
+
+      - name: Configure strict SSH
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$OCI_SSH_KEY" | tr -d '\r' > "$HOME/.ssh/aurelia_oci"
+          printf '%s\n' "$OCI_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/aurelia_oci" "$HOME/.ssh/known_hosts"
+
+          {
+            echo "Host aurelia-oci"
+            echo "  HostName $OCI_HOST"
+            echo "  User $OCI_USER"
+            echo "  Port 22"
+            echo "  IdentityFile ~/.ssh/aurelia_oci"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking yes"
+            echo "  UserKnownHostsFile ~/.ssh/known_hosts"
+            echo "  ServerAliveInterval 30"
+            echo "  ServerAliveCountMax 3"
+          } > "$HOME/.ssh/config"
+          chmod 600 "$HOME/.ssh/config"
+
+          ssh aurelia-oci -- true
+
+      - name: Package exact source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/aurelia-$GITHUB_SHA.tar.gz"
+          git archive --format=tar.gz --output="$archive" "$GITHUB_SHA"
+          test -s "$archive"
+          echo "AURELIA_ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Transfer exact source commit
+        run: |
+          set -euo pipefail
+          scp -F "$HOME/.ssh/config" "$AURELIA_ARCHIVE" "aurelia-oci:/tmp/aurelia-$GITHUB_SHA.tar.gz"
+
+      - name: Install and deploy the existing worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA
+             mkdir -p /tmp/aurelia-release-$GITHUB_SHA
+             tar -xzf /tmp/aurelia-$GITHUB_SHA.tar.gz -C /tmp/aurelia-release-$GITHUB_SHA
+             rm -f /tmp/aurelia-$GITHUB_SHA.tar.gz
+             sudo bash /tmp/aurelia-release-$GITHUB_SHA/scripts/oci/bootstrap_and_deploy.sh '$GITHUB_SHA'
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA"
+
+      - name: Verify running source and capital protection
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             test -f /var/lib/aurelia/DEPLOYED_SOURCE_SHA
+             test \"\$(cat /var/lib/aurelia/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_AUTONOMOUS_LOOP=false'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_VERIFY_DERIV_AUTH=true'
+             curl --fail --silent --show-error http://127.0.0.1:8080/health"
+
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+
+      - name: Deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## AURELIA OCI Always-Free Host"
+            echo ""
+            echo "**Source commit:** \`$GITHUB_SHA\`"
+            echo "**Assurance:** GREEN for exact commit"
+            echo "**Persistent worker:** deployed"
+            echo "**Autonomous execution loop:** disabled"
+            echo "**Authenticated Deriv runtime probe:** disabled in persistent worker"
+            echo "**Live execution:** BLOCKED"
+            echo "**Final execution authorization:** false"
+            echo ""
+            echo "This deployment is infrastructure-only. It does not grant capital authority or modify LIVE_LOCK."
+          } >> "$GITHUB_STEP_SUMMARY"
+ config/LIVE_LOCK.yaml
+              grep -Eq '^FINAL_EXECUTION_AUTHORIZATION:[[:space:]]*true[[:space:]]*          echo "LIVE_EXECUTION=BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+
+      - name: Require green AURELIA Assurance for this exact commit
+        env:
+          GH_TOKEN: \${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assurance_json="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow aurelia-assurance.yml \
+            --commit "$GITHUB_SHA" \
+            --limit 20 \
+            --json status,conclusion,event,databaseId)"
+          export assurance_json
+
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          runs = json.loads(os.environ["assurance_json"])
+          eligible = [
+              run for run in runs
+              if run.get("status") == "completed"
+              and run.get("conclusion") == "success"
+              and run.get("event") == "push"
+          ]
+
+          print(f"ASSURANCE_RUNS_FOUND={len(runs)}")
+          print(f"ASSURANCE_GREEN_PUSH_RUNS={len(eligible)}")
+
+          if not eligible:
+              print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PUSH_RUN_FOR_EXACT_COMMIT")
+              sys.exit(2)
+          PY
+
+      - name: Require OCI deployment secrets
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for name in OCI_HOST OCI_USER OCI_SSH_KEY OCI_KNOWN_HOSTS; do
+            test -n "$(printenv "$name")" || { echo "Missing required secret: $name"; exit 2; }
+          done
+
+      - name: Configure strict SSH
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$OCI_SSH_KEY" | tr -d '\r' > "$HOME/.ssh/aurelia_oci"
+          printf '%s\n' "$OCI_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/aurelia_oci" "$HOME/.ssh/known_hosts"
+
+          {
+            echo "Host aurelia-oci"
+            echo "  HostName $OCI_HOST"
+            echo "  User $OCI_USER"
+            echo "  Port 22"
+            echo "  IdentityFile ~/.ssh/aurelia_oci"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking yes"
+            echo "  UserKnownHostsFile ~/.ssh/known_hosts"
+            echo "  ServerAliveInterval 30"
+            echo "  ServerAliveCountMax 3"
+          } > "$HOME/.ssh/config"
+          chmod 600 "$HOME/.ssh/config"
+
+          ssh aurelia-oci -- true
+
+      - name: Package exact source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/aurelia-$GITHUB_SHA.tar.gz"
+          git archive --format=tar.gz --output="$archive" "$GITHUB_SHA"
+          test -s "$archive"
+          echo "AURELIA_ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Transfer exact source commit
+        run: |
+          set -euo pipefail
+          scp -F "$HOME/.ssh/config" "$AURELIA_ARCHIVE" "aurelia-oci:/tmp/aurelia-$GITHUB_SHA.tar.gz"
+
+      - name: Install and deploy the existing worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA
+             mkdir -p /tmp/aurelia-release-$GITHUB_SHA
+             tar -xzf /tmp/aurelia-$GITHUB_SHA.tar.gz -C /tmp/aurelia-release-$GITHUB_SHA
+             rm -f /tmp/aurelia-$GITHUB_SHA.tar.gz
+             sudo bash /tmp/aurelia-release-$GITHUB_SHA/scripts/oci/bootstrap_and_deploy.sh '$GITHUB_SHA'
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA"
+
+      - name: Verify running source and capital protection
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             test -f /var/lib/aurelia/DEPLOYED_SOURCE_SHA
+             test \"\$(cat /var/lib/aurelia/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_AUTONOMOUS_LOOP=false'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_VERIFY_DERIV_AUTH=true'
+             curl --fail --silent --show-error http://127.0.0.1:8080/health"
+
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+
+      - name: Deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## AURELIA OCI Always-Free Host"
+            echo ""
+            echo "**Source commit:** \`$GITHUB_SHA\`"
+            echo "**Assurance:** GREEN for exact commit"
+            echo "**Persistent worker:** deployed"
+            echo "**Autonomous execution loop:** disabled"
+            echo "**Authenticated Deriv runtime probe:** disabled in persistent worker"
+            echo "**Live execution:** BLOCKED"
+            echo "**Final execution authorization:** false"
+            echo ""
+            echo "This deployment is infrastructure-only. It does not grant capital authority or modify LIVE_LOCK."
+          } >> "$GITHUB_STEP_SUMMARY"
+ config/LIVE_LOCK.yaml
+              grep -Eq '^LIVE_EXECUTION:[[:space:]]*ENABLED[[:space:]]*          echo "LIVE_EXECUTION=BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+
+      - name: Require green AURELIA Assurance for this exact commit
+        env:
+          GH_TOKEN: \${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assurance_json="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow aurelia-assurance.yml \
+            --commit "$GITHUB_SHA" \
+            --limit 20 \
+            --json status,conclusion,event,databaseId)"
+          export assurance_json
+
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          runs = json.loads(os.environ["assurance_json"])
+          eligible = [
+              run for run in runs
+              if run.get("status") == "completed"
+              and run.get("conclusion") == "success"
+              and run.get("event") == "push"
+          ]
+
+          print(f"ASSURANCE_RUNS_FOUND={len(runs)}")
+          print(f"ASSURANCE_GREEN_PUSH_RUNS={len(eligible)}")
+
+          if not eligible:
+              print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PUSH_RUN_FOR_EXACT_COMMIT")
+              sys.exit(2)
+          PY
+
+      - name: Require OCI deployment secrets
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for name in OCI_HOST OCI_USER OCI_SSH_KEY OCI_KNOWN_HOSTS; do
+            test -n "$(printenv "$name")" || { echo "Missing required secret: $name"; exit 2; }
+          done
+
+      - name: Configure strict SSH
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$OCI_SSH_KEY" | tr -d '\r' > "$HOME/.ssh/aurelia_oci"
+          printf '%s\n' "$OCI_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/aurelia_oci" "$HOME/.ssh/known_hosts"
+
+          {
+            echo "Host aurelia-oci"
+            echo "  HostName $OCI_HOST"
+            echo "  User $OCI_USER"
+            echo "  Port 22"
+            echo "  IdentityFile ~/.ssh/aurelia_oci"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking yes"
+            echo "  UserKnownHostsFile ~/.ssh/known_hosts"
+            echo "  ServerAliveInterval 30"
+            echo "  ServerAliveCountMax 3"
+          } > "$HOME/.ssh/config"
+          chmod 600 "$HOME/.ssh/config"
+
+          ssh aurelia-oci -- true
+
+      - name: Package exact source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/aurelia-$GITHUB_SHA.tar.gz"
+          git archive --format=tar.gz --output="$archive" "$GITHUB_SHA"
+          test -s "$archive"
+          echo "AURELIA_ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Transfer exact source commit
+        run: |
+          set -euo pipefail
+          scp -F "$HOME/.ssh/config" "$AURELIA_ARCHIVE" "aurelia-oci:/tmp/aurelia-$GITHUB_SHA.tar.gz"
+
+      - name: Install and deploy the existing worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA
+             mkdir -p /tmp/aurelia-release-$GITHUB_SHA
+             tar -xzf /tmp/aurelia-$GITHUB_SHA.tar.gz -C /tmp/aurelia-release-$GITHUB_SHA
+             rm -f /tmp/aurelia-$GITHUB_SHA.tar.gz
+             sudo bash /tmp/aurelia-release-$GITHUB_SHA/scripts/oci/bootstrap_and_deploy.sh '$GITHUB_SHA'
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA"
+
+      - name: Verify running source and capital protection
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             test -f /var/lib/aurelia/DEPLOYED_SOURCE_SHA
+             test \"\$(cat /var/lib/aurelia/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_AUTONOMOUS_LOOP=false'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_VERIFY_DERIV_AUTH=true'
+             curl --fail --silent --show-error http://127.0.0.1:8080/health"
+
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+
+      - name: Deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## AURELIA OCI Always-Free Host"
+            echo ""
+            echo "**Source commit:** \`$GITHUB_SHA\`"
+            echo "**Assurance:** GREEN for exact commit"
+            echo "**Persistent worker:** deployed"
+            echo "**Autonomous execution loop:** disabled"
+            echo "**Authenticated Deriv runtime probe:** disabled in persistent worker"
+            echo "**Live execution:** BLOCKED"
+            echo "**Final execution authorization:** false"
+            echo ""
+            echo "This deployment is infrastructure-only. It does not grant capital authority or modify LIVE_LOCK."
+          } >> "$GITHUB_STEP_SUMMARY"
+ config/LIVE_LOCK.yaml
+              grep -Eq '^capital_plane_mode:[[:space:]]*LIVE[[:space:]]*          echo "LIVE_EXECUTION=BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+
+      - name: Require green AURELIA Assurance for this exact commit
+        env:
+          GH_TOKEN: \${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assurance_json="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow aurelia-assurance.yml \
+            --commit "$GITHUB_SHA" \
+            --limit 20 \
+            --json status,conclusion,event,databaseId)"
+          export assurance_json
+
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          runs = json.loads(os.environ["assurance_json"])
+          eligible = [
+              run for run in runs
+              if run.get("status") == "completed"
+              and run.get("conclusion") == "success"
+              and run.get("event") == "push"
+          ]
+
+          print(f"ASSURANCE_RUNS_FOUND={len(runs)}")
+          print(f"ASSURANCE_GREEN_PUSH_RUNS={len(eligible)}")
+
+          if not eligible:
+              print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PUSH_RUN_FOR_EXACT_COMMIT")
+              sys.exit(2)
+          PY
+
+      - name: Require OCI deployment secrets
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for name in OCI_HOST OCI_USER OCI_SSH_KEY OCI_KNOWN_HOSTS; do
+            test -n "$(printenv "$name")" || { echo "Missing required secret: $name"; exit 2; }
+          done
+
+      - name: Configure strict SSH
+        shell: bash
+        env:
+          OCI_HOST: \${{ secrets.OCI_HOST }}
+          OCI_USER: \${{ secrets.OCI_USER }}
+          OCI_SSH_KEY: \${{ secrets.OCI_SSH_KEY }}
+          OCI_KNOWN_HOSTS: \${{ secrets.OCI_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$OCI_SSH_KEY" | tr -d '\r' > "$HOME/.ssh/aurelia_oci"
+          printf '%s\n' "$OCI_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/aurelia_oci" "$HOME/.ssh/known_hosts"
+
+          {
+            echo "Host aurelia-oci"
+            echo "  HostName $OCI_HOST"
+            echo "  User $OCI_USER"
+            echo "  Port 22"
+            echo "  IdentityFile ~/.ssh/aurelia_oci"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking yes"
+            echo "  UserKnownHostsFile ~/.ssh/known_hosts"
+            echo "  ServerAliveInterval 30"
+            echo "  ServerAliveCountMax 3"
+          } > "$HOME/.ssh/config"
+          chmod 600 "$HOME/.ssh/config"
+
+          ssh aurelia-oci -- true
+
+      - name: Package exact source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/aurelia-$GITHUB_SHA.tar.gz"
+          git archive --format=tar.gz --output="$archive" "$GITHUB_SHA"
+          test -s "$archive"
+          echo "AURELIA_ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Transfer exact source commit
+        run: |
+          set -euo pipefail
+          scp -F "$HOME/.ssh/config" "$AURELIA_ARCHIVE" "aurelia-oci:/tmp/aurelia-$GITHUB_SHA.tar.gz"
+
+      - name: Install and deploy the existing worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA
+             mkdir -p /tmp/aurelia-release-$GITHUB_SHA
+             tar -xzf /tmp/aurelia-$GITHUB_SHA.tar.gz -C /tmp/aurelia-release-$GITHUB_SHA
+             rm -f /tmp/aurelia-$GITHUB_SHA.tar.gz
+             sudo bash /tmp/aurelia-release-$GITHUB_SHA/scripts/oci/bootstrap_and_deploy.sh '$GITHUB_SHA'
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA"
+
+      - name: Verify running source and capital protection
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-oci \
+            "set -euo pipefail
+             test -f /var/lib/aurelia/DEPLOYED_SOURCE_SHA
+             test \"\$(cat /var/lib/aurelia/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_AUTONOMOUS_LOOP=false'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_VERIFY_DERIV_AUTH=true'
+             curl --fail --silent --show-error http://127.0.0.1:8080/health"
+
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+
+      - name: Deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## AURELIA OCI Always-Free Host"
+            echo ""
+            echo "**Source commit:** \`$GITHUB_SHA\`"
+            echo "**Assurance:** GREEN for exact commit"
+            echo "**Persistent worker:** deployed"
+            echo "**Autonomous execution loop:** disabled"
+            echo "**Authenticated Deriv runtime probe:** disabled in persistent worker"
+            echo "**Live execution:** BLOCKED"
+            echo "**Final execution authorization:** false"
+            echo ""
+            echo "This deployment is infrastructure-only. It does not grant capital authority or modify LIVE_LOCK."
+          } >> "$GITHUB_STEP_SUMMARY"
+ config/LIVE_LOCK.yaml
+              ;;
+            *)
+              echo "DEPLOYMENT_BLOCKED=INVALID_MODE"
+              exit 2
+              ;;
+          esac
 
           echo "SOURCE_COMMIT=$GITHUB_SHA"
+          echo "DEPLOYMENT_MODE=$DEPLOYMENT_MODE"
           echo "LIVE_EXECUTION=BLOCKED"
           echo "FINAL_EXECUTION_AUTHORIZATION=false"
 
