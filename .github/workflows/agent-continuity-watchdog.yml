@@ -25,7 +25,7 @@ jobs:
       LIVE_EXECUTION: "BLOCKED"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Sync agent skill layouts
         run: python scripts/agent_capability_sync.py
       - name: Verify complete agent inventory assignments
