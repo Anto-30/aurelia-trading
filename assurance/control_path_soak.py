@@ -254,7 +254,20 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 before_calls = broker.calls
                 result = await executor.execute(intent, auth, token)
                 if broker.calls != before_calls + 1:
-                    return {"passed": False, "reason": "SUBMISSION_COUNT_DRIFT"}
+                    return {
+                        "passed": False,
+                        "reason": "SUBMISSION_COUNT_DRIFT",
+                        "second": second,
+                        "status": result.status,
+                        "reasons": result.reasons,
+                        "kill_switch": executor.kill_switch,
+                        "circuit_tripped": executor.circuit_breaker.tripped,
+                        "circuit_reason": executor.circuit_breaker.reason,
+                        "fence_valid": executor.fence.valid(token),
+                        "auth_current": auth.is_current(),
+                        "broker_calls_before": before_calls,
+                        "broker_calls_after": broker.calls,
+                    }
                 accepted += int(result.status == "ACCEPTED")
                 recovered += int(result.status == "RECOVERY_REQUIRED")
                 rejected += int(result.status == "REJECTED")
