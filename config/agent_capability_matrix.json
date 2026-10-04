@@ -1,0 +1,137 @@
+{
+  "schema": "aurelia.agent_capability_matrix.v1",
+  "principle": "Equip every agent with a common safe core plus role-specific capabilities; keep capital authority exclusively inside AURELIA.",
+  "core_capabilities": [
+    "repository_intelligence",
+    "git_and_ci",
+    "evidence_reconciliation",
+    "security_and_secret_hygiene",
+    "browser_e2e",
+    "document_pdf_table_inspection",
+    "research_web_search",
+    "deployment_diagnostics",
+    "observability",
+    "test_generation_and_repair"
+  ],
+  "agents": {
+    "ClaudeCode": {
+      "role": "primary engineering and repair",
+      "skills": [
+        "aurelia-federated-repair",
+        "aurelia-evidence-reconciliation",
+        "browser-e2e",
+        "security-review",
+        "ci-diagnostics"
+      ],
+      "plugins": [
+        "aurelia-federation"
+      ],
+      "tools": [
+        "GitHub",
+        "Playwright CLI",
+        "web",
+        "local shell"
+      ],
+      "startup_scope": "project"
+    },
+    "KimiK3": {
+      "role": "parallel analysis and adversarial engineering review",
+      "skills": [
+        "aurelia-federated-repair",
+        "aurelia-evidence-reconciliation",
+        "research-intelligence",
+        "test-analysis"
+      ],
+      "plugins": [
+        "aurelia-federation"
+      ],
+      "tools": [
+        "GitHub",
+        "web",
+        "local shell"
+      ],
+      "startup_scope": "project"
+    },
+    "GrokBot": {
+      "role": "orchestration, research, blocker diagnosis",
+      "skills": [
+        "aurelia-federated-repair",
+        "aurelia-evidence-reconciliation",
+        "research-intelligence",
+        "ci-diagnostics"
+      ],
+      "plugins": [
+        "aurelia-federation"
+      ],
+      "tools": [
+        "GitHub",
+        "web",
+        "MCP",
+        "Playwright CLI"
+      ],
+      "startup_scope": "project"
+    },
+    "GoogleAgentSkills": {
+      "role": "security, cloud, multi-agent architecture review",
+      "skills": [
+        "security-review",
+        "cloud-architecture",
+        "agent-security"
+      ],
+      "plugins": [],
+      "tools": [
+        "GitHub",
+        "web"
+      ],
+      "startup_scope": "project"
+    },
+    "GLM": {
+      "role": "multimodal and evidence inspection",
+      "skills": [
+        "evidence-inspection",
+        "pdf-table-inspection",
+        "image-analysis"
+      ],
+      "plugins": [],
+      "tools": [
+        "GitHub",
+        "web"
+      ],
+      "startup_scope": "project"
+    },
+    "PlaywrightCLI": {
+      "role": "browser, session, network, trace and E2E verification",
+      "skills": [
+        "playwright-cli",
+        "browser-e2e"
+      ],
+      "plugins": [],
+      "tools": [
+        "Playwright CLI"
+      ],
+      "startup_scope": "project"
+    },
+    "AURELIA": {
+      "role": "sole capital and execution authority",
+      "skills": [
+        "risk-and-capital-controls"
+      ],
+      "plugins": [],
+      "tools": [
+        "Deriv authenticated adapter"
+      ],
+      "startup_scope": "runtime"
+    }
+  },
+  "forbidden_for_external_agents": [
+    "capital authorization",
+    "live order submission",
+    "capital-moving orders during skill installation",
+    "secret retrieval or printing",
+    "live-lock mutation",
+    "risk-control bypass",
+    "unknown-outcome acceptance",
+    "second trading engine creation"
+  ],
+  "connection_truth": "A repository can package skills and configuration, but authenticated third-party accounts/connectors must be established in their own secure control planes."
+}
