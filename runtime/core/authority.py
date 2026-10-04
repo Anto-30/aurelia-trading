@@ -140,7 +140,11 @@ def build_intent(
     proposal_id: str | None,
     mode: str = "LIVE",
 ) -> OrderIntent:
-    if not context.is_current() or not context.final_execution_authorization:
+    if mode == "VERIFY_ONLY":
+        now = utc_now()
+        if not (context.authorization_issued_at <= now < context.authorization_expires_at):
+            raise RuntimeError("CANNOT_BUILD_EXPIRED_VERIFICATION_INTENT")
+    elif not context.is_current() or not context.final_execution_authorization:
         raise RuntimeError("CANNOT_BUILD_UNAUTHORIZED_INTENT")
     decision = context.decision
     return OrderIntent(
