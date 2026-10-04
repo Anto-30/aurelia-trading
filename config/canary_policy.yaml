@@ -1,0 +1,13 @@
+schema: aurelia.canary_policy.v1
+stage: CANARY
+max_live_trades: 1
+max_stake: 1.00
+require_fresh_broker_balance: true
+require_post_trade_reconciliation: true
+require_broker_transaction_confirmation: true
+require_contract_confirmation: true
+require_settlement_confirmation: true
+unexpected_balance_delta_action: KILL_SWITCH
+slippage_breach_action: KILL_SWITCH
+broker_unknown_action: RECOVERY_ONLY
+consecutive_failure_action: KILL_SWITCH
