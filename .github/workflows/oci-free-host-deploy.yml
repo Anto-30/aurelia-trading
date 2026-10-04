@@ -51,8 +51,8 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --workflow aurelia-assurance.yml \
             --commit "$GITHUB_SHA" \
-            --limit 1 \
-            --json status,conclusion)"
+            --limit 20 \
+            --json status,conclusion,event,databaseId)"
           export assurance_json
 
           python - <<'PY'
@@ -61,16 +61,18 @@ jobs:
           import sys
 
           runs = json.loads(os.environ["assurance_json"])
-          if not runs:
-              print("ASSURANCE_BLOCKED=NO_RUN_FOR_COMMIT")
-              sys.exit(2)
+          eligible = [
+              run for run in runs
+              if run.get("status") == "completed"
+              and run.get("conclusion") == "success"
+              and run.get("event") == "push"
+          ]
 
-          run = runs[0]
-          print(f"ASSURANCE_STATUS={run.get('status')}")
-          print(f"ASSURANCE_CONCLUSION={run.get('conclusion')}")
+          print(f"ASSURANCE_RUNS_FOUND={len(runs)}")
+          print(f"ASSURANCE_GREEN_PUSH_RUNS={len(eligible)}")
 
-          if run.get("status") != "completed" or run.get("conclusion") != "success":
-              print("ASSURANCE_BLOCKED=EXACT_COMMIT_NOT_GREEN")
+          if not eligible:
+              print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PUSH_RUN_FOR_EXACT_COMMIT")
               sys.exit(2)
           PY
 
