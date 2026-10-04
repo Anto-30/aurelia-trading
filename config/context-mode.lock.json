@@ -1,0 +1,16 @@
+{
+  "name":"context-mode",
+  "version":"1.0.169",
+  "source_repository":"https://github.com/mksglu/context-mode.git",
+  "source_commit":"589d821",
+  "license":"Elastic-2.0",
+  "integration":{
+    "mcp_platform":"copilot-cli",
+    "mcp_command":"context-mode",
+    "hooks_file":".github/hooks/context-mode.json",
+    "skill_file":"skills/context-mode/SKILL.md"
+  },
+  "capital_authority":false,
+  "live_execution_authority":false,
+  "secrets_access":false
+}
