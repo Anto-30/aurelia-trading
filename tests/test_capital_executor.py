@@ -120,7 +120,7 @@ def make_executor(lock_path: Path, broker=None):
         broker or FakeBroker(),
         journal=AppendOnlyJournal(lock_path.parent / "events.ndjson"),
         ledger=InMemoryLedger(),
-        idempotency=IdempotencyStore(),
+        idempotency=IdempotencyStore(lock_path.parent / "idempotency.json"),
         fence=ExecutionFence(),
         state=RuntimeStateMachine(),
         reconciler=Reconciler(),
