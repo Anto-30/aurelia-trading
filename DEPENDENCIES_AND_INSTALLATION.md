@@ -556,7 +556,7 @@ python -m runtime.ops.readiness_orchestrator
 # 1-4. Same as above, then:
 
 # 5. Configure environment
-export DERIV_AUTH_TOKEN="your_token_here"
+export DERIV_AUTH_TOKEN=<token>
 export DERIV_APP_ID="your_app_id"
 export DERIV_EXPECTED_LOGINID="CR#####"
 export DERIV_ENVIRONMENT="real"
