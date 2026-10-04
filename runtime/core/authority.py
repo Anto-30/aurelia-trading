@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from math import isfinite
 
+from .economics import TradeEconomics
 from .models import (
     AccountIdentity,
     AuthorizationContext,
@@ -27,6 +28,38 @@ class GateResult:
 
 def probability_is_valid(probability: float) -> bool:
     return isfinite(probability) and MIN_PROBABILITY <= probability <= MAX_PROBABILITY
+
+
+def decision_economics_gate(decision: Decision) -> tuple[bool, str, float | None]:
+    if any(value is None for value in (decision.average_win, decision.average_loss)):
+        return False, "ECONOMICS_INPUTS_MISSING", None
+
+    try:
+        economics = TradeEconomics(
+            probability=float(decision.probability),
+            average_win=float(decision.average_win),
+            average_loss=float(decision.average_loss),
+            execution_cost=float(decision.execution_cost),
+            slippage_cost=float(decision.slippage_cost),
+            quote_cost=float(decision.quote_cost),
+        )
+    except (TypeError, ValueError, OverflowError):
+        return False, "ECONOMICS_INPUTS_INVALID", None
+
+    allowed, reason = economics.gate()
+    computed = economics.expected_value if isfinite(economics.expected_value) else None
+    if decision.expected_value is not None:
+        try:
+            supplied = float(decision.expected_value)
+        except (TypeError, ValueError):
+            return False, "EXPECTED_VALUE_INVALID", computed
+        if not isfinite(supplied):
+            return False, "EXPECTED_VALUE_NON_FINITE", computed
+        if abs(supplied - economics.expected_value) > 1e-9:
+            return False, "EXPECTED_VALUE_MISMATCH", computed
+    if not allowed:
+        return False, reason, computed
+    return True, "EXPECTED_VALUE_POSITIVE", computed
 
 
 def requested_stake_is_permitted(
@@ -61,6 +94,7 @@ def authorization_gate(
     market_data_validated: bool = False,
     exposure_approved: bool = False,
     authorization_ttl_seconds: float = 30.0,
+    execution_mode: str = "LIVE",
 ) -> tuple[GateResult, AuthorizationContext | None]:
     reasons: list[str] = []
 
@@ -89,6 +123,11 @@ def authorization_gate(
     if not exposure_approved:
         reasons.append("EXPOSURE_NOT_APPROVED")
 
+    if execution_mode == "LIVE":
+        economics_allowed, economics_reason, _ = decision_economics_gate(decision)
+        if not economics_allowed:
+            reasons.append(economics_reason)
+
     if not decision.strategy_hash:
         reasons.append("STRATEGY_HASH_MISSING")
     if not config_hash or config_hash != runtime_config_hash:
@@ -99,14 +138,18 @@ def authorization_gate(
         reasons.append("RISK_WARDEN_REJECTED")
     if not firewall_approved:
         reasons.append("EXECUTION_FIREWALL_REJECTED")
-    if not kill_switch_off:
-        reasons.append("KILL_SWITCH_ON")
-    if not reconciliation_healthy:
-        reasons.append("RECONCILIATION_UNHEALTHY")
-    if not final_execution_authorization:
-        reasons.append("FINAL_EXECUTION_AUTHORIZATION_FALSE")
-    if not live_trading_enabled:
-        reasons.append("LIVE_TRADING_DISABLED")
+    if execution_mode not in {"LIVE", "VERIFY_ONLY"}:
+        reasons.append("INVALID_EXECUTION_MODE")
+
+    if execution_mode == "LIVE":
+        if not reconciliation_healthy:
+            reasons.append("RECONCILIATION_UNHEALTHY")
+        if not kill_switch_off:
+            reasons.append("KILL_SWITCH_ON")
+        if not final_execution_authorization:
+            reasons.append("FINAL_EXECUTION_AUTHORIZATION_FALSE")
+        if not live_trading_enabled:
+            reasons.append("LIVE_TRADING_DISABLED")
 
     if reasons:
         return GateResult(False, tuple(reasons)), None
@@ -122,11 +165,11 @@ def authorization_gate(
             authorization_id=f"auth:{decision.decision_id}:{int(now.timestamp() * 1000)}",
             authorization_issued_at=now,
             authorization_expires_at=now + timedelta(seconds=authorization_ttl_seconds),
-            kill_switch_off=True,
-            risk_approved=True,
-            firewall_approved=True,
-            reconciliation_healthy=True,
-            final_execution_authorization=True,
+            kill_switch_off=kill_switch_off,
+            risk_approved=risk_approved,
+            firewall_approved=firewall_approved,
+            reconciliation_healthy=reconciliation_healthy,
+            final_execution_authorization=final_execution_authorization,
         ),
     )
 
@@ -137,7 +180,11 @@ def build_intent(
     proposal_id: str | None,
     mode: str = "LIVE",
 ) -> OrderIntent:
-    if not context.is_current() or not context.final_execution_authorization:
+    if mode == "VERIFY_ONLY":
+        now = utc_now()
+        if not (context.authorization_issued_at <= now < context.authorization_expires_at):
+            raise RuntimeError("CANNOT_BUILD_EXPIRED_VERIFICATION_INTENT")
+    elif not context.is_current() or not context.final_execution_authorization:
         raise RuntimeError("CANNOT_BUILD_UNAUTHORIZED_INTENT")
     decision = context.decision
     return OrderIntent(

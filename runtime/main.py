@@ -13,7 +13,7 @@ from threading import Thread
 from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.continuous_runtime import start_continuous_runtime
 from runtime.core.events import event_envelope
-from runtime.core.health import HealthSnapshot
+from runtime.core.health import HealthSnapshot, refresh_runtime_health
 from runtime.core.journal import AppendOnlyJournal
 from runtime.core.models import RuntimeState
 from runtime.core.release_gate import read_live_release
@@ -79,7 +79,7 @@ async def main() -> None:
         broker_session=False,
         market_data_fresh=False,
         capital_fresh=False,
-        ledger_healthy=True,
+        ledger_healthy=False,
         reconciliation_healthy=False,
         kill_switch_off=False,
     )
@@ -191,8 +191,15 @@ async def main() -> None:
                     config_hash=config_hash,
                 )
             )
-            health.broker_session = True
-            health.capital_fresh = snapshot.is_valid()
+            refresh_runtime_health(
+                health,
+                broker_session=True,
+                capital=snapshot,
+                market_data_received_at=None,
+                ledger_healthy=False,
+                reconciliation_healthy=False,
+                kill_switch_off=False,
+            )
             health.dependencies_ok = True
         finally:
             await adapter.close()
@@ -250,9 +257,15 @@ async def main() -> None:
         try:
             continuous_runtime = await start_continuous_runtime(machine)
             if continuous_runtime.execution_loop is not None:
-                health.broker_session = continuous_runtime.adapter is not None
-                health.capital_fresh = health.broker_session
-                health.reconciliation_healthy = True
+                refresh_runtime_health(
+                    health,
+                    broker_session=continuous_runtime.adapter is not None,
+                    capital=None,
+                    market_data_received_at=None,
+                    ledger_healthy=False,
+                    reconciliation_healthy=False,
+                    kill_switch_off=False,
+                )
         except Exception as exc:
             health.critical_unknowns.add("CONTINUOUS_RUNTIME_STARTUP")
             journal.append(
@@ -278,10 +291,30 @@ async def main() -> None:
                 HealthHandler.state = RuntimeState.CAPITAL_PROTECTED
             else:
                 loop = continuous_runtime.execution_loop
-                health.broker_session = continuous_runtime.adapter is not None and continuous_runtime.adapter.transport is not None
-                health.capital_fresh = health.broker_session
-                health.reconciliation_healthy = health.broker_session
-                health.kill_switch_off = bool(loop is not None and not loop.executor.kill_switch)
+                broker_connected = (
+                    continuous_runtime.adapter is not None
+                    and continuous_runtime.adapter.transport is not None
+                )
+                capital_snapshot = None
+                capital_error = None
+                if broker_connected:
+                    try:
+                        capital_snapshot = await continuous_runtime.adapter.get_balance()
+                    except Exception as exc:
+                        capital_error = type(exc).__name__
+                refresh_runtime_health(
+                    health,
+                    broker_session=broker_connected,
+                    capital=capital_snapshot,
+                    market_data_received_at=None,
+                    ledger_healthy=False,
+                    reconciliation_healthy=False,
+                    kill_switch_off=bool(loop is not None and not loop.executor.kill_switch),
+                )
+                if capital_error:
+                    health.critical_unknowns.add('DERIV_BALANCE_REFRESH')
+                else:
+                    health.critical_unknowns.discard('DERIV_BALANCE_REFRESH')
                 HealthHandler.state = machine.state
                 task = continuous_runtime.execution_task
                 if task is not None and task.done():

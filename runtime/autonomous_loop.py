@@ -269,19 +269,6 @@ class AutonomousExecutionLoop:
                 },
             )
         )
-        self.executor._log(
-            "CONTRACT_SETTLED",
-            {
-                "intent_id": intent.intent_id,
-                "contract_id": contract_id,
-                "symbol": intent.symbol,
-                "direction": intent.direction,
-                "stake": intent.stake,
-                "net_delta": net_delta,
-                "post_balance": post_balance.available_balance,
-                "reconciliation_healthy": reconciliation.healthy,
-            },
-        )
         if not reconciliation.healthy:
             self.executor.activate_kill_switch("POST_TRADE_RECONCILIATION_MISMATCH")
 
@@ -458,8 +445,8 @@ class AutonomousExecutionLoop:
                         account=capital.account,
                         controls=controls,
                     )
-                    if isinstance(result, LifecycleResult) and result.reconciliation_healthy:
-                        self.executor.activate_kill_switch("TRADE_LIFECYCLE_COMPLETE")
+                    if isinstance(result, LifecycleResult) and not result.reconciliation_healthy:
+                        self.executor.activate_kill_switch("TRADE_LIFECYCLE_RECONCILIATION_FAILED")
                 except Exception:
                     self.executor.activate_kill_switch("AUTONOMOUS_LOOP_EXCEPTION")
 
@@ -505,6 +492,12 @@ class FederatedDecisionProvider:
                     market_snapshot_hash=str(payload["market_snapshot_hash"]),
                     risk_requested_stake=float(payload["risk_requested_stake"]),
                     rationale_codes=tuple(payload.get("rationale_codes", ())),
+                    average_win=(float(payload["average_win"]) if payload.get("average_win") is not None else None),
+                    average_loss=(float(payload["average_loss"]) if payload.get("average_loss") is not None else None),
+                    execution_cost=float(payload.get("execution_cost", 0.0)),
+                    slippage_cost=float(payload.get("slippage_cost", 0.0)),
+                    quote_cost=float(payload.get("quote_cost", 0.0)),
+                    expected_value=(float(payload["expected_value"]) if payload.get("expected_value") is not None else None),
                 )
             except (KeyError, TypeError, ValueError):
                 self._seen.add(message_id)

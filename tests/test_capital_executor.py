@@ -55,6 +55,13 @@ def decision():
         datetime.now(UTC),
         "market-hash",
         1.0,
+        ("TEST",),
+        2.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.8,
     )
 
 
