@@ -14,6 +14,8 @@ The U.S. federal General Election is scheduled for Tuesday, November 3, 2026. El
 
 On February 20, 2026, the Supreme Court held in *Learning Resources, Inc. v. Trump* that IEEPA does not authorize the President to impose tariffs. Tariff policy is therefore modeled as a separately sourced legal/policy event rather than assuming unlimited executive tariff authority.
 
+Source references: FEC election information (official federal election date); U.S. Supreme Court opinion in *Learning Resources, Inc. v. Trump* (tariff authority under IEEPA).
+
 ## Scenario engine
 
 | Scenario | Resolution rule | Candidate research areas |
