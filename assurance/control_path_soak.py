@@ -302,7 +302,7 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
         total_effects = sum(r.economic_effect_count for r in idempotency._records.values())
         unknown_records = sum(1 for r in idempotency._records.values() if r.broker_outcome_unknown)
         passed = total_effects == broker.economic_effects and unknown_records >= 1
-        return {
+        result = {
             "passed": passed,
             "iterations": iterations,
             "broker_calls": broker.calls,
@@ -314,3 +314,15 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
             "rejected": rejected,
             "accepted": accepted,
         }
+        if not passed:
+            result["effect_records"] = sorted(
+                (
+                    record.intent_id,
+                    record.broker_transaction_id,
+                    record.economic_effect_count,
+                    record.broker_outcome_unknown,
+                )
+                for record in idempotency._records.values()
+                if record.economic_effect_count
+            )
+        return result
