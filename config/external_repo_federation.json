@@ -1138,7 +1138,11 @@
         "security-review",
         "browser-verification",
         "release-workflow"
-      ]
+      ],
+      "category": "engineering-workflow",
+      "domain": "engineering",
+      "source_url": "https://github.com/garrytan/gstack",
+      "head_commit": "10315cf44d1ea13e3ae4821841873afbf7807935"
     },
     {
       "repo": "rihebty/flow-kit",
@@ -1152,7 +1156,11 @@
       "capabilities": [
         "workflow-composition",
         "agent-flow-patterns"
-      ]
+      ],
+      "category": "agent-workflow",
+      "domain": "engineering",
+      "source_url": "https://github.com/rihebty/flow-kit",
+      "head_commit": "9b5dda7206ae841230f118348d660ad8d0ae2830"
     },
     {
       "repo": "thanh-abaii/gstack-windows-port",
@@ -1166,7 +1174,11 @@
         "powershell-compatibility",
         "windows-agent-skills",
         "security-audit"
-      ]
+      ],
+      "category": "windows-agent-tooling",
+      "domain": "engineering",
+      "source_url": "https://github.com/thanh-abaii/gstack-windows-port",
+      "head_commit": "26937232ba2141c6bcf6ffdd8e0822163b475d63"
     },
     {
       "repo": "lucas-flatwhite/gstack-ko",
@@ -1179,7 +1191,11 @@
       "capabilities": [
         "Korean-skill-reference",
         "planning-review-reference"
-      ]
+      ],
+      "category": "localized-agent-workflow",
+      "domain": "engineering",
+      "source_url": "https://github.com/lucas-flatwhite/gstack-ko",
+      "head_commit": "18bacc475cb5f7bf57647f4fbb647415c65c2303"
     },
     {
       "repo": "mr-daedalium/ostack-saas",
@@ -1195,7 +1211,11 @@
         "security-review",
         "QA-workflow",
         "release-workflow"
-      ]
+      ],
+      "category": "agent-team-workflow",
+      "domain": "engineering",
+      "source_url": "https://github.com/mr-daedalium/ostack-saas",
+      "head_commit": "a67256db4451f2d085370cfc36ebe091211b8e7b"
     },
     {
       "repo": "Ahacad/gstack",
@@ -1208,7 +1228,11 @@
       "capabilities": [
         "Claude-Code-plugin-wrapper",
         "gstack-skill-discovery"
-      ]
+      ],
+      "category": "claude-code-plugin",
+      "domain": "engineering",
+      "source_url": "https://github.com/Ahacad/gstack",
+      "head_commit": "f873a4d051b16a6652a3463cd1cd060dde86a24b"
     },
     {
       "repo": "loperanger7/gstack-auto",
@@ -1225,7 +1249,11 @@
         "QA-loop",
         "scoring",
         "iteration-orchestration"
-      ]
+      ],
+      "category": "agent-orchestration",
+      "domain": "engineering",
+      "source_url": "https://github.com/loperanger7/gstack-auto",
+      "head_commit": "17bf2a025c175b899e7d30be1ab4e658fd4ae04f"
     }
   ]
 }
