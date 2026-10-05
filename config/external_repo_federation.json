@@ -1069,6 +1069,58 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/affaan-m/agentshield",
       "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "AEON-7/Ornith-1.0-35B-AEON-Ultimate-Uncensored",
+      "category": "LLM-model",
+      "domain": "agent-intelligence",
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/AEON-7/Ornith-1.0-35B-AEON-Ultimate-Uncensored.git",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "OrnitheMC/ornithe-standard-libraries",
+      "category": "software-library",
+      "domain": "engineering",
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/OrnitheMC/ornithe-standard-libraries.git",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "ornith-ai/Ornith-1",
+      "category": "LLM-model",
+      "domain": "agent-intelligence",
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/ornith-ai/Ornith-1.git",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "ARahim3/mlx-dspark",
+      "category": "inference-engine",
+      "domain": "agent-intelligence",
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/ARahim3/mlx-dspark.git",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "head_commit": "SYNC_REQUIRED"
     }
   ]
 }
