@@ -1,10 +1,10 @@
 {
   "schema": "aurelia.external_access_state.v1",
-  "snapshot_generated_at_utc": "2026-10-05T14:17:15Z",
+  "snapshot_generated_at_utc": "2026-10-05T16:31:00Z",
   "snapshot_semantics": "observed_source_commit; historical snapshots remain immutable",
   "repository": "Anto-30/aurelia-trading",
   "canonical_branch": "main",
-  "current_tip": "1db34854fd969fe1c270be9edab15a49b3b3b256",
+  "current_tip": "e3582e155aa3428ad46cab520f9966155e6d67fe",
   "github": {
     "repository_permission": {
       "admin": true,
@@ -31,7 +31,16 @@
     "railway_run_id": 37315579355,
     "railway_conclusion": "success",
     "secret_presence_run_id": 37315579376,
-    "secret_presence_conclusion": "success"
+    "secret_presence_conclusion": "success",
+    "post_merge_commit": "e3582e155aa3428ad46cab520f9966155e6d67fe",
+    "pre_merge_assurance_run_id": 37340753520,
+    "pre_merge_assurance_conclusion": "success",
+    "pre_merge_federation_run_id": 37340753457,
+    "pre_merge_federation_conclusion": "success",
+    "pre_merge_continuity_run_id": 37340753476,
+    "pre_merge_continuity_conclusion": "success",
+    "post_merge_runs_observed": false,
+    "post_merge_note": "No workflow run was yet returned for the merge commit at snapshot time; this does not count as a pass."
   },
   "railway": {
     "project_id": "da9da5a1-acd2-4af2-9fec-bf46e4d4252b",
