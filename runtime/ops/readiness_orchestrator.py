@@ -10,6 +10,7 @@ from typing import Any
 
 from runtime.core.release_gate import LiveReleaseState, read_live_release
 from assurance.certification_evidence import validate_evidence_file
+from runtime.ops.readiness_attestation import REQUIRED_CAPABILITIES, verify_readiness_attestations
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -164,7 +165,10 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
     # themselves evidence and therefore cannot upgrade session/balance state.
     session = bool(deriv_evidence)
     balance = bool(deriv_evidence)
-    persistent_worker = _flag("AURELIA_PERSISTENT_WORKER_HEALTHY") or _flag("AURELIA_RAILWAY_WORKER_HEALTHY")
+    runtime_id = os.getenv("AURELIA_RUNTIME_ID", "").strip()
+    attestations = verify_readiness_attestations(root, runtime_id=runtime_id)
+    attestation_status = {capability: capability in attestations["verified"] for capability in REQUIRED_CAPABILITIES}
+    persistent_worker = attestation_status["PERSISTENT_WORKER"]
 
     evidence_specs = {
         "STRATEGY_LIVE_ELIGIBLE": "evidence/strategy_eligibility.json",
@@ -188,14 +192,14 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         evidence_gates["CALIBRATION"],
         evidence_gates["ECONOMICS"],
         evidence_gates["SOAK_3600S"],
-        Gate("MARKET_DATA", "PASS" if _flag("AURELIA_MARKET_DATA_VALIDATED") else "FAIL", "requires validated decision-time market data"),
-        Gate("PROBABILITY", "PASS" if _flag("AURELIA_PROBABILITY_VALID") else "FAIL", "requires valid, calibrated, fresh probability"),
-        Gate("RISK_WARDEN", "PASS" if _flag("AURELIA_RISK_WARDEN_PASS") else "FAIL", "requires deterministic risk approval"),
-        Gate("EXECUTION_FIREWALL", "PASS" if _flag("AURELIA_EXECUTION_FIREWALL_PASS") else "FAIL", "requires firewall approval"),
-        Gate("EXPOSURE", "PASS" if _flag("AURELIA_EXPOSURE_PASS") else "FAIL", "requires exposure approval"),
-        Gate("RECONCILIATION", "PASS" if _flag("AURELIA_RECONCILIATION_HEALTHY") else "FAIL", "requires healthy reconciliation"),
-        Gate("WATCHDOG", "PASS" if _flag("AURELIA_WATCHDOG_HEALTHY") else "FAIL", "requires healthy watchdog"),
-        Gate("IDEMPOTENCY", "PASS" if _flag("AURELIA_IDEMPOTENCY_HEALTHY") else "FAIL", "requires restart-safe exactly-once protection"),
+        Gate("MARKET_DATA", "PASS" if attestation_status["MARKET_DATA"] else "FAIL", "requires a current provenance-bound market-data attestation"),
+        Gate("PROBABILITY", "PASS" if attestation_status["PROBABILITY"] else "FAIL", "requires a current provenance-bound probability attestation"),
+        Gate("RISK_WARDEN", "PASS" if attestation_status["RISK_WARDEN"] else "FAIL", "requires a current provenance-bound risk attestation"),
+        Gate("EXECUTION_FIREWALL", "PASS" if attestation_status["EXECUTION_FIREWALL"] else "FAIL", "requires a current provenance-bound execution-firewall attestation"),
+        Gate("EXPOSURE", "PASS" if attestation_status["EXPOSURE"] else "FAIL", "requires a current provenance-bound exposure attestation"),
+        Gate("RECONCILIATION", "PASS" if attestation_status["RECONCILIATION"] else "FAIL", "requires a current provenance-bound reconciliation attestation"),
+        Gate("WATCHDOG", "PASS" if attestation_status["WATCHDOG"] else "FAIL", "requires a current provenance-bound watchdog attestation"),
+        Gate("IDEMPOTENCY", "PASS" if attestation_status["IDEMPOTENCY"] else "FAIL", "requires a current provenance-bound idempotency attestation"),
     ]
 
     observed = deriv_evidence.get("observed", {}) if isinstance(deriv_evidence, dict) else {}
@@ -249,12 +253,12 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         },
         "worker": {
             "persistent": "HEALTHY" if persistent_worker else "NOT_DEPLOYED",
-            "legacy_railway": "HEALTHY" if _flag("AURELIA_RAILWAY_WORKER_HEALTHY") else "NOT_CONFIGURED",
-            "deriv_connectivity": "PASS" if _flag("AURELIA_PERSISTENT_WORKER_DERIV_CONNECTED") or _flag("AURELIA_RAILWAY_DERIV_CONNECTED") else "UNKNOWN",
+            "legacy_railway": "HEALTHY" if attestation_status["PERSISTENT_WORKER"] else "NOT_CONFIGURED",
+            "deriv_connectivity": "PASS" if attestation_status["PERSISTENT_WORKER"] else "UNKNOWN",
         },
         "strategy_live_eligible": evidence_gates["STRATEGY_LIVE_ELIGIBLE"].passed,
         "evidence": {
-            "market_data": _flag("AURELIA_MARKET_DATA_VALIDATED"),
+            "market_data": attestation_status["MARKET_DATA"],
             "prospective_oos": evidence_gates["PROSPECTIVE_OOS"].passed,
             "calibration": evidence_gates["CALIBRATION"].passed,
             "economics": evidence_gates["ECONOMICS"].passed,
@@ -267,18 +271,19 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
             "stake_ceiling": verified_balance,
         },
         "controls": {
-            "risk_warden": _flag("AURELIA_RISK_WARDEN_PASS"),
-            "execution_firewall": _flag("AURELIA_EXECUTION_FIREWALL_PASS"),
-            "exposure": _flag("AURELIA_EXPOSURE_PASS"),
-            "reconciliation": _flag("AURELIA_RECONCILIATION_HEALTHY"),
-            "watchdog": _flag("AURELIA_WATCHDOG_HEALTHY"),
-            "idempotency": _flag("AURELIA_IDEMPOTENCY_HEALTHY"),
+            "risk_warden": attestation_status["RISK_WARDEN"],
+            "execution_firewall": attestation_status["EXECUTION_FIREWALL"],
+            "exposure": attestation_status["EXPOSURE"],
+            "reconciliation": attestation_status["RECONCILIATION"],
+            "watchdog": attestation_status["WATCHDOG"],
+            "idempotency": attestation_status["IDEMPOTENCY"],
         },
         "live_lock": {
             "live_trading_enabled": release.live_trading_enabled,
             "final_execution_authorization": release.final_execution_authorization,
             "capital_plane_mode": release.capital_plane_mode,
         },
+        "attestations": attestations,
         "blockers": blockers,
         "next_action": blockers[0] if blockers else None,
         "continue_hunting": True,
