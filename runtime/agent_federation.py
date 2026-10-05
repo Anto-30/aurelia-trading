@@ -501,6 +501,7 @@ class AgentFederationSupervisor:
                         "security",
                         "deployment",
                         "evidence_reconciliation",
+                        "event_driven_macro",
                     ],
                     "capital_authority": False,
                     "status": "SUPERVISED_CONTINUOUS",
@@ -515,6 +516,8 @@ class AgentFederationSupervisor:
                 ("orchestration", "GrokBot"),
                 ("security", "GoogleAgentSkills"),
                 ("evidence", "GLM"),
+                ("macro_event_intelligence", "KimiK3"),
+                ("macro_red_team", "GrokBot"),
             ):
                 # Standing work must be idempotent; do not create a new task
                 # every supervisor cycle while a lane is unavailable or busy.
