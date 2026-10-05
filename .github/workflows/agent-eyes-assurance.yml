@@ -1,0 +1,76 @@
+name: Agent Eyes Pin Assurance
+
+on:
+  pull_request:
+    paths:
+      - "config/external_repo_federation.json"
+      - "config/agent_eyes_install_manifest.json"
+      - "scripts/install_agent_eyes.sh"
+      - "docs/AGENT_EYES_INTEGRATION_2026-10-05.md"
+      - ".github/workflows/agent-eyes-assurance.yml"
+  push:
+    branches: [main]
+    paths:
+      - "config/external_repo_federation.json"
+      - "config/agent_eyes_install_manifest.json"
+      - "scripts/install_agent_eyes.sh"
+      - "docs/AGENT_EYES_INTEGRATION_2026-10-05.md"
+      - ".github/workflows/agent-eyes-assurance.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-pins:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout AURELIA
+        uses: actions/checkout@v4
+
+      - name: Validate manifest and policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path("config/agent_eyes_install_manifest.json").read_text())
+          registry = json.loads(Path("config/external_repo_federation.json").read_text())
+
+          expected = {x["repo"]: x for x in manifest["sources"]}
+          registry_map = {x["repo"]: x for x in registry["repositories"]}
+
+          assert len(expected) == 3
+          for repo, item in expected.items():
+              assert repo in registry_map
+              assert item["commit"] == registry_map[repo]["head_commit"]
+              assert registry_map[repo]["mode"] == "TOOLCHAIN_ONLY"
+              assert item["required_for_live"] is False
+          print("Agent Eyes manifest/registry policy: OK")
+          PY
+
+      - name: Acquire pinned sources without executing them
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/install_agent_eyes.sh
+
+      - name: Verify exact pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C .aurelia/external-tools/agent-eyes/16-eyes rev-parse HEAD)" = "261d2b381b3ff6e819456d4c9aa40b9dff56b7d3"
+          test "$(git -C .aurelia/external-tools/agent-eyes/visual-eyes rev-parse HEAD)" = "c2ff5067353c6dbbcd09a4f0630147a042ba51e7"
+          test "$(git -C .aurelia/external-tools/agent-eyes/Touchpoint rev-parse HEAD)" = "f512227621c3e0f4e5675e4e7dbed7aaebdcc76b"
+          echo "All three external pins verified."
+
+      - name: Verify live lock remains non-live
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '^live_trading_enabled: false$' config/LIVE_LOCK.yaml
+          grep -q '^FINAL_EXECUTION_AUTHORIZATION: false$' config/LIVE_LOCK.yaml
+          grep -q '^LIVE_EXECUTION: BLOCKED$' config/LIVE_LOCK.yaml
+          grep -q '^research_capital_authority: false$' config/LIVE_LOCK.yaml
+          echo "LIVE_LOCK remains fail-closed."

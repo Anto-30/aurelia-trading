@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_skill_federation.v1",
-  "generated_date": "2026-10-04",
+  "generated_date": "2026-10-05",
   "purpose": "Research/engineering capability federation. No external agent, skill, plugin, MCP server, hook, or marketplace entry may obtain capital authority.",
   "default_policy": {
     "external_code_execution": "DENY_BY_DEFAULT",
@@ -167,6 +167,47 @@
         "browser-E2E",
         "tracing",
         "session-management"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "16-eyes",
+      "owner": "kigiela",
+      "repo": "kigiela/16-eyes",
+      "pinned_commit": "261d2b381b3ff6e819456d4c9aa40b9dff56b7d3",
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "capabilities": [
+        "security-audit",
+        "finding-verification",
+        "adversarial-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "visual-eyes",
+      "owner": "DeHor-Labs",
+      "repo": "DeHor-Labs/visual-eyes",
+      "pinned_commit": "c2ff5067353c6dbbcd09a4f0630147a042ba51e7",
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "capabilities": [
+        "visual-verification",
+        "screenshot-analysis",
+        "visual-regression",
+        "responsive-testing"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "touchpoint",
+      "owner": "Touchpoint-Labs",
+      "repo": "Touchpoint-Labs/Touchpoint",
+      "pinned_commit": "f512227621c3e0f4e5675e4e7dbed7aaebdcc76b",
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "capabilities": [
+        "desktop-accessibility",
+        "MCP",
+        "CDP",
+        "orient-act-verify"
       ],
       "capital_authority": false
     }

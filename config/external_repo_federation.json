@@ -3,7 +3,7 @@
   "generated_date": "2026-10-05",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
-  "sync_policy": "Weekly CI checks public reachability and current head commits. Head changes require review before becoming a pinned research baseline.",
+  "sync_policy": "Weekly CI checks public reachability and current head commits. Toolchain sources are pinned for reproducibility; pin changes require review before use. External sources remain non-authoritative.",
   "global_controls": {
     "capital_authority": false,
     "live_order_submission": false,
@@ -1121,6 +1121,71 @@
         "KimiK3"
       ],
       "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "kigiela/16-eyes",
+      "category": "AI-security-audit-tooling",
+      "domain": "security",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/kigiela/16-eyes",
+      "head_commit": "261d2b381b3ff6e819456d4c9aa40b9dff56b7d3",
+      "pinned_version": "1.2.2",
+      "capabilities": [
+        "full_repo_security_audit",
+        "diff_pr_security_audit",
+        "finding_verification",
+        "adversarial_review"
+      ],
+      "capital_authority": false,
+      "external_code_execution": "SANDBOX_ONLY"
+    },
+    {
+      "repo": "DeHor-Labs/visual-eyes",
+      "category": "visual-verification-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/DeHor-Labs/visual-eyes",
+      "head_commit": "c2ff5067353c6dbbcd09a4f0630147a042ba51e7",
+      "pinned_version": "1.0.0",
+      "capabilities": [
+        "screenshot_capture",
+        "visual_regression",
+        "responsive_testing",
+        "before_after_verification"
+      ],
+      "capital_authority": false,
+      "external_code_execution": "SANDBOX_ONLY"
+    },
+    {
+      "repo": "Touchpoint-Labs/Touchpoint",
+      "category": "desktop-accessibility-mcp",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/Touchpoint-Labs/Touchpoint",
+      "head_commit": "f512227621c3e0f4e5675e4e7dbed7aaebdcc76b",
+      "pinned_version": "0.3.0",
+      "capabilities": [
+        "desktop_accessibility",
+        "native_ui_discovery",
+        "cdp_browser_control",
+        "mcp_server",
+        "orient_act_verify"
+      ],
+      "capital_authority": false,
+      "external_code_execution": "SANDBOX_ONLY"
     }
   ]
 }
