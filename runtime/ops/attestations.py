@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -42,13 +43,19 @@ def payload_hash(record: dict[str, Any]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def sign_attestation(record: dict[str, Any], signing_key: str) -> dict[str, Any]:
+def _signature(record: dict[str, Any], signing_key: str) -> str:
     if not signing_key:
         raise AttestationError("signing key is required")
+    return hmac.new(
+        signing_key.encode("utf-8"),
+        payload_hash(record).encode("ascii"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def sign_attestation(record: dict[str, Any], signing_key: str) -> dict[str, Any]:
     signed = dict(record)
-    # HMAC-style keyed digest. The secret never belongs in the artifact.
-    material = signing_key.encode("utf-8") + b":" + payload_hash(signed).encode("ascii")
-    signed["signature"] = hashlib.sha256(material).hexdigest()
+    signed["signature"] = _signature(signed, signing_key)
     return signed
 
 
@@ -82,18 +89,18 @@ def verify_attestation(
         raise AttestationError("invalid provenance")
 
     now = now or datetime.now(timezone.utc)
-    issued = datetime.fromisoformat(record["issued_at_utc"].replace("Z", "+00:00"))
-    expires = datetime.fromisoformat(record["expires_at_utc"].replace("Z", "+00:00"))
+    try:
+        issued = datetime.fromisoformat(record["issued_at_utc"].replace("Z", "+00:00"))
+        expires = datetime.fromisoformat(record["expires_at_utc"].replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise AttestationError("invalid attestation timestamp") from exc
     if issued.tzinfo is None or expires.tzinfo is None:
         raise AttestationError("attestation timestamps must be timezone-aware")
     if issued > now or expires <= now or expires <= issued:
         raise AttestationError("attestation is expired or temporally invalid")
 
-    if not signing_key:
-        raise AttestationError("verification key unavailable")
-    material = signing_key.encode("utf-8") + b":" + payload_hash(record).encode("ascii")
-    expected = hashlib.sha256(material).hexdigest()
-    if record["signature"] != expected:
+    expected = _signature(record, signing_key)
+    if not hmac.compare_digest(record["signature"], expected):
         raise AttestationError("invalid attestation signature")
 
     return Attestation(**{k: record[k] for k in required})
