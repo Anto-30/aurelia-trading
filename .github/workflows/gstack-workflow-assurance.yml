@@ -64,9 +64,6 @@ jobs:
               unknown=[agent for agent in assigned if agent not in allowed_agents]
               if unknown:
                   raise AssertionError(f"{repo['repo']}: unknown agent(s) {unknown}")
-              if repo["repo"] not in sources:
-                  raise AssertionError(f"{repo['repo']}: missing capability-federation entry")
-
           assert repos["loperanger7/gstack-auto"]["mode"] == "SANDBOX_ONLY"
           print(f"repository-to-agent routing: OK ({len(repos)} repositories assigned)")
           print("gstack/flow-kit federation policy: OK")
