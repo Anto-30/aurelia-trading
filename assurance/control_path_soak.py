@@ -142,10 +142,11 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
 
     The executor stays in LIVE mode because the capital executor deliberately
     forbids alternate broker-submission modes. No network or real capital is used.
-    Idempotency/ledger stores are in-memory here to keep 3,600 cycles fast; their
-    persistence/reload semantics are covered by dedicated tests. Persistent fencing
-    remains active across executor recreation. This proves repeated control-path
-    invariants, not elapsed-time production SLOs.
+    Idempotency/ledger stores are isolated to this soak invocation; the idempotency
+    registry uses a temporary file so executor recreation exercises persistence
+    without inheriting state from other tests or runtime processes. Persistent
+    fencing remains active across executor recreation. This proves repeated
+    control-path invariants, not elapsed-time production SLOs.
     """
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
@@ -159,7 +160,7 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
         )
         broker = DeterministicBroker()
         journal = MemoryJournal()
-        idempotency = IdempotencyStore()
+        idempotency = IdempotencyStore(root / "idempotency.json")
         ledger = InMemoryLedger()
         fence = ExecutionFence()
         executor = _executor(lock, broker, journal, idempotency, ledger, fence)
