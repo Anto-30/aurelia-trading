@@ -210,5 +210,24 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(federation.active_agents(), ())
 
 
+    async def test_legacy_lease_never_counts_as_active(self):
+        with tempfile.TemporaryDirectory() as td:
+            federation = PersistentAgentFederation(
+                journal_path=f"{td}/events.ndjson",
+                lease_path=f"{td}/leases.json",
+                config_hash="cfg",
+                source_hash="src",
+                lease_seconds=30,
+            )
+            federation._save_leases({
+                "ClaudeCode": {
+                    "lease_id": "legacy",
+                    "heartbeat_at": "2099-01-01T00:00:00+00:00",
+                    "expires_at": "2099-01-01T00:01:00+00:00",
+                }
+            })
+            self.assertEqual(federation.active_agents(), ())
+
+
 if __name__ == "__main__":
     unittest.main()
