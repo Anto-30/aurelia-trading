@@ -178,10 +178,9 @@ class SupervisedAgentWorker:
             self._heartbeat(), name=f"worker-heartbeat:{self.worker_id}"
         )
         # Establish the first worker-owned lease before reporting ACTIVE.
-        await federation_heartbeat = self.federation.heartbeat(
+        await self.federation.heartbeat(
             self.agent, worker_id=self.worker_id, origin="WORKER"
         )
-        del await federation_heartbeat
         self._state = "ACTIVE"
         self._task = asyncio.create_task(
             self._run(), name=f"agent-worker:{self.agent}:{self.worker_id}"
