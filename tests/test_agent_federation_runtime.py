@@ -16,6 +16,13 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
                 lease_seconds=30,
             )
             await federation.register_agents(["ClaudeCode", "KimiK3", "GrokBot"])
+            self.assertEqual(federation.active_agents(), ())
+            for agent in ("ClaudeCode", "KimiK3", "GrokBot"):
+                await federation.heartbeat(
+                    agent,
+                    worker_id=f"{agent}-test-worker",
+                    origin="TEST",
+                )
             await federation.publish(
                 sender="ClaudeCode",
                 recipients=["AURELIA"],
@@ -28,6 +35,9 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(len(messages), 1)
             self.assertEqual(messages[0]["message_type"], "OBSERVATION")
             self.assertIn("ClaudeCode", federation.active_agents())
+            lease = federation._load_leases()["ClaudeCode"]
+            self.assertEqual(lease["worker_id"], "ClaudeCode-test-worker")
+            self.assertEqual(lease["origin"], "TEST")
 
     async def test_roundtable_is_durable_and_broadcast(self):
         with tempfile.TemporaryDirectory() as td:
@@ -159,12 +169,45 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
                 source_hash="src",
                 lease_seconds=5,
             )
-            await federation.heartbeat("ClaudeCode")
+            await federation.heartbeat(
+                "ClaudeCode",
+                worker_id="ClaudeCode-test-worker",
+                origin="TEST",
+            )
             data = federation._load_leases()
             data["ClaudeCode"]["expires_at"] = "2000-01-01T00:00:00+00:00"
             federation._save_leases(data)
             self.assertIn("ClaudeCode", federation.stale_agents())
             self.assertNotIn("ClaudeCode", federation.active_agents())
+
+
+    async def test_supervisor_origin_is_forbidden(self):
+        with tempfile.TemporaryDirectory() as td:
+            federation = PersistentAgentFederation(
+                journal_path=f"{td}/events.ndjson",
+                lease_path=f"{td}/leases.json",
+                config_hash="cfg",
+                source_hash="src",
+            )
+            with self.assertRaises(PermissionError):
+                await federation.heartbeat(
+                    "ClaudeCode",
+                    worker_id="fake-supervisor-worker",
+                    origin="SUPERVISOR",
+                )
+            self.assertEqual(federation.active_agents(), ())
+
+    async def test_worker_id_is_required_for_liveness(self):
+        with tempfile.TemporaryDirectory() as td:
+            federation = PersistentAgentFederation(
+                journal_path=f"{td}/events.ndjson",
+                lease_path=f"{td}/leases.json",
+                config_hash="cfg",
+                source_hash="src",
+            )
+            with self.assertRaises(ValueError):
+                await federation.heartbeat("ClaudeCode")
+            self.assertEqual(federation.active_agents(), ())
 
 
 if __name__ == "__main__":
