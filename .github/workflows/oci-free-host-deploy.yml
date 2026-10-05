@@ -151,7 +151,10 @@ jobs:
              mkdir -p /tmp/aurelia-release-$GITHUB_SHA
              tar -xzf /tmp/aurelia-$GITHUB_SHA.tar.gz -C /tmp/aurelia-release-$GITHUB_SHA
              rm -f /tmp/aurelia-$GITHUB_SHA.tar.gz
-             sudo env AURELIA_DEPLOYMENT_MODE=\"$DEPLOYMENT_MODE\" bash /tmp/aurelia-release-$GITHUB_SHA/scripts/oci/bootstrap_and_deploy.sh '$GITHUB_SHA'
+             sudo rm -rf /opt/aurelia/releases/$GITHUB_SHA
+             sudo mkdir -p /opt/aurelia/releases/$GITHUB_SHA
+             sudo cp -a /tmp/aurelia-release-$GITHUB_SHA/. /opt/aurelia/releases/$GITHUB_SHA/
+             sudo env AURELIA_DEPLOYMENT_MODE="$DEPLOYMENT_MODE" bash /opt/aurelia/releases/$GITHUB_SHA/scripts/oci/bootstrap_and_deploy.sh '$GITHUB_SHA'
              rm -rf /tmp/aurelia-release-$GITHUB_SHA"
 
       - name: Verify running source and deployment mode
