@@ -234,7 +234,33 @@ def cross_asset_confirmation(market: MarketSnapshot) -> dict[str, str]:
     }
 
 
-def sector_rotation(scenario: Scenario, regime: MacroRegime) -> dict[str, tuple[str, ...]]:
+def political_risk_score(*, surprise_score: float, scenario: Scenario, regime: MacroRegime, contested: bool) -> float:
+    """Heuristic event-risk magnitude, not a directional return forecast."""
+    score = max(0.0, min(100.0, surprise_score / 2.0))
+    if contested or scenario == Scenario.UNRESOLVED:
+        score += 25.0
+    if regime == MacroRegime.RISK_OFF:
+        score += 20.0
+    elif regime == MacroRegime.MIXED:
+        score += 10.0
+    elif regime == MacroRegime.UNKNOWN:
+        score += 15.0
+    return round(min(100.0, score), 2)
+
+
+def trade_expression_candidates(*, scenario: Scenario, regime: MacroRegime, surprise_score: float) -> tuple[str, ...]:
+    if scenario == Scenario.UNRESOLVED or regime == MacroRegime.UNKNOWN:
+        return ("WAIT_FOR_CONFIRMATION",)
+    if regime == MacroRegime.RISK_OFF:
+        return ("INDEX_HEDGE", "PROTECTIVE_PUT", "COLLAR", "DEFENSIVE_PAIR")
+    if regime == MacroRegime.RISK_ON and surprise_score >= 50.0:
+        return ("INDEX_LONG", "SECTOR_LONG", "DEFINED_RISK_CALL_SPREAD", "RELATIVE_VALUE_PAIR")
+    if regime == MacroRegime.RISK_ON:
+        return ("RELATIVE_VALUE_PAIR", "SELECTIVE_SECTOR_LONG", "WAIT_FOR_EARNINGS_CONFIRMATION")
+    return ("RELATIVE_VALUE_PAIR", "WAIT_FOR_CONFIRMATION")
+
+
+def sector_rotation(scenario: Scenario, regime: MacroRegime):
     base = {
         Scenario.GOP_RETENTION: ("Traditional Energy", "Defense", "AI Infrastructure", "Financials"),
         Scenario.DIVIDED_GOVERNMENT: ("Healthcare", "Defense", "Non-AI Technology"),
@@ -299,6 +325,8 @@ class EventDecision:
     political_age_hours: float
     market_age_minutes: float
     cross_asset: Mapping[str, str]
+    political_risk_score: float
+    trade_expressions: tuple[str, ...]
     source_ids: tuple[str, ...] = ()
     capital_authority: bool = False
 
@@ -425,5 +453,11 @@ class EventDrivenMacroEngine:
             political_age_hours=round(political_age, 2),
             market_age_minutes=round(market_age, 2),
             cross_asset=cross_asset_confirmation(market),
+            political_risk_score=political_risk_score(
+                surprise_score=surprise, scenario=scenario, regime=regime, contested=current.contested
+            ),
+            trade_expressions=trade_expression_candidates(
+                scenario=scenario, regime=regime, surprise_score=surprise
+            ),
             source_ids=tuple(sorted(set(previous.source_ids + current.source_ids))),
         )
