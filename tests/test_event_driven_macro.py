@@ -12,6 +12,7 @@ from research.event_driven_macro import (
     Scenario,
     cross_asset_confirmation,
     event_half_life_hours,
+    political_risk_score,
     probability_eligible,
     rank_company_exposures,
     scenario_probabilities,
@@ -168,6 +169,34 @@ class TestEventDrivenMacro(unittest.TestCase):
         self.assertEqual(c["oil"], "DOWN")
         self.assertEqual(c["crypto"], "UP")
         self.assertEqual(c["credit_spreads"], "TIGHTER")
+
+    def test_risk_score_and_trade_expression_are_deterministic(self):
+        self.assertEqual(
+            political_risk_score(
+                surprise_score=60,
+                scenario=Scenario.DIVIDED_GOVERNMENT,
+                regime=MacroRegime.RISK_ON,
+                contested=False,
+            ),
+            30.0,
+        )
+        now = datetime.now(timezone.utc)
+        d = EventDrivenMacroEngine().evaluate(
+            previous=PoliticalSnapshot(0.0, 0.0, ResultStatus.LIKELY, ResultStatus.LIKELY, as_of_utc=now),
+            current=PoliticalSnapshot(1.0, 0.2, ResultStatus.CONFIRMED, ResultStatus.LIKELY, as_of_utc=now),
+            market=MarketSnapshot(
+                spx_return_pct=1,
+                nasdaq_return_pct=1,
+                small_cap_return_pct=1,
+                two_year_yield_change_bps=-5,
+                ten_year_yield_change_bps=-4,
+                credit_spread_change_bps=-2,
+                vix_change_pct=-12,
+                as_of_utc=now,
+            ),
+            now=now,
+        )
+        self.assertIn("DEFINED_RISK_CALL_SPREAD", d.trade_expressions)
 
     def test_event_half_life_is_explicit(self):
         self.assertEqual(event_half_life_hours("ELECTION_RESULT"), 120)
