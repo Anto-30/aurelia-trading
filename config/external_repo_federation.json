@@ -3,7 +3,7 @@
   "generated_date": "2026-10-05",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
-  "sync_policy": "Weekly CI checks public reachability and current head commits. Head changes require review before becoming a pinned research baseline.",
+  "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
   "global_controls": {
     "capital_authority": false,
     "live_order_submission": false,
@@ -1121,6 +1121,111 @@
         "KimiK3"
       ],
       "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "garrytan/gstack",
+      "role": "ENGINEERING_WORKFLOW_REFERENCE",
+      "mode": "TOOLCHAIN_ONLY",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "commit": "10315cf44d1ea13e3ae4821841873afbf7807935",
+      "capabilities": [
+        "planning",
+        "engineering-review",
+        "QA",
+        "security-review",
+        "browser-verification",
+        "release-workflow"
+      ]
+    },
+    {
+      "repo": "rihebty/flow-kit",
+      "role": "FLOW_ORCHESTRATION_REFERENCE",
+      "mode": "REFERENCE_ONLY",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "commit": "9b5dda7206ae841230f118348d660ad8d0ae2830",
+      "capabilities": [
+        "workflow-composition",
+        "agent-flow-patterns"
+      ]
+    },
+    {
+      "repo": "thanh-abaii/gstack-windows-port",
+      "role": "WINDOWS_TOOLCHAIN_REFERENCE",
+      "mode": "TOOLCHAIN_ONLY",
+      "assigned_agents": [
+        "ClaudeCode"
+      ],
+      "commit": "26937232ba2141c6bcf6ffdd8e0822163b475d63",
+      "capabilities": [
+        "powershell-compatibility",
+        "windows-agent-skills",
+        "security-audit"
+      ]
+    },
+    {
+      "repo": "lucas-flatwhite/gstack-ko",
+      "role": "LOCALIZED_SKILL_REFERENCE",
+      "mode": "REFERENCE_ONLY",
+      "assigned_agents": [
+        "ClaudeCode"
+      ],
+      "commit": "18bacc475cb5f7bf57647f4fbb647415c65c2303",
+      "capabilities": [
+        "Korean-skill-reference",
+        "planning-review-reference"
+      ]
+    },
+    {
+      "repo": "mr-daedalium/ostack-saas",
+      "role": "ALTERNATIVE_AGENT_WORKFLOW_REFERENCE",
+      "mode": "REFERENCE_ONLY",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "commit": "a67256db4451f2d085370cfc36ebe091211b8e7b",
+      "capabilities": [
+        "agent-team-patterns",
+        "security-review",
+        "QA-workflow",
+        "release-workflow"
+      ]
+    },
+    {
+      "repo": "Ahacad/gstack",
+      "role": "CLAUDE_PLUGIN_WRAPPER_REFERENCE",
+      "mode": "TOOLCHAIN_ONLY",
+      "assigned_agents": [
+        "ClaudeCode"
+      ],
+      "commit": "f873a4d051b16a6652a3463cd1cd060dde86a24b",
+      "capabilities": [
+        "Claude-Code-plugin-wrapper",
+        "gstack-skill-discovery"
+      ]
+    },
+    {
+      "repo": "loperanger7/gstack-auto",
+      "role": "PARALLEL_ENGINEERING_ORCHESTRATION_REFERENCE",
+      "mode": "SANDBOX_ONLY",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "commit": "17bf2a025c175b899e7d30be1ab4e658fd4ae04f",
+      "capabilities": [
+        "parallel-builds",
+        "adversarial-review",
+        "QA-loop",
+        "scoring",
+        "iteration-orchestration"
+      ]
     }
   ]
 }
