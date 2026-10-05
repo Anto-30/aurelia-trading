@@ -8,7 +8,7 @@ wallet, capital, or live-lock access and cannot produce an execution command.
 
 import hashlib
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 
@@ -413,7 +413,21 @@ def research_candidate(
         "authorization_scope": "RESEARCH_ONLY",
     }
     provenance_hash = hashlib.sha256(_payload(fields).encode("utf-8")).hexdigest()
-    return MemecoinResearchDecision(**fields, provenance_hash=provenance_hash)
+    return MemecoinResearchDecision(
+        schema=fields["schema"],
+        candidate_id=fields["candidate_id"],
+        token_mint=fields["token_mint"],
+        chain=fields["chain"],
+        status=status,
+        evidence_class=EvidenceClass.RESEARCH_ONLY,
+        reasons=tuple(fields["reasons"]),
+        net_expected_edge=edge,
+        calibrated_probability=fields["calibrated_probability"],
+        trade_probability_valid=probability_valid,
+        execution_authorized=False,
+        authorization_scope="RESEARCH_ONLY",
+        provenance_hash=provenance_hash,
+    )
 
 
 def research_decision_cannot_authorize_execution(
