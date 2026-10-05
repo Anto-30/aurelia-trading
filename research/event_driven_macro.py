@@ -430,6 +430,7 @@ class EventDrivenMacroEngine:
             "MARKET_DATA_STALE",
             "PREVIOUS_POLITICAL_PROBABILITY_INVALID",
             "CURRENT_POLITICAL_PROBABILITY_INVALID",
+            "CROSS_ASSET_CONFIRMATION_INSUFFICIENT",
         }
         if any(reason in hard for reason in reasons):
             action = Action.NO_TRADE
