@@ -503,7 +503,7 @@ class AgentFederationSupervisor:
                         "evidence_reconciliation",
                     ],
                     "capital_authority": False,
-                    "status": "ACTIVE",
+                    "status": "SUPERVISED_CONTINUOUS",
                 },
                 correlation_id=f"cycle:{int(datetime.now(timezone.utc).timestamp())}",
                 priority=60,
@@ -516,10 +516,18 @@ class AgentFederationSupervisor:
                 ("security", "GoogleAgentSkills"),
                 ("evidence", "GLM"),
             ):
+                # Standing work must be idempotent; do not create a new task
+                # every supervisor cycle while a lane is unavailable or busy.
+                pending = self.federation.pending_tasks(agent)
+                if any(
+                    row.get("task_type") == f"CONTINUOUS_{domain.upper()}"
+                    for row in pending
+                ):
+                    continue
                 await self.federation.enqueue_task(
                     task_type=f"CONTINUOUS_{domain.upper()}",
                     payload={"domain": domain, "status": "READY", "capital_authority": False},
-                    correlation_id=f"cycle:{int(datetime.now(timezone.utc).timestamp())}:{domain}",
+                    correlation_id=f"standing:{domain}:{agent}",
                     priority=55,
                     assigned_agent=agent,
                 )
