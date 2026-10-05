@@ -84,6 +84,14 @@ A political headline alone is insufficient.
 
 The module assigns explicit monitoring persistence by event class. Election headlines are short-lived; confirmed results persist longer; legislation, regulation, tariff actions, sanctions and court decisions require longer monitoring. The persistence score is a monitoring control, not a return forecast.
 
+## Risk score and trade-expression layer
+
+The module produces a 0–100 political-risk magnitude score. It is not a forecast of market returns.
+
+It also emits expression classes rather than tickers: `INDEX_LONG`, `SECTOR_LONG`, `RELATIVE_VALUE_PAIR`, `DEFINED_RISK_CALL_SPREAD`, `PROTECTIVE_PUT`, `COLLAR`, `INDEX_HEDGE`, and `DEFENSIVE_PAIR`. These are research candidates only; instrument selection still requires current prices, liquidity, volatility, borrow/financing, and strategy qualification.
+
+
+
 ## Hard blockers
 
 The event engine returns `NO_TRADE` for:
