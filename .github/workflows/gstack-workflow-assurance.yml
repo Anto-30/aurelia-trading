@@ -6,14 +6,18 @@ on:
       - "config/external_repo_federation.json"
       - "config/agent_skill_federation.json"
       - "config/gstack_workflow_sync.json"
+      - "config/repo_agent_routing.json"
       - "docs/GSTACK_FLOWKIT_FEDERATION_2026-10-05.md"
+      - "docs/REPOSITORY_AGENT_ROUTING_2026-10-05.md"
   push:
     branches: [main]
     paths:
       - "config/external_repo_federation.json"
       - "config/agent_skill_federation.json"
       - "config/gstack_workflow_sync.json"
+      - "config/repo_agent_routing.json"
       - "docs/GSTACK_FLOWKIT_FEDERATION_2026-10-05.md"
+      - "docs/REPOSITORY_AGENT_ROUTING_2026-10-05.md"
 
 permissions:
   contents: read
@@ -23,16 +27,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate pins and hard boundaries
+      - name: Validate pins, agent routing, and hard boundaries
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
+
           m=json.loads(Path("config/gstack_workflow_sync.json").read_text())
           e=json.loads(Path("config/external_repo_federation.json").read_text())
           a=json.loads(Path("config/agent_skill_federation.json").read_text())
+          r=json.loads(Path("config/repo_agent_routing.json").read_text())
+
           repos={x["repo"]:x for x in e["repositories"]}
           sources={x["repo"]:x for x in a["sources"]}
+          allowed_agents=set(r["agents"])
+
+          assert repos, "repository federation must not be empty"
           for x in m["sources"]:
               assert repos[x["repo"]]["commit"] == x["commit"]
               assert repos[x["repo"]]["mode"] == x["mode"]
@@ -41,8 +51,24 @@ jobs:
               assert x["live_order_authority"] is False
               assert x["secret_reading"] is False
               assert sources[x["repo"]]["pinned_commit"] == x["commit"]
-          assert "loperanger7/gstack-auto" in repos
+
+          for repo in e["repositories"]:
+              required=["repo","category","domain","assigned_agents","mode","source_url","head_commit"]
+              missing=[k for k in required if k not in repo]
+              if missing:
+                  raise AssertionError(f"{repo.get('repo','<unknown>')}: missing {missing}")
+
+              assigned=repo["assigned_agents"]
+              if not isinstance(assigned,list) or not assigned:
+                  raise AssertionError(f"{repo['repo']}: no agent assigned")
+              unknown=[agent for agent in assigned if agent not in allowed_agents]
+              if unknown:
+                  raise AssertionError(f"{repo['repo']}: unknown agent(s) {unknown}")
+              if repo["repo"] not in sources:
+                  raise AssertionError(f"{repo['repo']}: missing capability-federation entry")
+
           assert repos["loperanger7/gstack-auto"]["mode"] == "SANDBOX_ONLY"
+          print(f"repository-to-agent routing: OK ({len(repos)} repositories assigned)")
           print("gstack/flow-kit federation policy: OK")
           PY
       - name: Verify AURELIA live lock
