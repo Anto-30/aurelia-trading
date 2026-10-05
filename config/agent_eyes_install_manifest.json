@@ -1,0 +1,59 @@
+{
+  "schema": "aurelia.agent_eyes_install_manifest.v1",
+  "generated_date": "2026-10-05",
+  "purpose": "Pin and install external agent-visibility and security tooling without copying executable source into AURELIA capital or execution planes.",
+  "install_root": ".aurelia/external-tools/agent-eyes",
+  "execution_policy": "SOURCE_CHECKOUT_ONLY",
+  "runtime_policy": "External tools must run outside the capital plane and cannot mutate LIVE_LOCK, Risk Warden, Execution Firewall, broker state, secrets, or execution authorization.",
+  "sources": [
+    {
+      "name": "16-eyes",
+      "repo": "kigiela/16-eyes",
+      "commit": "261d2b381b3ff6e819456d4c9aa40b9dff56b7d3",
+      "version": "1.2.2",
+      "mode": "TOOLCHAIN_ONLY",
+      "install": "npm install --prefix .aurelia/external-tools/agent-eyes/16-eyes --ignore-scripts",
+      "entrypoints": [
+        "npx 16-eyes init",
+        "npx 16-eyes audit",
+        "npx 16-eyes audit-diff"
+      ],
+      "required_for_live": false
+    },
+    {
+      "name": "visual-eyes",
+      "repo": "DeHor-Labs/visual-eyes",
+      "commit": "c2ff5067353c6dbbcd09a4f0630147a042ba51e7",
+      "version": "1.0.0",
+      "mode": "TOOLCHAIN_ONLY",
+      "install": "source checkout; install Playwright only in isolated CI/engineering environment",
+      "entrypoints": [
+        "visual screenshot verification",
+        "visual regression comparison"
+      ],
+      "required_for_live": false
+    },
+    {
+      "name": "Touchpoint",
+      "repo": "Touchpoint-Labs/Touchpoint",
+      "commit": "f512227621c3e0f4e5675e4e7dbed7aaebdcc76b",
+      "version": "0.3.0",
+      "mode": "TOOLCHAIN_ONLY",
+      "install": "python -m pip install --no-deps -e . inside an isolated engineering virtualenv; platform dependencies remain opt-in",
+      "entrypoints": [
+        "touchpoint-mcp",
+        "desktop accessibility API",
+        "CDP browser/Electron control"
+      ],
+      "required_for_live": false
+    }
+  ],
+  "prohibitions": [
+    "No external source is a strategy qualification.",
+    "No external source can authorize a trade.",
+    "No external source can submit a broker transaction.",
+    "No external source can read or log production secrets.",
+    "No external source can change LIVE_LOCK or FINAL_EXECUTION_AUTHORIZATION.",
+    "No external source is a production dependency unless separately reviewed and promoted by AURELIA governance."
+  ]
+}
