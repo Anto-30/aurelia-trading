@@ -1,0 +1,94 @@
+{
+  "schema": "aurelia.gstack_workflow_sync.v1",
+  "generated_date": "2026-10-05",
+  "purpose": "Pin external engineering-agent workflow sources for controlled research and engineering use.",
+  "sources": [
+    {
+      "repo": "garrytan/gstack",
+      "commit": "10315cf44d1ea13e3ae4821841873afbf7807935",
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "production_deployment_authority": false,
+      "live_order_authority": false,
+      "secret_reading": false
+    },
+    {
+      "repo": "rihebty/flow-kit",
+      "commit": "9b5dda7206ae841230f118348d660ad8d0ae2830",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "production_deployment_authority": false,
+      "live_order_authority": false,
+      "secret_reading": false
+    },
+    {
+      "repo": "thanh-abaii/gstack-windows-port",
+      "commit": "26937232ba2141c6bcf6ffdd8e0822163b475d63",
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "production_deployment_authority": false,
+      "live_order_authority": false,
+      "secret_reading": false
+    },
+    {
+      "repo": "lucas-flatwhite/gstack-ko",
+      "commit": "18bacc475cb5f7bf57647f4fbb647415c65c2303",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "production_deployment_authority": false,
+      "live_order_authority": false,
+      "secret_reading": false
+    },
+    {
+      "repo": "mr-daedalium/ostack-saas",
+      "commit": "a67256db4451f2d085370cfc36ebe091211b8e7b",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "production_deployment_authority": false,
+      "live_order_authority": false,
+      "secret_reading": false
+    },
+    {
+      "repo": "Ahacad/gstack",
+      "commit": "f873a4d051b16a6652a3463cd1cd060dde86a24b",
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "production_deployment_authority": false,
+      "live_order_authority": false,
+      "secret_reading": false
+    },
+    {
+      "repo": "loperanger7/gstack-auto",
+      "commit": "17bf2a025c175b899e7d30be1ab4e658fd4ae04f",
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "production_deployment_authority": false,
+      "live_order_authority": false,
+      "secret_reading": false
+    }
+  ],
+  "agent_assignments": {
+    "ClaudeCode": [
+      "garrytan/gstack",
+      "rihebty/flow-kit",
+      "thanh-abaii/gstack-windows-port",
+      "lucas-flatwhite/gstack-ko",
+      "mr-daedalium/ostack-saas",
+      "Ahacad/gstack",
+      "loperanger7/gstack-auto"
+    ],
+    "GrokBot": [
+      "garrytan/gstack",
+      "rihebty/flow-kit",
+      "mr-daedalium/ostack-saas",
+      "loperanger7/gstack-auto"
+    ]
+  },
+  "prohibitions": [
+    "No external workflow source can authorize a trade.",
+    "No external workflow source can mutate LIVE_LOCK or FINAL_EXECUTION_AUTHORIZATION.",
+    "No external workflow source can read production secrets.",
+    "No external workflow source is strategy qualification evidence.",
+    "gstack-auto remains sandbox-only because it orchestrates autonomous implementation loops."
+  ]
+}
