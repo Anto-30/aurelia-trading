@@ -95,7 +95,17 @@ class TestEventDrivenMacro(unittest.TestCase):
         self.assertEqual(d.action, Action.NO_TRADE)
         self.assertIn("MARKET_DATA_STALE", d.reasons)
 
+    def test_insufficient_cross_asset_confirmation_is_no_trade(self):
+        now = datetime.now(timezone.utc)
+        previous = PoliticalSnapshot(0.5, 0.5, ResultStatus.LIKELY, ResultStatus.LIKELY, as_of_utc=now)
+        current = PoliticalSnapshot(0.9, 0.1, ResultStatus.CONFIRMED, ResultStatus.LIKELY, as_of_utc=now)
+        market = MarketSnapshot(spx_return_pct=1.0, as_of_utc=now)
+        d = EventDrivenMacroEngine().evaluate(previous=previous, current=current, market=market, now=now)
+        self.assertEqual(d.action, Action.NO_TRADE)
+        self.assertIn("CROSS_ASSET_CONFIRMATION_INSUFFICIENT", d.reasons)
+
     def test_risk_off_high_surprise_produces_hedge(self):
+
         now = datetime.now(timezone.utc)
         previous = PoliticalSnapshot(0.0, 0.0, ResultStatus.LIKELY, ResultStatus.LIKELY, as_of_utc=now)
         current = PoliticalSnapshot(0.0, 0.0, ResultStatus.CONFIRMED, ResultStatus.CONFIRMED, as_of_utc=now)
