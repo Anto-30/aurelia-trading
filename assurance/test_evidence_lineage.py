@@ -23,11 +23,19 @@ class TestEvidenceLineage(unittest.TestCase):
             "data/runtime/archive/AURELIA_EXTERNAL_ACCESS_STATE_2026-10-04.json"
         )
 
+        # The current snapshot records the source tip observed when the snapshot
+        # was produced. The simulation soak is independent evidence tied to the
+        # source commit that actually produced its artifact. Never relabel an
+        # older soak artifact as evidence for a newer source tip.
         self.assertEqual(
+            current["github"]["post_merge_commit"],
             current["current_tip"],
-            current["simulation_soak"]["source_commit"],
         )
         self.assertNotEqual(current["current_tip"], historical["current_tip"])
+        self.assertNotEqual(
+            current["simulation_soak"]["source_commit"],
+            current["current_tip"],
+        )
         self.assertEqual(
             current["simulation_soak"]["workflow_run_id"],
             current["ci"]["nonprod_soak_run_id"],
