@@ -66,6 +66,7 @@ def verify_attestation(
     expected_source_sha: str,
     expected_runtime_id: str,
     expected_config_hash: str,
+    expected_evidence_hash: str | None = None,
     now: datetime | None = None,
 ) -> Attestation:
     required = (
@@ -85,6 +86,8 @@ def verify_attestation(
         raise AttestationError("runtime identity mismatch")
     if record["config_hash"] != expected_config_hash:
         raise AttestationError("configuration hash mismatch")
+    if expected_evidence_hash is not None and record["evidence_hash"] != expected_evidence_hash:
+        raise AttestationError("evidence hash mismatch")
     if record["provenance"] not in {"runtime", "ci", "broker", "control_plane"}:
         raise AttestationError("invalid provenance")
 
