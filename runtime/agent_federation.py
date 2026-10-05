@@ -361,13 +361,19 @@ class PersistentAgentFederation:
     def active_agents(self) -> tuple[str, ...]:
         leases = self._load_leases()
         now = datetime.now(timezone.utc)
-        return tuple(
-            sorted(
-                agent
-                for agent, value in leases.items()
-                if datetime.fromisoformat(value["expires_at"]) > now
-            )
-        )
+        active: list[str] = []
+        for agent, value in leases.items():
+            worker_id = str(value.get("worker_id", "")).strip()
+            origin = str(value.get("origin", ""))
+            expires_at = value.get("expires_at")
+            if not worker_id or origin not in {"WORKER", "TEST"} or not expires_at:
+                continue
+            try:
+                if datetime.fromisoformat(str(expires_at)) > now:
+                    active.append(agent)
+            except (TypeError, ValueError):
+                continue
+        return tuple(sorted(active))
 
     async def publish(
         self,
