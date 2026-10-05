@@ -30,7 +30,7 @@ jobs:
           assert p["global_controls"]["live_order_submission"] is False
           assert p["global_controls"]["secret_reading"] is False
           assert p["global_controls"]["external_code_execution"] == "DENY_BY_DEFAULT"
-          assert len(p["repositories"]) == 49
+          assert len(p["repositories"]) == 78
           assert all(x["source_url"].startswith("https://github.com/") for x in p["repositories"])
           print("EXTERNAL_REPO_POLICY=PASS")
           PY
