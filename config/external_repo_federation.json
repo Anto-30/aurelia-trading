@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-04",
+  "generated_date": "2026-10-05",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "Weekly CI checks public reachability and current head commits. Head changes require review before becoming a pinned research baseline.",
@@ -692,6 +692,383 @@
         "container-wrapper",
         "persistent-agent-state"
       ]
+    },
+    {
+      "repo": "chrisleekr/binance-trading-bot",
+      "category": "crypto-trading-bot",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/chrisleekr/binance-trading-bot",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "chrisconlan/algorithmic-trading-with-python",
+      "category": "algorithmic-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/chrisconlan/algorithmic-trading-with-python",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "nykooi1/vibe-wise",
+      "category": "AI-agent-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/nykooi1/vibe-wise",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "saniales/golang-crypto-trading-bot",
+      "category": "crypto-trading-bot",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/saniales/golang-crypto-trading-bot",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "tradytics/eiten",
+      "category": "trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/tradytics/eiten",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "blampe/IbPy",
+      "category": "interactive-brokers-legacy-api",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/blampe/IbPy",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "omnigent-ai/omnigent",
+      "category": "AI-agent-framework",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/omnigent-ai/omnigent",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "ChromeDevTools/chrome-devtools-mcp",
+      "category": "browser-agent-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "hackingthemarkets/binance-tutorials",
+      "category": "crypto-trading-tutorials",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/hackingthemarkets/binance-tutorials",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "MacroAnarchy/hermes-gadget-sdk",
+      "category": "hermes-agent-sdk",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/MacroAnarchy/hermes-gadget-sdk",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "Adolanium/hermes-gadget-sdk",
+      "category": "hermes-agent-sdk",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Adolanium/hermes-gadget-sdk",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "freqtrade/freqtrade-strategies",
+      "category": "strategy-library",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/freqtrade/freqtrade-strategies",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "Drakkar-Software/OctoBot",
+      "category": "trading-platform",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/Drakkar-Software/OctoBot",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "iterativv/NostalgiaForInfinity",
+      "category": "strategy-library",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/iterativv/NostalgiaForInfinity",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "thesoulcrancerdev/poly-trading-strategies",
+      "category": "prediction-market-strategies",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/thesoulcrancerdev/poly-trading-strategies",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "ryanfrigo/kalshi-ai-trading-bot",
+      "category": "prediction-market-bot",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/ryanfrigo/kalshi-ai-trading-bot",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "ChypherFish3r/coinbase-trading-bot",
+      "category": "crypto-exchange-bot",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/ChypherFish3r/coinbase-trading-bot",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "degatchi/mev-template-rs",
+      "category": "MEV-research",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/degatchi/mev-template-rs",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "jordantete/grid_trading_bot",
+      "category": "grid-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/jordantete/grid_trading_bot",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "diogomatoschaves/MyCryptoBot",
+      "category": "crypto-trading-bot",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/diogomatoschaves/MyCryptoBot",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "vavarb/vavabot_options_strategy",
+      "category": "options-strategy-research",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/vavarb/vavabot_options_strategy",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "Kryptgen89/freqtrade-setup",
+      "category": "trading-framework-setup",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Kryptgen89/freqtrade-setup",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "SevaTV/botpilot",
+      "category": "trading-agent-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/SevaTV/botpilot",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "giaaua06/okx-grid-trading-bot",
+      "category": "grid-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/giaaua06/okx-grid-trading-bot",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "doat08/okx-bot-suite",
+      "category": "crypto-exchange-bot-suite",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/doat08/okx-bot-suite",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "omirb604/spot-grid-trading-bot",
+      "category": "spot-grid-research",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/omirb604/spot-grid-trading-bot",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "djc00p/freqtrade-us-setup",
+      "category": "trading-framework-setup",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/djc00p/freqtrade-us-setup",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "superset-sh/superset",
+      "category": "analytics-observability-platform",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/superset-sh/superset",
+      "head_commit": "SYNC_REQUIRED"
+    },
+    {
+      "repo": "affaan-m/agentshield",
+      "category": "agent-security",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/affaan-m/agentshield",
+      "head_commit": "SYNC_REQUIRED"
     }
   ]
 }
