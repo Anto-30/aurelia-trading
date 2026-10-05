@@ -20,6 +20,7 @@ from runtime.core.reconcile import Reconciler
 from runtime.core.runtime_config import load_config_hash
 from runtime.core.models import RuntimeState
 from runtime.core.state import RuntimeStateMachine
+from runtime.strategy.research_supervisor import build_research_signal_supervisor
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AGENTS = (
@@ -35,10 +36,18 @@ class ContinuousRuntime:
     execution_loop: AutonomousExecutionLoop | None = None
     execution_task: asyncio.Task[None] | None = None
     heartbeat_task: asyncio.Task[None] | None = None
+    research_signal_task: asyncio.Task[None] | None = None
 
     async def stop(self) -> None:
         if self.execution_loop is not None:
             self.execution_loop.stop()
+        if self.research_signal_task is not None:
+            self.research_signal_task.cancel()
+            try:
+                await self.research_signal_task
+            except asyncio.CancelledError:
+                pass
+            self.research_signal_task = None
         if self.heartbeat_task is not None:
             self.heartbeat_task.cancel()
             try:
@@ -182,6 +191,15 @@ async def start_continuous_runtime(
         active = await adapter.active_symbols()
         limit = max(1, int(os.getenv("AURELIA_MAX_SYMBOLS", "20")))
         symbols = tuple(str(x.get("symbol")) for x in active if x.get("symbol"))[:limit]
+    if os.getenv("AURELIA_RESEARCH_SIGNAL_HUNT", "true").strip().lower() == "true":
+        research_supervisor = build_research_signal_supervisor(adapter, federation, symbols)
+        runtime.research_signal_task = research_supervisor.start_task()
+        await federation.publish(
+            sender="AURELIA", recipients=agents, message_type="RESEARCH_HUNT_STARTED",
+            payload={"symbol_count": len(symbols), "capital_authority": False, "order_submission_permitted": False},
+            correlation_id="research-hunt", priority=70, requires_response=False,
+        )
+
     runtime.execution_loop = AutonomousExecutionLoop(
         adapter=adapter, executor=executor, decision_provider=FederatedDecisionProvider(federation),
         runtime_config_hash=config_hash, symbols=symbols,
