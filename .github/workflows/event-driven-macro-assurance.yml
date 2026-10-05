@@ -7,6 +7,7 @@ on:
       - 'scripts/evaluate_event_macro.py'
       - 'config/event_driven_macro_policy.json'
       - 'config/event_driven_agent_routing.json'
+      - 'config/event_driven_policy_lifecycle.json'
       - 'tests/test_event_driven_macro.py'
       - 'tests/fixtures/event_macro_smoke.json'
       - 'runtime/agent_federation.py'
