@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Unit tests
-        run: python -m unittest -v tests/test_event_driven_macro.py
+        run: python -m unittest discover -s tests -p 'test_event_driven_macro.py' -v
       - name: Compile check
         run: python -m py_compile research/event_driven_macro.py scripts/evaluate_event_macro.py
       - name: Offline CLI smoke test
