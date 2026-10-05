@@ -1,0 +1,54 @@
+name: gstack Workflow Federation Assurance
+
+on:
+  pull_request:
+    paths:
+      - "config/external_repo_federation.json"
+      - "config/agent_skill_federation.json"
+      - "config/gstack_workflow_sync.json"
+      - "docs/GSTACK_FLOWKIT_FEDERATION_2026-10-05.md"
+  push:
+    branches: [main]
+    paths:
+      - "config/external_repo_federation.json"
+      - "config/agent_skill_federation.json"
+      - "config/gstack_workflow_sync.json"
+      - "docs/GSTACK_FLOWKIT_FEDERATION_2026-10-05.md"
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate pins and hard boundaries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path("config/gstack_workflow_sync.json").read_text())
+          e=json.loads(Path("config/external_repo_federation.json").read_text())
+          a=json.loads(Path("config/agent_skill_federation.json").read_text())
+          repos={x["repo"]:x for x in e["repositories"]}
+          sources={x["repo"]:x for x in a["sources"]}
+          for x in m["sources"]:
+              assert repos[x["repo"]]["commit"] == x["commit"]
+              assert repos[x["repo"]]["mode"] == x["mode"]
+              assert x["capital_authority"] is False
+              assert x["production_deployment_authority"] is False
+              assert x["live_order_authority"] is False
+              assert x["secret_reading"] is False
+              assert sources[x["repo"]]["pinned_commit"] == x["commit"]
+          assert "loperanger7/gstack-auto" in repos
+          assert repos["loperanger7/gstack-auto"]["mode"] == "SANDBOX_ONLY"
+          print("gstack/flow-kit federation policy: OK")
+          PY
+      - name: Verify AURELIA live lock
+        run: |
+          grep -q '^live_trading_enabled: false$' config/LIVE_LOCK.yaml
+          grep -q '^FINAL_EXECUTION_AUTHORIZATION: false$' config/LIVE_LOCK.yaml
+          grep -q '^LIVE_EXECUTION: BLOCKED$' config/LIVE_LOCK.yaml
+          grep -q '^research_capital_authority: false$' config/LIVE_LOCK.yaml
+          echo "AURELIA capital boundary remains fail-closed."
