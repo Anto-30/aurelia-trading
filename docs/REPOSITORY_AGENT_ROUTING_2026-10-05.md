@@ -16,7 +16,7 @@ A repository is not considered federated merely because its URL appears in a pro
 - `source_url`
 - `head_commit`
 
-It must also have a corresponding capability entry in `config/agent_skill_federation.json`.
+A capability entry in `config/agent_skill_federation.json` is additionally required when the repository is being consumed as a skill, plugin, or agent source.
 
 The first agent in `assigned_agents` is the primary consumer. Remaining agents are supporting consumers.
 
