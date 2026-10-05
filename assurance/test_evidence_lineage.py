@@ -28,7 +28,7 @@ class TestEvidenceLineage(unittest.TestCase):
         # source commit that actually produced its artifact. Never relabel an
         # older soak artifact as evidence for a newer source tip.
         self.assertEqual(
-            current["github"]["post_merge_commit"],
+            current["ci"]["post_merge_commit"],
             current["current_tip"],
         )
         self.assertNotEqual(current["current_tip"], historical["current_tip"])
