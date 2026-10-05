@@ -6,7 +6,7 @@
     "assignment_required": true,
     "minimum_assigned_agents": 1,
     "primary_agent_required": true,
-    "capability_mapping_required": true,
+    "capability_mapping_required": "when_repository_is_registered_as_a_skill_or_agent_source",
     "unassigned_repository_action": "REJECT_AND_REQUEST_CLASSIFICATION",
     "unknown_agent_action": "REJECT",
     "capital_authority": false,
@@ -85,70 +85,143 @@
     {
       "priority": 100,
       "when": {
-        "category_contains_any": ["algorithmic-trading", "trading-research", "quant-", "systematic-trading", "machine-learning-for-trading", "AI-trading", "multi-agent-trading", "options-strategy", "grid-trading", "crypto-trading", "equity-research", "market-data"]
+        "category_contains_any": [
+          "algorithmic-trading",
+          "trading-research",
+          "quant-",
+          "systematic-trading",
+          "machine-learning-for-trading",
+          "AI-trading",
+          "multi-agent-trading",
+          "options-strategy",
+          "grid-trading",
+          "crypto-trading",
+          "equity-research",
+          "market-data"
+        ]
       },
       "primary_agent": "KimiK3",
-      "supporting_agents": ["GrokBot", "ClaudeCode"],
+      "supporting_agents": [
+        "GrokBot",
+        "ClaudeCode"
+      ],
       "mode_default": "RESEARCH_ONLY",
       "rationale": "Quantitative and trading repositories require research, statistical validation, implementation review, and adversarial challenge."
     },
     {
       "priority": 95,
       "when": {
-        "category_contains_any": ["agent-security", "security", "gateway", "MCP-security"]
+        "category_contains_any": [
+          "agent-security",
+          "security",
+          "gateway",
+          "MCP-security"
+        ]
       },
       "primary_agent": "GoogleAgentSkills",
-      "supporting_agents": ["ClaudeCode", "GrokBot"],
+      "supporting_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
       "mode_default": "SANDBOX_ONLY",
       "rationale": "Security-sensitive agent infrastructure is reviewed by a security-focused specialist before engineering integration."
     },
     {
       "priority": 90,
       "when": {
-        "category_contains_any": ["browser", "web-testing", "ui", "editor-platform", "desktop", "visual"]
+        "category_contains_any": [
+          "browser",
+          "web-testing",
+          "ui",
+          "editor-platform",
+          "desktop",
+          "visual"
+        ]
       },
       "primary_agent": "PlaywrightCLI",
-      "supporting_agents": ["ClaudeCode"],
+      "supporting_agents": [
+        "ClaudeCode"
+      ],
       "mode_default": "TOOLCHAIN_ONLY",
       "rationale": "Browser, UI, desktop, and visual verification belongs with the browser/E2E specialist and implementation owner."
     },
     {
       "priority": 85,
       "when": {
-        "category_contains_any": ["OCR", "document", "multimodal", "vision", "visual-analysis"]
+        "category_contains_any": [
+          "OCR",
+          "document",
+          "multimodal",
+          "vision",
+          "visual-analysis"
+        ]
       },
       "primary_agent": "GLM",
-      "supporting_agents": ["ClaudeCode"],
+      "supporting_agents": [
+        "ClaudeCode"
+      ],
       "mode_default": "REFERENCE_ONLY",
       "rationale": "Document and multimodal sources are routed to the visual/document specialist."
     },
     {
       "priority": 80,
       "when": {
-        "category_contains_any": ["agent-team", "orchestration", "workflow", "kanban", "coordination", "hermes", "agentplane", "plugin"]
+        "category_contains_any": [
+          "agent-team",
+          "orchestration",
+          "workflow",
+          "kanban",
+          "coordination",
+          "hermes",
+          "agentplane",
+          "plugin"
+        ]
       },
       "primary_agent": "GrokBot",
-      "supporting_agents": ["ClaudeCode", "KimiK3"],
+      "supporting_agents": [
+        "ClaudeCode",
+        "KimiK3"
+      ],
       "mode_default": "SANDBOX_ONLY",
       "rationale": "Agent orchestration and workflow sources are primarily intelligence/orchestration inputs, not capital-plane authorities."
     },
     {
       "priority": 70,
       "when": {
-        "category_contains_any": ["railway", "deployment", "iac", "cloud", "devops"]
+        "category_contains_any": [
+          "railway",
+          "deployment",
+          "iac",
+          "cloud",
+          "devops"
+        ]
       },
       "primary_agent": "ClaudeCode",
-      "supporting_agents": ["GrokBot", "PlaywrightCLI"],
+      "supporting_agents": [
+        "GrokBot",
+        "PlaywrightCLI"
+      ],
       "mode_default": "TOOLCHAIN_ONLY",
       "rationale": "Deployment tooling is implemented by ClaudeCode and independently reviewed for orchestration and endpoint behavior."
     },
     {
       "priority": 60,
       "when": {
-        "category_contains_any": ["python", "rust", "coding-agent", "framework", "library", "toolchain", "git-ci", "notifications"]
+        "category_contains_any": [
+          "python",
+          "rust",
+          "coding-agent",
+          "framework",
+          "library",
+          "toolchain",
+          "git-ci",
+          "notifications"
+        ]
       },
       "primary_agent": "ClaudeCode",
-      "supporting_agents": ["KimiK3"],
+      "supporting_agents": [
+        "KimiK3"
+      ],
       "mode_default": "TOOLCHAIN_ONLY",
       "rationale": "General software tooling is consumed primarily by the implementation agent."
     },
@@ -158,7 +231,9 @@
         "domain": "reference"
       },
       "primary_agent": "ClaudeCode",
-      "supporting_agents": ["GrokBot"],
+      "supporting_agents": [
+        "GrokBot"
+      ],
       "mode_default": "REFERENCE_ONLY",
       "rationale": "Unclassified reference material is kept available to engineering and external-intelligence review without execution authority."
     }
@@ -176,7 +251,12 @@
     "assignment_semantics": {
       "assigned_agents_order": "first=primary, remaining=supporting",
       "primary_agent_must_match": "highest-priority applicable routing rule unless an explicit reviewed exception is recorded",
-      "exception_requires": ["reason", "reviewed_by", "review_date"]
-    }
+      "exception_requires": [
+        "reason",
+        "reviewed_by",
+        "review_date"
+      ]
+    },
+    "capability_mapping_semantics": "agent_skill_federation entry is required only when the repository is consumed as a skill/plugin/agent source; repository-agent assignment is mandatory for every federated repository."
   }
 }
