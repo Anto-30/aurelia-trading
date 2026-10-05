@@ -1,0 +1,57 @@
+{
+  "schema": "aurelia.fomo_research_sources.v1",
+  "retrieved_at_utc": "2026-10-05T16:23:00Z",
+  "policy": {
+    "capital_authority": false,
+    "live_order_authority": false,
+    "secret_reading": false,
+    "execution_integration": false,
+    "community_sources": "RESEARCH_ONLY"
+  },
+  "sources": [
+    {
+      "name": "FOMO",
+      "type": "official_product",
+      "url": "https://fomo.family/",
+      "observed_capabilities": [
+        "social_trading",
+        "leaderboard",
+        "trader_feed",
+        "real_time_alerts",
+        "multichain_crypto_trading"
+      ],
+      "use_in_aurelia": "research_reference_only",
+      "evidence": "FOMO official site observed 2026-10-05"
+    },
+    {
+      "name": "Endor Labs Agent Kit",
+      "type": "public_github",
+      "repository": "endorlabs/endor-labs-agent-kit",
+      "pinned_commit": "0f19e435678db45bc60a33b254567f1501b1430c",
+      "capability_reference": "CI/CD and supply-chain posture, read-only agent workflows",
+      "use_in_aurelia": "advisory_engineering_only"
+    },
+    {
+      "name": "Quant Trading research toolkit",
+      "type": "public_github",
+      "repository": "Arpita-314/quant-trading",
+      "pinned_commit": "1f91ade01961c1de88752d2f40f98b40c7a0d818",
+      "capability_reference": "causal signal generation, walk-forward validation, backtesting and multi-agent research patterns",
+      "use_in_aurelia": "research_reference_only"
+    },
+    {
+      "name": "Hey-Traders",
+      "type": "external_web_product",
+      "url": "https://hey-traders.com/",
+      "observed_capability": "agent-native charting, backtesting and live execution",
+      "use_in_aurelia": "architecture_reference_only",
+      "restriction": "do_not_import_external_execution_authority"
+    },
+    {
+      "name": "DayTrading.Monster",
+      "type": "unresolved_reference",
+      "use_in_aurelia": "not_integrated",
+      "reason": "No verifiable connected repository or tool identity was established in this environment."
+    }
+  ]
+}
