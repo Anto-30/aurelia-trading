@@ -51,6 +51,8 @@ def config_hash(root: Path) -> str:
     )
     digest = hashlib.sha256()
     for path in paths:
+        if not path.exists():
+            return ""
         digest.update(path.relative_to(root).as_posix().encode("utf-8"))
         digest.update(b"\\0")
         digest.update(path.read_bytes())
