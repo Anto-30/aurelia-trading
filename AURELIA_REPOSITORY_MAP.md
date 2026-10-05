@@ -49,6 +49,7 @@ This is the browsable map of the current AURELIA implementation on `main`.
 - Event-driven macro engine: `research/event_driven_macro.py`
 - Event-driven macro policy: `config/event_driven_macro_policy.json`
 - Event-driven agent routing: `config/event_driven_agent_routing.json`
+- Event-driven policy lifecycle: `config/event_driven_policy_lifecycle.json`
 - Intraday bias measurement: `research/labs/intraday_bias_measurement.py`
 - Intraday bias archive: `research/labs/intraday_bias_archive.py`
 - Intraday bias validation: `research/labs/intraday_bias_validation.py`
