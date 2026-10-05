@@ -34,6 +34,11 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_event_driven_macro.py' -v
       - name: Compile check
         run: python -m py_compile research/event_driven_macro.py scripts/evaluate_event_macro.py
+      - name: Configuration validation
+        run: |
+          python -m json.tool config/event_driven_macro_policy.json >/dev/null
+          python -m json.tool config/event_driven_agent_routing.json >/dev/null
+          python -m json.tool config/event_driven_policy_lifecycle.json >/dev/null
       - name: Offline CLI smoke test
         run: PYTHONPATH=. python scripts/evaluate_event_macro.py --input tests/fixtures/event_macro_smoke.json
       - name: Capital-safety assertion
