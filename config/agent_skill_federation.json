@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_skill_federation.v1",
-  "generated_date": "2026-10-04",
+  "generated_date": "2026-10-05",
   "purpose": "Research/engineering capability federation. No external agent, skill, plugin, MCP server, hook, or marketplace entry may obtain capital authority.",
   "default_policy": {
     "external_code_execution": "DENY_BY_DEFAULT",
@@ -167,6 +167,100 @@
         "browser-E2E",
         "tracing",
         "session-management"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "gstack",
+      "owner": "garrytan",
+      "repo": "garrytan/gstack",
+      "pinned_commit": "10315cf44d1ea13e3ae4821841873afbf7807935",
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "capabilities": [
+        "planning",
+        "engineering-review",
+        "QA",
+        "security-review",
+        "browser-verification",
+        "release-workflow"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "flow-kit",
+      "owner": "rihebty",
+      "repo": "rihebty/flow-kit",
+      "pinned_commit": "9b5dda7206ae841230f118348d660ad8d0ae2830",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "workflow-composition",
+        "agent-flow-patterns"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "gstack-windows-port",
+      "owner": "thanh-abaii",
+      "repo": "thanh-abaii/gstack-windows-port",
+      "pinned_commit": "26937232ba2141c6bcf6ffdd8e0822163b475d63",
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "capabilities": [
+        "powershell-compatibility",
+        "windows-agent-skills",
+        "security-audit"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "gstack-ko",
+      "owner": "lucas-flatwhite",
+      "repo": "lucas-flatwhite/gstack-ko",
+      "pinned_commit": "18bacc475cb5f7bf57647f4fbb647415c65c2303",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "localized-skill-reference",
+        "planning-review-reference"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "ostack-saas",
+      "owner": "mr-daedalium",
+      "repo": "mr-daedalium/ostack-saas",
+      "pinned_commit": "a67256db4451f2d085370cfc36ebe091211b8e7b",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "agent-team-patterns",
+        "security-review",
+        "QA-workflow",
+        "release-workflow"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "ahacad-gstack",
+      "owner": "Ahacad",
+      "repo": "Ahacad/gstack",
+      "pinned_commit": "f873a4d051b16a6652a3463cd1cd060dde86a24b",
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "capabilities": [
+        "Claude-Code-plugin-wrapper",
+        "gstack-skill-discovery"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "gstack-auto",
+      "owner": "loperanger7",
+      "repo": "loperanger7/gstack-auto",
+      "pinned_commit": "17bf2a025c175b899e7d30be1ab4e658fd4ae04f",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "parallel-builds",
+        "adversarial-review",
+        "QA-loop",
+        "scoring",
+        "iteration-orchestration"
       ],
       "capital_authority": false
     }
