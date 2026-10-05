@@ -78,12 +78,22 @@ def verify_readiness_attestations(
         )
     )
 
-    if not runtime_id:
-        raise ReadinessAttestationError("runtime identity is required")
-    if not source_sha:
-        raise ReadinessAttestationError("authoritative source SHA is unavailable")
-    if not signing_key:
-        raise ReadinessAttestationError("attestation signing key is unavailable")
+    if not runtime_id or not source_sha or not signing_key:
+        missing = {}
+        if not runtime_id:
+            missing["runtime_id"] = "RUNTIME_ID_UNAVAILABLE"
+        if not source_sha:
+            missing["source_sha"] = "SOURCE_SHA_UNAVAILABLE"
+        if not signing_key:
+            missing["signing_key"] = "SIGNING_KEY_UNAVAILABLE"
+        return {
+            "all_passed": False,
+            "source_sha": source_sha,
+            "config_hash": cfg_hash,
+            "runtime_id": runtime_id,
+            "verified": {},
+            "failures": missing,
+        }
 
     verified: dict[str, Any] = {}
     failures: dict[str, str] = {}
