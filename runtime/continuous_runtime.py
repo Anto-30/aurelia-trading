@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import socket
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -32,10 +34,18 @@ class ContinuousRuntime:
     adapter: DerivAdapter | None = None
     execution_loop: AutonomousExecutionLoop | None = None
     execution_task: asyncio.Task[None] | None = None
+    heartbeat_task: asyncio.Task[None] | None = None
 
     async def stop(self) -> None:
         if self.execution_loop is not None:
             self.execution_loop.stop()
+        if self.heartbeat_task is not None:
+            self.heartbeat_task.cancel()
+            try:
+                await self.heartbeat_task
+            except asyncio.CancelledError:
+                pass
+            self.heartbeat_task = None
         if self.federation_supervisor is not None:
             await self.federation_supervisor.stop()
         if self.adapter is not None:
@@ -77,6 +87,30 @@ async def start_continuous_runtime(
         )
         federation_supervisor.start()
     runtime = ContinuousRuntime(federation, federation_supervisor)
+
+    # AURELIA worker liveness is owned by this actual runtime process.
+    # The federation supervisor deliberately cannot manufacture this lease.
+    worker_id = os.getenv("AURELIA_WORKER_ID", "").strip() or (
+        f"AURELIA:{socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex[:12]}"
+    )
+
+    async def worker_heartbeat() -> None:
+        interval = max(1.0, min(federation.lease_seconds / 3.0, 15.0))
+        while True:
+            await federation.heartbeat(
+                "AURELIA",
+                worker_id=worker_id,
+                origin="WORKER",
+            )
+            try:
+                await asyncio.sleep(interval)
+            except asyncio.CancelledError:
+                raise
+
+    runtime.heartbeat_task = asyncio.create_task(
+        worker_heartbeat(),
+        name=f"aurelia-worker-heartbeat:{worker_id}",
+    )
 
     if os.getenv("AURELIA_AUTONOMOUS_LOOP", "false").strip().lower() != "true":
         await federation.publish(

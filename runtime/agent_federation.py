@@ -41,6 +41,8 @@ class AgentMessage:
 class AgentLease:
     agent: str
     lease_id: str
+    worker_id: str
+    origin: str
     heartbeat_at: datetime
     expires_at: datetime
 
@@ -294,11 +296,24 @@ class PersistentAgentFederation:
         rows.sort(key=lambda x: (-int(x.get("priority", 50)), x.get("created_at", "")))
         return rows
 
-    async def heartbeat(self, agent: str) -> AgentLease:
+    async def heartbeat(
+        self,
+        agent: str,
+        *,
+        worker_id: str | None = None,
+        origin: str = "WORKER",
+    ) -> AgentLease:
+        if origin not in {"WORKER", "TEST"}:
+            raise PermissionError("AGENT_HEARTBEAT_ORIGIN_FORBIDDEN")
+        if not worker_id or not str(worker_id).strip():
+            raise ValueError("WORKER_ID_REQUIRED")
+        worker_id = str(worker_id).strip()
         now = datetime.now(timezone.utc)
         lease = AgentLease(
             agent=agent,
-            lease_id=f"lease:{agent}:{int(now.timestamp() * 1000)}",
+            lease_id=f"lease:{agent}:{worker_id}:{int(now.timestamp() * 1000)}",
+            worker_id=worker_id,
+            origin=origin,
             heartbeat_at=now,
             expires_at=now + timedelta(seconds=self.lease_seconds),
         )
@@ -306,31 +321,59 @@ class PersistentAgentFederation:
             leases = self._load_leases()
             leases[agent] = {
                 "lease_id": lease.lease_id,
+                "worker_id": lease.worker_id,
+                "origin": lease.origin,
                 "heartbeat_at": lease.heartbeat_at.isoformat(),
                 "expires_at": lease.expires_at.isoformat(),
             }
             self._save_leases(leases)
         self._append(
             "AGENT_HEARTBEAT",
-            {"agent": agent, "lease_id": lease.lease_id, "expires_at": lease.expires_at.isoformat()},
-            correlation_id=f"agent:{agent}",
+            {
+                "agent": agent,
+                "worker_id": worker_id,
+                "origin": origin,
+                "lease_id": lease.lease_id,
+                "expires_at": lease.expires_at.isoformat(),
+            },
+            correlation_id=f"agent:{agent}:worker:{worker_id}",
         )
         return lease
 
     async def register_agents(self, agents: Iterable[str]) -> None:
-        for agent in agents:
-            await self.heartbeat(agent)
+        """Register the configured roster without creating a liveness lease.
+
+        Role/catalog registration is not a heartbeat. Only a real worker (or
+        an explicitly marked test) may create/renew an agent lease.
+        """
+        roster = tuple(sorted(set(str(agent) for agent in agents if str(agent).strip())))
+        if not roster:
+            return
+        self._append(
+            "AGENT_ROSTER_REGISTERED",
+            {
+                "agents": roster,
+                "synthetic_heartbeat": False,
+            },
+            correlation_id=f"agent-roster:{sha256(roster)[:20]}",
+        )
 
     def active_agents(self) -> tuple[str, ...]:
         leases = self._load_leases()
         now = datetime.now(timezone.utc)
-        return tuple(
-            sorted(
-                agent
-                for agent, value in leases.items()
-                if datetime.fromisoformat(value["expires_at"]) > now
-            )
-        )
+        active: list[str] = []
+        for agent, value in leases.items():
+            worker_id = str(value.get("worker_id", "")).strip()
+            origin = str(value.get("origin", ""))
+            expires_at = value.get("expires_at")
+            if not worker_id or origin not in {"WORKER", "TEST"} or not expires_at:
+                continue
+            try:
+                if datetime.fromisoformat(str(expires_at)) > now:
+                    active.append(agent)
+            except (TypeError, ValueError):
+                continue
+        return tuple(sorted(active))
 
     async def publish(
         self,
@@ -441,7 +484,6 @@ class AgentFederationSupervisor:
                     )
                     self.federation._stale_notified.add(agent)
             self.federation._stale_notified.intersection_update(stale)
-            await self.federation.register_agents(self.agents)
             active = self.federation.active_agents()
             if datetime.now(timezone.utc) - last_roundtable >= timedelta(seconds=self.roundtable_seconds):
                 await self.federation.broadcast_roundtable()
