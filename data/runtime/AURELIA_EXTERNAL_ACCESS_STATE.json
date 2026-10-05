@@ -1,9 +1,10 @@
 {
   "schema": "aurelia.external_access_state.v1",
-  "snapshot_generated_at_utc": "2026-10-04T14:33:00Z",
+  "snapshot_generated_at_utc": "2026-10-05T14:17:15Z",
+  "snapshot_semantics": "observed_source_commit; historical snapshots remain immutable",
   "repository": "Anto-30/aurelia-trading",
   "canonical_branch": "main",
-  "current_tip": "3389e630c9de05f14a05763a6456ad698aca7f81",
+  "current_tip": "1db34854fd969fe1c270be9edab15a49b3b3b256",
   "github": {
     "repository_permission": {
       "admin": true,
@@ -16,6 +17,22 @@
     "default_branch": "main",
     "branch_protection": "DISABLED"
   },
+  "ci": {
+    "assurance_run_id": 37315579301,
+    "assurance_conclusion": "success",
+    "nonprod_soak_run_id": 37315579336,
+    "nonprod_soak_conclusion": "success",
+    "agent_continuity_run_id": 37315579311,
+    "agent_continuity_conclusion": "success",
+    "agent_federation_run_id": 37315579345,
+    "agent_federation_conclusion": "success",
+    "free_runtime_run_id": 37315579163,
+    "free_runtime_conclusion": "success",
+    "railway_run_id": 37315579355,
+    "railway_conclusion": "success",
+    "secret_presence_run_id": 37315579376,
+    "secret_presence_conclusion": "success"
+  },
   "railway": {
     "project_id": "da9da5a1-acd2-4af2-9fec-bf46e4d4252b",
     "environment_id": "bb95dc97-ad27-4b3a-8fa-cf52df555a38",
@@ -26,7 +43,8 @@
     "latest_exact_create_deployment_attempt": "REJECTED",
     "latest_rejection": "Your trial has expired. Please select a plan to continue using Railway.",
     "blocker": "RAILWAY_PLAN_REQUIRED",
-    "railway_token_available_to_ci": false
+    "railway_token_available_to_ci": false,
+    "deployment_workflow_deploy_step": "SKIPPED"
   },
   "deriv": {
     "canonical_endpoint": "api.derivws.com",
@@ -34,7 +52,8 @@
     "repository_path_implementation": "VERIFIED_BY_CODE_INSPECTION",
     "current_authenticated_runtime_session": "NOT_CONFIGURED",
     "independent_authenticated_runtime_check": false,
-    "real_broker_evidence": "UNAVAILABLE"
+    "real_broker_evidence": "UNAVAILABLE",
+    "authenticated_deriv_ci_step": "SKIPPED_NOT_CONFIGURED"
   },
   "capital": {
     "starting_stake_usd": 1,
@@ -52,26 +71,75 @@
     "production_soak_3600s": "NOT_RUN"
   },
   "simulation_soak": {
-    "workflow_run_id": 37161897786,
-    "evidence_artifact_id": 11289281853,
-    "source_commit": "3389e630c9de05f14a05763a6456ad698aca7f81",
-    "runtime_image_id": "sha256:690bf3b41f130cccd301a9ec3b07c00742f2b5a8dd0057b6bc8a9cd8c4bc3796",
-    "duration_seconds": 3601,
+    "workflow_run_id": 37315579336,
+    "evidence_artifact_id": 11351107615,
+    "artifact_digest": "sha256:82e97f6f25c6e9e230f26fd5ff8d5411c2d6150d9af5bf4b5d72ac350702ed8e",
+    "source_commit": "1db34854fd969fe1c270be9edab15a49b3b3b256",
+    "runtime_image_id": "sha256:46a3767c11d267d1d6023802ef6c6a7beb836367168fc3f3af1ea8ef2db7bf10",
+    "duration_seconds": 3600,
+    "target_seconds": 3600,
     "health_checks": 706,
     "controlled_restarts": 3,
     "health_check_failures": 0,
-    "classification": "SIMULATION_VERIFIED"
+    "authenticated_deriv_session": false,
+    "real_broker_transaction": false,
+    "real_capital_movement": false,
+    "final_execution_authorization": false,
+    "live_execution": "BLOCKED",
+    "capital_can_open_new_exposure": false
   },
   "security": {
     "secret_values_committed": false,
     "credential_values_in_artifact": false
   },
-  "assurance": {
-    "run_id": 37161897822,
-    "conclusion": "success",
-    "checked_commit": "3389e630c9de05f14a05763a6456ad698aca7f81",
-    "authenticated_deriv_step": "SKIPPED_NOT_CONFIGURED",
-    "railway_deploy": "NOT_EXECUTED"
+  "federation": {
+    "external_capital_authority": false,
+    "live_order_authority": false,
+    "live_lock_mutation": false,
+    "secret_reading": false,
+    "external_code_execution": "DENY_BY_DEFAULT"
   },
-  "note": "Repository and infrastructure observations only. This artifact never grants capital authority and never converts simulation or operator-reported broker evidence into independent broker verification."
+  "blockers": [
+    {
+      "gate": "RAILWAY_PLAN",
+      "status": "BLOCKED",
+      "reason": "Railway deployment capability is unavailable because the project requires a paid plan after the trial expired."
+    },
+    {
+      "gate": "RAILWAY_TOKEN",
+      "status": "BLOCKED",
+      "reason": "No usable Railway deployment token is available to the current CI workflow."
+    },
+    {
+      "gate": "RAILWAY_SERVICE",
+      "status": "BLOCKED",
+      "reason": "Required production worker service is not observed."
+    },
+    {
+      "gate": "DERIV_AUTHENTICATION",
+      "status": "BLOCKED",
+      "reason": "Protected authenticated Deriv verification prerequisites are not configured; the authenticated verification step is skipped."
+    },
+    {
+      "gate": "REAL_BROKER_EVIDENCE",
+      "status": "BLOCKED",
+      "reason": "No authenticated real-broker transaction lifecycle was independently executed and reconciled."
+    },
+    {
+      "gate": "PRODUCTION_SOAK",
+      "status": "BLOCKED",
+      "reason": "Only a non-production control-path soak has been verified; no production worker soak exists."
+    },
+    {
+      "gate": "STRATEGY_LIVE_ELIGIBILITY",
+      "status": "FAIL",
+      "reason": "Prospective OOS, calibration/drift and net execution economics remain incomplete."
+    },
+    {
+      "gate": "LIVE_RELEASE",
+      "status": "FAIL",
+      "reason": "LIVE_LOCK remains fail-closed with VERIFY_ONLY and FINAL_EXECUTION_AUTHORIZATION=false."
+    }
+  ],
+  "note": "Repository/infrastructure evidence only. This state never grants capital authority and never converts simulation, UI, or operator claims into broker truth."
 }
