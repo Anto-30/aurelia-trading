@@ -151,6 +151,26 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertAlmostEqual(report["oos_mean_strategy_return"], 0.0)
         self.assertEqual(report["qualification_status"], "INSUFFICIENT_SAMPLE")
 
+
+    def test_positive_underlying_oos_cannot_qualify_without_quoted_economics(self):
+        state = initial_state()
+        start = state["manifest"]["oos_start_at_utc"]
+        state["observations"] = [
+            {
+                "signal_id": f"sig-{i}",
+                "direction": "CALL",
+                "raw_return": 0.01,
+                "outcome": 1,
+                "probability": 0.55 + (i % 3) * 0.05,
+                "signal_timestamp_utc": start,
+            }
+            for i in range(100)
+        ]
+        state["quote_observations"] = []
+        report = evaluation(state)
+        self.assertEqual(report["qualification_status"], "ECONOMICS_INCOMPLETE")
+        self.assertFalse(report["strategy_live_eligible"])
+
     def test_campaign_end_does_not_seal_with_unresolved_pending(self):
         state = initial_state()
         state["manifest"]["campaign_end_at_utc"] = "2026-10-06T20:00:00Z"
