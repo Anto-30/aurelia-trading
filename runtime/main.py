@@ -460,7 +460,12 @@ async def main() -> None:
             else:
                 loop = continuous_runtime.execution_loop
                 adapter = continuous_runtime.adapter
-                if adapter is None or not adapter.authorized or adapter.account is None:
+                broker_authorization_lost = (
+                    adapter is None
+                    or not adapter.authorized
+                    or adapter.account is None
+                )
+                if broker_authorization_lost:
                     health.kill_switch_off = False
                     health.broker_session = False
                     health.critical_unknowns.add("BROKER_AUTHORIZATION_LOST")
@@ -473,7 +478,7 @@ async def main() -> None:
                         loop.executor.activate_kill_switch("BROKER_AUTHORIZATION_LOST")
                 else:
                     health.broker_session = bool(adapter.transport is not None)
-                HealthHandler.state = machine.state
+                    HealthHandler.state = machine.state
                 task = continuous_runtime.execution_task
                 if task is not None and task.done():
                     health.critical_unknowns.add("AUTONOMOUS_LOOP_STOPPED")
