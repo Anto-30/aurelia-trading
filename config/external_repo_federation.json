@@ -1372,6 +1372,28 @@
         "agent-skill-patterns"
       ],
       "integration_note": "Use for isolated agent/tool/context-provider experiments and schema design. External agents remain advisory and cannot authorize capital."
+    },
+    {
+      "repo": "charlesdove977/claude-x-jev",
+      "category": "claude-code-decision-skill",
+      "domain": "agent-intelligence",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/charlesdove977/claude-x-jev",
+      "head_commit": "c8662b0550b2a999d1dbcfb148683615cf92636a",
+      "capabilities": [
+        "typed-decision-routing",
+        "classification",
+        "confidence-scoring",
+        "draft-verification",
+        "tool-call-gating",
+        "agent-workflow-optimization"
+      ],
+      "integration_note": "Use as an isolated Claude Code/agent-intelligence skill. Jev is advisory/routing only; it cannot authorize capital, mutate LIVE_LOCK, read secrets, or submit broker transactions. Do not install its hook into AURELIA capital/execution paths."
     }
   ]
 }
