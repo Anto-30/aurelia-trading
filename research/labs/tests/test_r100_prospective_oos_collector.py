@@ -10,6 +10,7 @@ from research.r100_prospective_oos_collector import (
     build_signal_id,
     initial_state,
     probability_metrics,
+    quoted_contract_economics,
     save_state,
     load_state,
 )
@@ -64,6 +65,22 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
             self.assertEqual(restored["schema"], "aurelia.r100.prospective_oos.v1")
             self.assertEqual(restored["manifest"]["strategy_version"], "0.2.0")
             self.assertEqual(restored["observations"], [])
+
+
+    def test_quoted_binary_contract_economics(self):
+        observations = [
+            {"signal_id": "a", "outcome": 1},
+            {"signal_id": "b", "outcome": 0},
+        ]
+        quotes = [
+            {"signal_id": "a", "ask_price": 1.0, "payout": 1.95, "quote_status": "OBSERVED"},
+            {"signal_id": "b", "ask_price": 1.0, "payout": 1.95, "quote_status": "OBSERVED"},
+        ]
+        economics = quoted_contract_economics(observations, quotes)
+        self.assertEqual(economics["sample_count"], 2)
+        self.assertAlmostEqual(economics["win_rate"], 0.5)
+        self.assertAlmostEqual(economics["mean_net_return_per_stake"], -0.025)
+        self.assertAlmostEqual(economics["break_even_probability"], 1 / 1.95)
 
     def test_horizon_is_positive(self):
         self.assertGreater(HORIZON_TICKS, 0)
