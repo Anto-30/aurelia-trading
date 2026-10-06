@@ -317,8 +317,24 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         row for row in rows
         if datetime.fromisoformat(row["signal_timestamp_utc"].replace("Z", "+00:00")) >= oos_start
     ]
-    oos_returns = [float(x["raw_return"]) for x in oos_rows]
-    mean_oos = sum(oos_returns) / len(oos_returns) if oos_returns else None
+    def strategy_return(row: dict[str, Any]) -> float:
+        raw = float(row["raw_return"])
+        if row["direction"] == "CALL":
+            return raw
+        if row["direction"] == "PUT":
+            return -raw
+        raise ValueError("R100_UNKNOWN_DIRECTION")
+
+    oos_strategy_returns = [strategy_return(x) for x in oos_rows]
+    oos_market_returns = [float(x["raw_return"]) for x in oos_rows]
+    mean_strategy_oos = (
+        sum(oos_strategy_returns) / len(oos_strategy_returns)
+        if oos_strategy_returns else None
+    )
+    mean_market_oos = (
+        sum(oos_market_returns) / len(oos_market_returns)
+        if oos_market_returns else None
+    )
     win_rate = sum(int(x["outcome"]) for x in oos_rows) / len(oos_rows) if oos_rows else None
     calibration = probability_metrics(oos_rows)
     quoted_economics = quoted_contract_economics(
@@ -329,7 +345,7 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
 
     if min_cell_trades < 100:
         qualification_status = "INSUFFICIENT_SAMPLE"
-    elif mean_oos is None or mean_oos <= 0:
+    elif mean_strategy_oos is None or mean_strategy_oos <= 0:
         qualification_status = "OOS_FAILED"
     elif calibration["calibration_status"] != "VALIDATED_RESEARCH":
         qualification_status = "CALIBRATION_INCOMPLETE"
@@ -356,7 +372,8 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         "in_sample_observations": len(is_rows),
         "oos_observations": len(oos_rows),
         "min_trades_per_strategy_symbol_regime": min_cell_trades,
-        "oos_mean_forward_return": mean_oos,
+        "oos_mean_strategy_return": mean_strategy_oos,
+        "oos_mean_market_return": mean_market_oos,
         "oos_win_rate": win_rate,
         "probability": calibration,
         "multiple_testing": {
