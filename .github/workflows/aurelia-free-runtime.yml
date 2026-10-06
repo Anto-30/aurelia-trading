@@ -57,21 +57,25 @@ jobs:
           retention-days: 7
 
   authenticated-deriv-evidence:
+    # Load production-scoped Actions secrets for authenticated verification only.
+    environment:
+      name: production
+      deployment: false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
     env:
-      DERIV_AUTH_CONFIGURED: ${{ secrets.DERIV_AUTH_TOKEN != '' && secrets.DERIV_EXPECTED_LOGINID != '' && secrets.DERIV_APP_ID != '' }}
+      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') != '' && ((secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
       AURELIA_VERIFY_DERIV_PUBLIC: "true"
       AURELIA_VERIFY_DERIV_AUTH: "true"
       AURELIA_RUN_ONCE: "true"
       AURELIA_CONTINUOUS_RUNTIME: "false"
-      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
+      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
       DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID }}
-      DERIV_AUTH_MODE: "pat"
-      DERIV_EXPECTED_CURRENCY: "USD"
+      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+      DERIV_AUTH_MODE: ${{ secrets.DERIV_AUTH_MODE || 'pat' }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
       DERIV_ENVIRONMENT: "real"
     steps:
       - uses: actions/checkout@v7
