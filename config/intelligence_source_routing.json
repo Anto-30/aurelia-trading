@@ -1,0 +1,163 @@
+{
+  "schema": "aurelia.intelligence_source_routing.v1",
+  "generated_date": "2026-10-07",
+  "purpose": "Route external intelligence and engineering services to bounded AURELIA agents without granting capital authority.",
+  "invariants": {
+    "capital_authority": false,
+    "live_order_authority": false,
+    "production_deployment_authority": false,
+    "secret_reading": false,
+    "secret_logging": false,
+    "external_code_execution": "DENY_BY_DEFAULT",
+    "source_pinning_required": true,
+    "research_sources_never_override_deterministic_gates": true,
+    "external_market_signals_are_non_authoritative": true
+  },
+  "routing": [
+    {
+      "source": "GitHub",
+      "agent_roles": [
+        "Orchestrator",
+        "Engineering",
+        "QA",
+        "Security",
+        "Evidence Auditor"
+      ],
+      "uses": [
+        "repository state",
+        "commits",
+        "PRs",
+        "issues",
+        "CI status",
+        "release evidence"
+      ],
+      "authority": "research_and_engineering_only"
+    },
+    {
+      "source": "CodeRabbit",
+      "agent_roles": [
+        "Code Review",
+        "QA",
+        "Security"
+      ],
+      "uses": [
+        "PR review",
+        "static review",
+        "defect discovery",
+        "maintainability review"
+      ],
+      "authority": "review_only",
+      "availability": "external_service_not_directly_connected_here"
+    },
+    {
+      "source": "Next Stock Outlook",
+      "agent_roles": [
+        "Equity Research",
+        "Strategy Research",
+        "Catalyst Research"
+      ],
+      "uses": [
+        "stock idea discovery",
+        "target/price context",
+        "watchlist candidates"
+      ],
+      "authority": "research_only",
+      "policy": "never converts a stock pick into an order"
+    },
+    {
+      "source": "The Fly Market Intelligence",
+      "agent_roles": [
+        "News",
+        "Catalyst",
+        "Macro",
+        "Equity Research"
+      ],
+      "uses": [
+        "market news",
+        "economic calendar",
+        "analyst actions",
+        "earnings/catalyst context",
+        "syndicate activity"
+      ],
+      "authority": "research_only",
+      "policy": "news can raise a research flag but cannot bypass probability/risk/release gates"
+    },
+    {
+      "source": "Sixtyfour Intelligence",
+      "agent_roles": [
+        "Research",
+        "Counterparty Intelligence",
+        "Company Intelligence"
+      ],
+      "uses": [
+        "company research",
+        "people/company intelligence",
+        "ecosystem mapping"
+      ],
+      "authority": "research_only",
+      "policy": "billable enrichment requires explicit task justification and must not expose secrets"
+    },
+    {
+      "source": "Code Tytor: Python",
+      "agent_roles": [
+        "Engineering",
+        "Quant Research",
+        "Testing"
+      ],
+      "uses": [
+        "Python analysis",
+        "algorithm prototyping",
+        "test assistance",
+        "code explanation"
+      ],
+      "authority": "sandbox_only",
+      "policy": "generated code requires tests/review before merge"
+    },
+    {
+      "source": "Notion",
+      "agent_roles": [
+        "Knowledge Manager",
+        "Evidence Auditor",
+        "Orchestrator"
+      ],
+      "uses": [
+        "research notes",
+        "decisions",
+        "operational documentation",
+        "runbooks"
+      ],
+      "authority": "documentation_only",
+      "policy": "unverified notes never constitute execution evidence"
+    },
+    {
+      "source": "Outlook Email",
+      "agent_roles": [
+        "Notification",
+        "Operations",
+        "Evidence Auditor"
+      ],
+      "uses": [
+        "operational messages",
+        "alerts",
+        "human review queues"
+      ],
+      "authority": "communication_only",
+      "policy": "email content cannot authorize live capital actions"
+    },
+    {
+      "source": "Email",
+      "agent_roles": [
+        "Notification",
+        "Operations"
+      ],
+      "uses": [
+        "alerts",
+        "reports",
+        "human approval workflow"
+      ],
+      "authority": "communication_only",
+      "policy": "no execution authority"
+    }
+  ],
+  "agent_contract": "Every routed source produces typed evidence tagged source, timestamp, provenance, confidence, and authority class. Deterministic Risk Warden, Execution Firewall, Balance Truth, LIVE_LOCK, reconciliation, and release gates remain final."
+}
