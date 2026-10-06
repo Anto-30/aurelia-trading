@@ -58,9 +58,7 @@ jobs:
 
   authenticated-deriv-evidence:
     # Load production-scoped Actions secrets for authenticated verification only.
-    environment:
-      name: production
-      deployment: false
+    environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
