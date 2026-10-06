@@ -1,0 +1,45 @@
+{
+  "schema": "aurelia.event_driven_macro_policy.v1",
+  "capital_authority": false,
+  "order_submission_permitted": false,
+  "live_lock_mutation": false,
+  "probability": {
+    "min_trade_probability": 0.55,
+    "max_trade_probability": 0.75,
+    "clipping": false
+  },
+  "staleness": {
+    "political_hours": 24,
+    "market_minutes": 10
+  },
+  "confirmation": {
+    "minimum_observations": 4,
+    "minimum_score": 4
+  },
+  "surprise": {
+    "trade_threshold": 25,
+    "high_threshold": 50
+  },
+  "hard_no_trade_on_contested": true,
+  "event_half_life_hours": {
+    "ELECTION_HEADLINE": 12,
+    "ELECTION_RESULT": 120,
+    "CONGRESSIONAL_COMPOSITION": 720,
+    "LEGISLATION": 2160,
+    "REGULATION": 4320,
+    "COURT_DECISION": 720,
+    "TARIFF_ACTION": 720,
+    "FED_DECISION": 48,
+    "GEOPOLITICAL_SHOCK": 168,
+    "SANCTIONS": 720
+  },
+  "research_only_rule": "Political intelligence can produce WAIT, HEDGE, NO_TRADE, or TRADE_CANDIDATE hypotheses only; it cannot authorize or submit capital-moving actions.",
+  "source_requirements": [
+    "official election dates/results or legally authoritative election source",
+    "timestamped independent election expectations/race ratings",
+    "timestamped cross-asset market data",
+    "primary legal/regulatory/tariff sources",
+    "issuer filings or investor-relations evidence for company policy exposure",
+    "timestamped earnings-estimate or company-fundamental evidence when using an earnings confirmation"
+  ]
+}

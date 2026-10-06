@@ -1,0 +1,56 @@
+name: Event-Driven Macro Assurance
+
+on:
+  push:
+    paths:
+      - 'research/event_driven_macro.py'
+      - 'scripts/evaluate_event_macro.py'
+      - 'config/event_driven_macro_policy.json'
+      - 'config/event_driven_agent_routing.json'
+      - 'config/event_driven_policy_lifecycle.json'
+      - 'tests/test_event_driven_macro.py'
+      - 'tests/fixtures/event_macro_smoke.json'
+      - 'runtime/agent_federation.py'
+  pull_request:
+    paths:
+      - 'research/event_driven_macro.py'
+      - 'scripts/evaluate_event_macro.py'
+      - 'config/event_driven_macro_policy.json'
+      - 'config/event_driven_agent_routing.json'
+      - 'config/event_driven_policy_lifecycle.json'
+      - 'tests/test_event_driven_macro.py'
+      - 'tests/fixtures/event_macro_smoke.json'
+      - 'runtime/agent_federation.py'
+
+jobs:
+  assurance:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Unit tests
+        run: python -m unittest discover -s tests -p 'test_event_driven_macro.py' -v
+      - name: Compile check
+        run: python -m py_compile research/event_driven_macro.py scripts/evaluate_event_macro.py
+      - name: Configuration validation
+        run: |
+          python -m json.tool config/event_driven_macro_policy.json >/dev/null
+          python -m json.tool config/event_driven_agent_routing.json >/dev/null
+          python -m json.tool config/event_driven_policy_lifecycle.json >/dev/null
+      - name: Offline CLI smoke test
+        run: PYTHONPATH=. python scripts/evaluate_event_macro.py --input tests/fixtures/event_macro_smoke.json
+      - name: Capital-safety assertion
+        run: |
+          test "$(python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('config/event_driven_macro_policy.json').read_text())
+          print(str(p['capital_authority']).lower())
+          PY
+          )" = "false"
+          grep -Eq '^live_trading_enabled: false$' config/LIVE_LOCK.yaml
+          grep -Eq '^FINAL_EXECUTION_AUTHORIZATION: false$' config/LIVE_LOCK.yaml

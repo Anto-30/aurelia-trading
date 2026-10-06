@@ -1,0 +1,29 @@
+{
+  "schema": "aurelia.event_driven_agent_routing.v1",
+  "capital_authority": false,
+  "workstreams": {
+    "election_fact_timeline": ["KimiK3", "GrokBot", "GLM"],
+    "political_expectation_and_surprise": ["KimiK3", "GrokBot"],
+    "macro_cross_asset": ["KimiK3", "GrokBot"],
+    "sector_rotation": ["KimiK3", "GrokBot"],
+    "company_policy_exposure": ["KimiK3", "GrokBot"],
+    "earnings_confirmation": ["KimiK3", "GrokBot"],
+    "relative_value_pairs": ["KimiK3", "GrokBot"],
+    "options_and_volatility_research": ["KimiK3", "GrokBot"],
+    "global_and_crypto_spillover": ["KimiK3", "GrokBot"],
+    "engineering_and_integration": ["ClaudeCode"],
+    "security_and_threat_review": ["GoogleAgentSkills"],
+    "evidence_validation": ["GLM"],
+    "browser_and_ui_verification": ["PlaywrightCLI"],
+    "orchestration_and_red_team": ["GrokBot"],
+    "capital_controls": ["AURELIA"]
+  },
+  "handoff_rules": [
+    "research findings must carry source IDs and timestamps",
+    "conflicting claims require cross-check before escalation",
+    "company exposure requires evidence_id and bounded revenue exposure",
+    "political probability is not the AURELIA trade-probability gate",
+    "external agents cannot authorize capital, submit orders, or mutate LIVE_LOCK",
+    "AURELIA deterministic controls remain the sole capital authority"
+  ]
+}

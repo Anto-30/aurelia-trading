@@ -1,0 +1,35 @@
+{
+  "previous": {
+    "house_dem_probability": 0.58,
+    "senate_dem_probability": 0.42,
+    "house_status": "LIKELY",
+    "senate_status": "LIKELY",
+    "as_of_utc": "2026-10-05T20:00:00Z",
+    "source_ids": ["fixture:political:previous"]
+  },
+  "current": {
+    "house_dem_probability": 1.0,
+    "senate_dem_probability": 0.0,
+    "house_status": "CONFIRMED",
+    "senate_status": "LIKELY",
+    "as_of_utc": "2026-10-05T20:05:00Z",
+    "source_ids": ["fixture:political:current"]
+  },
+  "market": {
+    "spx_return_pct": 1.0,
+    "nasdaq_return_pct": 1.2,
+    "small_cap_return_pct": 1.4,
+    "two_year_yield_change_bps": -5,
+    "ten_year_yield_change_bps": -7,
+    "usd_return_pct": -0.3,
+    "gold_return_pct": 0.8,
+    "oil_return_pct": 0.5,
+    "credit_spread_change_bps": -2,
+    "vix_level": 16.5,
+    "vix_change_pct": -10,
+    "crypto_return_pct": 1.5,
+    "as_of_utc": "2026-10-05T20:06:00Z"
+  },
+  "event_type": "ELECTION_RESULT",
+  "now_utc": "2026-10-05T20:07:00Z"
+}

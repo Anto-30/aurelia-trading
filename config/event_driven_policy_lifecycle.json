@@ -1,0 +1,31 @@
+{
+  "schema": "aurelia.event_driven_policy_lifecycle.v1",
+  "capital_authority": false,
+  "stages": [
+    "EVENT_DETECTED",
+    "EXPECTATION_UPDATED",
+    "SURPRISE_ASSESSED",
+    "COMMITTEE_OR_LEGISLATIVE_STAGE",
+    "EXECUTIVE_OR_AGENCY_ACTION",
+    "COURT_OR_REGULATORY_CHALLENGE",
+    "IMPLEMENTATION_CONFIRMED",
+    "MARKET_TRANSMISSION_REASSESSED",
+    "THESIS_RETIRED"
+  ],
+  "status_values": ["UNKNOWN", "RUMORED", "PROPOSED", "IN_PROCESS", "CONFIRMED", "BLOCKED", "REVERSED"],
+  "rules": [
+    "RUMORED is research-only and cannot drive directional execution.",
+    "UNKNOWN or conflicting policy status requires evidence reconciliation.",
+    "A policy event can be retired when its catalyst window expires or evidence reverses.",
+    "Implementation stage does not bypass AURELIA strategy qualification or capital controls."
+  ],
+  "monitoring_domains": [
+    "legislation",
+    "regulation",
+    "tariffs",
+    "court_decisions",
+    "sanctions",
+    "central_bank_policy",
+    "geopolitical_shocks"
+  ]
+}

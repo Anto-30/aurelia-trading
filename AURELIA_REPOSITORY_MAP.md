@@ -46,6 +46,10 @@ This is the browsable map of the current AURELIA implementation on `main`.
 - Decision replay: `runtime/validation/decision_replay.py`
 - Strategy governance: `runtime/strategy/governance.py`
 - Prospective OOS archiver: `research/r100_prospective_oos_archiver.py`
+- Event-driven macro engine: `research/event_driven_macro.py`
+- Event-driven macro policy: `config/event_driven_macro_policy.json`
+- Event-driven agent routing: `config/event_driven_agent_routing.json`
+- Event-driven policy lifecycle: `config/event_driven_policy_lifecycle.json`
 - Intraday bias measurement: `research/labs/intraday_bias_measurement.py`
 - Intraday bias archive: `research/labs/intraday_bias_archive.py`
 - Intraday bias validation: `research/labs/intraday_bias_validation.py`
@@ -64,6 +68,8 @@ This is the browsable map of the current AURELIA implementation on `main`.
 - Stake policy: `docs/AURELIA_STAKE_POLICY_2026-10-03.md`
 - Runtime baseline: `docs/AURELIA_RUNTIME_BASELINE_2026-10-03.md`
 - Status model: `docs/AURELIA_STATUS_MODEL.yaml`
+- Event-driven macro playbook: `docs/AURELIA_EVENT_DRIVEN_MACRO_PLAYBOOK_2026-10-05.md`
+- Event-driven macro assurance: `.github/workflows/event-driven-macro-assurance.yml`
 - Deployment/auth workflows: `.github/workflows/`
 
 Historical archives and old branches are not the current source of truth.

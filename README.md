@@ -32,6 +32,18 @@ Current operational state: `docs/AURELIA_CURRENT_OPERATIONAL_STATE_2026-10-04.md
 - Deployment: `railway.toml` and `.github/workflows/railway-deploy.yml`
 - Evidence and reports: `reports/` and `docs/`
 
+## Event-driven macro intelligence
+
+AURELIA includes a research-only event engine at `research/event_driven_macro.py`. It models event-driven opportunities through expectation, surprise, cross-asset confirmation, sector rotation, relative value, evidence-backed company exposure, political-risk scoring, event half-life, and explicit options/hedging expression classes. The lifecycle is pinned at `config/event_driven_policy_lifecycle.json`; routing is pinned at `config/event_driven_agent_routing.json`.
+
+The deterministic CLI is:
+
+`PYTHONPATH=. python scripts/evaluate_event_macro.py --input tests/fixtures/event_macro_smoke.json`
+
+Design and operating rules: `docs/AURELIA_EVENT_DRIVEN_MACRO_PLAYBOOK_2026-10-05.md`.
+
+This component cannot authorize orders, submit broker transactions, or mutate `config/LIVE_LOCK.yaml`.
+
 ## Deriv integration
 
 The canonical Options API path is the current Deriv API under `api.derivws.com`.
@@ -101,4 +113,4 @@ The weekly .github/workflows/external-repo-sync.yml workflow checks public reach
 
 ## Federated agent skills
 
-AURELIA maintains a pinned cross-agent engineering capability registry at `config/agent_skill_federation.json`. The registry covers Claude Code, Kimi K3/Kimi Code, Grok Bot, Google Agent Skills, GLM Skills, and Playwright CLI. All external capabilities are advisory/engineering-only and cannot authorize or submit capital-moving actions.
+AURELIA maintains a pinned cross-agent engineering capability registry at `config/agent_skill_federation.json`. The registry covers Claude Code, Kimi K3/Kimi Code, Grok Bot, Google Agent Skills, GLM Skills, and Playwright CLI. All external capabilities are advisory/engineering-only and cannot authorize or submit capital-moving actions. Event-driven workstream routing is pinned at `config/event_driven_agent_routing.json`.
