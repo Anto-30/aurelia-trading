@@ -22,9 +22,7 @@ concurrency:
 jobs:
   deploy:
     # OCI credentials may be stored as production environment-scoped Actions secrets.
-    environment:
-      name: production
-      deployment: false
+    environment: production
     # Canonical deployment source is main; LIVE remains independently gated by LIVE_LOCK.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
