@@ -15,6 +15,7 @@ from research.r100_prospective_oos_collector import (
     evaluation,
     save_state,
     load_state,
+    observe_tick,
 )
 
 
@@ -148,6 +149,53 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertAlmostEqual(report["oos_mean_market_return"], 0.01)
         self.assertAlmostEqual(report["oos_mean_strategy_return"], 0.0)
         self.assertEqual(report["qualification_status"], "INSUFFICIENT_SAMPLE")
+
+    def test_campaign_end_does_not_seal_with_unresolved_pending(self):
+        state = initial_state()
+        state["manifest"]["campaign_end_at_utc"] = "2026-10-06T20:00:00Z"
+        state["pending"] = [{
+            "signal_id": "pending",
+            "signal_timestamp_utc": "2026-10-06T19:59:00Z",
+            "entry_quote": 100.0,
+            "direction": "CALL",
+            "probability": 0.60,
+            "score": 1.5,
+            "age_ticks": 0,
+        }]
+        report = evaluation(state)
+        self.assertFalse(report["campaign_complete"])
+        self.assertFalse(state["manifest"]["sealed"])
+
+    def test_campaign_end_stops_new_signal_emission_but_settles_pending(self):
+        class NoEmitHunter:
+            def __init__(self):
+                self.calls = 0
+
+            def observe(self, **kwargs):
+                self.calls += 1
+                raise AssertionError("hunter.observe must not be called after campaign end")
+
+        state = initial_state()
+        state["pending"] = [{
+            "signal_id": "pending",
+            "signal_timestamp_utc": "2026-10-06T19:59:00Z",
+            "entry_quote": 100.0,
+            "direction": "CALL",
+            "probability": 0.60,
+            "score": 1.5,
+            "age_ticks": HORIZON_TICKS - 1,
+        }]
+        hunter = NoEmitHunter()
+        observe_tick(
+            hunter=hunter,
+            state=state,
+            quote=101.0,
+            received_at=datetime.now(timezone.utc),
+            emit_candidate=False,
+        )
+        self.assertEqual(hunter.calls, 0)
+        self.assertEqual(len(state["pending"]), 0)
+        self.assertEqual(len(state["observations"]), 1)
 
     def test_horizon_is_positive(self):
         self.assertGreater(HORIZON_TICKS, 0)
