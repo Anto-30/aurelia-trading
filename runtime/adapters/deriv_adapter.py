@@ -182,7 +182,6 @@ class DerivAdapter:
             response_req_id = reply.get("req_id", tracked.req_id)
             if response_req_id != tracked.req_id:
                 tracked.state = RequestState.TIMEOUT
-                self.circuit.record_failure()
                 raise DerivProtocolError("REQUEST_ID_MISMATCH")
             if "error" in reply:
                 self.ledger.reject(response_req_id, reply)
