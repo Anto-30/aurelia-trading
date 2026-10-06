@@ -30,6 +30,9 @@ HORIZON_TICKS = int(os.getenv("AURELIA_R100_HORIZON_TICKS", "10"))
 STATE_PATH = Path(os.getenv("AURELIA_R100_STATE_PATH", ".research_state/aurelia_r100_state.json"))
 MIN_TRADE_PROBABILITY = 0.55
 MAX_TRADE_PROBABILITY = 0.75
+CALIBRATION_MIN_BUCKETS = 3
+CALIBRATION_MIN_BUCKET_SAMPLES = 10
+CALIBRATION_MAX_RELIABILITY_GAP = 0.05
 
 @dataclass(frozen=True)
 class PendingSignal:
@@ -71,6 +74,9 @@ def research_config_hash() -> str:
         "probability_max": MAX_TRADE_PROBABILITY,
         "probability_clipping": False,
         "collection_seconds": COLLECTION_SECONDS,
+        "calibration_min_buckets": CALIBRATION_MIN_BUCKETS,
+        "calibration_min_bucket_samples": CALIBRATION_MIN_BUCKET_SAMPLES,
+        "calibration_max_reliability_gap": CALIBRATION_MAX_RELIABILITY_GAP,
     })
 
 def initial_state() -> dict[str, Any]:
@@ -106,6 +112,11 @@ def initial_state() -> dict[str, Any]:
             "model_version": STRATEGY_VERSION,
             "code_commit": research_code_commit(),
             "config_hash": research_config_hash(),
+            "calibration_policy": {
+                "min_buckets": CALIBRATION_MIN_BUCKETS,
+                "min_bucket_samples": CALIBRATION_MIN_BUCKET_SAMPLES,
+                "max_reliability_gap": CALIBRATION_MAX_RELIABILITY_GAP,
+            },
             "random_seeds": [],
             "data_windows": [],
             "started_at_utc": iso(started),
@@ -258,6 +269,8 @@ def probability_metrics(observations: list[dict[str, Any]]) -> dict[str, Any]:
             "reliability_buckets": [],
             "drift_detected": False,
             "calibration_status": "NOT_RUN",
+            "qualifying_reliability_buckets": 0,
+            "max_reliability_gap": None,
         }
     brier = sum((p - y) ** 2 for p, y in zip(probabilities, outcomes)) / len(probabilities)
     log_loss = 0.0
@@ -279,6 +292,17 @@ def probability_metrics(observations: list[dict[str, Any]]) -> dict[str, Any]:
                 "realized_rate": sum(y for _, y in rows) / len(rows),
             })
 
+    qualifying_buckets = [
+        bucket
+        for bucket in buckets
+        if int(bucket["count"]) >= CALIBRATION_MIN_BUCKET_SAMPLES
+    ]
+    reliability_gaps = [
+        abs(float(bucket["mean_probability"]) - float(bucket["realized_rate"]))
+        for bucket in qualifying_buckets
+    ]
+    max_reliability_gap = max(reliability_gaps) if reliability_gaps else None
+
     midpoint = max(1, len(probabilities) // 2)
     baseline = sum(probabilities[:midpoint]) / midpoint
     recent_rows = probabilities[midpoint:]
@@ -286,7 +310,13 @@ def probability_metrics(observations: list[dict[str, Any]]) -> dict[str, Any]:
     drift_detected = abs(baseline - recent) > 0.05
     status = (
         "VALIDATED_RESEARCH"
-        if len(probabilities) >= 100 and len(buckets) >= 3 and not drift_detected
+        if (
+            len(probabilities) >= 100
+            and len(qualifying_buckets) >= CALIBRATION_MIN_BUCKETS
+            and max_reliability_gap is not None
+            and max_reliability_gap <= CALIBRATION_MAX_RELIABILITY_GAP
+            and not drift_detected
+        )
         else "PROVISIONAL"
     )
     return {
@@ -294,6 +324,8 @@ def probability_metrics(observations: list[dict[str, Any]]) -> dict[str, Any]:
         "brier_score": brier,
         "log_loss": log_loss,
         "reliability_buckets": buckets,
+        "qualifying_reliability_buckets": len(qualifying_buckets),
+        "max_reliability_gap": max_reliability_gap,
         "drift_detected": drift_detected,
         "calibration_status": status,
     }
