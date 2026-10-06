@@ -52,10 +52,11 @@ def canonical_hash(value: Any) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 def research_code_commit() -> str:
-    value = os.getenv("AURELIA_RESEARCH_CODE_COMMIT", "").strip()
-    if not value:
-        raise ValueError("R100_SOURCE_COMMIT_UNAVAILABLE")
-    return value
+    return (
+        os.getenv("AURELIA_RESEARCH_CODE_COMMIT", "").strip()
+        or os.getenv("GITHUB_SHA", "").strip()
+        or "LOCAL_UNPINNED"
+    )
 
 def research_config_hash() -> str:
     return canonical_hash({
