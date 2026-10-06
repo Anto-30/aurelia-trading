@@ -31,6 +31,7 @@ Current operational state: `docs/AURELIA_CURRENT_OPERATIONAL_STATE_2026-10-04.md
 - Tests: `tests/`
 - Deployment: `railway.toml` and `.github/workflows/railway-deploy.yml`
 - Evidence and reports: `reports/` and `docs/`
+- Intelligence routing: `config/intelligence_source_routing.json`
 
 ## Deriv integration
 
@@ -95,9 +96,19 @@ A readiness report must not be interpreted as live authorization unless every ma
 
 ## External repository federation
 
-AURELIA maintains a governed registry at config/external_repo_federation.json for the external repositories used as research, engineering, tooling, or reference sources. These sources are not vendored into the capital or execution planes. The registry assigns each source a mode (RESEARCH_ONLY, SANDBOX_ONLY, TOOLCHAIN_ONLY, or REFERENCE_ONLY) and maps sources to the appropriate agents.
+AURELIA maintains a governed registry at `config/external_repo_federation.json` for the external repositories used as research, engineering, tooling, or reference sources. These sources are not vendored into the capital or execution planes. The registry assigns each source a mode (RESEARCH_ONLY, SANDBOX_ONLY, TOOLCHAIN_ONLY, or REFERENCE_ONLY) and maps sources to the appropriate agents.
 
 The weekly .github/workflows/external-repo-sync.yml workflow checks public reachability and records current head commits as an artifact. External source updates do not automatically become AURELIA dependencies or change execution behavior.
+
+## Federated intelligence sources
+
+AURELIA also maintains `config/intelligence_source_routing.json` for bounded routing of external intelligence and engineering services.
+
+The registry assigns specialist use to GitHub, CodeRabbit, Next Stock Outlook, The Fly Market Intelligence, Sixtyfour Intelligence, Code Tytor: Python, Notion, and Outlook/Email. These sources are non-authoritative: they may generate research, evidence, code-review findings, operational messages, or documentation, but they cannot authorize capital, modify `LIVE_LOCK`, read production secrets, submit broker transactions, or override deterministic validation.
+
+The regression contract is `assurance/test_intelligence_source_routing.py`. External intelligence must follow the boundary:
+
+`source -> specialist agent -> normalized evidence -> deterministic validation -> existing release gate`.
 
 ## Federated agent skills
 
