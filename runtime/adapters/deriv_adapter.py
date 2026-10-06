@@ -9,6 +9,7 @@ from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTranspo
 from runtime.core.circuit import CircuitBreaker
 from runtime.core.events import sha256
 from runtime.core.request_ledger import RequestLedger, RequestState
+from runtime.core.secrets import get_optional_secret
 from runtime.core.models import (
     AccountIdentity,
     BrokerOutcome,
@@ -43,7 +44,7 @@ class DerivAdapter:
             auth_token if auth_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
         )
         self.expected_loginid = (
-            expected_loginid or os.getenv("DERIV_EXPECTED_LOGINID", "")
+            expected_loginid or get_optional_secret("DERIV_EXPECTED_LOGINID")
         )
         self.expected_currency = expected_currency
         self.environment = environment
