@@ -310,6 +310,39 @@
         "agent-workflow-optimization"
       ],
       "capital_authority": false
+    },
+    {
+      "name": "openjarvis",
+      "owner": "open-jarvis",
+      "repo": "open-jarvis/OpenJarvis",
+      "pinned_commit": "bf945a49a79f49a1258f7045a83c8e42c0da510f",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "local-first-agents",
+        "agent-orchestration",
+        "continuous-monitoring",
+        "deep-research",
+        "scheduled-agents",
+        "memory",
+        "tool-selection",
+        "local-inference"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "personaljarvis",
+      "owner": "PersonalJarvis",
+      "repo": "PersonalJarvis/PersonalJarvis",
+      "pinned_commit": "ebff034e519e17df91a5c2f4d992a2aa3399463d",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agentic-ide",
+        "multi-pane-agent-workflows",
+        "prompt-delivery",
+        "browser-and-ui-automation",
+        "agent-workspace"
+      ],
+      "capital_authority": false
     }
   ]
 }
