@@ -32,10 +32,22 @@ class RequestLedger:
         self._pending: dict[int, TrackedRequest] = {}
         self._max_pending_age = max_pending_age_seconds
 
-    def create_request(self, request_type: str, payload: dict[str, Any]) -> TrackedRequest:
-        self._counter += 1
+    def create_request(
+        self,
+        request_type: str,
+        payload: dict[str, Any],
+        *,
+        req_id: int | None = None,
+    ) -> TrackedRequest:
+        if req_id is None:
+            self._counter += 1
+            req_id = self._counter
+        else:
+            if not isinstance(req_id, int) or req_id <= 0:
+                raise ValueError("REQUEST_ID_MUST_BE_POSITIVE_INTEGER")
+            self._counter = max(self._counter, req_id)
         tracked = TrackedRequest(
-            req_id=self._counter,
+            req_id=req_id,
             request_type=request_type,
             payload=payload,
         )
