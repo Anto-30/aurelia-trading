@@ -18,6 +18,7 @@ from runtime.core.journal import AppendOnlyJournal
 from runtime.core.persistent import PersistentExecutionFence, PersistentLedger
 from runtime.core.reconcile import Reconciler
 from runtime.core.runtime_config import load_config_hash
+from runtime.core.secrets import get_optional_secret
 from runtime.core.models import RuntimeState
 from runtime.core.state import RuntimeStateMachine
 from runtime.strategy.research_supervisor import build_research_signal_supervisor
@@ -129,10 +130,10 @@ async def start_continuous_runtime(
         )
         return runtime
 
-    token = os.getenv("DERIV_AUTH_TOKEN") or os.getenv("DERIV_PAT", "")
+    token = get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")
     loginid = os.getenv("DERIV_EXPECTED_LOGINID") or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "")
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
-    app_id = os.getenv("DERIV_APP_ID", "")
+    app_id = get_optional_secret("DERIV_APP_ID")
     if not token or not loginid:
         await federation.publish(
             sender="AURELIA", recipients=agents, message_type="BLOCKER",

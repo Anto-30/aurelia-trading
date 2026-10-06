@@ -36,10 +36,7 @@ jobs:
       - name: Build clean runtime container
         run: docker build --pull -t aurelia-runtime:ci .
       - name: Verify public Deriv market-data WebSocket
-        env:
-          AURELIA_VERIFY_DERIV_PUBLIC: "true"
-          AURELIA_RUN_ONCE: "true"
-        run: python -m runtime.main
+        run: python scripts/verify_deriv_public_transport.py
       - name: Verify authenticated Deriv real-account session
         if: env.DERIV_AUTH_CONFIGURED == 'true'
         env:

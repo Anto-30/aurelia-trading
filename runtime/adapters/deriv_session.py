@@ -7,6 +7,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
+from runtime.core.secrets import get_optional_secret, get_required_secret
+
 OTP_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts/{account_id}/otp"
 MODERN_OPTIONS_WS_HOST = "api.derivws.com"
 MODERN_OPTIONS_WS_PREFIX = "/trading/v1/options/ws/"
@@ -114,8 +116,16 @@ def get_authenticated_ws_url(
     Raises:
         DerivSessionError: If validation or request fails
     """
-    token = bearer_token if bearer_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
-    application_id = app_id if app_id is not None else os.getenv("DERIV_APP_ID", "")
+    token = (
+        bearer_token
+        if bearer_token is not None
+        else get_required_secret("DERIV_AUTH_TOKEN")
+    )
+    application_id = (
+        app_id
+        if app_id is not None
+        else get_optional_secret("DERIV_APP_ID")
+    )
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
     if not account_id:
         raise DerivSessionError("ACCOUNT_ID_REQUIRED")

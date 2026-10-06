@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
+import time
 
 from runtime.adapters.session_manager import DerivSessionManager
 from runtime.agent_federation import AgentFederationSupervisor, PersistentAgentFederation
@@ -19,10 +21,75 @@ from runtime.core.journal import AppendOnlyJournal
 from runtime.core.models import RuntimeState
 from runtime.core.release_gate import read_live_release
 from runtime.core.runtime_config import load_config_hash
+from runtime.core.secrets import get_required_secret, validate_secrets_at_startup
 from runtime.core.state import RuntimeStateMachine
 from runtime.core.supervisor import RuntimeSupervisor
 
 ROOT = Path(__file__).resolve().parents[1]
+
+FEDERATION_TRIGGER_EVENTS = {
+    "MARKET_ANOMALY_DETECTED",
+    "STRATEGY_SIGNAL_GENERATED",
+    "CAPITAL_THRESHOLD_BREACHED",
+    "RECONCILIATION_MISMATCH",
+    "WATCHDOG_PROTECT",
+    "RUNTIME_STATE_TRANSITION",
+}
+
+
+class JSONFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        log_entry = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "component": record.name,
+            "message": record.getMessage(),
+        }
+        if hasattr(record, "structured_data"):
+            log_entry.update(record.structured_data)
+        return json.dumps(log_entry, sort_keys=True)
+
+
+logger = logging.getLogger("AURELIA")
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(JSONFormatter())
+    logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+logger.propagate = False
+
+
+async def _balance_poller(
+    adapter: DerivAdapter,
+    health: HealthSnapshot,
+    journal: AppendOnlyJournal,
+    config_hash: str,
+    interval: float = 10.0,
+) -> None:
+    """Poll Deriv balance independently so the main loop stays responsive."""
+    while True:
+        try:
+            snapshot = await adapter.get_balance()
+            health.capital_fresh = snapshot.is_valid()
+            health.broker_session = bool(adapter.authorized and adapter.account)
+            health.critical_unknowns.discard("DERIV_BALANCE_REFRESH")
+        except Exception as exc:
+            health.capital_fresh = False
+            health.critical_unknowns.add("DERIV_BALANCE_REFRESH")
+            journal.append(
+                event_envelope(
+                    event_type="BALANCE_POLL_ERROR",
+                    event_id=f"BALANCE_POLL_ERROR:{int(time.time() * 1000)}",
+                    correlation_id="balance-poller",
+                    payload={"error_class": type(exc).__name__},
+                    source_hash="runtime-baseline",
+                    config_hash=config_hash,
+                )
+            )
+        try:
+            await asyncio.sleep(interval)
+        except asyncio.CancelledError:
+            raise
 
 
 class HealthHandler(BaseHTTPRequestHandler):
@@ -66,6 +133,7 @@ def start_server(port: int) -> ThreadingHTTPServer:
 
 
 async def main() -> None:
+    validate_secrets_at_startup()
     server = start_server(int(os.getenv("PORT", "8080")))
     journal = AppendOnlyJournal(
         os.getenv("AURELIA_JOURNAL_PATH", "/tmp/aurelia/aurelia-events.ndjson")
@@ -88,6 +156,8 @@ async def main() -> None:
     HealthHandler.state = machine.state
     public_probe_failed = False
     authenticated_probe_failed = False
+
+    federation_queue: asyncio.Queue[dict[str, object]] = asyncio.Queue()
 
     federation = PersistentAgentFederation(
         journal_path=os.getenv(
@@ -117,8 +187,7 @@ async def main() -> None:
             "PlaywrightCLI",
             "AURELIA",
         ),
-        interval_seconds=float(os.getenv("AURELIA_AGENT_CYCLE_SECONDS", "15")),
-        roundtable_seconds=float(os.getenv("AURELIA_AGENT_ROUNDTABLE_SECONDS", "60")),
+        event_queue=federation_queue,
     )
     federation_supervisor.start()
     journal.append(
@@ -154,18 +223,15 @@ async def main() -> None:
         )
     )
 
-    print(
-        json.dumps(
-            {
-                "component": "AURELIA",
-                "runtime_version": "0.1.0-baseline-2026-10-03",
-                "config_hash": config_hash,
-                "FINAL_EXECUTION_AUTHORIZATION": False,
-                "LIVE_EXECUTION": "BLOCKED",
-                "capital_plane_mode": "VERIFY_ONLY",
-            },
-            sort_keys=True,
-        )
+    logger.info(
+        "Runtime startup",
+        extra={"structured_data": {
+            "runtime_version": "0.1.0-baseline-2026-10-03",
+            "config_hash": config_hash,
+            "FINAL_EXECUTION_AUTHORIZATION": False,
+            "LIVE_EXECUTION": "BLOCKED",
+            "capital_plane_mode": "VERIFY_ONLY",
+        }},
     )
 
     async def public_probe() -> None:
@@ -207,8 +273,8 @@ async def main() -> None:
             expected_currency=os.getenv("DERIV_EXPECTED_CURRENCY", "USD"),
         )
         bootstrap = manager.bootstrap(
-            bearer_token=os.getenv("DERIV_AUTH_TOKEN") or None,
-            app_id=os.getenv("DERIV_APP_ID") or None,
+            bearer_token=get_required_secret("DERIV_AUTH_TOKEN"),
+            app_id=get_required_secret("DERIV_APP_ID"),
         )
         adapter = DerivAdapter(
             ws_url=bootstrap.websocket.url,
@@ -270,6 +336,34 @@ async def main() -> None:
                 )
             )
 
+    # --- HARD ABORT GATE: Never proceed to continuous runtime if probes failed ---
+    if public_probe_failed or authenticated_probe_failed:
+        fatal_reason = []
+        if public_probe_failed:
+            fatal_reason.append("PUBLIC_DERIV_TRANSPORT_VERIFICATION_FAILED")
+        if authenticated_probe_failed:
+            fatal_reason.append("AUTHENTICATED_DERIV_SESSION_VERIFICATION_FAILED")
+        journal.append(
+            event_envelope(
+                event_type="FATAL_STARTUP_ABORT",
+                event_id="FATAL_STARTUP_ABORT:1",
+                correlation_id="startup-gate",
+                payload={
+                    "reasons": fatal_reason,
+                    "action": "PROCESS_TERMINATION",
+                    "capital_authority_granted": False,
+                },
+                source_hash="runtime-baseline",
+                config_hash=config_hash,
+            )
+        )
+        await federation_supervisor.stop()
+        server.shutdown()
+        raise SystemExit(
+            f"AURELIA_FATAL_STARTUP_ABORT: {'; '.join(fatal_reason)}"
+        )
+    # --- END HARD ABORT GATE ---
+
     if os.getenv("AURELIA_RUN_ONCE", "false").lower() == "true":
         await federation_supervisor.stop()
         server.shutdown()
@@ -285,10 +379,23 @@ async def main() -> None:
         health.process_heartbeat = datetime.now(timezone.utc)
         return health.liveness() and health.dependencies_ok
 
+    def emit_federation_event(event_type: str, **payload: object) -> None:
+        if event_type not in FEDERATION_TRIGGER_EVENTS:
+            return
+        try:
+            federation_queue.put_nowait({
+                "event_type": event_type,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                **payload,
+            })
+        except Exception:
+            health.critical_unknowns.add("FEDERATION_EVENT_QUEUE_FAILURE")
+
     def protect(reason: str) -> None:
         health.kill_switch_off = False
         health.critical_unknowns.add(reason)
         HealthHandler.state = RuntimeState.CAPITAL_PROTECTED
+        emit_federation_event("WATCHDOG_PROTECT", reason=reason)
         journal.append(
             event_envelope(
                 event_type="WATCHDOG_PROTECT",
@@ -303,6 +410,8 @@ async def main() -> None:
     supervisor.start(heartbeat, protect)
 
     continuous_runtime = None
+    balance_task: asyncio.Task[None] | None = None
+    last_runtime_state = machine.state
     if os.getenv("AURELIA_CONTINUOUS_RUNTIME", "true").strip().lower() == "true":
         try:
             continuous_runtime = await start_continuous_runtime(
@@ -311,14 +420,19 @@ async def main() -> None:
                 federation_supervisor=federation_supervisor,
             )
             if continuous_runtime.execution_loop is not None:
-                refresh_runtime_health(
-                    health,
-                    broker_session=continuous_runtime.adapter is not None,
-                    capital=None,
-                    market_data_received_at=None,
-                    ledger_healthy=False,
-                    reconciliation_healthy=False,
-                    kill_switch_off=False,
+                balance_task = asyncio.create_task(
+                    _balance_poller(
+                        continuous_runtime.adapter,
+                        health,
+                        journal,
+                        config_hash,
+                    ),
+                    name="aurelia-balance-poller",
+                )
+                health.broker_session = bool(
+                    continuous_runtime.adapter is not None
+                    and continuous_runtime.adapter.authorized
+                    and continuous_runtime.adapter.account is not None
                 )
         except Exception as exc:
             health.critical_unknowns.add("CONTINUOUS_RUNTIME_STARTUP")
@@ -345,31 +459,26 @@ async def main() -> None:
                 HealthHandler.state = RuntimeState.CAPITAL_PROTECTED
             else:
                 loop = continuous_runtime.execution_loop
-                broker_connected = (
-                    continuous_runtime.adapter is not None
-                    and continuous_runtime.adapter.transport is not None
+                adapter = continuous_runtime.adapter
+                broker_authorization_lost = (
+                    adapter is None
+                    or not adapter.authorized
+                    or adapter.account is None
                 )
-                capital_snapshot = None
-                capital_error = None
-                if broker_connected:
-                    try:
-                        capital_snapshot = await continuous_runtime.adapter.get_balance()
-                    except Exception as exc:
-                        capital_error = type(exc).__name__
-                refresh_runtime_health(
-                    health,
-                    broker_session=broker_connected,
-                    capital=capital_snapshot,
-                    market_data_received_at=None,
-                    ledger_healthy=False,
-                    reconciliation_healthy=False,
-                    kill_switch_off=bool(loop is not None and not loop.executor.kill_switch),
-                )
-                if capital_error:
-                    health.critical_unknowns.add('DERIV_BALANCE_REFRESH')
+                if broker_authorization_lost:
+                    health.kill_switch_off = False
+                    health.broker_session = False
+                    health.critical_unknowns.add("BROKER_AUTHORIZATION_LOST")
+                    HealthHandler.state = RuntimeState.CAPITAL_PROTECTED
+                    emit_federation_event(
+                        "WATCHDOG_PROTECT",
+                        reason="BROKER_AUTHORIZATION_LOST",
+                    )
+                    if loop is not None and not loop.executor.kill_switch:
+                        loop.executor.activate_kill_switch("BROKER_AUTHORIZATION_LOST")
                 else:
-                    health.critical_unknowns.discard('DERIV_BALANCE_REFRESH')
-                HealthHandler.state = machine.state
+                    health.broker_session = bool(adapter.transport is not None)
+                    HealthHandler.state = machine.state
                 task = continuous_runtime.execution_task
                 if task is not None and task.done():
                     health.critical_unknowns.add("AUTONOMOUS_LOOP_STOPPED")
@@ -379,8 +488,25 @@ async def main() -> None:
                         pass
                     if loop is not None:
                         loop.executor.activate_kill_switch("AUTONOMOUS_LOOP_STOPPED")
+                        emit_federation_event(
+                            "WATCHDOG_PROTECT",
+                            reason="AUTONOMOUS_LOOP_STOPPED",
+                        )
+                if machine.state != last_runtime_state:
+                    emit_federation_event(
+                        "RUNTIME_STATE_TRANSITION",
+                        from_state=last_runtime_state.value,
+                        to_state=machine.state.value,
+                    )
+                    last_runtime_state = machine.state
             await asyncio.sleep(5)
     finally:
+        if balance_task is not None:
+            balance_task.cancel()
+            try:
+                await balance_task
+            except asyncio.CancelledError:
+                pass
         if continuous_runtime is not None:
             await continuous_runtime.stop()
         supervisor.stop()

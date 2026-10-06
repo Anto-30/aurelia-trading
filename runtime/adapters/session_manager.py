@@ -8,6 +8,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
+from runtime.core.secrets import get_optional_secret
+
 from runtime.adapters.deriv_session import (
     AuthenticatedWebSocketUrl,
     DerivSessionError,
@@ -132,8 +134,8 @@ class DerivSessionManager:
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> list[dict[str, Any]]:
-        token = bearer_token if bearer_token is not None else (os.getenv("DERIV_AUTH_TOKEN") or os.getenv("DERIV_PAT", ""))
-        application_id = app_id if app_id is not None else os.getenv("DERIV_APP_ID", "")
+        token = bearer_token if bearer_token is not None else (get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT"))
+        application_id = app_id if app_id is not None else get_optional_secret("DERIV_APP_ID")
         if not token:
             raise DerivSessionManagerError("DERIV_BEARER_TOKEN_MISSING")
         payload = self._request_json(

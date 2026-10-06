@@ -454,95 +454,117 @@ class PersistentAgentFederation:
         )
 
 
+FEDERATION_TRIGGER_EVENTS = {
+    "MARKET_ANOMALY_DETECTED",
+    "STRATEGY_SIGNAL_GENERATED",
+    "CAPITAL_THRESHOLD_BREACHED",
+    "RECONCILIATION_MISMATCH",
+    "WATCHDOG_PROTECT",
+    "RUNTIME_STATE_TRANSITION",
+}
+
+
 class AgentFederationSupervisor:
+    """Event-driven advisory supervisor.
+
+    Agent dispatches happen only for explicit trigger events. A single
+    five-minute heartbeat checks supervisor liveness without dispatching work
+    to agents. The federation remains advisory and never grants capital
+    authority.
+    """
+
     def __init__(
         self,
         federation: PersistentAgentFederation,
         *,
         agents: Iterable[str],
+        event_queue: asyncio.Queue[dict[str, Any]] | None = None,
         interval_seconds: float = 15.0,
         roundtable_seconds: float = 60.0,
+        heartbeat_seconds: float = 300.0,
     ) -> None:
         self.federation = federation
         self.agents = tuple(sorted(set(agents)))
-        self.interval_seconds = max(2.0, interval_seconds)
-        self.roundtable_seconds = max(self.interval_seconds, roundtable_seconds)
+        self.event_queue = event_queue or asyncio.Queue()
+        # Retain the legacy constructor parameters for compatibility with
+        # callers/configuration, but do not use them for agent polling.
+        self.interval_seconds = float(interval_seconds)
+        self.roundtable_seconds = float(roundtable_seconds)
+        self.heartbeat_seconds = max(30.0, float(heartbeat_seconds))
         self._task: asyncio.Task[None] | None = None
-        self._stop = asyncio.Event()
+        self._running = False
 
-    async def _cycle(self) -> None:
-        last_roundtable = datetime.min.replace(tzinfo=timezone.utc)
-        while not self._stop.is_set():
-            await self.federation.recover_stale_tasks()
-            stale = self.federation.stale_agents()
-            for agent in stale:
-                if agent not in self.federation._stale_notified:
-                    self.federation._append(
-                        "AGENT_STALE",
-                        {"agent": agent, "action": "RECOVER_ON_NEXT_HEARTBEAT"},
-                        correlation_id=f"agent:{agent}",
-                    )
-                    self.federation._stale_notified.add(agent)
-            self.federation._stale_notified.intersection_update(stale)
-            active = self.federation.active_agents()
-            if datetime.now(timezone.utc) - last_roundtable >= timedelta(seconds=self.roundtable_seconds):
-                await self.federation.broadcast_roundtable()
-                last_roundtable = datetime.now(timezone.utc)
-            await self.federation.publish(
-                sender="AURELIA",
-                recipients=active or self.agents,
-                message_type="CONTINUOUS_WORK_CYCLE",
-                payload={
-                    "domains": [
-                        "market_intelligence",
-                        "strategy_review",
-                        "validation",
-                        "risk_and_execution_review",
-                        "security",
-                        "deployment",
-                        "evidence_reconciliation",
-                    ],
-                    "capital_authority": False,
-                    "status": "SUPERVISED_CONTINUOUS",
-                },
-                correlation_id=f"cycle:{int(datetime.now(timezone.utc).timestamp())}",
-                priority=60,
-                requires_response=True,
-            )
-            for domain, agent in (
-                ("research", "KimiK3"),
-                ("engineering", "ClaudeCode"),
-                ("orchestration", "GrokBot"),
-                ("security", "GoogleAgentSkills"),
-                ("evidence", "GLM"),
-            ):
-                # Standing work must be idempotent; do not create a new task
-                # every supervisor cycle while a lane is unavailable or busy.
-                pending = self.federation.pending_tasks(agent)
-                if any(
-                    row.get("task_type") == f"CONTINUOUS_{domain.upper()}"
-                    for row in pending
-                ):
-                    continue
-                await self.federation.enqueue_task(
-                    task_type=f"CONTINUOUS_{domain.upper()}",
-                    payload={"domain": domain, "status": "READY", "capital_authority": False},
-                    correlation_id=f"standing:{domain}:{agent}",
-                    priority=55,
-                    assigned_agent=agent,
+    async def _dispatch_to_agents(self, event: dict[str, Any]) -> None:
+        recipients = self.federation.active_agents() or self.agents
+        if not recipients:
+            return
+        await self.federation.publish(
+            sender="AURELIA",
+            recipients=recipients,
+            message_type="FEDERATION_TRIGGER",
+            payload={
+                "trigger_event": dict(event),
+                "capital_authority": False,
+                "order_submission_permitted": False,
+            },
+            correlation_id=f"trigger:{event.get('event_type')}:{event.get('timestamp')}",
+            priority=90,
+            requires_response=True,
+        )
+
+    async def _heartbeat(self) -> None:
+        recovered = await self.federation.recover_stale_tasks()
+        stale = self.federation.stale_agents()
+        for agent in stale:
+            if agent not in self.federation._stale_notified:
+                self.federation._append(
+                    "AGENT_STALE",
+                    {"agent": agent, "action": "RECOVER_ON_NEXT_HEARTBEAT"},
+                    correlation_id=f"agent:{agent}",
                 )
+                self.federation._stale_notified.add(agent)
+        self.federation._stale_notified.intersection_update(stale)
+        self.federation._append(
+            "AGENT_FEDERATION_HEARTBEAT",
+            {
+                "active_agents": len(self.federation.active_agents()),
+                "recovered_tasks": len(recovered),
+                "agent_dispatch": False,
+            },
+            correlation_id="agent-federation-heartbeat",
+        )
+
+    async def _run(self) -> None:
+        while self._running:
             try:
-                await asyncio.wait_for(self._stop.wait(), timeout=self.interval_seconds)
+                event = await asyncio.wait_for(
+                    self.event_queue.get(),
+                    timeout=self.heartbeat_seconds,
+                )
             except asyncio.TimeoutError:
-                pass
+                await self._heartbeat()
+                continue
+            try:
+                if isinstance(event, dict) and event.get("event_type") in FEDERATION_TRIGGER_EVENTS:
+                    await self._dispatch_to_agents(event)
+            finally:
+                self.event_queue.task_done()
 
     def start(self) -> None:
         if self._task is None or self._task.done():
-            self._stop.clear()
-            self._task = asyncio.create_task(self._cycle(), name="aurelia-agent-federation")
+            self._running = True
+            self._task = asyncio.create_task(
+                self._run(),
+                name="aurelia-agent-federation",
+            )
 
     async def stop(self) -> None:
-        self._stop.set()
+        self._running = False
         if self._task is not None:
-            await self._task
+            self._task.cancel()
+            try:
+                await self._task
+            except asyncio.CancelledError:
+                pass
             self._task = None
+

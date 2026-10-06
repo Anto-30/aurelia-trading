@@ -99,12 +99,24 @@ class DerivWebSocketTransport:
                 future.set_exception(exc)
         self._pending.clear()
 
+    def reserve_request_id(self, request_id: int) -> None:
+        """Reserve an externally assigned request id before any await point."""
+        if not isinstance(request_id, int) or request_id <= 0:
+            raise ValueError("REQUEST_ID_MUST_BE_POSITIVE_INTEGER")
+        self._request_id = max(self._request_id, request_id)
+
     async def request(self, payload: dict[str, Any]) -> dict[str, Any]:
         if self.ws is None:
             raise DerivTransportError("BROKER_SESSION_NOT_CONNECTED")
 
-        self._request_id += 1
-        request_id = self._request_id
+        supplied_id = payload.get("req_id")
+        if supplied_id is not None:
+            if not isinstance(supplied_id, int) or supplied_id <= 0:
+                raise DerivTransportError("REQUEST_ID_INVALID")
+            self.reserve_request_id(supplied_id)
+            request_id = supplied_id
+        else:
+            request_id = self._next_request_id()
         body = dict(payload)
         body["req_id"] = request_id
 
