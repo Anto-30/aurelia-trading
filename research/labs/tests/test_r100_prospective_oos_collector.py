@@ -64,6 +64,15 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertFalse(0.54 >= 0.55 and 0.54 <= 0.75)
         self.assertFalse(0.76 >= 0.55 and 0.76 <= 0.75)
 
+    def test_poor_reliability_cannot_be_marked_calibrated(self):
+        rows = (
+            [{"probability": 0.55, "outcome": 1}] * 40
+            + [{"probability": 0.65, "outcome": 1}] * 30
+            + [{"probability": 0.75, "outcome": 1}] * 30
+        )
+        metrics = probability_metrics(rows)
+        self.assertGreater(metrics["max_reliability_gap"], 0.05)
+        self.assertEqual(metrics["calibration_status"], "PROVISIONAL")
     def test_signal_id_is_deterministic(self):
         timestamp = "2026-10-06T20:00:00Z"
         self.assertEqual(
