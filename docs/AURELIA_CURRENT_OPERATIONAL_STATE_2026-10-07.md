@@ -89,3 +89,13 @@ GitHub, CodeRabbit, Next Stock Outlook, The Fly Market Intelligence, Sixtyfour I
 `LIVE_ORDERS=0`
 
 This record is an operational status snapshot, not a live-capital authorization.
+
+
+## CI hardening completed
+
+Two explicit GitHub Actions workflows are now present on `main`:
+
+- `.github/workflows/assurance.yml`: assurance tests, runtime tests, container health smoke test, and capital-protection assertions.
+- `.github/workflows/deriv-auth-evidence.yml`: scheduled/manual authenticated Deriv verification only; it explicitly asserts zero orders and no capital authority.
+
+The workflows do not alter `LIVE_LOCK` and do not submit orders. The connected GitHub workflow-run API currently reports no run for the latest workflow commit, so CI execution is not represented as PASS until GitHub supplies actual run evidence.
