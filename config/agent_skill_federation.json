@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_skill_federation.v1",
-  "generated_date": "2026-10-05",
+  "generated_date": "2026-10-06",
   "purpose": "Research/engineering capability federation. No external agent, skill, plugin, MCP server, hook, or marketplace entry may obtain capital authority.",
   "default_policy": {
     "external_code_execution": "DENY_BY_DEFAULT",
@@ -292,6 +292,22 @@
         "workspace-operations",
         "agent-self-review",
         "Hermes-plugin-patterns"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "claude-x-jev",
+      "owner": "Charles J Dove",
+      "repo": "charlesdove977/claude-x-jev",
+      "pinned_commit": "c8662b0550b2a999d1dbcfb148683615cf92636a",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "typed-decision-routing",
+        "classification",
+        "confidence-scoring",
+        "draft-verification",
+        "tool-call-gating",
+        "agent-workflow-optimization"
       ],
       "capital_authority": false
     }
