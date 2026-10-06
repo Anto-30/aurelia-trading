@@ -1,0 +1,66 @@
+name: AURELIA Deriv Verify-Only Evidence
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-deriv-verify-only
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
+      DERIV_PAT: ${{ secrets.DERIV_PAT }}
+      DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID }}
+      DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+      DERIV_EXPECTED_CURRENCY: USD
+      DERIV_ENVIRONMENT: real
+      DERIV_AUTH_MODE: pat
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      LIVE_EXECUTION: "BLOCKED"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Verify required protected configuration is present
+        shell: bash
+        run: |
+          token="${DERIV_AUTH_TOKEN:-${DERIV_PAT:-}}"
+          test -n "$token" || { echo "DERIV_AUTH_SESSION=BLOCKED_EXTERNAL_SECRET"; exit 2; }
+          test -n "${DERIV_APP_ID}" || { echo "DERIV_AUTH_SESSION=BLOCKED_EXTERNAL_SECRET"; exit 2; }
+          test -n "${DERIV_EXPECTED_LOGINID:-${DERIV_AUTHORIZED_ACCOUNT_ID:-}}" || { echo "DERIV_AUTH_SESSION=BLOCKED_EXTERNAL_SECRET"; exit 2; }
+          echo "Protected Deriv configuration is present; secret values are not printed."
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run authenticated Deriv verification
+        run: |
+          python scripts/verify_deriv_session.py
+
+      - name: Assert no capital authority
+        run: |
+          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
+          test "$LIVE_EXECUTION" = "BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+          echo "LIVE_EXECUTION=BLOCKED"
+          echo "DERIV_ORDERS_SUBMITTED=0"
+
+      - name: Upload non-secret evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deriv-authenticated-session-evidence
+          path: artifacts/deriv_authenticated_session.json
+          if-no-files-found: ignore
+          retention-days: 14
