@@ -244,6 +244,67 @@ def probability_metrics(observations: list[dict[str, Any]]) -> dict[str, Any]:
         "calibration_status": status,
     }
 
+def quoted_contract_economics(
+    observations: list[dict[str, Any]],
+    quote_observations: list[dict[str, Any]],
+) -> dict[str, Any]:
+    quotes = {
+        str(row.get("signal_id")): row
+        for row in quote_observations
+        if row.get("quote_status") == "OBSERVED"
+    }
+    samples: list[float] = []
+    wins = 0
+    for row in observations:
+        quote = quotes.get(str(row.get("signal_id")))
+        if not quote:
+            continue
+        try:
+            stake = float(quote["ask_price"])
+            payout = float(quote["payout"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if not all(math.isfinite(x) and x > 0 for x in (stake, payout)):
+            continue
+        outcome = int(row["outcome"])
+        net = (payout - stake) if outcome == 1 else -stake
+        samples.append(net / stake)
+        wins += outcome
+    if not samples:
+        return {
+            "status": "NOT_AVAILABLE",
+            "sample_count": 0,
+            "win_count": 0,
+            "win_rate": None,
+            "mean_net_return_per_stake": None,
+            "break_even_probability": None,
+            "quoted_payout_to_stake_ratio": None,
+        }
+    ratios = []
+    for row in quote_observations:
+        if row.get("quote_status") != "OBSERVED":
+            continue
+        try:
+            stake = float(row["ask_price"])
+            payout = float(row["payout"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if all(math.isfinite(x) and x > 0 for x in (stake, payout)):
+            ratios.append(payout / stake)
+    ratio = sum(ratios) / len(ratios) if ratios else None
+    return {
+        "status": "KNOWN_QUOTED_CONTRACT_ECONOMICS",
+        "sample_count": len(samples),
+        "win_count": wins,
+        "win_rate": wins / len(samples),
+        "mean_net_return_per_stake": sum(samples) / len(samples),
+        "break_even_probability": (1.0 / ratio) if ratio else None,
+        "quoted_payout_to_stake_ratio": ratio,
+        "realized_execution_status": "NOT_MEASURED",
+        "cost_status": "REALIZED_COSTS_UNKNOWN",
+    }
+
+
 def evaluation(state: dict[str, Any]) -> dict[str, Any]:
     manifest = state["manifest"]
     oos_start = datetime.fromisoformat(manifest["oos_start_at_utc"].replace("Z", "+00:00"))
@@ -260,6 +321,10 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
     mean_oos = sum(oos_returns) / len(oos_returns) if oos_returns else None
     win_rate = sum(int(x["outcome"]) for x in oos_rows) / len(oos_rows) if oos_rows else None
     calibration = probability_metrics(oos_rows)
+    quoted_economics = quoted_contract_economics(
+        oos_rows if oos_rows else is_rows,
+        state["quote_observations"],
+    )
     min_cell_trades = len(oos_rows)
 
     if min_cell_trades < 100:
@@ -303,7 +368,8 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         "execution_economics": {
             "status": "UNDETERMINED_PRODUCTION",
             "proposal_quote_observations": len(state["quote_observations"]),
-            "reason": "Public proposal quotes observe broker pricing mechanics but do not prove fill, realized slippage, fees or net live expectancy.",
+            "quoted_contract_economics": quoted_economics,
+            "reason": "Public proposal quotes establish quoted stake/payout terms, but do not prove fill, realized slippage, fees or net live expectancy.",
         },
         "qualification_status": qualification_status,
         "strategy_live_eligible": False,
