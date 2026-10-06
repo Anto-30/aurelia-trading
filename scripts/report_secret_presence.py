@@ -10,6 +10,7 @@ SECRET_NAMES = (
     "DERIV_EXPECTED_LOGINID",
     "DERIV_AUTHORIZED_ACCOUNT_ID",
     "DERIV_EXPECTED_CURRENCY",
+    "DERIV_AUTH_MODE",
     "RAILWAY_TOKEN",
 )
 
@@ -31,6 +32,8 @@ def main() -> int:
         auth_mode != "pat" or present("DERIV_APP_ID")
     )
 
+    print(f"DERIV_AUTH_MODE_PRESENT={'true' if present('DERIV_AUTH_MODE') else 'false'}")
+    print(f"DERIV_AUTH_MODE_EFFECTIVE={auth_mode}")
     print(f"DERIV_AUTH_CONFIGURED={'true' if deriv_configured else 'false'}")
     print("FINAL_EXECUTION_AUTHORIZATION=false")
     print("LIVE_EXECUTION=BLOCKED")
