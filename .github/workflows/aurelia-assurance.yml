@@ -8,9 +8,7 @@ permissions:
 jobs:
   assurance:
     # Load production-scoped Actions secrets for authenticated verification.
-    environment:
-      name: production
-      deployment: false
+    environment: production
     runs-on: ubuntu-latest
     env:
       DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') != '' && ((secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
