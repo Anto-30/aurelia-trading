@@ -26,6 +26,8 @@ jobs:
       AURELIA_R100_STATE_PATH: ".research_state/aurelia_r100_state.json"
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
@@ -33,6 +35,14 @@ jobs:
         run: pip install -r requirements.txt
       - name: Run prospective collector tests
         run: python -m unittest research/labs/tests/test_r100_prospective_oos_collector.py -v
+      - name: Bind research source provenance
+        shell: bash
+        run: |
+          collector_commit="$(git log -1 --format=%H -- research/r100_prospective_oos_collector.py)"
+          test -n "$collector_commit"
+          echo "AURELIA_RESEARCH_CODE_COMMIT=$collector_commit" >> "$GITHUB_ENV"
+          echo "Research collector source commit: $collector_commit"
+
       - name: Recover latest prospective archive
         shell: bash
         run: |
@@ -57,6 +67,60 @@ jobs:
           mkdir -p "$(dirname "${AURELIA_R100_STATE_PATH}")"
           cp "$state_file" "${AURELIA_R100_STATE_PATH}"
           echo "Recovered prospective archive artifact ${artifact_id}."
+      - name: Validate recovered research provenance
+        shell: bash
+        run: |
+          if [ ! -f "$AURELIA_R100_STATE_PATH" ]; then
+            echo "No prior archive state; a new frozen campaign will be initialized."
+            exit 0
+          fi
+          python - <<'PY'
+          import json
+          import os
+          import sys
+          from datetime import datetime
+          from pathlib import Path
+          from research.r100_prospective_oos_collector import research_config_hash
+
+          path = Path(os.environ["AURELIA_R100_STATE_PATH"])
+          state = json.loads(path.read_text())
+          manifest = state.get("manifest") or {}
+          stored_commit = str(manifest.get("code_commit") or "")
+          stored_config = str(manifest.get("config_hash") or "")
+          current_commit = os.environ["AURELIA_RESEARCH_CODE_COMMIT"]
+          current_config = research_config_hash()
+          oos_start_text = manifest.get("oos_start_at_utc")
+          oos_start = (
+              datetime.fromisoformat(str(oos_start_text).replace("Z", "+00:00"))
+              if oos_start_text else None
+          )
+          rows = state.get("observations") or []
+          oos_rows = [
+              row for row in rows
+              if oos_start and datetime.fromisoformat(
+                  str(row["signal_timestamp_utc"]).replace("Z", "+00:00")
+              ) >= oos_start
+          ]
+
+          if not stored_commit or not stored_config:
+              if oos_rows:
+                  print("R100_ARCHIVE_PROVENANCE=BLOCKED_LEGACY_ACTIVE_OOS")
+                  sys.exit(1)
+              print("R100_ARCHIVE_PROVENANCE=LEGACY_PRE_OOS")
+              path.unlink()
+              sys.exit(0)
+
+          if stored_commit != current_commit or stored_config != current_config:
+              if oos_rows:
+                  print("R100_ARCHIVE_PROVENANCE=BLOCKED_ACTIVE_OOS_DRIFT")
+                  sys.exit(1)
+              print("R100_ARCHIVE_PROVENANCE=PRE_OOS_DRIFT_NEW_CAMPAIGN")
+              path.unlink()
+              sys.exit(0)
+
+          print("R100_ARCHIVE_PROVENANCE=VERIFIED")
+          PY
+
       - name: Collect real public Deriv R100 observations
         run: python -m research.r100_prospective_oos_collector
       - name: Verify research-only semantics
