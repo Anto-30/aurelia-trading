@@ -19,7 +19,7 @@ class AutonomousSignalHunterTests(unittest.TestCase):
         hunter = AutonomousSignalHunter(min_observations=20, threshold=1.0, cooldown_seconds=0)
         now = datetime.now(timezone.utc)
         prices = [100.0 + (i * 0.01) for i in range(25)]
-        prices[-1] = 101.0
+        prices[-1] = 100.2
         candidate = None
         for i, price in enumerate(prices):
             candidate = hunter.observe(
