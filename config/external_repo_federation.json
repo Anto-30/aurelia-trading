@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-05",
+  "generated_date": "2026-10-06",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -92,15 +92,25 @@
     },
     {
       "repo": "zed-industries/zed",
-      "category": "editor-platform",
+      "category": "agent-enabled-code-editor",
       "domain": "engineering",
       "assigned_agents": [
         "ClaudeCode",
+        "GrokBot",
+        "KimiK3",
         "PlaywrightCLI"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/zed",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "73be6ac6b1975f428328bbf7fe185d3b671afec4",
+      "capabilities": [
+        "high-performance-editor",
+        "agent-workflows",
+        "ACP-integration",
+        "worktree-development",
+        "collaborative-editing"
+      ],
+      "integration_note": "Developer-tooling reference only. No editor hook or extension gains capital authority."
     },
     {
       "repo": "zed-industries/extensions",
@@ -1254,6 +1264,114 @@
       "domain": "engineering",
       "source_url": "https://github.com/loperanger7/gstack-auto",
       "head_commit": "17bf2a025c175b899e7d30be1ab4e658fd4ae04f"
+    },
+    {
+      "repo": "capthvnsen/alans-way-agents",
+      "category": "agent-proactivity-and-workspace",
+      "domain": "agent-orchestration",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "KimiK3"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/capthvnsen/alans-way-agents",
+      "head_commit": "9e2b928241364fb23becea0419d9eb0db2e97fb6",
+      "capabilities": [
+        "bounded-proactivity",
+        "workspace-browser-routing",
+        "agent-self-review",
+        "scheduled-observers",
+        "Hermes-integration"
+      ],
+      "integration_note": "Use as an orchestration/workspace reference. Do not install its gateway hooks into AURELIA capital or execution paths."
+    },
+    {
+      "repo": "cuemacro/finmarketpy",
+      "category": "financial-backtesting-and-market-analysis",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/cuemacro/finmarketpy",
+      "head_commit": "afeaef28f5c8b78e613e649ecf18a9653dbf41fd",
+      "capabilities": [
+        "strategy-backtesting",
+        "market-analysis",
+        "seasonality",
+        "event-studies",
+        "volatility-targeting",
+        "historical-performance-analysis"
+      ],
+      "integration_note": "Research/backtest reference only. Validate any imported methodology independently against AURELIA OOS and cost controls."
+    },
+    {
+      "repo": "stablyai/orca",
+      "category": "multi-agent-development-orchestrator",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/stablyai/orca",
+      "head_commit": "8d049b594d5de477a0a430b6a8d908a7365fee35",
+      "capabilities": [
+        "parallel-agent-worktrees",
+        "agent-session-management",
+        "remote-worktrees",
+        "github-linear-workflow",
+        "agent-monitoring",
+        "cli-orchestration"
+      ],
+      "integration_note": "Developer/operator tooling reference. Must remain outside capital authority and cannot mutate LIVE_LOCK or submit broker orders."
+    },
+    {
+      "repo": "manu354/cryptocurrency-arbitrage",
+      "category": "crypto-arbitrage-reference",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/manu354/cryptocurrency-arbitrage",
+      "head_commit": "853d1d0d026997ace7c380aba350978c064a6519",
+      "capabilities": [
+        "cross-market-price-comparison",
+        "arbitrage-opportunity-scanning",
+        "market-pair-enumeration"
+      ],
+      "integration_note": "Legacy reference only; public README states the active trading-bot code is private. Do not treat this repository as production execution code."
+    },
+    {
+      "repo": "Eigenwise/atomic-agents",
+      "category": "modular-agent-framework",
+      "domain": "agent-intelligence",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "GoogleAgentSkills"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Eigenwise/atomic-agents",
+      "head_commit": "d2b61b90b2816dbdf9f42f8638b7d375bf08cd11",
+      "capabilities": [
+        "typed-agent-schemas",
+        "atomic-tools",
+        "context-providers",
+        "agent-chaining",
+        "agent-hooks",
+        "MCP-tools",
+        "agent-skill-patterns"
+      ],
+      "integration_note": "Use for isolated agent/tool/context-provider experiments and schema design. External agents remain advisory and cannot authorize capital."
     }
   ]
 }
