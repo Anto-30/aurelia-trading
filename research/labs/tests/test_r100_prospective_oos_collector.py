@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -18,6 +19,19 @@ from research.r100_prospective_oos_collector import (
 
 
 class R100ProspectiveCollectorTest(unittest.TestCase):
+    def test_manifest_binds_exact_source_commit(self):
+        previous = os.environ.get("AURELIA_RESEARCH_CODE_COMMIT")
+        try:
+            os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = "commit-under-test"
+            manifest = initial_state()["manifest"]
+            self.assertEqual(manifest["code_commit"], "commit-under-test")
+            self.assertTrue(manifest["config_hash"])
+        finally:
+            if previous is None:
+                os.environ.pop("AURELIA_RESEARCH_CODE_COMMIT", None)
+            else:
+                os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = previous
+
     def test_manifest_is_frozen_and_non_authorizing(self):
         state = initial_state()
         manifest = state["manifest"]
@@ -56,6 +70,23 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
             build_signal_id(timestamp, 100.0, "CALL"),
             build_signal_id(timestamp, 100.0, "CALL"),
         )
+
+    def test_loaded_campaign_rejects_source_commit_drift(self):
+        previous = os.environ.get("AURELIA_RESEARCH_CODE_COMMIT")
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "state.json"
+                state = initial_state()
+                state["manifest"]["code_commit"] = "commit-A"
+                save_state(path, state)
+                os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = "commit-B"
+                with self.assertRaisesRegex(ValueError, "R100_SOURCE_COMMIT_MISMATCH"):
+                    load_state(path)
+        finally:
+            if previous is None:
+                os.environ.pop("AURELIA_RESEARCH_CODE_COMMIT", None)
+            else:
+                os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = previous
 
     def test_state_round_trip_and_schema(self):
         with tempfile.TemporaryDirectory() as tmp:
