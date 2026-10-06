@@ -4,7 +4,7 @@
 
 - Repository: `Anto-30/aurelia-trading`
 - Canonical branch: `main`
-- Latest observed main tip: `f35ad10ed0be01fcf6aed273bb507201e387cd7e`
+- Latest observed main tip: `1301e451bd6a1aefa0b450d6b05fa2273cc2e090`
 - Live-release control: `config/LIVE_LOCK.yaml`
 - Intelligence routing: `config/intelligence_source_routing.json`
 - Intelligence routing assurance: `assurance/test_intelligence_source_routing.py`
@@ -23,9 +23,9 @@ Recent changes include:
 
 ## CI / assurance evidence
 
-The latest commit has no status checks attached according to the connected GitHub status API. The connected GitHub workflow-run lookup for the latest commit returned no workflow runs. This is not treated as a CI pass.
+The latest main tip has multiple GitHub Actions runs queued/pending after the workflow-hardening commits. The connected workflow API shows the current assurance, secret-presence, non-production soak, free-runtime, and Railway deployment workflows being scheduled against the latest commits; these are not promoted to PASS until completed evidence is available. Earlier assurance on commit `de1c17570aae2d3cc65543602930e8229b644c48` completed successfully, but current release evidence is still required.
 
-The repository's engineering claims therefore remain separated from fresh execution evidence. No unsupported test, soak, broker, or deployment result is being promoted to PASS.
+The repository-side workflow syntax and duplication issues have now been cleaned up. No unsupported test, soak, broker, or deployment result is being promoted to PASS.
 
 ## Capital safety
 
@@ -55,6 +55,7 @@ Therefore:
 - no substitute worker was created;
 - no deployment success is claimed;
 - no production secrets were modified;
+- service creation remains rejected at the Railway account-plan layer;
 - the existing capital-protection state is unchanged.
 
 ## Remaining mandatory blockers
@@ -90,6 +91,14 @@ GitHub, CodeRabbit, Next Stock Outlook, The Fly Market Intelligence, Sixtyfour I
 
 This record is an operational status snapshot, not a live-capital authorization.
 
+## 2026-10-07 release-path hardening
+
+- Fixed the remaining production-environment workflow syntax across the active GitHub Actions set.
+- Removed duplicate AURELIA assurance and duplicate Deriv lifecycle workflow paths that were generating unnecessary competing runs.
+- Retained authenticated Deriv verification as verify-only until protected credentials and release evidence exist.
+- Railway service creation was re-attempted and remains rejected because the connected account requires an active plan.
+- Current main remains fail-closed; no capital movement has been authorized or performed.
+
 
 ## CI hardening completed
 
@@ -98,4 +107,4 @@ Two explicit GitHub Actions workflows are now present on `main`:
 - `.github/workflows/assurance.yml`: assurance tests, runtime tests, container health smoke test, and capital-protection assertions.
 - `.github/workflows/deriv-auth-evidence.yml`: scheduled/manual authenticated Deriv verification only; it explicitly asserts zero orders and no capital authority.
 
-The workflows do not alter `LIVE_LOCK` and do not submit orders. The connected GitHub workflow-run API currently reports no run for the latest workflow commit, so CI execution is not represented as PASS until GitHub supplies actual run evidence.
+The workflows do not alter `LIVE_LOCK` and do not submit orders. Current workflow runs are visible in GitHub Actions for the latest commits; their queued/pending state is not treated as PASS until completed. A canonical verify-only Deriv lifecycle path now exists, while redundant workflow duplication has been removed.
