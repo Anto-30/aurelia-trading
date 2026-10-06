@@ -173,6 +173,7 @@ class DerivAdapter:
             raise DerivProtocolError("CIRCUIT_BREAKER_OPEN")
 
         tracked = self.ledger.create_request(request_type, dict(payload))
+        self.transport.reserve_request_id(tracked.req_id)
         payload_with_id = {**payload, "req_id": tracked.req_id}
         try:
             reply = await self.transport.request(payload_with_id)
