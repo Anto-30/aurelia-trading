@@ -28,7 +28,26 @@ jobs:
       - name: Validate OCI deployment script syntax
         run: bash -n scripts/oci/bootstrap_and_deploy.sh
       - name: Run research-plane tests
-        run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
+        id: research_tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -s research/labs/tests -p 'test_*.py' -v 2>&1 | tee /tmp/aurelia-research-plane-tests.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload research-plane test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-research-plane-test-diagnostics-${{ github.run_id }}
+          path: /tmp/aurelia-research-plane-tests.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Enforce research-plane test result
+        if: steps.research_tests.outcome == 'failure'
+        run: exit 1
       - name: Run assurance tests
         run: python -m unittest discover -s assurance -p 'test_*.py' -v
       - name: Run runtime tests
