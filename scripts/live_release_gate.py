@@ -6,6 +6,8 @@ import os
 import sys
 from pathlib import Path
 
+from runtime.core.secrets import get_optional_secret
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -69,7 +71,7 @@ def _assert_env(name: str) -> str:
 
 
 def check_environment() -> None:
-    if not (os.getenv("DERIV_AUTH_TOKEN", "").strip() or os.getenv("DERIV_PAT", "").strip()):
+    if not (get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")):
         raise RuntimeError("missing required env var: DERIV_AUTH_TOKEN (or DERIV_PAT)")
     if not (os.getenv("DERIV_EXPECTED_LOGINID", "").strip() or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()):
         raise RuntimeError("missing required env var: DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID)")
@@ -82,7 +84,7 @@ def check_environment() -> None:
 
     if (
         os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() == "pat"
-        and not os.getenv("DERIV_APP_ID")
+        and not get_optional_secret("DERIV_APP_ID")
     ):
         raise RuntimeError("DERIV_APP_ID required when DERIV_AUTH_MODE=pat")
 
