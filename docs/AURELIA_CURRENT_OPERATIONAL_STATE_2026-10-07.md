@@ -4,7 +4,7 @@
 
 - Repository: `Anto-30/aurelia-trading`
 - Canonical branch: `main`
-- Latest observed main tip: `1301e451bd6a1aefa0b450d6b05fa2273cc2e090`
+- Latest observed main tip: `337bfb022a1b46a814a306f417c4df3c3ee591d9`
 - Live-release control: `config/LIVE_LOCK.yaml`
 - Intelligence routing: `config/intelligence_source_routing.json`
 - Intelligence routing assurance: `assurance/test_intelligence_source_routing.py`
