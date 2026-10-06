@@ -4,30 +4,28 @@
 
 - Repository: `Anto-30/aurelia-trading`
 - Canonical branch: `main`
-- Latest observed tip: `99a9a0da48ed2dde61260e68c4481a985e83f369`
+- Latest observed main tip: `f35ad10ed0be01fcf6aed273bb507201e387cd7e`
 - Live-release control: `config/LIVE_LOCK.yaml`
 - Intelligence routing: `config/intelligence_source_routing.json`
 - Intelligence routing assurance: `assurance/test_intelligence_source_routing.py`
 
-## Engineering changes observed
+## Latest engineering changes
 
-The latest repository work continues the prospective R100 research hardening and adds a bounded intelligence-source routing contract.
+The latest main-branch work strengthens the existing research and release boundary rather than creating a second trading engine.
 
-The R100 work now:
-- prevents a prospective campaign from sealing while unresolved pending observations remain;
-- stops new candidate emission after campaign end while allowing pending observations to settle;
-- rolls a sealed campaign into a new research state;
-- preserves immutable campaign/source provenance;
-- requires measurable probability reliability rather than treating sample size alone as calibration;
-- rejects out-of-policy confidence rather than clipping it.
+Recent changes include:
+- R100 economics qualification now requires quoted execution economics and the precedence bug in that gate has been corrected.
+- Prospective R100 campaigns now close/roll safely, settle pending observations, and preserve immutable source provenance.
+- Probability reliability is required for qualification; sample size alone is insufficient.
+- Out-of-policy confidence is rejected rather than clipped.
+- External intelligence is routed through bounded specialist roles and cannot acquire capital authority.
+- An authenticated Deriv verify-only lifecycle evidence job has been added to the existing workflow architecture.
 
-The intelligence routing layer maps GitHub, CodeRabbit, Next Stock Outlook, The Fly Market Intelligence, Sixtyfour Intelligence, Code Tytor: Python, Notion, and Outlook/Email to specialist research/engineering roles. The routing registry explicitly denies capital authority, live-order authority, production deployment authority, secret access, and external-code execution by default.
+## CI / assurance evidence
 
-## Assurance
+The latest commit has no status checks attached according to the connected GitHub status API. The connected GitHub workflow-run lookup for the latest commit returned no workflow runs. This is not treated as a CI pass.
 
-A dedicated regression contract exists for the routing layer. Code Tytor expert review reported zero issues in the test implementation.
-
-The current GitHub connector reports no status checks attached to the latest documentation commit. This is not treated as a CI pass. Local direct network execution against GitHub was unavailable in the Python sandbox, so no unsupported local CI result is claimed.
+The repository's engineering claims therefore remain separated from fresh execution evidence. No unsupported test, soak, broker, or deployment result is being promoted to PASS.
 
 ## Capital safety
 
@@ -38,23 +36,41 @@ The current GitHub connector reports no status checks attached to the latest doc
 - `LIVE_EXECUTION: BLOCKED`
 - `capital_plane_mode: VERIFY_ONLY`
 
-No research/intelligence source has capital authority.
+No research/intelligence source has capital authority. Live orders remain zero.
 
-## Production blockers still outstanding
+## Fresh external infrastructure check
 
-The previously verified blockers remain material unless fresh evidence proves otherwise:
+The existing Railway project `AURELIA-Production-Worker` exists with a production environment, but it currently has zero services and zero deployments.
+
+A fresh deployment attempt against:
+- project: `AURELIA-Production-Worker`
+- environment: `production`
+- repository: `Anto-30/aurelia-trading`
+- branch: `main`
+- intended service: `aurelia-production-worker`
+
+was rejected by Railway with: `Your trial has expired. Please select a plan to continue using Railway.`
+
+Therefore:
+- no substitute worker was created;
+- no deployment success is claimed;
+- no production secrets were modified;
+- the existing capital-protection state is unchanged.
+
+## Remaining mandatory blockers
 
 1. Railway production worker/plan availability.
-2. Authenticated Deriv runtime session using protected credentials.
-3. Broker-confirmed end-to-end transaction/fill lifecycle.
-4. Post-transaction ledger/reconciliation evidence.
-5. Production-worker 3,600-second soak.
+2. Protected authenticated Deriv runtime session.
+3. Broker-confirmed end-to-end transaction/fill lifecycle, performed only through the existing capital plane after its own release gate authorizes it.
+4. Post-transaction ledger and reconciliation evidence.
+5. Production-worker 3,600-second soak and restart/recovery evidence.
 6. Prospective multi-day OOS qualification.
-7. Probability calibration/drift qualification.
-8. Net execution-cost/economics qualification, including at least 100 matched quoted-contract observations with positive mean net return before the research campaign can report `RESEARCH_QUALIFIED`.
-9. Final evidence-backed release-gate decision.
+7. Probability calibration and drift qualification.
+8. Net execution-cost/economics qualification, including the required quoted-contract sample and positive net-return criterion.
+9. Fresh CI/assurance execution evidence on the current main tip.
+10. Final evidence-backed release-gate decision.
 
-Passing engineering tests or receiving a research recommendation does not satisfy these gates.
+Passing repository tests, research recommendations, or authenticated session checks alone do not satisfy these gates.
 
 ## Intelligence-source authority contract
 
@@ -62,7 +78,7 @@ All external intelligence follows:
 
 `source -> specialist agent -> normalized evidence -> provenance/confidence -> deterministic validation -> existing release gate`
 
-The capital plane remains sovereign. External agents, plugins, MCP sources, emails, stock-pick feeds, market-news feeds, and research repositories cannot directly authorize or submit capital-moving actions.
+GitHub, CodeRabbit, Next Stock Outlook, The Fly Market Intelligence, Sixtyfour Intelligence, Code Tytor: Python, Notion, Outlook/Email, external repositories, plugins, and MCP sources remain non-authoritative. They cannot authorize capital, mutate `LIVE_LOCK`, read production secrets, submit broker transactions, or override deterministic validation.
 
 ## Current decision
 
