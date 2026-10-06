@@ -14,6 +14,10 @@ concurrency:
 
 jobs:
   deploy:
+    # Railway credential may be stored as a production environment secret.
+    environment:
+      name: production
+      deployment: false
     runs-on: ubuntu-latest
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
