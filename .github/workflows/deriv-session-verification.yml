@@ -17,6 +17,10 @@ permissions:
 
 jobs:
   verify:
+    # Credentials may be stored as production environment-scoped Actions secrets.
+    environment:
+      name: production
+      deployment: false
     runs-on: ubuntu-latest
     env:
       DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
