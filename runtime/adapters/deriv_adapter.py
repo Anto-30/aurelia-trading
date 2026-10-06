@@ -187,10 +187,6 @@ class DerivAdapter:
                 self.ledger.confirm(response_req_id, reply)
                 self.circuit.record_success()
             return reply
-        except DerivProtocolError:
-            if tracked.req_id in {item.req_id for item in self.ledger.pending_requests}:
-                tracked.state = RequestState.TIMEOUT
-            raise
         except Exception as exc:
             tracked.state = RequestState.TIMEOUT
             self.circuit.record_failure()
