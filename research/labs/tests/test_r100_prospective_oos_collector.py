@@ -11,6 +11,7 @@ from research.r100_prospective_oos_collector import (
     initial_state,
     probability_metrics,
     quoted_contract_economics,
+    evaluation,
     save_state,
     load_state,
 )
@@ -81,6 +82,32 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertAlmostEqual(economics["win_rate"], 0.5)
         self.assertAlmostEqual(economics["mean_net_return_per_stake"], -0.025)
         self.assertAlmostEqual(economics["break_even_probability"], 1 / 1.95)
+
+    def test_oos_uses_direction_adjusted_strategy_return(self):
+        state = initial_state()
+        start = state["manifest"]["oos_start_at_utc"]
+        state["observations"] = [
+            {
+                "signal_id": "call",
+                "direction": "CALL",
+                "raw_return": 0.01,
+                "outcome": 1,
+                "probability": 0.60,
+                "signal_timestamp_utc": start,
+            },
+            {
+                "signal_id": "put",
+                "direction": "PUT",
+                "raw_return": 0.01,
+                "outcome": 0,
+                "probability": 0.60,
+                "signal_timestamp_utc": start,
+            },
+        ]
+        report = evaluation(state)
+        self.assertAlmostEqual(report["oos_mean_market_return"], 0.01)
+        self.assertAlmostEqual(report["oos_mean_strategy_return"], 0.0)
+        self.assertEqual(report["qualification_status"], "INSUFFICIENT_SAMPLE")
 
     def test_horizon_is_positive(self):
         self.assertGreater(HORIZON_TICKS, 0)
