@@ -99,8 +99,12 @@ class DerivWebSocketTransport:
                 future.set_exception(exc)
         self._pending.clear()
 
+    def allocate_request_id(self) -> int:
+        """Allocate the next transport-wide request id synchronously."""
+        return self._next_request_id()
+
     def reserve_request_id(self, request_id: int) -> None:
-        """Reserve an externally assigned request id before any await point."""
+        """Advance the request-id high-water mark for external callers."""
         if not isinstance(request_id, int) or request_id <= 0:
             raise ValueError("REQUEST_ID_MUST_BE_POSITIVE_INTEGER")
         self._request_id = max(self._request_id, request_id)
