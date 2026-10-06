@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 from math import isfinite
 from pathlib import Path
 
+from runtime.core.secrets import get_optional_secret
+
 from assurance.evidence_writer import build_evidence, payload_sha256, write_evidence
 from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.adapters.session_manager import DerivSessionManager
@@ -50,7 +52,7 @@ async def run() -> int:
     ):
         return fail("LIVE_RELEASE_GATE_NOT_ENABLED")
 
-    token = os.getenv("DERIV_AUTH_TOKEN") or os.getenv("DERIV_PAT", "")
+    token = get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")
     expected_loginid = os.getenv("DERIV_EXPECTED_LOGINID") or os.getenv(
         "DERIV_AUTHORIZED_ACCOUNT_ID", ""
     )
@@ -74,7 +76,7 @@ async def run() -> int:
         )
         bootstrap = manager.bootstrap(
             bearer_token=token,
-            app_id=os.getenv("DERIV_APP_ID") or None,
+            app_id=get_optional_secret("DERIV_APP_ID") or None,
         )
         adapter = DerivAdapter(
             ws_url=bootstrap.websocket.url,
