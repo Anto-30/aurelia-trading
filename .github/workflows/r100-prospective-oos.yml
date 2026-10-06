@@ -1,0 +1,94 @@
+name: AURELIA R100 Prospective OOS Research
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: aurelia-r100-prospective-oos
+  cancel-in-progress: false
+
+jobs:
+  collect-and-evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: \${{ github.token }}
+      AURELIA_R100_COLLECTION_SECONDS: "540"
+      AURELIA_R100_HORIZON_TICKS: "10"
+      AURELIA_R100_STATE_PATH: ".research_state/aurelia_r100_state.json"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+      - name: Run prospective collector tests
+        run: python -m unittest research/labs/tests/test_r100_prospective_oos_collector.py -v
+      - name: Recover latest prospective archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .research_state/previous
+          artifact_id="$(
+            gh api "/repos/\${GITHUB_REPOSITORY}/actions/artifacts?name=aurelia-r100-prospective-oos&per_page=100" \
+              --jq '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | last.id // empty'
+          )"
+          if [ -z "$artifact_id" ]; then
+            echo "No prior prospective archive found; starting fresh campaign."
+            exit 0
+          fi
+          gh api "/repos/\${GITHUB_REPOSITORY}/actions/artifacts/\${artifact_id}/zip" \
+            > .research_state/previous/archive.zip
+          unzip -oq .research_state/previous/archive.zip -d .research_state/previous/extracted
+          state_file="$(find .research_state/previous/extracted -name aurelia_r100_state.json -type f | head -n 1)"
+          if [ -z "$state_file" ]; then
+            echo "Prior archive did not contain aurelia_r100_state.json" >&2
+            exit 1
+          fi
+          mkdir -p "$(dirname "\${AURELIA_R100_STATE_PATH}")"
+          cp "$state_file" "\${AURELIA_R100_STATE_PATH}"
+          echo "Recovered prospective archive artifact \${artifact_id}."
+      - name: Collect real public Deriv R100 observations
+        run: python -m research.r100_prospective_oos_collector
+      - name: Verify research-only semantics
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          state = json.loads(Path(".research_state/aurelia_r100_state.json").read_text())
+          report = json.loads(Path(".research_state/aurelia_r100_report.json").read_text())
+          assert state["manifest"]["strategy_version"] == "0.2.0"
+          assert report["execution_authorized"] is False
+          assert report["capital_authority"] is False
+          assert report["live_execution"] is False
+          assert report["strategy_live_eligible"] is False
+          assert report["execution_economics"]["status"] == "UNDETERMINED_PRODUCTION"
+          assert all(0.55 <= float(row["probability"]) <= 0.75 for row in state["observations"])
+          assert all(row.get("quote_status") in {"OBSERVED", "UNAVAILABLE"} for row in state["quote_observations"])
+          print(
+              "R100_RESEARCH_SEMANTICS=PASS",
+              "observations=", report["observations_total"],
+              "oos=", report["oos_observations"],
+              "qualification=", report["qualification_status"],
+          )
+          PY
+      - name: Upload prospective research archive
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-r100-prospective-oos
+          path: |
+            .research_state/aurelia_r100_state.json
+            .research_state/aurelia_r100_report.json
+          if-no-files-found: error
+          retention-days: 30
