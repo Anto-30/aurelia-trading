@@ -437,12 +437,12 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         qualification_status = "INSUFFICIENT_SAMPLE"
     elif mean_strategy_oos is None or mean_strategy_oos <= 0:
         qualification_status = "OOS_FAILED"
-    elif calibration["calibration_status"] != "VALIDATED_RESEARCH":
-        qualification_status = "CALIBRATION_INCOMPLETE"
     elif quoted_economics["sample_count"] < 100:
         qualification_status = "ECONOMICS_INCOMPLETE"
     elif quoted_economics["mean_net_return_per_stake"] is None or quoted_economics["mean_net_return_per_stake"] <= 0:
         qualification_status = "ECONOMICS_FAILED"
+    elif calibration["calibration_status"] != "VALIDATED_RESEARCH":
+        qualification_status = "CALIBRATION_INCOMPLETE"
     else:
         qualification_status = "RESEARCH_QUALIFIED"
 
