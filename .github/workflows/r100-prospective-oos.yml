@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      GH_TOKEN: \${{ github.token }}
+      GH_TOKEN: ${{ github.token }}
       AURELIA_R100_COLLECTION_SECONDS: "540"
       AURELIA_R100_HORIZON_TICKS: "10"
       AURELIA_R100_STATE_PATH: ".research_state/aurelia_r100_state.json"
@@ -39,14 +39,14 @@ jobs:
           set -euo pipefail
           mkdir -p .research_state/previous
           artifact_id="$(
-            gh api "/repos/\${GITHUB_REPOSITORY}/actions/artifacts?name=aurelia-r100-prospective-oos&per_page=100" \
+            gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts?name=aurelia-r100-prospective-oos&per_page=100" \
               --jq '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | last.id // empty'
           )"
           if [ -z "$artifact_id" ]; then
             echo "No prior prospective archive found; starting fresh campaign."
             exit 0
           fi
-          gh api "/repos/\${GITHUB_REPOSITORY}/actions/artifacts/\${artifact_id}/zip" \
+          gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}/zip" \
             > .research_state/previous/archive.zip
           unzip -oq .research_state/previous/archive.zip -d .research_state/previous/extracted
           state_file="$(find .research_state/previous/extracted -name aurelia_r100_state.json -type f | head -n 1)"
@@ -54,9 +54,9 @@ jobs:
             echo "Prior archive did not contain aurelia_r100_state.json" >&2
             exit 1
           fi
-          mkdir -p "$(dirname "\${AURELIA_R100_STATE_PATH}")"
-          cp "$state_file" "\${AURELIA_R100_STATE_PATH}"
-          echo "Recovered prospective archive artifact \${artifact_id}."
+          mkdir -p "$(dirname "${AURELIA_R100_STATE_PATH}")"
+          cp "$state_file" "${AURELIA_R100_STATE_PATH}"
+          echo "Recovered prospective archive artifact ${artifact_id}."
       - name: Collect real public Deriv R100 observations
         run: python -m research.r100_prospective_oos_collector
       - name: Verify research-only semantics
