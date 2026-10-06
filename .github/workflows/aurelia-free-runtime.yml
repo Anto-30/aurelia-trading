@@ -33,7 +33,7 @@ jobs:
       - name: Install runtime
         run: pip install -r requirements.txt
       - name: Run free public-market runtime probe
-        run: python -m runtime.main
+        run: python scripts/verify_deriv_public_transport.py
       - name: Run runtime tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
       - name: Run assurance tests
