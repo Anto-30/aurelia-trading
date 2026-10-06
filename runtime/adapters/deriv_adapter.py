@@ -8,6 +8,7 @@ from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_
 from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
 from runtime.core.circuit import CircuitBreaker
 from runtime.core.events import sha256
+from runtime.core.request_ledger import RequestLedger, RequestState
 from runtime.core.models import (
     AccountIdentity,
     BrokerOutcome,
@@ -50,7 +51,12 @@ class DerivAdapter:
         self.transport: DerivWebSocketTransport | None = None
         self.authorized = False
         self.account: AccountIdentity | None = None
-        self.circuit = CircuitBreaker()
+        self.circuit = CircuitBreaker(
+            failure_threshold=5,
+            recovery_timeout_seconds=60.0,
+            half_open_max_requests=1,
+        )
+        self.ledger = RequestLedger(max_pending_age_seconds=30.0)
         self._subscription_keys: set[str] = set()
 
     def _validate_environment_url(self, url: str) -> None:
@@ -74,10 +80,10 @@ class DerivAdapter:
             await self.transport.connect()
 
             if self.auth_token:
-                reply = await self.transport.request({"authorize": self.auth_token})
+                reply = await self._tracked_request("authorize", {"authorize": self.auth_token})
                 identity_payload = reply.get("authorize") or {}
             else:
-                reply = await self.transport.request({"balance": 1})
+                reply = await self._tracked_request("balance", {"balance": 1})
                 identity_payload = reply.get("balance") or {}
 
             loginid = str(
@@ -133,12 +139,14 @@ class DerivAdapter:
             PUBLIC_WS_URL,
             timeout_seconds=self.timeout_seconds,
         )
-        await transport.connect()
+        previous_transport = self.transport
+        self.transport = transport
         try:
-            reply = await transport.request({"active_symbols": "brief"})
+            reply = await self._tracked_request("active_symbols", {"active_symbols": "brief"})
             return len(reply.get("active_symbols") or [])
         finally:
             await transport.close()
+            self.transport = previous_transport
 
     async def reconnect(self, fresh_ws_url: str | None = None) -> None:
         if self.transport is None:
@@ -156,14 +164,42 @@ class DerivAdapter:
             await self.close()
             raise
 
-    async def request(self, payload: dict[str, Any]) -> dict[str, Any]:
+    async def _tracked_request(self, request_type: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Send a Deriv API request with correlation and circuit enforcement."""
         if self.transport is None:
             raise DerivProtocolError("BROKER_SESSION_NOT_CONNECTED")
+        if not self.circuit.allow_request():
+            raise DerivProtocolError("CIRCUIT_BREAKER_OPEN")
+
+        tracked = self.ledger.create_request(request_type, dict(payload))
+        payload_with_id = {**payload, "req_id": tracked.req_id}
         try:
-            return await self.transport.request(payload)
-        except DerivTransportError as exc:
+            reply = await self.transport.request(payload_with_id)
+            response_req_id = reply.get("req_id", tracked.req_id)
+            if response_req_id != tracked.req_id:
+                tracked.state = RequestState.TIMEOUT
+                self.circuit.record_failure()
+                raise DerivProtocolError("REQUEST_ID_MISMATCH")
+            if "error" in reply:
+                self.ledger.reject(response_req_id, reply)
+                self.circuit.record_failure()
+            else:
+                self.ledger.confirm(response_req_id, reply)
+                self.circuit.record_success()
+            return reply
+        except DerivProtocolError:
+            if tracked.req_id in {item.req_id for item in self.ledger.pending_requests}:
+                tracked.state = RequestState.TIMEOUT
+            raise
+        except Exception as exc:
+            tracked.state = RequestState.TIMEOUT
             self.circuit.record_failure()
-            raise DerivProtocolError(str(exc)) from exc
+            if isinstance(exc, DerivTransportError):
+                raise DerivProtocolError(str(exc)) from exc
+            raise
+
+    async def request(self, payload: dict[str, Any]) -> dict[str, Any]:
+        return await self._tracked_request("request", payload)
 
     async def get_balance(self) -> CapitalSnapshot:
         if not self.account:
@@ -269,8 +305,6 @@ class DerivAdapter:
     async def submit_authorized_order(self, payload: dict[str, Any]) -> BrokerResult:
         if not self.authorized:
             raise DerivProtocolError("BROKER_SESSION_NOT_AUTHORIZED")
-        if not self.circuit.permit_new_submission():
-            raise DerivProtocolError("BROKER_CIRCUIT_OPEN")
         proposal_id = payload.get("proposal_id")
         if not proposal_id:
             raise DerivProtocolError("ORDER_REQUIRES_BROKER_PROPOSAL_ID")
