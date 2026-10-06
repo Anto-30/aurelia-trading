@@ -45,6 +45,9 @@ permissions:
 
 jobs:
   verify-only:
+    environment:
+      name: production
+      deployment: false
     # Verify-only is intentionally branch-independent so the current canonical main can be verified.
     # Capital-moving execution remains independently blocked by LIVE_LOCK and FINAL_EXECUTION_AUTHORIZATION.
     if: ${{ github.event_name == 'workflow_dispatch' }}
