@@ -140,6 +140,7 @@ class DerivAdapter:
             PUBLIC_WS_URL,
             timeout_seconds=self.timeout_seconds,
         )
+        await transport.connect()
         previous_transport = self.transport
         self.transport = transport
         try:
@@ -172,10 +173,19 @@ class DerivAdapter:
         if not self.circuit.allow_request():
             raise DerivProtocolError("CIRCUIT_BREAKER_OPEN")
 
-        tracked = self.ledger.create_request(request_type, dict(payload))
-        reserve_request_id = getattr(self.transport, "reserve_request_id", None)
-        if callable(reserve_request_id):
-            reserve_request_id(tracked.req_id)
+        allocate_request_id = getattr(self.transport, "allocate_request_id", None)
+        if callable(allocate_request_id):
+            reserved_req_id = allocate_request_id()
+            tracked = self.ledger.create_request(
+                request_type,
+                dict(payload),
+                req_id=reserved_req_id,
+            )
+        else:
+            tracked = self.ledger.create_request(request_type, dict(payload))
+            reserve_request_id = getattr(self.transport, "reserve_request_id", None)
+            if callable(reserve_request_id):
+                reserve_request_id(tracked.req_id)
         payload_with_id = {**payload, "req_id": tracked.req_id}
         try:
             reply = await self.transport.request(payload_with_id)
