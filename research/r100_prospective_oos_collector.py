@@ -51,6 +51,38 @@ def canonical_hash(value: Any) -> str:
     payload = json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
+def current_research_code_commit() -> str:
+    return (
+        os.getenv("AURELIA_RESEARCH_CODE_COMMIT")
+        or os.getenv("GITHUB_SHA")
+        or "LOCAL_UNBOUND"
+    )
+
+def research_config_hash() -> str:
+    return canonical_hash({
+        "strategy_id": STRATEGY_ID,
+        "strategy_version": STRATEGY_VERSION,
+        "parameters": {
+            "window": 64,
+            "min_observations": 20,
+            "threshold": 1.5,
+            "cooldown_seconds": 30.0,
+            "horizon_ticks": HORIZON_TICKS,
+        },
+        "search_space": {
+            "window": [64],
+            "min_observations": [20],
+            "threshold": [1.5],
+            "cooldown_seconds": [30.0],
+            "horizon_ticks": [HORIZON_TICKS],
+        },
+        "probability_policy": {
+            "min": MIN_TRADE_PROBABILITY,
+            "max": MAX_TRADE_PROBABILITY,
+            "clipping": False,
+        },
+    })
+
 def initial_state() -> dict[str, Any]:
     started = utc_now()
     return {
@@ -62,6 +94,8 @@ def initial_state() -> dict[str, Any]:
             "dataset_policy": "public Deriv R_100 ticks collected prospectively; no historical backfill; no retuning after collection begins",
             "strategy_id": STRATEGY_ID,
             "strategy_version": STRATEGY_VERSION,
+            "code_commit": current_research_code_commit(),
+            "config_hash": research_config_hash(),
             "strategy_parameters": {
                 "window": 64,
                 "min_observations": 20,
@@ -106,6 +140,15 @@ def load_state(path: Path) -> dict[str, Any]:
         raise ValueError("R100_STRATEGY_MISMATCH")
     if manifest.get("strategy_version") != STRATEGY_VERSION:
         raise ValueError("R100_STRATEGY_VERSION_MISMATCH")
+    stored_code_commit = str(manifest.get("code_commit") or "")
+    stored_config_hash = str(manifest.get("config_hash") or "")
+    if not stored_code_commit or not stored_config_hash:
+        raise ValueError("R100_SOURCE_PROVENANCE_MISSING")
+    expected_code_commit = current_research_code_commit()
+    if expected_code_commit != "LOCAL_UNBOUND" and stored_code_commit != expected_code_commit:
+        raise ValueError("R100_SOURCE_COMMIT_MISMATCH")
+    if stored_config_hash != research_config_hash():
+        raise ValueError("R100_RESEARCH_CONFIG_MISMATCH")
     if manifest.get("sealed"):
         raise ValueError("R100_ARCHIVE_ALREADY_SEALED")
     return state
