@@ -1,8 +1,6 @@
 name: AURELIA R100 Prospective OOS Research
 
 on:
-  push:
-    branches: ["main"]
   workflow_dispatch:
   schedule:
     - cron: "0 * * * *"
@@ -57,6 +55,29 @@ jobs:
           mkdir -p "$(dirname "${AURELIA_R100_STATE_PATH}")"
           cp "$state_file" "${AURELIA_R100_STATE_PATH}"
           echo "Recovered prospective archive artifact ${artifact_id}."
+      - name: Pin prospective campaign source
+        shell: bash
+        run: |
+          set -euo pipefail
+          campaign_commit="$(python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path(".research_state/aurelia_r100_state.json")
+          if not path.exists():
+              print("")
+          else:
+              state = json.loads(path.read_text(encoding="utf-8"))
+              print(str(state.get("manifest", {}).get("code_commit", "") or ""))
+          PY
+          )"
+          if [ -n "$campaign_commit" ]; then
+            git fetch --no-tags --depth=1 origin "$campaign_commit"
+            git checkout --detach "$campaign_commit"
+          fi
+          resolved_commit="$(git rev-parse HEAD)"
+          echo "AURELIA_RESEARCH_CODE_COMMIT=$resolved_commit" >> "$GITHUB_ENV"
+          echo "R100_RESEARCH_SOURCE_COMMIT=$resolved_commit"
       - name: Collect real public Deriv R100 observations
         run: python -m research.r100_prospective_oos_collector
       - name: Verify research-only semantics

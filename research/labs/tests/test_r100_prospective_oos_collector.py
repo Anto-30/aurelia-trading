@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -18,6 +19,19 @@ from research.r100_prospective_oos_collector import (
 
 
 class R100ProspectiveCollectorTest(unittest.TestCase):
+    def test_manifest_binds_exact_source_commit(self):
+        previous = os.environ.get("AURELIA_RESEARCH_CODE_COMMIT")
+        try:
+            os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = "commit-under-test"
+            manifest = initial_state()["manifest"]
+            self.assertEqual(manifest["code_commit"], "commit-under-test")
+            self.assertTrue(manifest["config_hash"])
+        finally:
+            if previous is None:
+                os.environ.pop("AURELIA_RESEARCH_CODE_COMMIT", None)
+            else:
+                os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = previous
+
     def test_manifest_is_frozen_and_non_authorizing(self):
         state = initial_state()
         manifest = state["manifest"]
@@ -50,12 +64,38 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertFalse(0.54 >= 0.55 and 0.54 <= 0.75)
         self.assertFalse(0.76 >= 0.55 and 0.76 <= 0.75)
 
+    def test_poor_reliability_cannot_be_marked_calibrated(self):
+        rows = (
+            [{"probability": 0.55, "outcome": 1}] * 40
+            + [{"probability": 0.65, "outcome": 1}] * 30
+            + [{"probability": 0.75, "outcome": 1}] * 30
+        )
+        metrics = probability_metrics(rows)
+        self.assertGreater(metrics["max_reliability_gap"], 0.05)
+        self.assertEqual(metrics["calibration_status"], "PROVISIONAL")
     def test_signal_id_is_deterministic(self):
         timestamp = "2026-10-06T20:00:00Z"
         self.assertEqual(
             build_signal_id(timestamp, 100.0, "CALL"),
             build_signal_id(timestamp, 100.0, "CALL"),
         )
+
+    def test_loaded_campaign_rejects_source_commit_drift(self):
+        previous = os.environ.get("AURELIA_RESEARCH_CODE_COMMIT")
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "state.json"
+                state = initial_state()
+                state["manifest"]["code_commit"] = "commit-A"
+                save_state(path, state)
+                os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = "commit-B"
+                with self.assertRaisesRegex(ValueError, "R100_SOURCE_COMMIT_MISMATCH"):
+                    load_state(path)
+        finally:
+            if previous is None:
+                os.environ.pop("AURELIA_RESEARCH_CODE_COMMIT", None)
+            else:
+                os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = previous
 
     def test_state_round_trip_and_schema(self):
         with tempfile.TemporaryDirectory() as tmp:
