@@ -7,6 +7,8 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from runtime.core.secrets import get_optional_secret
+
 from assurance.evidence_writer import build_evidence, payload_sha256, write_evidence
 from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.adapters.session_manager import DerivSessionManager, DerivSessionManagerError
@@ -23,8 +25,8 @@ async def run() -> int:
     started = datetime.now(timezone.utc)
     # Accept the canonical AURELIA names plus the operator-facing aliases
     # used by the protected deployment environment. Values are never logged.
-    token = os.getenv("DERIV_AUTH_TOKEN") or os.getenv("DERIV_PAT", "")
-    app_id = os.getenv("DERIV_APP_ID", "")
+    token = get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")
+    app_id = get_optional_secret("DERIV_APP_ID")
     expected_loginid = os.getenv("DERIV_EXPECTED_LOGINID") or os.getenv(
         "DERIV_AUTHORIZED_ACCOUNT_ID", ""
     )
