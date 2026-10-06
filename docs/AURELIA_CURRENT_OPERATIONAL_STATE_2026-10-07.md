@@ -51,7 +51,7 @@ The previously verified blockers remain material unless fresh evidence proves ot
 5. Production-worker 3,600-second soak.
 6. Prospective multi-day OOS qualification.
 7. Probability calibration/drift qualification.
-8. Net execution-cost/economics qualification.
+8. Net execution-cost/economics qualification, including at least 100 matched quoted-contract observations with positive mean net return before the research campaign can report `RESEARCH_QUALIFIED`.
 9. Final evidence-backed release-gate decision.
 
 Passing engineering tests or receiving a research recommendation does not satisfy these gates.
