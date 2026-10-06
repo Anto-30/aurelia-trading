@@ -32,6 +32,19 @@ class AutonomousSignalHunterTests(unittest.TestCase):
         self.assertFalse(payload["order_submission_permitted"])
         self.assertTrue(payload["research_only"])
 
+    def test_out_of_policy_confidence_is_rejected_not_clipped(self):
+        hunter = AutonomousSignalHunter(min_observations=20, threshold=0.1, cooldown_seconds=0)
+        now = datetime.now(timezone.utc)
+        candidate = None
+        for i in range(19):
+            candidate = hunter.observe(
+                symbol="R_100", quote=100.0, received_at=now + timedelta(seconds=i)
+            ) or candidate
+        candidate = hunter.observe(
+            symbol="R_100", quote=110.0, received_at=now + timedelta(seconds=19)
+        )
+        self.assertIsNone(candidate)
+
     def test_invalid_tick_is_rejected(self):
         hunter = AutonomousSignalHunter()
         self.assertIsNone(hunter.observe(symbol="", quote=100.0))
