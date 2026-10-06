@@ -51,6 +51,27 @@ def canonical_hash(value: Any) -> str:
     payload = json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
+def research_code_commit() -> str:
+    value = os.getenv("AURELIA_RESEARCH_CODE_COMMIT", "").strip()
+    if not value:
+        raise ValueError("R100_SOURCE_COMMIT_UNAVAILABLE")
+    return value
+
+def research_config_hash() -> str:
+    return canonical_hash({
+        "strategy_id": STRATEGY_ID,
+        "strategy_version": STRATEGY_VERSION,
+        "window": 64,
+        "min_observations": 20,
+        "threshold": 1.5,
+        "cooldown_seconds": 30.0,
+        "horizon_ticks": HORIZON_TICKS,
+        "probability_min": MIN_TRADE_PROBABILITY,
+        "probability_max": MAX_TRADE_PROBABILITY,
+        "probability_clipping": False,
+        "collection_seconds": COLLECTION_SECONDS,
+    })
+
 def initial_state() -> dict[str, Any]:
     started = utc_now()
     return {
@@ -81,6 +102,11 @@ def initial_state() -> dict[str, Any]:
             "oos_reuse_count": 0,
             "selection_rule": "single predeclared frozen strategy; no OOS retuning",
             "regime_policy": "single predeclared ALL_MARKET cell; no data-mined regime segmentation in this campaign",
+            "model_version": STRATEGY_VERSION,
+            "code_commit": research_code_commit(),
+            "config_hash": research_config_hash(),
+            "random_seeds": [],
+            "data_windows": [],
             "started_at_utc": iso(started),
             "oos_start_at_utc": iso(started + timedelta(hours=24)),
             "campaign_end_at_utc": iso(started + timedelta(days=7)),
@@ -108,6 +134,33 @@ def load_state(path: Path) -> dict[str, Any]:
         raise ValueError("R100_STRATEGY_VERSION_MISMATCH")
     if manifest.get("sealed"):
         raise ValueError("R100_ARCHIVE_ALREADY_SEALED")
+
+    current_commit = research_code_commit()
+    bound_commit = str(manifest.get("code_commit") or "")
+    if not bound_commit:
+        oos_start = datetime.fromisoformat(
+            manifest["oos_start_at_utc"].replace("Z", "+00:00")
+        )
+        has_oos = any(
+            datetime.fromisoformat(
+                row["signal_timestamp_utc"].replace("Z", "+00:00")
+            ) >= oos_start
+            for row in state.get("observations", [])
+        )
+        if has_oos:
+            raise ValueError("R100_LEGACY_ARCHIVE_MISSING_SOURCE_COMMIT")
+        manifest["code_commit"] = current_commit
+        manifest["config_hash"] = manifest.get("config_hash") or research_config_hash()
+        manifest["model_version"] = manifest.get("model_version") or STRATEGY_VERSION
+        manifest["random_seeds"] = manifest.get("random_seeds") or []
+        manifest["provenance_migration"] = "LEGACY_PRE_OOS_BOUND_CURRENT_SOURCE"
+    elif bound_commit != current_commit:
+        raise ValueError("R100_SOURCE_COMMIT_MISMATCH")
+
+    expected_config_hash = research_config_hash()
+    if manifest.get("config_hash") and manifest["config_hash"] != expected_config_hash:
+        raise ValueError("R100_CONFIG_HASH_MISMATCH")
+    manifest["config_hash"] = expected_config_hash
     return state
 
 def save_state(path: Path, state: dict[str, Any]) -> None:
