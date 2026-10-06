@@ -195,6 +195,7 @@ def observe_tick(
     state: dict[str, Any],
     quote: float,
     received_at: datetime,
+    emit_candidate: bool = True,
 ) -> None:
     pending = state["pending"]
     settled: list[dict[str, Any]] = []
@@ -233,6 +234,9 @@ def observe_tick(
         pending.remove(item)
 
     state["observations"].extend(settled)
+    if not emit_candidate:
+        state["last_price"] = float(quote)
+        return
 
     candidate = hunter.observe(
         symbol=SYMBOL,
@@ -438,8 +442,11 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
     else:
         qualification_status = "RESEARCH_QUALIFIED"
 
-    campaign_complete = utc_now() >= datetime.fromisoformat(
-        manifest["campaign_end_at_utc"].replace("Z", "+00:00")
+    campaign_complete = (
+        utc_now() >= datetime.fromisoformat(
+            manifest["campaign_end_at_utc"].replace("Z", "+00:00")
+        )
+        and not state["pending"]
     )
     state["manifest"]["sealed"] = bool(campaign_complete)
     archive_hash = canonical_hash({
@@ -489,6 +496,9 @@ async def collect_once(state: dict[str, Any]) -> None:
     state["last_run_started_at_utc"] = iso(start)
 
     transport = DerivWebSocketTransport(PUBLIC_WS_URL, timeout_seconds=10.0)
+    campaign_end = datetime.fromisoformat(
+        state["manifest"]["campaign_end_at_utc"].replace("Z", "+00:00")
+    )
     hunter = AutonomousSignalHunter(
         window=64,
         min_observations=20,
@@ -519,6 +529,7 @@ async def collect_once(state: dict[str, Any]) -> None:
                 state=state,
                 quote=quote,
                 received_at=received_at,
+                emit_candidate=received_at < campaign_end,
             )
             if len(state["pending"]) > prior_pending:
                 new_signal = state["pending"][-1]
