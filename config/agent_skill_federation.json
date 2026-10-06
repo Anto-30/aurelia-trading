@@ -263,6 +263,37 @@
         "iteration-orchestration"
       ],
       "capital_authority": false
+    },
+    {
+      "name": "atomic-agents",
+      "owner": "Eigenwise",
+      "repo": "Eigenwise/atomic-agents",
+      "pinned_commit": "d2b61b90b2816dbdf9f42f8638b7d375bf08cd11",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "typed-agent-schemas",
+        "atomic-agent-construction",
+        "atomic-tool-construction",
+        "context-providers",
+        "agent-chaining",
+        "MCP-tools",
+        "agent-hooks"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "alans-way-agents",
+      "owner": "capthvnsen",
+      "repo": "capthvnsen/alans-way-agents",
+      "pinned_commit": "9e2b928241364fb23becea0419d9eb0db2e97fb6",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "bounded-proactivity",
+        "workspace-operations",
+        "agent-self-review",
+        "Hermes-plugin-patterns"
+      ],
+      "capital_authority": false
     }
   ]
 }
