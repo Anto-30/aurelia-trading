@@ -72,6 +72,23 @@ jobs:
           echo "R100_ARTIFACT_IMPORT=SUCCESS"
           echo "R100_ARTIFACT_ID=${artifact_id}"
 
+          soak_json="$(
+            gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts?name=aurelia-non-production-3600s-soak-evidence&per_page=100" |
+              jq -c '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | reverse | map(select(.workflow_run.head_branch == "main")) | .[0] // empty'
+          )"
+          if [ -n "$soak_json" ] && [ "$soak_json" != "null" ]; then
+            soak_id="$(jq -r '.id' <<<"$soak_json")"
+            gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${soak_id}/zip" > /tmp/r100-artifact/soak.zip
+            unzip -oq /tmp/r100-artifact/soak.zip -d /tmp/r100-artifact/soak
+            if [ -f /tmp/r100-artifact/soak/evidence/soak_3600s.json ]; then
+              cp /tmp/r100-artifact/soak/evidence/soak_3600s.json evidence/soak_3600s.json
+            fi
+            echo "SOAK_ARTIFACT_IMPORT=SUCCESS"
+            echo "SOAK_ARTIFACT_ID=${soak_id}"
+          else
+            echo "SOAK_ARTIFACT_IMPORT=NONE_AVAILABLE"
+          fi
+
       - name: Generate current closure report
         run: |
           set +e
