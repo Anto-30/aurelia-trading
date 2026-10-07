@@ -64,6 +64,13 @@ jobs:
           echo "SOURCE_COMMIT=$GITHUB_SHA"
           echo "DEPLOYMENT_MODE=$DEPLOYMENT_MODE"
 
+      - name: Require deterministic live release gate for LIVE deployment
+        if: inputs.deployment_mode == 'LIVE'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/live_release_gate.py
+
       - name: Require green AURELIA Assurance for the exact commit
         env:
           GH_TOKEN: ${{ github.token }}
