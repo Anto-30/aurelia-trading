@@ -90,6 +90,7 @@ jobs:
           set -euo pipefail
 
           start_epoch="$(date +%s)"
+          start_utc="$(date -u --iso-8601=seconds)"
           end_epoch=$((start_epoch + SOAK_SECONDS))
           checks=0
           restarts=0
@@ -176,6 +177,10 @@ jobs:
           test "$duration" -ge 3600
           test "$failures" -eq 0
 
+      - name: Promote verified soak certification evidence
+        if: success()
+        run: python scripts/promote_soak_certification_evidence.py
+
       - name: Assert capital protection
         if: always()
         run: |
@@ -199,6 +204,7 @@ jobs:
           name: aurelia-non-production-3600s-soak-evidence
           path: |
             aurelia-3600s-soak-evidence.json
+            evidence/soak_3600s.json
             aurelia-runtime.log
             aurelia-runtime-inspect.json
             /tmp/aurelia-source-identity.env
