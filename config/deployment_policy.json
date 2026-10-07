@@ -15,7 +15,10 @@
   "capital_authority": "LIVE_LOCK_only",
   "auto_live_enable": false,
   "default_deployment_mode": "VERIFY_ONLY",
-  "accepted_deployment_modes": ["VERIFY_ONLY", "LIVE"],
+  "accepted_deployment_modes": [
+    "VERIFY_ONLY",
+    "LIVE"
+  ],
   "allowed_host_classes": [
     "user_controlled_linux_host",
     "dedicated_linux_vm",
@@ -28,5 +31,11 @@
     "public_health_port": false,
     "deriv_credentials_in_git": false,
     "deriv_credentials_in_ci_artifacts": false
+  },
+  "health_watchdog": {
+    "enabled": true,
+    "mechanism": "systemd_service",
+    "interval_seconds": 30,
+    "recovery_action": "restart_container_on_health_failure"
   }
 }
