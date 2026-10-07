@@ -33,6 +33,13 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("http://127.0.0.1:8080/health", source)
         self.assertIn("DEPLOYED_SOURCE_SHA", source)
 
+    def test_assurance_uses_generic_deployment_script(self):
+        workflow = (ROOT / ".github" / "workflows" / "aurelia-assurance.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("scripts/deploy/bootstrap_and_deploy.sh", workflow)
+        self.assertNotIn("scripts/oci/bootstrap_and_deploy.sh", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()
