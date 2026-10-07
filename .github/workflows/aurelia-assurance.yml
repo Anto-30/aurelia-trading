@@ -50,6 +50,30 @@ jobs:
         run: |
           python scripts/verify_deriv_session.py
 
+      - name: Verify authenticated Deriv verify-only transaction lifecycle
+        if: env.DERIV_AUTH_CONFIGURED == 'true'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTH_MODE: ${{ secrets.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
+          DERIV_ENVIRONMENT: "real"
+          DERIV_LIFECYCLE_MODE: "VERIFY_ONLY"
+          DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
+          DERIV_VERIFY_STAKE: "1.0"
+          DERIV_VERIFY_PROBABILITY: "0.60"
+        run: |
+          python scripts/verify_deriv_transaction_lifecycle.py
+
+      - name: Upload authenticated verify-only lifecycle evidence
+        if: always() && hashFiles('artifacts/deriv_transaction_lifecycle.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: deriv-transaction-lifecycle-verify-only
+          path: artifacts/deriv_transaction_lifecycle.json
+          if-no-files-found: error
+
       - name: Report authenticated Deriv prerequisite state
         if: env.DERIV_AUTH_CONFIGURED != 'true'
         run: |
