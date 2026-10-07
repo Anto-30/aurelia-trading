@@ -157,6 +157,83 @@
       ],
       "authority": "communication_only",
       "policy": "no execution authority"
+    },
+    {
+      "source": "External repositories — UI/engineering (Ace)",
+      "agent_roles": [
+        "Command Center UI",
+        "Engineering",
+        "QA"
+      ],
+      "uses": [
+        "embedded code editor research",
+        "syntax highlighting",
+        "developer tooling"
+      ],
+      "authority": "sandbox_and_ui_only",
+      "policy": "package/source pin required; no capital or broker authority"
+    },
+    {
+      "source": "External repositories — browser automation (Playwriter)",
+      "agent_roles": [
+        "Operations QA",
+        "Browser Automation",
+        "Evidence Auditor"
+      ],
+      "uses": [
+        "browser workflow validation",
+        "non-production UI checks",
+        "evidence capture"
+      ],
+      "authority": "sandbox_only",
+      "policy": "cannot bypass authentication, release gates, or broker controls"
+    },
+    {
+      "source": "External repositories — coding agent (Open Interpreter)",
+      "agent_roles": [
+        "Engineering",
+        "Research Orchestrator",
+        "QA"
+      ],
+      "uses": [
+        "code maintenance research",
+        "sandbox execution",
+        "engineering workflow experiments"
+      ],
+      "authority": "sandbox_only",
+      "policy": "external execution denied by default; no production secrets or capital authority"
+    },
+    {
+      "source": "External repositories — reverse engineering (REA)",
+      "agent_roles": [
+        "Security",
+        "Reverse Engineering",
+        "Evidence Auditor"
+      ],
+      "uses": [
+        "binary/application inspection",
+        "dependency investigation",
+        "runtime behavior analysis"
+      ],
+      "authority": "sandbox_only",
+      "policy": "analysis only; never promote findings to execution authority"
+    },
+    {
+      "source": "External repositories — trading examples (TradingView/Binance, IB HFT, IbPy, GoEx)",
+      "agent_roles": [
+        "Quant Research",
+        "Strategy Research",
+        "Microstructure",
+        "Broker Research"
+      ],
+      "uses": [
+        "architecture patterns",
+        "strategy hypotheses",
+        "market microstructure research",
+        "exchange abstraction comparison"
+      ],
+      "authority": "research_only",
+      "policy": "non-Deriv execution code is reference material; no direct adapter reuse or order authority"
     }
   ],
   "agent_contract": "Every routed source produces typed evidence tagged source, timestamp, provenance, confidence, and authority class. Deterministic Risk Warden, Execution Firewall, Balance Truth, LIVE_LOCK, reconciliation, and release gates remain final."
