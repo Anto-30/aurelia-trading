@@ -57,12 +57,13 @@ jobs:
           mkdir -p "$(dirname "${AURELIA_R100_STATE_PATH}")"
           cp "$state_file" "${AURELIA_R100_STATE_PATH}"
           echo "Recovered prospective archive artifact ${artifact_id}."
-      - name: Pin prospective campaign source
+      - name: Pin or safely rebind prospective campaign source
         shell: bash
         run: |
           set -euo pipefail
           campaign_sealed="$(python - <<'PY'
           import json
+          from datetime import datetime, timezone
           from pathlib import Path
 
           path = Path(".research_state/aurelia_r100_state.json")
@@ -70,17 +71,24 @@ jobs:
               print("false")
           else:
               state = json.loads(path.read_text(encoding="utf-8"))
-              print("true" if state.get("manifest", {}).get("sealed") else "false")
+              manifest = state.get("manifest", {})
+              if manifest.get("sealed"):
+                  print("true")
+              else:
+                  oos_start = datetime.fromisoformat(
+                      str(manifest["oos_start_at_utc"]).replace("Z", "+00:00")
+                  )
+                  print("true" if datetime.now(timezone.utc) >= oos_start else "false")
           PY
           )"
           if [ "$campaign_sealed" = "true" ]; then
             rm -f ".research_state/aurelia_r100_state.json"
             echo "R100_SEALED_CAMPAIGN_ROLLOVER=NEW_CAMPAIGN"
           fi
+
           campaign_commit="$(python - <<'PY'
           import json
           from pathlib import Path
-
           path = Path(".research_state/aurelia_r100_state.json")
           if not path.exists():
               print("")
@@ -89,10 +97,53 @@ jobs:
               print(str(state.get("manifest", {}).get("code_commit", "") or ""))
           PY
           )"
-          if [ -n "$campaign_commit" ]; then
-            git fetch --no-tags --depth=1 origin "$campaign_commit"
-            git checkout --detach "$campaign_commit"
+
+          if [ -z "$campaign_commit" ]; then
+            echo "AURELIA_RESEARCH_CODE_COMMIT=$GITHUB_SHA" >> "$GITHUB_ENV"
+            echo "R100_RESEARCH_SOURCE_COMMIT=$GITHUB_SHA"
+            exit 0
           fi
+
+          git fetch --no-tags --depth=1 origin "$campaign_commit"
+          campaign_oos_start="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          state = json.loads(Path(".research_state/aurelia_r100_state.json").read_text())
+          print(state["manifest"]["oos_start_at_utc"])
+          PY
+          )"
+          now_epoch="$(date -u +%s)"
+          oos_epoch="$(date -u -d "$campaign_oos_start" +%s)"
+
+          if [ "$now_epoch" -lt "$oos_epoch" ]; then
+            old_collector="$(git show "$campaign_commit:research/r100_prospective_oos_collector.py" | sha256sum | awk '{print $1}')"
+            new_collector="$(git show "$GITHUB_SHA:research/r100_prospective_oos_collector.py" | sha256sum | awk '{print $1}')"
+            old_signal="$(git show "$campaign_commit:runtime/strategy/autonomous_signal_engine.py" | sha256sum | awk '{print $1}')"
+            new_signal="$(git show "$GITHUB_SHA:runtime/strategy/autonomous_signal_engine.py" | sha256sum | awk '{print $1}')"
+            test "$old_collector" = "$new_collector"
+            test "$old_signal" = "$new_signal"
+
+            python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path(".research_state/aurelia_r100_state.json")
+          state = json.loads(path.read_text())
+          state["manifest"]["code_commit"] = os.environ["GITHUB_SHA"]
+          state["manifest"]["provenance_migration"] = (
+              "PRE_OOS_SOURCE_REBIND_STRATEGY_IMPLEMENTATION_IDENTICAL"
+          )
+          path.write_text(json.dumps(state, sort_keys=True, separators=(",", ":")))
+          PY
+            git checkout --detach "$GITHUB_SHA"
+            echo "R100_PRE_OOS_SOURCE_REBIND=SAFE"
+            echo "R100_STRATEGY_IMPLEMENTATION_FINGERPRINT=IDENTICAL"
+          else
+            git checkout --detach "$campaign_commit"
+            echo "R100_OOS_SOURCE_PIN=PRESERVED"
+          fi
+
           resolved_commit="$(git rev-parse HEAD)"
           echo "AURELIA_RESEARCH_CODE_COMMIT=$resolved_commit" >> "$GITHUB_ENV"
           echo "R100_RESEARCH_SOURCE_COMMIT=$resolved_commit"
