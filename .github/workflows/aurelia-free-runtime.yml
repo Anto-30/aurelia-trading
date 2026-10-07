@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
+      PYTHONPATH: "."
       AURELIA_VERIFY_DERIV_PUBLIC: "true"
       AURELIA_RUN_ONCE: "true"
       AURELIA_VERIFY_DERIV_AUTH: "false"
