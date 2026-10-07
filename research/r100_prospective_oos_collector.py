@@ -33,6 +33,7 @@ MAX_TRADE_PROBABILITY = 0.75
 CALIBRATION_MIN_BUCKETS = 3
 CALIBRATION_MIN_BUCKET_SAMPLES = 10
 CALIBRATION_MAX_RELIABILITY_GAP = 0.05
+LEGACY_DEFAULT_COLLECTION_SECONDS = 540
 
 @dataclass(frozen=True)
 class PendingSignal:
@@ -73,7 +74,29 @@ def research_config_hash() -> str:
         "probability_min": MIN_TRADE_PROBABILITY,
         "probability_max": MAX_TRADE_PROBABILITY,
         "probability_clipping": False,
-        "collection_seconds": COLLECTION_SECONDS,
+        "calibration_min_buckets": CALIBRATION_MIN_BUCKETS,
+        "calibration_min_bucket_samples": CALIBRATION_MIN_BUCKET_SAMPLES,
+        "calibration_max_reliability_gap": CALIBRATION_MAX_RELIABILITY_GAP,
+    })
+
+def legacy_research_config_hash() -> str:
+    """Hash used by pre-v0.2.1 campaigns where collection duration was included.
+
+    Collection duration is an operational sampling parameter, not a strategy rule;
+    it must not invalidate an otherwise identical frozen research campaign.
+    """
+    return canonical_hash({
+        "strategy_id": STRATEGY_ID,
+        "strategy_version": STRATEGY_VERSION,
+        "window": 64,
+        "min_observations": 20,
+        "threshold": 1.5,
+        "cooldown_seconds": 30.0,
+        "horizon_ticks": HORIZON_TICKS,
+        "probability_min": MIN_TRADE_PROBABILITY,
+        "probability_max": MAX_TRADE_PROBABILITY,
+        "probability_clipping": False,
+        "collection_seconds": LEGACY_DEFAULT_COLLECTION_SECONDS,
         "calibration_min_buckets": CALIBRATION_MIN_BUCKETS,
         "calibration_min_bucket_samples": CALIBRATION_MIN_BUCKET_SAMPLES,
         "calibration_max_reliability_gap": CALIBRATION_MAX_RELIABILITY_GAP,
@@ -170,9 +193,15 @@ def load_state(path: Path) -> dict[str, Any]:
         raise ValueError("R100_SOURCE_COMMIT_MISMATCH")
 
     expected_config_hash = research_config_hash()
-    if manifest.get("config_hash") and manifest["config_hash"] != expected_config_hash:
-        raise ValueError("R100_CONFIG_HASH_MISMATCH")
-    manifest["config_hash"] = expected_config_hash
+    stored_config_hash = str(manifest.get("config_hash") or "")
+    if stored_config_hash and stored_config_hash != expected_config_hash:
+        if stored_config_hash == legacy_research_config_hash():
+            manifest["config_hash"] = expected_config_hash
+            manifest["provenance_migration"] = "LEGACY_CONFIG_HASH_COLLECTION_DURATION_REMOVED"
+        else:
+            raise ValueError("R100_CONFIG_HASH_MISMATCH")
+    else:
+        manifest["config_hash"] = expected_config_hash
     return state
 
 def save_state(path: Path, state: dict[str, Any]) -> None:
