@@ -14,7 +14,7 @@ AURELIA is an autonomous trading platform for research, validation, risk control
 
 The current repository state is authoritative for the implementation. Historical archives and old branches are not the current source of truth.
 
-Current operational state: `docs/AURELIA_CURRENT_OPERATIONAL_STATE_2026-10-07.md`. The repository is browsable from `main`; remote GitHub read/write access has been verified for the current engineering integration. This does not grant capital authority.
+Current operational state: `docs/AURELIA_CURRENT_OPERATIONAL_STATE_2026-10-08.md`. The repository is browsable from `main`; remote GitHub read/write access has been verified for the current engineering integration. This does not grant capital authority.
 
 ## Architecture
 
@@ -29,7 +29,9 @@ Current operational state: `docs/AURELIA_CURRENT_OPERATIONAL_STATE_2026-10-07.md
 - Research: `research/`
 - Runtime entry point: `runtime/main.py`
 - Tests: `tests/`
-- Deployment: `railway.toml` and `.github/workflows/railway-deploy.yml`
+- Deployment policy: `config/deployment_policy.json`
+- Persistent deployment workflow: `.github/workflows/self-hosted-runtime-deploy.yml`
+- Host deployment script: `scripts/deploy/bootstrap_and_deploy.sh`
 - Evidence and reports: `reports/` and `docs/`
 - Intelligence routing: `config/intelligence_source_routing.json`
 
@@ -90,9 +92,10 @@ A readiness report must not be interpreted as live authorization unless every ma
 ## External access state
 
 - Current non-secret infrastructure verification: `data/runtime/AURELIA_EXTERNAL_ACCESS_STATE.json`
-- This artifact distinguishes repository-level GitHub access, Railway deployment state, and operator-reported broker runtime evidence.
+- This artifact contains historical external-access observations and must not be interpreted as capital authority.
 - GitHub repository-level push capability is currently available to the connected engineering integration used for this verification.
-- Railway currently has no service/deployment in the existing project; deployment was rejected because the Railway trial has expired and a plan is required.
+- Railway is no longer an active AURELIA deployment dependency; its historical rejection remains documented only for auditability.
+- The active deployment path is provider-neutral self-hosting on a user-controlled Linux/Docker host.
 
 ## External repository federation
 
