@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SHA="\${1:?source commit SHA required}"
+SHA="${1:?source commit SHA required}"
 APP_ROOT="/opt/aurelia"
 RELEASE_ROOT="$APP_ROOT/releases"
 RELEASE_DIR="$RELEASE_ROOT/$SHA"
@@ -11,7 +11,7 @@ ENV_FILE="$ENV_DIR/aurelia.env"
 DATA_DIR="/var/lib/aurelia"
 IMAGE="aurelia-runtime:$SHA"
 CONTAINER="aurelia-runtime"
-DEPLOYMENT_MODE="\${AURELIA_DEPLOYMENT_MODE:-VERIFY_ONLY}"
+DEPLOYMENT_MODE="${AURELIA_DEPLOYMENT_MODE:-VERIFY_ONLY}"
 
 if ! command -v sudo >/dev/null 2>&1; then
   echo "AURELIA_HOST_BLOCKED=SUDO_REQUIRED"
