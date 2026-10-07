@@ -1,23 +1,40 @@
 ---
 name: jev-typed-decision-challenger
-description: Fast typed advisory challenges for GrokBot; never grants capital, deployment, secret, or live-order authority.
+description: High-speed typed advisory challenger for GrokBot using pinned JEV community tooling.
 version: 1.0.0
 ---
 
-# JEV Typed Decision Challenger
+# JEV → Grok typed challenger
 
-JEV is an advisory challenger for GrokBot. It can classify, score, challenge, and flag uncertainty before Grok performs deeper reasoning.
+JEV operates only in AURELIA's advisory/research plane. GrokBot owns orchestration and interpretation.
 
-## Hard boundary
-
+Boundary:
 - capital authority: false
 - live orders: forbidden
-- production deployment authority: false
+- deployment authority: false
 - secret access: forbidden
 - LIVE_LOCK mutation: forbidden
-- Risk Warden bypass: forbidden
-- Execution Firewall bypass: forbidden
+- Risk Warden / Execution Firewall bypass: forbidden
 
-Source pin: `claude-x-jev` commit `c8662b0550b2a999d1dbcfb148683615cf92636a`.
+Pinned source:
+- repository: charlesdove977/claude-x-jev
+- commit: c8662b0550b2a999d1dbcfb148683615cf92636a
 
-Use JEV only for typed research/engineering challenges. Its result is evidence for Grok, never an execution authorization.
+Input:
+- decision_id
+- strategy/version
+- symbol/direction
+- proposed probability
+- regime/market context
+- evidence identifiers
+- control/risk state
+- proposition to challenge
+
+Output:
+- verdict: CONSISTENT | CHALLENGE | ESCALATE
+- confidence
+- bounded reasons
+- source_commit
+- authority: ADVISORY_ONLY
+
+A CONSISTENT result never authorizes capital. A CHALLENGE or ESCALATE result is advisory only. All capital decisions remain inside deterministic AURELIA gates.
