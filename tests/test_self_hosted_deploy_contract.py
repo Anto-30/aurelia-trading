@@ -11,10 +11,12 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         policy_path = ROOT / "config" / "deployment_policy.json"
         workflow_path = ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml"
         script_path = ROOT / "scripts" / "deploy" / "bootstrap_and_deploy.sh"
+        watchdog_path = ROOT / "scripts" / "deploy" / "aurelia-watchdog.sh"
 
         self.assertTrue(policy_path.is_file(), "deployment policy missing")
         self.assertTrue(workflow_path.is_file(), "self-hosted workflow missing")
         self.assertTrue(script_path.is_file(), "self-hosted deployment script missing")
+        self.assertTrue(watchdog_path.is_file(), "runtime watchdog missing")
 
         policy = json.loads(policy_path.read_text(encoding="utf-8"))
         self.assertEqual(policy["primary_provider"], "self_hosted")
@@ -32,6 +34,8 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("--restart unless-stopped", source)
         self.assertIn("http://127.0.0.1:8080/health", source)
         self.assertIn("DEPLOYED_SOURCE_SHA", source)
+        self.assertIn("aurelia-runtime-watchdog.service", source)
+        self.assertIn("if mode == \"VERIFY_ONLY\"", source)
 
     def test_assurance_uses_generic_deployment_script(self):
         workflow = (ROOT / ".github" / "workflows" / "aurelia-assurance.yml").read_text(
