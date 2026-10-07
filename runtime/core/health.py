@@ -16,6 +16,7 @@ class HealthSnapshot:
     executor_lease_valid: bool = True
     resource_ok: bool = True
     dependencies_ok: bool = True
+    agent_workers_healthy: bool = True
     critical_unknowns: set[str] = field(default_factory=set)
 
     def liveness(self):
@@ -27,6 +28,7 @@ class HealthSnapshot:
             and self.dependencies_ok
             and self.resource_ok
             and self.executor_lease_valid
+            and self.agent_workers_healthy
             and not self.critical_unknowns
         )
 
