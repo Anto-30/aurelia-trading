@@ -140,6 +140,25 @@ else
   LIVE_EXECUTION=BLOCKED
 fi
 
+sudo install -m 700 "$RELEASE_DIR/scripts/deploy/aurelia-watchdog.sh" /usr/local/sbin/aurelia-watchdog.sh
+sudo tee /etc/systemd/system/aurelia-runtime-watchdog.service >/dev/null <<'EOF'
+[Unit]
+Description=AURELIA runtime health watchdog
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/aurelia-watchdog.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable aurelia-runtime-watchdog.service
+
 sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"
 sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 
@@ -176,8 +195,17 @@ if [ "$healthy" -ne 1 ]; then
 fi
 
 health="$(cat /tmp/aurelia-health.json)"
-printf '%s\n' "$health" | grep -q '"liveness": true'
-printf '%s\n' "$health" | grep -q '"capital_can_open_new_exposure": false'
+python - "$DEPLOYMENT_MODE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+mode = sys.argv[1]
+payload = json.loads(Path("/tmp/aurelia-health.json").read_text(encoding="utf-8"))
+assert payload.get("liveness") is True, payload
+if mode == "VERIFY_ONLY":
+    assert payload.get("capital_can_open_new_exposure") is False, payload
+PY
 sudo docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx "AURELIA_AUTONOMOUS_LOOP=$AUTONOMOUS_LOOP"
 sudo docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx "FINAL_EXECUTION_AUTHORIZATION=$FINAL_AUTH"
 sudo docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx "LIVE_EXECUTION=$LIVE_EXECUTION"
@@ -201,6 +229,7 @@ cat <<EOF | sudo tee "$DATA_DIR/DEPLOYMENT_LINEAGE.json" >/dev/null
 EOF
 sudo chmod 600 "$DATA_DIR/DEPLOYMENT_LINEAGE.json"
 
+sudo systemctl restart aurelia-runtime-watchdog.service
 sudo ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
 printf '%s\n' "$SHA" | sudo tee "$DATA_DIR/DEPLOYED_SOURCE_SHA" >/dev/null
 printf '%s\n' "$health" | sudo tee "$DATA_DIR/LAST_HEALTH.json" >/dev/null
