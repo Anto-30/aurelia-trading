@@ -64,11 +64,18 @@ This is the browsable map of the current AURELIA implementation on `main`.
 - Stake policy: `docs/AURELIA_STAKE_POLICY_2026-10-03.md`
 - Runtime baseline: `docs/AURELIA_RUNTIME_BASELINE_2026-10-03.md`
 - Status model: `docs/AURELIA_STATUS_MODEL.yaml`
-- Deployment/auth workflows: `.github/workflows/`
+- Deployment policy: `config/deployment_policy.json`
+- Persistent deployment workflow: `.github/workflows/self-hosted-runtime-deploy.yml`
+- Host deployment script: `scripts/deploy/bootstrap_and_deploy.sh`
+- Authentication/assurance workflows: `.github/workflows/`
 
 Historical archives and old branches are not the current source of truth.
 
-## External access and current state
+## Deployment and external access
 
+- Active deployment: provider-neutral self-hosted Linux/Docker runtime.
+- Active deployment policy: `config/deployment_policy.json`
+- Active deployment workflow: `.github/workflows/self-hosted-runtime-deploy.yml`
 - External access state: `data/runtime/AURELIA_EXTERNAL_ACCESS_STATE.json`
+- Historical Railway/OCI deployment records are audit artifacts, not active runtime dependencies.
 - Current source-of-truth repository state is directly readable from the remote `main` branch.
