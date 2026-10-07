@@ -5,6 +5,10 @@ on:
   pull_request:
 permissions:
   contents: read
+
+concurrency:
+  group: aurelia-assurance-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   assurance:
     # Load production-scoped Actions secrets for authenticated verification.
