@@ -36,6 +36,7 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("DEPLOYED_SOURCE_SHA", source)
         self.assertIn("aurelia-runtime-watchdog.service", source)
         self.assertIn("if mode == \"VERIFY_ONLY\"", source)
+        self.assertIn("aurelia-runtime-watchdog.service", source)
 
     def test_assurance_uses_generic_deployment_script(self):
         workflow = (ROOT / ".github" / "workflows" / "aurelia-assurance.yml").read_text(
@@ -44,6 +45,13 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("scripts/deploy/bootstrap_and_deploy.sh", workflow)
         self.assertNotIn("scripts/oci/bootstrap_and_deploy.sh", workflow)
 
-
 if __name__ == "__main__":
     unittest.main()
+
+
+    def test_live_deployment_requires_release_gate(self):
+        workflow = (ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("python scripts/live_release_gate.py", workflow)
+        self.assertIn("if: inputs.deployment_mode == 'LIVE'", workflow)
