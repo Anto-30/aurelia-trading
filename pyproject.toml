@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "aurelia-runtime"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["websockets>=17.1,<18"]
+dependencies = ["websockets>=17.1,<18", "pyahocorasick==2.3.1"]
 
 [tool.setuptools.packages.find]
 include = ["runtime*"]
