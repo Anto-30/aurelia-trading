@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: aurelia-release-closure
@@ -38,6 +39,39 @@ jobs:
           python-version: "3.13"
       - name: Install runtime dependencies
         run: pip install -r requirements.txt
+      - name: Import latest successful R100 research evidence
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p .research_state evidence /tmp/r100-artifact
+          artifact_json="$(
+            gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts?name=aurelia-r100-prospective-oos&per_page=100" |
+              jq -c '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | reverse | map(select(.workflow_run.head_branch == "main")) | .[0] // empty'
+          )"
+          if [ -z "$artifact_json" ] || [ "$artifact_json" = "null" ]; then
+            echo "R100_ARTIFACT_IMPORT=NONE_AVAILABLE"
+            exit 0
+          fi
+          artifact_id="$(jq -r '.id' <<<"$artifact_json")"
+          gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}/zip" > /tmp/r100-artifact/r100.zip
+          unzip -oq /tmp/r100-artifact/r100.zip -d /tmp/r100-artifact/extracted
+          if [ -f /tmp/r100-artifact/extracted/evidence/prospective_oos.json ]; then
+            cp /tmp/r100-artifact/extracted/evidence/prospective_oos.json evidence/prospective_oos.json
+          fi
+          if [ -f /tmp/r100-artifact/extracted/evidence/calibration.json ]; then
+            cp /tmp/r100-artifact/extracted/evidence/calibration.json evidence/calibration.json
+          fi
+          if [ -f /tmp/r100-artifact/extracted/aurelia_r100_state.json ]; then
+            cp /tmp/r100-artifact/extracted/aurelia_r100_state.json .research_state/aurelia_r100_state.json
+          fi
+          if [ -f /tmp/r100-artifact/extracted/aurelia_r100_report.json ]; then
+            cp /tmp/r100-artifact/extracted/aurelia_r100_report.json .research_state/aurelia_r100_report.json
+          fi
+          echo "R100_ARTIFACT_IMPORT=SUCCESS"
+          echo "R100_ARTIFACT_ID=${artifact_id}"
+
       - name: Generate current closure report
         run: |
           set +e
