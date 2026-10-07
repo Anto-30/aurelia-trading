@@ -98,12 +98,10 @@ class AgentWorkerSupervisor:
                             requires_response=True,
                         )
                         # A configured external worker owns execution. The local
-                        # supervisor never fabricates a provider result.
-                        if process is not None and process.returncode is None:
-                            await self.federation.complete_task(
-                                task.task_id, agent=spec.agent, status="COMPLETED"
-                            )
-                        else:
+                        # supervisor never fabricates a provider result. It leaves
+                        # the task CLAIMED so the provider worker can complete it;
+                        # stale claims are requeued by the federation.
+                        if process is None:
                             await self.federation.complete_task(
                                 task.task_id, agent=spec.agent, status="BLOCKED"
                             )
