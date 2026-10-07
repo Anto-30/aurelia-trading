@@ -11,6 +11,7 @@ from pathlib import Path
 from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.adapters.session_manager import DerivSessionManager
 from runtime.agent_federation import AgentFederationSupervisor, PersistentAgentFederation
+from runtime.agent_performance import AgentPerformanceLedger
 from runtime.agent_workers import AgentWorkerSupervisor
 from runtime.autonomous_loop import AutonomousExecutionLoop, FederatedDecisionProvider
 from runtime.broker.executor import CapitalPlaneExecutor
@@ -20,7 +21,6 @@ from runtime.core.persistent import PersistentExecutionFence, PersistentLedger
 from runtime.core.reconcile import Reconciler
 from runtime.core.runtime_config import load_config_hash
 from runtime.core.secrets import get_optional_secret
-from runtime.core.models import RuntimeState
 from runtime.core.state import RuntimeStateMachine
 from runtime.strategy.research_supervisor import build_research_signal_supervisor
 
@@ -30,10 +30,12 @@ DEFAULT_AGENTS = (
     "GLM", "PlaywrightCLI", "AURELIA",
 )
 
+
 @dataclass
 class ContinuousRuntime:
     federation: PersistentAgentFederation
     federation_supervisor: AgentFederationSupervisor
+    performance_ledger: AgentPerformanceLedger | None = None
     agent_worker_supervisor: AgentWorkerSupervisor | None = None
     adapter: DerivAdapter | None = None
     execution_loop: AutonomousExecutionLoop | None = None
@@ -76,13 +78,13 @@ async def start_continuous_runtime(
     config_hash = load_config_hash(ROOT)
     source_hash = os.getenv("GITHUB_SHA", "RUNTIME_UNPINNED")
     if federation is None:
-        federation = federation or PersistentAgentFederation(
-        journal_path=os.getenv("AURELIA_FEDERATION_JOURNAL_PATH", "/tmp/aurelia/federation-events.ndjson"),
-        lease_path=os.getenv("AURELIA_FEDERATION_LEASE_PATH", "/tmp/aurelia/federation-leases.json"),
-        config_hash=config_hash,
-        source_hash=source_hash,
-        lease_seconds=float(os.getenv("AURELIA_AGENT_LEASE_SECONDS", "45")),
-    )
+        federation = PersistentAgentFederation(
+            journal_path=os.getenv("AURELIA_FEDERATION_JOURNAL_PATH", "/tmp/aurelia/federation-events.ndjson"),
+            lease_path=os.getenv("AURELIA_FEDERATION_LEASE_PATH", "/tmp/aurelia/federation-leases.json"),
+            config_hash=config_hash,
+            source_hash=source_hash,
+            lease_seconds=float(os.getenv("AURELIA_AGENT_LEASE_SECONDS", "45")),
+        )
     agents = DEFAULT_AGENTS
     matrix_path = ROOT / "config" / "agent_capability_matrix.json"
     if matrix_path.exists():
@@ -101,13 +103,12 @@ async def start_continuous_runtime(
             roundtable_seconds=float(os.getenv("AURELIA_AGENT_ROUNDTABLE_SECONDS", "60")),
         )
         federation_supervisor.start()
-    runtime = ContinuousRuntime(federation, federation_supervisor)
+    performance_ledger = AgentPerformanceLedger(
+        os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/var/lib/aurelia/agent-performance.json"),
+        decay_days=float(os.getenv("AURELIA_AGENT_SCORE_DECAY_DAYS", "90")),
+    )
+    runtime = ContinuousRuntime(federation, federation_supervisor, performance_ledger=performance_ledger)
 
-    # Start real local worker runtimes for every external advisory role. A
-    # worker emits a WORKER lease only while its process is actually running.
-    # Provider authentication remains explicit: absent a configured command,
-    # the worker reports CONNECTOR_REQUIRED rather than impersonating a
-    # Grok/Kimi/Claude/Google/GLM/Playwright session.
     if os.getenv("AURELIA_AGENT_WORKERS", "true").strip().lower() == "true":
         runtime.agent_worker_supervisor = AgentWorkerSupervisor(
             federation,
@@ -116,8 +117,6 @@ async def start_continuous_runtime(
         )
         runtime.agent_worker_supervisor.start()
 
-    # AURELIA worker liveness is owned by this actual runtime process.
-    # The federation supervisor deliberately cannot manufacture this lease.
     worker_id = os.getenv("AURELIA_WORKER_ID", "").strip() or (
         f"AURELIA:{socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex[:12]}"
     )
@@ -125,20 +124,13 @@ async def start_continuous_runtime(
     async def worker_heartbeat() -> None:
         interval = max(1.0, min(federation.lease_seconds / 3.0, 15.0))
         while True:
-            await federation.heartbeat(
-                "AURELIA",
-                worker_id=worker_id,
-                origin="WORKER",
-            )
+            await federation.heartbeat("AURELIA", worker_id=worker_id, origin="WORKER")
             try:
                 await asyncio.sleep(interval)
             except asyncio.CancelledError:
                 raise
 
-    runtime.heartbeat_task = asyncio.create_task(
-        worker_heartbeat(),
-        name=f"aurelia-worker-heartbeat:{worker_id}",
-    )
+    runtime.heartbeat_task = asyncio.create_task(worker_heartbeat(), name=f"aurelia-worker-heartbeat:{worker_id}")
 
     if os.getenv("AURELIA_AUTONOMOUS_LOOP", "false").strip().lower() != "true":
         await federation.publish(
@@ -153,25 +145,19 @@ async def start_continuous_runtime(
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
     app_id = get_optional_secret("DERIV_APP_ID")
     if not token or not loginid:
-        await federation.publish(
-            sender="AURELIA", recipients=agents, message_type="BLOCKER",
+        await federation.publish(sender="AURELIA", recipients=agents, message_type="BLOCKER",
             payload={"reason": "DERIV_AUTH_CONFIGURATION_MISSING", "capital_authority": False},
-            correlation_id="deriv-auth", priority=95, requires_response=True,
-        )
+            correlation_id="deriv-auth", priority=95, requires_response=True)
         return runtime
     if auth_mode not in {"pat", "oauth"}:
-        await federation.publish(
-            sender="AURELIA", recipients=agents, message_type="BLOCKER",
+        await federation.publish(sender="AURELIA", recipients=agents, message_type="BLOCKER",
             payload={"reason": "DERIV_AUTH_MODE_INVALID", "capital_authority": False},
-            correlation_id="deriv-auth-mode", priority=95, requires_response=True,
-        )
+            correlation_id="deriv-auth-mode", priority=95, requires_response=True)
         return runtime
     if auth_mode == "pat" and not app_id:
-        await federation.publish(
-            sender="AURELIA", recipients=agents, message_type="BLOCKER",
+        await federation.publish(sender="AURELIA", recipients=agents, message_type="BLOCKER",
             payload={"reason": "DERIV_APP_ID_REQUIRED_FOR_PAT", "capital_authority": False},
-            correlation_id="deriv-app-id", priority=95, requires_response=True,
-        )
+            correlation_id="deriv-app-id", priority=95, requires_response=True)
         return runtime
 
     manager = DerivSessionManager(
@@ -179,10 +165,7 @@ async def start_continuous_runtime(
         expected_environment=os.getenv("DERIV_ENVIRONMENT", "real"),
         expected_currency=os.getenv("DERIV_EXPECTED_CURRENCY", "USD"),
     )
-    bootstrap = manager.bootstrap(
-        bearer_token=token,
-        app_id=app_id or None,
-    )
+    bootstrap = manager.bootstrap(bearer_token=token, app_id=app_id or None)
     adapter = DerivAdapter(
         ws_url=bootstrap.websocket.url,
         expected_loginid=bootstrap.binding.loginid,
@@ -225,9 +208,7 @@ async def start_continuous_runtime(
         lifecycle_timeout_seconds=float(os.getenv("AURELIA_LIFECYCLE_TIMEOUT_SECONDS", "600")),
     )
     runtime.adapter = adapter
-    runtime.execution_task = asyncio.create_task(
-        runtime.execution_loop.run(), name="aurelia-autonomous-execution-loop"
-    )
+    runtime.execution_task = asyncio.create_task(runtime.execution_loop.run(), name="aurelia-autonomous-execution-loop")
     await federation.publish(
         sender="AURELIA", recipients=agents, message_type="AUTONOMOUS_RUNTIME_STARTED",
         payload={"account_loginid": account.loginid, "environment": account.environment,
