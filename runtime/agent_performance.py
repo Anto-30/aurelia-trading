@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -130,7 +131,7 @@ class AgentPerformanceEvaluator:
 
     def __init__(self, ledger: AgentPerformanceLedger, *, evidence_root: str | Path | None = None) -> None:
         self.ledger = ledger
-        self.evidence_root = Path(evidence_root) if evidence_root else None
+        self.evidence_root = Path(evidence_root or os.getenv("AURELIA_EVIDENCE_ROOT", "/var/lib/aurelia/evidence"))
 
     def _evidence_exists(self, ref: str) -> bool:
         if not ref or self.evidence_root is None:
@@ -149,17 +150,17 @@ class AgentPerformanceEvaluator:
         failed = status == "FAILED"
         blocked = status == "BLOCKED"
         scores = {
-            "correctness": 25.0 if completed and bool(result.get("verified", False)) else 0.0,
+            "correctness": 25.0 if completed and evidence_ok and bool(result.get("verified", False)) else 0.0,
             "evidence_quality": 20.0 if evidence_ok else 0.0,
-            "task_outcome": 20.0 if completed else 0.0,
-            "robustness": 15.0 if completed and bool(result.get("regression_free", False)) else 0.0,
-            "reproducibility": 10.0 if completed and bool(result.get("reproducible", False)) else 0.0,
-            "efficiency": 5.0 if completed and bool(result.get("efficient", False)) else 0.0,
-            "collaboration": 5.0 if completed and bool(result.get("handoff_clean", False)) else 0.0,
+            "task_outcome": 20.0 if completed and evidence_ok else 0.0,
+            "robustness": 15.0 if completed and evidence_ok and bool(result.get("regression_free", False)) else 0.0,
+            "reproducibility": 10.0 if completed and evidence_ok and bool(result.get("reproducible", False)) else 0.0,
+            "efficiency": 5.0 if completed and evidence_ok and bool(result.get("efficient", False)) else 0.0,
+            "collaboration": 5.0 if completed and evidence_ok and bool(result.get("handoff_clean", False)) else 0.0,
         }
         penalty = -20.0 if failed else (-5.0 if blocked else 0.0)
         if completed and not evidence_ok:
-            penalty = min(penalty, -25.0)
+            penalty = -25.0
         evaluation_id = evaluation_id or f"eval:{task_id}:{agent}:{int(time.time() * 1000)}"
         evaluation = self.ledger.award(
             agent=agent,
