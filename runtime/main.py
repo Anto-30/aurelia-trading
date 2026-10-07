@@ -460,6 +460,15 @@ async def main() -> None:
             else:
                 loop = continuous_runtime.execution_loop
                 adapter = continuous_runtime.adapter
+                expected_workers = set(federation_supervisor.agents)
+                active_workers = set(federation.active_agents())
+                missing_workers = expected_workers - active_workers
+                if missing_workers:
+                    health.agent_workers_healthy = False
+                    health.critical_unknowns.add("AGENT_WORKER_LIVENESS")
+                else:
+                    health.agent_workers_healthy = True
+                    health.critical_unknowns.discard("AGENT_WORKER_LIVENESS")
                 broker_authorization_lost = (
                     adapter is None
                     or not adapter.authorized
