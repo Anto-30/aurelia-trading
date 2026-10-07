@@ -52,6 +52,8 @@ jobs:
             --env AURELIA_VERIFY_DERIV_PUBLIC=false \
             --env AURELIA_VERIFY_DERIV_AUTH=false \
             --env AURELIA_RUN_ONCE=false \
+            --env FINAL_EXECUTION_AUTHORIZATION=false \
+            --env LIVE_EXECUTION=BLOCKED \
             aurelia-non-production-soak
 
       - name: Wait for runtime health
