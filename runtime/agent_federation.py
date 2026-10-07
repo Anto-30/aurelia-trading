@@ -94,6 +94,7 @@ class PersistentAgentFederation:
         source_hash: str,
         lease_seconds: float = 45.0,
         task_path: str | Path | None = None,
+        performance_path: str | Path | None = None,
     ) -> None:
         self.journal = AppendOnlyJournal(journal_path)
         self.lease_path = Path(lease_path)
@@ -106,8 +107,8 @@ class PersistentAgentFederation:
         self.task_path = Path(task_path) if task_path is not None else self.lease_path.with_name("federation-tasks.json")
         self.task_path.parent.mkdir(parents=True, exist_ok=True)
         self._stale_notified: set[str] = set()
-        performance_path = self.lease_path.with_name("agent-performance.json")
-        self.performance_evaluator = AgentPerformanceEvaluator(AgentPerformanceLedger(performance_path))
+        score_path = Path(performance_path) if performance_path is not None else self.lease_path.with_name("agent-performance.json")
+        self.performance_evaluator = AgentPerformanceEvaluator(AgentPerformanceLedger(score_path))
 
     def _append(self, event_type: str, payload: dict[str, Any], correlation_id: str) -> None:
         event_id = f"{event_type}:{sha256({ 'payload': payload, 'correlation_id': correlation_id })[:20]}"
