@@ -47,6 +47,8 @@ jobs:
             --name aurelia-non-production-soak \
             --publish 18081:8080 \
             --env PORT=8080 \
+            --env FINAL_EXECUTION_AUTHORIZATION=false \
+            --env LIVE_EXECUTION=BLOCKED \
             --env AURELIA_NON_PRODUCTION_SOAK=true \
             --env AURELIA_CONTINUOUS_RUNTIME=false \
             --env AURELIA_VERIFY_DERIV_PUBLIC=false \

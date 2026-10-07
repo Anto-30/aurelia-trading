@@ -159,6 +159,42 @@
       "policy": "no execution authority"
     },
     {
+      "source": "JEV (claude-x-jev)",
+      "agent_roles": [
+        "GrokBot"
+      ],
+      "primary_agent": "GrokBot",
+      "uses": [
+        "typed decision classification",
+        "confidence-scored challenger checks",
+        "evidence consistency checks",
+        "fast decision triage"
+      ],
+      "authority": "advisory_typed_challenge_only",
+      "capital_authority": false,
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "pinned_commit": "c8662b0550b2a999d1dbcfb148683615cf92636a",
+      "policy": "JEV may challenge advisory decisions but may never authorize capital, submit orders, read secrets, mutate LIVE_LOCK, or bypass deterministic gates."
+    },
+    {
+      "source": "JEV (claude-x-jev)",
+      "agent_roles": [
+        "GrokBot"
+      ],
+      "primary_agent": "GrokBot",
+      "uses": [
+        "typed decision classification",
+        "confidence-scored challenger checks",
+        "draft/evidence consistency checks",
+        "fast tool/decision triage"
+      ],
+      "authority": "advisory_typed_challenge_only",
+      "capital_authority": false,
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "pinned_commit": "c8662b0550b2a999d1dbcfb148683615cf92636a",
+      "policy": "JEV can challenge and classify advisory decisions but can never authorize capital, submit orders, mutate LIVE_LOCK, or bypass deterministic gates."
+    },
+    {
       "source": "External repositories — UI/engineering (Ace)",
       "agent_roles": [
         "Command Center UI",
@@ -234,6 +270,233 @@
       ],
       "authority": "research_only",
       "policy": "non-Deriv execution code is reference material; no direct adapter reuse or order authority"
+    },
+    {
+      "source": "External repositories — market terminal (ticker-tape-web)",
+      "agent_roles": [
+        "Market Research",
+        "Command Center UI",
+        "Evidence Auditor"
+      ],
+      "uses": [
+        "market dashboard research",
+        "quote/technical visualization patterns",
+        "UI/UX reference"
+      ],
+      "authority": "sandbox_and_ui_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — agent work discovery (browser-use/agency)",
+      "agent_roles": [
+        "GrokBot",
+        "ClaudeCode",
+        "Orchestrator"
+      ],
+      "uses": [
+        "agent work discovery",
+        "approval workflow patterns",
+        "coordination research"
+      ],
+      "authority": "sandbox_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — PUA productivity skills",
+      "agent_roles": [
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "uses": [
+        "agent persistence/productivity patterns",
+        "exhaustive troubleshooting workflow research"
+      ],
+      "authority": "sandbox_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — Agency Agents app",
+      "agent_roles": [
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "uses": [
+        "agent catalog research",
+        "install ledger/reconciliation patterns",
+        "tool targeting"
+      ],
+      "authority": "sandbox_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — Agency Swarm",
+      "agent_roles": [
+        "GrokBot",
+        "ClaudeCode",
+        "Orchestrator"
+      ],
+      "uses": [
+        "directional agent communication",
+        "typed tools",
+        "multi-agent orchestration"
+      ],
+      "authority": "sandbox_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — Open Agency agents",
+      "agent_roles": [
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "uses": [
+        "specialist persona research",
+        "engineering workflow patterns"
+      ],
+      "authority": "sandbox_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — Agency Agents Chinese",
+      "agent_roles": [
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "uses": [
+        "multilingual specialist persona research",
+        "agent roster comparison"
+      ],
+      "authority": "reference_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — Agency Agents",
+      "agent_roles": [
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "uses": [
+        "specialist agent personas",
+        "engineering/design/security workflow patterns"
+      ],
+      "authority": "reference_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — orbitinghail/Graft",
+      "agent_roles": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "uses": [
+        "transactional synchronization research",
+        "edge storage patterns"
+      ],
+      "authority": "reference_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — trailhq/Graft",
+      "agent_roles": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "uses": [
+        "coding-agent context",
+        "persistent agent rules",
+        "context compression"
+      ],
+      "authority": "sandbox_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — Browserless",
+      "agent_roles": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "uses": [
+        "headless browser runtime",
+        "CDP",
+        "browser session diagnostics"
+      ],
+      "authority": "sandbox_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — Tencent BrowserSkill",
+      "agent_roles": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "uses": [
+        "browser evidence",
+        "logged-in browser automation",
+        "web debugging"
+      ],
+      "authority": "sandbox_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — UserAgent-Switcher",
+      "agent_roles": [
+        "PlaywrightCLI",
+        "ClaudeCode"
+      ],
+      "uses": [
+        "browser compatibility testing",
+        "request-header/browser fingerprint test research"
+      ],
+      "authority": "sandbox_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repositories — Browser Use",
+      "agent_roles": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "uses": [
+        "browser agents",
+        "web automation",
+        "browser testing"
+      ],
+      "authority": "sandbox_only",
+      "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repository — pyahocorasick",
+      "agent_roles": [
+        "GrokBot",
+        "ClaudeCode",
+        "Market Research",
+        "News Intelligence"
+      ],
+      "uses": [
+        "fast multi-pattern matching",
+        "keyword/entity lexicon indexing",
+        "news/event classification research"
+      ],
+      "authority": "sandbox_and_ui_only",
+      "policy": "Advisory/reference only; cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repository — Conway Automaton",
+      "agent_roles": [
+        "GrokBot",
+        "ClaudeCode",
+        "Orchestrator"
+      ],
+      "uses": [
+        "autonomous-agent runtime architecture research",
+        "memory/heartbeat/policy research",
+        "autonomy threat-model review"
+      ],
+      "authority": "reference_only",
+      "policy": "Advisory/reference only; cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
     }
   ],
   "agent_contract": "Every routed source produces typed evidence tagged source, timestamp, provenance, confidence, and authority class. Deterministic Risk Warden, Execution Firewall, Balance Truth, LIVE_LOCK, reconciliation, and release gates remain final."

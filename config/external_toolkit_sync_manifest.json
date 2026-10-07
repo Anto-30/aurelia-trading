@@ -1,0 +1,223 @@
+{
+  "schema": "aurelia.external_toolkit_sync.v1",
+  "generated_date": "2026-10-07",
+  "purpose": "Persist the requested external repositories as pinned, governed sources for GrokBot, ClaudeCode/Dev, and AURELIA research/tooling. This is not source vendoring and does not grant execution authority.",
+  "targets": {
+    "GrokBot": {
+      "mode": "SANDBOX_ONLY",
+      "use": [
+        "orchestration",
+        "agent research",
+        "browser research",
+        "market UI research",
+        "context tooling"
+      ]
+    },
+    "ClaudeCode": {
+      "label": "Dev",
+      "mode": "SANDBOX_ONLY",
+      "use": [
+        "engineering",
+        "QA",
+        "browser E2E",
+        "agent tooling",
+        "context tooling"
+      ]
+    },
+    "AURELIA": {
+      "mode": "REFERENCE_ONLY",
+      "use": [
+        "research/tooling reference only",
+        "no capital-plane import",
+        "no execution dependency"
+      ]
+    }
+  },
+  "installation_policy": "Use isolated shallow checkouts, package/skill installation, or source browsing only. Never copy external code into capital/ or execution/. Never expose production secrets.",
+  "repositories": [
+    {
+      "repo": "jeffbai996/ticker-tape-web",
+      "pinned_commit": "687452677dffbc9830db3ebbab06ade71ee6f263",
+      "role": "market terminal and UI research",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "browser-use/agency",
+      "pinned_commit": "53651cecb61d5b71b208504c7790c1e0e94bb3ad",
+      "role": "agent work discovery and approval patterns",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "tanweai/pua",
+      "pinned_commit": "e6e6cd237ad17750d179674bff52f8184abea8fd",
+      "role": "agent productivity/skill packaging; sandbox only",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "msitarzewski/agency-agents-app",
+      "pinned_commit": "2d6bbfe8e15e65a4c18bd3228652ccd8ceeae0c0",
+      "role": "agent installation and reconciliation patterns",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "VRSEN/agency-swarm",
+      "pinned_commit": "75a725fd76531eabeccdaf4c9ec1f2cdd6e40b70",
+      "role": "multi-agent orchestration",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "Anas-Khan93/ai-agency-agents",
+      "pinned_commit": "1c06454211dc5ba301f278fb8c884ea2664ddf46",
+      "role": "specialist agent personas",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "jnMetaCode/agency-agents-zh",
+      "pinned_commit": "c9000995c38ee2db685cedb8bfe2826fd7e42804",
+      "role": "multilingual specialist persona reference",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "msitarzewski/agency-agents",
+      "pinned_commit": "f99f6aa910a442b0197b768ce0ea7751e35e2060",
+      "role": "specialist agent personas",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "orbitinghail/graft",
+      "pinned_commit": "b07d9312dfdccc0c2de3c49fab890381d3436e0e",
+      "role": "transactional sync/storage research; reference only",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "trailhq/Graft",
+      "pinned_commit": "fe30ead39d5e6f0c921018d364da2bdbc9d4b3ad",
+      "role": "coding-agent context and persistent rules",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "browserless/browserless",
+      "pinned_commit": "f7edf0f526e5fefa2db8abca22f47b32ac165c89",
+      "role": "headless browser/CDP infrastructure",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "Tencent/BrowserSkill",
+      "pinned_commit": "5adf917918e21a01709b51e4c3392c7893348ca3",
+      "role": "browser evidence and logged-in browser automation",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "ray-lothian/UserAgent-Switcher",
+      "pinned_commit": "c9d19d08aa5dddf0ece0f9c3fdd04d8bfdf4bb1",
+      "role": "browser compatibility testing",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "browser-use/browser-use",
+      "pinned_commit": "c75e8476e26d18b7617643bc2ae082fae8eae431",
+      "role": "browser-agent automation/testing",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "WojciechMula/pyahocorasick",
+      "pinned_commit": "4e28d29898f1019d9706485b2a06026466814d9d",
+      "role": "fast multi-pattern matching; keyword/event matching; news/entity lexicon indexing",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "Conway-Research/automaton",
+      "pinned_commit": "d8f816881fd24b6f5e3d616e59edec387a447667",
+      "role": "agent runtime architecture research; memory/heartbeat/policy research; autonomy threat-model research",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    }
+  ],
+  "hard_constraints": [
+    "No external repository can authorize capital.",
+    "No external repository can submit live orders.",
+    "No external repository can mutate LIVE_LOCK or FINAL_EXECUTION_AUTHORIZATION.",
+    "No external repository can read, print, or persist production secrets.",
+    "No external repository can become a second trading engine.",
+    "AURELIA deterministic Risk Warden, Execution Firewall, Balance Truth, reconciliation, qualification, and release gates remain final."
+  ]
+}

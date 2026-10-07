@@ -44,7 +44,18 @@ jobs:
       - name: Local container startup and health smoke test
         run: |
           docker build --tag aurelia-runtime-smoke .
-          docker run --detach --rm             --name aurelia-runtime-smoke             --publish 18080:8080             aurelia-runtime-smoke
+          docker run --detach --rm \
+            --name aurelia-runtime-smoke \
+            --publish 18080:8080 \
+            --env PORT=8080 \
+            --env AURELIA_NON_PRODUCTION_SOAK=true \
+            --env AURELIA_CONTINUOUS_RUNTIME=false \
+            --env AURELIA_VERIFY_DERIV_PUBLIC=false \
+            --env AURELIA_VERIFY_DERIV_AUTH=false \
+            --env AURELIA_RUN_ONCE=false \
+            --env FINAL_EXECUTION_AUTHORIZATION=false \
+            --env LIVE_EXECUTION=BLOCKED \
+            aurelia-runtime-smoke
 
           cleanup() {
             docker stop aurelia-runtime-smoke >/dev/null 2>&1 || true

@@ -57,6 +57,27 @@ jobs:
           mkdir -p "$(dirname "${AURELIA_R100_STATE_PATH}")"
           cp "$state_file" "${AURELIA_R100_STATE_PATH}"
           echo "Recovered prospective archive artifact ${artifact_id}."
+      - name: Check recovered campaign compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          guard="$(python -m research.r100_campaign_guard)"
+          echo "R100_CAMPAIGN_GUARD=$guard"
+          case "$guard" in
+            R100_NO_STATE|R100_COMPATIBLE)
+              ;;
+            R100_ROLLOVER_REQUIRED:*)
+              preserved=".research_state/previous/incompatible-${GITHUB_RUN_ID}.json"
+              cp "${AURELIA_R100_STATE_PATH}" "$preserved"
+              rm -f "${AURELIA_R100_STATE_PATH}"
+              echo "R100_ROLLOVER_REQUIRED=${guard#R100_ROLLOVER_REQUIRED:}"
+              echo "R100_PRESERVED_INCOMPATIBLE_STATE=$preserved"
+              ;;
+            *)
+              echo "R100_CAMPAIGN_GUARD=UNEXPECTED_RESULT" >&2
+              exit 2
+              ;;
+          esac
       - name: Pin prospective campaign source
         shell: bash
         run: |
@@ -129,5 +150,6 @@ jobs:
           path: |
             .research_state/aurelia_r100_state.json
             .research_state/aurelia_r100_report.json
+            .research_state/previous/incompatible-*.json
           if-no-files-found: error
           retention-days: 30

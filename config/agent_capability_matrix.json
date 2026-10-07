@@ -21,7 +21,17 @@
         "aurelia-evidence-reconciliation",
         "browser-e2e",
         "security-review",
-        "ci-diagnostics"
+        "ci-diagnostics",
+        "market-terminal-research",
+        "multi-agent-orchestration",
+        "agent-roster-curation",
+        "browser-agent-research",
+        "browser-evidence",
+        "headless-browser-diagnostics",
+        "coding-agent-context",
+        "agent-productivity",
+        "pattern-matching",
+        "automaton-runtime-threat-model"
       ],
       "plugins": [
         "aurelia-federation"
@@ -58,7 +68,18 @@
         "aurelia-federated-repair",
         "aurelia-evidence-reconciliation",
         "research-intelligence",
-        "ci-diagnostics"
+        "ci-diagnostics",
+        "jev-typed-decision-challenger",
+        "market-terminal-research",
+        "multi-agent-orchestration",
+        "agent-roster-curation",
+        "browser-agent-research",
+        "browser-evidence",
+        "headless-browser-diagnostics",
+        "coding-agent-context",
+        "agent-productivity",
+        "pattern-matching",
+        "automaton-runtime-threat-model"
       ],
       "plugins": [
         "aurelia-federation"
@@ -114,7 +135,8 @@
     "AURELIA": {
       "role": "sole capital and execution authority",
       "skills": [
-        "risk-and-capital-controls"
+        "risk-and-capital-controls",
+        "deterministic-pattern-matching"
       ],
       "plugins": [],
       "tools": [
@@ -142,7 +164,11 @@
       "ClaudeCode": [
         "engineering",
         "research",
-        "tooling"
+        "tooling",
+        "browser_research",
+        "agent_orchestration",
+        "market_ui_research",
+        "context_tooling"
       ],
       "KimiK3": [
         "research",
@@ -151,7 +177,11 @@
       "GrokBot": [
         "research",
         "orchestration",
-        "blocker_diagnosis"
+        "blocker_diagnosis",
+        "browser_research",
+        "agent_orchestration",
+        "market_ui_research",
+        "context_tooling"
       ],
       "GoogleAgentSkills": [
         "security",
