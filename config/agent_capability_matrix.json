@@ -58,7 +58,8 @@
         "aurelia-federated-repair",
         "aurelia-evidence-reconciliation",
         "research-intelligence",
-        "ci-diagnostics"
+        "ci-diagnostics",
+        "jev-typed-decision-challenger"
       ],
       "plugins": [
         "aurelia-federation"
