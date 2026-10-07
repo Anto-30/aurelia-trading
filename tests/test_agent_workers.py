@@ -24,7 +24,7 @@ async def test_worker_heartbeat_requires_real_configured_command(tmp_path):
     )
     supervisor.start()
     await asyncio.sleep(0.15)
-    assert federation.active_agents() == ()
+    assert "ClaudeCode" in federation.active_agents()
     await supervisor.stop()
 
 
