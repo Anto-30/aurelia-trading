@@ -12,7 +12,7 @@ from runtime.core.models import BrokerOutcome
 
 class SessionLifecycleTests(unittest.TestCase):
     def test_otp_requires_token(self):
-        with patch.dict("os.environ", {}, clear=True):
+        with patch.dict("os.environ", {"DERIV_AUTH_TOKEN": ""}, clear=True):
             with self.assertRaises(DerivSessionError):
                 get_authenticated_ws_url("CR123")
 

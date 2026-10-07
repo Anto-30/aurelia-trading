@@ -6,12 +6,11 @@ import os
 import sys
 from pathlib import Path
 
-from runtime.core.secrets import get_optional_secret
-
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from runtime.core.secrets import get_optional_secret
 from assurance.certification_evidence import validate_evidence_bundle
 from runtime.ops.readiness_orchestrator import _current_evidence
 

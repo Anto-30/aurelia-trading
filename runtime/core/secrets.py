@@ -29,7 +29,30 @@ def redact(value: str, visible_chars: int = 4) -> str:
 
 
 def validate_secrets_at_startup() -> None:
-    """Fail fast before runtime initialization if critical secrets are absent."""
+    """Fail fast unless this is an explicitly sealed non-production soak."""
+    if os.getenv("AURELIA_NON_PRODUCTION_SOAK", "").strip().lower() == "true":
+        sealed_flags = {
+            "FINAL_EXECUTION_AUTHORIZATION": os.getenv(
+                "FINAL_EXECUTION_AUTHORIZATION", ""
+            ).strip().lower() == "false",
+            "LIVE_EXECUTION": os.getenv("LIVE_EXECUTION", "").strip().upper() == "BLOCKED",
+            "AURELIA_VERIFY_DERIV_PUBLIC": os.getenv(
+                "AURELIA_VERIFY_DERIV_PUBLIC", ""
+            ).strip().lower() == "false",
+            "AURELIA_VERIFY_DERIV_AUTH": os.getenv(
+                "AURELIA_VERIFY_DERIV_AUTH", ""
+            ).strip().lower() == "false",
+            "AURELIA_CONTINUOUS_RUNTIME": os.getenv(
+                "AURELIA_CONTINUOUS_RUNTIME", ""
+            ).strip().lower() == "false",
+        }
+        if all(sealed_flags.values()):
+            return
+        failed = [name for name, valid in sealed_flags.items() if not valid]
+        raise SecretsError(
+            "NON_PRODUCTION_SOAK_NOT_SEALED: " + ",".join(failed)
+        )
+
     required = ["DERIV_AUTH_TOKEN", "DERIV_APP_ID"]
     missing = [name for name in required if not os.getenv(name, "").strip()]
     if missing:

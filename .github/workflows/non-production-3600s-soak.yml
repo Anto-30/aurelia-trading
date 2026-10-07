@@ -17,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 75
     env:
+      PYTHONPATH: "."
+      AURELIA_NON_PRODUCTION_SOAK: "true"
+      AURELIA_CONTINUOUS_RUNTIME: "false"
       FINAL_EXECUTION_AUTHORIZATION: "false"
       LIVE_EXECUTION: "BLOCKED"
       AURELIA_VERIFY_DERIV_PUBLIC: "false"
@@ -44,6 +47,8 @@ jobs:
             --name aurelia-non-production-soak \
             --publish 18081:8080 \
             --env PORT=8080 \
+            --env AURELIA_NON_PRODUCTION_SOAK=true \
+            --env AURELIA_CONTINUOUS_RUNTIME=false \
             --env AURELIA_VERIFY_DERIV_PUBLIC=false \
             --env AURELIA_VERIFY_DERIV_AUTH=false \
             --env AURELIA_RUN_ONCE=false \

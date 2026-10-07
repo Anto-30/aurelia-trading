@@ -56,6 +56,28 @@ class FailClosedStartupTests(unittest.TestCase):
             fake_supervisor.stop.assert_awaited_once()
             fake_server.shutdown.assert_called_once()
 
+    def test_non_production_soak_is_secret_free_only_when_fully_sealed(self) -> None:
+        from runtime.core.secrets import SecretsError, validate_secrets_at_startup
+
+        sealed = {
+            "AURELIA_NON_PRODUCTION_SOAK": "true",
+            "FINAL_EXECUTION_AUTHORIZATION": "false",
+            "LIVE_EXECUTION": "BLOCKED",
+            "AURELIA_VERIFY_DERIV_PUBLIC": "false",
+            "AURELIA_VERIFY_DERIV_AUTH": "false",
+            "AURELIA_CONTINUOUS_RUNTIME": "false",
+            "DERIV_AUTH_TOKEN": "",
+            "DERIV_APP_ID": "",
+        }
+        with patch.dict(os.environ, sealed, clear=True):
+            validate_secrets_at_startup()
+
+        unsafe = dict(sealed)
+        unsafe["LIVE_EXECUTION"] = "ENABLED"
+        with patch.dict(os.environ, unsafe, clear=True):
+            with self.assertRaises(SecretsError):
+                validate_secrets_at_startup()
+
 
 if __name__ == "__main__":
     unittest.main()

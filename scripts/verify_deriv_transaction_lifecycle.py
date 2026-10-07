@@ -6,6 +6,11 @@ import os
 from datetime import datetime, timezone
 from math import isfinite
 from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from runtime.core.secrets import get_optional_secret
 
@@ -24,7 +29,6 @@ from runtime.core.runtime_config import load_config_hash
 from runtime.core.state import RuntimeStateMachine
 
 
-ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = Path(os.getenv("DERIV_LIFECYCLE_EVIDENCE_OUT", "artifacts/deriv_transaction_lifecycle.json"))
 INPUT = Path(os.getenv("AURELIA_LIVE_DECISION_ARTIFACT", "artifacts/live_canary_decision.json"))
 
