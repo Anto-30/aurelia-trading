@@ -84,6 +84,7 @@ async def start_continuous_runtime(
             config_hash=config_hash,
             source_hash=source_hash,
             lease_seconds=float(os.getenv("AURELIA_AGENT_LEASE_SECONDS", "45")),
+            performance_path=os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/var/lib/aurelia/agent-performance.json"),
         )
     agents = DEFAULT_AGENTS
     matrix_path = ROOT / "config" / "agent_capability_matrix.json"
