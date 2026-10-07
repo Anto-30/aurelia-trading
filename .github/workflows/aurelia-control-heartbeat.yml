@@ -1,0 +1,64 @@
+name: AURELIA Continuous Control Heartbeat
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-control-heartbeat
+  cancel-in-progress: true
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout canonical source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Verify source and fail-closed control state
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" != ""
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+          grep -Eq '^live_trading_enabled:[[:space:]]*false[[:space:]]*$' config/LIVE_LOCK.yaml
+          grep -Eq '^FINAL_EXECUTION_AUTHORIZATION:[[:space:]]*false[[:space:]]*$' config/LIVE_LOCK.yaml
+          grep -Eq '^LIVE_EXECUTION:[[:space:]]*BLOCKED[[:space:]]*$' config/LIVE_LOCK.yaml
+          grep -Eq '^capital_plane_mode:[[:space:]]*VERIFY_ONLY[[:space:]]*$' config/LIVE_LOCK.yaml
+
+          echo "AURELIA_HEARTBEAT=PASS"
+          echo "SOURCE_SHA=$GITHUB_SHA"
+          echo "LIVE_EXECUTION=BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
+          echo "CAPITAL_PLANE_MODE=VERIFY_ONLY"
+
+      - name: Validate readiness artifact is internally consistent
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path("data/runtime/AURELIA_READINESS.json")
+          d = json.loads(p.read_text(encoding="utf-8"))
+
+          assert d["final_execution_authorization"] is False
+          assert d["live_execution"] == "BLOCKED"
+          assert d["deriv"]["orders_submitted"] == 0
+          assert d["live_lock"]["live_trading_enabled"] is False
+          assert d["live_lock"]["final_execution_authorization"] is False
+          assert d["live_lock"]["capital_plane_mode"] == "VERIFY_ONLY"
+
+          print("READINESS_CONSISTENCY=PASS")
+          print(f"BLOCKERS={len(d.get('blockers', []))}")
+          print(f"STRATEGY_LIVE_ELIGIBLE={d.get('strategy_live_eligible')}")
+          PY
