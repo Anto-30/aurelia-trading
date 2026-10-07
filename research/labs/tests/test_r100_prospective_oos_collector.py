@@ -82,6 +82,29 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
             build_signal_id(timestamp, 100.0, "CALL"),
         )
 
+    def test_pre_oos_config_change_is_rebased_safely(self):
+        previous = os.environ.get("AURELIA_RESEARCH_CODE_COMMIT")
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "state.json"
+                state = initial_state()
+                state["manifest"]["code_commit"] = "commit-A"
+                state["manifest"]["config_hash"] = "legacy-config-hash"
+                state["manifest"]["oos_start_at_utc"] = "2099-01-01T00:00:00Z"
+                save_state(path, state)
+                os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = "commit-A"
+                restored = load_state(path)
+                self.assertEqual(restored["manifest"]["config_hash"], restored["manifest"]["config_hash"])
+                self.assertEqual(
+                    restored["manifest"]["provenance_migration"],
+                    "PRE_OOS_CONFIG_REBASE_NO_OOS_OBSERVATIONS",
+                )
+        finally:
+            if previous is None:
+                os.environ.pop("AURELIA_RESEARCH_CODE_COMMIT", None)
+            else:
+                os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = previous
+
     def test_loaded_campaign_rejects_source_commit_drift(self):
         previous = os.environ.get("AURELIA_RESEARCH_CODE_COMMIT")
         try:

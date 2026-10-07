@@ -145,8 +145,11 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
     now = datetime.now(timezone.utc)
     release: LiveReleaseState = read_live_release(root / "config" / "LIVE_LOCK.yaml")
 
-    token_present = bool(os.getenv("DERIV_AUTH_TOKEN"))
-    login_present = bool(os.getenv("DERIV_EXPECTED_LOGINID"))
+    token_present = bool(os.getenv("DERIV_AUTH_TOKEN") or os.getenv("DERIV_PAT"))
+    login_present = bool(
+        os.getenv("DERIV_EXPECTED_LOGINID")
+        or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID")
+    )
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
     app_present = bool(os.getenv("DERIV_APP_ID"))
     credentials = token_present and login_present and (
@@ -226,6 +229,8 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
 
     return {
         "schema": "aurelia.readiness.v1",
+        "authoritative": False,
+        "note": "This is a diagnostic snapshot. live_release_gate.py recomputes readiness from current evidence and never trusts this file as release authority.",
         "generated_at_utc": now.isoformat(),
         "mode": "AUTONOMOUS_EXECUTION_MODE" if final_auth else "AUTONOMOUS_EXECUTION_PREPARATION",
         "final_execution_authorization": final_auth,
