@@ -229,6 +229,8 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
 
     return {
         "schema": "aurelia.readiness.v1",
+        "authoritative": False,
+        "note": "This is a diagnostic snapshot. live_release_gate.py recomputes readiness from current evidence and never trusts this file as release authority.",
         "generated_at_utc": now.isoformat(),
         "mode": "AUTONOMOUS_EXECUTION_MODE" if final_auth else "AUTONOMOUS_EXECUTION_PREPARATION",
         "final_execution_authorization": final_auth,
