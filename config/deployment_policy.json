@@ -1,0 +1,32 @@
+{
+  "schema": "aurelia.deployment_policy.v1",
+  "primary_provider": "self_hosted",
+  "provider_lock": false,
+  "host_runtime": "linux_docker",
+  "transport": "ssh_immutable_archive",
+  "no_trial_dependency": true,
+  "source_integrity": "exact_git_commit",
+  "runtime_entrypoint": "python -m runtime.main",
+  "container_name": "aurelia-runtime",
+  "runtime_restart_policy": "unless-stopped",
+  "health_endpoint": "http://127.0.0.1:8080/health",
+  "persistent_state_root": "/var/lib/aurelia",
+  "secret_store": "/etc/aurelia/aurelia.env",
+  "capital_authority": "LIVE_LOCK_only",
+  "auto_live_enable": false,
+  "default_deployment_mode": "VERIFY_ONLY",
+  "accepted_deployment_modes": ["VERIFY_ONLY", "LIVE"],
+  "allowed_host_classes": [
+    "user_controlled_linux_host",
+    "dedicated_linux_vm",
+    "OCI_Always_Free_compatible_host"
+  ],
+  "provider_requirements": {
+    "persistent_process": true,
+    "docker_required": true,
+    "strict_ssh_host_verification": true,
+    "public_health_port": false,
+    "deriv_credentials_in_git": false,
+    "deriv_credentials_in_ci_artifacts": false
+  }
+}
