@@ -21,8 +21,8 @@
   "live_lock_active": true,
   "live_execution_current": "BLOCKED",
   "final_execution_authorization_current": false,
-  "starting_stake_usd": 1.0,
-  "execution_minimum_stake_usd": 1.0,
+  "starting_stake_usd": 1,
+  "execution_minimum_stake_usd": 1,
   "stake_ceiling": "authoritative_verified_available_balance",
   "probability_min": 0.55,
   "probability_max": 0.75,
@@ -31,5 +31,12 @@
   "github_remote_read_verified": true,
   "github_remote_write_verified": true,
   "github_canonical_branch": "main",
-  "note": "Current source is resolved directly from the remote main branch; commit identity must be read from the branch tip at time of use."
+  "note": "Current source is resolved directly from the remote main branch; commit identity must be read from the branch tip at time of use.",
+  "deployment_primary_provider": "self_hosted",
+  "deployment_policy": "config/deployment_policy.json",
+  "deployment_workflow": ".github/workflows/self-hosted-runtime-deploy.yml",
+  "deployment_script": "scripts/deploy/bootstrap_and_deploy.sh",
+  "deployment_runtime": "linux_docker",
+  "trial_dependency": false,
+  "provider_lock": false
 }
