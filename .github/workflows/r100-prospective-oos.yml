@@ -150,5 +150,6 @@ jobs:
           path: |
             .research_state/aurelia_r100_state.json
             .research_state/aurelia_r100_report.json
+            .research_state/previous/incompatible-*.json
           if-no-files-found: error
           retention-days: 30
