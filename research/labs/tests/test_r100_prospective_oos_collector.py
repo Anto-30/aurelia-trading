@@ -16,6 +16,8 @@ from research.r100_prospective_oos_collector import (
     evaluation,
     save_state,
     load_state,
+    legacy_research_config_hash,
+    research_config_hash,
     observe_tick,
 )
 
@@ -93,6 +95,27 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
                 os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = "commit-B"
                 with self.assertRaisesRegex(ValueError, "R100_SOURCE_COMMIT_MISMATCH"):
                     load_state(path)
+        finally:
+            if previous is None:
+                os.environ.pop("AURELIA_RESEARCH_CODE_COMMIT", None)
+            else:
+                os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = previous
+
+    def test_legacy_collection_duration_hash_migrates_without_changing_strategy_config(self):
+        previous = os.environ.get("AURELIA_RESEARCH_CODE_COMMIT")
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "state.json"
+                state = initial_state()
+                state["manifest"]["config_hash"] = legacy_research_config_hash()
+                save_state(path, state)
+                os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = state["manifest"]["code_commit"]
+                restored = load_state(path)
+                self.assertEqual(restored["manifest"]["config_hash"], research_config_hash())
+                self.assertEqual(
+                    restored["manifest"]["provenance_migration"],
+                    "LEGACY_CONFIG_HASH_COLLECTION_DURATION_REMOVED",
+                )
         finally:
             if previous is None:
                 os.environ.pop("AURELIA_RESEARCH_CODE_COMMIT", None)
