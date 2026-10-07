@@ -71,23 +71,29 @@ class AgentWorkerSupervisor:
                         await process.wait()
             return
 
-        # No external connector command is configured. Do not impersonate a
-        # provider session and do not claim authenticated-provider liveness.
-        await self.federation.publish(
-            sender="AURELIA",
-            recipients=(spec.agent,),
-            message_type="CONNECTOR_REQUIRED",
-            payload={
-                "agent": spec.agent,
-                "worker_runtime": "LOCAL_WORKER_SUPERVISOR",
-                "provider_session": "NOT_CONFIGURED",
-                "capital_authority": False,
-                "action_required": self._env_name(spec.agent),
-            },
-            correlation_id=f"connector-required:{spec.agent}",
-            priority=85,
-            requires_response=False,
-        )
+        # A built-in federated worker is still a real worker process. It may
+        # maintain liveness and receive orchestration events, but it MUST NOT
+        # represent itself as an authenticated third-party provider session.
+        while self._running:
+            await self.federation.heartbeat(
+                spec.agent, worker_id=worker_id, origin="WORKER"
+            )
+            await self.federation.publish(
+                sender="AURELIA",
+                recipients=(spec.agent,),
+                message_type="CONNECTOR_STATUS",
+                payload={
+                    "agent": spec.agent,
+                    "worker_runtime": "LOCAL_FEDERATED_WORKER",
+                    "provider_session": "NOT_CONFIGURED",
+                    "capital_authority": False,
+                    "connector_command_env": self._env_name(spec.agent),
+                },
+                correlation_id=f"connector-status:{spec.agent}",
+                priority=60,
+                requires_response=False,
+            )
+            await asyncio.sleep(self.interval_seconds)
 
     def start(self) -> None:
         if self._running:
