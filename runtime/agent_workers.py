@@ -58,12 +58,69 @@ class AgentWorkerSupervisor:
             try:
                 if command:
                     process = await asyncio.create_subprocess_exec(*command)
+                await self.federation.publish(
+                    sender="AURELIA",
+                    recipients=(spec.agent,),
+                    message_type="CONNECTOR_STATUS",
+                    payload={
+                        "agent": spec.agent,
+                        "worker_runtime": "LOCAL_FEDERATED_WORKER",
+                        "provider_session": "CONFIGURED_COMMAND" if command else "NOT_CONFIGURED",
+                        "capital_authority": False,
+                        "connector_command_env": self._env_name(spec.agent),
+                        "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
+                    },
+                    correlation_id=f"connector-status:{spec.agent}",
+                    priority=60,
+                    requires_response=False,
+                )
                 while self._running:
                     await self.federation.heartbeat(
                         spec.agent,
                         worker_id=f"{worker_id}:r{restart_count}",
                         origin="WORKER",
                     )
+                    task = await self.federation.claim_task(spec.agent)
+                    if task is not None:
+                        await self.federation.publish(
+                            sender="AURELIA",
+                            recipients=(spec.agent,),
+                            message_type="AGENT_TASK_CLAIMED",
+                            payload={
+                                "task_id": task.task_id,
+                                "task_type": task.task_type,
+                                "payload": task.payload,
+                                "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
+                                "capital_authority": False,
+                            },
+                            correlation_id=task.correlation_id,
+                            priority=task.priority,
+                            requires_response=True,
+                        )
+                        # A configured external worker owns execution. The local
+                        # supervisor never fabricates a provider result.
+                        if process is not None and process.returncode is None:
+                            await self.federation.complete_task(
+                                task.task_id, agent=spec.agent, status="COMPLETED"
+                            )
+                        else:
+                            await self.federation.complete_task(
+                                task.task_id, agent=spec.agent, status="BLOCKED"
+                            )
+                            await self.federation.publish(
+                                sender="AURELIA",
+                                recipients=(spec.agent,),
+                                message_type="CONNECTOR_REQUIRED",
+                                payload={
+                                    "task_id": task.task_id,
+                                    "reason": "NO_AUTHENTICATED_PROVIDER_COMMAND",
+                                    "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
+                                    "capital_authority": False,
+                                },
+                                correlation_id=task.correlation_id,
+                                priority=95,
+                                requires_response=False,
+                            )
                     if process is not None and process.returncode is not None:
                         break
                     await asyncio.sleep(self.interval_seconds)
@@ -97,31 +154,6 @@ class AgentWorkerSupervisor:
                 break
             restart_count += 1
             await asyncio.sleep(restart_delay)
-        return
-
-        # A built-in federated worker is still a real worker process. It may
-        # maintain liveness and receive orchestration events, but it MUST NOT
-        # represent itself as an authenticated third-party provider session.
-        while self._running:
-            await self.federation.heartbeat(
-                spec.agent, worker_id=worker_id, origin="WORKER"
-            )
-            await self.federation.publish(
-                sender="AURELIA",
-                recipients=(spec.agent,),
-                message_type="CONNECTOR_STATUS",
-                payload={
-                    "agent": spec.agent,
-                    "worker_runtime": "LOCAL_FEDERATED_WORKER",
-                    "provider_session": "NOT_CONFIGURED",
-                    "capital_authority": False,
-                    "connector_command_env": self._env_name(spec.agent),
-                },
-                correlation_id=f"connector-status:{spec.agent}",
-                priority=60,
-                requires_response=False,
-            )
-            await asyncio.sleep(self.interval_seconds)
 
     def start(self) -> None:
         if self._running:
