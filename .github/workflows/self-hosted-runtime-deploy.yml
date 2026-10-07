@@ -25,11 +25,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      DEPLOYMENT_MODE: \${{ inputs.deployment_mode }}
-      AURELIA_HOST: \${{ secrets.AURELIA_HOST }}
-      AURELIA_USER: \${{ secrets.AURELIA_USER }}
-      AURELIA_SSH_KEY: \${{ secrets.AURELIA_SSH_KEY }}
-      AURELIA_KNOWN_HOSTS: \${{ secrets.AURELIA_KNOWN_HOSTS }}
+      DEPLOYMENT_MODE: ${{ inputs.deployment_mode }}
+      AURELIA_HOST: ${{ secrets.AURELIA_HOST }}
+      AURELIA_USER: ${{ secrets.AURELIA_USER }}
+      AURELIA_SSH_KEY: ${{ secrets.AURELIA_SSH_KEY }}
+      AURELIA_KNOWN_HOSTS: ${{ secrets.AURELIA_KNOWN_HOSTS }}
 
     steps:
       - name: Checkout exact AURELIA source
@@ -66,7 +66,7 @@ jobs:
 
       - name: Require green AURELIA Assurance for the exact commit
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
