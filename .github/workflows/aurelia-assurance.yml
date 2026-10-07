@@ -65,6 +65,15 @@ jobs:
           if-no-files-found: error
 
       - name: Verify clean worker health endpoint
+        env:
+          PYTHONPATH: "."
+          AURELIA_NON_PRODUCTION_SOAK: "true"
+          FINAL_EXECUTION_AUTHORIZATION: "false"
+          LIVE_EXECUTION: "BLOCKED"
+          AURELIA_VERIFY_DERIV_PUBLIC: "false"
+          AURELIA_VERIFY_DERIV_AUTH: "false"
+          AURELIA_CONTINUOUS_RUNTIME: "false"
+          AURELIA_RUN_ONCE: "false"
         run: |
           python -m runtime.main >/tmp/aurelia-worker.log 2>&1 &
           PID=$!
