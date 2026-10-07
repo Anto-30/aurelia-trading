@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "purpose": "Evidence-backed agent performance and reward system",
+  "authority": {
+    "score_award_authority": "AURELIA_DETERMINISTIC_EVALUATOR",
+    "agents_can_self_award": false,
+    "points_grant_capital_authority": false,
+    "points_mutate_live_lock": false,
+    "points_permit_order_submission": false
+  },
+  "scoring": {
+    "base_max_per_evaluation": 100,
+    "categories": {
+      "correctness": 25,
+      "evidence_quality": 20,
+      "task_outcome": 20,
+      "robustness": 15,
+      "reproducibility": 10,
+      "efficiency": 5,
+      "collaboration": 5
+    },
+    "positive_points_require_evidence": true,
+    "negative_points_allowed": true,
+    "maximum_penalty_per_evaluation": -100,
+    "reputation_decay_days": 90,
+    "minimum_evaluations_for_rank": 5
+  },
+  "penalties": {
+    "fabricated_evidence": -100,
+    "false_completion": -75,
+    "regression": -50,
+    "invalid_research_claim": -50,
+    "control_bypass_attempt": -100,
+    "repeated_unresolved_error": -20
+  },
+  "ranking": {
+    "primary": "decayed_net_points",
+    "secondary": "evidence_quality_rate",
+    "tertiary": "successful_task_rate",
+    "minimum_evaluations_for_leadership": 10
+  },
+  "reward_routing": {
+    "higher_priority_research": true,
+    "larger_research_budget": true,
+    "peer_review_priority": true,
+    "capital_authority": false,
+    "live_execution_authority": false
+  }
+}
