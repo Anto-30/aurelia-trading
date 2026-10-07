@@ -121,6 +121,10 @@ jobs:
               "qualification=", report["qualification_status"],
           )
           PY
+      - name: Promote proven R100 certification evidence
+        if: always()
+        run: python scripts/promote_r100_certification_evidence.py
+
       - name: Upload prospective research archive
         if: always()
         uses: actions/upload-artifact@v4
@@ -129,5 +133,7 @@ jobs:
           path: |
             .research_state/aurelia_r100_state.json
             .research_state/aurelia_r100_report.json
-          if-no-files-found: error
+            evidence/prospective_oos.json
+            evidence/calibration.json
+          if-no-files-found: warn
           retention-days: 30
