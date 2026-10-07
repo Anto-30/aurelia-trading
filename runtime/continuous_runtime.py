@@ -11,6 +11,7 @@ from pathlib import Path
 from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.adapters.session_manager import DerivSessionManager
 from runtime.agent_federation import AgentFederationSupervisor, PersistentAgentFederation
+from runtime.agent_workers import AgentWorkerSupervisor
 from runtime.autonomous_loop import AutonomousExecutionLoop, FederatedDecisionProvider
 from runtime.broker.executor import CapitalPlaneExecutor
 from runtime.core.persistent import PersistentIdempotencyStore
@@ -33,6 +34,7 @@ DEFAULT_AGENTS = (
 class ContinuousRuntime:
     federation: PersistentAgentFederation
     federation_supervisor: AgentFederationSupervisor
+    agent_worker_supervisor: AgentWorkerSupervisor | None = None
     adapter: DerivAdapter | None = None
     execution_loop: AutonomousExecutionLoop | None = None
     execution_task: asyncio.Task[None] | None = None
@@ -56,6 +58,9 @@ class ContinuousRuntime:
             except asyncio.CancelledError:
                 pass
             self.heartbeat_task = None
+        if self.agent_worker_supervisor is not None:
+            await self.agent_worker_supervisor.stop()
+            self.agent_worker_supervisor = None
         if self.federation_supervisor is not None:
             await self.federation_supervisor.stop()
         if self.adapter is not None:
@@ -97,6 +102,19 @@ async def start_continuous_runtime(
         )
         federation_supervisor.start()
     runtime = ContinuousRuntime(federation, federation_supervisor)
+
+    # Start real local worker runtimes for every external advisory role. A
+    # worker emits a WORKER lease only while its process is actually running.
+    # Provider authentication remains explicit: absent a configured command,
+    # the worker reports CONNECTOR_REQUIRED rather than impersonating a
+    # Grok/Kimi/Claude/Google/GLM/Playwright session.
+    if os.getenv("AURELIA_AGENT_WORKERS", "true").strip().lower() == "true":
+        runtime.agent_worker_supervisor = AgentWorkerSupervisor(
+            federation,
+            agents=tuple(agent for agent in agents if agent != "AURELIA"),
+            interval_seconds=float(os.getenv("AURELIA_AGENT_WORKER_HEARTBEAT_SECONDS", "10")),
+        )
+        runtime.agent_worker_supervisor.start()
 
     # AURELIA worker liveness is owned by this actual runtime process.
     # The federation supervisor deliberately cannot manufacture this lease.
