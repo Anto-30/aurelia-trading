@@ -67,10 +67,19 @@ def main() -> int:
             "category": category,
             "reason": item.get("reason"),
         })
+    effective_final_authorization = bool(report.get("final_execution_authorization")) and cert_status == "PASS"
+    if cert_status != "PASS":
+        blockers.append({
+            "gate": "CERTIFICATION_BUNDLE",
+            "status": cert_status,
+            "category": "CERTIFICATION",
+            "reason": cert_detail,
+        })
+
     payload = {
         "schema": "aurelia.release_closure.v1",
         "authoritative": False,
-        "final_execution_authorization": bool(report.get("final_execution_authorization")),
+        "final_execution_authorization": effective_final_authorization,
         "live_execution": report.get("live_execution"),
         "source_sha": report.get("attestations", {}).get("source_sha"),
         "certification": {"status": cert_status, "detail": cert_detail},
@@ -79,6 +88,7 @@ def main() -> int:
         "external_evidence_blockers": [x for x in blockers if x["category"] == "EXTERNAL_EVIDENCE"],
         "control_attestation_blockers": [x for x in blockers if x["category"] == "CONTROL_ATTESTATION"],
         "final_authorization_blockers": [x for x in blockers if x["category"] == "FINAL_AUTHORIZATION"],
+        "certification_blockers": [x for x in blockers if x["category"] == "CERTIFICATION"],
     }
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0 if not blockers and cert_status == "PASS" else 2
