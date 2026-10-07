@@ -85,37 +85,56 @@ jobs:
         if: steps.credential.outputs.available == 'true'
         run: npm install --global @railway/cli
 
-      - name: Verify Railway project access and required service
+      - name: Verify or provision the canonical Railway service
         if: steps.credential.outputs.available == 'true'
         shell: bash
         run: |
-          railway status             --project "$RAILWAY_PROJECT_ID"             --environment "$RAILWAY_ENVIRONMENT_ID"
+          set -euo pipefail
+          railway status --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT_ID"
 
-          service_json="$(railway status             --project "$RAILWAY_PROJECT_ID"             --environment "$RAILWAY_ENVIRONMENT_ID"             --json)"
+          service_json="$(railway status --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT_ID" --json)"
           export service_json
 
+          exists="$(python - <<'PY'
+          import json, os
+          payload=json.loads(os.environ["service_json"])
+          services=payload.get("services", []) if isinstance(payload, dict) else payload
+          target=os.environ["RAILWAY_SERVICE_NAME"]
+          print("true" if any(isinstance(s,dict) and s.get("name")==target for s in services) else "false")
+          PY
+          )"
+
+          if [ "$exists" != "true" ]; then
+            echo "Canonical Railway worker is absent; creating the service from the existing AURELIA repository."
+            railway add --service "$RAILWAY_SERVICE_NAME" --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT_ID" --yes
+            railway service source connect               --project "$RAILWAY_PROJECT_ID"               --environment "$RAILWAY_ENVIRONMENT_ID"               --service "$RAILWAY_SERVICE_NAME"               --repo "Anto-30/aurelia-trading"               --branch "main"
+          fi
+
+          service_json="$(railway status --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT_ID" --json)"
+          export service_json
           python - <<'PY'
-          import json
-          import os
-          import sys
-
-          raw = os.environ["service_json"]
-          payload = json.loads(raw)
-          services = payload.get("services", []) if isinstance(payload, dict) else payload
-          names = {
-              item.get("name")
-              for item in services
-              if isinstance(item, dict) and item.get("name")
-          }
-          target = os.environ["RAILWAY_SERVICE_NAME"]
-          if target not in names:
-              print("BLOCKED_RAILWAY_SERVICE_MISSING")
-              print(f"Required service '{target}' does not exist in the target environment.")
-              print("Create the service after the Railway account plan is restored; do not create a substitute trading engine.")
+          import json, os, sys
+          payload=json.loads(os.environ["service_json"])
+          services=payload.get("services", []) if isinstance(payload,dict) else payload
+          target=os.environ["RAILWAY_SERVICE_NAME"]
+          match=next((s for s in services if isinstance(s,dict) and s.get("name")==target),None)
+          if not match:
+              print("RAILWAY_CANONICAL_SERVICE=BLOCKED")
               sys.exit(2)
-
           print(f"Railway service verified: {target}")
           PY
+
+      - name: Provision production runtime configuration and protected Deriv secrets
+        if: steps.credential.outputs.available == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}" || { echo "BLOCKED_EXTERNAL_SECRET: Deriv PAT is not configured"; exit 2; }
+          test -n "${{ secrets.DERIV_APP_ID }}" || { echo "BLOCKED_EXTERNAL_SECRET: Deriv App ID is not configured"; exit 2; }
+          test -n "${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}" || { echo "BLOCKED_EXTERNAL_SECRET: expected Deriv account binding is not configured"; exit 2; }
+
+          railway variable set             --project "$RAILWAY_PROJECT_ID"             --environment "$RAILWAY_ENVIRONMENT_ID"             --service "$RAILWAY_SERVICE_NAME"             "DERIV_AUTH_TOKEN=${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}"             "DERIV_APP_ID=${{ secrets.DERIV_APP_ID }}"             "DERIV_EXPECTED_LOGINID=${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}"             "DERIV_EXPECTED_CURRENCY=${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}"             "DERIV_ENVIRONMENT=real"             "DERIV_AUTH_MODE=${{ secrets.DERIV_AUTH_MODE || 'pat' }}"             "AURELIA_VERIFY_DERIV_AUTH=true"             "AURELIA_VERIFY_DERIV_PUBLIC=true"             "AURELIA_CONTINUOUS_RUNTIME=true"             "AURELIA_RUN_ONCE=false"             "FINAL_EXECUTION_AUTHORIZATION=false"             "LIVE_EXECUTION=BLOCKED"
+          echo "Protected runtime configuration provisioned without printing secret values."
 
       - name: Deploy AURELIA runtime
         if: steps.credential.outputs.available == 'true'
