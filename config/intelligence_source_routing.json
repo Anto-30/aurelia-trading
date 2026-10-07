@@ -159,6 +159,24 @@
       "policy": "no execution authority"
     },
     {
+      "source": "JEV (claude-x-jev)",
+      "agent_roles": [
+        "GrokBot"
+      ],
+      "primary_agent": "GrokBot",
+      "uses": [
+        "typed decision classification",
+        "confidence-scored challenger checks",
+        "evidence consistency checks",
+        "fast decision triage"
+      ],
+      "authority": "advisory_typed_challenge_only",
+      "capital_authority": false,
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "pinned_commit": "c8662b0550b2a999d1dbcfb148683615cf92636a",
+      "policy": "JEV may challenge advisory decisions but may never authorize capital, submit orders, read secrets, mutate LIVE_LOCK, or bypass deterministic gates."
+    },
+    {
       "source": "External repositories — UI/engineering (Ace)",
       "agent_roles": [
         "Command Center UI",
