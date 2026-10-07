@@ -48,3 +48,26 @@ Integration rule: AURELIA's existing PersistentAgentFederation remains the canon
 
 Railway sources may inform deployment automation and persistence design, but no external template may be deployed as AURELIA production infrastructure without repository review, CI evidence, secret-boundary review, and explicit deployment authorization.
 
+
+## 2026-10-07 browser/agency toolkit federation
+
+The following pinned sources are available to GrokBot and ClaudeCode/Dev through the governed federation manifest. AURELIA may use their outputs as reference evidence only:
+
+| Source | Mode | Primary use |
+|---|---|---|
+| jeffbai996/ticker-tape-web | SANDBOX_ONLY | market-terminal/UI research |
+| browser-use/agency | SANDBOX_ONLY | agent work discovery and approval patterns |
+| tanweai/pua | SANDBOX_ONLY | productivity and skill-packaging research; do not inherit coercive prompts as policy |
+| msitarzewski/agency-agents-app | SANDBOX_ONLY | agent installation/reconciliation patterns |
+| VRSEN/agency-swarm | SANDBOX_ONLY | directional multi-agent orchestration and typed tools |
+| Anas-Khan93/ai-agency-agents | SANDBOX_ONLY | specialist agent persona reference |
+| jnMetaCode/agency-agents-zh | REFERENCE_ONLY | multilingual specialist persona reference |
+| msitarzewski/agency-agents | REFERENCE_ONLY | specialist agent workflow reference |
+| orbitinghail/graft | REFERENCE_ONLY | transactional synchronization/storage research; explicitly alpha and not a runtime dependency |
+| trailhq/Graft | SANDBOX_ONLY | coding-agent context and persistent rules |
+| browserless/browserless | SANDBOX_ONLY | headless browser/CDP infrastructure research |
+| Tencent/BrowserSkill | SANDBOX_ONLY | browser evidence, logged-in browser automation, web debugging |
+| ray-lothian/UserAgent-Switcher | SANDBOX_ONLY | browser compatibility testing only; never use to evade broker/security controls |
+| browser-use/browser-use | SANDBOX_ONLY | browser-agent automation/testing |
+
+All source pins are recorded in config/external_toolkit_sync_manifest.json. Installing or studying these sources must not alter LIVE_LOCK, FINAL_EXECUTION_AUTHORIZATION, Risk Warden, Execution Firewall, account isolation, reconciliation, qualification, or broker truth.
