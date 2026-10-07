@@ -171,8 +171,26 @@ def load_state(path: Path) -> dict[str, Any]:
 
     expected_config_hash = research_config_hash()
     if manifest.get("config_hash") and manifest["config_hash"] != expected_config_hash:
-        raise ValueError("R100_CONFIG_HASH_MISMATCH")
-    manifest["config_hash"] = expected_config_hash
+        oos_start = datetime.fromisoformat(
+            manifest["oos_start_at_utc"].replace("Z", "+00:00")
+        )
+        has_oos = any(
+            datetime.fromisoformat(
+                row["signal_timestamp_utc"].replace("Z", "+00:00")
+            ) >= oos_start
+            for row in state.get("observations", [])
+        )
+        if has_oos:
+            raise ValueError("R100_CONFIG_HASH_MISMATCH")
+        # Configuration rebinding is permitted only before the sealed OOS window
+        # begins. This supports harmless operational changes (for example,
+        # collection duration) without altering the frozen strategy hypothesis.
+        manifest["config_hash"] = expected_config_hash
+        manifest["provenance_migration"] = (
+            "PRE_OOS_CONFIG_REBASE_NO_OOS_OBSERVATIONS"
+        )
+    else:
+        manifest["config_hash"] = expected_config_hash
     return state
 
 def save_state(path: Path, state: dict[str, Any]) -> None:
