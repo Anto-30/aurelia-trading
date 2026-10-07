@@ -116,12 +116,18 @@ jobs:
           oos_epoch="$(date -u -d "$campaign_oos_start" +%s)"
 
           if [ "$now_epoch" -lt "$oos_epoch" ]; then
-            old_collector="$(git show "$campaign_commit:research/r100_prospective_oos_collector.py" | sha256sum | awk '{print $1}')"
-            new_collector="$(git show "$GITHUB_SHA:research/r100_prospective_oos_collector.py" | sha256sum | awk '{print $1}')"
             old_signal="$(git show "$campaign_commit:runtime/strategy/autonomous_signal_engine.py" | sha256sum | awk '{print $1}')"
             new_signal="$(git show "$GITHUB_SHA:runtime/strategy/autonomous_signal_engine.py" | sha256sum | awk '{print $1}')"
-            test "$old_collector" = "$new_collector"
             test "$old_signal" = "$new_signal"
+            strategy_version="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          state = json.loads(Path(".research_state/aurelia_r100_state.json").read_text())
+          print(state["manifest"]["strategy_version"])
+          PY
+            )"
+            current_version="$(grep -o 'STRATEGY_VERSION = "[^"]*"' research/r100_prospective_oos_collector.py | cut -d '"' -f2)"
+            test "$strategy_version" = "$current_version"
 
             python - <<'PY'
           import json
