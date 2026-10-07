@@ -12,10 +12,9 @@ if str(ROOT) not in sys.path:
 
 from runtime.core.secrets import get_optional_secret
 from assurance.certification_evidence import validate_evidence_bundle
-from runtime.ops.readiness_orchestrator import _current_evidence
+from runtime.ops.readiness_orchestrator import _current_evidence, evaluate as evaluate_readiness
 
 LIVE_LOCK_PATH = ROOT / "config" / "LIVE_LOCK.yaml"
-READINESS_PATH = ROOT / "data" / "runtime" / "AURELIA_READINESS.json"
 SESSION_EVIDENCE_PATH = ROOT / "artifacts" / "deriv_authenticated_session.json"
 LIFECYCLE_VERIFY_EVIDENCE_PATH = ROOT / "artifacts" / "deriv_transaction_lifecycle.json"
 
@@ -103,14 +102,18 @@ def check_live_lock() -> None:
 
 
 def check_readiness() -> None:
-    report = _read_json(READINESS_PATH)
+    # Never trust the repository-tracked readiness snapshot. Recompute readiness
+    # from current lock, broker evidence, attestations, and certification state.
+    report = evaluate_readiness(ROOT)
+    if not isinstance(report, dict):
+        raise RuntimeError("dynamic readiness evaluation returned an invalid payload")
     if not report.get("final_execution_authorization"):
-        raise RuntimeError("readiness report final_execution_authorization is false")
+        raise RuntimeError("dynamic readiness final_execution_authorization is false")
     if str(report.get("live_execution", "")).upper() != "ENABLED":
-        raise RuntimeError("readiness report live_execution is not ENABLED")
+        raise RuntimeError("dynamic readiness live_execution is not ENABLED")
     blockers = report.get("blockers")
     if blockers:
-        raise RuntimeError(f"readiness blockers present: {blockers}")
+        raise RuntimeError(f"dynamic readiness blockers present: {blockers}")
 
 
 def check_certification_evidence() -> None:
