@@ -6,6 +6,11 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from runtime.core.secrets import get_optional_secret
 
@@ -17,7 +22,6 @@ from runtime.core.models import CapitalSnapshot
 from runtime.core.runtime_config import load_config_hash
 
 
-ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = Path(os.getenv("DERIV_EVIDENCE_OUT", "artifacts/deriv_authenticated_session.json"))
 
 
