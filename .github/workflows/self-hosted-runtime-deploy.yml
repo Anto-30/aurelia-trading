@@ -1,0 +1,189 @@
+name: AURELIA Self-Hosted Runtime Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_mode:
+        description: Deployment mode; LIVE is accepted only when the exact checked-in LIVE_LOCK already authorizes it.
+        required: true
+        default: VERIFY_ONLY
+        type: choice
+        options:
+          - VERIFY_ONLY
+          - LIVE
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-self-hosted-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DEPLOYMENT_MODE: \${{ inputs.deployment_mode }}
+      AURELIA_HOST: \${{ secrets.AURELIA_HOST }}
+      AURELIA_USER: \${{ secrets.AURELIA_USER }}
+      AURELIA_SSH_KEY: \${{ secrets.AURELIA_SSH_KEY }}
+      AURELIA_KNOWN_HOSTS: \${{ secrets.AURELIA_KNOWN_HOSTS }}
+
+    steps:
+      - name: Checkout exact AURELIA source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Verify source revision and deployment lock
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          case "$DEPLOYMENT_MODE" in
+            VERIFY_ONLY)
+              grep -Eq '^live_trading_enabled:[[:space:]]*false[[:space:]]*$' config/LIVE_LOCK.yaml
+              grep -Eq '^FINAL_EXECUTION_AUTHORIZATION:[[:space:]]*false[[:space:]]*$' config/LIVE_LOCK.yaml
+              grep -Eq '^LIVE_EXECUTION:[[:space:]]*BLOCKED[[:space:]]*$' config/LIVE_LOCK.yaml
+              grep -Eq '^capital_plane_mode:[[:space:]]*VERIFY_ONLY[[:space:]]*$' config/LIVE_LOCK.yaml
+              ;;
+            LIVE)
+              grep -Eq '^live_trading_enabled:[[:space:]]*true[[:space:]]*$' config/LIVE_LOCK.yaml
+              grep -Eq '^FINAL_EXECUTION_AUTHORIZATION:[[:space:]]*true[[:space:]]*$' config/LIVE_LOCK.yaml
+              grep -Eq '^LIVE_EXECUTION:[[:space:]]*ENABLED[[:space:]]*$' config/LIVE_LOCK.yaml
+              grep -Eq '^capital_plane_mode:[[:space:]]*LIVE[[:space:]]*$' config/LIVE_LOCK.yaml
+              ;;
+            *)
+              echo "DEPLOYMENT_BLOCKED=INVALID_MODE"
+              exit 2
+              ;;
+          esac
+          echo "SOURCE_COMMIT=$GITHUB_SHA"
+          echo "DEPLOYMENT_MODE=$DEPLOYMENT_MODE"
+
+      - name: Require green AURELIA Assurance for the exact commit
+        env:
+          GH_TOKEN: \${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assurance_json="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow aurelia-assurance.yml --commit "$GITHUB_SHA" --limit 20 --json status,conclusion,event,databaseId)"
+          export assurance_json
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          runs = json.loads(os.environ["assurance_json"])
+          eligible = [
+              run for run in runs
+              if run.get("status") == "completed"
+              and run.get("conclusion") == "success"
+              and run.get("event") == "push"
+          ]
+          if not eligible:
+              print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PUSH_RUN_FOR_EXACT_COMMIT")
+              sys.exit(2)
+          print(f"ASSURANCE_GREEN_PUSH_RUNS={len(eligible)}")
+          PY
+
+      - name: Require self-host transport secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in AURELIA_HOST AURELIA_USER AURELIA_SSH_KEY AURELIA_KNOWN_HOSTS; do
+            test -n "$(printenv "$name")" || { echo "Missing required protected secret: $name"; exit 2; }
+          done
+
+      - name: Configure strict SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$AURELIA_SSH_KEY" | tr -d '\r' > "$HOME/.ssh/aurelia_target"
+          printf '%s\n' "$AURELIA_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/aurelia_target" "$HOME/.ssh/known_hosts"
+          {
+            echo "Host aurelia-target"
+            echo "  HostName $AURELIA_HOST"
+            echo "  User $AURELIA_USER"
+            echo "  Port 22"
+            echo "  IdentityFile ~/.ssh/aurelia_target"
+            echo "  IdentitiesOnly yes"
+            echo "  StrictHostKeyChecking yes"
+            echo "  UserKnownHostsFile ~/.ssh/known_hosts"
+            echo "  ServerAliveInterval 30"
+            echo "  ServerAliveCountMax 3"
+          } > "$HOME/.ssh/config"
+          chmod 600 "$HOME/.ssh/config"
+          ssh aurelia-target -- true
+
+      - name: Package exact source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/aurelia-$GITHUB_SHA.tar.gz"
+          git archive --format=tar.gz --output="$archive" "$GITHUB_SHA"
+          test -s "$archive"
+          echo "AURELIA_ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Transfer and install exact source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          scp -F "$HOME/.ssh/config" "$AURELIA_ARCHIVE" "aurelia-target:/tmp/aurelia-$GITHUB_SHA.tar.gz"
+          ssh -F "$HOME/.ssh/config" aurelia-target \
+            "set -euo pipefail
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA
+             mkdir -p /tmp/aurelia-release-$GITHUB_SHA
+             tar -xzf /tmp/aurelia-$GITHUB_SHA.tar.gz -C /tmp/aurelia-release-$GITHUB_SHA
+             rm -f /tmp/aurelia-$GITHUB_SHA.tar.gz
+             sudo rm -rf /opt/aurelia/releases/$GITHUB_SHA
+             sudo mkdir -p /opt/aurelia/releases/$GITHUB_SHA
+             sudo cp -a /tmp/aurelia-release-$GITHUB_SHA/. /opt/aurelia/releases/$GITHUB_SHA/
+             sudo env AURELIA_DEPLOYMENT_MODE="$DEPLOYMENT_MODE" bash /opt/aurelia/releases/$GITHUB_SHA/scripts/deploy/bootstrap_and_deploy.sh '$GITHUB_SHA'
+             rm -rf /tmp/aurelia-release-$GITHUB_SHA"
+
+      - name: Verify source, runtime health, and capital state
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-target \
+            "set -euo pipefail
+             test -f /var/lib/aurelia/DEPLOYED_SOURCE_SHA
+             test \"$(cat /var/lib/aurelia/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
+             sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_DEPLOYMENT_MODE=$DEPLOYMENT_MODE'
+             curl --fail --silent --show-error http://127.0.0.1:8080/health
+             test \"$(sudo docker inspect aurelia-runtime --format '{{.HostConfig.RestartPolicy.Name}}')\" = 'unless-stopped'"
+
+          if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
+            ssh -F "$HOME/.ssh/config" aurelia-target \
+              "set -euo pipefail
+               sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_AUTONOMOUS_LOOP=true'
+               sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'FINAL_EXECUTION_AUTHORIZATION=true'
+               sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'LIVE_EXECUTION=ENABLED'"
+          else
+            ssh -F "$HOME/.ssh/config" aurelia-target \
+              "set -euo pipefail
+               sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_AUTONOMOUS_LOOP=false'
+               sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'FINAL_EXECUTION_AUTHORIZATION=false'
+               sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'LIVE_EXECUTION=BLOCKED'"
+          fi
+
+      - name: Write non-secret deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## AURELIA self-hosted runtime"
+            echo ""
+            echo "SOURCE_COMMIT=$GITHUB_SHA"
+            echo "DEPLOYMENT_MODE=$DEPLOYMENT_MODE"
+            echo "PERSISTENT_RUNTIME=true"
+            echo "TRIAL_DEPENDENCY=false"
+            echo "CAPITAL_AUTHORITY=LIVE_LOCK_only"
+            echo "FINAL_EXECUTION_AUTHORIZATION=$([ "$DEPLOYMENT_MODE" = "LIVE" ] && echo true || echo false)"
+            echo "LIVE_EXECUTION=$([ "$DEPLOYMENT_MODE" = "LIVE" ] && echo ENABLED || echo BLOCKED)"
+          } >> "$GITHUB_STEP_SUMMARY"
