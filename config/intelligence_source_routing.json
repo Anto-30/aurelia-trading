@@ -466,6 +466,37 @@
       ],
       "authority": "sandbox_only",
       "policy": "External source is advisory only; it cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repository — pyahocorasick",
+      "agent_roles": [
+        "GrokBot",
+        "ClaudeCode",
+        "Market Research",
+        "News Intelligence"
+      ],
+      "uses": [
+        "fast multi-pattern matching",
+        "keyword/entity lexicon indexing",
+        "news/event classification research"
+      ],
+      "authority": "sandbox_and_ui_only",
+      "policy": "Advisory/reference only; cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
+    },
+    {
+      "source": "External repository — Conway Automaton",
+      "agent_roles": [
+        "GrokBot",
+        "ClaudeCode",
+        "Orchestrator"
+      ],
+      "uses": [
+        "autonomous-agent runtime architecture research",
+        "memory/heartbeat/policy research",
+        "autonomy threat-model review"
+      ],
+      "authority": "reference_only",
+      "policy": "Advisory/reference only; cannot authorize capital, access secrets, mutate LIVE_LOCK, submit broker transactions, or override deterministic release gates."
     }
   ],
   "agent_contract": "Every routed source produces typed evidence tagged source, timestamp, provenance, confidence, and authority class. Deterministic Risk Warden, Execution Firewall, Balance Truth, LIVE_LOCK, reconciliation, and release gates remain final."
