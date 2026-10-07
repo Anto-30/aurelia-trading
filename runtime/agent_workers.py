@@ -51,25 +51,53 @@ class AgentWorkerSupervisor:
     async def _worker(self, spec: AgentWorkerSpec) -> None:
         worker_id = f"agent-worker:{spec.agent}:{os.getpid()}"
         command = self._command(spec.agent)
-        if command:
-            process = await asyncio.create_subprocess_exec(*command)
+        restart_delay = max(1.0, self.interval_seconds)
+        restart_count = 0
+        while self._running:
+            process = None
             try:
+                if command:
+                    process = await asyncio.create_subprocess_exec(*command)
                 while self._running:
                     await self.federation.heartbeat(
-                        spec.agent, worker_id=worker_id, origin="WORKER"
+                        spec.agent,
+                        worker_id=f"{worker_id}:r{restart_count}",
+                        origin="WORKER",
                     )
-                    if process.returncode is not None:
+                    if process is not None and process.returncode is not None:
                         break
                     await asyncio.sleep(self.interval_seconds)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                await self.federation.publish(
+                    sender="AURELIA",
+                    recipients=(spec.agent,),
+                    message_type="WORKER_RUNTIME_ERROR",
+                    payload={
+                        "agent": spec.agent,
+                        "worker_runtime": "LOCAL_FEDERATED_WORKER",
+                        "error_class": type(exc).__name__,
+                        "restart_policy": "ALWAYS_WHILE_RUNTIME_HEALTHY",
+                        "capital_authority": False,
+                    },
+                    correlation_id=f"worker-error:{spec.agent}",
+                    priority=95,
+                    requires_response=False,
+                )
             finally:
-                if process.returncode is None:
+                if process is not None and process.returncode is None:
                     process.terminate()
                     try:
                         await asyncio.wait_for(process.wait(), timeout=5)
                     except asyncio.TimeoutError:
                         process.kill()
                         await process.wait()
-            return
+            if not self._running:
+                break
+            restart_count += 1
+            await asyncio.sleep(restart_delay)
+        return
 
         # A built-in federated worker is still a real worker process. It may
         # maintain liveness and receive orchestration events, but it MUST NOT
