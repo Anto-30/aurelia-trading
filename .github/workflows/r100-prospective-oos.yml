@@ -18,10 +18,10 @@ concurrency:
 jobs:
   collect-and-evaluate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       GH_TOKEN: ${{ github.token }}
-      AURELIA_R100_COLLECTION_SECONDS: "540"
+      AURELIA_R100_COLLECTION_SECONDS: "900"
       AURELIA_R100_HORIZON_TICKS: "10"
       AURELIA_R100_STATE_PATH: ".research_state/aurelia_r100_state.json"
     steps:
