@@ -1,0 +1,15 @@
+{
+  "schema": "aurelia.ml_model_registry.v1",
+  "capital_authority": false,
+  "execution_authority": false,
+  "models": [{
+    "model_id": "RLSTM-IBTI-v0.1",
+    "status": "RESEARCH",
+    "architecture": "ResNet-LSTM",
+    "feature_families": ["OHLC","returns","candle_geometry","intra_bar_timing","rule_state","residuals","regime"],
+    "lookback_candidates": [16,32,64,128,256],
+    "paper_reference": "ResNLS",
+    "promotion_policy": "OOS + calibration + economics + robustness + provenance + shadow",
+    "capital_plane_access": false
+  }]
+}
