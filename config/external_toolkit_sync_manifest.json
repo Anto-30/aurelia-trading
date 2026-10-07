@@ -188,6 +188,28 @@
         "AURELIA"
       ],
       "integration": "governed_external_source"
+    },
+    {
+      "repo": "WojciechMula/pyahocorasick",
+      "pinned_commit": "4e28d29898f1019d9706485b2a06026466814d9d",
+      "role": "fast multi-pattern matching; keyword/event matching; news/entity lexicon indexing",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
+    },
+    {
+      "repo": "Conway-Research/automaton",
+      "pinned_commit": "d8f816881fd24b6f5e3d616e59edec387a447667",
+      "role": "agent runtime architecture research; memory/heartbeat/policy research; autonomy threat-model research",
+      "assigned_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "integration": "governed_external_source"
     }
   ],
   "hard_constraints": [
