@@ -9,6 +9,7 @@ from typing import Any, Iterable
 
 from runtime.core.events import event_envelope, sha256
 from runtime.core.journal import AppendOnlyJournal
+from runtime.agent_performance import AgentPerformanceEvaluator, AgentPerformanceLedger
 
 
 @dataclass(frozen=True)
@@ -105,6 +106,8 @@ class PersistentAgentFederation:
         self.task_path = Path(task_path) if task_path is not None else self.lease_path.with_name("federation-tasks.json")
         self.task_path.parent.mkdir(parents=True, exist_ok=True)
         self._stale_notified: set[str] = set()
+        performance_path = self.lease_path.with_name("agent-performance.json")
+        self.performance_evaluator = AgentPerformanceEvaluator(AgentPerformanceLedger(performance_path))
 
     def _append(self, event_type: str, payload: dict[str, Any], correlation_id: str) -> None:
         event_id = f"{event_type}:{sha256({ 'payload': payload, 'correlation_id': correlation_id })[:20]}"
@@ -244,7 +247,15 @@ class PersistentAgentFederation:
             ),
         )
 
-    async def complete_task(self, task_id: str, *, agent: str, status: str = "COMPLETED") -> bool:
+    async def complete_task(
+        self,
+        task_id: str,
+        *,
+        agent: str,
+        status: str = "COMPLETED",
+        evidence_ref: str = "",
+        result: dict[str, Any] | None = None,
+    ) -> bool:
         if status not in {"COMPLETED", "FAILED", "BLOCKED"}:
             raise ValueError("INVALID_TASK_STATUS")
         async with self._lock:
@@ -253,8 +264,28 @@ class PersistentAgentFederation:
             if selected is None or selected.get("assigned_agent") != agent or selected.get("status") != "CLAIMED":
                 return False
             selected["status"] = status
+            if evidence_ref:
+                selected["evidence_ref"] = evidence_ref
+            if result is not None:
+                selected["result"] = dict(result)
             self._save_tasks(tasks)
-        self._append("AGENT_TASK_COMPLETED", {"task_id": task_id, "agent": agent, "status": status}, task_id)
+        payload = {
+            "task_id": task_id,
+            "agent": agent,
+            "status": status,
+            "evidence_ref": evidence_ref,
+            "result": result or {},
+        }
+        self._append("AGENT_TASK_COMPLETED", payload, task_id)
+        if status in {"COMPLETED", "FAILED"}:
+            evaluation = self.performance_evaluator.evaluate(
+                task_id=task_id,
+                agent=agent,
+                status=status,
+                evidence_ref=evidence_ref,
+                result=result,
+            )
+            self._append("AGENT_PERFORMANCE_EVALUATED", evaluation, task_id)
         return True
 
     async def recover_stale_tasks(self) -> tuple[str, ...]:
