@@ -1,0 +1,23 @@
+name: AURELIA Fresh Auth Evidence Contract
+
+on:
+  push:
+    branches: ["repair/fresh-auth-evidence-2026-10-07"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+      - name: Run fresh repair contract
+        run: python -m unittest tests.test_fresh_auth_evidence_contract -v
