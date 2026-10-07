@@ -7,7 +7,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
-from runtime.core.secrets import get_optional_secret, get_required_secret
+from runtime.core.secrets import get_optional_secret
 
 OTP_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts/{account_id}/otp"
 MODERN_OPTIONS_WS_HOST = "api.derivws.com"
@@ -119,7 +119,7 @@ def get_authenticated_ws_url(
     token = (
         bearer_token
         if bearer_token is not None
-        else get_required_secret("DERIV_AUTH_TOKEN")
+        else get_optional_secret("DERIV_AUTH_TOKEN")
     )
     application_id = (
         app_id
