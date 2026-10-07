@@ -33,6 +33,8 @@ jobs:
 
       - name: Verify continuous-agent safety boundary
         run: python scripts/agent_continuity_check.py
+      - name: Probe real federated advisory workers
+        run: python scripts/agent_worker_probe.py
       - name: Assert capital protection
         run: |
           set -euo pipefail
