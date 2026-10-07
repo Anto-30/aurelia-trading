@@ -11,7 +11,9 @@ jobs:
     environment: production
     runs-on: ubuntu-latest
     env:
-      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') != '' && ((secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
+      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && ((secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
+      DERIV_AUTH_MODE: ${{ secrets.DERIV_AUTH_MODE || 'pat' }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -37,6 +39,59 @@ jobs:
         run: docker build --pull -t aurelia-runtime:ci .
       - name: Verify public Deriv market-data WebSocket
         run: python scripts/verify_deriv_public_transport.py
+      - name: Verify protected Deriv authentication prerequisites
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          token_present = bool(os.getenv("DERIV_AUTH_TOKEN", "").strip())
+          loginid_present = bool(os.getenv("DERIV_EXPECTED_LOGINID", "").strip())
+          auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
+          app_id_present = bool(os.getenv("DERIV_APP_ID", "").strip())
+          if auth_mode not in {"pat", "oauth"}:
+              raise SystemExit("DERIV_AUTH_PREREQUISITE=BLOCKED")
+          requirements = {
+              "token_present": token_present,
+              "expected_loginid_present": loginid_present,
+              "app_id_present_when_pat": app_id_present if auth_mode == "pat" else True,
+          }
+          configured = all(requirements.values())
+          evidence = {
+              "schema_version": "1",
+              "auth_mode": auth_mode,
+              "expected_currency": os.getenv("DERIV_EXPECTED_CURRENCY", "USD"),
+              "configured": configured,
+              "requirements": requirements,
+              "secret_values_exposed": False,
+          }
+          Path("artifacts/deriv_auth_prerequisites.json").write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print("DERIV_AUTH_PREREQUISITES=" + ("READY" if configured else "NOT_READY"))
+          print("DERIV_AUTH_MODE=" + auth_mode)
+          print("DERIV_TOKEN_PRESENT=" + str(token_present).lower())
+          print("DERIV_EXPECTED_LOGINID_PRESENT=" + str(loginid_present).lower())
+          print("DERIV_APP_ID_REQUIRED=" + str(auth_mode == "pat").lower())
+          print("DERIV_APP_ID_PRESENT_WHEN_REQUIRED=" + str(requirements["app_id_present_when_pat"]).lower())
+          PY
+
+      - name: Upload Deriv authentication prerequisite evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deriv-auth-prerequisites
+          path: artifacts/deriv_auth_prerequisites.json
+          if-no-files-found: error
+
       - name: Verify authenticated Deriv real-account session
         if: env.DERIV_AUTH_CONFIGURED == 'true'
         env:
