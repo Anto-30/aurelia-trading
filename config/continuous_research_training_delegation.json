@@ -1,0 +1,106 @@
+{
+  "schema": "aurelia.continuous_research_training_delegation.v1",
+  "objective": "Continuously improve AURELIA's research, strategy, engineering, risk, execution, market intelligence, calibration, and evidence quality without granting external agents capital authority.",
+  "execution_policy": {
+    "default_state": "RESEARCH_ONLY",
+    "capital_authority": false,
+    "live_orders": false,
+    "live_lock_mutation": false,
+    "secret_access": false,
+    "production_strategy_promotion": "deterministic_gate_only",
+    "unknown_evidence": "block_and_report"
+  },
+  "agents": {
+    "GrokBot": {
+      "role": "chief_orchestrator",
+      "domains": ["task_decomposition","research_routing","blocker_diagnosis","market_intelligence","cross_agent_synthesis"],
+      "outputs": ["ranked_hypotheses","research_queue","conflict_report","priority_changes"]
+    },
+    "ClaudeCode": {
+      "role": "engineering_and_repair",
+      "domains": ["architecture","python","CI","deployment","observability","tests","security_hardening"],
+      "outputs": ["patches","tests","failure_analysis","release_readiness"]
+    },
+    "KimiK3": {
+      "role": "quant_research_and_adversarial_review",
+      "domains": ["strategy_design","statistical_validation","multiple_testing","walk_forward","robustness","adversarial_review"],
+      "outputs": ["experiment_specs","counterexamples","validation_reviews"]
+    },
+    "GoogleAgentSkills": {
+      "role": "security_cloud_multi_agent_review",
+      "domains": ["threat_modeling","cloud_architecture","agent_security","data_governance"],
+      "outputs": ["risk_findings","architecture_reviews","remediation_requirements"]
+    },
+    "GLM": {
+      "role": "evidence_and_multimodal_inspection",
+      "domains": ["documents","charts","tables","screenshots","evidence_cross_validation"],
+      "outputs": ["evidence_extractions","discrepancy_reports"]
+    },
+    "PlaywrightCLI": {
+      "role": "browser_and_session_verification",
+      "domains": ["E2E","network","session","UI","trace"],
+      "outputs": ["reproducible_browser_evidence"]
+    },
+    "AURELIA": {
+      "role": "capital_and_execution_authority",
+      "domains": ["risk","account_binding","execution","ledger","reconciliation"],
+      "restriction": "AURELIA may only execute when existing deterministic controls and LIVE_LOCK authorize it."
+    }
+  },
+  "research_domains": [
+    "market_regime_detection",
+    "market_structure",
+    "liquidity_sweeps",
+    "fair_value_gaps",
+    "opening_range_and_consolidation_breakouts",
+    "trend_following",
+    "mean_reversion",
+    "momentum",
+    "volatility_and_range",
+    "order_flow_and_microstructure",
+    "tick_dynamics",
+    "multi_timeframe_alignment",
+    "1s_1m_5m_15m_30m_1h_4h_context",
+    "probability_calibration",
+    "uncertainty_estimation",
+    "cost_and_slippage",
+    "position_sizing",
+    "drawdown_and_tail_risk",
+    "portfolio_interactions",
+    "execution_quality",
+    "news_and_macro_context",
+    "cross_market_relationships",
+    "machine_learning",
+    "feature_engineering",
+    "model_selection",
+    "walk_forward_validation",
+    "out_of_sample_testing",
+    "monte_carlo",
+    "parameter_sensitivity",
+    "ablation",
+    "multiple_testing_control",
+    "regime_stability",
+    "strategy_retirement_and_revalidation"
+  ],
+  "experiment_requirements": {
+    "every_hypothesis_requires": ["hypothesis_id","dataset_hashes","time_windows","strategy_version","model_version","code_commit","config_hash","random_seeds","search_space","trial_count","selection_rule","reserved_oos","result","limitations"],
+    "qualification_minimum": "100+ OOS observations/trades per Strategy x Symbol x Regime where applicable",
+    "probability_range": "[0.55,0.75]",
+    "probability_outside_range": "REJECT",
+    "stale_or_uncalibrated_probability": "NO_TRADE",
+    "positive_expectancy_required": true,
+    "net_economics_required": true
+  },
+  "promotion": {
+    "allowed_states": ["RESEARCH","VALIDATION","OOS","CANDIDATE","CANARY","PRODUCTION","MONITORED","DEGRADED","SUSPENDED","REVALIDATION","REINSTATED","RETIRED"],
+    "promotion_authority": "deterministic_release_gate",
+    "ai_override": false
+  },
+  "continuous_operation": {
+    "runtime_watchdog_seconds": 900,
+    "agent_continuity_seconds": 900,
+    "research_stream": "continuous_when_Deriv_data_is_authenticated",
+    "training": "scheduled_recurring_plus_CI_research_workflows",
+    "knowledge_retention": "commit_lineage_and_evidence_artifacts"
+  }
+}
