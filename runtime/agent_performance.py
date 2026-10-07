@@ -112,3 +112,71 @@ class AgentPerformanceLedger:
             bucket["evidence_quality_rate"] = round(bucket["evidence_quality_rate"] / n, 4)
             bucket["successful_task_rate"] = round(bucket["successful_task_rate"] / n, 4)
         return sorted(agents.values(), key=lambda x: (-x["decayed_net_points"], -x["evidence_quality_rate"], -x["successful_task_rate"], x["agent"]))
+\n\nfrom __future__ import annotations
+
+import asyncio
+import json
+import math
+import time
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any
+
+from runtime.agent_performance import AgentPerformanceLedger
+
+
+class AgentPerformanceEvaluator:
+    """Deterministic bridge from completed federation tasks to reputation."""
+
+    def __init__(self, ledger: AgentPerformanceLedger, *, evidence_root: str | Path | None = None) -> None:
+        self.ledger = ledger
+        self.evidence_root = Path(evidence_root) if evidence_root else None
+
+    def _evidence_exists(self, ref: str) -> bool:
+        if not ref or self.evidence_root is None:
+            return bool(ref)
+        path = Path(ref)
+        if not path.is_absolute():
+            path = self.evidence_root / path
+        return path.exists() and path.is_file()
+
+    def evaluate(self, *, task_id: str, agent: str, status: str,
+                 evidence_ref: str = "", result: dict[str, Any] | None = None,
+                 evaluation_id: str | None = None) -> dict[str, Any]:
+        result = dict(result or {})
+        evidence_ok = self._evidence_exists(evidence_ref)
+        completed = status == "COMPLETED"
+        failed = status == "FAILED"
+        blocked = status == "BLOCKED"
+        scores = {
+            "correctness": 25.0 if completed and bool(result.get("verified", False)) else 0.0,
+            "evidence_quality": 20.0 if evidence_ok else 0.0,
+            "task_outcome": 20.0 if completed else 0.0,
+            "robustness": 15.0 if completed and bool(result.get("regression_free", False)) else 0.0,
+            "reproducibility": 10.0 if completed and bool(result.get("reproducible", False)) else 0.0,
+            "efficiency": 5.0 if completed and bool(result.get("efficient", False)) else 0.0,
+            "collaboration": 5.0 if completed and bool(result.get("handoff_clean", False)) else 0.0,
+        }
+        penalty = -20.0 if failed else (-5.0 if blocked else 0.0)
+        if completed and not evidence_ok:
+            penalty = min(penalty, -25.0)
+        evaluation_id = evaluation_id or f"eval:{task_id}:{agent}:{int(time.time() * 1000)}"
+        evaluation = self.ledger.award(
+            agent=agent,
+            task_id=task_id,
+            category_scores=scores,
+            penalty=penalty,
+            evidence_ref=evidence_ref or "MISSING",
+            evaluation_id=evaluation_id,
+        )
+        return asdict(evaluation) | {"total_points": evaluation.total_points}
+
+
+class PersistentAgentPerformance:
+    """Persistent leaderboard facade used by runtime/reporting code."""
+
+    def __init__(self, path: str | Path, *, decay_days: float = 90.0) -> None:
+        self.ledger = AgentPerformanceLedger(path, decay_days=decay_days)
+
+    def leaderboard(self) -> list[dict[str, Any]]:
+        return self.ledger.leaderboard()
