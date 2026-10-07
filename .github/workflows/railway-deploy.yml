@@ -85,6 +85,48 @@ jobs:
         if: steps.credential.outputs.available == 'true'
         run: npm install --global @railway/cli
 
+      - name: Verify Railway account and deployment entitlement
+        if: steps.credential.outputs.available == 'true'
+        shell: bash
+        run: |
+          set +e
+          output="$(railway status --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT_ID" 2>&1)"
+          status=$?
+          set -e
+          echo "$output"
+          export RAILWAY_PREFLIGHT_OUTPUT="$output"
+          if [ "$status" -ne 0 ]; then
+            mkdir -p artifacts
+            python - <<'PY'
+            import json, os
+            from pathlib import Path
+            raw=os.environ.get("RAILWAY_PREFLIGHT_OUTPUT","")
+            lower=raw.lower()
+            if "trial has expired" in lower or "select a plan" in lower:
+                reason="RAILWAY_PLAN_REQUIRED"
+            else:
+                reason="RAILWAY_ACCESS_BLOCKED"
+            Path("artifacts/railway_deployment_evidence.json").write_text(
+                json.dumps({
+                    "schema":"aurelia.railway.deployment.evidence.v2",
+                    "status":"BLOCKED_EXTERNAL_PLATFORM",
+                    "reason":reason,
+                    "service":os.environ["RAILWAY_SERVICE_NAME"],
+                    "source_repository":"Anto-30/aurelia-trading",
+                    "source_branch":"main",
+                    "capital_protection":True,
+                    "final_execution_authorization":False,
+                    "live_execution":"BLOCKED"
+                }, indent=2)+"\\n"
+            )
+            PY
+            echo "RAILWAY_DEPLOYMENT_BLOCKED=true" >> "$GITHUB_ENV"
+            echo "RAILWAY_DEPLOYMENT_REASON=RAILWAY_PLAN_REQUIRED"
+            echo "Railway rejected deployment access. A Railway plan must be selected before production deployment can proceed."
+            exit 2
+          fi
+          echo "RAILWAY_ACCOUNT_ACCESS=READY"
+
       - name: Verify or provision the canonical Railway service
         if: steps.credential.outputs.available == 'true'
         shell: bash
