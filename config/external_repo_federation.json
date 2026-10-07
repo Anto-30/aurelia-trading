@@ -1690,6 +1690,42 @@
         "browser-testing"
       ],
       "integration_note": "Pinned external source. Use only in isolated research/development tooling. It cannot grant capital authority, read secrets, mutate LIVE_LOCK, submit broker transactions, or become a second trading engine."
+    },
+    {
+      "repo": "WojciechMula/pyahocorasick",
+      "category": "pattern-matching-library",
+      "domain": "engineering/research",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/WojciechMula/pyahocorasick",
+      "head_commit": "4e28d29898f1019d9706485b2a06026466814d9d",
+      "capabilities": [
+        "fast multi-pattern matching",
+        "keyword/event matching",
+        "news/entity lexicon indexing"
+      ],
+      "integration_note": "Pinned external source. No capital authority, secret access, LIVE_LOCK mutation, broker transaction authority, or second trading engine."
+    },
+    {
+      "repo": "Conway-Research/automaton",
+      "category": "autonomous-agent-runtime",
+      "domain": "agent-research",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Conway-Research/automaton",
+      "head_commit": "d8f816881fd24b6f5e3d616e59edec387a447667",
+      "capabilities": [
+        "agent runtime architecture research",
+        "memory/heartbeat/policy research",
+        "autonomy threat-model research"
+      ],
+      "integration_note": "Pinned external source. No capital authority, secret access, LIVE_LOCK mutation, broker transaction authority, or second trading engine."
     }
   ]
 }
