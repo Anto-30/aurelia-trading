@@ -227,6 +227,7 @@ jobs:
             echo "Local container startup and /health smoke test passed."
             echo "Railway deployment reached SUCCESS and the service runtime/replica check passed."
             echo ""
+            echo "DEPLOYMENT_VERIFIED=DEPLOYED_AND_HEALTHCHECKED" >> "$GITHUB_ENV"
             echo "**Capital authorization remains:** `FINAL_EXECUTION_AUTHORIZATION=false`"
             echo "**Live execution remains:** `BLOCKED`"
           } >> "$GITHUB_STEP_SUMMARY"
@@ -255,10 +256,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p artifacts
-          status="BLOCKED_EXTERNAL_CREDENTIAL"
-          if [ "${{ steps.credential.outputs.available }}" = "true" ]; then
-            status="DEPLOYMENT_ATTEMPTED"
-          fi
+          status="${DEPLOYMENT_VERIFIED:-BLOCKED_EXTERNAL_CREDENTIAL}"
           cat > artifacts/railway_deployment_evidence.json <<EOF
           {
             "schema": "aurelia.railway.deployment.evidence.v1",
