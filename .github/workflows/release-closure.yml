@@ -1,0 +1,70 @@
+name: AURELIA Release Closure
+
+on:
+  push:
+    branches: ["main"]
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-release-closure
+  cancel-in-progress: false
+
+jobs:
+  closure:
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONPATH: "."
+      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+      DERIV_PAT: ${{ secrets.DERIV_PAT }}
+      DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+      DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
+      DERIV_AUTH_MODE: ${{ secrets.DERIV_AUTH_MODE || 'pat' }}
+      DERIV_ENVIRONMENT: "real"
+      AURELIA_RUNTIME_ID: ${{ secrets.AURELIA_RUNTIME_ID }}
+      AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+      - name: Generate current closure report
+        run: |
+          set +e
+          python scripts/release_closure.py > release-closure.json
+          status=$?
+          set -e
+          cat release-closure.json
+          echo "RELEASE_CLOSURE_STATUS=$status"
+      - name: Upload closure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-release-closure-${{ github.run_id }}
+          path: release-closure.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preserve fail-closed behavior
+        run: |
+          test -f release-closure.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("release-closure.json").read_text())
+          assert data["final_execution_authorization"] in (False, True)
+          if data["final_execution_authorization"]:
+              assert data["live_execution"] == "ENABLED"
+          else:
+              assert data["live_execution"] == "BLOCKED"
+          print("RELEASE_CLOSURE_SEMANTICS=PASS")
+          PY
