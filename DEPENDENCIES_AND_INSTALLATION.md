@@ -156,45 +156,28 @@ python3 -c "from runtime.core.release_gate import read_live_release; print('✓ 
 
 ### 4.1 Environment Variables (for live Deriv connectivity)
 
-Create `.env` file in repository root:
+For persistent deployment, do not create a repository-root `.env` containing broker credentials. Store runtime secrets on the host in the protected file `/etc/aurelia/aurelia.env` with mode 600, or use an equivalent host secret manager.
 
-```bash
-# Deriv API Credentials (REQUIRED for live trading)
-DERIV_AUTH_TOKEN=<your_deriv_api_token>          # PAT or OAuth token
-DERIV_APP_ID=<your_deriv_app_id>                 # For PAT auth mode
-DERIV_EXPECTED_LOGINID=<your_deriv_login_id>    # Real account ID (CR#####)
-DERIV_EXPECTED_CURRENCY=USD                       # Account currency
-DERIV_ENVIRONMENT=real                            # real or demo
-DERIV_AUTH_MODE=pat                               # pat or oauth
+The active deployment contract is:
 
-# Runtime Configuration
-AURELIA_JOURNAL_PATH=/tmp/aurelia/aurelia-events.ndjson
-PORT=8080
-PYTHONDONTWRITEBYTECODE=1
-PYTHONUNBUFFERED=1
+- `config/deployment_policy.json`
+- `.github/workflows/self-hosted-runtime-deploy.yml`
+- `scripts/deploy/bootstrap_and_deploy.sh`
 
-# Verification Flags (set to 'true' when ready to verify)
+The host environment may contain:
+```text
+DERIV_AUTH_TOKEN=<protected secret>
+DERIV_APP_ID=<protected secret when PAT mode is used>
+DERIV_EXPECTED_LOGINID=<protected real-account binding>
+DERIV_EXPECTED_CURRENCY=USD
+DERIV_ENVIRONMENT=real
+DERIV_AUTH_MODE=pat
 AURELIA_VERIFY_DERIV_PUBLIC=true
-AURELIA_VERIFY_DERIV_AUTH=false  # Set to 'true' only with valid credentials
-AURELIA_RUN_ONCE=false
-
-# Readiness Gates (leave as false unless explicitly tested)
-AURELIA_STRATEGY_LIVE_ELIGIBLE=false
-AURELIA_PROSPECTIVE_OOS_PASS=false
-AURELIA_CALIBRATION_PASS=false
-AURELIA_ECONOMICS_PASS=false
-AURELIA_SOAK_3600S_PASS=false
+AURELIA_VERIFY_DERIV_AUTH=true
+AURELIA_CONTINUOUS_RUNTIME=true
 ```
 
-Load environment variables (Python):
-
-```python
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-auth_token = os.getenv('DERIV_AUTH_TOKEN')
-```
+Never commit these values, include them in GitHub artifacts, print them to logs, or copy them into source archives.
 
 ### 4.2 Config Files
 
@@ -359,7 +342,7 @@ export REDIS_URL=redis://localhost:6379/0
 
 ---
 
-## 7. Docker Setup (For Containerized Deployment)
+## 7. Docker Setup (For Self-Hosted Container Deployment)
 
 ### 7.1 Build Image
 
