@@ -250,6 +250,38 @@ jobs:
           test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
           test "$LIVE_EXECUTION" = "BLOCKED"
 
+      - name: Write non-secret Railway deployment evidence
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          status="BLOCKED_EXTERNAL_CREDENTIAL"
+          if [ "${{ steps.credential.outputs.available }}" = "true" ]; then
+            status="DEPLOYMENT_ATTEMPTED"
+          fi
+          cat > artifacts/railway_deployment_evidence.json <<EOF
+          {
+            "schema": "aurelia.railway.deployment.evidence.v1",
+            "status": "$status",
+            "service": "$RAILWAY_SERVICE_NAME",
+            "source_repository": "Anto-30/aurelia-trading",
+            "source_branch": "main",
+            "capital_protection": true,
+            "final_execution_authorization": false,
+            "live_execution": "BLOCKED"
+          }
+          EOF
+          echo "RAILWAY_DEPLOYMENT_EVIDENCE_WRITTEN=true"
+
+      - name: Upload non-secret Railway deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-railway-deployment-evidence
+          path: artifacts/railway_deployment_evidence.json
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Explicit capital protection marker
         if: always()
         run: |
