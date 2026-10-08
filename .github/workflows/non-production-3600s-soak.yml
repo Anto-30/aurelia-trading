@@ -10,7 +10,7 @@ permissions:
 
 concurrency:
   group: aurelia-non-production-soak-${{ github.sha }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   soak:
