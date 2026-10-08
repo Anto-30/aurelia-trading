@@ -1,6 +1,6 @@
 {
-  "schema": "aurelia.agent_capability_matrix.v1",
-  "principle": "Equip every agent with a common safe core plus role-specific capabilities; keep capital authority exclusively inside AURELIA.",
+  "schema": "aurelia.agent_capability_matrix.v2",
+  "principle": "Equip every agent with a common safe core plus role-specific capabilities; ChatGPT and Claude Code form the dual primary intelligence brain, while AURELIA alone retains capital authority.",
   "core_capabilities": [
     "repository_intelligence",
     "git_and_ci",
@@ -14,19 +14,43 @@
     "test_generation_and_repair"
   ],
   "agents": {
-    "ClaudeCode": {
-      "role": "primary engineering and repair",
+    "ChatGPT": {
+      "role": "primary strategic brain and system-level orchestrator",
       "skills": [
-        "aurelia-federated-repair",
-        "aurelia-evidence-reconciliation",
-        "browser-e2e",
-        "security-review",
-        "ci-diagnostics"
+        "strategic_planning",
+        "task_decomposition",
+        "cross_agent_synthesis",
+        "research_intelligence",
+        "market_context",
+        "evidence_reconciliation"
       ],
       "plugins": [
         "aurelia-federation"
       ],
       "tools": [
+        "OpenAI Responses API",
+        "GitHub",
+        "web",
+        "MCP"
+      ],
+      "startup_scope": "project"
+    },
+    "ClaudeCode": {
+      "role": "primary engineering brain and implementation orchestrator",
+      "skills": [
+        "aurelia-federated-repair",
+        "aurelia-evidence-reconciliation",
+        "browser-e2e",
+        "security-review",
+        "ci-diagnostics",
+        "coding",
+        "deployment"
+      ],
+      "plugins": [
+        "aurelia-federation"
+      ],
+      "tools": [
+        "Claude Code",
         "GitHub",
         "Playwright CLI",
         "web",
@@ -53,7 +77,7 @@
       "startup_scope": "project"
     },
     "GrokBot": {
-      "role": "orchestration, research, blocker diagnosis",
+      "role": "adversarial research, orchestration and blocker diagnosis",
       "skills": [
         "aurelia-federated-repair",
         "aurelia-evidence-reconciliation",
@@ -72,7 +96,7 @@
       "startup_scope": "project"
     },
     "GoogleAgentSkills": {
-      "role": "security, cloud, multi-agent architecture review",
+      "role": "security, cloud and multi-agent architecture review",
       "skills": [
         "security-review",
         "cloud-architecture",
@@ -123,6 +147,19 @@
       "startup_scope": "runtime"
     }
   },
+  "brain_constitution": {
+    "primary_brains": [
+      "ChatGPT",
+      "ClaudeCode"
+    ],
+    "interchangeable": true,
+    "independent_challenger_required_for_capital_relevant_work": true,
+    "llm_capital_authority": false,
+    "llm_live_lock_mutation": false,
+    "llm_final_execution_authorization_mutation": false,
+    "deterministic_validation_required": true,
+    "provider_unavailability_must_fail_closed": true
+  },
   "forbidden_for_external_agents": [
     "capital authorization",
     "live order submission",
@@ -133,14 +170,21 @@
     "unknown-outcome acceptance",
     "second trading engine creation"
   ],
-  "connection_truth": "A repository can package skills and configuration, but authenticated third-party accounts/connectors must be established in their own secure control planes.",
+  "connection_truth": "Repository configuration can define provider adapters, but authenticated third-party accounts must be established through their secure control planes.",
   "external_repository_routing": {
     "registry": "config/external_repo_federation.json",
     "mandatory_skill": "skills/external-repo-federation/SKILL.md",
     "default_mode": "advisory_engineering_only",
     "routing_rules": {
+      "ChatGPT": [
+        "planning",
+        "research",
+        "synthesis",
+        "orchestration"
+      ],
       "ClaudeCode": [
         "engineering",
+        "deployment",
         "research",
         "tooling"
       ],
