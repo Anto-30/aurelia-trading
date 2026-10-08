@@ -7,6 +7,8 @@ from pathlib import Path
 from runtime.agent_federation import PersistentAgentFederation
 from runtime.agent_workers import AgentWorkerSupervisor
 
+# Keep this inventory identical to config/agent_capability_matrix.json.
+# The probe must fail closed if any registered agent lacks a live worker.
 AGENTS = (
     "ClaudeCode",
     "KimiK3",
@@ -14,6 +16,8 @@ AGENTS = (
     "GoogleAgentSkills",
     "GLM",
     "PlaywrightCLI",
+    "JEV",
+    "AURELIA",
 )
 
 
@@ -36,9 +40,11 @@ async def main() -> int:
             await asyncio.sleep(2.5)
             active = set(federation.active_agents())
             missing = sorted(set(AGENTS) - active)
+            unexpected = sorted(active - set(AGENTS))
             print("AGENT_WORKER_ACTIVE=" + ",".join(sorted(active)))
             print("AGENT_WORKER_MISSING=" + ",".join(missing))
-            return 1 if missing else 0
+            print("AGENT_WORKER_UNEXPECTED=" + ",".join(unexpected))
+            return 1 if missing or unexpected else 0
         finally:
             await workers.stop()
 
