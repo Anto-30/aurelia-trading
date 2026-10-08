@@ -1,0 +1,40 @@
+{
+  "schema": "aurelia.model_federation.v2",
+  "purpose": "Dual-primary ChatGPT and Claude Code intelligence federation; no capital authority.",
+  "constitution": {
+    "intelligence_only": true,
+    "capital_authority": false,
+    "live_order_authority": false,
+    "live_lock_mutation": false,
+    "final_execution_authorization_mutation": false,
+    "deterministic_validation_required": true,
+    "provider_availability_must_be_verified": true
+  },
+  "primary_brains": [
+    {
+      "agent_id": "ChatGPT",
+      "provider": "openai",
+      "interface": "responses_api",
+      "availability": "connector_required"
+    },
+    {
+      "agent_id": "ClaudeCode",
+      "provider": "anthropic",
+      "interface": "claude_code_cli",
+      "availability": "connector_required"
+    }
+  ],
+  "routing": {
+    "normal_work": "either verified primary; use evidenced routing",
+    "high_consequence": "both verified primaries required",
+    "capital_relevant": "both verified primaries required then AURELIA deterministic validation"
+  },
+  "specialists": [
+    "KimiK3",
+    "GrokBot",
+    "GoogleAgentSkills",
+    "GLM",
+    "PlaywrightCLI"
+  ],
+  "capital_authority_holder": "AURELIA"
+}
