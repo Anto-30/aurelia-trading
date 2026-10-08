@@ -24,6 +24,7 @@ jobs:
       AURELIA_RUN_ONCE: "true"
       AURELIA_VERIFY_DERIV_AUTH: "false"
       AURELIA_CONTINUOUS_RUNTIME: "false"
+      AURELIA_AGENT_PERFORMANCE_PATH: "/tmp/aurelia/agent-performance.json"
       DERIV_EXPECTED_CURRENCY: "USD"
       DERIV_ENVIRONMENT: "real"
     steps:
