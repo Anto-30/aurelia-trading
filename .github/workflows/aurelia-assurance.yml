@@ -148,6 +148,18 @@ jobs:
           path: artifacts/deriv_authenticated_session.json
           if-no-files-found: error
 
+      - name: Generate current readiness report
+        if: always()
+        env:
+          AURELIA_READINESS_OUT: artifacts/AURELIA_READINESS.current.json
+        run: |
+          set +e
+          python -m runtime.ops.readiness_orchestrator
+          status=$?
+          set -e
+          test "$status" -eq 2
+          echo "READINESS_EXPECTED_BLOCKED=true"
+
       - name: Verify clean worker health endpoint
         env:
           PYTHONPATH: "."
