@@ -151,3 +151,30 @@ The change is complete only when:
 - the live release gate still requires genuine authenticated Deriv, strategy, calibration, economics, production-runtime and soak evidence.
 
 Changing the Claude configuration alone does not authorize live trading.
+
+## 12. Continuous delegation, hunting and execution
+
+Claude's orchestration loop is intended to be continuous rather than a one-shot planner. It may continuously create, prioritize, delegate, monitor, retry, reassign and close intelligence-plane work across the registered agent federation.
+
+The continuous loop includes three distinct lanes:
+- **Hunt:** continuously search for new strategy hypotheses, market regimes, symbols, features, execution improvements and external research. Every candidate enters evidence-backed validation and may be rejected.
+- **Operate:** continuously monitor approved runtime components, market data, broker/session health, risk state, reconciliation, agent health and evidence freshness.
+- **Execute:** continuously evaluate executable opportunities and submit execution intents to AURELIA's deterministic capital plane. Claude and subordinate agents may propose or request execution, but only the deterministic release/risk/execution gates can authorize a real order.
+
+Continuous execution must never mean unconditional trading. When a strategy is unqualified, probability is outside 0.55–0.75, evidence is stale/invalid, balance is insufficient, broker state is UNKNOWN, reconciliation fails, a safety gate trips, or LIVE_LOCK/release authorization is false, the execution lane must remain blocked while hunting and research continue.
+
+Claude may delegate work to all registered agents according to capability, health, trust/evidence score, workload, latency, cost and task criticality. Agents may spawn bounded sub-tasks only when their registry permissions allow it. Every delegation has an owner, deadline/lease, correlation ID, provenance and completion state.
+
+The scheduler must support persistent recurring jobs for strategy hunting, validation campaigns, news/macro monitoring, market scanning, calibration, execution surveillance, post-trade analysis, agent evaluation and system-health checks. Recurring work must be idempotent and recoverable after restart.
+
+A strategy that passes all deterministic qualification and release requirements may be made eligible for execution by AURELIA. Claude does not promote it directly. Once eligible, the continuous execution loop may evaluate new opportunities without requiring a human prompt for every trade, subject to the existing deterministic capital controls and configured risk limits.
+
+No continuous loop may convert a research hypothesis into live capital exposure merely because an LLM believes it is profitable. The transition remains evidence-driven and deterministic.
+
+## 13. Operational objective
+
+The desired operating model is:
+
+Claude -> continuous planner -> capability scheduler -> all eligible agents -> research/hunt/evidence -> deterministic validation -> qualified strategy registry -> market opportunity evaluation -> Risk Warden + Execution Firewall -> CapitalPlaneExecutor -> Deriv -> reconciliation -> feedback -> Claude
+
+This is a 24/7 autonomous operating loop, not a permission for unrestricted autonomous trading. Capital movement remains gated at every iteration.
