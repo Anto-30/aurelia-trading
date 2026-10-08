@@ -635,7 +635,9 @@
         "JEV",
         "KimiK3",
         "PlaywrightCLI"
-      ]
+      ],
+      "pin_status": "UPSTREAM_IDENTIFIER_FORMAT_ANOMALY",
+      "pin_validation_note": "GitHub API currently returns a 41-character commit identifier for this repository head; do not reinterpret, truncate, hash, or promote it. Keep source sandbox-only until upstream exposes a canonical 40-character object ID."
     },
     {
       "name": "copilotkit-opendots",
