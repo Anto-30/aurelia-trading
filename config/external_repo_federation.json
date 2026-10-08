@@ -2514,6 +2514,116 @@
         "AG-UI architecture research"
       ],
       "integration_note": "Federated for governed engineering/tooling/research use. External source is non-authoritative: no production secrets, no LIVE_LOCK mutation, no capital authority, no broker transaction authority, and no direct promotion into execution paths. Any UI/tool action must remain behind AURELIA deterministic capital-plane controls."
+    },
+    {
+      "repo": "web3spreads/quant-flow",
+      "category": "crypto-trading-framework",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/web3spreads/quant-flow",
+      "head_commit": "f0cb60b347611b54d39626c4022c29582d2168a6",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "LLM structured-decision patterns",
+        "deterministic execution and risk separation",
+        "perpetual/grid architecture reference"
+      ],
+      "integration_note": "Research/reference only. Hyperliquid-specific execution is not an AURELIA dependency and cannot authorize capital or broker transactions."
+    },
+    {
+      "repo": "mathisgerdes/continuous-flow-lft",
+      "category": "continuous-normalizing-flows",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/mathisgerdes/continuous-flow-lft",
+      "head_commit": "fcc769c3d34647563401b9c33e4b074941b7d298",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "JAX continuous normalizing flows",
+        "Monte Carlo sampling research",
+        "lattice field theory flow modeling"
+      ],
+      "integration_note": "Research-only mathematical reference; no trading or capital authority."
+    },
+    {
+      "repo": "zimingttkx/QuantumFlow",
+      "category": "distributed-LLM-inference-platform",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/zimingttkx/QuantumFlow",
+      "head_commit": "2de147bbb32cb178ae842af0879e2957bce9ae3d",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "distributed inference",
+        "GPU scheduling",
+        "multi-tenant inference architecture",
+        "observability"
+      ],
+      "integration_note": "Sandbox engineering reference only; no runtime promotion, production secret access, capital authority, or broker transaction authority."
+    },
+    {
+      "repo": "dwave-examples/flow-shop-scheduling",
+      "category": "quantum-optimization",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/dwave-examples/flow-shop-scheduling",
+      "head_commit": "fcddaf799c7426cd683385f2d309e7194825edac",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "flow-shop optimization",
+        "constraint quadratic models",
+        "hybrid quantum/classical optimization",
+        "makespan minimization"
+      ],
+      "integration_note": "Research-only optimization reference; D-Wave/Leap access is not an AURELIA dependency and cannot authorize capital activity."
     }
   ],
   "pin_policy": {
@@ -2537,16 +2647,12 @@
     "duplicate_input": "none",
     "physical_grok_jev_install": "NOT_CLAIMED",
     "canonical_sync_contract": "This file",
-    "assignment_policy": "All known AURELIA agents assigned to every new repository",
+    "assignment_policy": "All requested AURELIA agents assigned to every new repository",
     "assigned_agents": [
-      "AURELIA",
       "ClaudeCode",
-      "GLM",
-      "GoogleAgentSkills",
       "GrokBot",
       "JEV",
-      "KimiK3",
-      "PlaywrightCLI"
+      "AURELIA"
     ],
     "oh_my_pstack": {
       "head_commit": "fc0eabd25f21b194a336b640e75e29c252382866",
@@ -2636,6 +2742,56 @@
           "AURELIA"
         ],
         "physical_runtime_install": "NOT_CLAIMED"
+      }
+    ],
+    "quantum_flow_batch": [
+      {
+        "repo": "web3spreads/quant-flow",
+        "head_commit": "f0cb60b347611b54d39626c4022c29582d2168a6",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED",
+        "mode": "RESEARCH_ONLY"
+      },
+      {
+        "repo": "mathisgerdes/continuous-flow-lft",
+        "head_commit": "fcc769c3d34647563401b9c33e4b074941b7d298",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED",
+        "mode": "RESEARCH_ONLY"
+      },
+      {
+        "repo": "zimingttkx/QuantumFlow",
+        "head_commit": "2de147bbb32cb178ae842af0879e2957bce9ae3d",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED",
+        "mode": "SANDBOX_ONLY"
+      },
+      {
+        "repo": "dwave-examples/flow-shop-scheduling",
+        "head_commit": "fcddaf799c7426cd683385f2d309e7194825edac",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED",
+        "mode": "RESEARCH_ONLY"
       }
     ]
   }
