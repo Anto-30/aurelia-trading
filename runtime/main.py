@@ -8,6 +8,7 @@ import time
 
 from runtime.adapters.session_manager import DerivSessionManager
 from runtime.agent_federation import AgentFederationSupervisor, PersistentAgentFederation
+from runtime.agent_performance import PersistentAgentPerformance
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -95,11 +96,28 @@ async def _balance_poller(
 class HealthHandler(BaseHTTPRequestHandler):
     health: HealthSnapshot | None = None
     state: RuntimeState = RuntimeState.BOOT
+    performance: PersistentAgentPerformance | None = None
 
     def log_message(self, format, *args):
         return
 
     def do_GET(self):
+        if self.path.startswith("/agent-leaderboard"):
+            performance = self.performance
+            if performance is None:
+                self.send_response(503)
+                self.end_headers()
+                return
+            agent = self.path.removeprefix("/agent-leaderboard").strip("/") or None
+            body = performance.snapshot(agent=agent)
+            raw = json.dumps(body, sort_keys=True).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            self.wfile.write(raw)
+            return
         if self.path not in {"/health", "/ready"}:
             self.send_response(404)
             self.end_headers()
@@ -175,6 +193,7 @@ async def main() -> None:
         config_hash=config_hash,
         source_hash="runtime-baseline",
         lease_seconds=float(os.getenv("AURELIA_AGENT_LEASE_SECONDS", "45")),
+        performance_path=performance_path,
     )
     federation_supervisor = AgentFederationSupervisor(
         federation,

@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "purpose": "Evidence-backed agent performance and reward system",
+  "version": 2,
+  "purpose": "Evidence-backed agent performance and operational leaderboard",
   "authority": {
     "score_award_authority": "AURELIA_DETERMINISTIC_EVALUATOR",
     "agents_can_self_award": false,
@@ -38,6 +38,14 @@
     "secondary": "evidence_quality_rate",
     "tertiary": "successful_task_rate",
     "minimum_evaluations_for_leadership": 10
+  },
+  "operational": {
+    "endpoint": "/agent-leaderboard",
+    "agent_endpoint": "/agent-leaderboard/{agent}",
+    "persistence_env": "AURELIA_AGENT_PERFORMANCE_PATH",
+    "evidence_hash": "sha256",
+    "evidence_contents_exposed": false,
+    "cache_control": "no-store"
   },
   "reward_routing": {
     "higher_priority_research": true,
