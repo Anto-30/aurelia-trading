@@ -1836,6 +1836,174 @@
       "head_commit": "e687416b0f2df0f3ad7f4dfc2065eefe6bc17ea9",
       "pin_source": "github_default_branch_ref_checked_2026-10-08",
       "integration_note": "Claude Code function-hook mods including context, agent, review and guard tooling. Keep marketplace/mod execution outside AURELIA capital and execution planes."
+    },
+    {
+      "repo": "ychampion/melete",
+      "category": "personal-ai-agent-workspace",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "JEV",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/ychampion/melete",
+      "head_commit": "84fd4ccbca6521c534d35c58479c63552b55ac84",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "External reference only; inspect in quarantine before any execution. No capital authority, production deployment authority, secret access, or broker transaction authority."
+    },
+    {
+      "repo": "yxq953/MuseLite",
+      "category": "ai-workspace-agent-browser-automation",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "JEV",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/yxq953/MuseLite",
+      "head_commit": "bfda25f77bf5da9522d5dd4cc28246be28227875",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "External reference only; inspect in quarantine before any execution. No capital authority, production deployment authority, secret access, or broker transaction authority."
+    },
+    {
+      "repo": "leepokai/Codync",
+      "category": "multi-agent-bot-and-sync",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "JEV",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/leepokai/Codync",
+      "head_commit": "02e00ad0b5b3a891c29cc49f34886328c6d86267",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "External reference only; inspect in quarantine before any execution. No capital authority, production deployment authority, secret access, or broker transaction authority."
+    },
+    {
+      "repo": "tjiuce/OpenDots",
+      "category": "iot-realtime-ai-analytics",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "JEV",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/tjiuce/OpenDots",
+      "head_commit": "579c386c657ef3e26970e3cb98c6caf51bfe26a0",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "External reference only; inspect in quarantine before any execution. No capital authority, production deployment authority, secret access, or broker transaction authority."
+    },
+    {
+      "repo": "Shashankss1205/OpenDots",
+      "category": "persistent-agent-runtime",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "JEV",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Shashankss1205/OpenDots",
+      "head_commit": "bb8db954445d15ba815a9278cf07c51d20bb5109",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "External reference only; inspect in quarantine before any execution. No capital authority, production deployment authority, secret access, or broker transaction authority."
+    },
+    {
+      "repo": "docmost/docmost",
+      "category": "collaborative-knowledge-base",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "JEV",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/docmost/docmost",
+      "head_commit": "d3a0c9bfdf3710161fe66e8de28a8d23104d54f5",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "External reference only; inspect in quarantine before any execution. No capital authority, production deployment authority, secret access, or broker transaction authority."
+    },
+    {
+      "repo": "Anil-matcha/open-dots",
+      "category": "self-hosted-agent-workspace",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "JEV",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Anil-matcha/open-dots",
+      "head_commit": "3d8de1cd665c7d6d70583f34b89c2dc034512c1ea",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "External reference only; inspect in quarantine before any execution. No capital authority, production deployment authority, secret access, or broker transaction authority."
+    },
+    {
+      "repo": "CopilotKit/OpenDots",
+      "category": "always-on-ai-coworkers",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "JEV",
+        "ClaudeCode",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/CopilotKit/OpenDots",
+      "head_commit": "625452e06cde74cb25b0ce319e2c1be0488f5a5f",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "External reference only; inspect in quarantine before any execution. No capital authority, production deployment authority, secret access, or broker transaction authority."
     }
   ],
   "pin_policy": {
@@ -1847,15 +2015,16 @@
     "completed_at": "2026-10-08",
     "source": "user-supplied GitHub repositories",
     "unique_repositories_added_or_refreshed": [
-      "Tickloop/claude-mods",
-      "escapeboy/claude-code-kit",
-      "karanb192/claude-code-mods",
-      "whyashthakker/awesome-claude-code-mods",
-      "JohnnyVizz/claude-kit",
-      "0xDarkMatter/claude-mods",
-      "hamzafer/claude-code-mods"
+      "ychampion/melete",
+      "yxq953/MuseLite",
+      "leepokai/Codync",
+      "tjiuce/OpenDots",
+      "Shashankss1205/OpenDots",
+      "docmost/docmost",
+      "Anil-matcha/open-dots",
+      "CopilotKit/OpenDots"
     ],
-    "duplicate_input": "karanb192/awesome-claude-code-mods was supplied twice; registered once",
+    "duplicate_input": "none",
     "physical_grok_jev_install": "NOT_CLAIMED",
     "canonical_sync_contract": "This file"
   }
