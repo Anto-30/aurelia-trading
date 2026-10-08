@@ -32,10 +32,7 @@ class BrokerEvidenceVerifierContractTests(unittest.TestCase):
         )
         self.assertIn('enriched["capital_authority_granted"] = False', source)
         self.assertIn('enriched["orders_submitted"] = 0', source)
-        self.assertIn(
-            '"verification_scope": "REAL_DERIV_BROKER_ACCOUNT_READ_ONLY"',
-            source,
-        )
+        self.assertIn('enriched["verification_scope"] = "REAL_DERIV_BROKER_ACCOUNT_READ_ONLY"', source)
 
 
 if __name__ == "__main__":
