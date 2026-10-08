@@ -16,6 +16,7 @@ def test_counts_unique_broker_accepted_trades():
     ]
     summary = trade_count(events)
     assert summary.accepted_trades == 2
+    assert summary.unique_intents == 2
     assert summary.last_trade_at_utc == "2026-10-08T10:02:00Z"
     assert count_accepted_trades(events) == 2
 
