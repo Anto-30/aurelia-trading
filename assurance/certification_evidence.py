@@ -27,7 +27,6 @@ NEW_BASELINE_RUNTIME_MARKERS = (
     "runtime/core/authority.py",
     "runtime/core/models.py",
     "config/LIVE_LOCK.yaml",
-    "railway.toml",
 )
 
 REQUIRED_RUNTIME_MARKERS = NEW_BASELINE_RUNTIME_MARKERS
