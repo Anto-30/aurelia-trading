@@ -1842,15 +1842,24 @@
       "category": "personal-ai-agent-workspace",
       "domain": "engineering",
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "ClaudeCode",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "AURELIA",
+        "ClaudeCode",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/ychampion/melete",
@@ -1863,15 +1872,24 @@
       "category": "ai-workspace-agent-browser-automation",
       "domain": "engineering",
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "ClaudeCode",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "AURELIA",
+        "ClaudeCode",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/yxq953/MuseLite",
@@ -1884,15 +1902,24 @@
       "category": "multi-agent-bot-and-sync",
       "domain": "engineering",
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "ClaudeCode",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "AURELIA",
+        "ClaudeCode",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/leepokai/Codync",
@@ -1905,15 +1932,24 @@
       "category": "iot-realtime-ai-analytics",
       "domain": "engineering",
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "ClaudeCode",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "AURELIA",
+        "ClaudeCode",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/tjiuce/OpenDots",
@@ -1926,15 +1962,24 @@
       "category": "persistent-agent-runtime",
       "domain": "engineering",
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "ClaudeCode",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "AURELIA",
+        "ClaudeCode",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Shashankss1205/OpenDots",
@@ -1947,15 +1992,24 @@
       "category": "collaborative-knowledge-base",
       "domain": "engineering",
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "ClaudeCode",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "AURELIA",
+        "ClaudeCode",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/docmost/docmost",
@@ -1968,15 +2022,24 @@
       "category": "self-hosted-agent-workspace",
       "domain": "engineering",
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "ClaudeCode",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "AURELIA",
+        "ClaudeCode",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Anil-matcha/open-dots",
@@ -1989,15 +2052,24 @@
       "category": "always-on-ai-coworkers",
       "domain": "engineering",
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "ClaudeCode",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "AURELIA",
+        "ClaudeCode",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/CopilotKit/OpenDots",
@@ -2026,6 +2098,17 @@
     ],
     "duplicate_input": "none",
     "physical_grok_jev_install": "NOT_CLAIMED",
-    "canonical_sync_contract": "This file"
+    "canonical_sync_contract": "This file",
+    "assignment_policy": "All known AURELIA agents assigned to every new repository",
+    "assigned_agents": [
+      "AURELIA",
+      "ClaudeCode",
+      "GLM",
+      "GoogleAgentSkills",
+      "GrokBot",
+      "JEV",
+      "KimiK3",
+      "PlaywrightCLI"
+    ]
   }
 }
