@@ -1,6 +1,6 @@
 {
-  "schema": "aurelia.agent_capability_matrix.v1",
-  "principle": "Equip every agent with a common safe core plus role-specific capabilities; keep capital authority exclusively inside AURELIA.",
+  "schema": "aurelia.agent_capability_matrix.v2",
+  "principle": "Equip every agent with a common safe core plus role-specific capabilities; ChatGPT and Claude Code form the dual primary intelligence brain, while AURELIA alone retains capital authority.",
   "core_capabilities": [
     "repository_intelligence",
     "git_and_ci",
@@ -15,13 +15,15 @@
   ],
   "agents": {
     "ClaudeCode": {
-      "role": "primary engineering and repair",
+      "role": "primary engineering brain and implementation orchestrator",
       "skills": [
         "aurelia-federated-repair",
         "aurelia-evidence-reconciliation",
         "browser-e2e",
         "security-review",
-        "ci-diagnostics"
+        "ci-diagnostics",
+        "coding",
+        "deployment"
       ],
       "plugins": [
         "aurelia-federation"
@@ -121,6 +123,27 @@
         "Deriv authenticated adapter"
       ],
       "startup_scope": "runtime"
+    },
+    "ChatGPT": {
+      "role": "primary strategic brain and system-level orchestrator",
+      "skills": [
+        "strategic_planning",
+        "task_decomposition",
+        "cross_agent_synthesis",
+        "research_intelligence",
+        "market_context",
+        "evidence_reconciliation"
+      ],
+      "plugins": [
+        "aurelia-federation"
+      ],
+      "tools": [
+        "OpenAI Responses API",
+        "GitHub",
+        "web",
+        "MCP"
+      ],
+      "startup_scope": "project"
     }
   },
   "forbidden_for_external_agents": [
@@ -141,6 +164,7 @@
     "routing_rules": {
       "ClaudeCode": [
         "engineering",
+        "deployment",
         "research",
         "tooling"
       ],
@@ -169,6 +193,12 @@
       ],
       "AURELIA": [
         "capital_and_execution_only"
+      ],
+      "ChatGPT": [
+        "planning",
+        "research",
+        "synthesis",
+        "orchestration"
       ]
     },
     "hard_constraints": [
@@ -178,5 +208,18 @@
       "External trading engines remain research/reference only.",
       "Only the existing AURELIA capital plane can authorize capital movement."
     ]
+  },
+  "brain_constitution": {
+    "primary_brains": [
+      "ChatGPT",
+      "ClaudeCode"
+    ],
+    "interchangeable": true,
+    "independent_challenger_required_for_capital_relevant_work": true,
+    "llm_capital_authority": false,
+    "llm_live_lock_mutation": false,
+    "llm_final_execution_authorization_mutation": false,
+    "deterministic_validation_required": true,
+    "provider_unavailability_must_fail_closed": true
   }
 }
