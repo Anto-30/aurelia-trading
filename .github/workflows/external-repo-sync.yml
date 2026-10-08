@@ -56,6 +56,9 @@ jobs:
           x=json.load(open("/tmp/external-repo-sync.json"))
           bad=[r for r in x["repositories"] if not r.get("reachable")]
           print("EXTERNAL_REPO_REACHABLE=%d/%d"%(len(x["repositories"])-len(bad),len(x["repositories"])))
+          unresolved=[r["repo"] for r in p["repositories"] if r.get("head_commit") == "SYNC_REQUIRED"]
+          print("EXTERNAL_REPO_PINNED=%d/%d"%(len(p["repositories"])-len(unresolved),len(p["repositories"])))
+          print("EXTERNAL_REPO_UNRESOLVED_PIN_COUNT=%d"%len(unresolved))
           if bad:
               print("UNREACHABLE=", [r["repo"] for r in bad])
               raise SystemExit(1)
