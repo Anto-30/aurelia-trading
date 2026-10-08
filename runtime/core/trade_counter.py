@@ -30,6 +30,7 @@ def count_accepted_trades(events: Iterable[Mapping[str, Any]]) -> int:
 
 def trade_count(events: Iterable[Mapping[str, Any]]) -> TradeCount:
     keys: set[str] = set()
+    intent_ids: set[str] = set()
     last: str | None = None
     for event in events:
         if str(event.get("event_type") or "") != "BROKER_ACCEPTED":
@@ -38,12 +39,17 @@ def trade_count(events: Iterable[Mapping[str, Any]]) -> TradeCount:
         if key is None or key in keys:
             continue
         keys.add(key)
+        payload = event.get("payload")
+        if isinstance(payload, Mapping):
+            intent_id = str(payload.get("intent_id") or "").strip()
+            if intent_id:
+                intent_ids.add(intent_id)
         occurred = str(event.get("occurred_at_utc") or "").strip()
         if occurred and (last is None or occurred > last):
             last = occurred
     return TradeCount(
         accepted_trades=len(keys),
-        unique_intents=len({k for k in keys if k.startswith("intent:")}),
+        unique_intents=len(intent_ids),
         last_trade_at_utc=last,
     )
 
