@@ -15,6 +15,7 @@ jobs:
     environment: production
     runs-on: ubuntu-latest
     env:
+      AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
       DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && ((secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
       DERIV_AUTH_MODE: ${{ secrets.DERIV_AUTH_MODE || 'pat' }}
       DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
