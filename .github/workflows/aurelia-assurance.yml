@@ -45,6 +45,7 @@ jobs:
       - name: Verify public Deriv market-data WebSocket
         run: python scripts/verify_deriv_public_transport.py
       - name: Verify protected Deriv authentication prerequisites
+        if: always()
         env:
           DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
