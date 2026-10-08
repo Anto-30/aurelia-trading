@@ -18,6 +18,7 @@ LIVE_LOCK_PATH = ROOT / "config" / "LIVE_LOCK.yaml"
 READINESS_PATH = ROOT / "data" / "runtime" / "AURELIA_READINESS.json"
 SESSION_EVIDENCE_PATH = ROOT / "artifacts" / "deriv_authenticated_session.json"
 LIFECYCLE_VERIFY_EVIDENCE_PATH = ROOT / "artifacts" / "deriv_transaction_lifecycle.json"
+BROKER_EVIDENCE_PATH = ROOT / "artifacts" / "deriv_broker_account_evidence.json"
 
 
 def _as_bool(value: str | None) -> bool:
@@ -145,6 +146,20 @@ def check_verify_only_lifecycle_evidence() -> None:
         raise RuntimeError("verify-only lifecycle evidence cannot contain submitted orders")
 
 
+def check_broker_account_evidence() -> None:
+    evidence = _current_evidence(BROKER_EVIDENCE_PATH)
+    if evidence is None:
+        raise RuntimeError(
+            "read-only Deriv broker account evidence is missing, expired, tampered, non-real, or otherwise invalid"
+        )
+    if evidence.get("verification_scope") != "REAL_DERIV_BROKER_ACCOUNT_READ_ONLY":
+        raise RuntimeError("invalid Deriv broker evidence scope")
+    if evidence.get("capital_authority_granted") is True:
+        raise RuntimeError("broker evidence verifier cannot grant capital authority")
+    if int(evidence.get("orders_submitted", 0)) != 0:
+        raise RuntimeError("broker evidence verifier cannot submit orders")
+
+
 def check_runtime_verification_flags() -> None:
     if not _as_bool(os.getenv("AURELIA_VERIFY_DERIV_PUBLIC")):
         raise RuntimeError("AURELIA_VERIFY_DERIV_PUBLIC must be true")
@@ -164,6 +179,7 @@ def main() -> int:
         check_certification_evidence()
         check_session_evidence()
         check_verify_only_lifecycle_evidence()
+        check_broker_account_evidence()
         check_runtime_verification_flags()
     except Exception as exc:
         return fail(str(exc))
