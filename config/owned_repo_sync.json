@@ -1,0 +1,53 @@
+{
+  "schema": "aurelia.owned_repo_sync.v1",
+  "generated_date": "2026-10-08",
+  "purpose": "Canonical synchronization manifest for the user's owned GitHub repositories across Grok, JEV, and AURELIA.",
+  "policy": {
+    "grok_access": "RESEARCH_AND_ENGINEERING_ONLY",
+    "jev_access": "RESEARCH_AND_DECISION_ROUTING_ONLY",
+    "aurelia_role": "CANONICAL_CONTROL_PLANE",
+    "capital_authority": false,
+    "live_order_submission": false,
+    "live_lock_mutation": false,
+    "secret_reading": false,
+    "source_of_truth": "GitHub main/default branches"
+  },
+  "repositories": [
+    {
+      "repo": "Anto-30/Anto30",
+      "role": "OWNED_REPOSITORY",
+      "targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "repo": "Anto-30/aurelia-trading",
+      "role": "CANONICAL_AURELIA_CONTROL_PLANE",
+      "targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "repo": "Anto-30/Aurelia-trading-",
+      "role": "OWNED_REPOSITORY",
+      "targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "repo": "Anto-30/Tales-and-trails-safaris-",
+      "role": "OWNED_REPOSITORY",
+      "targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    }
+  ]
+}
