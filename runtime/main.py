@@ -172,6 +172,8 @@ async def main() -> None:
     )
     HealthHandler.health = health
     HealthHandler.state = machine.state
+    performance_path = os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/tmp/aurelia/agent-performance.json")
+    HealthHandler.performance = PersistentAgentPerformance(performance_path)
     public_probe_failed = False
     authenticated_probe_failed = False
 
