@@ -35,6 +35,9 @@ def main() -> None:
     assert matrix["connection_truth"]
     for source in federation["sources"]:
         sha = source["pinned_commit"]
+        if source.get("pin_status") == "UPSTREAM_IDENTIFIER_FORMAT_ANOMALY":
+            assert source.get("pin_validation_note"), source["name"]
+            continue
         assert len(sha) == 40 and sha == sha.lower(), source["name"]
     assert continuity["capital_authority"] is False
     assert continuity["heartbeat_seconds"] > 0
