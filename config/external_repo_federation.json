@@ -21,7 +21,8 @@
       "domain": "engineering",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/pingdotgg/t3code",
@@ -33,7 +34,9 @@
       "domain": "engineering",
       "assigned_agents": [
         "ClaudeCode",
-        "KimiK3"
+        "KimiK3",
+        "GrokBot",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/python-poetry/poetry",
@@ -45,7 +48,9 @@
       "domain": "engineering",
       "assigned_agents": [
         "ClaudeCode",
-        "KimiK3"
+        "KimiK3",
+        "GrokBot",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/poem-web/poem",
@@ -58,7 +63,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/Niko1221/Strata",
@@ -71,7 +77,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/JerBouma/AlgorithmicTrading",
@@ -84,7 +91,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/coding-kitties/investing-algorithm-framework",
@@ -98,7 +106,8 @@
         "ClaudeCode",
         "GrokBot",
         "KimiK3",
-        "PlaywrightCLI"
+        "PlaywrightCLI",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/zed",
@@ -118,7 +127,9 @@
       "domain": "engineering",
       "assigned_agents": [
         "ClaudeCode",
-        "PlaywrightCLI"
+        "PlaywrightCLI",
+        "GrokBot",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/extensions",
@@ -130,7 +141,9 @@
       "domain": "engineering",
       "assigned_agents": [
         "ClaudeCode",
-        "KimiK3"
+        "KimiK3",
+        "GrokBot",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/python-environment-tools",
@@ -141,7 +154,9 @@
       "category": "notifications",
       "domain": "engineering",
       "assigned_agents": [
-        "ClaudeCode"
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/notify",
@@ -153,7 +168,8 @@
       "domain": "engineering",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/gh-workflow",
@@ -164,7 +180,9 @@
       "category": "rust-client",
       "domain": "engineering",
       "assigned_agents": [
-        "ClaudeCode"
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/yawc",
@@ -176,7 +194,8 @@
       "domain": "engineering",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/zed-industries/codex-acp",
@@ -189,7 +208,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/zed-industries/superpowers",
@@ -200,7 +220,9 @@
       "category": "font-tooling",
       "domain": "engineering",
       "assigned_agents": [
-        "ClaudeCode"
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/font-kit",
@@ -211,7 +233,9 @@
       "category": "git-ci",
       "domain": "engineering",
       "assigned_agents": [
-        "ClaudeCode"
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/git-restore-mtime-action",
@@ -224,7 +248,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/TauricResearch/TradingAgents",
@@ -238,7 +263,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/HKUDS/Vibe-Trading",
@@ -252,7 +278,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/freqtrade/freqtrade",
@@ -265,7 +292,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/hsliuping/TradingAgents-CN",
@@ -278,7 +306,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/Superalgos/Superalgos",
@@ -291,7 +320,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/StockSharp/StockSharp",
@@ -304,7 +334,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/QuantConnect/Lean",
@@ -318,7 +349,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/HKUDS/AI-Trader",
@@ -331,7 +363,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/OpenByteInc/QuantDinger",
@@ -343,7 +376,9 @@
       "domain": "research",
       "assigned_agents": [
         "ClaudeCode",
-        "KimiK3"
+        "KimiK3",
+        "GrokBot",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Mathieu2301/TradingView-API",
@@ -355,7 +390,8 @@
       "domain": "research",
       "assigned_agents": [
         "KimiK3",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/simonlin1212/TradingAgents-astock",
@@ -368,7 +404,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/pst-group/pysystemtrade",
@@ -382,7 +419,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/stefan-jansen/machine-learning-for-trading",
@@ -396,7 +434,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/nautechsystems/nautilus_trader",
@@ -408,7 +447,9 @@
       "category": "unrelated-game-codebase",
       "domain": "reference",
       "assigned_agents": [
-        "ClaudeCode"
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/endless-sky/endless-sky",
@@ -421,7 +462,8 @@
       "assigned_agents": [
         "GrokBot",
         "KimiK3",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/tradesdontlie/tradingview-mcp",
@@ -434,7 +476,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/je-suis-tm/quant-trading",
@@ -447,7 +490,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/jesse-ai/jesse",
@@ -461,7 +505,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/paperswithbacktest/awesome-systematic-trading",
@@ -474,7 +519,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/hummingbot/hummingbot",
@@ -487,7 +533,8 @@
       "domain": "research",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/marketcalls/openalgo",
@@ -500,7 +547,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/NoFxAiOS/nofx",
@@ -512,7 +560,8 @@
       "domain": "research",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/fabston/TradingView-Webhook-Bot",
@@ -525,7 +574,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "PlaywrightCLI"
+        "PlaywrightCLI",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/arvin341az-glitch/RVG",
@@ -539,7 +589,8 @@
         "GrokBot",
         "ClaudeCode",
         "KimiK3",
-        "GLM"
+        "GLM",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/smfworks/hermes-ai-team",
@@ -560,7 +611,8 @@
       "domain": "engineering",
       "assigned_agents": [
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/forcewake/hermes-conductor",
@@ -582,7 +634,8 @@
         "GrokBot",
         "ClaudeCode",
         "KimiK3",
-        "GoogleAgentSkills"
+        "GoogleAgentSkills",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Ardha-Eco-System/RUDR9",
@@ -603,7 +656,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/AlekseiUL/codex-plus-hermes-team",
@@ -623,7 +677,8 @@
       "domain": "engineering",
       "assigned_agents": [
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/diegomarino/kanban-task-threads",
@@ -640,7 +695,8 @@
       "domain": "engineering",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/basilisk-labs/agentplane-hermes-plugin",
@@ -660,7 +716,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "PlaywrightCLI"
+        "PlaywrightCLI",
+        "JEV"
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/railwayapp/docs",
@@ -679,7 +736,8 @@
       "domain": "deployment",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/railwayapp/cli",
@@ -698,7 +756,8 @@
       "domain": "deployment",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/vignesh07/clawdbot-railway-template",
@@ -718,7 +777,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/chrisleekr/binance-trading-bot",
@@ -731,7 +791,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/chrisconlan/algorithmic-trading-with-python",
@@ -744,7 +805,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/nykooi1/vibe-wise",
@@ -757,7 +819,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/saniales/golang-crypto-trading-bot",
@@ -770,7 +833,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/tradytics/eiten",
@@ -783,7 +847,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/blampe/IbPy",
@@ -796,7 +861,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/omnigent-ai/omnigent",
@@ -809,7 +875,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
@@ -822,7 +889,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/hackingthemarkets/binance-tutorials",
@@ -835,7 +903,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/MacroAnarchy/hermes-gadget-sdk",
@@ -848,7 +917,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Adolanium/hermes-gadget-sdk",
@@ -861,7 +931,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/freqtrade/freqtrade-strategies",
@@ -874,7 +945,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/Drakkar-Software/OctoBot",
@@ -887,7 +959,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/iterativv/NostalgiaForInfinity",
@@ -900,7 +973,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/thesoulcrancerdev/poly-trading-strategies",
@@ -913,7 +987,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/ryanfrigo/kalshi-ai-trading-bot",
@@ -926,7 +1001,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/ChypherFish3r/coinbase-trading-bot",
@@ -939,7 +1015,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/degatchi/mev-template-rs",
@@ -952,7 +1029,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/jordantete/grid_trading_bot",
@@ -965,7 +1043,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/diogomatoschaves/MyCryptoBot",
@@ -978,7 +1057,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/vavarb/vavabot_options_strategy",
@@ -991,7 +1071,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/Kryptgen89/freqtrade-setup",
@@ -1004,7 +1085,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/SevaTV/botpilot",
@@ -1017,7 +1099,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/giaaua06/okx-grid-trading-bot",
@@ -1030,7 +1113,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/doat08/okx-bot-suite",
@@ -1043,7 +1127,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/omirb604/spot-grid-trading-bot",
@@ -1056,7 +1141,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/djc00p/freqtrade-us-setup",
@@ -1069,7 +1155,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/superset-sh/superset",
@@ -1082,7 +1169,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/affaan-m/agentshield",
@@ -1097,7 +1185,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "head_commit": "SYNC_REQUIRED"
     },
@@ -1110,7 +1199,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "head_commit": "SYNC_REQUIRED"
     },
@@ -1123,7 +1213,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "head_commit": "SYNC_REQUIRED"
     },
@@ -1136,7 +1227,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "head_commit": "SYNC_REQUIRED"
     },
@@ -1146,7 +1238,8 @@
       "mode": "TOOLCHAIN_ONLY",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "commit": "10315cf44d1ea13e3ae4821841873afbf7807935",
       "capabilities": [
@@ -1168,7 +1261,8 @@
       "mode": "REFERENCE_ONLY",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "commit": "9b5dda7206ae841230f118348d660ad8d0ae2830",
       "capabilities": [
@@ -1185,7 +1279,9 @@
       "role": "WINDOWS_TOOLCHAIN_REFERENCE",
       "mode": "TOOLCHAIN_ONLY",
       "assigned_agents": [
-        "ClaudeCode"
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
       ],
       "commit": "26937232ba2141c6bcf6ffdd8e0822163b475d63",
       "capabilities": [
@@ -1203,7 +1299,9 @@
       "role": "LOCALIZED_SKILL_REFERENCE",
       "mode": "REFERENCE_ONLY",
       "assigned_agents": [
-        "ClaudeCode"
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
       ],
       "commit": "18bacc475cb5f7bf57647f4fbb647415c65c2303",
       "capabilities": [
@@ -1221,7 +1319,8 @@
       "mode": "REFERENCE_ONLY",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "commit": "a67256db4451f2d085370cfc36ebe091211b8e7b",
       "capabilities": [
@@ -1240,7 +1339,9 @@
       "role": "CLAUDE_PLUGIN_WRAPPER_REFERENCE",
       "mode": "TOOLCHAIN_ONLY",
       "assigned_agents": [
-        "ClaudeCode"
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
       ],
       "commit": "f873a4d051b16a6652a3463cd1cd060dde86a24b",
       "capabilities": [
@@ -1258,7 +1359,8 @@
       "mode": "SANDBOX_ONLY",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "commit": "17bf2a025c175b899e7d30be1ab4e658fd4ae04f",
       "capabilities": [
@@ -1280,7 +1382,8 @@
       "assigned_agents": [
         "GrokBot",
         "ClaudeCode",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/capthvnsen/alans-way-agents",
@@ -1301,7 +1404,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/cuemacro/finmarketpy",
@@ -1323,7 +1427,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/stablyai/orca",
@@ -1345,7 +1450,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/manu354/cryptocurrency-arbitrage",
@@ -1365,7 +1471,8 @@
         "ClaudeCode",
         "KimiK3",
         "GrokBot",
-        "GoogleAgentSkills"
+        "GoogleAgentSkills",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Eigenwise/atomic-agents",
@@ -1388,7 +1495,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/charlesdove977/claude-x-jev",
@@ -1410,7 +1518,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/open-jarvis/OpenJarvis",
@@ -1434,7 +1543,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/PersonalJarvis/PersonalJarvis",
@@ -1454,7 +1564,8 @@
       "domain": "engineering",
       "assigned_agents": [
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/iamlukethedev/Herald-OS",
@@ -1476,7 +1587,8 @@
       "assigned_agents": [
         "GrokBot",
         "ClaudeCode",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Mintplex-Labs/anything-llm",
@@ -1499,7 +1611,8 @@
       "domain": "engineering",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/import-ai/omnibox",
@@ -1522,7 +1635,8 @@
       "assigned_agents": [
         "GrokBot",
         "ClaudeCode",
-        "KimiK3"
+        "KimiK3",
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/tryanything-ai/anything",
@@ -1544,7 +1658,8 @@
       "domain": "reference",
       "assigned_agents": [
         "ClaudeCode",
-        "GrokBot"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/Liquid4All/docs",
@@ -1565,7 +1680,8 @@
       "assigned_agents": [
         "KimiK3",
         "GrokBot",
-        "ClaudeCode"
+        "ClaudeCode",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/leionion/liquidation-cluster-signal-scraper",
