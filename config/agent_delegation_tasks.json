@@ -8,7 +8,8 @@
     "required_runtime_event": "subagent.started",
     "completion_event": "subagent.completed",
     "failure_event": "subagent.failed",
-    "rule": "A task is not marked runtime-proven unless attributable lifecycle evidence exists for the agent and task."
+    "rule": "A task is not marked runtime-proven unless attributable lifecycle evidence exists for the agent and task.",
+    "enforcement": "CI must fail closed if any registered agent lacks a task or any runtime-proof claim lacks lifecycle evidence."
   },
   "tasks": [
     {
@@ -139,5 +140,6 @@
         "execution_proof": false
       }
     }
-  ]
+  ],
+  "revision": 2
 }
