@@ -2102,6 +2102,163 @@
         "orchestration"
       ],
       "integration_note": "Federated as a sandbox/toolchain source for Claude Code, Grok, Dev/JEV and AURELIA engineering workflows. Never vendored into the capital or execution planes; cannot grant capital authority."
+    },
+    {
+      "repo": "backnotprop/pstack",
+      "category": "agent-engineering-workflows",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/backnotprop/pstack",
+      "head_commit": "3a604672c46cd8187d2b19980eae0a34f9f91138",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "portable-agent-skills",
+        "engineering-workflows",
+        "TDD",
+        "verification",
+        "orchestration"
+      ],
+      "integration_note": "Federated as a governed engineering/toolchain/reference source. External code remains non-authoritative and cannot grant capital authority, mutate LIVE_LOCK, access secrets, or submit broker transactions."
+    },
+    {
+      "repo": "michael-denyer/pstack-claude",
+      "category": "agent-engineering-workflows",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/michael-denyer/pstack-claude",
+      "head_commit": "29eb31cb8e198c62dd9cff4027e6c4f0f2f63d0b",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "Claude-Code-skills",
+        "Codex-skills",
+        "agent-routing",
+        "verification",
+        "multi-model-workflows"
+      ],
+      "integration_note": "Federated as a governed engineering/toolchain/reference source. External code remains non-authoritative and cannot grant capital authority, mutate LIVE_LOCK, access secrets, or submit broker transactions."
+    },
+    {
+      "repo": "ericlitman/open-pstack",
+      "category": "agent-engineering-workflows",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/ericlitman/open-pstack",
+      "head_commit": "1b03678171f6f400ae2cc9dc4e7a4a6a13e4bb43",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "Claude-Code-skills",
+        "Codex-skills",
+        "verification",
+        "multi-model-workflows",
+        "poteto-mode"
+      ],
+      "integration_note": "Federated as a governed engineering/toolchain/reference source. External code remains non-authoritative and cannot grant capital authority, mutate LIVE_LOCK, access secrets, or submit broker transactions."
+    },
+    {
+      "repo": "peadar/pstack",
+      "category": "debugging-tool",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/peadar/pstack",
+      "head_commit": "165dad4c56ea26dce74b42ac86dc9d5bf2c2e51c",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "Linux-stack-debugging",
+        "ELF-analysis",
+        "crash-debugging",
+        "backtrace-analysis"
+      ],
+      "integration_note": "Federated as a governed engineering/toolchain/reference source. External code remains non-authoritative and cannot grant capital authority, mutate LIVE_LOCK, access secrets, or submit broker transactions."
+    },
+    {
+      "repo": "bloomberg/pystack",
+      "category": "python-debugging-tool",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/bloomberg/pystack",
+      "head_commit": "5c594dc24996eab7b589264eb42a9d6e8cdec283",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "CPython-stack-debugging",
+        "Python-thread-analysis",
+        "core-dump-analysis",
+        "debugging"
+      ],
+      "integration_note": "Federated as a governed engineering/toolchain/reference source. External code remains non-authoritative and cannot grant capital authority, mutate LIVE_LOCK, access secrets, or submit broker transactions."
+    },
+    {
+      "repo": "ScriptedAlchemy/pstack-codex",
+      "category": "agent-engineering-workflows",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/ScriptedAlchemy/pstack-codex",
+      "head_commit": "c25afa251f1513b0b28cc089294d468c5e350444",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "Codex-native-pstack-workflows",
+        "engineering-review",
+        "verification",
+        "orchestration"
+      ],
+      "integration_note": "Federated as a governed engineering/toolchain/reference source. External code remains non-authoritative and cannot grant capital authority, mutate LIVE_LOCK, access secrets, or submit broker transactions."
+    },
+    {
+      "repo": "Aqua-123/pstack-for-codex",
+      "category": "agent-engineering-workflows",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Aqua-123/pstack-for-codex",
+      "head_commit": "9fecac589333cbc0b058c8bb47e1720cf87b6061",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "Codex-native-pstack-workflows",
+        "Poteto Mode",
+        "verification",
+        "engineering-workflows"
+      ],
+      "integration_note": "Federated as a governed engineering/toolchain/reference source. External code remains non-authoritative and cannot grant capital authority, mutate LIVE_LOCK, access secrets, or submit broker transactions."
     }
   ],
   "pin_policy": {
@@ -2146,6 +2303,85 @@
       ],
       "physical_runtime_install": "NOT_CLAIMED",
       "mode": "SANDBOX_ONLY"
-    }
+    },
+    "pstack_batch": [
+      {
+        "repo": "backnotprop/pstack",
+        "head_commit": "3a604672c46cd8187d2b19980eae0a34f9f91138",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "michael-denyer/pstack-claude",
+        "head_commit": "29eb31cb8e198c62dd9cff4027e6c4f0f2f63d0b",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "ericlitman/open-pstack",
+        "head_commit": "1b03678171f6f400ae2cc9dc4e7a4a6a13e4bb43",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "peadar/pstack",
+        "head_commit": "165dad4c56ea26dce74b42ac86dc9d5bf2c2e51c",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "bloomberg/pystack",
+        "head_commit": "5c594dc24996eab7b589264eb42a9d6e8cdec283",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "ScriptedAlchemy/pstack-codex",
+        "head_commit": "c25afa251f1513b0b28cc089294d468c5e350444",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "Aqua-123/pstack-for-codex",
+        "head_commit": "9fecac589333cbc0b058c8bb47e1720cf87b6061",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      }
+    ]
   }
 }
