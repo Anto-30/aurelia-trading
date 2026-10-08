@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Install runtime
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt pytest
       - name: Run free public-market runtime probe
         run: python scripts/verify_deriv_public_transport.py
       - name: Run runtime tests
