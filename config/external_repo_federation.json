@@ -2076,6 +2076,32 @@
       "head_commit": "625452e06cde74cb25b0ce319e2c1be0488f5a5f",
       "pin_source": "github_default_branch_ref_checked_2026-10-08",
       "integration_note": "External reference only; inspect in quarantine before any execution. No capital authority, production deployment authority, secret access, or broker transaction authority."
+    },
+    {
+      "repo": "shrimpwtf/oh-my-pstack",
+      "category": "agent-engineering-workflows",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/shrimpwtf/oh-my-pstack",
+      "head_commit": "fc0eabd25f21b194a336b640e75e29c252382866",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "portable-agent-skills",
+        "engineering-workflows",
+        "delegation",
+        "planning",
+        "verification",
+        "review",
+        "debugging",
+        "orchestration"
+      ],
+      "integration_note": "Federated as a sandbox/toolchain source for Claude Code, Grok, Dev/JEV and AURELIA engineering workflows. Never vendored into the capital or execution planes; cannot grant capital authority."
     }
   ],
   "pin_policy": {
@@ -2085,7 +2111,7 @@
   },
   "last_sync": {
     "completed_at": "2026-10-08",
-    "source": "user-supplied GitHub repositories",
+    "source": "user-supplied agent-workspace repositories",
     "unique_repositories_added_or_refreshed": [
       "ychampion/melete",
       "yxq953/MuseLite",
@@ -2109,6 +2135,17 @@
       "JEV",
       "KimiK3",
       "PlaywrightCLI"
-    ]
+    ],
+    "oh_my_pstack": {
+      "head_commit": "fc0eabd25f21b194a336b640e75e29c252382866",
+      "targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "physical_runtime_install": "NOT_CLAIMED",
+      "mode": "SANDBOX_ONLY"
+    }
   }
 }
