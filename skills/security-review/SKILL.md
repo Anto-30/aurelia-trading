@@ -1,7 +1,6 @@
 ---
 name: security-review
-description: Perform security, supply-chain, secret-hygiene, privilege-boundary, and agent-tooling reviews of AURELIA.
+description: Review code, dependencies, agents, MCP servers, prompts, secrets, and deployment boundaries for security defects.
 ---
-
-Check unpinned external dependencies, executable plugin hooks, MCP/LSP trust boundaries, secret exposure in logs/artifacts, privilege escalation paths, live-lock mutation paths, agent-to-capital authority crossings, unsafe browser automation, and CI permissions.
-Fail closed when a control cannot be verified.
+# security-review
+Search for credential leakage, unsafe command execution, prompt injection paths, excessive MCP permissions, SSRF, unsafe deserialization, dependency risk, and privilege escalation. Apply least privilege. Do not weaken controls to resolve findings.
