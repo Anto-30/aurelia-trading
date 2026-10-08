@@ -24,6 +24,7 @@ from runtime.core.models import (
 )
 from runtime.core.reconcile import Reconciler, ReconciliationResult
 from runtime.core.trade_certificate import TradeCertificate
+from runtime.core.trade_counter import count_accepted_trades
 from runtime.ops.latency import LatencyMetrics
 from runtime.core.release_gate import read_live_release
 from runtime.core.production_controls import CircuitBreaker
@@ -516,6 +517,7 @@ class CapitalPlaneExecutor:
                     "intent_id": intent.intent_id,
                     "broker_transaction_id": result.broker_transaction_id,
                     "contract_id": result.contract_id,
+                    "aurelia_trade_number": count_accepted_trades(self.journal.read_all()),
                 },
             )
             return ExecutionOutcome(
