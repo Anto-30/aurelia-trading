@@ -65,8 +65,6 @@ jobs:
           if auth_mode not in {"pat", "oauth"}:
               print("DERIV_AUTH_PREREQUISITE=INVALID_AUTH_MODE")
               auth_mode = "pat"
-              requirements["app_id_present_when_pat"] = app_id_present
-              configured = False
           requirements = {
               "token_present": token_present,
               "expected_loginid_present": loginid_present,
