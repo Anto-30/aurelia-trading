@@ -1,0 +1,35 @@
+{
+  "schema": "aurelia.external_repo_federation.addendum.v1",
+  "generated_date": "2026-10-08",
+  "purpose": "Register the requested agentic-development and Copilot repositories for governed use by ClaudeCode, GrokBot, JEV, and AURELIA without copying unreviewed external code into capital or execution paths.",
+  "sync_model": {
+    "mode": "governed_external_source",
+    "source_of_truth": "upstream_repository_at_pinned_commit",
+    "vendoring_into_capital_or_execution": false,
+    "external_code_execution": "DENY_BY_DEFAULT",
+    "production_secret_access": false,
+    "broker_authority": false,
+    "live_lock_authority": false,
+    "deployment_authority": false,
+    "promotion_rule": "Only reviewed, tested, AURELIA-owned adaptations may be promoted into production."
+  },
+  "agent_assignments": {
+    "ClaudeCode": ["engineering", "implementation-review", "dependency-analysis", "security-review"],
+    "GrokBot": ["orchestration", "architecture-review", "research-synthesis", "workflow-design"],
+    "JEV": ["validation", "evidence-audit", "workflow-testing", "regression-review"],
+    "AURELIA": ["governed-registry", "research-routing", "integration-gates", "production-safety-boundary"]
+  },
+  "repositories": [
+    {"repo":"ikcode-dev/copilot-kit","head_commit":"80612817d88aa0346432f9c7538b1b6f6baaf65f","mode":"TOOLING_REFERENCE","domain":"copilot-prompts-and-agent-workflows","use":["prompt patterns","custom instructions","agent orchestration patterns"],"production_path":"sandbox_then_review"},
+    {"repo":"All-The-Vibes/ATV-StarterKit","head_commit":"ad996736b879be87c7755df5c5017d5336203bbc","mode":"TOOLCHAIN_REFERENCE","domain":"agentic-coding-environment","use":["skills","agents","hooks","MCP configuration patterns","developer workflow scaffolding"],"production_path":"tooling_only"},
+    {"repo":"microsoft/Employee-Self-Service-Agent-Developer-Kit","head_commit":"34df5f5b5e6c1e8841e355c1e79ff78ba6d5b6cf","mode":"REFERENCE_ONLY","domain":"agent-development-and-flightcheck-patterns","use":["agent customization","flightcheck concepts","deployment/readiness validation patterns"],"production_path":"reference_only","restriction":"Microsoft Copilot Studio/ESS-specific components are not AURELIA runtime dependencies."},
+    {"repo":"microsoft/PromptKit","head_commit":"074dc8dc51e08f0f9890c652a9d0b17584f7ef41","mode":"TOOLING_REFERENCE","domain":"versioned-agentic-prompts","use":["composable prompts","reasoning protocols","prompt validation","prompt drift detection"],"production_path":"sandbox_then_review"},
+    {"repo":"github/spec-kit-copilot","head_commit":"e0816db66d50909b21c37cd01329931078e9421f","mode":"TOOLING_REFERENCE","domain":"Copilot-spec-driven-development","use":["Copilot skills","specify CLI integration","bug-fix workflow","SDD workflow"],"production_path":"tooling_only"},
+    {"repo":"TheMattBerman/google-ads-copilot","head_commit":"2c253ee988b5540465317cde0cd4d6915dc2b382","mode":"REFERENCE_ONLY","domain":"intent-first-agent-operations","use":["read-draft-apply pattern","reviewable action staging","audit and undo patterns"],"production_path":"reference_only","restriction":"Google Ads connectors and account mutations are not AURELIA dependencies or trading authority."},
+    {"repo":"microsoft/Power-CAT-Copilot-Studio-Kit","head_commit":"144713d41cf372803d0c127521191c0cb9cad0d4","mode":"REFERENCE_ONLY","domain":"agent-testing-governance-observability","use":["test sets","rubrics","compliance gates","agent debugger concepts","change tracking","telemetry"],"production_path":"reference_only","restriction":"Power Platform components are not AURELIA runtime dependencies."},
+    {"repo":"github/spec-kit","head_commit":"f545e4c93e230a17093015863fc0af53f9a314ee","mode":"TOOLCHAIN_REFERENCE","domain":"spec-driven-development","use":["specification","planning","task decomposition","bug assessment/fix/test","convergence","lifecycle hooks"],"production_path":"tooling_only"},
+    {"repo":"CopilotKit/CopilotKit","head_commit":"daf2212760e715da686322806f972be87e7086e5","mode":"SANDBOX_REFERENCE","domain":"agent-native-ui-and-human-in-the-loop","use":["generative UI","shared agent/UI state","human-in-the-loop workflows","multi-surface agent interfaces","AG-UI-related architecture research"],"production_path":"sandbox_then_review","restriction":"No UI component or agent action can bypass AURELIA capital-plane controls."}
+  ],
+  "promotion_gates":["license_and_dependency_review","security_review","SBOM/dependency-risk review where applicable","AURELIA architecture compatibility review","unit/integration/regression tests","deterministic safety-gate preservation","no secret leakage","no LIVE_LOCK mutation","no broker transaction authority","evidence recorded before promotion"],
+  "required_aurelia_invariants":["Risk Warden remains authoritative","Execution Firewall remains authoritative","Balance Truth remains authoritative","Account Isolation remains authoritative","transaction verification and reconciliation remain mandatory","UNKNOWN/freshness failures remain fail-closed","research agents cannot authorize live capital","external repositories cannot authorize live capital"]
+}

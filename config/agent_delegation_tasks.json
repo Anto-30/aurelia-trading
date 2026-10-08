@@ -1,0 +1,145 @@
+{
+  "schema": "aurelia.agent_delegation_tasks.v1",
+  "generated": "2026-10-08",
+  "orchestrator": "ClaudeCode",
+  "purpose": "One explicit delegated engineering/verification task per registered agent. Assignment proof is separate from runtime execution proof.",
+  "execution_proof_policy": {
+    "configuration_is_not_execution": true,
+    "required_runtime_event": "subagent.started",
+    "completion_event": "subagent.completed",
+    "failure_event": "subagent.failed",
+    "rule": "A task is not marked runtime-proven unless attributable lifecycle evidence exists for the agent and task.",
+    "enforcement": "CI must fail closed if any registered agent lacks a task or any runtime-proof claim lacks lifecycle evidence."
+  },
+  "tasks": [
+    {
+      "task_id": "AGT-CLAUDE-001",
+      "agent": "ClaudeCode",
+      "status": "assigned",
+      "objective": "Repair and certify the agent delegation proof chain, including inventory validation and continuity evidence.",
+      "acceptance_criteria": [
+        "inventory validator passes",
+        "all eight agents have exactly one task",
+        "delegation evidence is attributable"
+      ],
+      "evidence_path": "artifacts/agent-delegation/claudecode.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
+    },
+    {
+      "task_id": "AGT-KIMI-001",
+      "agent": "KimiK3",
+      "status": "assigned",
+      "objective": "Adversarially review the delegation matrix, task ownership, and proof semantics for omissions or false-positive execution claims.",
+      "acceptance_criteria": [
+        "no unowned agent",
+        "no duplicate ownership",
+        "no configuration-as-execution false positive"
+      ],
+      "evidence_path": "artifacts/agent-delegation/kimi-k3.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
+    },
+    {
+      "task_id": "AGT-GROK-001",
+      "agent": "GrokBot",
+      "status": "assigned",
+      "objective": "Coordinate the federated task queue and identify any blocked or unassigned agent work.",
+      "acceptance_criteria": [
+        "all eight tasks visible",
+        "blocked work explicitly reported",
+        "results routed back to Claude"
+      ],
+      "evidence_path": "artifacts/agent-delegation/grokbot.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
+    },
+    {
+      "task_id": "AGT-GAS-001",
+      "agent": "GoogleAgentSkills",
+      "status": "assigned",
+      "objective": "Review security, cloud, and multi-agent boundaries of the delegation/proof mechanism.",
+      "acceptance_criteria": [
+        "least privilege preserved",
+        "no secret exposure",
+        "no capital authority leakage"
+      ],
+      "evidence_path": "artifacts/agent-delegation/google-agent-skills.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
+    },
+    {
+      "task_id": "AGT-GLM-001",
+      "agent": "GLM",
+      "status": "assigned",
+      "objective": "Inspect generated delegation and CI evidence artifacts for consistency and evidence-quality defects.",
+      "acceptance_criteria": [
+        "artifact lineage is attributable",
+        "claims match observed evidence",
+        "contradictions are surfaced"
+      ],
+      "evidence_path": "artifacts/agent-delegation/glm.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
+    },
+    {
+      "task_id": "AGT-PW-001",
+      "agent": "PlaywrightCLI",
+      "status": "assigned",
+      "objective": "Verify the observable agent/command-center evidence surfaces and detect missing runtime status indicators.",
+      "acceptance_criteria": [
+        "agent status surface is reachable",
+        "task identity is visible",
+        "runtime state is not confused with configuration"
+      ],
+      "evidence_path": "artifacts/agent-delegation/playwright-cli.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
+    },
+    {
+      "task_id": "AGT-JEV-001",
+      "agent": "JEV",
+      "status": "assigned",
+      "objective": "Independently validate the delegation inventory, regression behavior, and proof gate.",
+      "acceptance_criteria": [
+        "validator passes",
+        "regression checks pass",
+        "runtime proof remains fail-closed when events are absent"
+      ],
+      "evidence_path": "artifacts/agent-delegation/jev.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
+    },
+    {
+      "task_id": "AGT-AURELIA-001",
+      "agent": "AURELIA",
+      "status": "assigned",
+      "objective": "Maintain the capital-plane safety gate and reconcile any evidence without authorizing capital movement.",
+      "acceptance_criteria": [
+        "LIVE_LOCK remains protected",
+        "FINAL_EXECUTION_AUTHORIZATION remains false",
+        "UNKNOWN evidence cannot promote execution"
+      ],
+      "evidence_path": "artifacts/agent-delegation/aurelia.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
+    }
+  ],
+  "revision": 2
+}

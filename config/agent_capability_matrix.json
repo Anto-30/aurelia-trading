@@ -1,5 +1,5 @@
 {
-  "schema": "aurelia.agent_capability_matrix.v1",
+  "schema": "aurelia.agent_capability_matrix.v2",
   "principle": "Equip every agent with a common safe core plus role-specific capabilities; keep capital authority exclusively inside AURELIA.",
   "core_capabilities": [
     "repository_intelligence",
@@ -17,110 +17,176 @@
     "ClaudeCode": {
       "role": "primary engineering and repair",
       "skills": [
-        "aurelia-federated-repair",
-        "aurelia-evidence-reconciliation",
-        "browser-e2e",
+        "aurelia-agent-core",
+        "external-repo-federation",
+        "evidence-reconciliation",
         "security-review",
-        "ci-diagnostics"
+        "ci-diagnostics",
+        "browser-e2e"
       ],
       "plugins": [
-        "aurelia-federation"
+        "aurelia-federation",
+        "github",
+        "spec-kit",
+        "promptkit"
       ],
       "tools": [
         "GitHub",
-        "Playwright CLI",
         "web",
-        "local shell"
+        "local shell",
+        "CI",
+        "Playwright CLI"
       ],
-      "startup_scope": "project"
+      "authority": "non-capital engineering"
     },
     "KimiK3": {
       "role": "parallel analysis and adversarial engineering review",
       "skills": [
-        "aurelia-federated-repair",
-        "aurelia-evidence-reconciliation",
-        "research-intelligence",
-        "test-analysis"
-      ],
-      "plugins": [
-        "aurelia-federation"
-      ],
-      "tools": [
-        "GitHub",
-        "web",
-        "local shell"
-      ],
-      "startup_scope": "project"
-    },
-    "GrokBot": {
-      "role": "orchestration, research, blocker diagnosis",
-      "skills": [
-        "aurelia-federated-repair",
-        "aurelia-evidence-reconciliation",
+        "aurelia-agent-core",
+        "external-repo-federation",
+        "evidence-reconciliation",
+        "security-review",
         "research-intelligence",
         "ci-diagnostics"
       ],
       "plugins": [
-        "aurelia-federation"
+        "aurelia-federation",
+        "github",
+        "spec-kit",
+        "promptkit"
+      ],
+      "tools": [
+        "GitHub",
+        "web",
+        "local shell",
+        "CI"
+      ],
+      "authority": "non-capital analysis"
+    },
+    "GrokBot": {
+      "role": "orchestration, research and blocker diagnosis",
+      "skills": [
+        "aurelia-agent-core",
+        "external-repo-federation",
+        "evidence-reconciliation",
+        "research-intelligence",
+        "ci-diagnostics",
+        "browser-e2e"
+      ],
+      "plugins": [
+        "aurelia-federation",
+        "github",
+        "spec-kit",
+        "promptkit",
+        "copilotkit"
       ],
       "tools": [
         "GitHub",
         "web",
         "MCP",
-        "Playwright CLI"
+        "Playwright CLI",
+        "local shell"
       ],
-      "startup_scope": "project"
+      "authority": "non-capital orchestration"
     },
     "GoogleAgentSkills": {
-      "role": "security, cloud, multi-agent architecture review",
+      "role": "security, cloud and multi-agent architecture review",
       "skills": [
+        "aurelia-agent-core",
         "security-review",
-        "cloud-architecture",
-        "agent-security"
+        "external-repo-federation",
+        "research-intelligence"
       ],
-      "plugins": [],
+      "plugins": [
+        "github",
+        "spec-kit"
+      ],
       "tools": [
         "GitHub",
         "web"
       ],
-      "startup_scope": "project"
+      "authority": "non-capital review"
     },
     "GLM": {
       "role": "multimodal and evidence inspection",
       "skills": [
-        "evidence-inspection",
-        "pdf-table-inspection",
-        "image-analysis"
+        "aurelia-agent-core",
+        "evidence-reconciliation",
+        "research-intelligence",
+        "security-review"
       ],
-      "plugins": [],
+      "plugins": [
+        "github"
+      ],
       "tools": [
         "GitHub",
-        "web"
+        "web",
+        "document/PDF inspection",
+        "image analysis"
       ],
-      "startup_scope": "project"
+      "authority": "non-capital evidence"
     },
     "PlaywrightCLI": {
       "role": "browser, session, network, trace and E2E verification",
       "skills": [
-        "playwright-cli",
+        "aurelia-agent-core",
+        "browser-e2e",
+        "evidence-reconciliation",
+        "security-review"
+      ],
+      "plugins": [
+        "github"
+      ],
+      "tools": [
+        "Playwright CLI",
+        "web"
+      ],
+      "authority": "non-capital verification"
+    },
+    "JEV": {
+      "role": "validation, evidence audit, workflow testing and regression review",
+      "skills": [
+        "aurelia-agent-core",
+        "external-repo-federation",
+        "evidence-reconciliation",
+        "security-review",
+        "ci-diagnostics",
+        "research-intelligence",
         "browser-e2e"
       ],
-      "plugins": [],
+      "plugins": [
+        "aurelia-federation",
+        "github",
+        "spec-kit",
+        "promptkit"
+      ],
       "tools": [
+        "GitHub",
+        "web",
+        "local shell",
+        "CI",
         "Playwright CLI"
       ],
-      "startup_scope": "project"
+      "authority": "non-capital validation"
     },
     "AURELIA": {
       "role": "sole capital and execution authority",
       "skills": [
+        "aurelia-agent-core",
+        "evidence-reconciliation",
+        "security-review",
         "risk-and-capital-controls"
       ],
-      "plugins": [],
-      "tools": [
-        "Deriv authenticated adapter"
+      "plugins": [
+        "aurelia-federation"
       ],
-      "startup_scope": "runtime"
+      "tools": [
+        "Deriv authenticated adapter",
+        "GitHub",
+        "web",
+        "observability"
+      ],
+      "authority": "capital plane only; subject to deterministic controls"
     }
   },
   "forbidden_for_external_agents": [
@@ -131,7 +197,8 @@
     "live-lock mutation",
     "risk-control bypass",
     "unknown-outcome acceptance",
-    "second trading engine creation"
+    "second trading engine creation",
+    "direct production deployment without release gate"
   ],
   "connection_truth": "A repository can package skills and configuration, but authenticated third-party accounts/connectors must be established in their own secure control planes.",
   "external_repository_routing": {
@@ -178,5 +245,103 @@
       "External trading engines remain research/reference only.",
       "Only the existing AURELIA capital plane can authorize capital movement."
     ]
-  }
+  },
+  "generated_date": "2026-10-08",
+  "common_skill_bundle": [
+    "aurelia-agent-core",
+    "external-repo-federation",
+    "evidence-reconciliation",
+    "security-review",
+    "ci-diagnostics",
+    "research-intelligence",
+    "browser-e2e"
+  ],
+  "tool_policy": {
+    "default": "least_privilege",
+    "research_tools": [
+      "web",
+      "GitHub"
+    ],
+    "engineering_tools": [
+      "GitHub",
+      "local shell",
+      "CI"
+    ],
+    "browser_tools": [
+      "Playwright CLI"
+    ],
+    "document_tools": [
+      "PDF/table/image inspection"
+    ],
+    "deployment_tools": [
+      "deployment diagnostics",
+      "observability"
+    ],
+    "capital_tools": [
+      "Deriv authenticated adapter"
+    ],
+    "capital_tools_restricted_to": [
+      "AURELIA"
+    ],
+    "secrets": "never exposed to external agents"
+  },
+  "federated_repositories": {
+    "ikcode-dev/copilot-kit": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "All-The-Vibes/ATV-StarterKit": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "microsoft/Employee-Self-Service-Agent-Developer-Kit": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "microsoft/PromptKit": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV",
+      "AURELIA"
+    ],
+    "github/spec-kit-copilot": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "TheMattBerman/google-ads-copilot": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "microsoft/Power-CAT-Copilot-Studio-Kit": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "github/spec-kit": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "CopilotKit/CopilotKit": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ]
+  },
+  "required_invariants": [
+    "Risk Warden authoritative",
+    "Execution Firewall authoritative",
+    "Balance Truth authoritative",
+    "Account Isolation authoritative",
+    "transaction verification and reconciliation mandatory",
+    "UNKNOWN/freshness failures fail-closed",
+    "research agents cannot authorize live capital",
+    "external repositories cannot authorize live capital",
+    "sub-agents receive explicit skills rather than assumed inheritance"
+  ]
 }

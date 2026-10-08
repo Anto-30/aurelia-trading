@@ -1,7 +1,6 @@
 ---
 name: ci-diagnostics
-description: Diagnose GitHub Actions failures, stale workflows, evidence lineage, and certification drift.
+description: Diagnose GitHub Actions, tests, builds, release gates, and deployment failures using evidence.
 ---
-
-Always identify the exact commit, workflow/run, failing job/step, relevant artifact, and whether the failure is code, infrastructure, credentials, or evidence-class related.
-Repair the smallest cause and rerun the relevant certification.
+# ci-diagnostics
+Inspect the failing workflow and exact job/step. Reproduce where possible. Fix root causes rather than suppressing checks. Run the narrow test first, then the relevant regression suite. Never convert a failed safety gate into success by changing the gate semantics.

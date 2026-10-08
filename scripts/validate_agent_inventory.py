@@ -11,6 +11,7 @@ AGENTS = {
     "GoogleAgentSkills",
     "GLM",
     "PlaywrightCLI",
+    "JEV",
     "AURELIA",
 }
 
@@ -29,6 +30,7 @@ def main() -> None:
     matrix = load("config/agent_capability_matrix.json")
     boundary = load("config/agent_capability_boundary.json")
     continuity = load("config/agent_continuity_policy.json")
+    delegation = load("config/agent_delegation_tasks.json")
     lock = (ROOT / "config/LIVE_LOCK.yaml").read_text(encoding="utf-8")
 
     assert tools["total_tool_definitions"] > 0
@@ -61,6 +63,21 @@ def main() -> None:
         assert plugin["capital_authority"] is False
 
     assert set(matrix["agents"]) == AGENTS
+    assert delegation["schema"] == "aurelia.agent_delegation_tasks.v1"
+    tasks = delegation["tasks"]
+    assert isinstance(tasks, list) and tasks
+    task_agents = [task["agent"] for task in tasks]
+    assert set(task_agents) == AGENTS
+    assert len(task_agents) == len(set(task_agents))
+    for task in tasks:
+        assert task["task_id"]
+        assert task["objective"]
+        assert task["acceptance_criteria"]
+        assert task["evidence_path"]
+        assert task["status"] in {"assigned", "running", "completed", "blocked"}
+        assert task["runtime_proof"]["required_event"] == "subagent.started"
+        assert task["runtime_proof"]["execution_proof"] is False
+    assert delegation["execution_proof_policy"]["configuration_is_not_execution"] is True
     assert boundary["capital_authority"] is False
     assert boundary["actors"]["AURELIA"]["capital_authority"] is True
     for name, actor in boundary["actors"].items():
@@ -104,6 +121,8 @@ def main() -> None:
     print("CAPITAL_AUTHORITY_EXTERNAL_AGENTS=FALSE")
     print("FINAL_EXECUTION_AUTHORIZATION=FALSE")
     print("LIVE_EXECUTION=BLOCKED")
+    print("DELEGATED_TASK_ASSIGNMENTS=PASS")
+    print("RUNTIME_EXECUTION_PROOF=REQUIRED")
 
 
 if __name__ == "__main__":

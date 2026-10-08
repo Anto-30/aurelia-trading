@@ -2259,6 +2259,261 @@
         "engineering-workflows"
       ],
       "integration_note": "Federated as a governed engineering/toolchain/reference source. External code remains non-authoritative and cannot grant capital authority, mutate LIVE_LOCK, access secrets, or submit broker transactions."
+    },
+    {
+      "repo": "ikcode-dev/copilot-kit",
+      "category": "copilot-agent-workflows",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/ikcode-dev/copilot-kit",
+      "head_commit": "80612817d88aa0346432f9c7538b1b6f6baaf65f",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "prompt patterns",
+        "custom instructions",
+        "agent orchestration patterns"
+      ],
+      "integration_note": "Federated for governed engineering/tooling/research use. External source is non-authoritative: no production secrets, no LIVE_LOCK mutation, no capital authority, no broker transaction authority, and no direct promotion into execution paths."
+    },
+    {
+      "repo": "All-The-Vibes/ATV-StarterKit",
+      "category": "agentic-coding-environment",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/All-The-Vibes/ATV-StarterKit",
+      "head_commit": "ad996736b879be87c7755df5c5017d5336203bbc",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "skills",
+        "agents",
+        "hooks",
+        "MCP configuration patterns",
+        "developer workflow scaffolding"
+      ],
+      "integration_note": "Federated for governed engineering/tooling/research use. External source is non-authoritative: no production secrets, no LIVE_LOCK mutation, no capital authority, no broker transaction authority, and no direct promotion into execution paths."
+    },
+    {
+      "repo": "microsoft/Employee-Self-Service-Agent-Developer-Kit",
+      "category": "agent-development-and-flightcheck",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/microsoft/Employee-Self-Service-Agent-Developer-Kit",
+      "head_commit": "34df5f5b5e6c1e8841e355c1e79ff78ba6d5b6cf",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "agent customization",
+        "flightcheck concepts",
+        "deployment/readiness validation patterns"
+      ],
+      "integration_note": "Federated for governed engineering/tooling/research use. External source is non-authoritative: no production secrets, no LIVE_LOCK mutation, no capital authority, no broker transaction authority, and no direct promotion into execution paths. Microsoft Copilot Studio/ESS-specific components remain reference-only."
+    },
+    {
+      "repo": "microsoft/PromptKit",
+      "category": "prompt-engineering",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/microsoft/PromptKit",
+      "head_commit": "074dc8dc51e08f0f9890c652a9d0b17584f7ef41",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "composable prompts",
+        "reasoning protocols",
+        "prompt validation",
+        "prompt drift detection"
+      ],
+      "integration_note": "Federated for governed engineering/tooling/research use. External source is non-authoritative: no production secrets, no LIVE_LOCK mutation, no capital authority, no broker transaction authority, and no direct promotion into execution paths."
+    },
+    {
+      "repo": "github/spec-kit-copilot",
+      "category": "copilot-spec-driven-development",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/github/spec-kit-copilot",
+      "head_commit": "e0816db66d50909b21c37cd01329931078e9421f",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "Copilot skills",
+        "specify CLI integration",
+        "bug-fix workflow",
+        "spec-driven development"
+      ],
+      "integration_note": "Federated for governed engineering/tooling/research use. External source is non-authoritative: no production secrets, no LIVE_LOCK mutation, no capital authority, no broker transaction authority, and no direct promotion into execution paths."
+    },
+    {
+      "repo": "TheMattBerman/google-ads-copilot",
+      "category": "intent-first-agent-operations",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/TheMattBerman/google-ads-copilot",
+      "head_commit": "2c253ee988b5540465317cde0cd4d6915dc2b382",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "read-draft-apply pattern",
+        "reviewable action staging",
+        "audit and undo patterns"
+      ],
+      "integration_note": "Federated for governed engineering/tooling/research use. External source is non-authoritative: no production secrets, no LIVE_LOCK mutation, no capital authority, no broker transaction authority, and no direct promotion into execution paths. Google Ads connectors and account mutations are not AURELIA dependencies."
+    },
+    {
+      "repo": "microsoft/Power-CAT-Copilot-Studio-Kit",
+      "category": "agent-testing-governance-observability",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/microsoft/Power-CAT-Copilot-Studio-Kit",
+      "head_commit": "144713d41cf372803d0c127521191c0cb9cad0d4",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "test sets",
+        "rubrics",
+        "compliance gates",
+        "agent debugger concepts",
+        "change tracking",
+        "telemetry"
+      ],
+      "integration_note": "Federated for governed engineering/tooling/research use. External source is non-authoritative: no production secrets, no LIVE_LOCK mutation, no capital authority, no broker transaction authority, and no direct promotion into execution paths. Power Platform components are not AURELIA runtime dependencies."
+    },
+    {
+      "repo": "github/spec-kit",
+      "category": "spec-driven-development",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/github/spec-kit",
+      "head_commit": "f545e4c93e230a17093015863fc0af53f9a314ee",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "specification",
+        "planning",
+        "task decomposition",
+        "bug assessment/fix/test",
+        "convergence",
+        "lifecycle hooks"
+      ],
+      "integration_note": "Federated for governed engineering/tooling/research use. External source is non-authoritative: no production secrets, no LIVE_LOCK mutation, no capital authority, no broker transaction authority, and no direct promotion into execution paths."
+    },
+    {
+      "repo": "CopilotKit/CopilotKit",
+      "category": "agent-native-ui-and-human-in-the-loop",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/CopilotKit/CopilotKit",
+      "head_commit": "daf2212760e715da686322806f972be87e7086e5",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "generative UI",
+        "shared agent/UI state",
+        "human-in-the-loop workflows",
+        "multi-surface agent interfaces",
+        "AG-UI architecture research"
+      ],
+      "integration_note": "Federated for governed engineering/tooling/research use. External source is non-authoritative: no production secrets, no LIVE_LOCK mutation, no capital authority, no broker transaction authority, and no direct promotion into execution paths. Any UI/tool action must remain behind AURELIA deterministic capital-plane controls."
     }
   ],
   "pin_policy": {
