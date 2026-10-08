@@ -517,7 +517,7 @@ class CapitalPlaneExecutor:
                     "intent_id": intent.intent_id,
                     "broker_transaction_id": result.broker_transaction_id,
                     "contract_id": result.contract_id,
-                    "aurelia_trade_number": count_accepted_trades(self.journal.read_all()),
+                    "aurelia_trade_number": count_accepted_trades(self.journal.read_all()) + 1,
                 },
             )
             return ExecutionOutcome(
