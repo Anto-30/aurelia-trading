@@ -1447,6 +1447,139 @@
         "agent-workspace"
       ],
       "integration_note": "Use as isolated agentic-IDE/workspace reference. No capital authority, production deployment authority, secret access, LIVE_LOCK mutation, or broker transaction authority."
+    },
+    {
+      "repo": "iamlukethedev/Herald-OS",
+      "category": "hermes-agent-os",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/iamlukethedev/Herald-OS",
+      "head_commit": "3c891adcd1f5c3b6eeadf4d20472d10d9516a999",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "hermes-agent-os",
+        "permissioned-system-tools",
+        "agent-memory",
+        "scheduled-automation",
+        "desktop-integration"
+      ],
+      "integration_note": "Use as a sandboxed agent-OS/Hermes workflow reference. Do not grant it AURELIA capital, execution, secret, or LIVE_LOCK authority."
+    },
+    {
+      "repo": "Mintplex-Labs/anything-llm",
+      "category": "agent-orchestration-platform",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "KimiK3"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Mintplex-Labs/anything-llm",
+      "head_commit": "3c7e73b8104e25327b9db3c4a8eeaf3ac4af237f",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "RAG",
+        "document-ingestion",
+        "agent-workflows",
+        "MCP",
+        "memory",
+        "dynamic-model-routing",
+        "vector-databases"
+      ],
+      "integration_note": "Use for isolated knowledge/RAG, agent-workflow, and model-routing experiments. Do not connect its agents directly to broker transaction paths."
+    },
+    {
+      "repo": "import-ai/omnibox",
+      "category": "toolchain-knowledge-hub",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/import-ai/omnibox",
+      "head_commit": "734fc57cd2352c81f8c36a8400cb13767461388a",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "web-capture",
+        "file-parsing",
+        "indexing",
+        "knowledge-search",
+        "document-QA",
+        "local-database"
+      ],
+      "integration_note": "Developer/operator knowledge-source reference only. Any captured material must remain provenance-tagged and non-authoritative."
+    },
+    {
+      "repo": "tryanything-ai/anything",
+      "category": "agent-workflow-automation",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "KimiK3"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/tryanything-ai/anything",
+      "head_commit": "c59e5230e12da2bbf6e8741a18c0189a84c44ed8",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "durable-workflows",
+        "task-queues",
+        "cron-triggers",
+        "WASM-plugins",
+        "Supabase",
+        "workflow-versioning"
+      ],
+      "integration_note": "Use only for sandboxed workflow/orchestration experiments. It must not become a second AURELIA execution engine or capital authority."
+    },
+    {
+      "repo": "Liquid4All/docs",
+      "category": "AI-model-documentation",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Liquid4All/docs",
+      "head_commit": "474339ae39e9852bdfdccd5f22d122a73de0e807",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "LLM-documentation",
+        "API-reference",
+        "model-guides",
+        "tutorials"
+      ],
+      "integration_note": "Liquid AI model documentation. Keep reference-only; do not interpret this repository as market-liquidity or trading-signal data."
+    },
+    {
+      "repo": "leionion/liquidation-cluster-signal-scraper",
+      "category": "market-data-liquidation-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/leionion/liquidation-cluster-signal-scraper",
+      "head_commit": "14796904c2b302cce9b3529a513c05519caae255",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "capabilities": [
+        "liquidation-heatmap",
+        "open-interest-delta",
+        "cluster-scoring",
+        "squeeze-classification",
+        "paper-mode",
+        "signal-history"
+      ],
+      "integration_note": "Crypto microstructure/liquidation research source only. Validate independently; no direct broker execution, no Deriv order routing, and no capital authority."
     }
   ],
   "pin_policy": {

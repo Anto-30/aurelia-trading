@@ -30,7 +30,7 @@ jobs:
           assert p["global_controls"]["live_order_submission"] is False
           assert p["global_controls"]["secret_reading"] is False
           assert p["global_controls"]["external_code_execution"] == "DENY_BY_DEFAULT"
-          assert len(p["repositories"]) == 97
+          assert len(p["repositories"]) == 103
           assert all(x["source_url"].startswith("https://github.com/") for x in p["repositories"])
           print("EXTERNAL_REPO_POLICY=PASS")
           PY
@@ -53,8 +53,11 @@ jobs:
           PY
           python - <<'PY'
           import json
+          from pathlib import Path
+          p=json.loads(Path("config/external_repo_federation.json").read_text())
           x=json.load(open("/tmp/external-repo-sync.json"))
           bad=[r for r in x["repositories"] if not r.get("reachable")]
+          unresolved=[r["repo"] for r in p["repositories"] if r.get("head_commit") == "SYNC_REQUIRED"]
           print("EXTERNAL_REPO_REACHABLE=%d/%d"%(len(x["repositories"])-len(bad),len(x["repositories"])))
           unresolved=[r["repo"] for r in p["repositories"] if r.get("head_commit") == "SYNC_REQUIRED"]
           print("EXTERNAL_REPO_PINNED=%d/%d"%(len(p["repositories"])-len(unresolved),len(p["repositories"])))
