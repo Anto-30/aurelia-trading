@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_skill_federation.v1",
-  "generated_date": "2026-10-06",
+  "generated_date": "2026-10-08",
   "purpose": "Research/engineering capability federation. No external agent, skill, plugin, MCP server, hook, or marketplace entry may obtain capital authority.",
   "default_policy": {
     "external_code_execution": "DENY_BY_DEFAULT",
@@ -343,6 +343,155 @@
         "agent-workspace"
       ],
       "capital_authority": false
+    },
+    {
+      "name": "tickloop-claude-mods",
+      "owner": "Tickloop",
+      "repo": "Tickloop/claude-mods",
+      "pinned_commit": "06e3dc584139240d968ab7f71cae4213ce15b40c",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "Claude Code function hooks",
+        "UI/tool-line mods"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "name": "escapeboy-claude-code-kit",
+      "owner": "escapeboy",
+      "repo": "escapeboy/claude-code-kit",
+      "pinned_commit": "1d03a85047ec9ea2885e381d008c5b64fef1d7e7",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "skills",
+        "mods",
+        "subagents",
+        "hooks",
+        "agent workflows"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "name": "karan-claude-code-mods",
+      "owner": "karanb192",
+      "repo": "karanb192/claude-code-mods",
+      "pinned_commit": "10617a90106144d3cb131bd599e677d9c38bfd35",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "mod-builder",
+        "subagent model pinning",
+        "prompt-cache tooling",
+        "Claude function hooks"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "name": "whyash-awesome-claude-code-mods",
+      "owner": "whyashthakker",
+      "repo": "whyashthakker/awesome-claude-code-mods",
+      "pinned_commit": "c53a70b8787c4270029af9648d6eb7054c6c29c3",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "Claude Code mods",
+        "session diagnostics",
+        "workflow controls",
+        "Desktop Code mods"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "name": "johnnyvizz-claude-kit",
+      "owner": "JohnnyVizz",
+      "repo": "JohnnyVizz/claude-kit",
+      "pinned_commit": "272a877f39b6971690e087b16a7cc3951b811e39",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "savvy-flow",
+        "worker agents",
+        "progress mod"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "name": "darkmatter-claude-mods",
+      "owner": "0xDarkMatter",
+      "repo": "0xDarkMatter/claude-mods",
+      "pinned_commit": "3aac515e62ba1be0da3a720a9e23ffa9f17e7b11",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent skills",
+        "agent orchestration",
+        "security tooling",
+        "hooks"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "name": "hamzafer-claude-code-mods",
+      "owner": "hamzafer",
+      "repo": "hamzafer/claude-code-mods",
+      "pinned_commit": "e687416b0f2df0f3ad7f4dfc2065eefe6bc17ea9",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "context tooling",
+        "agent monitoring",
+        "review tooling",
+        "guard mods",
+        "function hooks"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
     }
-  ]
+  ],
+  "last_sync": {
+    "completed_at": "2026-10-08",
+    "source": "user-supplied Claude Code repositories",
+    "targets": [
+      "GrokBot",
+      "JEV",
+      "AURELIA"
+    ],
+    "duplicate_input": "none in this federation list; catalog repo registered separately"
+  }
 }
