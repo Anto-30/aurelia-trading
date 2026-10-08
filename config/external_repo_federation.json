@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-06",
+  "generated_date": "2026-10-08",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -228,7 +228,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/TauricResearch/TradingAgents",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "1394a3f72aa4393e1a98f51b382434c4b4c2d972",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08"
     },
     {
       "repo": "HKUDS/Vibe-Trading",
@@ -241,7 +242,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/HKUDS/Vibe-Trading",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "14cabaf1958a4ca5001084b02f1afb026a9d5593",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08"
     },
     {
       "repo": "freqtrade/freqtrade",
@@ -306,7 +308,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/QuantConnect/Lean",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "80e7843f645673bcbeaab963049f76f20f6785e1",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08"
     },
     {
       "repo": "HKUDS/AI-Trader",
@@ -369,7 +372,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/pst-group/pysystemtrade",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "a62269d27707806ba61f516791b71a9cd14cf268",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08"
     },
     {
       "repo": "stefan-jansen/machine-learning-for-trading",
@@ -382,7 +386,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/stefan-jansen/machine-learning-for-trading",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "827444ddc2106a1dbcf2145b9d48a6007a03de9a",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08"
     },
     {
       "repo": "nautechsystems/nautilus_trader",
@@ -395,7 +400,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/nautechsystems/nautilus_trader",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "7b766f8825b2539c5b2ac1375e9d97b41c509edb",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08"
     },
     {
       "repo": "endless-sky/endless-sky",
@@ -445,7 +451,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/jesse-ai/jesse",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "417f8765225e3bfc12043d4b712f19fe15a3c078",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08"
     },
     {
       "repo": "paperswithbacktest/awesome-systematic-trading",
@@ -471,7 +478,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/hummingbot/hummingbot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "9af100d6822da7d2d0291a906c730ef172284ee2",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08"
     },
     {
       "repo": "marketcalls/openalgo",
@@ -1440,5 +1448,10 @@
       ],
       "integration_note": "Use as isolated agentic-IDE/workspace reference. No capital authority, production deployment authority, secret access, LIVE_LOCK mutation, or broker transaction authority."
     }
-  ]
+  ],
+  "pin_policy": {
+    "pinned_commit_required_for_active_sources": true,
+    "unresolved_sources_remain_non_authoritative": true,
+    "automatic_upstream_execution": false
+  }
 }
