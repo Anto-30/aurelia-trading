@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.repo_agent_routing.v1",
-  "generated_date": "2026-10-05",
+  "generated_date": "2026-10-08",
   "purpose": "Deterministically route every federated external repository to the agents best suited to consume its engineering, research, security, multimodal, browser, deployment, or orchestration capabilities.",
   "admission_policy": {
     "assignment_required": true,
@@ -78,6 +78,17 @@
         "cloud-architecture",
         "multi-agent-security",
         "agentic-analytics"
+      ]
+    },
+    "JEV": {
+      "role": "decision_verification_tool_call_gating_and_agent_workflow_optimization",
+      "capabilities": [
+        "typed-decision-routing",
+        "classification",
+        "confidence-scoring",
+        "draft-verification",
+        "tool-call-gating",
+        "agent-workflow-optimization"
       ]
     }
   },
