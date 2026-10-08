@@ -40,6 +40,11 @@ jobs:
         run: python -m unittest discover -s tests -p "test_*.py" -v
       - name: Run assurance tests
         run: python -m unittest discover -s assurance -p "test_*.py" -v
+      - name: Report accepted trade count
+        if: always()
+        run: |
+          mkdir -p /tmp/aurelia
+          python scripts/report_trade_count.py --journal /tmp/aurelia/execution-events.ndjson | tee /tmp/aurelia/trade-count.json
       - name: Preserve live fail-closed gate
         run: |
           set +e
