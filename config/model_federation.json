@@ -1,0 +1,55 @@
+{
+  "schema": "aurelia.model_federation.v1",
+  "purpose": "Evidence-based routing of intelligence-plane tasks across approved LLMs without capital authority.",
+  "constitution": {
+    "intelligence_only": true,
+    "capital_authority": false,
+    "live_order_authority": false,
+    "live_lock_mutation": false,
+    "final_execution_authorization_mutation": false,
+    "deterministic_validation_required": true,
+    "unknown_model_availability_is_not_assumed": true
+  },
+  "routing_policy": {
+    "minimum_samples_for_promotion": 30,
+    "champion_confidence_margin": 0.05,
+    "max_staleness_days": 30,
+    "abstain_on_missing_evidence": true,
+    "high_consequence_requires_independent_challenger": true,
+    "capital_relevant_requires_deterministic_validation": true
+  },
+  "models": [
+    {"model_id":"openai.gpt-5.6-luna","provider":"openai","label":"GPT-5.6 Luna","availability":"probe_required","capabilities":["reasoning","research","planning","quant","coding","synthesis"]},
+    {"model_id":"anthropic.opus-class","provider":"anthropic","label":"Claude Opus-class","availability":"probe_required","capabilities":["reasoning","research","coding","adversarial","security","synthesis"]},
+    {"model_id":"anthropic.sonnet-class","provider":"anthropic","label":"Claude Sonnet-class","availability":"probe_required","capabilities":["coding","review","classification","reasoning"]},
+    {"model_id":"google.gemini-flash-class","provider":"google","label":"Gemini Flash-class","availability":"probe_required","capabilities":["classification","news","retrieval","data_quality","low_latency"]},
+    {"model_id":"google.gemini-pro-class","provider":"google","label":"Gemini Pro-class","availability":"probe_required","capabilities":["reasoning","quant","research","synthesis"]}
+  ],
+  "agents": [
+    {"agent_id":"chief_orchestrator","primary":"openai.gpt-5.6-luna","challengers":["anthropic.opus-class"],"tasks":["planning","decomposition","coordination","synthesis","conflict_resolution"]},
+    {"agent_id":"research_director","primary":"anthropic.opus-class","challengers":["openai.gpt-5.6-luna"],"tasks":["deep_research","hypothesis","evidence_synthesis","experiment_design"]},
+    {"agent_id":"macro_intelligence","primary":"openai.gpt-5.6-luna","challengers":["anthropic.opus-class"],"tasks":["macro","rates","inflation","liquidity","transmission"]},
+    {"agent_id":"global_news_intelligence","primary":"google.gemini-flash-class","challengers":["openai.gpt-5.6-luna"],"tasks":["news_classification","event_extraction","source_comparison","breaking_news"]},
+    {"agent_id":"geopolitical_intelligence","primary":"anthropic.opus-class","challengers":["openai.gpt-5.6-luna"],"tasks":["geopolitics","sanctions","conflict","political_risk"]},
+    {"agent_id":"market_regime","primary":"openai.gpt-5.6-luna","challengers":["anthropic.opus-class"],"tasks":["regime","anomaly","volatility","risk_on_off"]},
+    {"agent_id":"market_structure","primary":"anthropic.opus-class","challengers":["openai.gpt-5.6-luna"],"tasks":["structure","liquidity","breakout","sweep","multitimeframe"]},
+    {"agent_id":"strategy_research","primary":"anthropic.opus-class","challengers":["openai.gpt-5.6-luna"],"tasks":["strategy_design","robustness","failure_analysis","research_priority"]},
+    {"agent_id":"quant_statistical","primary":"openai.gpt-5.6-luna","challengers":["google.gemini-pro-class"],"tasks":["statistics","probability","sampling","quant_validation"]},
+    {"agent_id":"calibration","primary":"openai.gpt-5.6-luna","challengers":["anthropic.opus-class"],"tasks":["calibration","uncertainty","drift"]},
+    {"agent_id":"adversarial","primary":"anthropic.opus-class","challengers":["openai.gpt-5.6-luna"],"tasks":["contradiction","leakage","overfit","counterexample"]},
+    {"agent_id":"risk_intelligence","primary":"openai.gpt-5.6-luna","challengers":["anthropic.opus-class"],"tasks":["risk","stress_testing","uncertainty","scenarios"]},
+    {"agent_id":"portfolio_intelligence","primary":"openai.gpt-5.6-luna","challengers":["anthropic.opus-class"],"tasks":["portfolio","exposure","concentration","correlation"]},
+    {"agent_id":"execution_intelligence","primary":"openai.gpt-5.6-luna","challengers":["google.gemini-flash-class"],"tasks":["execution_quality","latency","spread","slippage"]},
+    {"agent_id":"data_quality","primary":"google.gemini-flash-class","challengers":["openai.gpt-5.6-luna"],"tasks":["data_quality","staleness","schema","lineage"]},
+    {"agent_id":"engineering","primary":"anthropic.opus-class","challengers":["openai.gpt-5.6-luna"],"tasks":["architecture","coding","debugging","testing"]},
+    {"agent_id":"code_review","primary":"anthropic.sonnet-class","challengers":["openai.gpt-5.6-luna"],"tasks":["code_review","bug_detection","test_review"]},
+    {"agent_id":"security","primary":"anthropic.opus-class","challengers":["openai.gpt-5.6-luna"],"tasks":["security","threat_model","prompt_injection","secret_protection"]},
+    {"agent_id":"audit","primary":"anthropic.opus-class","challengers":["openai.gpt-5.6-luna"],"tasks":["audit","evidence_review","provenance","governance"]},
+    {"agent_id":"learning_evolution","primary":"openai.gpt-5.6-luna","challengers":["anthropic.opus-class"],"tasks":["learning","curriculum","skill_discovery","model_reassignment"]},
+    {"agent_id":"knowledge_manager","primary":"google.gemini-flash-class","challengers":["openai.gpt-5.6-luna"],"tasks":["retrieval","classification","memory","provenance"]},
+    {"agent_id":"watchdog","primary":"google.gemini-flash-class","challengers":["anthropic.sonnet-class"],"tasks":["monitoring","anomaly_detection","health","policy"]},
+    {"agent_id":"task_generator","primary":"google.gemini-flash-class","challengers":["anthropic.sonnet-class"],"tasks":["curriculum","adversarial_tasks","unseen_tasks"]},
+    {"agent_id":"agent_evaluator","primary":"anthropic.opus-class","challengers":["openai.gpt-5.6-luna"],"tasks":["evaluation","comparison","promotion"]},
+    {"agent_id":"novelty_detector","primary":"openai.gpt-5.6-luna","challengers":["anthropic.opus-class"],"tasks":["novelty","distribution_shift","novel_regime"]}
+  ]
+}
