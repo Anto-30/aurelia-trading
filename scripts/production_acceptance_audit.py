@@ -20,6 +20,7 @@ REQUIRED_FILES = (
     "docs/PRODUCTION_READINESS.md",
     "scripts/live_release_gate.py",
     "scripts/verify_deriv_session.py",
+    "scripts/verify_deriv_broker_evidence.py",
     "scripts/verify_deriv_transaction_lifecycle.py",
     ".github/workflows/aurelia-assurance.yml",
 )
