@@ -660,6 +660,30 @@
         "KimiK3",
         "PlaywrightCLI"
       ]
+    },
+    {
+      "name": "oh-my-pstack",
+      "owner": "shrimpwtf",
+      "repo": "shrimpwtf/oh-my-pstack",
+      "pinned_commit": "fc0eabd25f21b194a336b640e75e29c252382866",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "portable-agent-skills",
+        "engineering-workflows",
+        "delegation",
+        "planning",
+        "verification",
+        "review",
+        "debugging",
+        "orchestration"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
     }
   ],
   "last_sync": {
@@ -691,6 +715,16 @@
       "JEV",
       "KimiK3",
       "PlaywrightCLI"
-    ]
+    ],
+    "oh_my_pstack": {
+      "pinned_commit": "fc0eabd25f21b194a336b640e75e29c252382866",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "physical_runtime_install": "NOT_CLAIMED"
+    }
   }
 }
