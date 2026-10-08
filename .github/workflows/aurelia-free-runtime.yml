@@ -96,12 +96,17 @@ jobs:
       - name: Verify authenticated Deriv session
         if: env.DERIV_AUTH_CONFIGURED == 'true'
         run: python scripts/verify_deriv_session.py
+      - name: Verify broker-side account evidence (read-only)
+        if: env.DERIV_AUTH_CONFIGURED == 'true'
+        run: python scripts/verify_deriv_broker_evidence.py
       - name: Upload authenticated evidence
         if: always() && env.DERIV_AUTH_CONFIGURED == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: deriv-authenticated-evidence-${{ github.run_id }}
-          path: artifacts/deriv_authenticated_session.json
+          path: |
+            artifacts/deriv_authenticated_session.json
+            artifacts/deriv_broker_account_evidence.json
           if-no-files-found: ignore
           retention-days: 7
 
