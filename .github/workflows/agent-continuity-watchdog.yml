@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
+      PYTHONPATH: "."
+      AURELIA_AGENT_PERFORMANCE_PATH: "/tmp/aurelia/agent-performance.json"
       FINAL_EXECUTION_AUTHORIZATION: "false"
       LIVE_EXECUTION: "BLOCKED"
     steps:

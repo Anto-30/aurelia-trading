@@ -96,6 +96,41 @@ jobs:
           resolved_commit="$(git rev-parse HEAD)"
           echo "AURELIA_RESEARCH_CODE_COMMIT=$resolved_commit" >> "$GITHUB_ENV"
           echo "R100_RESEARCH_SOURCE_COMMIT=$resolved_commit"
+      - name: Validate or safely roll incompatible prospective campaign
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f "${AURELIA_R100_STATE_PATH}" ]; then
+            echo "R100_CAMPAIGN_STATE=FRESH"
+            exit 0
+          fi
+          set +e
+          validation_output="$(python - <<'PY'
+          import os
+          from pathlib import Path
+          from research.r100_prospective_oos_collector import load_state
+          path = Path(os.environ["AURELIA_R100_STATE_PATH"])
+          load_state(path)
+          print("R100_CAMPAIGN_STATE=VALID")
+          PY
+          2>&1)"
+          status=$?
+          set -e
+          echo "$validation_output"
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          fi
+          if echo "$validation_output" | grep -qE 'R100_(CONFIG_HASH|SOURCE_COMMIT)_MISMATCH'; then
+            archive_dir=".research_state/incompatible-$(date -u +%Y%m%dT%H%M%SZ)"
+            mkdir -p "$archive_dir"
+            cp "${AURELIA_R100_STATE_PATH}" "$archive_dir/aurelia_r100_state.json"
+            rm -f "${AURELIA_R100_STATE_PATH}"
+            echo "R100_CAMPAIGN_STATE=ROLLED_OVER_INCOMPATIBLE"
+            echo "R100_ARCHIVED_STATE=$archive_dir/aurelia_r100_state.json"
+            exit 0
+          fi
+          echo "$validation_output" >&2
+          exit "$status"
       - name: Collect real public Deriv R100 observations
         run: python -m research.r100_prospective_oos_collector
       - name: Verify research-only semantics
