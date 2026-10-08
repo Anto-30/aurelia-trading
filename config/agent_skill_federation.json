@@ -495,9 +495,14 @@
       ],
       "capital_authority": false,
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ]
     },
     {
@@ -512,9 +517,14 @@
       ],
       "capital_authority": false,
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ]
     },
     {
@@ -529,9 +539,14 @@
       ],
       "capital_authority": false,
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ]
     },
     {
@@ -546,9 +561,14 @@
       ],
       "capital_authority": false,
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ]
     },
     {
@@ -563,9 +583,14 @@
       ],
       "capital_authority": false,
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ]
     },
     {
@@ -580,9 +605,14 @@
       ],
       "capital_authority": false,
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ]
     },
     {
@@ -597,9 +627,14 @@
       ],
       "capital_authority": false,
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ]
     },
     {
@@ -614,9 +649,14 @@
       ],
       "capital_authority": false,
       "assigned_agents": [
+        "AURELIA",
+        "ClaudeCode",
+        "GLM",
+        "GoogleAgentSkills",
         "GrokBot",
         "JEV",
-        "AURELIA"
+        "KimiK3",
+        "PlaywrightCLI"
       ]
     }
   ],
@@ -638,6 +678,17 @@
       "Anil-matcha/open-dots",
       "CopilotKit/OpenDots"
     ],
-    "physical_runtime_install": "NOT_CLAIMED"
+    "physical_runtime_install": "NOT_CLAIMED",
+    "assignment_policy": "All known AURELIA agents assigned to every new repository",
+    "assigned_agents": [
+      "AURELIA",
+      "ClaudeCode",
+      "GLM",
+      "GoogleAgentSkills",
+      "GrokBot",
+      "JEV",
+      "KimiK3",
+      "PlaywrightCLI"
+    ]
   }
 }
