@@ -1696,11 +1696,167 @@
         "signal-history"
       ],
       "integration_note": "Crypto microstructure/liquidation research source only. Validate independently; no direct broker execution, no Deriv order routing, and no capital authority."
+    },
+    {
+      "repo": "Tickloop/claude-mods",
+      "category": "claude-code-mods",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Tickloop/claude-mods",
+      "head_commit": "06e3dc584139240d968ab7f71cae4213ce15b40c",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "Two Claude Code UI/function-hook mods (glamour-dark and tool-lines). Source may be inspected and tested in an isolated workspace; never load its hooks into AURELIA capital/execution paths."
+    },
+    {
+      "repo": "escapeboy/claude-code-kit",
+      "category": "claude-code-agent-kit",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/escapeboy/claude-code-kit",
+      "head_commit": "1d03a85047ec9ea2885e381d008c5b64fef1d7e7",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "Large skills/mods/subagents/hooks collection. Installation instructions can modify Claude user configuration; treat all executable components as untrusted until isolated validation."
+    },
+    {
+      "repo": "karanb192/claude-code-mods",
+      "category": "claude-code-mods",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/karanb192/claude-code-mods",
+      "head_commit": "10617a90106144d3cb131bd599e677d9c38bfd35",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "Mod marketplace with image-peek, fable-pin, cache-tax and mod-builder. Its own documentation describes process/files/network/model/agent reach; use footprint validation before any isolated execution."
+    },
+    {
+      "repo": "whyashthakker/awesome-claude-code-mods",
+      "category": "claude-code-mod-catalog",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/whyashthakker/awesome-claude-code-mods",
+      "head_commit": "c53a70b8787c4270029af9648d6eb7054c6c29c3",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "Catalog plus bundled executable mods. Treat catalog recommendations as discovery metadata, not authorization; validate individual mods before use."
+    },
+    {
+      "repo": "JohnnyVizz/claude-kit",
+      "category": "claude-code-agent-kit",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/JohnnyVizz/claude-kit",
+      "head_commit": "272a877f39b6971690e087b16a7cc3951b811e39",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "savvy-flow skill/agents and savvy-progress function-hook mod. Keep execution isolated; do not allow worker agents or hooks to cross into capital authority."
+    },
+    {
+      "repo": "0xDarkMatter/claude-mods",
+      "category": "claude-code-agent-skills-and-mods",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/0xDarkMatter/claude-mods",
+      "head_commit": "3aac515e62ba1be0da3a720a9e23ffa9f17e7b11",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "Large agent-skill/mod collection with executable tooling, hooks and agent workflows. No direct installation into AURELIA execution paths; inspect and test in quarantine."
+    },
+    {
+      "repo": "hamzafer/claude-code-mods",
+      "category": "claude-code-mods",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/hamzafer/claude-code-mods",
+      "head_commit": "e687416b0f2df0f3ad7f4dfc2065eefe6bc17ea9",
+      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "integration_note": "Claude Code function-hook mods including context, agent, review and guard tooling. Keep marketplace/mod execution outside AURELIA capital and execution planes."
     }
   ],
   "pin_policy": {
     "pinned_commit_required_for_active_sources": true,
     "unresolved_sources_remain_non_authoritative": true,
     "automatic_upstream_execution": false
+  },
+  "last_sync": {
+    "completed_at": "2026-10-08",
+    "source": "user-supplied GitHub repositories",
+    "unique_repositories_added_or_refreshed": [
+      "Tickloop/claude-mods",
+      "escapeboy/claude-code-kit",
+      "karanb192/claude-code-mods",
+      "whyashthakker/awesome-claude-code-mods",
+      "JohnnyVizz/claude-kit",
+      "0xDarkMatter/claude-mods",
+      "hamzafer/claude-code-mods"
+    ],
+    "duplicate_input": "karanb192/awesome-claude-code-mods was supplied twice; registered once",
+    "physical_grok_jev_install": "NOT_CLAIMED",
+    "canonical_sync_contract": "This file"
   }
 }
