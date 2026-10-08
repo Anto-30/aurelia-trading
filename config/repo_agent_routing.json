@@ -90,6 +90,15 @@
         "tool-call-gating",
         "agent-workflow-optimization"
       ]
+    },
+    "AURELIA": {
+      "role": "canonical_aurelia_supervisor_and_policy_owner",
+      "capabilities": [
+        "system-supervision",
+        "policy-evaluation",
+        "cross-agent-coordination",
+        "capital-plane-policy-enforcement"
+      ]
     }
   },
   "routing_rules": [
