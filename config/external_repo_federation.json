@@ -648,7 +648,7 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/forcewake/hermes-conductor",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "ab0d8eab0301b3f18e6977416d080d5fa574f169",
       "capabilities": [
         "controller-owned-dispatch",
         "worktree-isolation",
@@ -656,7 +656,8 @@
         "stale-base-recovery",
         "dependency-ordering",
         "worker-lifecycle"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Ardha-Eco-System/RUDR9",
@@ -671,7 +672,7 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Ardha-Eco-System/RUDR9",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "e69e16ea2e39963fd23bdc7a3325e02ea4f1f19b",
       "capabilities": [
         "role-specialization",
         "tool-permission-boundaries",
@@ -679,7 +680,8 @@
         "security-review",
         "performance-review",
         "review-gates"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "AlekseiUL/codex-plus-hermes-team",
@@ -693,7 +695,7 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/AlekseiUL/codex-plus-hermes-team",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "fb7f4f2da39c929394dc0c398165cab3ac44ce5a",
       "capabilities": [
         "specialist-routing",
         "panel-consensus",
@@ -701,7 +703,8 @@
         "side-effect-policy",
         "mcp-bridge",
         "agent-discovery"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "diegomarino/kanban-task-threads",
@@ -714,12 +717,13 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/diegomarino/kanban-task-threads",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "467284665eb18360e9c32cd8fe4ff76690a66231",
       "capabilities": [
         "task-threading",
         "kanban-coordination",
         "context-handoff"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "basilisk-labs/agentplane-hermes-plugin",
@@ -732,14 +736,15 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/basilisk-labs/agentplane-hermes-plugin",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "dc4662ad32bc8395fb6ae3f77af551698ce6f62f",
       "capabilities": [
         "worker-lane-bridge",
         "protocol-v2",
         "terminal-attestation",
         "task-projection",
         "hermes-agentplane-adapter"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "railwayapp/docs",
@@ -753,14 +758,15 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/railwayapp/docs",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "b2c0106946259493aa0d51c0b3a47e861a457f6a",
       "capabilities": [
         "railway-deployment",
         "iac",
         "service-configuration",
         "secrets-preservation",
         "staged-changes"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "railwayapp/cli",
@@ -773,14 +779,15 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/railwayapp/cli",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "dfac95fea06e914f31cdef5744ae0a820e6916d5",
       "capabilities": [
         "railway-cli",
         "agent-setup",
         "mcp-proxy",
         "iac-cli",
         "deployment-connectivity"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "vignesh07/clawdbot-railway-template",
@@ -793,14 +800,15 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/vignesh07/clawdbot-railway-template",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "b9e2467189d02dfe51a80173c40bad650a58eaf2",
       "capabilities": [
         "railway-volume-persistence",
         "health-endpoint-patterns",
         "protected-setup",
         "container-wrapper",
         "persistent-agent-state"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "chrisleekr/binance-trading-bot",
