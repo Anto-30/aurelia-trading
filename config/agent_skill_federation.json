@@ -1709,6 +1709,163 @@
         "ClaudeCode",
         "JEV"
       ]
+    },
+    {
+      "name": "litellm",
+      "owner": "BerriAI",
+      "repo": "BerriAI/litellm",
+      "pinned_commit": "5e1c5c0bd17781a83b4368c38ebebcf7bc683fcb",
+      "trust": "OFFICIAL_SECURITY_REVIEW_REQUIRED",
+      "capabilities": [
+        "multi-provider-LLM-routing",
+        "proxy-gateway",
+        "cost-observability",
+        "guardrails",
+        "load-balancing"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "integration_note": "Primary upstream gateway reference only. Do not install or execute in production until version-specific supply-chain and security review is complete. GitHub security page lists recent critical/high advisories; avoid unreviewed package installs and verify signed releases."
+    },
+    {
+      "name": "litellm-agent-control-plane",
+      "owner": "LiteLLM-Labs",
+      "repo": "LiteLLM-Labs/litellm-agent-control-plane",
+      "pinned_commit": "53bfd20e2fec51fc8f665fb614512c6b138367da",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-routing",
+        "agent-control-plane",
+        "provider-integration"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "integration_note": "Architecture and API reference only; no control over AURELIA capital-plane policy, broker credentials, or production execution."
+    },
+    {
+      "name": "litellm-docs",
+      "owner": "BerriAI",
+      "repo": "BerriAI/litellm-docs",
+      "pinned_commit": "4a73adff0a530b948b043b0fa64bf96d2cc7c4ce",
+      "trust": "OFFICIAL_SECURITY_REVIEW_REQUIRED",
+      "capabilities": [
+        "official-documentation",
+        "configuration-reference",
+        "security-advisories"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "AURELIA"
+      ],
+      "integration_note": "Documentation reference. Check security notices and pin exact version documentation before adopting any runtime behavior."
+    },
+    {
+      "name": "litellm-proxy",
+      "owner": "BerriAI",
+      "repo": "BerriAI/liteLLM-proxy",
+      "pinned_commit": "1ef69ae92bf22600f9a42d15e3b992e1010c9a7e",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "legacy-proxy-reference"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "integration_note": "Older proxy repository with last commit in 2024; reference only and not the preferred current upstream implementation."
+    },
+    {
+      "name": "cc-mirror",
+      "owner": "numman-ali",
+      "repo": "numman-ali/cc-mirror",
+      "pinned_commit": "e0e6f289c78ebe7f38bd8afcad92d28ea7e4f1e5",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "isolated-claude-code-variants",
+        "custom-provider-configuration"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Developer-tooling experiment only. Do not route production credentials through modified coding-agent binaries or provider bridges."
+    },
+    {
+      "name": "litellm-pgvector",
+      "owner": "BerriAI",
+      "repo": "BerriAI/litellm-pgvector",
+      "pinned_commit": "5bd8f3ab1fa9129e758a2c4b17ba1c6f3047ba24",
+      "trust": "OFFICIAL_SECURITY_REVIEW_REQUIRED",
+      "capabilities": [
+        "pgvector-memory-reference",
+        "retrieval-architecture"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "AURELIA"
+      ],
+      "integration_note": "Sandbox-only memory integration reference; no production account data or secrets."
+    },
+    {
+      "name": "litellm-rust",
+      "owner": "LiteLLM-Labs",
+      "repo": "LiteLLM-Labs/litellm-rust",
+      "pinned_commit": "76f83257fce4dcc3d76e7e760934bbd725b624d9",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "rust-gateway-reference",
+        "coding-agent-provider-routing"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Prototype gateway reference; benchmark and security review required before any deployment."
+    },
+    {
+      "name": "langchain-litellm",
+      "owner": "langchain-ai",
+      "repo": "langchain-ai/langchain-litellm",
+      "pinned_commit": "5b8af479f783ae5a0d3eff9214c2cbb06473e513",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "langchain-provider-adapter",
+        "multi-provider-model-routing"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "integration_note": "Adapter reference only; dependency/version compatibility and transitive security review required before use."
     }
   ],
   "last_sync": {
