@@ -847,10 +847,9 @@
       "capital_authority": false,
       "assigned_agents": [
         "KimiK3",
-        "GrokBot",
         "ClaudeCode",
-        "JEV",
-        "AURELIA"
+        "GrokBot",
+        "JEV"
       ]
     },
     {
@@ -1663,7 +1662,13 @@
         "performance-tracing",
         "UI-verification"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "ai-scalpel-trading-bot",
@@ -1678,7 +1683,13 @@
         "dry-run-evaluation",
         "position-sizing-research"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "candlestick",
@@ -1692,7 +1703,12 @@
         "TypeScript-types",
         "unit-test-reference"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "JEV"
+      ]
     }
   ],
   "last_sync": {
