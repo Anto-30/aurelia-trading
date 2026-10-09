@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import asyncio
+import json
 import os
 import tempfile
 import unittest
+from unittest.mock import AsyncMock, patch
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -240,6 +243,33 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertEqual(hunter.calls, 0)
         self.assertEqual(len(state["pending"]), 0)
         self.assertEqual(len(state["observations"]), 1)
+
+    def test_failed_collection_preserves_state_and_emits_non_authorizing_report(self):
+        import research.r100_prospective_oos_collector as collector
+
+        with tempfile.TemporaryDirectory() as tmp:
+            state_path = Path(tmp) / "aurelia_r100_state.json"
+            with (
+                patch.object(collector, "STATE_PATH", state_path),
+                patch.object(
+                    collector,
+                    "collect_once",
+                    new=AsyncMock(side_effect=RuntimeError("simulated feed outage")),
+                ),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "simulated feed outage"):
+                    asyncio.run(collector.main())
+
+            persisted = json.loads(state_path.read_text(encoding="utf-8"))
+            report = json.loads(
+                state_path.with_name("aurelia_r100_report.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(persisted["last_run_error_type"], "RuntimeError")
+            self.assertTrue(persisted["last_run_error_at_utc"])
+            self.assertEqual(report["collection_status"], "FAILED_RETRYABLE")
+            self.assertEqual(report["collection_error_type"], "RuntimeError")
+            self.assertFalse(report["execution_authorized"])
+            self.assertFalse(report["capital_authority"])
 
     def test_horizon_is_positive(self):
         self.assertGreater(HORIZON_TICKS, 0)
