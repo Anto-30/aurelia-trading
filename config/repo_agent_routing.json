@@ -1,7 +1,7 @@
 {
   "schema": "aurelia.repo_agent_routing.v1",
   "generated_date": "2026-10-09",
-  "purpose": "Deterministically route every federated external repository to the agents best suited to consume its engineering, research, security, multimodal, browser, deployment, or orchestration capabilities.",
+  "purpose": "Deterministically route every federated external repository to the agents best suited to consume its engineering, research, security, multimodal, browser, deployment, or orchestration capabilities. Includes security-first routing for LLM gateway and Freebuff-related reference sources.",
   "admission_policy": {
     "assignment_required": true,
     "minimum_assigned_agents": 1,
@@ -135,7 +135,8 @@
           "agent-security",
           "security",
           "gateway",
-          "MCP-security"
+          "MCP-security",
+          "llm-gateway"
         ]
       },
       "primary_agent": "GoogleAgentSkills",
@@ -229,7 +230,9 @@
           "coordination",
           "hermes",
           "agentplane",
-          "plugin"
+          "plugin",
+          "agent-control-plane",
+          "agent-orchestration"
         ]
       },
       "primary_agent": "GrokBot",

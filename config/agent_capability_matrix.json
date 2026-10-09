@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_capability_matrix.v2",
-  "principle": "Equip each agent with common safe core plus least-privilege role-specific capabilities. External tools and trading repositories are non-authoritative; capital authority remains exclusively inside AURELIA's deterministic control plane.",
+  "principle": "Equip each agent with common safe core plus least-privilege role-specific capabilities. External tools and trading repositories are non-authoritative; capital authority remains exclusively inside AURELIA's deterministic control plane. Freebuff account/API bridge sources are reference/sandbox only and cannot be used to evade upstream access restrictions.",
   "core_capabilities": [
     "repository_intelligence",
     "git_and_ci",
@@ -353,6 +353,161 @@
       "ClaudeCode",
       "GrokBot",
       "JEV"
+    ],
+    "BerriAI/litellm": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "LiteLLM-Labs/litellm-agent-control-plane": [
+      "GrokBot",
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "JEV"
+    ],
+    "BerriAI/litellm-docs": [
+      "GLM",
+      "ClaudeCode",
+      "JEV"
+    ],
+    "BerriAI/liteLLM-proxy": [
+      "ClaudeCode",
+      "JEV",
+      "GrokBot"
+    ],
+    "numman-ali/cc-mirror": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "BerriAI/litellm-pgvector": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "JEV"
+    ],
+    "LiteLLM-Labs/litellm-rust": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "GrokBot",
+      "JEV"
+    ],
+    "langchain-ai/langchain-litellm": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "GrokBot",
+      "JEV"
+    ],
+    "jxjhheric/freebuff2api-wokers": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "kele68108/Freebuff2API-Optimized": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "t479842598/freebuff2api-vercel": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "HengXin666/freebuff-proxy": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "lza6/Freebuff-2API": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "NetroIndonesia/freebuff2api": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "XxxXTeam/freebuff2api": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "Quorinex/Freebuff2API": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "pingmike2/freebuff2api-wokers": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "CodebuffAI/freebuff": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "JEV"
+    ],
+    "VenTheZone/freebuff-gate": [
+      "PlaywrightCLI",
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "JEV"
+    ],
+    "Praket7/freebuff-mcp": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "PlaywrightCLI",
+      "JEV"
+    ],
+    "Jakevin/codex-freebuff-web": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "JEV"
+    ],
+    "TheMetalStorm/herdr-freebuff-plugin": [
+      "GrokBot",
+      "ClaudeCode",
+      "JEV"
+    ],
+    "Heartcoolman/FreeBuff": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "HaizhuAI/Freebuff2apic": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "0xgetz/freebuff-9router": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "aminkalantari842-ui/global-intelligence-os": [
+      "GrokBot",
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "JEV"
+    ],
+    "6yte96/freebuffet": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "GrokBot",
+      "JEV"
     ]
   },
   "required_invariants": [
@@ -409,6 +564,296 @@
       "install_status": "RESEARCH_ONLY",
       "mode": "RESEARCH_ONLY",
       "security": "legacy beta; inspect dependencies and APIs; no production credentials or deployment"
+    },
+    "BerriAI/litellm": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_SANDBOX_CANDIDATE",
+      "mode": "SANDBOX_ONLY",
+      "security": "Sandbox architecture reference only; critical/high upstream security advisories require exact patched version and artifact verification before any deployment."
+    },
+    "LiteLLM-Labs/litellm-agent-control-plane": {
+      "primary": "GrokBot",
+      "supporting": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "install_status": "PINNED_SANDBOX_CANDIDATE",
+      "mode": "SANDBOX_ONLY",
+      "security": "Architecture reference only; external agents must not cross AURELIA capital-plane boundaries."
+    },
+    "BerriAI/litellm-docs": {
+      "primary": "GLM",
+      "supporting": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Official public docs and advisory reference only."
+    },
+    "BerriAI/liteLLM-proxy": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "JEV",
+        "GrokBot"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Deprecated upstream repository; current implementation is BerriAI/litellm. Do not install."
+    },
+    "numman-ali/cc-mirror": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_SANDBOX_CANDIDATE",
+      "mode": "SANDBOX_ONLY",
+      "security": "Isolated developer tooling only; do not route production credentials through modified coding-agent variants."
+    },
+    "BerriAI/litellm-pgvector": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "install_status": "PINNED_SANDBOX_CANDIDATE",
+      "mode": "SANDBOX_ONLY",
+      "security": "Vector-memory reference only; no broker statements, Deriv credentials, or production data in vector storage."
+    },
+    "LiteLLM-Labs/litellm-rust": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_SANDBOX_CANDIDATE",
+      "mode": "SANDBOX_ONLY",
+      "security": "Upstream README describes a proof of concept; do not treat as a production gateway."
+    },
+    "langchain-ai/langchain-litellm": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_SANDBOX_CANDIDATE",
+      "mode": "SANDBOX_ONLY",
+      "security": "Adapter reference pending compatibility, tool-call semantics, and transitive-dependency review."
+    },
+    "jxjhheric/freebuff2api-wokers": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Reference-only review. Do not deploy or invoke its Freebuff upstream routes."
+    },
+    "kele68108/Freebuff2API-Optimized": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Fork uses multi-account token rotation and session-reuse optimizations; documentation/reference review only."
+    },
+    "t479842598/freebuff2api-vercel": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Reference only. No deployment, token import, fingerprint adaptation, or production credentials."
+    },
+    "HengXin666/freebuff-proxy": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "README describes a reverse-engineered upstream protocol and multi-account pool; no runtime use."
+    },
+    "lza6/Freebuff-2API": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Reference-only. It supports token/cookie import and account pooling; never provide AURELIA or Deriv credentials."
+    },
+    "NetroIndonesia/freebuff2api": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Upstream README explicitly warns of Terms-of-Service risk and possible account restrictions. Do not deploy or use for restriction evasion."
+    },
+    "XxxXTeam/freebuff2api": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Reference only. No token collection via untrusted external pages and no production deployment."
+    },
+    "Quorinex/Freebuff2API": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "README describes randomized request fingerprints and multi-token rotation; reference-only, no evasion or deployment."
+    },
+    "pingmike2/freebuff2api-wokers": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Reference only. README says Cloudflare Worker deployment can increase account-ban risk."
+    },
+    "CodebuffAI/freebuff": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Official upstream client reference only; not a substitute for provider-supported access or AURELIA authorization."
+    },
+    "VenTheZone/freebuff-gate": {
+      "primary": "PlaywrightCLI",
+      "supporting": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "install_status": "PINNED_SANDBOX_CANDIDATE",
+      "mode": "SANDBOX_ONLY",
+      "security": "Sandbox only; not installed into the AURELIA Command Center and not exposed on public interfaces."
+    },
+    "Praket7/freebuff-mcp": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "JEV"
+      ],
+      "install_status": "PINNED_SANDBOX_CANDIDATE",
+      "mode": "SANDBOX_ONLY",
+      "security": "High-trust local bridge: can send requests to Freebuff and read ordinary project files. Isolated sandbox and manual approvals only; redaction is not a security boundary."
+    },
+    "Jakevin/codex-freebuff-web": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "install_status": "PINNED_SANDBOX_CANDIDATE",
+      "mode": "SANDBOX_ONLY",
+      "security": "Sandbox-only adapter for developer use; no production account data or AURELIA/Deriv secrets."
+    },
+    "TheMetalStorm/herdr-freebuff-plugin": {
+      "primary": "GrokBot",
+      "supporting": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Plugin scrapes terminal content to infer agent state; reference-only until privacy and least-privilege review."
+    },
+    "Heartcoolman/FreeBuff": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Local compatible bridge only as architecture reference; do not route production credentials through it."
+    },
+    "HaizhuAI/Freebuff2apic": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Reference only; repository description identifies account-pool management and proxy routing."
+    },
+    "0xgetz/freebuff-9router": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Reference-only adapter/gateway integration; no production credentials or live account-pool deployment."
+    },
+    "aminkalantari842-ui/global-intelligence-os": {
+      "primary": "GrokBot",
+      "supporting": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Repository has no declared license in API metadata and a broad project description; inspect before any use."
+    },
+    "6yte96/freebuffet": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_SANDBOX_CANDIDATE",
+      "mode": "SANDBOX_ONLY",
+      "security": "Sandbox-only CLI review. It can generate provider configuration; never write secrets or config into production hosts automatically."
     }
   }
 }
