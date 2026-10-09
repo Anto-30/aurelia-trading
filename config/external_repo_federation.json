@@ -3911,8 +3911,7 @@
         "GoogleAgentSkills",
         "ClaudeCode",
         "GrokBot",
-        "JEV",
-        "AURELIA"
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/BerriAI/litellm",
@@ -3936,8 +3935,7 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV",
-        "AURELIA"
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/LiteLLM-Labs/litellm-agent-control-plane",
@@ -3958,8 +3956,7 @@
       "assigned_agents": [
         "GLM",
         "ClaudeCode",
-        "JEV",
-        "AURELIA"
+        "JEV"
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/BerriAI/litellm-docs",
@@ -4019,8 +4016,7 @@
       "assigned_agents": [
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV",
-        "AURELIA"
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/BerriAI/litellm-pgvector",
@@ -4035,7 +4031,7 @@
     },
     {
       "repo": "LiteLLM-Labs/litellm-rust",
-      "category": "rust-prototype",
+      "category": "rust-toolchain-prototype",
       "domain": "agent-infrastructure",
       "assigned_agents": [
         "ClaudeCode",
@@ -4062,8 +4058,7 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV",
-        "AURELIA"
+        "JEV"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/langchain-ai/langchain-litellm",
@@ -4074,6 +4069,307 @@
         "multi-provider-model-routing"
       ],
       "integration_note": "Adapter reference only; dependency/version compatibility and transitive security review required before use.",
+      "capital_authority": false
+    },
+    {
+      "repo": "jxjhheric/freebuff2api-wokers",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/jxjhheric/freebuff2api-wokers",
+      "head_commit": "5cbb353019f2f660ca1d72984549e430590b4778",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "kele68108/Freebuff2API-Optimized",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/kele68108/Freebuff2API-Optimized",
+      "head_commit": "f7e13d414e9a7197a227969d88ad6166724c2a15",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "t479842598/freebuff2api-vercel",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/t479842598/freebuff2api-vercel",
+      "head_commit": "16274ad8f3b9fa9c30093ab859f3732aca043452",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "HengXin666/freebuff-proxy",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/HengXin666/freebuff-proxy",
+      "head_commit": "581097b0b7ba14a57fca487936975d97474d9bb8",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "lza6/Freebuff-2API",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/lza6/Freebuff-2API",
+      "head_commit": "bd607aac70548b80f586c60f819ed8e47240e25f",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "NetroIndonesia/freebuff2api",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/NetroIndonesia/freebuff2api",
+      "head_commit": "4894d7db6157c97f3037dc7d79ae0c2571762f8e",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "XxxXTeam/freebuff2api",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/XxxXTeam/freebuff2api",
+      "head_commit": "0c691c7dc90b91589e53901ea39dee96b28bf157",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "Quorinex/Freebuff2API",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Quorinex/Freebuff2API",
+      "head_commit": "a1c10357098f0615a8b605bf32ed9455e33320e4",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "pingmike2/freebuff2api-wokers",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/pingmike2/freebuff2api-wokers",
+      "head_commit": "901a9d87c748072fea16c8cc4d5e9d3bca87d593",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "CodebuffAI/freebuff",
+      "category": "coding-agent",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/CodebuffAI/freebuff",
+      "head_commit": "18f32cd3c51ea88d763e89432642a908030fd088",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "VenTheZone/freebuff-gate",
+      "category": "browser-ui",
+      "domain": "engineering",
+      "assigned_agents": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/VenTheZone/freebuff-gate",
+      "head_commit": "3663a93614f0abbfcb477563538014e1f35b0cd4",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "Praket7/freebuff-mcp",
+      "category": "agent-security-mcp",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Praket7/freebuff-mcp",
+      "head_commit": "02cf6e623cc6643fba3aeadeba3011188857212d",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "Jakevin/codex-freebuff-web",
+      "category": "coding-agent-provider-bridge",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Jakevin/codex-freebuff-web",
+      "head_commit": "576c6835bc06ed4fc039bb6cd264e73ce36efa41",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "TheMetalStorm/herdr-freebuff-plugin",
+      "category": "agent-orchestration-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/TheMetalStorm/herdr-freebuff-plugin",
+      "head_commit": "a49b1ea428fe6eb620288a3035984073927557d2",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "Heartcoolman/FreeBuff",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Heartcoolman/FreeBuff",
+      "head_commit": "9edc400ca83c347554dba8fb373e63af8fcfbcd2",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "HaizhuAI/Freebuff2apic",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/HaizhuAI/Freebuff2apic",
+      "head_commit": "58ff9bdbbc749b8a607a2960ee89d6f29927ca0f",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "0xgetz/freebuff-9router",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/0xgetz/freebuff-9router",
+      "head_commit": "ec5e698816d86b4db1d970e03d10350bcc15d966",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "aminkalantari842-ui/global-intelligence-os",
+      "category": "agent-orchestration",
+      "domain": "reference",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/aminkalantari842-ui/global-intelligence-os",
+      "head_commit": "05ea36d535e2076a359b7fdeb82d99e77f66ae4e",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
+      "capital_authority": false
+    },
+    {
+      "repo": "6yte96/freebuffet",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/6yte96/freebuffet",
+      "head_commit": "280259f0495f8d37b7cd51a19500e8eb0eab8223",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
       "capital_authority": false
     }
   ],
@@ -4483,6 +4779,6 @@
     "repository_count": 154,
     "all_repository_heads_pinned": true,
     "date": "2026-10-09",
-    "summary": "Eight LiteLLM-related sources pinned with role-correct agent ordering; all remain non-authoritative and not production-installed."
+    "summary": "Added 19 Freebuff-related sources as pinned reference/sandbox entries; all external capital authority remains false."
   }
 }
