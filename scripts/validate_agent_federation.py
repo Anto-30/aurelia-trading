@@ -120,14 +120,6 @@ def main() -> None:
         "0xgetz/freebuff-9router": "GoogleAgentSkills",
         "aminkalantari842-ui/global-intelligence-os": "GrokBot",
         "6yte96/freebuffet": "ClaudeCode",
-        "BerriAI/litellm": "GoogleAgentSkills",
-        "LiteLLM-Labs/litellm-agent-control-plane": "GrokBot",
-        "BerriAI/litellm-docs": "GLM",
-        "BerriAI/liteLLM-proxy": "ClaudeCode",
-        "numman-ali/cc-mirror": "ClaudeCode",
-        "BerriAI/litellm-pgvector": "ClaudeCode",
-        "LiteLLM-Labs/litellm-rust": "ClaudeCode",
-        "langchain-ai/langchain-litellm": "ClaudeCode",
     }
     all_external = external_repos["repositories"]
     assert len({item["repo"] for item in all_external}) == len(all_external)
@@ -141,6 +133,7 @@ def main() -> None:
         assert item["mode"] in {"RESEARCH_ONLY", "SANDBOX_ONLY", "TOOLCHAIN_ONLY", "REFERENCE_ONLY"}, repo
 
     registered_skills = {item["repo"]: item for item in federation["sources"]}
+    assert len({item["name"] for item in federation["sources"]}) == len(federation["sources"]), "duplicate external skill names"
     for repo, expected_commit in expected_external.items():
         item = registered_skills[repo]
         assert item["pinned_commit"] == expected_commit, repo
