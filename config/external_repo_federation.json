@@ -1062,7 +1062,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/ChypherFish3r/coinbase-trading-bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "95467c6480dff5e2b6d59a056da1458648146b44",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "degatchi/mev-template-rs",
@@ -1076,7 +1077,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/degatchi/mev-template-rs",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "a56ba8af57b701e8a2d3f787eb9b4fa1711d2285",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "jordantete/grid_trading_bot",
@@ -1090,7 +1092,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/jordantete/grid_trading_bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "262424be908227bab0587d9ff185157ea3180f20",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "diogomatoschaves/MyCryptoBot",
@@ -1104,7 +1107,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/diogomatoschaves/MyCryptoBot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "4f6a3d0e3584df65b717eee5aecdac8aba055b17",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "vavarb/vavabot_options_strategy",
@@ -1118,7 +1122,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/vavarb/vavabot_options_strategy",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "99f99e77e73ba881a3189f70e1b1365cfb49450f",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Kryptgen89/freqtrade-setup",
@@ -1132,7 +1137,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/Kryptgen89/freqtrade-setup",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "19db1b102dedb407ddd67be3bd7005d205404da5",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "SevaTV/botpilot",
@@ -1146,7 +1152,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/SevaTV/botpilot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "e3d17e039cba6de209fd93a913e517227971c6ce",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "giaaua06/okx-grid-trading-bot",
@@ -1160,7 +1167,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/giaaua06/okx-grid-trading-bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "7daf00eaba6bda5ba3bdb298e8bd1f2ac2d892fe",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "doat08/okx-bot-suite",
