@@ -72,6 +72,16 @@ def main() -> None:
         "davepoon/buildwithclaude": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
         "workersio/skills": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
     }
+    expected_primary = {
+        "BerriAI/litellm": "GoogleAgentSkills",
+        "LiteLLM-Labs/litellm-agent-control-plane": "GrokBot",
+        "BerriAI/litellm-docs": "GLM",
+        "BerriAI/liteLLM-proxy": "ClaudeCode",
+        "numman-ali/cc-mirror": "ClaudeCode",
+        "BerriAI/litellm-pgvector": "ClaudeCode",
+        "LiteLLM-Labs/litellm-rust": "ClaudeCode",
+        "langchain-ai/langchain-litellm": "ClaudeCode",
+    }
     all_external = external_repos["repositories"]
     assert len({item["repo"] for item in all_external}) == len(all_external)
     assert all(item.get("head_commit") and item["head_commit"] != "SYNC_REQUIRED" for item in all_external)
@@ -89,6 +99,16 @@ def main() -> None:
         assert item["pinned_commit"] == expected_commit, repo
         assert item["capital_authority"] is False, repo
         assert set(item.get("assigned_agents", [])).issubset(known_agents), repo
+
+    for repo, expected_agent in expected_primary.items():
+        repo_item = registered[repo]
+        skill_item = registered_skills[repo]
+        assert repo_item["assigned_agents"][0] == expected_agent, (
+            repo, "repo primary routing mismatch", repo_item["assigned_agents"]
+        )
+        assert skill_item["assigned_agents"][0] == expected_agent, (
+            repo, "skill primary routing mismatch", skill_item["assigned_agents"]
+        )
 
     sources = federation.get("sources", [])
     assert len(sources) >= 7
