@@ -508,6 +508,111 @@
       "GoogleAgentSkills",
       "GrokBot",
       "JEV"
+    ],
+    "pineforge-4pass/pineforge-engine": [
+      "KimiK3",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "pinecone-io/pinecone-claude-code-plugin": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "tmustier/pine-of-glass": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "FaustoS88/Pydantic-AI-Pinescript-Expert": [
+      "KimiK3",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "be-thomas/OpenPineScript": [
+      "KimiK3",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "jpantsjoha/pinescript-vscode-extension": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "double232/pinescript-skill": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "gugu91/pinet": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "folknor/pine-tools": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "dharmanan/PineScript-coder": [
+      "KimiK3",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "dotsystemsdevs/pineflow": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "batonogov/pine": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "edeng23/pines": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "TheFractalyst/PineMCP": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "JEV"
+    ],
+    "85599/pinesprout": [
+      "KimiK3",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "hasnocool/tradingview-script-downloader": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "coocolab/Coocolab-Tradingview-MCP": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "JEV"
+    ],
+    "daviddme/tradingview-indicator-search-mcp-server": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "JEV"
+    ],
+    "kashsuks/Pinel": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "pinecone-io/getting-started-with-pinecone-webinar": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
     ]
   },
   "required_invariants": [
@@ -854,6 +959,211 @@
       "install_status": "PINNED_SANDBOX_CANDIDATE",
       "mode": "SANDBOX_ONLY",
       "security": "Sandbox-only CLI review. It can generate provider configuration; never write secrets or config into production hosts automatically."
+    },
+    "pineforge-4pass/pineforge-engine": {
+      "primary": "KimiK3",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "RESEARCH_ONLY",
+      "mode": "RESEARCH_ONLY",
+      "security": "Pine Script v6 code generation/backtesting engine; validate semantics, broker execution differences and OOS results.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "pinecone-io/pinecone-claude-code-plugin": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "TOOLCHAIN_ONLY",
+      "security": "Official Pinecone Claude Code marketplace plugin; vector search integration only.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "tmustier/pine-of-glass": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "security": "Pi coding-agent observability/context extension; do not assume Claude runtime compatibility.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "FaustoS88/Pydantic-AI-Pinescript-Expert": {
+      "primary": "KimiK3",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "RESEARCH_ONLY",
+      "mode": "RESEARCH_ONLY",
+      "security": "Pine Script RAG/code-generation assistant; generated signals remain unqualified until independent testing.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "be-thomas/OpenPineScript": {
+      "primary": "KimiK3",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "RESEARCH_ONLY",
+      "mode": "RESEARCH_ONLY",
+      "security": "Pine Script runtime; GPL-3.0 compatibility and semantic completeness review required.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "jpantsjoha/pinescript-vscode-extension": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "TOOLCHAIN_ONLY",
+      "security": "Pine Script v6 editor extension; license must be clarified before redistribution.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "double232/pinescript-skill": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "security": "Pine Script v6 skill reference; inspect prompts/dependencies; license not declared.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "gugu91/pinet": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "TOOLCHAIN_ONLY",
+      "security": "Local-first coordination for Pi coding agents; no production credentials.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "folknor/pine-tools": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "TOOLCHAIN_ONLY",
+      "security": "Pine language service/LSP/MCP/CLI linting; license review before adoption.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "dharmanan/PineScript-coder": {
+      "primary": "KimiK3",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "RESEARCH_ONLY",
+      "mode": "RESEARCH_ONLY",
+      "security": "Pine Script v6 generation; test repaint/lookahead, fees and fill semantics.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "dotsystemsdevs/pineflow": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "security": "AI coding prompts/workflow toolkit; not a Pine-specific trading runtime.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "batonogov/pine": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "TOOLCHAIN_ONLY",
+      "security": "Native macOS agent editor; not available in current runtime unless separately installed.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "edeng23/pines": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "TOOLCHAIN_ONLY",
+      "security": "Pi multi-session orchestration TUI; no proof Pi runtime is connected.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "TheFractalyst/PineMCP": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "install_status": "SANDBOX_ONLY",
+      "mode": "SANDBOX_ONLY",
+      "security": "Local Pine Script docs/code MCP; isolate and review tool permissions before activation.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "85599/pinesprout": {
+      "primary": "KimiK3",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "RESEARCH_ONLY",
+      "mode": "RESEARCH_ONLY",
+      "security": "Pine Script v5/v6 lint/format/upgrade toolkit; use as analysis only until validated.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "hasnocool/tradingview-script-downloader": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "security": "Selenium/BeautifulSoup public script downloader; no unlicensed code reuse or logged-in session scraping.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "coocolab/Coocolab-Tradingview-MCP": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "install_status": "SANDBOX_ONLY",
+      "mode": "SANDBOX_ONLY",
+      "security": "Desktop TradingView MCP; never attach production browser session or broker secrets.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "daviddme/tradingview-indicator-search-mcp-server": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "install_status": "SANDBOX_ONLY",
+      "mode": "SANDBOX_ONLY",
+      "security": "Public indicator search/source fetch MCP; respect author licenses and platform access controls.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "kashsuks/Pinel": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "TOOLCHAIN_ONLY",
+      "security": "Rust code editor; GPL-3.0 compatibility review and separate installation required.; no production credentials; no capital authority; validate license and semantics before adoption"
+    },
+    "pinecone-io/getting-started-with-pinecone-webinar": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "security": "Pinecone educational examples; docs/demo only, not production dependencies.; no production credentials; no capital authority; validate license and semantics before adoption"
     }
   }
 }
