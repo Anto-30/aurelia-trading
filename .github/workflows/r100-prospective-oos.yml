@@ -18,7 +18,7 @@ concurrency:
 jobs:
   collect-and-evaluate:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     env:
       GH_TOKEN: ${{ github.token }}
       AURELIA_R100_COLLECTION_SECONDS: "900"
@@ -81,7 +81,7 @@ jobs:
           git fetch --no-tags --depth=1 origin "$campaign_commit"
           git checkout --detach "$campaign_commit"
           set +e
-          validation_output="$(python -c 'import os; from pathlib import Path; from research.r100_prospective_oos_collector import load_state; load_state(Path(os.environ["AURELIA_R100_STATE_PATH"])); print("R100_CAMPAIGN_STATE=VALID")' 2>&1)"
+          validation_output="$(AURELIA_RESEARCH_CODE_COMMIT="$campaign_commit" python -c 'import os; from pathlib import Path; from research.r100_prospective_oos_collector import load_state; load_state(Path(os.environ["AURELIA_R100_STATE_PATH"])); print("R100_CAMPAIGN_STATE=VALID")' 2>&1)"
           status=$?
           set -e
           echo "$validation_output"
@@ -102,8 +102,27 @@ jobs:
             exit 0
           fi
           exit "$status"
-      - name: Collect real public Deriv R100 observations
-        run: python -m research.r100_prospective_oos_collector
+      - name: Collect real public Deriv R100 observations with bounded retry
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=1
+          for attempt in 1 2; do
+            echo "R100_COLLECTION_ATTEMPT=$attempt"
+            set +e
+            python -m research.r100_prospective_oos_collector
+            status=$?
+            set -e
+            if [ "$status" -eq 0 ]; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 2 ]; then
+              echo "R100_COLLECTION_RETRY=1 delay_seconds=10"
+              sleep 10
+            fi
+          done
+          echo "R100_COLLECTION_EXHAUSTED=1 state_preserved_for_next_run=true"
+          exit "$status"
       - name: Verify research-only semantics
         shell: bash
         run: |
