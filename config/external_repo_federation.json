@@ -942,7 +942,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/hackingthemarkets/binance-tutorials",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "791930d6419820c447ee3f36fa9f97cb9e57267f",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "MacroAnarchy/hermes-gadget-sdk",
@@ -956,7 +957,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/MacroAnarchy/hermes-gadget-sdk",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "06da04a4028ff343aa0854883b314fc51e1b0d56",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Adolanium/hermes-gadget-sdk",
@@ -970,7 +972,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Adolanium/hermes-gadget-sdk",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "a321be51cb2cf11fabfe89aae193ad6096cab0f4",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "freqtrade/freqtrade-strategies",
@@ -984,7 +987,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/freqtrade/freqtrade-strategies",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "f3340ce11f5bdf62f598522e64d1f5638eaa13f5",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Drakkar-Software/OctoBot",
@@ -998,7 +1002,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/Drakkar-Software/OctoBot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "c45fdc2c95c5bd3d649251fa90c327e2e8f86b00",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "iterativv/NostalgiaForInfinity",
@@ -1012,7 +1017,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/iterativv/NostalgiaForInfinity",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "94c927f1f65b5094e12428672ae4d4de00afbdea",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "thesoulcrancerdev/poly-trading-strategies",
@@ -1026,7 +1032,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/thesoulcrancerdev/poly-trading-strategies",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "2c5053e1719c0c2df7edf64b3db325089e47ab38",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "ryanfrigo/kalshi-ai-trading-bot",
@@ -1040,7 +1047,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/ryanfrigo/kalshi-ai-trading-bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "7b9667bb7e7e7b263f14b54ab8647a05cbdd1383",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "ChypherFish3r/coinbase-trading-bot",
