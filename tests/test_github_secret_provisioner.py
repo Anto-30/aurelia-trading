@@ -18,7 +18,7 @@ case "${1:-} ${2:-}" in
     exit 0
     ;;
   "repo view")
-    printf '%s\\n' 'Anto-30/aurelia-trading'
+    printf '%s\n' 'Anto-30/aurelia-trading'
     ;;
   "api repos/Anto-30/aurelia-trading/environments/production")
     exit 0
@@ -27,11 +27,11 @@ case "${1:-} ${2:-}" in
     name="${3:?secret name missing}"
     value="$(cat)"
     test -n "$value"
-    printf '%s\\n' "$name" >> "$PROVISIONER_TEST_RECORD"
+    printf '%s\n' "$name" >> "$PROVISIONER_TEST_RECORD"
     ;;
   "secret list")
     {
-      printf '%s\\n' "${PROVISIONER_TEST_EXISTING_NAMES:-}" | grep -v '^$' || true
+      printf '%s\n' "${PROVISIONER_TEST_EXISTING_NAMES:-}" | grep -v '^$' || true
       if [[ -f "$PROVISIONER_TEST_RECORD" ]]; then
         cat "$PROVISIONER_TEST_RECORD"
       fi
@@ -107,7 +107,7 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
         )
 
     def test_existing_secrets_are_not_overwritten(self) -> None:
-        self.env["PROVISIONER_TEST_EXISTING_NAMES"] = "\\n".join(
+        self.env["PROVISIONER_TEST_EXISTING_NAMES"] = "\n".join(
             [
                 "DERIV_PAT",
                 "DERIV_APP_ID",
