@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_capability_matrix.v2",
-  "principle": "Equip every agent with a common safe core plus role-specific capabilities; keep capital authority exclusively inside AURELIA.",
+  "principle": "Equip each agent with common safe core plus least-privilege role-specific capabilities. External tools and trading repositories are non-authoritative; capital authority remains exclusively inside AURELIA's deterministic control plane.",
   "core_capabilities": [
     "repository_intelligence",
     "git_and_ci",
@@ -22,7 +22,10 @@
         "evidence-reconciliation",
         "security-review",
         "ci-diagnostics",
-        "browser-e2e"
+        "browser-e2e",
+        "chrome-devtools-mcp",
+        "candlestick-pattern-validation",
+        "trading-repository-audit"
       ],
       "plugins": [
         "aurelia-federation",
@@ -35,7 +38,8 @@
         "web",
         "local shell",
         "CI",
-        "Playwright CLI"
+        "Playwright CLI",
+        "Chrome DevTools MCP (planned; local client setup required)"
       ],
       "authority": "non-capital engineering"
     },
@@ -47,7 +51,11 @@
         "evidence-reconciliation",
         "security-review",
         "research-intelligence",
-        "ci-diagnostics"
+        "ci-diagnostics",
+        "candlestick-pattern-research",
+        "crypto-strategy-research",
+        "lookahead-bias-audit",
+        "ML-calibration"
       ],
       "plugins": [
         "aurelia-federation",
@@ -59,7 +67,9 @@
         "GitHub",
         "web",
         "local shell",
-        "CI"
+        "CI",
+        "pinned candlestick-pattern library candidate",
+        "isolated trading-bot research source"
       ],
       "authority": "non-capital analysis"
     },
@@ -71,7 +81,9 @@
         "evidence-reconciliation",
         "research-intelligence",
         "ci-diagnostics",
-        "browser-e2e"
+        "browser-e2e",
+        "browser-investigation-orchestration",
+        "external-trading-source-adversarial-review"
       ],
       "plugins": [
         "aurelia-federation",
@@ -95,7 +107,9 @@
         "aurelia-agent-core",
         "security-review",
         "external-repo-federation",
-        "research-intelligence"
+        "research-intelligence",
+        "MCP-browser-security-review",
+        "external-tool-permission-review"
       ],
       "plugins": [
         "github",
@@ -132,14 +146,19 @@
         "aurelia-agent-core",
         "browser-e2e",
         "evidence-reconciliation",
-        "security-review"
+        "security-review",
+        "chrome-devtools-mcp",
+        "network-inspection",
+        "performance-tracing"
       ],
       "plugins": [
-        "github"
+        "github",
+        "chrome-devtools-mcp (planned; not installed here)"
       ],
       "tools": [
         "Playwright CLI",
-        "web"
+        "web",
+        "Chrome DevTools MCP (pinned candidate; local client setup required)"
       ],
       "authority": "non-capital verification"
     },
@@ -152,7 +171,10 @@
         "security-review",
         "ci-diagnostics",
         "research-intelligence",
-        "browser-e2e"
+        "browser-e2e",
+        "browser-evidence-validation",
+        "candlestick-library-regression-tests",
+        "trading-source-provenance"
       ],
       "plugins": [
         "aurelia-federation",
@@ -246,7 +268,7 @@
       "Only the existing AURELIA capital plane can authorize capital movement."
     ]
   },
-  "generated_date": "2026-10-08",
+  "generated_date": "2026-10-09",
   "common_skill_bundle": [
     "aurelia-agent-core",
     "external-repo-federation",
@@ -343,5 +365,50 @@
     "research agents cannot authorize live capital",
     "external repositories cannot authorize live capital",
     "sub-agents receive explicit skills rather than assumed inheritance"
-  ]
+  ],
+  "external_source_assignments": {
+    "ChromeDevTools/chrome-devtools-mcp": {
+      "primary": "PlaywrightCLI",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "TOOLCHAIN_ONLY",
+      "security": "isolated browser profile; URL allowlist; prompt-injection defenses; never use logged-in Deriv session for untrusted pages"
+    },
+    "hackobi/AI-Scalpel-Trading-Bot": {
+      "primary": "KimiK3",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "RESEARCH_ONLY",
+      "mode": "RESEARCH_ONLY",
+      "security": "no live exchange credentials; no production bot start; test only in isolated dry-run/backtest environment"
+    },
+    "cm45t3r/candlestick": {
+      "primary": "KimiK3",
+      "supporting": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "TOOLCHAIN_ONLY",
+      "security": "validate OHLC semantics, lookahead, streaming/index correctness and regression tests before use"
+    },
+    "CryptoSignal/Crypto-Signal": {
+      "primary": "KimiK3",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "RESEARCH_ONLY",
+      "mode": "RESEARCH_ONLY",
+      "security": "legacy beta; inspect dependencies and APIs; no production credentials or deployment"
+    }
+  }
 }
