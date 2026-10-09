@@ -4371,6 +4371,331 @@
       "head_commit": "280259f0495f8d37b7cd51a19500e8eb0eab8223",
       "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
       "capital_authority": false
+    },
+    {
+      "repo": "pineforge-4pass/pineforge-engine",
+      "category": "pine-script-tooling",
+      "domain": "quant-research",
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/pineforge-4pass/pineforge-engine",
+      "head_commit": "873b25daa00687cd2b9b9d6b2e49c57149227edd",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "Apache-2.0",
+      "notes": "Pine Script v6 code generation/backtesting engine; validate semantics, broker execution differences and OOS results."
+    },
+    {
+      "repo": "pinecone-io/pinecone-claude-code-plugin",
+      "category": "developer-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/pinecone-io/pinecone-claude-code-plugin",
+      "head_commit": "c383d38b5cc3c5ec219f2e68026e47ffbf46524a",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "MIT",
+      "notes": "Official Pinecone Claude Code marketplace plugin; vector search integration only."
+    },
+    {
+      "repo": "tmustier/pine-of-glass",
+      "category": "developer-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/tmustier/pine-of-glass",
+      "head_commit": "6e7dd5fd613198fee9fff71df1bc45a579030cce",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "MIT",
+      "notes": "Pi coding-agent observability/context extension; do not assume Claude runtime compatibility."
+    },
+    {
+      "repo": "FaustoS88/Pydantic-AI-Pinescript-Expert",
+      "category": "developer-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/FaustoS88/Pydantic-AI-Pinescript-Expert",
+      "head_commit": "03cbd93c486435df08d70185fbab9aa61fff5fbb",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "MIT",
+      "notes": "Pine Script RAG/code-generation assistant; generated signals remain unqualified until independent testing."
+    },
+    {
+      "repo": "be-thomas/OpenPineScript",
+      "category": "pine-script-tooling",
+      "domain": "quant-research",
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/be-thomas/OpenPineScript",
+      "head_commit": "a793e719043a0a05dc7c184b04ef4ad6985d0de9",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "GPL-3.0",
+      "notes": "Pine Script runtime; GPL-3.0 compatibility and semantic completeness review required."
+    },
+    {
+      "repo": "jpantsjoha/pinescript-vscode-extension",
+      "category": "pine-script-tooling",
+      "domain": "quant-research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/jpantsjoha/pinescript-vscode-extension",
+      "head_commit": "b81aa3d88f6327328ebf84b851757bd6266e56f8",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "NOASSERTION",
+      "notes": "Pine Script v6 editor extension; license must be clarified before redistribution."
+    },
+    {
+      "repo": "double232/pinescript-skill",
+      "category": "pine-script-tooling",
+      "domain": "quant-research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/double232/pinescript-skill",
+      "head_commit": "107fd4c6f4abd6cf64639040d6d67b42d130aa3d",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "NOASSERTION",
+      "notes": "Pine Script v6 skill reference; inspect prompts/dependencies; license not declared."
+    },
+    {
+      "repo": "gugu91/pinet",
+      "category": "developer-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/gugu91/pinet",
+      "head_commit": "78b24b7ce6abd3e7cb793b31a399041c7d6a3c7a",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "MIT",
+      "notes": "Local-first coordination for Pi coding agents; no production credentials."
+    },
+    {
+      "repo": "folknor/pine-tools",
+      "category": "developer-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/folknor/pine-tools",
+      "head_commit": "3dd9f3c941ece3368e500360dd9e6e125ad396f6",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "NOASSERTION",
+      "notes": "Pine language service/LSP/MCP/CLI linting; license review before adoption."
+    },
+    {
+      "repo": "dharmanan/PineScript-coder",
+      "category": "pine-script-tooling",
+      "domain": "quant-research",
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/dharmanan/PineScript-coder",
+      "head_commit": "5f4c0f65e58b60860a920c2c59670ed21b1a9eaa",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "MIT",
+      "notes": "Pine Script v6 generation; test repaint/lookahead, fees and fill semantics."
+    },
+    {
+      "repo": "dotsystemsdevs/pineflow",
+      "category": "developer-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/dotsystemsdevs/pineflow",
+      "head_commit": "8d2dbbc2a5b3061d102c6beb2e9070c4c4f05e3d",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "MIT",
+      "notes": "AI coding prompts/workflow toolkit; not a Pine-specific trading runtime."
+    },
+    {
+      "repo": "batonogov/pine",
+      "category": "developer-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/batonogov/pine",
+      "head_commit": "c5ed7a4c4744c4dfd4ff88dd20cc94a2c81b96d1",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "MIT",
+      "notes": "Native macOS agent editor; not available in current runtime unless separately installed."
+    },
+    {
+      "repo": "edeng23/pines",
+      "category": "developer-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/edeng23/pines",
+      "head_commit": "c6020543236360c92adff8ee48d621b1d4b3759f",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "Apache-2.0",
+      "notes": "Pi multi-session orchestration TUI; no proof Pi runtime is connected."
+    },
+    {
+      "repo": "TheFractalyst/PineMCP",
+      "category": "mcp-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/TheFractalyst/PineMCP",
+      "head_commit": "c630de784c795d8abc5e15780881f5237dba8bdc",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "MIT",
+      "notes": "Local Pine Script docs/code MCP; isolate and review tool permissions before activation."
+    },
+    {
+      "repo": "85599/pinesprout",
+      "category": "pine-script-tooling",
+      "domain": "quant-research",
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/85599/pinesprout",
+      "head_commit": "48bcea15275351869dffa1a3ba5fa6ffebd1f983",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "MIT",
+      "notes": "Pine Script v5/v6 lint/format/upgrade toolkit; use as analysis only until validated."
+    },
+    {
+      "repo": "hasnocool/tradingview-script-downloader",
+      "category": "developer-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/hasnocool/tradingview-script-downloader",
+      "head_commit": "997d5417235c4fa9d4e20d56b02fe6b0fd3fd37d",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "NOASSERTION",
+      "notes": "Selenium/BeautifulSoup public script downloader; no unlicensed code reuse or logged-in session scraping."
+    },
+    {
+      "repo": "coocolab/Coocolab-Tradingview-MCP",
+      "category": "mcp-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/coocolab/Coocolab-Tradingview-MCP",
+      "head_commit": "cd16a7dc038762688e7807a26285a26337d6fc60",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "NOASSERTION",
+      "notes": "Desktop TradingView MCP; never attach production browser session or broker secrets."
+    },
+    {
+      "repo": "daviddme/tradingview-indicator-search-mcp-server",
+      "category": "mcp-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/daviddme/tradingview-indicator-search-mcp-server",
+      "head_commit": "1f8648936088cf189e4ac1a23b55c522c11d15cd",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "MIT",
+      "notes": "Public indicator search/source fetch MCP; respect author licenses and platform access controls."
+    },
+    {
+      "repo": "kashsuks/Pinel",
+      "category": "developer-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/kashsuks/Pinel",
+      "head_commit": "1b10a5f8c8f772a27360d77dae33be5137bc7a66",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "GPL-3.0",
+      "notes": "Rust code editor; GPL-3.0 compatibility review and separate installation required."
+    },
+    {
+      "repo": "pinecone-io/getting-started-with-pinecone-webinar",
+      "category": "developer-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/pinecone-io/getting-started-with-pinecone-webinar",
+      "head_commit": "76068a1b11a5c33dd82192f31ba5377c46c656cf",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "license": "MIT",
+      "notes": "Pinecone educational examples; docs/demo only, not production dependencies."
     }
   ],
   "pin_policy": {

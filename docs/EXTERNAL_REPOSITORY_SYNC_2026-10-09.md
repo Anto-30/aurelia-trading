@@ -52,3 +52,8 @@ Eight source pins were added: `BerriAI/litellm`, `LiteLLM-Labs/litellm-agent-con
 ## Supplemental source batch — Freebuff / provider-gateway review, 2026-10-09
 
 The original inventory counts recorded above are a historical snapshot. The subsequent LiteLLM and Freebuff registrations bring the current main-branch manifests to **216 external repository entries** and **115 skill/source entries** once the open federation PR is merged. The 19 Freebuff-related source pins are documented in `docs/AURELIA_FREEBUFF_REPOSITORY_REVIEW_2026-10-09.md`. They remain reference/sandbox sources, not production installs. External code execution remains deny-by-default, and no source has capital authority.
+
+
+## Pine Script / TradingView / Pinecone batch — 2026-10-09
+
+Twenty additional repositories were pinned on branch `integration/pinescript-toolchain-federation-20261009`. After merge, the expected inventory is 236 external repositories and 135 skill/source records. Review decisions and exact pins are documented in `docs/AURELIA_PINESCRIPT_TRADINGVIEW_REPOSITORY_REVIEW_2026-10-09.md`. These are source registrations, not claims of installation or live readiness.
