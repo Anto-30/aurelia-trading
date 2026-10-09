@@ -2635,13 +2635,11 @@
         "AURELIA",
         "ClaudeCode",
         "GrokBot",
-        "Dev",
         "JEV",
         "KimiK3"
       ],
       "sync_targets": [
         "GrokBot",
-        "Dev",
         "ClaudeCode",
         "JEV",
         "AURELIA",
@@ -2663,13 +2661,11 @@
         "AURELIA",
         "ClaudeCode",
         "GrokBot",
-        "Dev",
         "JEV",
         "KimiK3"
       ],
       "sync_targets": [
         "GrokBot",
-        "Dev",
         "ClaudeCode",
         "JEV",
         "AURELIA",
@@ -2691,13 +2687,11 @@
         "AURELIA",
         "ClaudeCode",
         "GrokBot",
-        "Dev",
         "JEV",
         "KimiK3"
       ],
       "sync_targets": [
         "GrokBot",
-        "Dev",
         "ClaudeCode",
         "JEV",
         "AURELIA",
@@ -2719,13 +2713,11 @@
         "AURELIA",
         "ClaudeCode",
         "GrokBot",
-        "Dev",
         "JEV",
         "KimiK3"
       ],
       "sync_targets": [
         "GrokBot",
-        "Dev",
         "ClaudeCode",
         "JEV",
         "AURELIA",
@@ -2747,13 +2739,11 @@
         "AURELIA",
         "ClaudeCode",
         "GrokBot",
-        "Dev",
         "JEV",
         "KimiK3"
       ],
       "sync_targets": [
         "GrokBot",
-        "Dev",
         "ClaudeCode",
         "JEV",
         "AURELIA",
@@ -2775,13 +2765,11 @@
         "AURELIA",
         "ClaudeCode",
         "GrokBot",
-        "Dev",
         "JEV",
         "KimiK3"
       ],
       "sync_targets": [
         "GrokBot",
-        "Dev",
         "ClaudeCode",
         "JEV",
         "AURELIA",
@@ -2803,13 +2791,11 @@
         "AURELIA",
         "ClaudeCode",
         "GrokBot",
-        "Dev",
         "JEV",
         "KimiK3"
       ],
       "sync_targets": [
         "GrokBot",
-        "Dev",
         "ClaudeCode",
         "JEV",
         "AURELIA",
@@ -2831,13 +2817,11 @@
         "AURELIA",
         "ClaudeCode",
         "GrokBot",
-        "Dev",
         "JEV",
         "KimiK3"
       ],
       "sync_targets": [
         "GrokBot",
-        "Dev",
         "ClaudeCode",
         "JEV",
         "AURELIA",
@@ -2859,13 +2843,11 @@
         "AURELIA",
         "ClaudeCode",
         "GrokBot",
-        "Dev",
         "JEV",
         "KimiK3"
       ],
       "sync_targets": [
         "GrokBot",
-        "Dev",
         "ClaudeCode",
         "JEV",
         "AURELIA",
@@ -3050,7 +3032,6 @@
     ],
     "targets": [
       "GrokBot",
-      "Dev",
       "ClaudeCode",
       "JEV",
       "AURELIA",
@@ -3129,6 +3110,10 @@
     "registry_updated": true,
     "physical_runtime_clone": "BLOCKED_NO_REMOTE_DEVICE",
     "deployment": "NOT_PERFORMED",
-    "capital_authority": false
+    "capital_authority": false,
+    "requested_agent_aliases_unresolved": [
+      "Dev"
+    ],
+    "agent_alias_resolution_note": "The repository's canonical config/repo_agent_routing.json does not define an agent ID named Dev; this batch is routed only to canonical agent IDs. Do not claim Dev runtime sync until its canonical ID is registered and reviewed."
   }
 }
