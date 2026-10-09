@@ -140,3 +140,41 @@ LiteLLM is **not approved for production installation** by this federation sync.
 
 A Git commit pin alone does not prove which released package, container image, or dependency set will run. Before testing a gateway outside an isolated development environment, verify its exact version and image signature, apply the applicable fixes, disable client-supplied credential overrides, enforce upstream host validation, restrict network egress, and keep all Deriv and production-host secrets out of the gateway. Do not expose the gateway's management API to untrusted networks.
 
+
+
+## Freebuff / Codebuff proxy source review — 2026-10-09
+
+The following 19 repositories have been pinned for reference or isolated development review only. **None is installed or approved as an AURELIA runtime dependency.** The source labels and exact default-branch pins are in `config/external_repo_federation.json`; agent assignments and install status are in `config/agent_capability_matrix.json`.
+
+| Repository | Pin | License metadata | Mode | Primary agent |
+|---|---|---|---|---|
+| `jxjhheric/freebuff2api-wokers` | `5cbb353019f2…` | MIT | REFERENCE_ONLY | GoogleAgentSkills |
+| `kele68108/Freebuff2API-Optimized` | `f7e13d414e9a…` | AGPL-3.0 | REFERENCE_ONLY | GoogleAgentSkills |
+| `t479842598/freebuff2api-vercel` | `16274ad8f3b9…` | AGPL-3.0 | REFERENCE_ONLY | GoogleAgentSkills |
+| `HengXin666/freebuff-proxy` | `581097b0b7ba…` | MIT | REFERENCE_ONLY | GoogleAgentSkills |
+| `lza6/Freebuff-2API` | `bd607aac7054…` | MIT | REFERENCE_ONLY | GoogleAgentSkills |
+| `NetroIndonesia/freebuff2api` | `4894d7db6157…` | NOASSERTION | REFERENCE_ONLY | GoogleAgentSkills |
+| `XxxXTeam/freebuff2api` | `0c691c7dc90b…` | AGPL-3.0 | REFERENCE_ONLY | GoogleAgentSkills |
+| `Quorinex/Freebuff2API` | `a1c10357098f…` | MIT | REFERENCE_ONLY | GoogleAgentSkills |
+| `pingmike2/freebuff2api-wokers` | `901a9d87c748…` | NOASSERTION | REFERENCE_ONLY | GoogleAgentSkills |
+| `CodebuffAI/freebuff` | `18f32cd3c51e…` | Apache-2.0 | REFERENCE_ONLY | ClaudeCode |
+| `VenTheZone/freebuff-gate` | `3663a93614f0…` | NOASSERTION | SANDBOX_ONLY | PlaywrightCLI |
+| `Praket7/freebuff-mcp` | `02cf6e623cc6…` | NOASSERTION | SANDBOX_ONLY | GoogleAgentSkills |
+| `Jakevin/codex-freebuff-web` | `576c6835bc06…` | MIT | SANDBOX_ONLY | ClaudeCode |
+| `TheMetalStorm/herdr-freebuff-plugin` | `a49b1ea428fe…` | MIT | REFERENCE_ONLY | GrokBot |
+| `Heartcoolman/FreeBuff` | `9edc400ca83c…` | NOASSERTION | REFERENCE_ONLY | GoogleAgentSkills |
+| `HaizhuAI/Freebuff2apic` | `58ff9bdbbc74…` | NOASSERTION | REFERENCE_ONLY | GoogleAgentSkills |
+| `0xgetz/freebuff-9router` | `ec5e698816d8…` | MIT | REFERENCE_ONLY | GoogleAgentSkills |
+| `aminkalantari842-ui/global-intelligence-os` | `05ea36d535e2…` | NOASSERTION | REFERENCE_ONLY | GrokBot |
+| `6yte96/freebuffet` | `280259f0495f…` | MIT | SANDBOX_ONLY | ClaudeCode |
+
+### Restrictions and findings
+
+- The official `CodebuffAI/freebuff` repository is the upstream coding-agent reference. The other API bridges and proxy forks may reimplement the client protocol, manage account pools/tokens, or randomize request fingerprints. This audit records those traits only to define a security boundary; it does not implement them.
+- `NetroIndonesia/freebuff2api` explicitly warns in its README about Freebuff/Codebuff Terms-of-Service risk and account restrictions. `pingmike2/freebuff2api-wokers` warns that Cloudflare Worker deployment may increase account-ban risk. See the original READMEs: [NetroIndonesia/freebuff2api](https://github.com/NetroIndonesia/freebuff2api) and [pingmike2/freebuff2api-wokers](https://github.com/pingmike2/freebuff2api-wokers).
+- Do not deploy or use these sources to evade usage limits, account restrictions, bans, access controls, session policy, or provider terms. Do not use randomised fingerprints, account-pool rotation, or reverse-engineered protocol flows to circumvent the upstream controls.
+- Do not submit Deriv tokens, account IDs, broker messages, production SSH keys, or any AURELIA production secret to Freebuff, a third-party proxy, a model gateway, an MCP server, or vector memory. Keep untrusted agents in isolated dev profiles with only disposable development context and explicit approval before any local file write/tool invocation.
+- `Praket7/freebuff-mcp` can call the local Freebuff application and read project files. Its own README notes that secret-pattern masking can miss unusual secrets; masking is not a complete security boundary. Use it only in a disposable sandbox and do not connect it to the production trading repository with secrets present.
+- `global-intelligence-os` and several proxy repositories have no declared license in GitHub API metadata. They remain reference-only until license and ownership are clarified.
+
+This is repository federation and source pinning—not physical installation, credential transfer, an authenticated provider connection, or proof that ChatGPT/Claude/Dev runtimes are connected. The label `Dev` is not a canonical agent identity in this repository; developer-oriented work is routed to `ClaudeCode` unless a real Dev runtime is registered and verified.
