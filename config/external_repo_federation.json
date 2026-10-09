@@ -26,7 +26,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/pingdotgg/t3code",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ec80933ac8cd02fec5c97b342462ccc9567cdb1e",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "python-poetry/poetry",
@@ -40,7 +41,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/python-poetry/poetry",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "63bba274f8ea6bc9a064f5328fa6c67bce617cc1",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "poem-web/poem",
@@ -54,7 +56,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/poem-web/poem",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "63163b17a0a15cd9ae29634c10826852d60150d4",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Niko1221/Strata",
@@ -68,7 +71,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/Niko1221/Strata",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "JerBouma/AlgorithmicTrading",
@@ -82,7 +86,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/JerBouma/AlgorithmicTrading",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "87886cc8bf32f9ec9871c289cb5076371d5c1fb0",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "coding-kitties/investing-algorithm-framework",
@@ -96,7 +101,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/coding-kitties/investing-algorithm-framework",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "f8e82c748cb10b9b1704821089bb3edb48659c7e",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/zed",
@@ -133,7 +139,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/extensions",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "c63c15ce892e8ea02d0be53ae5d2526105e03519",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/python-environment-tools",
@@ -147,7 +154,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/python-environment-tools",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "5aad7164bfc2a58977b103c8ef8fdd7302ed2e9f",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/notify",
@@ -160,7 +168,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/notify",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "d842f16b2716bd60f09caf3ae3a894237ab38f54",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/gh-workflow",
@@ -173,7 +182,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/gh-workflow",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "3793c170f1ead17fff767ad2369fe63802398117",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/yawc",
@@ -186,7 +196,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/yawc",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "0ea0bf5d04b97a6377d79d051c34ec97d2df5525",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/codex-acp",
@@ -199,7 +210,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/zed-industries/codex-acp",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "296069e841634cd4bb9bc4515602d836e49231ec",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/superpowers",
@@ -213,7 +225,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/zed-industries/superpowers",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ac082fac785e8f042fe8eea7b8f1d88bddb7e35b",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/font-kit",
@@ -226,7 +239,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/font-kit",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ab2ef66421612d6e0c103885dc5a7b7d0d110c2c",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/git-restore-mtime-action",
@@ -239,7 +253,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/git-restore-mtime-action",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "72cefcf20b50bf4fcd74ea8a0d2927b0680e2114",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "TauricResearch/TradingAgents",
@@ -283,7 +298,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/freqtrade/freqtrade",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "2cdfc2325e3c2af1680e8adbe5245ac42709fda9",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "hsliuping/TradingAgents-CN",
@@ -297,7 +313,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/hsliuping/TradingAgents-CN",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "51060a7682cf51810b4bc3a704829438d18cd8dc",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Superalgos/Superalgos",
@@ -311,7 +328,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/Superalgos/Superalgos",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "9f0fb59edd4bae7afa08d06c366e0bcb48103aec",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "StockSharp/StockSharp",
@@ -325,7 +343,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/StockSharp/StockSharp",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "f49ca8b38aa05a22631a428d7057e9da35ed99ed",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "QuantConnect/Lean",
@@ -354,7 +373,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/HKUDS/AI-Trader",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "d03ff6c056b32ced735adf7c19ed8175adb1c8df",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "OpenByteInc/QuantDinger",
@@ -368,7 +388,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/OpenByteInc/QuantDinger",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ba8cd667acca3e934bbc1cb354922eff413393dc",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Mathieu2301/TradingView-API",
@@ -382,7 +403,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Mathieu2301/TradingView-API",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "6a4f8ff9a2b332d0a59dbd27c75201eb84663045",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "simonlin1212/TradingAgents-astock",
@@ -395,7 +417,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/simonlin1212/TradingAgents-astock",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "7fc142e5a622a16dcfce8c2544c771fc251f5dce",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "pst-group/pysystemtrade",
@@ -453,7 +476,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/endless-sky/endless-sky",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "fa22e46ae92b382509b4076caa859e36e6c16fa7",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "tradesdontlie/tradingview-mcp",
@@ -467,7 +491,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/tradesdontlie/tradingview-mcp",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "c05b8f5755ed8e64ea242de88ddbf46aa24d56a4",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "je-suis-tm/quant-trading",
@@ -481,7 +506,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/je-suis-tm/quant-trading",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "611b73f2c3f577ac5b28aaa19ac8c43d3236c7a5",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "jesse-ai/jesse",
@@ -510,7 +536,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/paperswithbacktest/awesome-systematic-trading",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ddfee8bb548bd6914191cb8fdb695d533ae16b0d",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "hummingbot/hummingbot",
@@ -538,7 +565,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/marketcalls/openalgo",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "f4ca3612aed2b1e5b0b61c55b56382c0541d7c30",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "NoFxAiOS/nofx",
@@ -552,7 +580,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/NoFxAiOS/nofx",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ef476f28926c7d0c03f105a19b18f91e30a652a7",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "fabston/TradingView-Webhook-Bot",
@@ -565,7 +594,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/fabston/TradingView-Webhook-Bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "7eff8f9e9e13f350d7a3f258329285eb3a0bbd37",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "arvin341az-glitch/RVG",
@@ -579,7 +609,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/arvin341az-glitch/RVG",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "cdece8ea86d2bdda11530e9e6c27cfaa5f467ea7",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "smfworks/hermes-ai-team",
@@ -594,7 +625,7 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/smfworks/hermes-ai-team",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "82812ae8a977c3190ae8478d13b16390315710cf",
       "capabilities": [
         "agent-identity",
         "persistent-memory-patterns",
@@ -603,7 +634,8 @@
         "kanban-coordination",
         "rituals",
         "desktop-bot-pods"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "forcewake/hermes-conductor",
@@ -616,7 +648,7 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/forcewake/hermes-conductor",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "ab0d8eab0301b3f18e6977416d080d5fa574f169",
       "capabilities": [
         "controller-owned-dispatch",
         "worktree-isolation",
@@ -624,7 +656,8 @@
         "stale-base-recovery",
         "dependency-ordering",
         "worker-lifecycle"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Ardha-Eco-System/RUDR9",
@@ -639,7 +672,7 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Ardha-Eco-System/RUDR9",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "e69e16ea2e39963fd23bdc7a3325e02ea4f1f19b",
       "capabilities": [
         "role-specialization",
         "tool-permission-boundaries",
@@ -647,7 +680,8 @@
         "security-review",
         "performance-review",
         "review-gates"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "AlekseiUL/codex-plus-hermes-team",
@@ -661,7 +695,7 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/AlekseiUL/codex-plus-hermes-team",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "fb7f4f2da39c929394dc0c398165cab3ac44ce5a",
       "capabilities": [
         "specialist-routing",
         "panel-consensus",
@@ -669,7 +703,8 @@
         "side-effect-policy",
         "mcp-bridge",
         "agent-discovery"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "diegomarino/kanban-task-threads",
@@ -682,12 +717,13 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/diegomarino/kanban-task-threads",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "467284665eb18360e9c32cd8fe4ff76690a66231",
       "capabilities": [
         "task-threading",
         "kanban-coordination",
         "context-handoff"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "basilisk-labs/agentplane-hermes-plugin",
@@ -700,14 +736,15 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/basilisk-labs/agentplane-hermes-plugin",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "dc4662ad32bc8395fb6ae3f77af551698ce6f62f",
       "capabilities": [
         "worker-lane-bridge",
         "protocol-v2",
         "terminal-attestation",
         "task-projection",
         "hermes-agentplane-adapter"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "railwayapp/docs",
@@ -721,14 +758,15 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/railwayapp/docs",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "b2c0106946259493aa0d51c0b3a47e861a457f6a",
       "capabilities": [
         "railway-deployment",
         "iac",
         "service-configuration",
         "secrets-preservation",
         "staged-changes"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "railwayapp/cli",
@@ -741,14 +779,15 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/railwayapp/cli",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "dfac95fea06e914f31cdef5744ae0a820e6916d5",
       "capabilities": [
         "railway-cli",
         "agent-setup",
         "mcp-proxy",
         "iac-cli",
         "deployment-connectivity"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "vignesh07/clawdbot-railway-template",
@@ -761,14 +800,15 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/vignesh07/clawdbot-railway-template",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "b9e2467189d02dfe51a80173c40bad650a58eaf2",
       "capabilities": [
         "railway-volume-persistence",
         "health-endpoint-patterns",
         "protected-setup",
         "container-wrapper",
         "persistent-agent-state"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "chrisleekr/binance-trading-bot",
@@ -782,7 +822,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/chrisleekr/binance-trading-bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "70e018756964ed7d84753ee51b5fbc8575e4fa52",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "chrisconlan/algorithmic-trading-with-python",
@@ -796,7 +837,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/chrisconlan/algorithmic-trading-with-python",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ebe01087c7d9172db72bc3c9adc1eee5e882ac49",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "nykooi1/vibe-wise",
@@ -810,7 +852,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/nykooi1/vibe-wise",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "eefb53df406ab89e31444684ff32c1df205221f8",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "saniales/golang-crypto-trading-bot",
@@ -824,7 +867,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/saniales/golang-crypto-trading-bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "02695e5d0901d973199d8de56b16c4d691724f9b",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "tradytics/eiten",
@@ -838,7 +882,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/tradytics/eiten",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "44536c58887833b7b9bbcb30f2a270db2c712ea6",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "blampe/IbPy",
@@ -852,7 +897,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/blampe/IbPy",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "cba912d2ecc669b0bf2980357ea7942e49c0825e",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "omnigent-ai/omnigent",
@@ -866,7 +912,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/omnigent-ai/omnigent",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "54c21ba8ff841aab03f53889498274256e138812",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "ChromeDevTools/chrome-devtools-mcp",
@@ -880,7 +927,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "f08dbe152502d66e75fa07fb2588dc0feb42bc20",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "hackingthemarkets/binance-tutorials",
@@ -894,7 +942,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/hackingthemarkets/binance-tutorials",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "791930d6419820c447ee3f36fa9f97cb9e57267f",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "MacroAnarchy/hermes-gadget-sdk",
@@ -908,7 +957,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/MacroAnarchy/hermes-gadget-sdk",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "06da04a4028ff343aa0854883b314fc51e1b0d56",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Adolanium/hermes-gadget-sdk",
@@ -922,7 +972,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Adolanium/hermes-gadget-sdk",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "a321be51cb2cf11fabfe89aae193ad6096cab0f4",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "freqtrade/freqtrade-strategies",
@@ -936,7 +987,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/freqtrade/freqtrade-strategies",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "f3340ce11f5bdf62f598522e64d1f5638eaa13f5",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Drakkar-Software/OctoBot",
@@ -950,7 +1002,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/Drakkar-Software/OctoBot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "c45fdc2c95c5bd3d649251fa90c327e2e8f86b00",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "iterativv/NostalgiaForInfinity",
@@ -964,7 +1017,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/iterativv/NostalgiaForInfinity",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "94c927f1f65b5094e12428672ae4d4de00afbdea",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "thesoulcrancerdev/poly-trading-strategies",
@@ -978,7 +1032,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/thesoulcrancerdev/poly-trading-strategies",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "2c5053e1719c0c2df7edf64b3db325089e47ab38",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "ryanfrigo/kalshi-ai-trading-bot",
@@ -992,7 +1047,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/ryanfrigo/kalshi-ai-trading-bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "7b9667bb7e7e7b263f14b54ab8647a05cbdd1383",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "ChypherFish3r/coinbase-trading-bot",
@@ -1006,7 +1062,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/ChypherFish3r/coinbase-trading-bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "95467c6480dff5e2b6d59a056da1458648146b44",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "degatchi/mev-template-rs",
@@ -1020,7 +1077,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/degatchi/mev-template-rs",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "a56ba8af57b701e8a2d3f787eb9b4fa1711d2285",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "jordantete/grid_trading_bot",
@@ -1034,7 +1092,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/jordantete/grid_trading_bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "262424be908227bab0587d9ff185157ea3180f20",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "diogomatoschaves/MyCryptoBot",
@@ -1048,7 +1107,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/diogomatoschaves/MyCryptoBot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "4f6a3d0e3584df65b717eee5aecdac8aba055b17",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "vavarb/vavabot_options_strategy",
@@ -1062,7 +1122,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/vavarb/vavabot_options_strategy",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "99f99e77e73ba881a3189f70e1b1365cfb49450f",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Kryptgen89/freqtrade-setup",
@@ -1076,7 +1137,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/Kryptgen89/freqtrade-setup",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "19db1b102dedb407ddd67be3bd7005d205404da5",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "SevaTV/botpilot",
@@ -1090,7 +1152,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/SevaTV/botpilot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "e3d17e039cba6de209fd93a913e517227971c6ce",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "giaaua06/okx-grid-trading-bot",
@@ -1104,7 +1167,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/giaaua06/okx-grid-trading-bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "7daf00eaba6bda5ba3bdb298e8bd1f2ac2d892fe",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "doat08/okx-bot-suite",
@@ -1118,7 +1182,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/doat08/okx-bot-suite",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "1f1b1b5ef6919c522b27ffe3b0da4d261a28bfa9",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "omirb604/spot-grid-trading-bot",
@@ -1132,7 +1197,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/omirb604/spot-grid-trading-bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "be0abeb6f89d41f43c10191d029987fcb6e34341",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "djc00p/freqtrade-us-setup",
@@ -1146,7 +1212,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/djc00p/freqtrade-us-setup",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "c60fa3c7b0fdfc3974757615e09008b9eb0b5f95",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "superset-sh/superset",
@@ -1160,7 +1227,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/superset-sh/superset",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "502135366a804fa6f7af816aaaeb95021fe020c3",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "affaan-m/agentshield",
@@ -1174,7 +1242,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/affaan-m/agentshield",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "b0891303bdcd6037376a94263d45cfd2ff3dfb98",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "AEON-7/Ornith-1.0-35B-AEON-Ultimate-Uncensored",
@@ -1188,7 +1257,8 @@
         "KimiK3",
         "JEV"
       ],
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "bc9733592998fde66a7ea1ceff313ddd19e51790",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "OrnitheMC/ornithe-standard-libraries",
@@ -1202,7 +1272,8 @@
         "KimiK3",
         "JEV"
       ],
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "045becb83c99576164da7bcdfdfcf7c179279652",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "ornith-ai/Ornith-1",
@@ -1216,7 +1287,8 @@
         "KimiK3",
         "JEV"
       ],
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "9c800446621ebad1172f517a1d0f9b683fb8615e",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "ARahim3/mlx-dspark",
@@ -1230,7 +1302,8 @@
         "KimiK3",
         "JEV"
       ],
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "d6042f38f0aa7dd3e03a2a406111d725056d45a3",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "garrytan/gstack",
@@ -3402,6 +3475,15 @@
         ],
         "physical_runtime_install": "NOT_CLAIMED"
       }
-    ]
+    ],
+    "legacy_head_pinning": {
+      "previously_unpinned": 73,
+      "now_pinned": 73,
+      "source": "GitHub default-branch commit API",
+      "completed_at": "2026-10-09",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    "repository_count": 154,
+    "all_repository_heads_pinned": true
   }
 }
