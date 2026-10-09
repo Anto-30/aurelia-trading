@@ -88,11 +88,15 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install -r requirements.txt
-      - name: Report authenticated prerequisite state
+      - name: Fail closed when authenticated Deriv prerequisites are missing
         if: env.DERIV_AUTH_CONFIGURED != 'true'
+        shell: bash
         run: |
           echo "DERIV_AUTH_SESSION=NOT_CONFIGURED"
-          echo "Authenticated Deriv evidence is skipped because required protected secrets are not configured."
+          echo "::error title=DERIV_AUTH_NOT_CONFIGURED::Protected production environment is missing one or more required Deriv secrets."
+          echo "Required secret names: DERIV_AUTH_TOKEN (or DERIV_PAT), DERIV_APP_ID for PAT mode, DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID)."
+          echo "Configure these under Settings > Environments > production > Environment secrets; values are never printed."
+          exit 2
       - name: Verify authenticated Deriv session
         if: env.DERIV_AUTH_CONFIGURED == 'true'
         run: python scripts/verify_deriv_session.py
@@ -138,11 +142,15 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install -r requirements.txt
-      - name: Report lifecycle prerequisite state
+      - name: Fail closed when lifecycle prerequisites are missing
         if: env.DERIV_AUTH_CONFIGURED != 'true'
+        shell: bash
         run: |
           echo "DERIV_TRANSACTION_LIFECYCLE=NOT_CONFIGURED"
-          echo "Verify-only lifecycle evidence is skipped because required protected Deriv secrets are not configured."
+          echo "::error title=DERIV_LIFECYCLE_NOT_CONFIGURED::Verify-only lifecycle cannot run without protected Deriv secrets."
+          echo "Required secret names: DERIV_AUTH_TOKEN (or DERIV_PAT), DERIV_APP_ID for PAT mode, DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID)."
+          echo "Configure these under Settings > Environments > production > Environment secrets; values are never printed."
+          exit 2
       - name: Verify authenticated Deriv transaction lifecycle without submission
         if: env.DERIV_AUTH_CONFIGURED == 'true'
         run: python scripts/verify_deriv_transaction_lifecycle.py
