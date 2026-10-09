@@ -13,3 +13,7 @@ Claude Code is the primary implementation/review agent. Prefer:
 Before completion claims, independently verify the exact changed commit and required CI evidence.
 
 Claude Code has zero capital authority.
+
+## Continuous operations goal
+
+Use `GOALS.md` as the goal and acceptance contract for the ChatGPT + Claude Code supervisory model. Work through its immediate execution order and report evidence for each acceptance state. Prioritize continuously progressing research and a verified persistent runtime; do not claim that scheduled jobs equal an always-on daemon. Keep Claude Code at zero capital authority. Never flip `config/LIVE_LOCK.yaml`, bypass a failed release gate, or submit capital-moving orders. Escalate missing account authentication or protected secrets for configuration through the secure provider UI, without printing or committing them. Live authorization must remain blocked until the existing deterministic policy and independent release authority approve it.
