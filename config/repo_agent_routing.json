@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.repo_agent_routing.v1",
-  "generated_date": "2026-10-08",
+  "generated_date": "2026-10-09",
   "purpose": "Deterministically route every federated external repository to the agents best suited to consume its engineering, research, security, multimodal, browser, deployment, or orchestration capabilities.",
   "admission_policy": {
     "assignment_required": true,
@@ -145,6 +145,23 @@
       ],
       "mode_default": "SANDBOX_ONLY",
       "rationale": "Security-sensitive agent infrastructure is reviewed by a security-focused specialist before engineering integration."
+    },
+    {
+      "priority": 92,
+      "when": {
+        "category_contains_any": [
+          "obsidian"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV"
+      ],
+      "mode_default": "SANDBOX_ONLY",
+      "rationale": "Obsidian vault and plugin integration is led by engineering, with orchestration, browser verification, multimodal review, and decision verification support. Vault access and third-party plugins remain sandboxed and cannot access production secrets or capital authority."
     },
     {
       "priority": 90,
