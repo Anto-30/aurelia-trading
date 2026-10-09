@@ -313,7 +313,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/hsliuping/TradingAgents-CN",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "51060a7682cf51810b4bc3a704829438d18cd8dc",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Superalgos/Superalgos",
@@ -327,7 +328,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/Superalgos/Superalgos",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "9f0fb59edd4bae7afa08d06c366e0bcb48103aec",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "StockSharp/StockSharp",
@@ -341,7 +343,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/StockSharp/StockSharp",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "f49ca8b38aa05a22631a428d7057e9da35ed99ed",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "QuantConnect/Lean",
@@ -370,7 +373,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/HKUDS/AI-Trader",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "d03ff6c056b32ced735adf7c19ed8175adb1c8df",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "OpenByteInc/QuantDinger",
@@ -384,7 +388,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/OpenByteInc/QuantDinger",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ba8cd667acca3e934bbc1cb354922eff413393dc",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Mathieu2301/TradingView-API",
@@ -398,7 +403,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Mathieu2301/TradingView-API",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "6a4f8ff9a2b332d0a59dbd27c75201eb84663045",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "simonlin1212/TradingAgents-astock",
@@ -411,7 +417,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/simonlin1212/TradingAgents-astock",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "7fc142e5a622a16dcfce8c2544c771fc251f5dce",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "pst-group/pysystemtrade",
@@ -469,7 +476,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/endless-sky/endless-sky",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "fa22e46ae92b382509b4076caa859e36e6c16fa7",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "tradesdontlie/tradingview-mcp",
