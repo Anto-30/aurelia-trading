@@ -55,3 +55,8 @@ The provisioner cannot infer which of multiple saved token candidates is current
 4. Re-run current assurance. Strategy OOS, calibration, production economics, production host/recovery and explicit release authorization remain separate gates.
 
 The release control remains `live_trading_enabled: false`, `FINAL_EXECUTION_AUTHORIZATION: false`, `LIVE_EXECUTION: BLOCKED` until independent evidence and release authority say otherwise.
+
+
+## Freebuff-related sources
+
+Nineteen Freebuff/Codebuff-related repositories were added to the same federation registry. They are reference-only or sandbox-only; not production dependencies. Several implement compatibility proxies, session/token management, or request-shape adaptations; one upstream repository explicitly warns about Terms-of-Service risk. AURELIA will not implement usage-limit or ban evasion, deploy these proxies, or pass Deriv/production secrets through them. Use the official provider client or supported API routes where available. All sources are assigned to canonical agents with security review first; the label “Dev” routes to ClaudeCode unless a distinct Dev runtime is registered and verified.
