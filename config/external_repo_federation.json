@@ -3475,6 +3475,15 @@
         ],
         "physical_runtime_install": "NOT_CLAIMED"
       }
-    ]
+    ],
+    "legacy_head_pinning": {
+      "previously_unpinned": 73,
+      "now_pinned": 73,
+      "source": "GitHub default-branch commit API",
+      "completed_at": "2026-10-09",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    "repository_count": 154,
+    "all_repository_heads_pinned": true
   }
 }
