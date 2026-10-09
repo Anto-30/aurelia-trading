@@ -1730,10 +1730,9 @@
         "GoogleAgentSkills",
         "ClaudeCode",
         "GrokBot",
-        "JEV",
-        "AURELIA"
+        "JEV"
       ],
-      "integration_note": "Primary upstream gateway reference only. Do not install or execute in production until version-specific supply-chain and security review is complete. GitHub security page lists recent critical/high advisories; avoid unreviewed package installs and verify signed releases."
+      "integration_note": "Sandbox architecture reference only; critical/high upstream security advisories require exact patched version and artifact verification before any deployment."
     },
     {
       "name": "litellm-agent-control-plane",
@@ -1754,10 +1753,9 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV",
-        "AURELIA"
+        "JEV"
       ],
-      "integration_note": "Architecture and API reference only; no control over AURELIA capital-plane policy, broker credentials, or production execution."
+      "integration_note": "Architecture reference only; external agents must not cross AURELIA capital-plane boundaries."
     },
     {
       "name": "litellm-docs",
@@ -1776,17 +1774,16 @@
       "assigned_agents": [
         "GLM",
         "ClaudeCode",
-        "JEV",
-        "AURELIA"
+        "JEV"
       ],
-      "integration_note": "Documentation reference. Check security notices and pin exact version documentation before adopting any runtime behavior."
+      "integration_note": "Official public docs and advisory reference only."
     },
     {
       "name": "litellm-proxy",
       "owner": "BerriAI",
       "repo": "BerriAI/liteLLM-proxy",
       "pinned_commit": "1ef69ae92bf22600f9a42d15e3b992e1010c9a7e",
-      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
       "capabilities": [
         "legacy-proxy-reference",
         "deprecation-review"
@@ -1797,7 +1794,7 @@
         "JEV",
         "GrokBot"
       ],
-      "integration_note": "Older proxy repository with last commit in 2024; reference only and not the preferred current upstream implementation."
+      "integration_note": "Deprecated upstream repository; current implementation is BerriAI/litellm. Do not install."
     },
     {
       "name": "cc-mirror",
@@ -1817,7 +1814,7 @@
         "GrokBot",
         "JEV"
       ],
-      "integration_note": "Developer-tooling experiment only. Do not route production credentials through modified coding-agent binaries or provider bridges."
+      "integration_note": "Isolated developer tooling only; do not route production credentials through modified coding-agent variants."
     },
     {
       "name": "litellm-pgvector",
@@ -1835,10 +1832,9 @@
       "assigned_agents": [
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV",
-        "AURELIA"
+        "JEV"
       ],
-      "integration_note": "Sandbox-only memory integration reference; no production account data or secrets."
+      "integration_note": "Vector-memory reference only; no broker statements, Deriv credentials, or production data in vector storage."
     },
     {
       "name": "litellm-rust",
@@ -1859,7 +1855,7 @@
         "GrokBot",
         "JEV"
       ],
-      "integration_note": "Prototype gateway reference; benchmark and security review required before any deployment."
+      "integration_note": "Upstream README describes a proof of concept; do not treat as a production gateway."
     },
     {
       "name": "langchain-litellm",
@@ -1878,10 +1874,386 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV",
-        "AURELIA"
+        "JEV"
       ],
-      "integration_note": "Adapter reference only; dependency/version compatibility and transitive security review required before use."
+      "integration_note": "Adapter reference pending compatibility, tool-call semantics, and transitive-dependency review."
+    },
+    {
+      "name": "freebuff2api-wokers",
+      "owner": "jxjhheric",
+      "repo": "jxjhheric/freebuff2api-wokers",
+      "pinned_commit": "5cbb353019f2f660ca1d72984549e430590b4778",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "API-proxy architecture review",
+        "session-boundary review",
+        "license-and-terms review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Reference-only review. Do not deploy or invoke its Freebuff upstream routes."
+    },
+    {
+      "name": "freebuff2api-optimized",
+      "owner": "kele68108",
+      "repo": "kele68108/Freebuff2API-Optimized",
+      "pinned_commit": "f7e13d414e9a7197a227969d88ad6166724c2a15",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "API-proxy architecture review",
+        "concurrency and session-isolation review",
+        "dependency review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Fork uses multi-account token rotation and session-reuse optimizations; documentation/reference review only."
+    },
+    {
+      "name": "freebuff2api-vercel",
+      "owner": "t479842598",
+      "repo": "t479842598/freebuff2api-vercel",
+      "pinned_commit": "16274ad8f3b9fa9c30093ab859f3732aca043452",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "serverless gateway architecture review",
+        "secret-storage review",
+        "request-logging review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Reference only. No deployment, token import, fingerprint adaptation, or production credentials."
+    },
+    {
+      "name": "freebuff-proxy",
+      "owner": "HengXin666",
+      "repo": "HengXin666/freebuff-proxy",
+      "pinned_commit": "581097b0b7ba14a57fca487936975d97474d9bb8",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "containerized proxy architecture review",
+        "account-isolation review",
+        "security review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "README describes a reverse-engineered upstream protocol and multi-account pool; no runtime use."
+    },
+    {
+      "name": "freebuff-2api",
+      "owner": "lza6",
+      "repo": "lza6/Freebuff-2API",
+      "pinned_commit": "bd607aac70548b80f586c60f819ed8e47240e25f",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "Rust gateway architecture review",
+        "secret-handling review",
+        "session-lifecycle review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Reference-only. It supports token/cookie import and account pooling; never provide AURELIA or Deriv credentials."
+    },
+    {
+      "name": "freebuff2api",
+      "owner": "NetroIndonesia",
+      "repo": "NetroIndonesia/freebuff2api",
+      "pinned_commit": "4894d7db6157c97f3037dc7d79ae0c2571762f8e",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "API-proxy security review",
+        "terms-and-privacy review",
+        "account-session boundary review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Upstream README explicitly warns of Terms-of-Service risk and possible account restrictions. Do not deploy or use for restriction evasion."
+    },
+    {
+      "name": "freebuff2api",
+      "owner": "XxxXTeam",
+      "repo": "XxxXTeam/freebuff2api",
+      "pinned_commit": "0c691c7dc90b91589e53901ea39dee96b28bf157",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "API compatibility review",
+        "license review",
+        "credential handling review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Reference only. No token collection via untrusted external pages and no production deployment."
+    },
+    {
+      "name": "freebuff2api",
+      "owner": "Quorinex",
+      "repo": "Quorinex/Freebuff2API",
+      "pinned_commit": "a1c10357098f0615a8b605bf32ed9455e33320e4",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "gateway boundary review",
+        "authentication review",
+        "provider-terms review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "README describes randomized request fingerprints and multi-token rotation; reference-only, no evasion or deployment."
+    },
+    {
+      "name": "freebuff2api-wokers",
+      "owner": "pingmike2",
+      "repo": "pingmike2/freebuff2api-wokers",
+      "pinned_commit": "901a9d87c748072fea16c8cc4d5e9d3bca87d593",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "Cloudflare worker gateway review",
+        "account-session boundary review",
+        "upstream terms review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Reference only. README says Cloudflare Worker deployment can increase account-ban risk."
+    },
+    {
+      "name": "freebuff",
+      "owner": "CodebuffAI",
+      "repo": "CodebuffAI/freebuff",
+      "pinned_commit": "18f32cd3c51ea88d763e89432642a908030fd088",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "official Freebuff CLI source reference",
+        "coding-agent integration reference",
+        "session compatibility review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "integration_note": "Official upstream client reference only; not a substitute for provider-supported access or AURELIA authorization."
+    },
+    {
+      "name": "freebuff-gate",
+      "owner": "VenTheZone",
+      "repo": "VenTheZone/freebuff-gate",
+      "pinned_commit": "3663a93614f0abbfcb477563538014e1f35b0cd4",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "local UI/relay review",
+        "browser security review",
+        "desktop-session boundary review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "integration_note": "Sandbox only; not installed into the AURELIA Command Center and not exposed on public interfaces."
+    },
+    {
+      "name": "freebuff-mcp",
+      "owner": "Praket7",
+      "repo": "Praket7/freebuff-mcp",
+      "pinned_commit": "02cf6e623cc6643fba3aeadeba3011188857212d",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "MCP bridge security review",
+        "local-project access review",
+        "secret redaction review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "JEV"
+      ],
+      "integration_note": "High-trust local bridge: can send requests to Freebuff and read ordinary project files. Isolated sandbox and manual approvals only; redaction is not a security boundary."
+    },
+    {
+      "name": "codex-freebuff-web",
+      "owner": "Jakevin",
+      "repo": "Jakevin/codex-freebuff-web",
+      "pinned_commit": "576c6835bc06ed4fc039bb6cd264e73ce36efa41",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "Codex provider bridge review",
+        "official session compatibility review",
+        "developer sandbox testing"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "integration_note": "Sandbox-only adapter for developer use; no production account data or AURELIA/Deriv secrets."
+    },
+    {
+      "name": "herdr-freebuff-plugin",
+      "owner": "TheMetalStorm",
+      "repo": "TheMetalStorm/herdr-freebuff-plugin",
+      "pinned_commit": "a49b1ea428fe6eb620288a3035984073927557d2",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "agent lifecycle integration review",
+        "PTY privacy review",
+        "local plugin permission review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "integration_note": "Plugin scrapes terminal content to infer agent state; reference-only until privacy and least-privilege review."
+    },
+    {
+      "name": "freebuff",
+      "owner": "Heartcoolman",
+      "repo": "Heartcoolman/FreeBuff",
+      "pinned_commit": "9edc400ca83c347554dba8fb373e63af8fcfbcd2",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "local proxy security review",
+        "session lifecycle reference",
+        "logging and secret hygiene"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Local compatible bridge only as architecture reference; do not route production credentials through it."
+    },
+    {
+      "name": "freebuff2apic",
+      "owner": "HaizhuAI",
+      "repo": "HaizhuAI/Freebuff2apic",
+      "pinned_commit": "58ff9bdbbc749b8a607a2960ee89d6f29927ca0f",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "gateway architecture review",
+        "provider privacy review",
+        "session-boundary review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Reference only; repository description identifies account-pool management and proxy routing."
+    },
+    {
+      "name": "freebuff-9router",
+      "owner": "0xgetz",
+      "repo": "0xgetz/freebuff-9router",
+      "pinned_commit": "ec5e698816d86b4db1d970e03d10350bcc15d966",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "gateway integration review",
+        "authentication flow review",
+        "secret containment review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Reference-only adapter/gateway integration; no production credentials or live account-pool deployment."
+    },
+    {
+      "name": "global-intelligence-os",
+      "owner": "aminkalantari842-ui",
+      "repo": "aminkalantari842-ui/global-intelligence-os",
+      "pinned_commit": "05ea36d535e2076a359b7fdeb82d99e77f66ae4e",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "agent orchestration architecture review",
+        "data provenance review",
+        "scope and license review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "integration_note": "Repository has no declared license in API metadata and a broad project description; inspect before any use."
+    },
+    {
+      "name": "freebuffet",
+      "owner": "6yte96",
+      "repo": "6yte96/freebuffet",
+      "pinned_commit": "280259f0495f8d37b7cd51a19500e8eb0eab8223",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "provider config generation review",
+        "coding-agent toolchain review",
+        "API key handling review"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV"
+      ],
+      "integration_note": "Sandbox-only CLI review. It can generate provider configuration; never write secrets or config into production hosts automatically."
     }
   ],
   "last_sync": {
@@ -2073,6 +2445,6 @@
       }
     ],
     "date": "2026-10-09",
-    "summary": "Eight LiteLLM-related sources pinned, role-routed, and restricted to sandbox/reference/toolchain analysis."
+    "summary": "Added 19 Freebuff sources as pinned non-authoritative research/tooling references; all stay sandbox/reference only."
   }
 }
