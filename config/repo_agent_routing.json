@@ -147,6 +147,24 @@
       "rationale": "Security-sensitive agent infrastructure is reviewed by a security-focused specialist before engineering integration."
     },
     {
+      "priority": 94,
+      "when": {
+        "category_contains_any": [
+          "browser-toolchain",
+          "chrome-devtools",
+          "browser-automation"
+        ]
+      },
+      "primary_agent": "PlaywrightCLI",
+      "supporting_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode_default": "TOOLCHAIN_ONLY",
+      "rationale": "Browser diagnostics and UI automation are owned by PlaywrightCLI with implementation, orchestration and evidence-validation support. Use isolated browser profiles and do not expose authenticated broker sessions."
+    },
+    {
       "priority": 92,
       "when": {
         "category_contains_any": [

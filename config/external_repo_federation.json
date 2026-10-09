@@ -917,12 +917,12 @@
     },
     {
       "repo": "ChromeDevTools/chrome-devtools-mcp",
-      "category": "browser-agent-tooling",
+      "category": "browser-toolchain",
       "domain": "engineering",
       "assigned_agents": [
+        "PlaywrightCLI",
         "ClaudeCode",
         "GrokBot",
-        "KimiK3",
         "JEV"
       ],
       "mode": "TOOLCHAIN_ONLY",
@@ -2990,19 +2990,19 @@
     },
     {
       "repo": "CryptoSignal/Crypto-Signal",
-      "category": "crypto-trading-framework",
-      "domain": "research",
+      "category": "crypto-trading-research",
+      "domain": "trading-research",
       "assigned_agents": [
         "KimiK3",
-        "GrokBot",
         "ClaudeCode",
-        "JEV",
-        "AURELIA"
+        "GrokBot",
+        "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/CryptoSignal/Crypto-Signal",
       "head_commit": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
-      "integration_note": "Legacy crypto technical-analysis bot; latest checked commit 2022-08-09. Research reference only; not a Deriv adapter or qualified strategy."
+      "integration_note": "Legacy crypto technical-analysis bot; latest checked commit 2022-08-09. Research reference only; not a Deriv adapter or qualified strategy.",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Kappaemme-git/codex-first-customer-finder-skill",
@@ -3873,6 +3873,35 @@
         "maintenance-review"
       ],
       "integration_note": "Reference-only source: use for documentation/patterns; do not execute or vendor directly into AURELIA capital/execution paths."
+    },
+    {
+      "repo": "hackobi/AI-Scalpel-Trading-Bot",
+      "category": "AI-trading-research",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/hackobi/AI-Scalpel-Trading-Bot",
+      "head_commit": "30eed4130d4808a25a5be6a0ee6cf42e3f19bc22",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
+    },
+    {
+      "repo": "cm45t3r/candlestick",
+      "category": "market-data-candlestick-library",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/cm45t3r/candlestick",
+      "head_commit": "7b7c45708c8366c0cb9c256044cf24e13cfb16fb",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     }
   ],
   "pin_policy": {

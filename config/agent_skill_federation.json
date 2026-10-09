@@ -837,15 +837,19 @@
       "capabilities": [
         "crypto-technical-analysis",
         "signal-research",
-        "legacy-bot-reference"
+        "legacy-bot-reference",
+        "technical-indicators",
+        "signal-generation",
+        "crypto-market-analysis",
+        "alerting-patterns",
+        "backtest-design-reference"
       ],
       "capital_authority": false,
       "assigned_agents": [
         "KimiK3",
-        "GrokBot",
         "ClaudeCode",
-        "JEV",
-        "AURELIA"
+        "GrokBot",
+        "JEV"
       ]
     },
     {
@@ -1643,6 +1647,68 @@
         "AURELIA"
       ],
       "capital_authority": false
+    },
+    {
+      "name": "chrome-devtools-mcp",
+      "owner": "ChromeDevTools",
+      "repo": "ChromeDevTools/chrome-devtools-mcp",
+      "pinned_commit": "f08dbe152502d66e75fa07fb2588dc0feb42bc20",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "browser-automation",
+        "Chrome-DevTools",
+        "network-inspection",
+        "console-debugging",
+        "performance-tracing",
+        "UI-verification"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
+    },
+    {
+      "name": "ai-scalpel-trading-bot",
+      "owner": "hackobi",
+      "repo": "hackobi/AI-Scalpel-Trading-Bot",
+      "pinned_commit": "30eed4130d4808a25a5be6a0ee6cf42e3f19bc22",
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "capabilities": [
+        "crypto-strategy-research",
+        "freqtrade-derived-backtesting",
+        "ML-parameter-optimization",
+        "dry-run-evaluation",
+        "position-sizing-research"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
+    },
+    {
+      "name": "candlestick",
+      "owner": "cm45t3r",
+      "repo": "cm45t3r/candlestick",
+      "pinned_commit": "7b7c45708c8366c0cb9c256044cf24e13cfb16fb",
+      "trust": "COMMUNITY_TOOLCHAIN_CANDIDATE",
+      "capabilities": [
+        "OHLC-candlestick-pattern-detection",
+        "streaming-pattern-analysis",
+        "TypeScript-types",
+        "unit-test-reference"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "JEV"
+      ]
     }
   ],
   "last_sync": {

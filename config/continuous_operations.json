@@ -1,0 +1,82 @@
+{
+  "schema": "aurelia.continuous_operations.v1",
+  "updated_at": "2026-10-09",
+  "objective": "Continuous strategy discovery, prospective data collection, qualification, and policy-gated execution with explicit separation between research and capital.",
+  "controllers": {
+    "ClaudeCode": {
+      "role": "repository-operational-controller",
+      "responsibilities": [
+        "maintain source, tests, deployment configuration, and agent routing",
+        "triage failed workflows and produce reproducible fixes",
+        "coordinate scheduled research and verify-only broker evidence",
+        "never self-authorize live capital or modify release gates to bypass failed evidence"
+      ],
+      "runtime_status": "EXTERNAL_RUNTIME_NOT_VERIFIED"
+    },
+    "ChatGPT": {
+      "role": "governance-and-analysis-supervisor",
+      "responsibilities": [
+        "review evidence, research methodology, risk controls, and release decisions",
+        "identify blockers and propose auditable changes",
+        "not claim to run persistent background processes or directly control Claude Code without a connected runtime"
+      ],
+      "runtime_status": "CONVERSATIONAL_SUPERVISION_ONLY"
+    },
+    "AURELIA": {
+      "role": "deterministic-policy-enforcer",
+      "responsibilities": [
+        "own balance truth, account isolation, risk checks, execution authorization, transaction verification, and ledger reconciliation",
+        "reject stale, invalid, drifted, uncalibrated, or out-of-policy trade probability",
+        "keep external agents and repositories outside capital authority"
+      ],
+      "runtime_status": "RELEASE_LOCKED_UNTIL_EVIDENCE_PASSES"
+    }
+  },
+  "scheduled_workflows": {
+    "control_heartbeat": {
+      "workflow": ".github/workflows/aurelia-control-heartbeat.yml",
+      "schedule": "*/5 * * * *",
+      "purpose": "check repository source identity and fail-closed release invariants"
+    },
+    "agent_continuity": {
+      "workflow": ".github/workflows/agent-continuity-watchdog.yml",
+      "schedule": "*/15 * * * *",
+      "purpose": "audit agent and skill continuity"
+    },
+    "public_market_research": {
+      "workflow": ".github/workflows/r100-prospective-oos.yml",
+      "schedule": "*/15 * * * *",
+      "purpose": "collect prospective public R100 observations and update research evidence"
+    },
+    "verify_only_broker_evidence": {
+      "workflow": ".github/workflows/deriv-auth-evidence.yml",
+      "schedule": "17 */6 * * *",
+      "purpose": "verify broker prerequisites only when protected credentials exist; no live orders"
+    },
+    "runtime_probe": {
+      "workflow": ".github/workflows/aurelia-free-runtime.yml",
+      "schedule": "*/15 * * * *",
+      "purpose": "bounded runtime and public-data checks, not a persistent always-on trading daemon"
+    }
+  },
+  "execution_policy": {
+    "research_hunting": "CONTINUOUS_SCHEDULED",
+    "broker_session": "VERIFY_ONLY_UNTIL_AUTHENTICATED_EVIDENCE_PASSES",
+    "strategy_execution": "BLOCKED_UNTIL_EXPLICIT_RELEASE_GATE_PASSES",
+    "live_trading_enabled": false,
+    "final_execution_authorization": false,
+    "live_execution": "BLOCKED",
+    "external_repo_capital_authority": false,
+    "probability_min": 0.55,
+    "probability_max": 0.75,
+    "probability_clipping": false,
+    "unknown_broker_outcome": "HALT_AND_RECONCILE",
+    "blind_resubmission": false
+  },
+  "operational_limitations": [
+    "GitHub scheduled workflows are periodic jobs, not a guaranteed 24/7 daemon; schedules may be delayed or disabled by platform/account policy.",
+    "The repository cannot prove that Claude Code is running continuously unless an actual connected host or agent runtime reports authenticated heartbeats.",
+    "ChatGPT conversation does not itself execute a persistent background process or control an external Claude Code process.",
+    "No live order is permitted while broker authentication, verified balance/stake affordability, qualified out-of-sample strategy evidence, deployment health, and transaction reconciliation gates are incomplete."
+  ]
+}
