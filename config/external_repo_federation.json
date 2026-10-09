@@ -2632,18 +2632,24 @@
       "category": "multi-agent-coding-orchestration",
       "domain": "engineering",
       "assigned_agents": [
-        "AURELIA",
-        "ClaudeCode",
         "GrokBot",
+        "ClaudeCode",
+        "KimiK3",
+        "AURELIA",
         "JEV",
-        "KimiK3"
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "ClaudeCode",
         "JEV",
         "AURELIA",
-        "KimiK3"
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/yeshrajawat/codync",
@@ -2655,21 +2661,27 @@
     },
     {
       "repo": "itsablabla/codync-web",
-      "category": "agent-workspace-web-client",
+      "category": "coding-agent-web-client",
       "domain": "engineering",
       "assigned_agents": [
-        "AURELIA",
         "ClaudeCode",
+        "PlaywrightCLI",
         "GrokBot",
+        "KimiK3",
+        "AURELIA",
         "JEV",
-        "KimiK3"
+        "GLM",
+        "GoogleAgentSkills"
       ],
       "sync_targets": [
         "GrokBot",
         "ClaudeCode",
         "JEV",
         "AURELIA",
-        "KimiK3"
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/itsablabla/codync-web",
@@ -2681,21 +2693,27 @@
     },
     {
       "repo": "leepokai/homebrew-codync",
-      "category": "package-manager-formula",
+      "category": "toolchain-package-manager-formula",
       "domain": "engineering",
       "assigned_agents": [
-        "AURELIA",
         "ClaudeCode",
         "GrokBot",
+        "KimiK3",
+        "AURELIA",
         "JEV",
-        "KimiK3"
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "ClaudeCode",
         "JEV",
         "AURELIA",
-        "KimiK3"
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/leepokai/homebrew-codync",
@@ -2707,21 +2725,27 @@
     },
     {
       "repo": "leepokai/Codync-web",
-      "category": "archived-agent-workspace-web-client",
+      "category": "archived-reference",
       "domain": "reference",
       "assigned_agents": [
-        "AURELIA",
         "ClaudeCode",
         "GrokBot",
+        "KimiK3",
+        "AURELIA",
         "JEV",
-        "KimiK3"
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "ClaudeCode",
         "JEV",
         "AURELIA",
-        "KimiK3"
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/leepokai/Codync-web",
@@ -2736,18 +2760,24 @@
       "category": "coding-agent-cli",
       "domain": "engineering",
       "assigned_agents": [
-        "AURELIA",
         "ClaudeCode",
         "GrokBot",
+        "KimiK3",
+        "AURELIA",
         "JEV",
-        "KimiK3"
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "ClaudeCode",
         "JEV",
         "AURELIA",
-        "KimiK3"
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/QwenLM/qwen-code",
@@ -2762,18 +2792,24 @@
       "category": "quant-research-tutorials",
       "domain": "research",
       "assigned_agents": [
-        "AURELIA",
-        "ClaudeCode",
+        "KimiK3",
         "GrokBot",
+        "ClaudeCode",
+        "AURELIA",
         "JEV",
-        "KimiK3"
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "ClaudeCode",
         "JEV",
         "AURELIA",
-        "KimiK3"
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/QuantConnect/Tutorials",
@@ -2785,21 +2821,27 @@
     },
     {
       "repo": "SockTrader/SockTrader",
-      "category": "trading-tooling-reference",
+      "category": "algorithmic-trading-tooling-reference",
       "domain": "research",
       "assigned_agents": [
-        "AURELIA",
-        "ClaudeCode",
+        "KimiK3",
         "GrokBot",
+        "ClaudeCode",
+        "AURELIA",
         "JEV",
-        "KimiK3"
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "ClaudeCode",
         "JEV",
         "AURELIA",
-        "KimiK3"
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/SockTrader/SockTrader",
@@ -2811,21 +2853,27 @@
     },
     {
       "repo": "openinterpreter/openinterpreter",
-      "category": "computer-use-agent",
+      "category": "desktop-computer-use-agent",
       "domain": "engineering",
       "assigned_agents": [
-        "AURELIA",
+        "PlaywrightCLI",
         "ClaudeCode",
         "GrokBot",
+        "KimiK3",
+        "AURELIA",
         "JEV",
-        "KimiK3"
+        "GLM",
+        "GoogleAgentSkills"
       ],
       "sync_targets": [
         "GrokBot",
         "ClaudeCode",
         "JEV",
         "AURELIA",
-        "KimiK3"
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/openinterpreter/openinterpreter",
@@ -2840,18 +2888,24 @@
       "category": "coding-agent-cli",
       "domain": "engineering",
       "assigned_agents": [
-        "AURELIA",
         "ClaudeCode",
         "GrokBot",
+        "KimiK3",
+        "AURELIA",
         "JEV",
-        "KimiK3"
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "sync_targets": [
         "GrokBot",
         "ClaudeCode",
         "JEV",
         "AURELIA",
-        "KimiK3"
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/anomalyco/opencode",
@@ -2883,7 +2937,7 @@
     "duplicate_input": "none",
     "physical_grok_jev_install": "NOT_CLAIMED",
     "canonical_sync_contract": "This file",
-    "assignment_policy": "All requested AURELIA agents assigned to every new repository",
+    "assignment_policy": "All canonical AURELIA agent IDs are assigned; the first assignment is the primary specialist selected by repo_agent_routing.json",
     "assigned_agents": [
       "ClaudeCode",
       "GrokBot",
@@ -3035,7 +3089,10 @@
       "ClaudeCode",
       "JEV",
       "AURELIA",
-      "KimiK3"
+      "KimiK3",
+      "GLM",
+      "GoogleAgentSkills",
+      "PlaywrightCLI"
     ],
     "requested_batch": [
       {
