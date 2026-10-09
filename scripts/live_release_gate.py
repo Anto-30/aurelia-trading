@@ -77,15 +77,14 @@ def check_environment() -> None:
         raise RuntimeError("missing required env var: DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID)")
     _assert_env("DERIV_EXPECTED_CURRENCY")
     _assert_env("DERIV_ENVIRONMENT")
-    _assert_env("DERIV_AUTH_MODE")
+    auth_mode = _assert_env("DERIV_AUTH_MODE").lower()
 
+    if auth_mode not in {"pat", "oauth"}:
+        raise RuntimeError("DERIV_AUTH_MODE must be pat or oauth")
     if os.getenv("DERIV_ENVIRONMENT", "").strip().lower() != "real":
         raise RuntimeError("DERIV_ENVIRONMENT must be real for live trading")
 
-    if (
-        os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() == "pat"
-        and not get_optional_secret("DERIV_APP_ID")
-    ):
+    if auth_mode == "pat" and not get_optional_secret("DERIV_APP_ID"):
         raise RuntimeError("DERIV_APP_ID required when DERIV_AUTH_MODE=pat")
 
 
