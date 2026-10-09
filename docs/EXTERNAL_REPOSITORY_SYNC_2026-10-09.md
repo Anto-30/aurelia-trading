@@ -47,3 +47,8 @@ Eight source pins were added: `BerriAI/litellm`, `LiteLLM-Labs/litellm-agent-con
 
 **Scope limitation:** the registry can be synchronized into the existing AURELIA repository and made available as source context to the connected agent workflows. No connected Claude Code host, separate Dev runtime, or persistent ChatGPT workspace was available to physically install software into during this task. No such installation is claimed.
 
+
+
+## Supplemental source batch — Freebuff / provider-gateway review, 2026-10-09
+
+The original inventory counts recorded above are a historical snapshot. The subsequent LiteLLM and Freebuff registrations bring the current main-branch manifests to **216 external repository entries** and **115 skill/source entries** once the open federation PR is merged. The 19 Freebuff-related source pins are documented in `docs/AURELIA_FREEBUFF_REPOSITORY_REVIEW_2026-10-09.md`. They remain reference/sandbox sources, not production installs. External code execution remains deny-by-default, and no source has capital authority.
