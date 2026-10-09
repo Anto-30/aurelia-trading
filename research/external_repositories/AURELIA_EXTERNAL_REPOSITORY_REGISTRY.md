@@ -178,3 +178,39 @@ The following 19 repositories have been pinned for reference or isolated develop
 - `global-intelligence-os` and several proxy repositories have no declared license in GitHub API metadata. They remain reference-only until license and ownership are clarified.
 
 This is repository federation and source pinning—not physical installation, credential transfer, an authenticated provider connection, or proof that ChatGPT/Claude/Dev runtimes are connected. The label `Dev` is not a canonical agent identity in this repository; developer-oriented work is routed to `ClaudeCode` unless a real Dev runtime is registered and verified.
+
+
+## Pine Script, TradingView, and Pinecone source batch — 2026-10-09
+
+Twenty requested repositories are registered with exact default-branch commit pins, agent assignments, and a mode that does not grant capital authority. They are not installed into AURELIA's production runtime.
+
+| Repository | Pin | License metadata | Mode | Review note |
+|---|---|---|---|---|
+| [pineforge-4pass/pineforge-engine](https://github.com/pineforge-4pass/pineforge-engine) | `873b25daa00687cd2b9b9d6b2e49c57149227edd` | Apache-2.0 | RESEARCH_ONLY | Pine Script v6 code generation/backtesting engine; validate semantics, broker execution differences and OOS results. |
+| [pinecone-io/pinecone-claude-code-plugin](https://github.com/pinecone-io/pinecone-claude-code-plugin) | `c383d38b5cc3c5ec219f2e68026e47ffbf46524a` | MIT | TOOLCHAIN_ONLY | Official Pinecone Claude Code marketplace plugin; vector search integration only. |
+| [tmustier/pine-of-glass](https://github.com/tmustier/pine-of-glass) | `6e7dd5fd613198fee9fff71df1bc45a579030cce` | MIT | REFERENCE_ONLY | Pi coding-agent observability/context extension; do not assume Claude runtime compatibility. |
+| [FaustoS88/Pydantic-AI-Pinescript-Expert](https://github.com/FaustoS88/Pydantic-AI-Pinescript-Expert) | `03cbd93c486435df08d70185fbab9aa61fff5fbb` | MIT | RESEARCH_ONLY | Pine Script RAG/code-generation assistant; generated signals remain unqualified until independent testing. |
+| [be-thomas/OpenPineScript](https://github.com/be-thomas/OpenPineScript) | `a793e719043a0a05dc7c184b04ef4ad6985d0de9` | GPL-3.0 | RESEARCH_ONLY | Pine Script runtime; GPL-3.0 compatibility and semantic completeness review required. |
+| [jpantsjoha/pinescript-vscode-extension](https://github.com/jpantsjoha/pinescript-vscode-extension) | `b81aa3d88f6327328ebf84b851757bd6266e56f8` | NOASSERTION | TOOLCHAIN_ONLY | Pine Script v6 editor extension; license must be clarified before redistribution. |
+| [double232/pinescript-skill](https://github.com/double232/pinescript-skill) | `107fd4c6f4abd6cf64639040d6d67b42d130aa3d` | NOASSERTION | REFERENCE_ONLY | Pine Script v6 skill reference; inspect prompts/dependencies; license not declared. |
+| [gugu91/pinet](https://github.com/gugu91/pinet) | `78b24b7ce6abd3e7cb793b31a399041c7d6a3c7a` | MIT | TOOLCHAIN_ONLY | Local-first coordination for Pi coding agents; no production credentials. |
+| [folknor/pine-tools](https://github.com/folknor/pine-tools) | `3dd9f3c941ece3368e500360dd9e6e125ad396f6` | NOASSERTION | TOOLCHAIN_ONLY | Pine language service/LSP/MCP/CLI linting; license review before adoption. |
+| [dharmanan/PineScript-coder](https://github.com/dharmanan/PineScript-coder) | `5f4c0f65e58b60860a920c2c59670ed21b1a9eaa` | MIT | RESEARCH_ONLY | Pine Script v6 generation; test repaint/lookahead, fees and fill semantics. |
+| [dotsystemsdevs/pineflow](https://github.com/dotsystemsdevs/pineflow) | `8d2dbbc2a5b3061d102c6beb2e9070c4c4f05e3d` | MIT | REFERENCE_ONLY | AI coding prompts/workflow toolkit; not a Pine-specific trading runtime. |
+| [batonogov/pine](https://github.com/batonogov/pine) | `c5ed7a4c4744c4dfd4ff88dd20cc94a2c81b96d1` | MIT | TOOLCHAIN_ONLY | Native macOS agent editor; not available in current runtime unless separately installed. |
+| [edeng23/pines](https://github.com/edeng23/pines) | `c6020543236360c92adff8ee48d621b1d4b3759f` | Apache-2.0 | TOOLCHAIN_ONLY | Pi multi-session orchestration TUI; no proof Pi runtime is connected. |
+| [TheFractalyst/PineMCP](https://github.com/TheFractalyst/PineMCP) | `c630de784c795d8abc5e15780881f5237dba8bdc` | MIT | SANDBOX_ONLY | Local Pine Script docs/code MCP; isolate and review tool permissions before activation. |
+| [85599/pinesprout](https://github.com/85599/pinesprout) | `48bcea15275351869dffa1a3ba5fa6ffebd1f983` | MIT | RESEARCH_ONLY | Pine Script v5/v6 lint/format/upgrade toolkit; use as analysis only until validated. |
+| [hasnocool/tradingview-script-downloader](https://github.com/hasnocool/tradingview-script-downloader) | `997d5417235c4fa9d4e20d56b02fe6b0fd3fd37d` | NOASSERTION | REFERENCE_ONLY | Selenium/BeautifulSoup public script downloader; no unlicensed code reuse or logged-in session scraping. |
+| [coocolab/Coocolab-Tradingview-MCP](https://github.com/coocolab/Coocolab-Tradingview-MCP) | `cd16a7dc038762688e7807a26285a26337d6fc60` | NOASSERTION | SANDBOX_ONLY | Desktop TradingView MCP; never attach production browser session or broker secrets. |
+| [daviddme/tradingview-indicator-search-mcp-server](https://github.com/daviddme/tradingview-indicator-search-mcp-server) | `1f8648936088cf189e4ac1a23b55c522c11d15cd` | MIT | SANDBOX_ONLY | Public indicator search/source fetch MCP; respect author licenses and platform access controls. |
+| [kashsuks/Pinel](https://github.com/kashsuks/Pinel) | `1b10a5f8c8f772a27360d77dae33be5137bc7a66` | GPL-3.0 | TOOLCHAIN_ONLY | Rust code editor; GPL-3.0 compatibility review and separate installation required. |
+| [pinecone-io/getting-started-with-pinecone-webinar](https://github.com/pinecone-io/getting-started-with-pinecone-webinar) | `76068a1b11a5c33dd82192f31ba5377c46c656cf` | MIT | REFERENCE_ONLY | Pinecone educational examples; docs/demo only, not production dependencies. |
+
+### Integration rules
+- Pine Script generators, runtimes, and backtest engines are research-only until indicator semantics, repaint/lookahead behavior, execution timing, costs, and out-of-sample results are independently validated.
+- GPL-3.0 sources require a compatibility review before redistribution or linking into proprietary components. Sources without declared license metadata remain unapproved for redistribution.
+- TradingView MCP/browser automation is isolated sandbox tooling. Do not mount authenticated TradingView or Deriv sessions, browser cookies, production credentials, or SSH keys into external MCP servers.
+- Public script discovery is not permission to copy/reuse source code without respecting author licenses and platform rules.
+- Pinecone examples/plugins do not prove a connected Pinecone account, API key, or live Claude runtime. No credentials are embedded by this registry change.
+- All new skill records set `capital_authority: false`. AURELIA's deterministic risk/execution controls remain the sole capital authority.
