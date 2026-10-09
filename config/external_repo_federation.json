@@ -3908,8 +3908,8 @@
       "category": "llm-gateway",
       "domain": "agent-infrastructure",
       "assigned_agents": [
-        "ClaudeCode",
         "GoogleAgentSkills",
+        "ClaudeCode",
         "GrokBot",
         "JEV",
         "AURELIA"
@@ -3930,12 +3930,12 @@
     },
     {
       "repo": "LiteLLM-Labs/litellm-agent-control-plane",
-      "category": "agent-control-plane",
+      "category": "agent-orchestration",
       "domain": "agent-infrastructure",
       "assigned_agents": [
+        "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "GrokBot",
         "JEV",
         "AURELIA"
       ],
@@ -3953,11 +3953,11 @@
     },
     {
       "repo": "BerriAI/litellm-docs",
-      "category": "llm-gateway-documentation",
+      "category": "llm-documentation",
       "domain": "engineering",
       "assigned_agents": [
+        "GLM",
         "ClaudeCode",
-        "GoogleAgentSkills",
         "JEV",
         "AURELIA"
       ],
@@ -3975,8 +3975,8 @@
     },
     {
       "repo": "BerriAI/liteLLM-proxy",
-      "category": "legacy-llm-proxy",
-      "domain": "engineering",
+      "category": "legacy-proxy-reference",
+      "domain": "reference",
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
@@ -4014,7 +4014,7 @@
     },
     {
       "repo": "BerriAI/litellm-pgvector",
-      "category": "vector-memory-integration",
+      "category": "library-toolchain",
       "domain": "agent-infrastructure",
       "assigned_agents": [
         "ClaudeCode",
@@ -4035,7 +4035,7 @@
     },
     {
       "repo": "LiteLLM-Labs/litellm-rust",
-      "category": "rust-llm-gateway",
+      "category": "rust-prototype",
       "domain": "agent-infrastructure",
       "assigned_agents": [
         "ClaudeCode",
@@ -4056,7 +4056,7 @@
     },
     {
       "repo": "langchain-ai/langchain-litellm",
-      "category": "langchain-provider-adapter",
+      "category": "library-toolchain",
       "domain": "agent-infrastructure",
       "assigned_agents": [
         "ClaudeCode",
@@ -4481,6 +4481,8 @@
       "physical_runtime_install": "NOT_CLAIMED"
     },
     "repository_count": 154,
-    "all_repository_heads_pinned": true
+    "all_repository_heads_pinned": true,
+    "date": "2026-10-09",
+    "summary": "Eight LiteLLM-related sources pinned with role-correct agent ordering; all remain non-authoritative and not production-installed."
   }
 }
