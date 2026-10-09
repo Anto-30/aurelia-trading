@@ -145,12 +145,22 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
     now = datetime.now(timezone.utc)
     release: LiveReleaseState = read_live_release(root / "config" / "LIVE_LOCK.yaml")
 
-    token_present = bool(os.getenv("DERIV_AUTH_TOKEN"))
-    login_present = bool(os.getenv("DERIV_EXPECTED_LOGINID"))
-    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
-    app_present = bool(os.getenv("DERIV_APP_ID"))
-    credentials = token_present and login_present and (
-        auth_mode != "pat" or app_present
+    token_present = bool(
+        os.getenv("DERIV_AUTH_TOKEN", "").strip()
+        or os.getenv("DERIV_PAT", "").strip()
+    )
+    login_present = bool(
+        os.getenv("DERIV_EXPECTED_LOGINID", "").strip()
+        or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()
+    )
+    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+    auth_mode_valid = auth_mode in {"pat", "oauth"}
+    app_present = bool(os.getenv("DERIV_APP_ID", "").strip())
+    credentials = (
+        token_present
+        and login_present
+        and auth_mode_valid
+        and (auth_mode != "pat" or app_present)
     )
 
     deriv_evidence_path = Path(
