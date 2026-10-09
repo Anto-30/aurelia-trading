@@ -2266,7 +2266,13 @@
         "research-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "pinecone-io-pinecone-claude-code-plugin",
@@ -2279,7 +2285,12 @@
         "toolchain-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "tmustier-pine-of-glass",
@@ -2292,7 +2303,12 @@
         "reference-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "faustos88-pydantic-ai-pinescript-expert",
@@ -2305,7 +2321,13 @@
         "research-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "be-thomas-openpinescript",
@@ -2318,7 +2340,13 @@
         "research-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "jpantsjoha-pinescript-vscode-extension",
@@ -2331,7 +2359,12 @@
         "toolchain-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "double232-pinescript-skill",
@@ -2344,7 +2377,12 @@
         "reference-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "gugu91-pinet",
@@ -2357,7 +2395,12 @@
         "toolchain-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "folknor-pine-tools",
@@ -2370,7 +2413,12 @@
         "toolchain-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "dharmanan-pinescript-coder",
@@ -2383,7 +2431,13 @@
         "research-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "dotsystemsdevs-pineflow",
@@ -2396,7 +2450,12 @@
         "reference-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "batonogov-pine",
@@ -2409,7 +2468,12 @@
         "toolchain-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "edeng23-pines",
@@ -2422,7 +2486,12 @@
         "toolchain-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "thefractalyst-pinemcp",
@@ -2435,7 +2504,12 @@
         "sandbox-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ]
     },
     {
       "name": "85599-pinesprout",
@@ -2448,7 +2522,13 @@
         "research-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "hasnocool-tradingview-script-downloader",
@@ -2461,7 +2541,12 @@
         "reference-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "coocolab-coocolab-tradingview-mcp",
@@ -2474,7 +2559,12 @@
         "sandbox-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ]
     },
     {
       "name": "daviddme-tradingview-indicator-search-mcp-server",
@@ -2487,7 +2577,12 @@
         "sandbox-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ]
     },
     {
       "name": "kashsuks-pinel",
@@ -2500,7 +2595,12 @@
         "toolchain-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     },
     {
       "name": "pinecone-io-getting-started-with-pinecone-webinar",
@@ -2513,7 +2613,12 @@
         "reference-only",
         "source-review"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ]
     }
   ],
   "last_sync": {
