@@ -5,7 +5,7 @@ on:
     branches: ["main"]
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "*/15 * * * *"
 
 permissions:
   contents: read
@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: aurelia-r100-prospective-oos
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   collect-and-evaluate:
@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 40
     env:
       GH_TOKEN: ${{ github.token }}
-      AURELIA_R100_COLLECTION_SECONDS: "900"
+      AURELIA_R100_COLLECTION_SECONDS: "600"
       AURELIA_R100_HORIZON_TICKS: "10"
       AURELIA_R100_STATE_PATH: ".research_state/aurelia_r100_state.json"
     steps:
