@@ -1182,7 +1182,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/doat08/okx-bot-suite",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "1f1b1b5ef6919c522b27ffe3b0da4d261a28bfa9",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "omirb604/spot-grid-trading-bot",
@@ -1196,7 +1197,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/omirb604/spot-grid-trading-bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "be0abeb6f89d41f43c10191d029987fcb6e34341",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "djc00p/freqtrade-us-setup",
@@ -1210,7 +1212,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/djc00p/freqtrade-us-setup",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "c60fa3c7b0fdfc3974757615e09008b9eb0b5f95",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "superset-sh/superset",
@@ -1224,7 +1227,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/superset-sh/superset",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "502135366a804fa6f7af816aaaeb95021fe020c3",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "affaan-m/agentshield",
@@ -1238,7 +1242,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/affaan-m/agentshield",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "b0891303bdcd6037376a94263d45cfd2ff3dfb98",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "AEON-7/Ornith-1.0-35B-AEON-Ultimate-Uncensored",
@@ -1252,7 +1257,8 @@
         "KimiK3",
         "JEV"
       ],
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "bc9733592998fde66a7ea1ceff313ddd19e51790",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "OrnitheMC/ornithe-standard-libraries",
@@ -1266,7 +1272,8 @@
         "KimiK3",
         "JEV"
       ],
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "045becb83c99576164da7bcdfdfcf7c179279652",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "ornith-ai/Ornith-1",
@@ -1280,7 +1287,8 @@
         "KimiK3",
         "JEV"
       ],
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "9c800446621ebad1172f517a1d0f9b683fb8615e",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "ARahim3/mlx-dspark",
