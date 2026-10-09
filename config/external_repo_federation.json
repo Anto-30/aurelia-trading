@@ -822,7 +822,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/chrisleekr/binance-trading-bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "70e018756964ed7d84753ee51b5fbc8575e4fa52",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "chrisconlan/algorithmic-trading-with-python",
@@ -836,7 +837,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/chrisconlan/algorithmic-trading-with-python",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ebe01087c7d9172db72bc3c9adc1eee5e882ac49",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "nykooi1/vibe-wise",
@@ -850,7 +852,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/nykooi1/vibe-wise",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "eefb53df406ab89e31444684ff32c1df205221f8",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "saniales/golang-crypto-trading-bot",
@@ -864,7 +867,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/saniales/golang-crypto-trading-bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "02695e5d0901d973199d8de56b16c4d691724f9b",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "tradytics/eiten",
@@ -878,7 +882,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/tradytics/eiten",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "44536c58887833b7b9bbcb30f2a270db2c712ea6",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "blampe/IbPy",
@@ -892,7 +897,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/blampe/IbPy",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "cba912d2ecc669b0bf2980357ea7942e49c0825e",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "omnigent-ai/omnigent",
@@ -906,7 +912,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/omnigent-ai/omnigent",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "54c21ba8ff841aab03f53889498274256e138812",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "ChromeDevTools/chrome-devtools-mcp",
@@ -920,7 +927,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "f08dbe152502d66e75fa07fb2588dc0feb42bc20",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "hackingthemarkets/binance-tutorials",
