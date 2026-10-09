@@ -353,6 +353,55 @@
       "ClaudeCode",
       "GrokBot",
       "JEV"
+    ],
+    "BerriAI/litellm": [
+      "GoogleAgentSkills",
+      "ClaudeCode",
+      "GrokBot",
+      "JEV",
+      "AURELIA"
+    ],
+    "LiteLLM-Labs/litellm-agent-control-plane": [
+      "GrokBot",
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "JEV",
+      "AURELIA"
+    ],
+    "BerriAI/litellm-docs": [
+      "GLM",
+      "ClaudeCode",
+      "JEV",
+      "AURELIA"
+    ],
+    "BerriAI/liteLLM-proxy": [
+      "ClaudeCode",
+      "JEV",
+      "GrokBot"
+    ],
+    "numman-ali/cc-mirror": [
+      "ClaudeCode",
+      "GrokBot",
+      "JEV"
+    ],
+    "BerriAI/litellm-pgvector": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "JEV",
+      "AURELIA"
+    ],
+    "LiteLLM-Labs/litellm-rust": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "GrokBot",
+      "JEV"
+    ],
+    "langchain-ai/langchain-litellm": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "GrokBot",
+      "JEV",
+      "AURELIA"
     ]
   },
   "required_invariants": [
@@ -409,6 +458,93 @@
       "install_status": "RESEARCH_ONLY",
       "mode": "RESEARCH_ONLY",
       "security": "legacy beta; inspect dependencies and APIs; no production credentials or deployment"
+    },
+    "BerriAI/litellm": {
+      "primary": "GoogleAgentSkills",
+      "supporting": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "SANDBOX_ONLY",
+      "security": "Sandbox only. Current upstream advisories include critical proxy-admin privilege escalation and high-severity local-file-read/credential exposure issues; verify patched versions and image signatures before any future adoption. Never provide production Deriv credentials or capital authority."
+    },
+    "LiteLLM-Labs/litellm-agent-control-plane": {
+      "primary": "GrokBot",
+      "supporting": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "SANDBOX_ONLY",
+      "security": "Architecture reference only. No external agent sessions, scheduled jobs, or tool calls may cross into AURELIA capital authority; do not route production secrets."
+    },
+    "BerriAI/litellm-docs": {
+      "primary": "GLM",
+      "supporting": [
+        "ClaudeCode",
+        "JEV",
+        "AURELIA"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Public documentation/advisory reference only; verify guidance against version-specific upstream security advisories."
+    },
+    "BerriAI/liteLLM-proxy": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "JEV",
+        "GrokBot"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "REFERENCE_ONLY",
+      "security": "Upstream README marks this repository deprecated in favor of BerriAI/litellm. Do not install or deploy this legacy proxy."
+    },
+    "numman-ali/cc-mirror": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "SANDBOX_ONLY",
+      "security": "Developer tooling only. Use isolated local profiles and disposable/non-production model credentials; do not route Deriv tokens or production host secrets through modified coding-agent variants."
+    },
+    "BerriAI/litellm-pgvector": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "JEV",
+        "AURELIA"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "SANDBOX_ONLY",
+      "security": "Vector-memory prototype reference only; no broker statements, Deriv credentials, or other production secrets in vector storage."
+    },
+    "LiteLLM-Labs/litellm-rust": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "SANDBOX_ONLY",
+      "security": "README describes this as a proof of concept and says official LiteLLM is moving to Rust; do not treat it as a maintained production gateway."
+    },
+    "langchain-ai/langchain-litellm": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "install_status": "PINNED_CANDIDATE_NOT_INSTALLED",
+      "mode": "SANDBOX_ONLY",
+      "security": "Adapter reference only until the exact package version, provider semantics, transitive dependencies, logging, and tool-call behavior are tested."
     }
   }
 }
