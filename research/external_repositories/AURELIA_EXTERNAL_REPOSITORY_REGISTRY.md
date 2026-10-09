@@ -128,3 +128,15 @@ A later runtime dependency may be admitted only through an explicit bounded adap
 - Mode: `SANDBOX_ONLY`
 - Integration: adapter reference pending compatibility and transitive dependency review.
 
+
+
+## Security gate update — checked 2026-10-09
+
+LiteLLM is **not approved for production installation** by this federation sync. Review the upstream advisories before any runtime decision:
+
+- [GHSA-7hp6-4w63-5g45 — critical proxy-admin privilege escalation](https://github.com/BerriAI/litellm/security/advisories/GHSA-7hp6-4w63-5g45). The advisory lists patched branches including 1.100.4, 1.101.3, 1.102.2, and 1.103.1; confirm the exact release actually deployed.
+- [GHSA-g5ff-637f-6q2m — high-severity local file read via `vertex_ai_credentials`](https://github.com/BerriAI/litellm/security/advisories/GHSA-g5ff-637f-6q2m). The advisory lists 1.95.0 as patched.
+- [GHSA-3cv6-jpf6-8222 — authenticated SSRF and provider-credential exfiltration](https://github.com/BerriAI/litellm/security/advisories/GHSA-3cv6-jpf6-8222). Patched releases vary by branch; the advisory lists fixes including 1.96.2, 1.95.1, 1.94.3, 1.93.2, 1.92.2, 1.91.5, 1.90.7, 1.89.7, and 1.88.6.
+
+A Git commit pin alone does not prove which released package, container image, or dependency set will run. Before testing a gateway outside an isolated development environment, verify its exact version and image signature, apply the applicable fixes, disable client-supplied credential overrides, enforce upstream host validation, restrict network egress, and keep all Deriv and production-host secrets out of the gateway. Do not expose the gateway's management API to untrusted networks.
+
