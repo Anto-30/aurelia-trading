@@ -26,7 +26,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/pingdotgg/t3code",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ec80933ac8cd02fec5c97b342462ccc9567cdb1e",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "python-poetry/poetry",
@@ -40,7 +41,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/python-poetry/poetry",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "63bba274f8ea6bc9a064f5328fa6c67bce617cc1",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "poem-web/poem",
@@ -54,7 +56,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/poem-web/poem",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "63163b17a0a15cd9ae29634c10826852d60150d4",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "Niko1221/Strata",
@@ -68,7 +71,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/Niko1221/Strata",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "fb58e0dbc8399662c0e47c76578c6e878b14f6cf",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "JerBouma/AlgorithmicTrading",
@@ -82,7 +86,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/JerBouma/AlgorithmicTrading",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "87886cc8bf32f9ec9871c289cb5076371d5c1fb0",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "coding-kitties/investing-algorithm-framework",
@@ -96,7 +101,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/coding-kitties/investing-algorithm-framework",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "f8e82c748cb10b9b1704821089bb3edb48659c7e",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/zed",
@@ -133,7 +139,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/extensions",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "c63c15ce892e8ea02d0be53ae5d2526105e03519",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/python-environment-tools",
@@ -147,7 +154,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/python-environment-tools",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "5aad7164bfc2a58977b103c8ef8fdd7302ed2e9f",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/notify",
