@@ -2914,6 +2914,97 @@
       "physical_runtime_install": "NOT_CLAIMED",
       "integration_note": "Alternative coding-agent toolchain; evaluate separately before installing or enabling hooks.",
       "capital_authority": false
+    },
+    {
+      "repo": "CryptoSignal/Crypto-Signal",
+      "category": "crypto-trading-framework",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/CryptoSignal/Crypto-Signal",
+      "head_commit": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
+      "integration_note": "Legacy crypto technical-analysis bot; latest checked commit 2022-08-09. Research reference only; not a Deriv adapter, not qualified, and no execution authority."
+    },
+    {
+      "repo": "Kappaemme-git/codex-first-customer-finder-skill",
+      "category": "coding-agent-skills",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Kappaemme-git/codex-first-customer-finder-skill",
+      "head_commit": "d3f6964bd989745ac183edbd545c588a68451146",
+      "integration_note": "Evidence-backed customer discovery skill; sandbox/business-development use only, not trading logic."
+    },
+    {
+      "repo": "Neeeophytee/finding-unknowns-skills",
+      "category": "coding-agent-skills",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Neeeophytee/finding-unknowns-skills",
+      "head_commit": "ca5696a0f08d2de6b2997fff1d6cc05c3ed587cc",
+      "integration_note": "Requirement discovery, assumptions, context and regression-evidence skills; sandbox only."
+    },
+    {
+      "repo": "he-yufeng/FindJobs-Agent",
+      "category": "coding-agent",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/he-yufeng/FindJobs-Agent",
+      "head_commit": "591fe6b451db98fe0bebb8f92a7b9902b0fd6079",
+      "integration_note": "Job-search and skill-analysis toolkit; unrelated to capital decisions; isolate dependencies and external execution."
+    },
+    {
+      "repo": "davepoon/buildwithclaude",
+      "category": "coding-agent",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/davepoon/buildwithclaude",
+      "head_commit": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
+      "integration_note": "Community catalogue of Claude skills/plugins/agents. Discover and review items individually; do not bulk-install plugins into production."
+    },
+    {
+      "repo": "workersio/skills",
+      "category": "coding-agent-skills",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/workersio/skills",
+      "head_commit": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
+      "integration_note": "Bug-fixing skills; inspect and run only isolated regression tests. External code execution remains deny-by-default."
     }
   ],
   "pin_policy": {
@@ -2923,7 +3014,7 @@
   },
   "last_sync": {
     "completed_at": "2026-10-09",
-    "source": "user-requested 12-repository integration batch; metadata and default-branch heads checked through GitHub",
+    "source": "user-supplied GitHub repositories; commit SHAs verified against GitHub API",
     "unique_repositories_added_or_refreshed": [
       "ychampion/melete",
       "yxq953/MuseLite",
@@ -3171,6 +3262,77 @@
     "requested_agent_aliases_unresolved": [
       "Dev"
     ],
-    "agent_alias_resolution_note": "The repository's canonical config/repo_agent_routing.json does not define an agent ID named Dev; this batch is routed only to canonical agent IDs. Do not claim Dev runtime sync until its canonical ID is registered and reviewed."
+    "agent_alias_resolution_note": "The repository's canonical config/repo_agent_routing.json does not define an agent ID named Dev; this batch is routed only to canonical agent IDs. Do not claim Dev runtime sync until its canonical ID is registered and reviewed.",
+    "repositories_added_or_refreshed": [
+      {
+        "repo": "CryptoSignal/Crypto-Signal",
+        "head_commit": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
+        "assigned_agents": [
+          "KimiK3",
+          "GrokBot",
+          "ClaudeCode",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "Kappaemme-git/codex-first-customer-finder-skill",
+        "head_commit": "d3f6964bd989745ac183edbd545c588a68451146",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "Neeeophytee/finding-unknowns-skills",
+        "head_commit": "ca5696a0f08d2de6b2997fff1d6cc05c3ed587cc",
+        "assigned_agents": [
+          "ClaudeCode",
+          "JEV",
+          "GrokBot",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "he-yufeng/FindJobs-Agent",
+        "head_commit": "591fe6b451db98fe0bebb8f92a7b9902b0fd6079",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "davepoon/buildwithclaude",
+        "head_commit": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "workersio/skills",
+        "head_commit": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
+        "assigned_agents": [
+          "ClaudeCode",
+          "JEV",
+          "GrokBot",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      }
+    ],
+    "physical_runtime_install": "NOT_CLAIMED",
+    "note": "Federation registry sync only. Repositories are pinned, classified and assigned; source code is not copied into capital/execution paths."
   }
 }
