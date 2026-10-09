@@ -64,7 +64,10 @@ def main() -> None:
         "davepoon/buildwithclaude": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
         "workersio/skills": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
     }
-    registered = {item["repo"]: item for item in external_repos["repositories"]}
+    all_external = external_repos["repositories"]
+    assert len({item["repo"] for item in all_external}) == len(all_external)
+    assert all(item.get("head_commit") and item["head_commit"] != "SYNC_REQUIRED" for item in all_external)
+    registered = {item["repo"]: item for item in all_external}
     for repo, expected_commit in expected_external.items():
         item = registered[repo]
         assert item["head_commit"] == expected_commit, repo
