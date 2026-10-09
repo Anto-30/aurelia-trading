@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_skill_federation.v1",
-  "generated_date": "2026-10-08",
+  "generated_date": "2026-10-09",
   "purpose": "Research/engineering capability federation. No external agent, skill, plugin, MCP server, hook, or marketplace entry may obtain capital authority.",
   "default_policy": {
     "external_code_execution": "DENY_BY_DEFAULT",
@@ -827,11 +827,131 @@
         "JEV",
         "AURELIA"
       ]
+    },
+    {
+      "name": "crypto-signal",
+      "owner": "CryptoSignal",
+      "repo": "CryptoSignal/Crypto-Signal",
+      "pinned_commit": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "capabilities": [
+        "crypto-technical-analysis",
+        "signal-research",
+        "legacy-bot-reference"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "name": "codex-first-customer-finder",
+      "owner": "Kappaemme-git",
+      "repo": "Kappaemme-git/codex-first-customer-finder-skill",
+      "pinned_commit": "d3f6964bd989745ac183edbd545c588a68451146",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "customer-discovery",
+        "public-signal-research",
+        "evidence-backed-prospecting"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "name": "finding-unknowns-skills",
+      "owner": "Neeeophytee",
+      "repo": "Neeeophytee/finding-unknowns-skills",
+      "pinned_commit": "ca5696a0f08d2de6b2997fff1d6cc05c3ed587cc",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "requirements-discovery",
+        "unknowns-analysis",
+        "assumption-testing",
+        "context-management",
+        "regression-verification"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "AURELIA"
+      ]
+    },
+    {
+      "name": "findjobs-agent",
+      "owner": "he-yufeng",
+      "repo": "he-yufeng/FindJobs-Agent",
+      "pinned_commit": "591fe6b451db98fe0bebb8f92a7b9902b0fd6079",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "skill-analysis",
+        "job-search",
+        "resume-scoring",
+        "interview-structuring"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "name": "buildwithclaude",
+      "owner": "davepoon",
+      "repo": "davepoon/buildwithclaude",
+      "pinned_commit": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "claude-skill-discovery",
+        "plugin-discovery",
+        "agent-catalogue",
+        "hook-discovery"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ]
+    },
+    {
+      "name": "workersio-skills",
+      "owner": "workersio",
+      "repo": "workersio/skills",
+      "pinned_commit": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "bug-triage",
+        "bug-fixing",
+        "regression-testing",
+        "software-debugging"
+      ],
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "AURELIA"
+      ]
     }
   ],
   "last_sync": {
-    "completed_at": "2026-10-08",
-    "source": "user-supplied agent-workspace repositories",
+    "completed_at": "2026-10-09",
+    "source": "user-supplied GitHub repositories; commits pinned from default branches",
     "targets": [
       "GrokBot",
       "JEV",
@@ -848,7 +968,7 @@
       "CopilotKit/OpenDots"
     ],
     "physical_runtime_install": "NOT_CLAIMED",
-    "assignment_policy": "All known AURELIA agents assigned to every new repository",
+    "assignment_policy": "Mapped to canonical agent IDs. User label 'Dev' is not a separate registered agent; use ClaudeCode for engineering workflow until a distinct runtime identity is verified.",
     "assigned_agents": [
       "AURELIA",
       "ClaudeCode",
@@ -943,6 +1063,75 @@
           "ClaudeCode",
           "GrokBot",
           "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      }
+    ],
+    "latest_batch": [
+      {
+        "repo": "CryptoSignal/Crypto-Signal",
+        "pinned_commit": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
+        "assigned_agents": [
+          "KimiK3",
+          "GrokBot",
+          "ClaudeCode",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "Kappaemme-git/codex-first-customer-finder-skill",
+        "pinned_commit": "d3f6964bd989745ac183edbd545c588a68451146",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "Neeeophytee/finding-unknowns-skills",
+        "pinned_commit": "ca5696a0f08d2de6b2997fff1d6cc05c3ed587cc",
+        "assigned_agents": [
+          "ClaudeCode",
+          "JEV",
+          "GrokBot",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "he-yufeng/FindJobs-Agent",
+        "pinned_commit": "591fe6b451db98fe0bebb8f92a7b9902b0fd6079",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "davepoon/buildwithclaude",
+        "pinned_commit": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
+        "assigned_agents": [
+          "ClaudeCode",
+          "GrokBot",
+          "JEV",
+          "AURELIA"
+        ],
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "workersio/skills",
+        "pinned_commit": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
+        "assigned_agents": [
+          "ClaudeCode",
+          "JEV",
+          "GrokBot",
           "AURELIA"
         ],
         "physical_runtime_install": "NOT_CLAIMED"
