@@ -2254,6 +2254,266 @@
         "JEV"
       ],
       "integration_note": "Sandbox-only CLI review. It can generate provider configuration; never write secrets or config into production hosts automatically."
+    },
+    {
+      "name": "pineforge-4pass-pineforge-engine",
+      "owner": "pineforge-4pass",
+      "repo": "pineforge-4pass/pineforge-engine",
+      "pinned_commit": "873b25daa00687cd2b9b9d6b2e49c57149227edd",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "pine-script-tooling",
+        "research-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "pinecone-io-pinecone-claude-code-plugin",
+      "owner": "pinecone-io",
+      "repo": "pinecone-io/pinecone-claude-code-plugin",
+      "pinned_commit": "c383d38b5cc3c5ec219f2e68026e47ffbf46524a",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "developer-tooling",
+        "toolchain-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "tmustier-pine-of-glass",
+      "owner": "tmustier",
+      "repo": "tmustier/pine-of-glass",
+      "pinned_commit": "6e7dd5fd613198fee9fff71df1bc45a579030cce",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "developer-tooling",
+        "reference-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "faustos88-pydantic-ai-pinescript-expert",
+      "owner": "FaustoS88",
+      "repo": "FaustoS88/Pydantic-AI-Pinescript-Expert",
+      "pinned_commit": "03cbd93c486435df08d70185fbab9aa61fff5fbb",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "developer-tooling",
+        "research-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "be-thomas-openpinescript",
+      "owner": "be-thomas",
+      "repo": "be-thomas/OpenPineScript",
+      "pinned_commit": "a793e719043a0a05dc7c184b04ef4ad6985d0de9",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "pine-script-tooling",
+        "research-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "jpantsjoha-pinescript-vscode-extension",
+      "owner": "jpantsjoha",
+      "repo": "jpantsjoha/pinescript-vscode-extension",
+      "pinned_commit": "b81aa3d88f6327328ebf84b851757bd6266e56f8",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "pine-script-tooling",
+        "toolchain-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "double232-pinescript-skill",
+      "owner": "double232",
+      "repo": "double232/pinescript-skill",
+      "pinned_commit": "107fd4c6f4abd6cf64639040d6d67b42d130aa3d",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "pine-script-tooling",
+        "reference-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "gugu91-pinet",
+      "owner": "gugu91",
+      "repo": "gugu91/pinet",
+      "pinned_commit": "78b24b7ce6abd3e7cb793b31a399041c7d6a3c7a",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "developer-tooling",
+        "toolchain-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "folknor-pine-tools",
+      "owner": "folknor",
+      "repo": "folknor/pine-tools",
+      "pinned_commit": "3dd9f3c941ece3368e500360dd9e6e125ad396f6",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "developer-tooling",
+        "toolchain-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "dharmanan-pinescript-coder",
+      "owner": "dharmanan",
+      "repo": "dharmanan/PineScript-coder",
+      "pinned_commit": "5f4c0f65e58b60860a920c2c59670ed21b1a9eaa",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "pine-script-tooling",
+        "research-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "dotsystemsdevs-pineflow",
+      "owner": "dotsystemsdevs",
+      "repo": "dotsystemsdevs/pineflow",
+      "pinned_commit": "8d2dbbc2a5b3061d102c6beb2e9070c4c4f05e3d",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "developer-tooling",
+        "reference-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "batonogov-pine",
+      "owner": "batonogov",
+      "repo": "batonogov/pine",
+      "pinned_commit": "c5ed7a4c4744c4dfd4ff88dd20cc94a2c81b96d1",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "developer-tooling",
+        "toolchain-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "edeng23-pines",
+      "owner": "edeng23",
+      "repo": "edeng23/pines",
+      "pinned_commit": "c6020543236360c92adff8ee48d621b1d4b3759f",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "developer-tooling",
+        "toolchain-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "thefractalyst-pinemcp",
+      "owner": "TheFractalyst",
+      "repo": "TheFractalyst/PineMCP",
+      "pinned_commit": "c630de784c795d8abc5e15780881f5237dba8bdc",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "mcp-tooling",
+        "sandbox-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "85599-pinesprout",
+      "owner": "85599",
+      "repo": "85599/pinesprout",
+      "pinned_commit": "48bcea15275351869dffa1a3ba5fa6ffebd1f983",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "pine-script-tooling",
+        "research-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "hasnocool-tradingview-script-downloader",
+      "owner": "hasnocool",
+      "repo": "hasnocool/tradingview-script-downloader",
+      "pinned_commit": "997d5417235c4fa9d4e20d56b02fe6b0fd3fd37d",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "developer-tooling",
+        "reference-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "coocolab-coocolab-tradingview-mcp",
+      "owner": "coocolab",
+      "repo": "coocolab/Coocolab-Tradingview-MCP",
+      "pinned_commit": "cd16a7dc038762688e7807a26285a26337d6fc60",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "mcp-tooling",
+        "sandbox-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "daviddme-tradingview-indicator-search-mcp-server",
+      "owner": "daviddme",
+      "repo": "daviddme/tradingview-indicator-search-mcp-server",
+      "pinned_commit": "1f8648936088cf189e4ac1a23b55c522c11d15cd",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "mcp-tooling",
+        "sandbox-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "kashsuks-pinel",
+      "owner": "kashsuks",
+      "repo": "kashsuks/Pinel",
+      "pinned_commit": "1b10a5f8c8f772a27360d77dae33be5137bc7a66",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "developer-tooling",
+        "toolchain-only",
+        "source-review"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "pinecone-io-getting-started-with-pinecone-webinar",
+      "owner": "pinecone-io",
+      "repo": "pinecone-io/getting-started-with-pinecone-webinar",
+      "pinned_commit": "76068a1b11a5c33dd82192f31ba5377c46c656cf",
+      "trust": "COMMUNITY",
+      "capabilities": [
+        "developer-tooling",
+        "reference-only",
+        "source-review"
+      ],
+      "capital_authority": false
     }
   ],
   "last_sync": {
