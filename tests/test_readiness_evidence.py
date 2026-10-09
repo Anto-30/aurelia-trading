@@ -82,6 +82,36 @@ class ReadinessEvidenceTests(unittest.TestCase):
         self.assertEqual("UNKNOWN", report["deriv"]["session"])
         self.assertFalse(report["deriv"]["balance_fresh"])
 
+    def test_invalid_auth_mode_cannot_pass_credentials_gate(self) -> None:
+        os.environ.update({
+            "DERIV_AUTH_TOKEN": "test-token",
+            "DERIV_EXPECTED_LOGINID": "",
+            "DERIV_AUTHORIZED_ACCOUNT_ID": "CRTEST",
+            "DERIV_APP_ID": "12345",
+            "DERIV_AUTH_MODE": "deriv_auth_token",
+            "DERIV_EXPECTED_CURRENCY": "USD",
+        })
+        with tempfile.TemporaryDirectory() as tmp:
+            report = evaluate(Path(tmp))
+        self.assertFalse(report["deriv"]["credentials_present"])
+        credentials_gate = next(
+            gate for gate in report["blockers"] if gate["gate"] == "DERIV_CREDENTIALS"
+        )
+        self.assertEqual(credentials_gate["status"], "FAIL")
+
+    def test_oauth_accepts_authorized_account_alias_without_pat_app_id(self) -> None:
+        os.environ.update({
+            "DERIV_AUTH_TOKEN": "test-token",
+            "DERIV_EXPECTED_LOGINID": "",
+            "DERIV_AUTHORIZED_ACCOUNT_ID": "CRTEST",
+            "DERIV_APP_ID": "",
+            "DERIV_AUTH_MODE": "oauth",
+            "DERIV_EXPECTED_CURRENCY": "USD",
+        })
+        with tempfile.TemporaryDirectory() as tmp:
+            report = evaluate(Path(tmp))
+        self.assertTrue(report["deriv"]["credentials_present"])
+
     def test_tampered_evidence_returns_to_unknown(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

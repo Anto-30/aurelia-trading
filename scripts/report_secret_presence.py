@@ -23,16 +23,20 @@ def main() -> int:
         print(f"{name}_PRESENT={'true' if present(name) else 'false'}")
 
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+    auth_mode_valid = auth_mode in {"pat", "oauth"}
     auth_present = present("DERIV_AUTH_TOKEN") or present("DERIV_PAT")
     login_present = present("DERIV_EXPECTED_LOGINID") or present("DERIV_AUTHORIZED_ACCOUNT_ID")
     currency_present = present("DERIV_EXPECTED_CURRENCY")
     deriv_core = auth_present and login_present and currency_present
-    deriv_configured = deriv_core and (
-        auth_mode != "pat" or present("DERIV_APP_ID")
+    deriv_configured = (
+        deriv_core
+        and auth_mode_valid
+        and (auth_mode != "pat" or present("DERIV_APP_ID"))
     )
 
     print(f"DERIV_AUTH_MODE_PRESENT={'true' if present('DERIV_AUTH_MODE') else 'false'}")
-    print(f"DERIV_AUTH_MODE_EFFECTIVE={auth_mode}")
+    print(f"DERIV_AUTH_MODE_VALID={'true' if auth_mode_valid else 'false'}")
+    print(f"DERIV_AUTH_MODE_EFFECTIVE={auth_mode.upper() if auth_mode_valid else 'INVALID'}")
     print(f"DERIV_AUTH_CONFIGURED={'true' if deriv_configured else 'false'}")
     print("FINAL_EXECUTION_AUTHORIZATION=false")
     print("LIVE_EXECUTION=BLOCKED")

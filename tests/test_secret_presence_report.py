@@ -49,6 +49,25 @@ def test_report_is_boolean_only_and_preserves_capital_lock() -> None:
     assert "CAPITAL_MOVEMENT_PERMITTED=false" in result.stdout
 
 
+def test_invalid_auth_mode_is_rejected_and_not_echoed() -> None:
+    invalid_mode = "deriv_auth_token"
+    result = run_report(
+        DERIV_AUTH_TOKEN="FAKE_TOKEN",
+        DERIV_APP_ID="12345",
+        DERIV_EXPECTED_LOGINID="CRTEST",
+        DERIV_EXPECTED_CURRENCY="USD",
+        DERIV_AUTH_MODE=invalid_mode,
+    )
+
+    assert result.returncode == 0
+    assert invalid_mode not in result.stdout
+    assert "DERIV_AUTH_MODE_VALID=false" in result.stdout
+    assert "DERIV_AUTH_MODE_EFFECTIVE=INVALID" in result.stdout
+    assert "DERIV_AUTH_CONFIGURED=false" in result.stdout
+    assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
+    assert "LIVE_EXECUTION=BLOCKED" in result.stdout
+
+
 def test_missing_bindings_report_false_without_defaults() -> None:
     result = run_report(
         DERIV_AUTH_TOKEN="",
