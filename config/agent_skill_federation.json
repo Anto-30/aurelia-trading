@@ -947,6 +947,702 @@
         "GrokBot",
         "AURELIA"
       ]
+    },
+    {
+      "name": "utkusen-sast-skills",
+      "owner": "utkusen",
+      "repo": "utkusen/sast-skills",
+      "pinned_commit": "db52227eab1043bf122cbff7206fac6708b4d6c9",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "SAST",
+        "secure-code-review",
+        "vulnerability-triage",
+        "security-checklists"
+      ],
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "vinzent03-obsidian-git",
+      "owner": "Vinzent03",
+      "repo": "Vinzent03/obsidian-git",
+      "pinned_commit": "ee068b6110579ecb53332ce530b969902d9e2cd1",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "vault-version-control",
+        "git-sync",
+        "backup-and-restore"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "obsidianmd-obsidian-clipper",
+      "owner": "obsidianmd",
+      "repo": "obsidianmd/obsidian-clipper",
+      "pinned_commit": "6d56d618b00bd970aa738d6a7a61edee27783e81",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "web-clipping",
+        "capture-to-vault",
+        "browser-workflows"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "eugeniughelbur-obsidian-second-brain",
+      "owner": "eugeniughelbur",
+      "repo": "eugeniughelbur/obsidian-second-brain",
+      "pinned_commit": "9dc3ca8742068422fa3c3c86f3ac01b0cfe618c2",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "vault-organization",
+        "knowledge-management",
+        "templates"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "chhoumann-quickadd",
+      "owner": "chhoumann",
+      "repo": "chhoumann/quickadd",
+      "pinned_commit": "e199d12a582b10d08ebd97086c553f11ebbc7c6b",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "quick-capture",
+        "command-workflows",
+        "templates",
+        "automation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "groepl-obsidian-templates",
+      "owner": "groepl",
+      "repo": "groepl/Obsidian-Templates",
+      "pinned_commit": "4d02a44a831fcc2a8ba624b337f9b8321fd53940",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "vault-templates",
+        "note-structure",
+        "metadata-conventions"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "rait-09-obsidian-agent-client",
+      "owner": "RAIT-09",
+      "repo": "RAIT-09/obsidian-agent-client",
+      "pinned_commit": "3d069c91636588be4e65d955e670403a9ea642d8",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-client",
+        "vault-agent-workflows",
+        "MCP-integration-reference"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "yakitrak-notesmd-cli",
+      "owner": "Yakitrak",
+      "repo": "Yakitrak/notesmd-cli",
+      "pinned_commit": "0b6f10fbab406b728770e1f9b7806fa4472d2e63",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "vault-cli",
+        "markdown-operations",
+        "local-automation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "glowingjade-obsidian-smart-composer",
+      "owner": "glowingjade",
+      "repo": "glowingjade/obsidian-smart-composer",
+      "pinned_commit": "6b38ab3c57e03c5c6cbeb79815277857df59cbd8",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "AI-writing-assistance",
+        "vault-augmentation",
+        "context-retrieval"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "oleeskild-obsidian-digital-garden",
+      "owner": "oleeskild",
+      "repo": "oleeskild/obsidian-digital-garden",
+      "pinned_commit": "eb46bd40902a90f8dd5ad89623be9cd00f4ff2a1",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "publishing-workflows",
+        "static-site-generation",
+        "note-publishing"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "pyrochlore-obsidian-tracker",
+      "owner": "pyrochlore",
+      "repo": "pyrochlore/obsidian-tracker",
+      "pinned_commit": "933fa7537580fe79ecf567e83d5cb45ba18139e0",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "frontmatter-tracking",
+        "charting",
+        "note-metadata-analysis"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "obsidianmd-obsidian-importer",
+      "owner": "obsidianmd",
+      "repo": "obsidianmd/obsidian-importer",
+      "pinned_commit": "9e574b819ddfe3179837143e9db5e79140463924",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "import-migration",
+        "format-conversion",
+        "vault-migration"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "platers-obsidian-linter",
+      "owner": "platers",
+      "repo": "platers/obsidian-linter",
+      "pinned_commit": "e07b4994503abfa49be12833fcd82cbabd9e9618",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "markdown-linting",
+        "frontmatter-normalization",
+        "formatting"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "tfthacker-obsidian42-brat",
+      "owner": "TfTHacker",
+      "repo": "TfTHacker/obsidian42-brat",
+      "pinned_commit": "e9484d8f74b3b75ef59e33c9c9db139abaf039af",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "beta-plugin-management",
+        "plugin-testing",
+        "release-validation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "brianpetro-obsidian-smart-connections",
+      "owner": "brianpetro",
+      "repo": "brianpetro/obsidian-smart-connections",
+      "pinned_commit": "bf5ef447509d5e009cde8c83b68e09d8c3016b03",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "semantic-search",
+        "embeddings",
+        "vault-retrieval",
+        "knowledge-graphs"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "coddingtonbear-obsidian-local-rest-api",
+      "owner": "coddingtonbear",
+      "repo": "coddingtonbear/obsidian-local-rest-api",
+      "pinned_commit": "532af35659251a008a1b01f0f89aaa73205ce58d",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "local-vault-REST-API",
+        "built-in-MCP-server",
+        "authenticated-vault-access"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "silentvoid13-templater",
+      "owner": "SilentVoid13",
+      "repo": "SilentVoid13/Templater",
+      "pinned_commit": "c51cf118fd8ad0c451dc75bc602955b8f5667145",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "template-scripting",
+        "note-automation",
+        "dynamic-content"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "axtonliu-axton-obsidian-visual-skills",
+      "owner": "axtonliu",
+      "repo": "axtonliu/axton-obsidian-visual-skills",
+      "pinned_commit": "1265976d9746a84858b4b7b42fb86a215aa93de9",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "visual-design-skills",
+        "visualization",
+        "Obsidian-layout-design"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "sytone-obsidian-remote",
+      "owner": "sytone",
+      "repo": "sytone/obsidian-remote",
+      "pinned_commit": "f9b3206349ffe553776658251e1a0cef459d3efc",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "remote-access",
+        "containerization",
+        "self-hosted-integration"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "obsidianmd-obsidian-api",
+      "owner": "obsidianmd",
+      "repo": "obsidianmd/obsidian-api",
+      "pinned_commit": "9abd9605ce081383674aae1ed111c456edde0688",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "plugin-development",
+        "Obsidian-API",
+        "type-definitions"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "ar9av-obsidian-wiki",
+      "owner": "Ar9av",
+      "repo": "Ar9av/obsidian-wiki",
+      "pinned_commit": "4a0630baeb83b027e0beb7147aa4e31c4be6906b",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "wiki-structure",
+        "knowledge-base",
+        "linked-notes"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "obsidian-tasks-group-obsidian-tasks",
+      "owner": "obsidian-tasks-group",
+      "repo": "obsidian-tasks-group/obsidian-tasks",
+      "pinned_commit": "cc2afa8d77767858fb6014cae1cf03c4b6d0b44c",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "task-querying",
+        "project-management",
+        "task-automation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "zsviczian-obsidian-excalidraw-plugin",
+      "owner": "zsviczian",
+      "repo": "zsviczian/obsidian-excalidraw-plugin",
+      "pinned_commit": "f30b4c5d3dcb66ac76ced8f05d9e95409ee94c79",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "diagramming",
+        "whiteboarding",
+        "visual-thinking"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "vrtmrz-obsidian-livesync",
+      "owner": "vrtmrz",
+      "repo": "vrtmrz/obsidian-livesync",
+      "pinned_commit": "14141446a14deab3353a8864dee41e44c372d006",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "vault-replication",
+        "sync",
+        "self-hosting"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "agricidaniel-claude-obsidian",
+      "owner": "AgriciDaniel",
+      "repo": "AgriciDaniel/claude-obsidian",
+      "pinned_commit": "32ac5a02c4e082e4a5628ca810776375e134708e",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "Claude-Code-integration",
+        "vault-agent-workflows",
+        "MCP"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "obsidianmd-obsidian-sample-plugin",
+      "owner": "obsidianmd",
+      "repo": "obsidianmd/obsidian-sample-plugin",
+      "pinned_commit": "07ceb81d1fb3384af611ebf665a1ec42a7e5926d",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "plugin-development-starter",
+        "TypeScript",
+        "Obsidian-API"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "kepano-obsidian-skills",
+      "owner": "kepano",
+      "repo": "kepano/obsidian-skills",
+      "pinned_commit": "3ccff5338ea700537839b21900aa5358a0402c98",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "agent-skills",
+        "Obsidian-workflows",
+        "knowledge-management"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "obsidianmd-obsidian-help",
+      "owner": "obsidianmd",
+      "repo": "obsidianmd/obsidian-help",
+      "pinned_commit": "b95e59dab8b5d94ff06376f1437c8492f14da80d",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "official-documentation",
+        "Obsidian-usage",
+        "plugin-security"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "breferrari-obsidian-mind",
+      "owner": "breferrari",
+      "repo": "breferrari/obsidian-mind",
+      "pinned_commit": "d02e3ccfdff212544f77b67b48313d7b681ee28f",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "mind-mapping",
+        "knowledge-graph",
+        "note-organization"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "markuspfundstein-mcp-obsidian",
+      "owner": "MarkusPfundstein",
+      "repo": "MarkusPfundstein/mcp-obsidian",
+      "pinned_commit": "5ee0b84fa8319fd2fdf0db0ee1febb065e712a15",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "MCP-server",
+        "vault-read-write",
+        "agent-vault-integration"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "obsidianmd-obsidian-releases",
+      "owner": "obsidianmd",
+      "repo": "obsidianmd/obsidian-releases",
+      "pinned_commit": "6109807f61b87b06f08baf1641cf930636540b1d",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "official-release-metadata",
+        "community-plugin-index",
+        "release-compatibility"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "logancyang-obsidian-copilot",
+      "owner": "logancyang",
+      "repo": "logancyang/obsidian-copilot",
+      "pinned_commit": "60e4512afab2d5e8e0e9b2bcc591c418a5cec507",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "AI-chat",
+        "vault-retrieval",
+        "note-assistant"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
+    },
+    {
+      "name": "tuan3w-obsidian-template",
+      "owner": "tuan3w",
+      "repo": "tuan3w/obsidian-template",
+      "pinned_commit": "2730e5b215fcd000dd714863f47893e2634fd73e",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "note-templates",
+        "vault-organization",
+        "template-reference",
+        "maintenance-review"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "capital_authority": false
     }
   ],
   "last_sync": {

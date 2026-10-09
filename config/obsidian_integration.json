@@ -1,0 +1,101 @@
+{
+  "schema": "aurelia.obsidian_integration.v1",
+  "generated_date": "2026-10-09",
+  "status": "REPOSITORY_CONFIGURED_CONNECTION_NOT_ESTABLISHED",
+  "purpose": "A governed integration plan for using an owner-controlled Obsidian vault for cross-agent notes, research summaries, handoffs, and AURELIA operational documentation.",
+  "source_registry": "config/external_repo_federation.json",
+  "skill_registry": "config/agent_skill_federation.json",
+  "shared_skill_paths": [
+    "skills/obsidian-vault-integration/SKILL.md",
+    ".agents/skills/obsidian-vault-integration/SKILL.md",
+    ".claude/skills/obsidian-vault-integration/SKILL.md",
+    ".grok/skills/obsidian-vault-integration/SKILL.md"
+  ],
+  "requested_clients": {
+    "AURELIA": {
+      "status": "ROUTED_IN_REPOSITORY",
+      "details": "Obsidian capabilities are pinned in both source registries; the runtime does not yet have a live vault connection."
+    },
+    "Claude": {
+      "status": "PORTABLE_SKILL_PACKAGED_IN_REPOSITORY",
+      "details": "The skill is supplied for Claude Code through the repository; installation into an external/private Claude account is not asserted."
+    },
+    "Grok": {
+      "status": "PORTABLE_SKILL_PACKAGED_IN_REPOSITORY",
+      "details": "The skill is supplied through the repository's .grok skill path; account-level connection is not asserted."
+    },
+    "ChatGPT": {
+      "status": "NO_DIRECT_OBSIDIAN_CONNECTOR_AVAILABLE_IN_CURRENT_SESSION",
+      "details": "Can use repository docs and pinned source context. Live vault reads/writes require an explicitly configured client connector or user-provided approved integration."
+    },
+    "DeveloperTools": {
+      "status": "PORTABLE_SKILL_PACKAGED_IN_REPOSITORY",
+      "details": "Shared agent skill is included under .agents/skills for compatible developer-agent runners."
+    }
+  },
+  "preferred_transport": {
+    "repo": "coddingtonbear/obsidian-local-rest-api",
+    "pinned_commit": "532af35659251a008a1b01f0f89aaa73205ce58d",
+    "endpoint": "https://127.0.0.1:27124/mcp/",
+    "binding": "127.0.0.1",
+    "authentication": "Bearer API key stored locally in the user's client secret store",
+    "tls": "Verify TLS certificate; trust the plugin's local CA instead of disabling verification",
+    "initial_access": "READ_ONLY",
+    "note": "This repository version documents a built-in MCP server. Do not enable a second wrapper by default."
+  },
+  "alternatives": [
+    {
+      "repo": "MarkusPfundstein/mcp-obsidian",
+      "pinned_commit": "5ee0b84fa8319fd2fdf0db0ee1febb065e712a15",
+      "status": "SANDBOX_ONLY_ALTERNATIVE",
+      "note": "Separate MCP wrapper for the Local REST API; not selected as primary because it overlaps the primary plugin's built-in MCP functionality."
+    }
+  ],
+  "permissions": {
+    "default_mode": "READ_ONLY",
+    "writes_enabled": false,
+    "allowed_write_paths": [
+      "AURELIA/Integration/",
+      "AURELIA/Research/"
+    ],
+    "delete_allowed": false,
+    "command_execution_allowed": false,
+    "public_publishing_allowed": false,
+    "full_vault_export_allowed": false,
+    "production_secret_access": false,
+    "capital_authority": false,
+    "live_order_authority": false
+  },
+  "never_store_in_vault": [
+    "Deriv PAT/OAuth tokens",
+    "Deriv OTPs",
+    "SSH private keys",
+    "API keys and passwords",
+    "Environment files",
+    "Raw account login IDs",
+    "Private key material"
+  ],
+  "installation_state": {
+    "community_plugins_installed_by_this_change": false,
+    "repository_sources_physically_cloned_to_user_devices": false,
+    "external_accounts_connected": false,
+    "local_vault_authenticated": false,
+    "account_email_used": false,
+    "reason": "No connected Obsidian instance/device or authenticated vault API was available. Obsidian account sign-in, where required for Obsidian Sync, must be completed by the owner through Obsidian's own secure sign-in flow."
+  },
+  "community_plugin_policy": {
+    "default": "SANDBOX_ONLY",
+    "manual_review_required": true,
+    "restricted_mode_must_not_be_disabled_automatically": true,
+    "review_license_dependencies_network_calls_filesystem_access_and_update_path": true,
+    "git_or_livesync_secret_hygiene_required": true,
+    "public_digital_garden_requires_separate_content_review": true
+  },
+  "source_pin_policy": {
+    "unique_repositories": true,
+    "pin_to_verified_upstream_commit": true,
+    "update_source_registry_only_after_review": true,
+    "external_code_execution": "DENY_BY_DEFAULT",
+    "no_capital_authority": true
+  }
+}

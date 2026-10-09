@@ -3078,6 +3078,801 @@
       "source_url": "https://github.com/workersio/skills",
       "head_commit": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
       "integration_note": "Bug-fixing skills; external execution deny-by-default."
+    },
+    {
+      "repo": "utkusen/sast-skills",
+      "category": "security-skills",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/utkusen/sast-skills",
+      "head_commit": "db52227eab1043bf122cbff7206fac6708b4d6c9",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "SAST",
+        "secure-code-review",
+        "vulnerability-triage",
+        "security-checklists"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "Vinzent03/obsidian-git",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Vinzent03/obsidian-git",
+      "head_commit": "ee068b6110579ecb53332ce530b969902d9e2cd1",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "vault-version-control",
+        "git-sync",
+        "backup-and-restore"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "obsidianmd/obsidian-clipper",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/obsidianmd/obsidian-clipper",
+      "head_commit": "6d56d618b00bd970aa738d6a7a61edee27783e81",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "web-clipping",
+        "capture-to-vault",
+        "browser-workflows"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "eugeniughelbur/obsidian-second-brain",
+      "category": "obsidian-vault-template",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/eugeniughelbur/obsidian-second-brain",
+      "head_commit": "9dc3ca8742068422fa3c3c86f3ac01b0cfe618c2",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "vault-organization",
+        "knowledge-management",
+        "templates"
+      ],
+      "integration_note": "Reference-only source: use for documentation/patterns; do not execute or vendor directly into AURELIA capital/execution paths."
+    },
+    {
+      "repo": "chhoumann/quickadd",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/chhoumann/quickadd",
+      "head_commit": "e199d12a582b10d08ebd97086c553f11ebbc7c6b",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "quick-capture",
+        "command-workflows",
+        "templates",
+        "automation"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "groepl/Obsidian-Templates",
+      "category": "obsidian-templates",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/groepl/Obsidian-Templates",
+      "head_commit": "4d02a44a831fcc2a8ba624b337f9b8321fd53940",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "vault-templates",
+        "note-structure",
+        "metadata-conventions"
+      ],
+      "integration_note": "Reference-only source: use for documentation/patterns; do not execute or vendor directly into AURELIA capital/execution paths."
+    },
+    {
+      "repo": "RAIT-09/obsidian-agent-client",
+      "category": "obsidian-agent-client",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/RAIT-09/obsidian-agent-client",
+      "head_commit": "3d069c91636588be4e65d955e670403a9ea642d8",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "agent-client",
+        "vault-agent-workflows",
+        "MCP-integration-reference"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "Yakitrak/notesmd-cli",
+      "category": "obsidian-cli",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Yakitrak/notesmd-cli",
+      "head_commit": "0b6f10fbab406b728770e1f9b7806fa4472d2e63",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "vault-cli",
+        "markdown-operations",
+        "local-automation"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "glowingjade/obsidian-smart-composer",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/glowingjade/obsidian-smart-composer",
+      "head_commit": "6b38ab3c57e03c5c6cbeb79815277857df59cbd8",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "AI-writing-assistance",
+        "vault-augmentation",
+        "context-retrieval"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "oleeskild/obsidian-digital-garden",
+      "category": "obsidian-publishing",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/oleeskild/obsidian-digital-garden",
+      "head_commit": "eb46bd40902a90f8dd5ad89623be9cd00f4ff2a1",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "publishing-workflows",
+        "static-site-generation",
+        "note-publishing"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "pyrochlore/obsidian-tracker",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/pyrochlore/obsidian-tracker",
+      "head_commit": "933fa7537580fe79ecf567e83d5cb45ba18139e0",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "frontmatter-tracking",
+        "charting",
+        "note-metadata-analysis"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "obsidianmd/obsidian-importer",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/obsidianmd/obsidian-importer",
+      "head_commit": "9e574b819ddfe3179837143e9db5e79140463924",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "import-migration",
+        "format-conversion",
+        "vault-migration"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "platers/obsidian-linter",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/platers/obsidian-linter",
+      "head_commit": "e07b4994503abfa49be12833fcd82cbabd9e9618",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "markdown-linting",
+        "frontmatter-normalization",
+        "formatting"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "TfTHacker/obsidian42-brat",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/TfTHacker/obsidian42-brat",
+      "head_commit": "e9484d8f74b3b75ef59e33c9c9db139abaf039af",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "beta-plugin-management",
+        "plugin-testing",
+        "release-validation"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "brianpetro/obsidian-smart-connections",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/brianpetro/obsidian-smart-connections",
+      "head_commit": "bf5ef447509d5e009cde8c83b68e09d8c3016b03",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "semantic-search",
+        "embeddings",
+        "vault-retrieval",
+        "knowledge-graphs"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "coddingtonbear/obsidian-local-rest-api",
+      "category": "obsidian-local-api",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/coddingtonbear/obsidian-local-rest-api",
+      "head_commit": "532af35659251a008a1b01f0f89aaa73205ce58d",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "local-vault-REST-API",
+        "built-in-MCP-server",
+        "authenticated-vault-access"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "SilentVoid13/Templater",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/SilentVoid13/Templater",
+      "head_commit": "c51cf118fd8ad0c451dc75bc602955b8f5667145",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "template-scripting",
+        "note-automation",
+        "dynamic-content"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "axtonliu/axton-obsidian-visual-skills",
+      "category": "obsidian-skills",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/axtonliu/axton-obsidian-visual-skills",
+      "head_commit": "1265976d9746a84858b4b7b42fb86a215aa93de9",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "visual-design-skills",
+        "visualization",
+        "Obsidian-layout-design"
+      ],
+      "integration_note": "Reference-only source: use for documentation/patterns; do not execute or vendor directly into AURELIA capital/execution paths."
+    },
+    {
+      "repo": "sytone/obsidian-remote",
+      "category": "obsidian-remote-access",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/sytone/obsidian-remote",
+      "head_commit": "f9b3206349ffe553776658251e1a0cef459d3efc",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "remote-access",
+        "containerization",
+        "self-hosted-integration"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "obsidianmd/obsidian-api",
+      "category": "obsidian-api",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/obsidianmd/obsidian-api",
+      "head_commit": "9abd9605ce081383674aae1ed111c456edde0688",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "plugin-development",
+        "Obsidian-API",
+        "type-definitions"
+      ],
+      "integration_note": "Reference-only source: use for documentation/patterns; do not execute or vendor directly into AURELIA capital/execution paths."
+    },
+    {
+      "repo": "Ar9av/obsidian-wiki",
+      "category": "obsidian-wiki",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Ar9av/obsidian-wiki",
+      "head_commit": "4a0630baeb83b027e0beb7147aa4e31c4be6906b",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "wiki-structure",
+        "knowledge-base",
+        "linked-notes"
+      ],
+      "integration_note": "Reference-only source: use for documentation/patterns; do not execute or vendor directly into AURELIA capital/execution paths."
+    },
+    {
+      "repo": "obsidian-tasks-group/obsidian-tasks",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/obsidian-tasks-group/obsidian-tasks",
+      "head_commit": "cc2afa8d77767858fb6014cae1cf03c4b6d0b44c",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "task-querying",
+        "project-management",
+        "task-automation"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "zsviczian/obsidian-excalidraw-plugin",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/zsviczian/obsidian-excalidraw-plugin",
+      "head_commit": "f30b4c5d3dcb66ac76ced8f05d9e95409ee94c79",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "diagramming",
+        "whiteboarding",
+        "visual-thinking"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "vrtmrz/obsidian-livesync",
+      "category": "obsidian-sync",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/vrtmrz/obsidian-livesync",
+      "head_commit": "14141446a14deab3353a8864dee41e44c372d006",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "vault-replication",
+        "sync",
+        "self-hosting"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "AgriciDaniel/claude-obsidian",
+      "category": "obsidian-agent-client",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/AgriciDaniel/claude-obsidian",
+      "head_commit": "32ac5a02c4e082e4a5628ca810776375e134708e",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "Claude-Code-integration",
+        "vault-agent-workflows",
+        "MCP"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "obsidianmd/obsidian-sample-plugin",
+      "category": "obsidian-api",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/obsidianmd/obsidian-sample-plugin",
+      "head_commit": "07ceb81d1fb3384af611ebf665a1ec42a7e5926d",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "plugin-development-starter",
+        "TypeScript",
+        "Obsidian-API"
+      ],
+      "integration_note": "Reference-only source: use for documentation/patterns; do not execute or vendor directly into AURELIA capital/execution paths."
+    },
+    {
+      "repo": "kepano/obsidian-skills",
+      "category": "obsidian-skills",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/kepano/obsidian-skills",
+      "head_commit": "3ccff5338ea700537839b21900aa5358a0402c98",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "agent-skills",
+        "Obsidian-workflows",
+        "knowledge-management"
+      ],
+      "integration_note": "Reference-only source: use for documentation/patterns; do not execute or vendor directly into AURELIA capital/execution paths."
+    },
+    {
+      "repo": "obsidianmd/obsidian-help",
+      "category": "obsidian-docs",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/obsidianmd/obsidian-help",
+      "head_commit": "b95e59dab8b5d94ff06376f1437c8492f14da80d",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "official-documentation",
+        "Obsidian-usage",
+        "plugin-security"
+      ],
+      "integration_note": "Reference-only source: use for documentation/patterns; do not execute or vendor directly into AURELIA capital/execution paths."
+    },
+    {
+      "repo": "breferrari/obsidian-mind",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/breferrari/obsidian-mind",
+      "head_commit": "d02e3ccfdff212544f77b67b48313d7b681ee28f",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "mind-mapping",
+        "knowledge-graph",
+        "note-organization"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "MarkusPfundstein/mcp-obsidian",
+      "category": "obsidian-mcp",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/MarkusPfundstein/mcp-obsidian",
+      "head_commit": "5ee0b84fa8319fd2fdf0db0ee1febb065e712a15",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "main",
+      "capabilities": [
+        "MCP-server",
+        "vault-read-write",
+        "agent-vault-integration"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "obsidianmd/obsidian-releases",
+      "category": "obsidian-docs",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/obsidianmd/obsidian-releases",
+      "head_commit": "6109807f61b87b06f08baf1641cf930636540b1d",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "official-release-metadata",
+        "community-plugin-index",
+        "release-compatibility"
+      ],
+      "integration_note": "Reference-only source: use for documentation/patterns; do not execute or vendor directly into AURELIA capital/execution paths."
+    },
+    {
+      "repo": "logancyang/obsidian-copilot",
+      "category": "obsidian-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/logancyang/obsidian-copilot",
+      "head_commit": "60e4512afab2d5e8e0e9b2bcc591c418a5cec507",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "AI-chat",
+        "vault-retrieval",
+        "note-assistant"
+      ],
+      "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "tuan3w/obsidian-template",
+      "category": "obsidian-vault-template",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/tuan3w/obsidian-template",
+      "head_commit": "2730e5b215fcd000dd714863f47893e2634fd73e",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "upstream_branch": "master",
+      "capabilities": [
+        "note-templates",
+        "vault-organization",
+        "template-reference",
+        "maintenance-review"
+      ],
+      "integration_note": "Reference-only source: use for documentation/patterns; do not execute or vendor directly into AURELIA capital/execution paths."
     }
   ],
   "pin_policy": {
