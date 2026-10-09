@@ -1721,12 +1721,14 @@
         "proxy-gateway",
         "cost-observability",
         "guardrails",
-        "load-balancing"
+        "load-balancing",
+        "gateway-security-review",
+        "provider-secret-boundaries"
       ],
       "capital_authority": false,
       "assigned_agents": [
-        "ClaudeCode",
         "GoogleAgentSkills",
+        "ClaudeCode",
         "GrokBot",
         "JEV",
         "AURELIA"
@@ -1742,13 +1744,16 @@
       "capabilities": [
         "agent-routing",
         "agent-control-plane",
-        "provider-integration"
+        "provider-integration",
+        "agent-orchestration",
+        "session-management",
+        "scheduler-review"
       ],
       "capital_authority": false,
       "assigned_agents": [
+        "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "GrokBot",
         "JEV",
         "AURELIA"
       ],
@@ -1763,12 +1768,14 @@
       "capabilities": [
         "official-documentation",
         "configuration-reference",
-        "security-advisories"
+        "security-advisories",
+        "LLM-gateway-documentation",
+        "security-advisory-reference"
       ],
       "capital_authority": false,
       "assigned_agents": [
+        "GLM",
         "ClaudeCode",
-        "GoogleAgentSkills",
         "JEV",
         "AURELIA"
       ],
@@ -1781,7 +1788,8 @@
       "pinned_commit": "1ef69ae92bf22600f9a42d15e3b992e1010c9a7e",
       "trust": "COMMUNITY_SANDBOX_ONLY",
       "capabilities": [
-        "legacy-proxy-reference"
+        "legacy-proxy-reference",
+        "deprecation-review"
       ],
       "capital_authority": false,
       "assigned_agents": [
@@ -1799,7 +1807,9 @@
       "trust": "COMMUNITY_SANDBOX_ONLY",
       "capabilities": [
         "isolated-claude-code-variants",
-        "custom-provider-configuration"
+        "custom-provider-configuration",
+        "Claude-Code-provider-variants",
+        "sandboxed-developer-tooling"
       ],
       "capital_authority": false,
       "assigned_agents": [
@@ -1817,7 +1827,9 @@
       "trust": "OFFICIAL_SECURITY_REVIEW_REQUIRED",
       "capabilities": [
         "pgvector-memory-reference",
-        "retrieval-architecture"
+        "retrieval-architecture",
+        "vector-memory-reference",
+        "RAG-integration"
       ],
       "capital_authority": false,
       "assigned_agents": [
@@ -1836,7 +1848,9 @@
       "trust": "COMMUNITY_SANDBOX_ONLY",
       "capabilities": [
         "rust-gateway-reference",
-        "coding-agent-provider-routing"
+        "coding-agent-provider-routing",
+        "Rust-gateway-prototype",
+        "benchmark-reference"
       ],
       "capital_authority": false,
       "assigned_agents": [
@@ -1855,7 +1869,9 @@
       "trust": "COMMUNITY_SANDBOX_ONLY",
       "capabilities": [
         "langchain-provider-adapter",
-        "multi-provider-model-routing"
+        "multi-provider-model-routing",
+        "LangChain-provider-adapter",
+        "dependency-compatibility-review"
       ],
       "capital_authority": false,
       "assigned_agents": [
@@ -2055,6 +2071,8 @@
         ],
         "physical_runtime_install": "NOT_CLAIMED"
       }
-    ]
+    ],
+    "date": "2026-10-09",
+    "summary": "Eight LiteLLM-related sources pinned, role-routed, and restricted to sandbox/reference/toolchain analysis."
   }
 }
