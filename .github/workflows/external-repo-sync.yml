@@ -30,9 +30,14 @@ jobs:
           assert p["global_controls"]["live_order_submission"] is False
           assert p["global_controls"]["secret_reading"] is False
           assert p["global_controls"]["external_code_execution"] == "DENY_BY_DEFAULT"
-          assert len(p["repositories"]) == 103
-          assert all(x["source_url"].startswith("https://github.com/") for x in p["repositories"])
+          repos=p["repositories"]
+          assert isinstance(repos, list) and len(repos) > 0
+          assert all(isinstance(x.get("repo"), str) and "/" in x["repo"] for x in repos)
+          assert all(x.get("mode") in {"RESEARCH_ONLY","SANDBOX_ONLY","TOOLCHAIN_ONLY","REFERENCE_ONLY"} for x in repos)
+          assert all(x.get("source_url", "").startswith("https://github.com/") for x in repos)
+          assert all(x.get("capital_authority", False) is False for x in repos)
           print("EXTERNAL_REPO_POLICY=PASS")
+          print("EXTERNAL_REPO_COUNT=%d" % len(repos))
           PY
       - name: Sync public repository heads
         run: |

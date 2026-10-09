@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-08",
+  "generated_date": "2026-10-09",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -1418,7 +1418,8 @@
         "volatility-targeting",
         "historical-performance-analysis"
       ],
-      "integration_note": "Research/backtest reference only. Validate any imported methodology independently against AURELIA OOS and cost controls."
+      "integration_note": "Research/backtest reference only. Validate any imported methodology independently against AURELIA OOS and cost controls.",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "stablyai/orca",
@@ -1432,7 +1433,7 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/stablyai/orca",
-      "head_commit": "8d049b594d5de477a0a430b6a8d908a7365fee35",
+      "head_commit": "049bf808ab24ec7712a2dd0e72e80ce5b65360a0",
       "capabilities": [
         "parallel-agent-worktrees",
         "agent-session-management",
@@ -1441,7 +1442,8 @@
         "agent-monitoring",
         "cli-orchestration"
       ],
-      "integration_note": "Developer/operator tooling reference. Must remain outside capital authority and cannot mutate LIVE_LOCK or submit broker orders."
+      "integration_note": "Developer/operator tooling reference. Must remain outside capital authority and cannot mutate LIVE_LOCK or submit broker orders.",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "manu354/cryptocurrency-arbitrage",
@@ -1923,8 +1925,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/leepokai/Codync",
-      "head_commit": "02e00ad0b5b3a891c29cc49f34886328c6d86267",
-      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "head_commit": "9de648192320eabea121ba8a24e44937cdaa24f7",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
       "integration_note": "External reference only; inspect in quarantine before any execution. No capital authority, production deployment authority, secret access, or broker transaction authority."
     },
     {
@@ -2624,6 +2626,294 @@
         "makespan minimization"
       ],
       "integration_note": "Research-only optimization reference; D-Wave/Leap access is not an AURELIA dependency and cannot authorize capital activity."
+    },
+    {
+      "repo": "yeshrajawat/codync",
+      "category": "multi-agent-coding-orchestration",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "KimiK3",
+        "AURELIA",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "AURELIA",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/yeshrajawat/codync",
+      "head_commit": "37bd30255a8b0f3d95ae51b0e27a2a0216985540",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Compare against canonical leepokai/Codync; do not duplicate install without a demonstrated capability gap.",
+      "capital_authority": false
+    },
+    {
+      "repo": "itsablabla/codync-web",
+      "category": "coding-agent-web-client",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot",
+        "KimiK3",
+        "AURELIA",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "AURELIA",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/itsablabla/codync-web",
+      "head_commit": "9bc8a63ccc9543f811627f69ab91b205ecc87631",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Separate web-client reference; inspect authentication, data handling, and deployment requirements before any use.",
+      "capital_authority": false
+    },
+    {
+      "repo": "leepokai/homebrew-codync",
+      "category": "toolchain-package-manager-formula",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3",
+        "AURELIA",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "AURELIA",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/leepokai/homebrew-codync",
+      "head_commit": "e74aa2deb8bb3e22ce1829572035dc2c28a007c9",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Packaging/install reference only; no automatic install on the production host.",
+      "capital_authority": false
+    },
+    {
+      "repo": "leepokai/Codync-web",
+      "category": "archived-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3",
+        "AURELIA",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "AURELIA",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/leepokai/Codync-web",
+      "head_commit": "b34ea5d9a2e0d9fcb15e5d13cbe5428a03025f70",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Archived upstream repository. Historical inspection only; do not use as a live dependency.",
+      "capital_authority": false
+    },
+    {
+      "repo": "QwenLM/qwen-code",
+      "category": "coding-agent-cli",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3",
+        "AURELIA",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "AURELIA",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/QwenLM/qwen-code",
+      "head_commit": "4360b003a087fe9e57f6ffbe7ba48795980b59c3",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Large repository; clone only after disk-space and dependency checks. No production-secret access or capital authority.",
+      "capital_authority": false
+    },
+    {
+      "repo": "QuantConnect/Tutorials",
+      "category": "quant-research-tutorials",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "AURELIA",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/QuantConnect/Tutorials",
+      "head_commit": "4a341890296f7e79e095508f06170c72ccaa629c",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Educational/backtesting examples only; adapt only after independent OOS, cost, and execution-semantics validation.",
+      "capital_authority": false
+    },
+    {
+      "repo": "SockTrader/SockTrader",
+      "category": "algorithmic-trading-tooling-reference",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "AURELIA",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "AURELIA",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/SockTrader/SockTrader",
+      "head_commit": "565971c5c1be5678d6dfb223663e11881dbcf697",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Inspect architecture and licensing first; no imported strategy qualifies automatically for live use.",
+      "capital_authority": false
+    },
+    {
+      "repo": "openinterpreter/openinterpreter",
+      "category": "desktop-computer-use-agent",
+      "domain": "engineering",
+      "assigned_agents": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3",
+        "AURELIA",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "AURELIA",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/openinterpreter/openinterpreter",
+      "head_commit": "cc054cf52fa3585a3de50e0d4e0be6f9ee6677e8",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Sandbox-only computer-use/automation evaluation; deny access to broker sessions, secrets, and production hosts.",
+      "capital_authority": false
+    },
+    {
+      "repo": "anomalyco/opencode",
+      "category": "coding-agent-cli",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3",
+        "AURELIA",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "sync_targets": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "AURELIA",
+        "KimiK3",
+        "GLM",
+        "GoogleAgentSkills",
+        "PlaywrightCLI"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/anomalyco/opencode",
+      "head_commit": "388406238bd5ca15564a762840a2362c3a45bd9c",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Alternative coding-agent toolchain; evaluate separately before installing or enabling hooks.",
+      "capital_authority": false
     }
   ],
   "pin_policy": {
@@ -2632,8 +2922,8 @@
     "automatic_upstream_execution": false
   },
   "last_sync": {
-    "completed_at": "2026-10-08",
-    "source": "user-supplied agent-workspace repositories",
+    "completed_at": "2026-10-09",
+    "source": "user-requested 12-repository integration batch; metadata and default-branch heads checked through GitHub",
     "unique_repositories_added_or_refreshed": [
       "ychampion/melete",
       "yxq953/MuseLite",
@@ -2647,7 +2937,7 @@
     "duplicate_input": "none",
     "physical_grok_jev_install": "NOT_CLAIMED",
     "canonical_sync_contract": "This file",
-    "assignment_policy": "All requested AURELIA agents assigned to every new repository",
+    "assignment_policy": "All canonical AURELIA agent IDs are assigned; the first assignment is the primary specialist selected by repo_agent_routing.json",
     "assigned_agents": [
       "ClaudeCode",
       "GrokBot",
@@ -2793,6 +3083,94 @@
         "physical_runtime_install": "NOT_CLAIMED",
         "mode": "RESEARCH_ONLY"
       }
-    ]
+    ],
+    "targets": [
+      "GrokBot",
+      "ClaudeCode",
+      "JEV",
+      "AURELIA",
+      "KimiK3",
+      "GLM",
+      "GoogleAgentSkills",
+      "PlaywrightCLI"
+    ],
+    "requested_batch": [
+      {
+        "repo": "yeshrajawat/codync",
+        "head_commit": "37bd30255a8b0f3d95ae51b0e27a2a0216985540",
+        "mode": "SANDBOX_ONLY",
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "itsablabla/codync-web",
+        "head_commit": "9bc8a63ccc9543f811627f69ab91b205ecc87631",
+        "mode": "SANDBOX_ONLY",
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "leepokai/homebrew-codync",
+        "head_commit": "e74aa2deb8bb3e22ce1829572035dc2c28a007c9",
+        "mode": "TOOLCHAIN_ONLY",
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "leepokai/Codync-web",
+        "head_commit": "b34ea5d9a2e0d9fcb15e5d13cbe5428a03025f70",
+        "mode": "REFERENCE_ONLY",
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "QwenLM/qwen-code",
+        "head_commit": "4360b003a087fe9e57f6ffbe7ba48795980b59c3",
+        "mode": "SANDBOX_ONLY",
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "QuantConnect/Tutorials",
+        "head_commit": "4a341890296f7e79e095508f06170c72ccaa629c",
+        "mode": "RESEARCH_ONLY",
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "SockTrader/SockTrader",
+        "head_commit": "565971c5c1be5678d6dfb223663e11881dbcf697",
+        "mode": "RESEARCH_ONLY",
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "openinterpreter/openinterpreter",
+        "head_commit": "cc054cf52fa3585a3de50e0d4e0be6f9ee6677e8",
+        "mode": "SANDBOX_ONLY",
+        "physical_runtime_install": "NOT_CLAIMED"
+      },
+      {
+        "repo": "anomalyco/opencode",
+        "head_commit": "388406238bd5ca15564a762840a2362c3a45bd9c",
+        "mode": "TOOLCHAIN_ONLY",
+        "physical_runtime_install": "NOT_CLAIMED"
+      }
+    ],
+    "refreshed_existing_pins": [
+      {
+        "repo": "leepokai/Codync",
+        "head_commit": "9de648192320eabea121ba8a24e44937cdaa24f7"
+      },
+      {
+        "repo": "stablyai/orca",
+        "head_commit": "049bf808ab24ec7712a2dd0e72e80ce5b65360a0"
+      },
+      {
+        "repo": "cuemacro/finmarketpy",
+        "head_commit": "afeaef28f5c8b78e613e649ecf18a9653dbf41fd"
+      }
+    ],
+    "registry_updated": true,
+    "physical_runtime_clone": "BLOCKED_NO_REMOTE_DEVICE",
+    "deployment": "NOT_PERFORMED",
+    "capital_authority": false,
+    "requested_agent_aliases_unresolved": [
+      "Dev"
+    ],
+    "agent_alias_resolution_note": "The repository's canonical config/repo_agent_routing.json does not define an agent ID named Dev; this batch is routed only to canonical agent IDs. Do not claim Dev runtime sync until its canonical ID is registered and reviewed."
   }
 }
