@@ -14,16 +14,20 @@ concurrency:
 
 jobs:
   verify:
+    # This workflow must opt into the same protected environment as the other
+    # Deriv verification workflows; environment-scoped secrets are unavailable
+    # to jobs that omit this declaration.
+    environment: production
     runs-on: ubuntu-latest
     env:
-      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
+      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
       DERIV_PAT: ${{ secrets.DERIV_PAT }}
       DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID }}
+      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
       DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-      DERIV_EXPECTED_CURRENCY: USD
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
       DERIV_ENVIRONMENT: real
-      DERIV_AUTH_MODE: pat
+      DERIV_AUTH_MODE: ${{ secrets.DERIV_AUTH_MODE || 'pat' }}
       FINAL_EXECUTION_AUTHORIZATION: "false"
       LIVE_EXECUTION: "BLOCKED"
 
@@ -34,8 +38,12 @@ jobs:
         shell: bash
         run: |
           token="${DERIV_AUTH_TOKEN:-${DERIV_PAT:-}}"
+          auth_mode="$(printf "%s" "${DERIV_AUTH_MODE:-pat}" | tr "[:upper:]" "[:lower:]")"
+          test "$auth_mode" = "pat" -o "$auth_mode" = "oauth" || { echo "DERIV_AUTH_SESSION=BLOCKED_INVALID_AUTH_MODE"; exit 2; }
           test -n "$token" || { echo "DERIV_AUTH_SESSION=BLOCKED_EXTERNAL_SECRET"; exit 2; }
-          test -n "${DERIV_APP_ID}" || { echo "DERIV_AUTH_SESSION=BLOCKED_EXTERNAL_SECRET"; exit 2; }
+          if [ "$auth_mode" = "pat" ]; then
+            test -n "${DERIV_APP_ID}" || { echo "DERIV_AUTH_SESSION=BLOCKED_EXTERNAL_SECRET"; exit 2; }
+          fi
           test -n "${DERIV_EXPECTED_LOGINID:-${DERIV_AUTHORIZED_ACCOUNT_ID:-}}" || { echo "DERIV_AUTH_SESSION=BLOCKED_EXTERNAL_SECRET"; exit 2; }
           echo "Protected Deriv configuration is present; secret values are not printed."
 
