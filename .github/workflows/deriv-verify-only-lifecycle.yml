@@ -55,7 +55,7 @@ jobs:
       DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
       DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
       DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
       DERIV_ENVIRONMENT: "real"
       DERIV_AUTH_MODE: ${{ secrets.DERIV_AUTH_MODE || 'pat' }}
       DERIV_LIFECYCLE_MODE: "VERIFY_ONLY"
@@ -90,7 +90,9 @@ jobs:
           test -n "$DERIV_AUTH_TOKEN"
           test -n "$DERIV_EXPECTED_LOGINID"
           test -n "$DERIV_EXPECTED_CURRENCY"
-          if [ "${DERIV_AUTH_MODE,,}" = "pat" ]; then
+          auth_mode="${DERIV_AUTH_MODE,,}"
+          test "$auth_mode" = "pat" || test "$auth_mode" = "oauth"
+          if [ "$auth_mode" = "pat" ]; then
             test -n "$DERIV_APP_ID"
           fi
 
