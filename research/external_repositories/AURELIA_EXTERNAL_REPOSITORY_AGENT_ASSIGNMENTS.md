@@ -33,9 +33,9 @@ This preserves the existing AURELIA architecture rather than creating a second t
 
 | Repository | Assigned agents | Allowed use | Capital authority |
 |---|---|---|---|
-| BerriAI/litellm | ClaudeCode, GoogleAgentSkills, GrokBot, JEV, AURELIA | Sandbox gateway architecture, provider routing, guardrails and observability review; security review required | None |
-| LiteLLM-Labs/litellm-agent-control-plane | ClaudeCode, GoogleAgentSkills, GrokBot, JEV, AURELIA | Agent routing/control-plane architecture review only | None |
-| BerriAI/litellm-docs | ClaudeCode, GoogleAgentSkills, JEV, AURELIA | Documentation and security-advisory reference | None |
+| BerriAI/litellm | GoogleAgentSkills, ClaudeCode, GrokBot, JEV, AURELIA | Sandbox gateway architecture, provider routing, guardrails and observability review; security review required | None |
+| LiteLLM-Labs/litellm-agent-control-plane | GrokBot, ClaudeCode, GoogleAgentSkills, JEV, AURELIA | Agent routing/control-plane architecture review only | None |
+| BerriAI/litellm-docs | GLM, ClaudeCode, JEV, AURELIA | Documentation and security-advisory reference | None |
 | BerriAI/liteLLM-proxy | ClaudeCode, GrokBot, JEV | Legacy proxy reference only | None |
 | numman-ali/cc-mirror | ClaudeCode, GrokBot, JEV | Isolated developer tooling research; no production provider credentials | None |
 | BerriAI/litellm-pgvector | ClaudeCode, GoogleAgentSkills, JEV, AURELIA | Sandbox vector-memory integration reference | None |
