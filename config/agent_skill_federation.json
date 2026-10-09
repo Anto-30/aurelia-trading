@@ -14,7 +14,7 @@
   },
   "sources": [
     {
-      "name": "anthropics-skills",
+      "name": "claude-agent-skills",
       "owner": "Anthropic",
       "repo": "anthropics/skills",
       "pinned_commit": "8a1541c4a3ffa5a20a5a91de0dcf3f0bab1d1ef4",
@@ -28,7 +28,7 @@
       "capital_authority": false
     },
     {
-      "name": "anthropics-claude-plugins-official",
+      "name": "claude-code-official-plugins",
       "owner": "Anthropic",
       "repo": "anthropics/claude-plugins-official",
       "pinned_commit": "d182ca456ca09d31d139f7d3818d1d333b103cce",
@@ -42,7 +42,7 @@
       "capital_authority": false
     },
     {
-      "name": "moonshotai-kimi-code",
+      "name": "kimi-code",
       "owner": "MoonshotAI",
       "repo": "MoonshotAI/kimi-code",
       "pinned_commit": "21406fb4c805cc8c715e6d1f16ad3fb5f25f4fe3",
@@ -57,7 +57,7 @@
       "capital_authority": false
     },
     {
-      "name": "moonshotai-kimi-cli",
+      "name": "kimi-cli",
       "owner": "MoonshotAI",
       "repo": "MoonshotAI/kimi-cli",
       "pinned_commit": "9ab1286b8fe4e6bcd116949a27ce5e0ac3389c82",
@@ -69,7 +69,7 @@
       "capital_authority": false
     },
     {
-      "name": "xai-org-plugin-marketplace",
+      "name": "grok-plugin-marketplace",
       "owner": "xAI",
       "repo": "xai-org/plugin-marketplace",
       "pinned_commit": "77a16ec85ded1c3b133f686bd2e1bea36090e124",
@@ -86,7 +86,7 @@
       "capital_authority": false
     },
     {
-      "name": "zeropointrepo-awesome-grok-bot",
+      "name": "awesome-grok-bot",
       "owner": "Community",
       "repo": "ZeroPointRepo/awesome-grok-bot",
       "pinned_commit": "fa6ef78f4535cd3fb460925b7b6c3336103fbc3e",
@@ -98,7 +98,7 @@
       "capital_authority": false
     },
     {
-      "name": "google-skills",
+      "name": "google-agent-skills",
       "owner": "Google",
       "repo": "google/skills",
       "pinned_commit": "1d77046ad3670d62227f50a8f53286f6c6cde08b",
@@ -112,7 +112,7 @@
       "capital_authority": false
     },
     {
-      "name": "zai-org-glm-skills",
+      "name": "glm-skills",
       "owner": "ZhipuAI",
       "repo": "zai-org/GLM-skills",
       "pinned_commit": "2ecd31c37e75671a4767342ba3a68a84c8f1b848",
@@ -126,7 +126,7 @@
       "capital_authority": false
     },
     {
-      "name": "microsoft-playwright-cli",
+      "name": "playwright-cli",
       "owner": "Microsoft",
       "repo": "microsoft/playwright-cli",
       "pinned_commit": "b85c7a736bb473bf55b584e54a09ffa698d6d871",
@@ -141,7 +141,7 @@
       "capital_authority": false
     },
     {
-      "name": "xai-org-grok-build",
+      "name": "grok-build-official",
       "owner": "xAI",
       "repo": "xai-org/grok-build",
       "pinned_commit": "2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8",
@@ -157,7 +157,7 @@
       "capital_authority": false
     },
     {
-      "name": "microsoft-playwright-dev",
+      "name": "playwright-agent-skills",
       "owner": "Microsoft",
       "repo": "microsoft/playwright.dev",
       "pinned_commit": "718ff450acfcb2fb1b006515a07c9412efe0bd88",
@@ -171,7 +171,7 @@
       "capital_authority": false
     },
     {
-      "name": "garrytan-gstack",
+      "name": "gstack",
       "owner": "garrytan",
       "repo": "garrytan/gstack",
       "pinned_commit": "10315cf44d1ea13e3ae4821841873afbf7807935",
@@ -187,7 +187,7 @@
       "capital_authority": false
     },
     {
-      "name": "rihebty-flow-kit",
+      "name": "flow-kit",
       "owner": "rihebty",
       "repo": "rihebty/flow-kit",
       "pinned_commit": "9b5dda7206ae841230f118348d660ad8d0ae2830",
@@ -199,7 +199,7 @@
       "capital_authority": false
     },
     {
-      "name": "thanh-abaii-gstack-windows-port",
+      "name": "gstack-windows-port",
       "owner": "thanh-abaii",
       "repo": "thanh-abaii/gstack-windows-port",
       "pinned_commit": "26937232ba2141c6bcf6ffdd8e0822163b475d63",
@@ -212,7 +212,7 @@
       "capital_authority": false
     },
     {
-      "name": "lucas-flatwhite-gstack-ko",
+      "name": "gstack-ko",
       "owner": "lucas-flatwhite",
       "repo": "lucas-flatwhite/gstack-ko",
       "pinned_commit": "18bacc475cb5f7bf57647f4fbb647415c65c2303",
@@ -224,7 +224,7 @@
       "capital_authority": false
     },
     {
-      "name": "mr-daedalium-ostack-saas",
+      "name": "ostack-saas",
       "owner": "mr-daedalium",
       "repo": "mr-daedalium/ostack-saas",
       "pinned_commit": "a67256db4451f2d085370cfc36ebe091211b8e7b",
@@ -250,7 +250,7 @@
       "capital_authority": false
     },
     {
-      "name": "loperanger7-gstack-auto",
+      "name": "gstack-auto",
       "owner": "loperanger7",
       "repo": "loperanger7/gstack-auto",
       "pinned_commit": "17bf2a025c175b899e7d30be1ab4e658fd4ae04f",
@@ -265,7 +265,7 @@
       "capital_authority": false
     },
     {
-      "name": "eigenwise-atomic-agents",
+      "name": "atomic-agents",
       "owner": "Eigenwise",
       "repo": "Eigenwise/atomic-agents",
       "pinned_commit": "d2b61b90b2816dbdf9f42f8638b7d375bf08cd11",
@@ -282,7 +282,7 @@
       "capital_authority": false
     },
     {
-      "name": "capthvnsen-alans-way-agents",
+      "name": "alans-way-agents",
       "owner": "capthvnsen",
       "repo": "capthvnsen/alans-way-agents",
       "pinned_commit": "9e2b928241364fb23becea0419d9eb0db2e97fb6",
@@ -296,7 +296,7 @@
       "capital_authority": false
     },
     {
-      "name": "charlesdove977-claude-x-jev",
+      "name": "claude-x-jev",
       "owner": "Charles J Dove",
       "repo": "charlesdove977/claude-x-jev",
       "pinned_commit": "c8662b0550b2a999d1dbcfb148683615cf92636a",
@@ -312,7 +312,7 @@
       "capital_authority": false
     },
     {
-      "name": "open-jarvis-openjarvis",
+      "name": "openjarvis",
       "owner": "open-jarvis",
       "repo": "open-jarvis/OpenJarvis",
       "pinned_commit": "bf945a49a79f49a1258f7045a83c8e42c0da510f",
@@ -330,7 +330,7 @@
       "capital_authority": false
     },
     {
-      "name": "personaljarvis-personaljarvis",
+      "name": "personaljarvis",
       "owner": "PersonalJarvis",
       "repo": "PersonalJarvis/PersonalJarvis",
       "pinned_commit": "ebff034e519e17df91a5c2f4d992a2aa3399463d",
@@ -384,7 +384,7 @@
       ]
     },
     {
-      "name": "karanb192-claude-code-mods",
+      "name": "karan-claude-code-mods",
       "owner": "karanb192",
       "repo": "karanb192/claude-code-mods",
       "pinned_commit": "10617a90106144d3cb131bd599e677d9c38bfd35",
@@ -404,7 +404,7 @@
       ]
     },
     {
-      "name": "whyashthakker-awesome-claude-code-mods",
+      "name": "whyash-awesome-claude-code-mods",
       "owner": "whyashthakker",
       "repo": "whyashthakker/awesome-claude-code-mods",
       "pinned_commit": "c53a70b8787c4270029af9648d6eb7054c6c29c3",
@@ -443,7 +443,7 @@
       ]
     },
     {
-      "name": "0xdarkmatter-claude-mods",
+      "name": "darkmatter-claude-mods",
       "owner": "0xDarkMatter",
       "repo": "0xDarkMatter/claude-mods",
       "pinned_commit": "3aac515e62ba1be0da3a720a9e23ffa9f17e7b11",
@@ -662,7 +662,7 @@
       ]
     },
     {
-      "name": "shrimpwtf-oh-my-pstack",
+      "name": "oh-my-pstack",
       "owner": "shrimpwtf",
       "repo": "shrimpwtf/oh-my-pstack",
       "pinned_commit": "fc0eabd25f21b194a336b640e75e29c252382866",
@@ -686,7 +686,7 @@
       ]
     },
     {
-      "name": "backnotprop-pstack",
+      "name": "pstack",
       "owner": "backnotprop",
       "repo": "backnotprop/pstack",
       "pinned_commit": "3a604672c46cd8187d2b19980eae0a34f9f91138",
@@ -707,7 +707,7 @@
       ]
     },
     {
-      "name": "michael-denyer-pstack-claude",
+      "name": "pstack-claude",
       "owner": "michael-denyer",
       "repo": "michael-denyer/pstack-claude",
       "pinned_commit": "29eb31cb8e198c62dd9cff4027e6c4f0f2f63d0b",
@@ -728,7 +728,7 @@
       ]
     },
     {
-      "name": "ericlitman-open-pstack",
+      "name": "open-pstack",
       "owner": "ericlitman",
       "repo": "ericlitman/open-pstack",
       "pinned_commit": "1b03678171f6f400ae2cc9dc4e7a4a6a13e4bb43",
@@ -769,7 +769,7 @@
       ]
     },
     {
-      "name": "bloomberg-pystack",
+      "name": "pystack",
       "owner": "bloomberg",
       "repo": "bloomberg/pystack",
       "pinned_commit": "5c594dc24996eab7b589264eb42a9d6e8cdec283",
@@ -789,7 +789,7 @@
       ]
     },
     {
-      "name": "scriptedalchemy-pstack-codex",
+      "name": "pstack-codex",
       "owner": "ScriptedAlchemy",
       "repo": "ScriptedAlchemy/pstack-codex",
       "pinned_commit": "c25afa251f1513b0b28cc089294d468c5e350444",
@@ -809,7 +809,7 @@
       ]
     },
     {
-      "name": "aqua-123-pstack-for-codex",
+      "name": "pstack-for-codex",
       "owner": "Aqua-123",
       "repo": "Aqua-123/pstack-for-codex",
       "pinned_commit": "9fecac589333cbc0b058c8bb47e1720cf87b6061",
@@ -829,7 +829,7 @@
       ]
     },
     {
-      "name": "cryptosignal-crypto-signal",
+      "name": "crypto-signal",
       "owner": "CryptoSignal",
       "repo": "CryptoSignal/Crypto-Signal",
       "pinned_commit": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
@@ -853,7 +853,7 @@
       ]
     },
     {
-      "name": "kappaemme-git-codex-first-customer-finder-skill",
+      "name": "codex-first-customer-finder",
       "owner": "Kappaemme-git",
       "repo": "Kappaemme-git/codex-first-customer-finder-skill",
       "pinned_commit": "d3f6964bd989745ac183edbd545c588a68451146",
@@ -872,7 +872,7 @@
       ]
     },
     {
-      "name": "neeeophytee-finding-unknowns-skills",
+      "name": "finding-unknowns-skills",
       "owner": "Neeeophytee",
       "repo": "Neeeophytee/finding-unknowns-skills",
       "pinned_commit": "ca5696a0f08d2de6b2997fff1d6cc05c3ed587cc",
@@ -893,7 +893,7 @@
       ]
     },
     {
-      "name": "he-yufeng-findjobs-agent",
+      "name": "findjobs-agent",
       "owner": "he-yufeng",
       "repo": "he-yufeng/FindJobs-Agent",
       "pinned_commit": "591fe6b451db98fe0bebb8f92a7b9902b0fd6079",
@@ -913,7 +913,7 @@
       ]
     },
     {
-      "name": "davepoon-buildwithclaude",
+      "name": "buildwithclaude",
       "owner": "davepoon",
       "repo": "davepoon/buildwithclaude",
       "pinned_commit": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
@@ -1649,7 +1649,7 @@
       "capital_authority": false
     },
     {
-      "name": "chromedevtools-chrome-devtools-mcp",
+      "name": "chrome-devtools-mcp",
       "owner": "ChromeDevTools",
       "repo": "ChromeDevTools/chrome-devtools-mcp",
       "pinned_commit": "f08dbe152502d66e75fa07fb2588dc0feb42bc20",
@@ -1671,7 +1671,7 @@
       ]
     },
     {
-      "name": "hackobi-ai-scalpel-trading-bot",
+      "name": "ai-scalpel-trading-bot",
       "owner": "hackobi",
       "repo": "hackobi/AI-Scalpel-Trading-Bot",
       "pinned_commit": "30eed4130d4808a25a5be6a0ee6cf42e3f19bc22",
@@ -1692,7 +1692,7 @@
       ]
     },
     {
-      "name": "cm45t3r-candlestick",
+      "name": "candlestick",
       "owner": "cm45t3r",
       "repo": "cm45t3r/candlestick",
       "pinned_commit": "7b7c45708c8366c0cb9c256044cf24e13cfb16fb",
@@ -1711,7 +1711,7 @@
       ]
     },
     {
-      "name": "berriai-litellm",
+      "name": "litellm",
       "owner": "BerriAI",
       "repo": "BerriAI/litellm",
       "pinned_commit": "5e1c5c0bd17781a83b4368c38ebebcf7bc683fcb",
@@ -1735,7 +1735,7 @@
       "integration_note": "Sandbox architecture reference only; critical/high upstream security advisories require exact patched version and artifact verification before any deployment."
     },
     {
-      "name": "litellm-labs-litellm-agent-control-plane",
+      "name": "litellm-agent-control-plane",
       "owner": "LiteLLM-Labs",
       "repo": "LiteLLM-Labs/litellm-agent-control-plane",
       "pinned_commit": "53bfd20e2fec51fc8f665fb614512c6b138367da",
@@ -1758,7 +1758,7 @@
       "integration_note": "Architecture reference only; external agents must not cross AURELIA capital-plane boundaries."
     },
     {
-      "name": "berriai-litellm-docs",
+      "name": "litellm-docs",
       "owner": "BerriAI",
       "repo": "BerriAI/litellm-docs",
       "pinned_commit": "4a73adff0a530b948b043b0fa64bf96d2cc7c4ce",
@@ -1779,7 +1779,7 @@
       "integration_note": "Official public docs and advisory reference only."
     },
     {
-      "name": "berriai-litellm-proxy",
+      "name": "litellm-proxy",
       "owner": "BerriAI",
       "repo": "BerriAI/liteLLM-proxy",
       "pinned_commit": "1ef69ae92bf22600f9a42d15e3b992e1010c9a7e",
@@ -1797,7 +1797,7 @@
       "integration_note": "Deprecated upstream repository; current implementation is BerriAI/litellm. Do not install."
     },
     {
-      "name": "numman-ali-cc-mirror",
+      "name": "cc-mirror",
       "owner": "numman-ali",
       "repo": "numman-ali/cc-mirror",
       "pinned_commit": "e0e6f289c78ebe7f38bd8afcad92d28ea7e4f1e5",
@@ -1817,7 +1817,7 @@
       "integration_note": "Isolated developer tooling only; do not route production credentials through modified coding-agent variants."
     },
     {
-      "name": "berriai-litellm-pgvector",
+      "name": "litellm-pgvector",
       "owner": "BerriAI",
       "repo": "BerriAI/litellm-pgvector",
       "pinned_commit": "5bd8f3ab1fa9129e758a2c4b17ba1c6f3047ba24",
@@ -1837,7 +1837,7 @@
       "integration_note": "Vector-memory reference only; no broker statements, Deriv credentials, or production data in vector storage."
     },
     {
-      "name": "litellm-labs-litellm-rust",
+      "name": "litellm-rust",
       "owner": "LiteLLM-Labs",
       "repo": "LiteLLM-Labs/litellm-rust",
       "pinned_commit": "76f83257fce4dcc3d76e7e760934bbd725b624d9",
@@ -1858,7 +1858,7 @@
       "integration_note": "Upstream README describes a proof of concept; do not treat as a production gateway."
     },
     {
-      "name": "langchain-ai-langchain-litellm",
+      "name": "langchain-litellm",
       "owner": "langchain-ai",
       "repo": "langchain-ai/langchain-litellm",
       "pinned_commit": "5b8af479f783ae5a0d3eff9214c2cbb06473e513",
@@ -1879,7 +1879,7 @@
       "integration_note": "Adapter reference pending compatibility, tool-call semantics, and transitive-dependency review."
     },
     {
-      "name": "jxjhheric-freebuff2api-wokers",
+      "name": "freebuff2api-wokers",
       "owner": "jxjhheric",
       "repo": "jxjhheric/freebuff2api-wokers",
       "pinned_commit": "5cbb353019f2f660ca1d72984549e430590b4778",
@@ -1899,7 +1899,7 @@
       "integration_note": "Reference-only review. Do not deploy or invoke its Freebuff upstream routes."
     },
     {
-      "name": "kele68108-freebuff2api-optimized",
+      "name": "freebuff2api-optimized",
       "owner": "kele68108",
       "repo": "kele68108/Freebuff2API-Optimized",
       "pinned_commit": "f7e13d414e9a7197a227969d88ad6166724c2a15",
@@ -1919,7 +1919,7 @@
       "integration_note": "Fork uses multi-account token rotation and session-reuse optimizations; documentation/reference review only."
     },
     {
-      "name": "t479842598-freebuff2api-vercel",
+      "name": "freebuff2api-vercel",
       "owner": "t479842598",
       "repo": "t479842598/freebuff2api-vercel",
       "pinned_commit": "16274ad8f3b9fa9c30093ab859f3732aca043452",
@@ -1939,7 +1939,7 @@
       "integration_note": "Reference only. No deployment, token import, fingerprint adaptation, or production credentials."
     },
     {
-      "name": "hengxin666-freebuff-proxy",
+      "name": "freebuff-proxy",
       "owner": "HengXin666",
       "repo": "HengXin666/freebuff-proxy",
       "pinned_commit": "581097b0b7ba14a57fca487936975d97474d9bb8",
@@ -1959,7 +1959,7 @@
       "integration_note": "README describes a reverse-engineered upstream protocol and multi-account pool; no runtime use."
     },
     {
-      "name": "lza6-freebuff-2api",
+      "name": "freebuff-2api",
       "owner": "lza6",
       "repo": "lza6/Freebuff-2API",
       "pinned_commit": "bd607aac70548b80f586c60f819ed8e47240e25f",
@@ -1979,7 +1979,7 @@
       "integration_note": "Reference-only. It supports token/cookie import and account pooling; never provide AURELIA or Deriv credentials."
     },
     {
-      "name": "netroindonesia-freebuff2api",
+      "name": "freebuff2api",
       "owner": "NetroIndonesia",
       "repo": "NetroIndonesia/freebuff2api",
       "pinned_commit": "4894d7db6157c97f3037dc7d79ae0c2571762f8e",
@@ -2059,7 +2059,7 @@
       "integration_note": "Reference only. README says Cloudflare Worker deployment can increase account-ban risk."
     },
     {
-      "name": "codebuffai-freebuff",
+      "name": "freebuff",
       "owner": "CodebuffAI",
       "repo": "CodebuffAI/freebuff",
       "pinned_commit": "18f32cd3c51ea88d763e89432642a908030fd088",
@@ -2078,7 +2078,7 @@
       "integration_note": "Official upstream client reference only; not a substitute for provider-supported access or AURELIA authorization."
     },
     {
-      "name": "venthezone-freebuff-gate",
+      "name": "freebuff-gate",
       "owner": "VenTheZone",
       "repo": "VenTheZone/freebuff-gate",
       "pinned_commit": "3663a93614f0abbfcb477563538014e1f35b0cd4",
@@ -2098,7 +2098,7 @@
       "integration_note": "Sandbox only; not installed into the AURELIA Command Center and not exposed on public interfaces."
     },
     {
-      "name": "praket7-freebuff-mcp",
+      "name": "freebuff-mcp",
       "owner": "Praket7",
       "repo": "Praket7/freebuff-mcp",
       "pinned_commit": "02cf6e623cc6643fba3aeadeba3011188857212d",
@@ -2118,7 +2118,7 @@
       "integration_note": "High-trust local bridge: can send requests to Freebuff and read ordinary project files. Isolated sandbox and manual approvals only; redaction is not a security boundary."
     },
     {
-      "name": "jakevin-codex-freebuff-web",
+      "name": "codex-freebuff-web",
       "owner": "Jakevin",
       "repo": "Jakevin/codex-freebuff-web",
       "pinned_commit": "576c6835bc06ed4fc039bb6cd264e73ce36efa41",
@@ -2137,7 +2137,7 @@
       "integration_note": "Sandbox-only adapter for developer use; no production account data or AURELIA/Deriv secrets."
     },
     {
-      "name": "themetalstorm-herdr-freebuff-plugin",
+      "name": "herdr-freebuff-plugin",
       "owner": "TheMetalStorm",
       "repo": "TheMetalStorm/herdr-freebuff-plugin",
       "pinned_commit": "a49b1ea428fe6eb620288a3035984073927557d2",
@@ -2176,7 +2176,7 @@
       "integration_note": "Local compatible bridge only as architecture reference; do not route production credentials through it."
     },
     {
-      "name": "haizhuai-freebuff2apic",
+      "name": "freebuff2apic",
       "owner": "HaizhuAI",
       "repo": "HaizhuAI/Freebuff2apic",
       "pinned_commit": "58ff9bdbbc749b8a607a2960ee89d6f29927ca0f",
@@ -2196,7 +2196,7 @@
       "integration_note": "Reference only; repository description identifies account-pool management and proxy routing."
     },
     {
-      "name": "0xgetz-freebuff-9router",
+      "name": "freebuff-9router",
       "owner": "0xgetz",
       "repo": "0xgetz/freebuff-9router",
       "pinned_commit": "ec5e698816d86b4db1d970e03d10350bcc15d966",
@@ -2216,7 +2216,7 @@
       "integration_note": "Reference-only adapter/gateway integration; no production credentials or live account-pool deployment."
     },
     {
-      "name": "aminkalantari842-ui-global-intelligence-os",
+      "name": "global-intelligence-os",
       "owner": "aminkalantari842-ui",
       "repo": "aminkalantari842-ui/global-intelligence-os",
       "pinned_commit": "05ea36d535e2076a359b7fdeb82d99e77f66ae4e",
@@ -2236,7 +2236,7 @@
       "integration_note": "Repository has no declared license in API metadata and a broad project description; inspect before any use."
     },
     {
-      "name": "6yte96-freebuffet",
+      "name": "freebuffet",
       "owner": "6yte96",
       "repo": "6yte96/freebuffet",
       "pinned_commit": "280259f0495f8d37b7cd51a19500e8eb0eab8223",
