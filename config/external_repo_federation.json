@@ -168,7 +168,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/notify",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "d842f16b2716bd60f09caf3ae3a894237ab38f54",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/gh-workflow",
@@ -181,7 +182,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/gh-workflow",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "3793c170f1ead17fff767ad2369fe63802398117",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/yawc",
@@ -194,7 +196,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/yawc",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "0ea0bf5d04b97a6377d79d051c34ec97d2df5525",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/codex-acp",
@@ -207,7 +210,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/zed-industries/codex-acp",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "296069e841634cd4bb9bc4515602d836e49231ec",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/superpowers",
@@ -221,7 +225,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/zed-industries/superpowers",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ac082fac785e8f042fe8eea7b8f1d88bddb7e35b",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/font-kit",
@@ -234,7 +239,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/font-kit",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ab2ef66421612d6e0c103885dc5a7b7d0d110c2c",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "zed-industries/git-restore-mtime-action",
@@ -247,7 +253,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/zed-industries/git-restore-mtime-action",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "72cefcf20b50bf4fcd74ea8a0d2927b0680e2114",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "TauricResearch/TradingAgents",
@@ -291,7 +298,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/freqtrade/freqtrade",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "2cdfc2325e3c2af1680e8adbe5245ac42709fda9",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "hsliuping/TradingAgents-CN",
