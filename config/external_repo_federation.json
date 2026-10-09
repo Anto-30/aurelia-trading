@@ -1302,7 +1302,8 @@
         "KimiK3",
         "JEV"
       ],
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "d6042f38f0aa7dd3e03a2a406111d725056d45a3",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "garrytan/gstack",
