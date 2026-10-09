@@ -599,10 +599,36 @@ async def collect_once(state: dict[str, Any]) -> None:
 
 async def main() -> int:
     state = load_state(STATE_PATH)
-    await collect_once(state)
-    report = evaluation(state)
-    save_state(STATE_PATH, state)
     report_path = STATE_PATH.with_name("aurelia_r100_report.json")
+    try:
+        await collect_once(state)
+    except Exception as exc:
+        # Persist all observations already collected before a transport/API
+        # failure so a scheduled retry can resume the frozen campaign.
+        state["last_run_error_type"] = type(exc).__name__
+        state["last_run_error_at_utc"] = iso(utc_now())
+        save_state(STATE_PATH, state)
+        report = evaluation(state)
+        report["collection_status"] = "FAILED_RETRYABLE"
+        report["collection_error_type"] = type(exc).__name__
+        report_path.write_text(
+            json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
+            encoding="utf-8",
+        )
+        print(json.dumps({
+            "R100_PROSPECTIVE_COLLECTION": "RETRYABLE_FAILURE",
+            "ERROR_TYPE": type(exc).__name__,
+            "OBSERVATIONS_PRESERVED": report["observations_total"],
+            "EXECUTION_AUTHORIZED": False,
+            "CAPITAL_AUTHORITY": False,
+        }, sort_keys=True))
+        raise
+
+    state.pop("last_run_error_type", None)
+    state.pop("last_run_error_at_utc", None)
+    report = evaluation(state)
+    report["collection_status"] = "PASS"
+    save_state(STATE_PATH, state)
     report_path.write_text(
         json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
         encoding="utf-8",
