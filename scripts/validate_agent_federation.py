@@ -37,6 +37,7 @@ def main() -> None:
     federation = load_json("config/agent_skill_federation.json")
     external_repos = load_json("config/external_repo_federation.json")
     routing = load_json("config/repo_agent_routing.json")
+    capability_matrix = load_json("config/agent_capability_matrix.json")
     boundary = load_json("config/agent_capability_boundary.json")
     sot = load_json("AURELIA_SOURCE_OF_TRUTH.json")
     lock_text = (ROOT / "config/LIVE_LOCK.yaml").read_text(encoding="utf-8")
@@ -100,15 +101,32 @@ def main() -> None:
         assert item["capital_authority"] is False, repo
         assert set(item.get("assigned_agents", [])).issubset(known_agents), repo
 
+    matrix_assignments = capability_matrix.get("external_source_assignments", {})
+    matrix_federation = capability_matrix.get("federated_repositories", {})
     for repo, expected_agent in expected_primary.items():
         repo_item = registered[repo]
         skill_item = registered_skills[repo]
+        matrix_item = matrix_assignments[repo]
         assert repo_item["assigned_agents"][0] == expected_agent, (
             repo, "repo primary routing mismatch", repo_item["assigned_agents"]
         )
         assert skill_item["assigned_agents"][0] == expected_agent, (
             repo, "skill primary routing mismatch", skill_item["assigned_agents"]
         )
+        assert matrix_item["primary"] == expected_agent, (
+            repo, "capability-matrix primary routing mismatch", matrix_item.get("primary")
+        )
+        assert matrix_item["mode"] == repo_item["mode"], (
+            repo, "capability-matrix mode mismatch", matrix_item.get("mode"), repo_item["mode"]
+        )
+        assert set(matrix_item.get("supporting", [])).issubset(
+            set(repo_item["assigned_agents"])
+        ), (repo, "capability-matrix has unknown supporting agents")
+        assert matrix_federation[repo] == repo_item["assigned_agents"], (
+            repo, "capability-matrix assigned agents mismatch"
+        )
+        assert repo_item.get("capital_authority", False) is False
+        assert skill_item.get("capital_authority", False) is False
 
     sources = federation.get("sources", [])
     assert len(sources) >= 7
