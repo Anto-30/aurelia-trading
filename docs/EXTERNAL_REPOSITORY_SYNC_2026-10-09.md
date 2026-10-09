@@ -2,7 +2,7 @@
 
 ## Scope
 
-This change pins all 154 registered public GitHub repositories in AURELIA's existing federation registry, including the 73 entries that previously used `SYNC_REQUIRED`, and registers six user-requested sources in the skill registry. It does not copy upstream source into the capital plane or claim that external agent runtimes have been physically installed.
+Historical baseline: 154 public repositories were registered in an earlier sync. The 2026-10-09 follow-on sync now adds eight LiteLLM/agent-infrastructure sources, bringing the external repository federation from 189 to 197 unique pinned repositories and the agent-skill source registry from 88 to 96 sources. This is registry/source synchronization, not a claim that all source code was physically installed or admitted into the runtime. It does not copy upstream source into the capital plane or claim that external agent runtimes have been physically installed.
 
 ## Pinned sources and routing
 
@@ -37,3 +37,13 @@ Supporting assignments include GrokBot, JEV and AURELIA. Quantitative crypto res
 - Scheduled Deriv verification now selects the protected `production` environment and accepts the supported token/account-binding aliases.
 - Prospective R100 collection preserves partial state after a feed/API exception and retries once in the workflow; a failed run remains failed and cannot authorize trading.
 - Federation audit validates that the six sources remain pinned, assigned to known canonical agents, and non-authoritative.
+
+
+## Follow-on LiteLLM and agent gateway sync — 2026-10-09
+
+Eight source pins were added: `BerriAI/litellm`, `LiteLLM-Labs/litellm-agent-control-plane`, `BerriAI/litellm-docs`, `BerriAI/liteLLM-proxy`, `numman-ali/cc-mirror`, `BerriAI/litellm-pgvector`, `LiteLLM-Labs/litellm-rust`, and `langchain-ai/langchain-litellm`. Exact commit SHAs, assignments, modes, and restrictions are maintained in `config/external_repo_federation.json` and `config/agent_skill_federation.json`.
+
+**Security finding:** upstream LiteLLM security advisories include recent critical/high issues, and the official March 2026 security notice documented compromised PyPI versions 1.82.7 and 1.82.8. Therefore the sync registers these projects as references/sandbox-only; it does not run `pip install litellm`, add them to production dependencies, or give them access to secrets. Any later adoption must pin a reviewed release, verify release signatures where supported, scan transitive dependencies, and pass isolated tests.
+
+**Scope limitation:** the registry can be synchronized into the existing AURELIA repository and made available as source context to the connected agent workflows. No connected Claude Code host, separate Dev runtime, or persistent ChatGPT workspace was available to physically install software into during this task. No such installation is claimed.
+
