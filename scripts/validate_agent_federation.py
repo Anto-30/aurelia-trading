@@ -35,6 +35,8 @@ def is_ancestor(commit: str, head: str) -> bool:
 
 def main() -> None:
     federation = load_json("config/agent_skill_federation.json")
+    external_repos = load_json("config/external_repo_federation.json")
+    routing = load_json("config/repo_agent_routing.json")
     boundary = load_json("config/agent_capability_boundary.json")
     sot = load_json("AURELIA_SOURCE_OF_TRUTH.json")
     lock_text = (ROOT / "config/LIVE_LOCK.yaml").read_text(encoding="utf-8")
@@ -43,6 +45,39 @@ def main() -> None:
     assert federation["default_policy"]["capital_authority"] is False
     assert federation["default_policy"]["live_order_authority"] is False
     assert federation["default_policy"]["secret_reading"] == "DENY"
+
+    # Every user-requested external source must be pinned and assigned, while
+    # remaining outside capital/execution authority.
+    assert external_repos["schema"] == "aurelia.external_repo_federation.v1"
+    controls = external_repos["global_controls"]
+    assert controls["capital_authority"] is False
+    assert controls["live_order_submission"] is False
+    assert controls["live_lock_mutation"] is False
+    assert controls["secret_reading"] is False
+    assert controls["broker_transaction_write"] is False
+    known_agents = set(routing["agents"])
+    expected_external = {
+        "CryptoSignal/Crypto-Signal": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
+        "Kappaemme-git/codex-first-customer-finder-skill": "d3f6964bd989745ac183edbd545c588a68451146",
+        "Neeeophytee/finding-unknowns-skills": "ca5696a0f08d2de6b2997fff1d6cc05c3ed587cc",
+        "he-yufeng/FindJobs-Agent": "591fe6b451db98fe0bebb8f92a7b9902b0fd6079",
+        "davepoon/buildwithclaude": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
+        "workersio/skills": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
+    }
+    registered = {item["repo"]: item for item in external_repos["repositories"]}
+    for repo, expected_commit in expected_external.items():
+        item = registered[repo]
+        assert item["head_commit"] == expected_commit, repo
+        assert item["assigned_agents"], repo
+        assert set(item["assigned_agents"]).issubset(known_agents), repo
+        assert item["mode"] in {"RESEARCH_ONLY", "SANDBOX_ONLY", "TOOLCHAIN_ONLY", "REFERENCE_ONLY"}, repo
+
+    registered_skills = {item["repo"]: item for item in federation["sources"]}
+    for repo, expected_commit in expected_external.items():
+        item = registered_skills[repo]
+        assert item["pinned_commit"] == expected_commit, repo
+        assert item["capital_authority"] is False, repo
+        assert set(item.get("assigned_agents", [])).issubset(known_agents), repo
 
     sources = federation.get("sources", [])
     assert len(sources) >= 7
