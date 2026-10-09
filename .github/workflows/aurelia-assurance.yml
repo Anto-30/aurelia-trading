@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
-      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && ((secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
+      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && ((secrets.DERIV_AUTH_MODE || 'pat') == 'pat' || (secrets.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
       DERIV_AUTH_MODE: ${{ secrets.DERIV_AUTH_MODE || 'pat' }}
       DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
     steps:
@@ -60,15 +60,14 @@ jobs:
 
           token_present = bool(os.getenv("DERIV_AUTH_TOKEN", "").strip())
           loginid_present = bool(os.getenv("DERIV_EXPECTED_LOGINID", "").strip())
-          auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
+          auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+          auth_mode_valid = auth_mode in {"pat", "oauth"}
           app_id_present = bool(os.getenv("DERIV_APP_ID", "").strip())
-          if auth_mode not in {"pat", "oauth"}:
-              print("DERIV_AUTH_PREREQUISITE=INVALID_AUTH_MODE")
-              auth_mode = "pat"
           requirements = {
               "token_present": token_present,
               "expected_loginid_present": loginid_present,
-              "app_id_present_when_pat": app_id_present if auth_mode == "pat" else True,
+              "auth_mode_valid": auth_mode_valid,
+              "app_id_present_when_pat": app_id_present if auth_mode == "pat" else auth_mode == "oauth",
           }
           configured = all(requirements.values())
           evidence = {
@@ -84,7 +83,8 @@ jobs:
               encoding="utf-8",
           )
           print("DERIV_AUTH_PREREQUISITES=" + ("READY" if configured else "NOT_READY"))
-          print("DERIV_AUTH_MODE=" + auth_mode)
+          print("DERIV_AUTH_MODE=" + (auth_mode.upper() if auth_mode_valid else "INVALID"))
+          print("DERIV_AUTH_MODE_VALID=" + str(auth_mode_valid).lower())
           print("DERIV_TOKEN_PRESENT=" + str(token_present).lower())
           print("DERIV_EXPECTED_LOGINID_PRESENT=" + str(loginid_present).lower())
           print("DERIV_APP_ID_REQUIRED=" + str(auth_mode == "pat").lower())
