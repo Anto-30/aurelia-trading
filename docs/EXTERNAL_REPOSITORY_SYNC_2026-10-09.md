@@ -2,7 +2,7 @@
 
 ## Scope
 
-This change registers and pins six user-requested GitHub sources in AURELIA's existing federation registries. It does not copy upstream source into the capital plane or claim that external agent runtimes have been physically installed.
+This change pins all 154 registered public GitHub repositories in AURELIA's existing federation registry, including the 73 entries that previously used `SYNC_REQUIRED`, and registers six user-requested sources in the skill registry. It does not copy upstream source into the capital plane or claim that external agent runtimes have been physically installed.
 
 ## Pinned sources and routing
 
@@ -16,6 +16,12 @@ This change registers and pins six user-requested GitHub sources in AURELIA's ex
 | workersio/skills | 0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb | SANDBOX_ONLY | ClaudeCode | Bug triage, debugging and regression testing |
 
 Supporting assignments include GrokBot, JEV and AURELIA. Quantitative crypto research also includes KimiK3. The user's “Dev” label is not a canonical agent ID in the checked registry; this batch routes engineering work to ClaudeCode rather than inventing a second runtime identity.
+
+## Inventory validation
+
+- 154/154 registered repository URLs were reachable in the main-branch sync check.
+- 154/154 repository records now have a pinned default-branch commit SHA; the federation validator rejects duplicate repository names or any remaining `SYNC_REQUIRED` entries.
+- A pin records a source revision; it does not mean that code has been installed, reviewed for production use, or qualified as a strategy.
 
 ## Guardrails
 
