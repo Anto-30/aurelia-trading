@@ -76,3 +76,55 @@ External repositories may inform research, engineering, QA, security, UI, and op
 The current AURELIA Python runtime contains only its required runtime dependency set. These repositories are therefore synchronized as pinned intelligence sources first, rather than being injected wholesale into the production runtime. This avoids dependency pollution, supply-chain drift, and accidental broker-authority inheritance.
 
 A later runtime dependency may be admitted only through an explicit bounded adapter, tests, provenance pin, license/security review, and existing release gates.
+
+
+### BerriAI/litellm
+- Pin: `5e1c5c0bd17781a83b4368c38ebebcf7bc683fcb`
+- Role: Multi-provider LLM gateway / orchestration infrastructure
+- Mode: `SANDBOX_ONLY`
+- Integration: architecture reference; no production runtime install in this sync
+- Security: recent upstream advisories include critical/high issues. LiteLLM's March 2026 security notice documented compromised PyPI releases `1.82.7` and `1.82.8`; do not install those versions. Review current advisories and verify a pinned, signed release before any future adoption.
+- Boundary: no access to Deriv credentials, no production secrets, no authority to change LIVE_LOCK or execute trades.
+
+### LiteLLM-Labs/litellm-agent-control-plane
+- Pin: `53bfd20e2fec51fc8f665fb614512c6b138367da`
+- Role: Agent control-plane architecture
+- Mode: `SANDBOX_ONLY`
+- Integration: compare agent routing and provider-control patterns; cannot control AURELIA's deterministic capital plane.
+
+### BerriAI/litellm-docs
+- Pin: `4a73adff0a530b948b043b0fa64bf96d2cc7c4ce`
+- Role: Official LiteLLM documentation
+- Mode: `REFERENCE_ONLY`
+- Integration: documentation/security-advisory lookup only.
+
+### BerriAI/liteLLM-proxy
+- Pin: `1ef69ae92bf22600f9a42d15e3b992e1010c9a7e`
+- Role: Legacy proxy reference
+- Mode: `REFERENCE_ONLY`
+- Integration: older repository; not the preferred current upstream implementation.
+
+### numman-ali/cc-mirror
+- Pin: `e0e6f289c78ebe7f38bd8afcad92d28ea7e4f1e5`
+- Role: Isolated Claude Code / custom-provider developer tooling
+- Mode: `SANDBOX_ONLY`
+- Integration: developer tooling research; never route production credentials through modified coding-agent binaries.
+
+### BerriAI/litellm-pgvector
+- Pin: `5bd8f3ab1fa9129e758a2c4b17ba1c6f3047ba24`
+- Role: Vector-memory integration
+- Mode: `SANDBOX_ONLY`
+- Integration: retrieval architecture reference only; no production account data or secrets.
+
+### LiteLLM-Labs/litellm-rust
+- Pin: `76f83257fce4dcc3d76e7e760934bbd725b624d9`
+- Role: Rust LLM gateway prototype
+- Mode: `SANDBOX_ONLY`
+- Integration: reference only pending benchmark and security review.
+
+### langchain-ai/langchain-litellm
+- Pin: `5b8af479f783ae5a0d3eff9214c2cbb06473e513`
+- Role: LangChain provider adapter
+- Mode: `SANDBOX_ONLY`
+- Integration: adapter reference pending compatibility and transitive dependency review.
+
