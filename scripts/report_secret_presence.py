@@ -26,7 +26,7 @@ def main() -> int:
     auth_mode_valid = auth_mode in {"pat", "oauth"}
     auth_present = present("DERIV_AUTH_TOKEN") or present("DERIV_PAT")
     login_present = present("DERIV_EXPECTED_LOGINID") or present("DERIV_AUTHORIZED_ACCOUNT_ID")
-    currency_present = bool(os.getenv("DERIV_EXPECTED_CURRENCY", "USD").strip())
+    currency_present = present("DERIV_EXPECTED_CURRENCY")
     deriv_core = auth_present and login_present and currency_present
     deriv_configured = (
         deriv_core
