@@ -491,7 +491,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/tradesdontlie/tradingview-mcp",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "c05b8f5755ed8e64ea242de88ddbf46aa24d56a4",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "je-suis-tm/quant-trading",
@@ -505,7 +506,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/je-suis-tm/quant-trading",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "611b73f2c3f577ac5b28aaa19ac8c43d3236c7a5",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "jesse-ai/jesse",
@@ -534,7 +536,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/paperswithbacktest/awesome-systematic-trading",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ddfee8bb548bd6914191cb8fdb695d533ae16b0d",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "hummingbot/hummingbot",
@@ -562,7 +565,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/marketcalls/openalgo",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "f4ca3612aed2b1e5b0b61c55b56382c0541d7c30",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "NoFxAiOS/nofx",
@@ -576,7 +580,8 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/NoFxAiOS/nofx",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "ef476f28926c7d0c03f105a19b18f91e30a652a7",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "fabston/TradingView-Webhook-Bot",
@@ -589,7 +594,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/fabston/TradingView-Webhook-Bot",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "7eff8f9e9e13f350d7a3f258329285eb3a0bbd37",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "arvin341az-glitch/RVG",
@@ -603,7 +609,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/arvin341az-glitch/RVG",
-      "head_commit": "SYNC_REQUIRED"
+      "head_commit": "cdece8ea86d2bdda11530e9e6c27cfaa5f467ea7",
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "smfworks/hermes-ai-team",
@@ -618,7 +625,7 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/smfworks/hermes-ai-team",
-      "head_commit": "SYNC_REQUIRED",
+      "head_commit": "82812ae8a977c3190ae8478d13b16390315710cf",
       "capabilities": [
         "agent-identity",
         "persistent-memory-patterns",
@@ -627,7 +634,8 @@
         "kanban-coordination",
         "rituals",
         "desktop-bot-pods"
-      ]
+      ],
+      "pin_source": "github_default_branch_ref_checked_2026-10-09"
     },
     {
       "repo": "forcewake/hermes-conductor",
