@@ -61,13 +61,13 @@ The repository preserves Risk Warden, LivePolicy, Capital Plane Gate, Execution 
 
 The live lock is currently non-live by design. Passing tests or authenticated-session verification does not by itself authorize live capital.
 
-## Stake policy
+## Probability and stake policy
 
-The owner-directed starting stake is `$1.00`. It is a starting reference, not a permanent fixed stake.
+The hard probability band is **50%–75%**, inclusive, with no clipping. A probability inside the band is insufficient unless calibration, freshness, drift, instrument qualification, and positive net expected value after costs all pass.
 
-Actual stake remains subject to verified balance, deterministic risk, exposure, strategy state, drawdown, volatility, costs, broker constraints, and all mandatory execution controls.
+The starting stake and contract minimum are `1.00` in the verified account currency. For live purchased contracts, AURELIA computes the stake as 1% of fresh, verified available balance, rounded down to cents. The strategy/agent proposal cannot override the deterministic sizing rule. Since the minimum stake is `1.00`, a 1% budget cannot fund even the starting stake until verified available balance is at least `100.00` in that currency. A lower balance must remain blocked rather than force a risk-budget exception.
 
-`STAKE_CEILING = VERIFIED_AVAILABLE_BALANCE` is an affordability ceiling, not permission to risk the full account.
+Full policy: `docs/AURELIA_STAKE_POLICY_2026-10-10.md`.
 
 ## Verification
 
