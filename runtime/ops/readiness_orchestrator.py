@@ -11,6 +11,7 @@ from typing import Any
 
 from runtime.core.release_gate import LiveReleaseState, read_live_release
 from runtime.core.limits import ExecutionLimits
+from runtime.core.stake_sizing import DEFAULT_MAX_TRADE_RISK_FRACTION
 from assurance.certification_evidence import validate_evidence_file
 from runtime.ops.readiness_attestation import REQUIRED_CAPABILITIES, verify_readiness_attestations
 
@@ -29,7 +30,7 @@ class Gate:
 
 
 MINIMUM_LIVE_BALANCE = 1.50
-MINIMUM_STAKE_BALANCE_FRACTION = 0.01
+MINIMUM_STAKE_BALANCE_FRACTION = DEFAULT_MAX_TRADE_RISK_FRACTION
 
 
 def _minimum_capital_gate(balance: float | None) -> Gate:
