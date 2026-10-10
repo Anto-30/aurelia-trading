@@ -105,10 +105,26 @@ def _write_runtime_deriv_evidence(snapshot, config_hash: str) -> None:
     )
     enriched = dict(record)
     enriched["observed"] = observed
-    enriched["orders_submitted"] = 0
     enriched["capital_authority_granted"] = False
-    enriched["order_submission_permitted"] = False
-    enriched["verification_scope"] = f"AUTHENTICATED_DERIV_{account.environment.upper()}_SESSION"
+    readonly_scope = (
+        os.getenv("AURELIA_DEPLOYMENT_MODE", "VERIFY_ONLY").strip().upper() != "LIVE"
+    )
+    if readonly_scope:
+        enriched["orders_submitted"] = 0
+        enriched["order_submission_permitted"] = False
+        enriched["verification_scope"] = (
+            f"AUTHENTICATED_DERIV_{account.environment.upper()}_READ_ONLY_SESSION"
+        )
+        enriched["invariants_checked"] = [
+            *enriched.get("invariants_checked", []),
+            "no_order_submission",
+            "order_submission_not_permitted",
+        ]
+    else:
+        enriched["evidence_kind"] = "AUTHENTICATED_BALANCE_SNAPSHOT"
+        enriched["verification_scope"] = (
+            f"AUTHENTICATED_DERIV_{account.environment.upper()}_BALANCE_SNAPSHOT"
+        )
     enriched["record_hash"] = payload_sha256(
         {key: value for key, value in enriched.items() if key != "record_hash"}
     )
