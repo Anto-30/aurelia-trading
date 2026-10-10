@@ -43,7 +43,7 @@ class SessionSummary:
 @dataclass(frozen=True)
 class SessionReversalSignal:
     key: SessionKey
-    direction: SignalDirection
+    direction: SignalDirection | None
     signal_bar_open_utc: datetime
     signal_available_at_utc: datetime
     signal_price: float
@@ -60,7 +60,7 @@ class SessionReversalSignal:
 class SessionExpansionObservation:
     signal_key: SessionKey
     following_key: SessionKey
-    directional_signal: SignalDirection
+    directional_signal: SignalDirection | None
     prior_20_same_type_median_range: float | None
     following_session_range: float
     expansion_ratio: float | None
@@ -206,17 +206,16 @@ def detect_session_reversal(
         if not long_sweep and not short_sweep:
             continue
         if long_sweep and short_sweep:
-            direction: SignalDirection = "LONG"
-            stop = min(x.low for x in local_rows) - tick_size
+            # Both directions are possible inside this OHLC candle; never invent a side.
             return SessionReversalSignal(
                 key=current_key,
-                direction=direction,
+                direction=None,
                 signal_bar_open_utc=stamp,
                 signal_available_at_utc=close_at,
                 signal_price=bar.close,
                 prior_session_high=previous_session.high,
                 prior_session_low=previous_session.low,
-                stop_reference_price=stop,
+                stop_reference_price=float("nan"),
                 ambiguity=True,
             )
         if long_sweep:
