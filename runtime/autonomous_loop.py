@@ -105,6 +105,7 @@ class AutonomousExecutionLoop:
         symbols: tuple[str, ...] = (),
         lifecycle_timeout_seconds: float = 600.0,
         tick_timeout_seconds: float = 30.0,
+        daily_risk_guard=None,
     ) -> None:
         self.adapter = adapter
         self.executor = executor
@@ -114,6 +115,7 @@ class AutonomousExecutionLoop:
         self.symbols = symbols
         self.lifecycle_timeout_seconds = lifecycle_timeout_seconds
         self.tick_timeout_seconds = tick_timeout_seconds
+        self.daily_risk_guard = daily_risk_guard if daily_risk_guard is not None else executor.daily_risk_guard
         self._stop = asyncio.Event()
         self._fence: FenceToken | None = None
         self.trades_attempted = 0
@@ -202,6 +204,7 @@ class AutonomousExecutionLoop:
         intent: Any,
         prior_capital: CapitalSnapshot,
         contract_id: str,
+        broker_transaction_id: str,
     ) -> LifecycleResult:
         final_contract: dict[str, Any] | None = None
         try:
@@ -209,6 +212,8 @@ class AutonomousExecutionLoop:
                 async for status in monitor_contract(self.adapter, contract_id):
                     final_contract = status
         except TimeoutError:
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.trip("CONTRACT_SETTLEMENT_TIMEOUT")
             self.executor.activate_kill_switch("CONTRACT_SETTLEMENT_TIMEOUT")
             return LifecycleResult(
                 intent.intent_id,
@@ -220,7 +225,18 @@ class AutonomousExecutionLoop:
                 None,
             )
 
+        except Exception:
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.trip("CONTRACT_STATUS_UNRESOLVED")
+            self.executor.activate_kill_switch("CONTRACT_STATUS_UNRESOLVED")
+            return LifecycleResult(
+                intent.intent_id, "RECOVERY_REQUIRED", broker_transaction_id,
+                contract_id, False, False, None,
+            )
+
         if final_contract is None:
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.trip("CONTRACT_STATUS_UNRESOLVED")
             self.executor.activate_kill_switch("CONTRACT_STATUS_UNRESOLVED")
             return LifecycleResult(
                 intent.intent_id,
@@ -234,6 +250,8 @@ class AutonomousExecutionLoop:
 
         net_delta = _extract_net_delta(final_contract, intent.stake)
         if net_delta is None:
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.trip("BROKER_SETTLEMENT_ECONOMICS_UNRESOLVED")
             self.executor.activate_kill_switch("BROKER_SETTLEMENT_ECONOMICS_UNRESOLVED")
             return LifecycleResult(
                 intent.intent_id,
@@ -245,39 +263,78 @@ class AutonomousExecutionLoop:
                 None,
             )
 
-        post_balance = await self.adapter.get_balance()
-        reconciliation = await self.executor.reconcile(
-            broker_capital=post_balance,
-            prior_authoritative_balance=prior_capital.available_balance,
-            explainable_delta=net_delta,
-        )
-        self.executor.ledger.post(
-            __import__("runtime.core.models", fromlist=["LedgerEvent"]).LedgerEvent(
-                event_id=f"settlement:{intent.intent_id}",
-                intent_id=intent.intent_id,
-                account=intent.account,
-                event_type="CONTRACT_SETTLED",
-                amount=net_delta,
-                currency=intent.account.currency,
-                occurred_at=utc_now(),
-                broker_transaction_id=None,
-                metadata={
-                    "contract_id": contract_id,
-                    "post_balance": post_balance.available_balance,
-                    "broker_profit": final_contract.get("profit"),
-                    "broker_payout": final_contract.get("payout"),
-                },
+        try:
+            post_balance = await self.adapter.get_balance()
+            reconciliation = await self.executor.reconcile(
+                broker_capital=post_balance,
+                prior_authoritative_balance=prior_capital.available_balance,
+                explainable_delta=net_delta,
             )
+        except Exception:
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.trip("POST_TRADE_BALANCE_OR_RECONCILIATION_UNKNOWN")
+            self.executor.activate_kill_switch("POST_TRADE_BALANCE_OR_RECONCILIATION_UNKNOWN")
+            return LifecycleResult(
+                intent.intent_id, "RECOVERY_REQUIRED", broker_transaction_id,
+                contract_id, True, False, None,
+            )
+
+        from runtime.core.models import LedgerEvent
+        event = LedgerEvent(
+            event_id=f"settlement:{intent.intent_id}",
+            intent_id=intent.intent_id,
+            account=intent.account,
+            event_type="CONTRACT_SETTLED",
+            amount=net_delta,
+            currency=intent.account.currency,
+            occurred_at=utc_now(),
+            broker_transaction_id=broker_transaction_id,
+            metadata={
+                "contract_id": contract_id,
+                "post_balance": post_balance.available_balance,
+                "broker_profit": final_contract.get("profit"),
+                "broker_payout": final_contract.get("payout"),
+            },
         )
+        posted = self.executor.ledger.post(event)
+        if not posted:
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.trip("SETTLEMENT_LEDGER_DUPLICATE_OR_UNPOSTED")
+            self.executor.activate_kill_switch("SETTLEMENT_LEDGER_DUPLICATE_OR_UNPOSTED")
+            return LifecycleResult(
+                intent.intent_id, "RECOVERY_REQUIRED", broker_transaction_id,
+                contract_id, True, False, post_balance.available_balance,
+            )
+
+        status_value = str(final_contract.get("status") or "").lower()
+        terminal = bool(final_contract.get("is_sold")) or status_value in {
+            "sold", "closed", "won", "lost", "expired"
+        }
+        if self.daily_risk_guard is not None:
+            risk = self.daily_risk_guard.record_closed_trade(
+                intent_id=intent.intent_id,
+                contract_id=contract_id,
+                broker_transaction_id=broker_transaction_id,
+                account_loginid=intent.account.loginid,
+                currency=intent.account.currency,
+                net_pnl=net_delta,
+                post_balance=post_balance.balance,
+                closed_at=utc_now(),
+                terminal=terminal,
+                reconciled=reconciliation.healthy,
+            )
+            if not risk.get("allowed"):
+                self.executor.activate_kill_switch(str(risk.get("reason") or "DAILY_RISK_TRIPPED"))
+
         if not reconciliation.healthy:
             self.executor.activate_kill_switch("POST_TRADE_RECONCILIATION_MISMATCH")
 
         return LifecycleResult(
             intent.intent_id,
             "SETTLED" if reconciliation.healthy else "RECOVERY_REQUIRED",
-            None,
+            broker_transaction_id,
             contract_id,
-            True,
+            terminal,
             reconciliation.healthy,
             post_balance.available_balance,
         )
@@ -291,6 +348,20 @@ class AutonomousExecutionLoop:
         controls: dict[str, bool],
     ) -> LifecycleResult | ExecutionOutcome:
         self.trades_attempted += 1
+        if self.daily_risk_guard is not None:
+            risk = self.daily_risk_guard.permit(
+                account_loginid=account.loginid,
+                currency=capital.currency,
+                current_balance=capital.balance,
+                captured_at=capital.captured_at,
+            )
+            if not risk.get("allowed"):
+                reason = str(risk.get("reason") or "DAILY_RISK_DENIED")
+                self.executor.activate_kill_switch(reason)
+                self.executor._log("DAILY_RISK_BLOCKED", {
+                    "decision_id": decision.decision_id, "reason": reason,
+                })
+                return ExecutionOutcome(False, "BLOCKED", (reason,), f"intent:{decision.decision_id}")
         if self._fence is None or not self.executor.fence.valid(self._fence):
             self._fence = self.executor.fence.acquire(self.fence_owner)
 
@@ -343,18 +414,19 @@ class AutonomousExecutionLoop:
                 None,
             )
 
-        # The executor's accepted result does not carry the contract ID in its
-        # public outcome. Recover it from the broker portfolio/statement using
-        # the transaction ID rather than guessing.
-        portfolio = await self.adapter.portfolio()
-        candidate = next(
-            (
-                row for row in portfolio
-                if str(row.get("transaction_id") or "") == str(outcome.broker_transaction_id)
-            ),
-            None,
-        )
-        contract_id = str(candidate.get("contract_id")) if candidate and candidate.get("contract_id") else None
+        # Prefer the contract ID already confirmed in the broker buy response.
+        # Fall back to portfolio/statement only for adapters that omit it.
+        contract_id = str(outcome.contract_id) if outcome.contract_id else None
+        if contract_id is None:
+            portfolio = await self.adapter.portfolio()
+            candidate = next(
+                (
+                    row for row in portfolio
+                    if str(row.get("transaction_id") or "") == str(outcome.broker_transaction_id)
+                ),
+                None,
+            )
+            contract_id = str(candidate.get("contract_id")) if candidate and candidate.get("contract_id") else None
         if contract_id is None:
             statement = await self.adapter.statement(limit=100)
             candidate = next(
@@ -382,6 +454,7 @@ class AutonomousExecutionLoop:
             intent=intent,
             prior_capital=capital,
             contract_id=contract_id,
+            broker_transaction_id=outcome.broker_transaction_id,
         )
 
     async def run(self) -> None:

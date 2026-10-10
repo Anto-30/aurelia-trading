@@ -34,9 +34,9 @@ def account():
 def capital():
     a = account()
     return CapitalSnapshot(
-        balance=10.0,
+        balance=200.0,
         currency="USD",
-        available_balance=10.0,
+        available_balance=200.0,
         captured_at=datetime.now(UTC),
         source="test",
         account=a,
@@ -195,6 +195,43 @@ class CapitalExecutorHardeningTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(second.status, "RECOVERY_REQUIRED")
             self.assertIn("BROKER_OUTCOME_UNKNOWN_REQUIRES_RECONCILIATION", second.reasons)
             self.assertEqual(broker.calls, 1)
+
+
+    async def test_one_percent_maximum_loss_budget_is_enforced_at_submission(self):
+        with tempfile.TemporaryDirectory() as td:
+            lock = Path(td) / "LIVE_LOCK.yaml"
+            self.write_live_release(lock)
+            from runtime.core.models import CapitalSnapshot
+            small_account = AccountIdentity("CRSMALL", "real", "USD", "real")
+            snapshot = CapitalSnapshot(10.0, "USD", 10.0, datetime.now(UTC), "test", small_account)
+
+            class SmallBroker(FakeBroker):
+                async def get_balance(self):
+                    return snapshot
+
+            broker = SmallBroker()
+            executor = make_executor(lock, broker)
+            auth = AuthorizationContext(
+                decision=Decision(
+                    "D-SMALL", "S", "1", "strategy-hash", "R_100", "CALL", 0.60,
+                    datetime.now(UTC), "market-hash", 1.0, ("TEST",), 2.0, 1.0,
+                    0.0, 0.0, 0.0, 0.8,
+                ),
+                account=small_account, capital=snapshot, config_hash="config-hash",
+                authorization_id="AUTH-SMALL",
+                authorization_issued_at=datetime.now(UTC)-timedelta(seconds=1),
+                authorization_expires_at=datetime.now(UTC)+timedelta(seconds=30),
+                kill_switch_off=True, risk_approved=True, firewall_approved=True,
+                reconciliation_healthy=True, final_execution_authorization=True,
+            )
+            executor._kill_switch_activated_at = datetime.now(UTC)-timedelta(seconds=2)
+            self.assertTrue(executor.clear_kill_switch_with_fresh_authorization(auth))
+            intent = build_intent(auth, proposal_id="P1", mode="LIVE")
+            token = executor.fence.acquire("test")
+            outcome = await executor.execute(intent, auth, token)
+            self.assertFalse(outcome.allowed)
+            self.assertIn("TRADE_RISK_BUDGET_EXCEEDED", outcome.reasons)
+            self.assertEqual(broker.calls, 0)
 
     async def test_duplicate_concurrent_intent_has_one_broker_effect(self):
         with tempfile.TemporaryDirectory() as td:

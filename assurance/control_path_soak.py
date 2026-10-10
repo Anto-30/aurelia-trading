@@ -42,9 +42,9 @@ def _account():
 
 def _capital():
     return CapitalSnapshot(
-        balance=10.0,
+        balance=200.0,
         currency="USD",
-        available_balance=10.0,
+        available_balance=200.0,
         captured_at=datetime.now(UTC),
         source="deterministic-soak",
         account=_account(),
@@ -286,16 +286,16 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
             if second and second % 181 == 0:
                 mismatch = _capital()
                 mismatch = CapitalSnapshot(
-                    balance=9.0,
+                    balance=199.0,
                     currency=mismatch.currency,
-                    available_balance=9.0,
+                    available_balance=199.0,
                     captured_at=datetime.now(UTC),
                     source="soak-mismatch",
                     account=mismatch.account,
                 )
                 reconciliation: ReconciliationResult = await executor.reconcile(
                     broker_capital=mismatch,
-                    prior_authoritative_balance=10.0,
+                    prior_authoritative_balance=200.0,
                 )
                 if reconciliation.healthy:
                     return {"passed": False, "reason": "RECONCILIATION_FAILURE_ACCEPTED"}
