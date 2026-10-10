@@ -115,7 +115,7 @@ class PersistentDailyRiskGuard:
         max_balance_age_seconds: float = 15.0,
         max_consecutive_broker_failures: int = 3,
     ) -> None:
-        if not math.isfinite(max_daily_drawdown_pct) or not 0 < max_daily_drawdown_pct <= 0.10:
+        if not math.isfinite(max_daily_drawdown_pct) or not 0 < max_daily_drawdown_pct <= 0.05:
             raise ValueError("DAILY_RISK_DRAWDOWN_LIMIT_INVALID")
         if isinstance(max_consecutive_losses, bool) or max_consecutive_losses < 1:
             raise ValueError("DAILY_RISK_LOSS_STREAK_LIMIT_INVALID")
