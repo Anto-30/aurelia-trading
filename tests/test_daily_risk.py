@@ -117,6 +117,32 @@ class DailyRiskTests(unittest.TestCase):
             self.assertFalse(result["allowed"])
             self.assertEqual(result["reason"], "SETTLEMENT_OR_RECONCILIATION_UNVERIFIED")
 
+
+    def test_broker_failure_threshold_is_persistent(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "risk.json"
+            guard = PersistentDailyRiskGuard(path, max_consecutive_broker_failures=3)
+            guard.initialize_day(account_loginid="CR1", currency="USD", utc_day="2026-10-10",
+                reference_balance=100, baseline_source="test", now=NOW)
+            self.assertTrue(guard.record_broker_failure("timeout", now=NOW)["allowed"])
+            self.assertTrue(guard.record_broker_failure("rate-limit", now=NOW)["allowed"])
+            third = guard.record_broker_failure("disconnect", now=NOW)
+            self.assertFalse(third["allowed"])
+            self.assertIn("BROKER_FAILURE_LIMIT", third["reason"])
+            self.assertTrue(PersistentDailyRiskGuard(path).tripped)
+
+    def test_broker_success_resets_only_untripped_failure_streak(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "risk.json"
+            guard = PersistentDailyRiskGuard(path)
+            guard.initialize_day(account_loginid="CR1", currency="USD", utc_day="2026-10-10",
+                reference_balance=100, baseline_source="test", now=NOW)
+            guard.record_broker_failure("timeout", now=NOW)
+            result = guard.record_broker_success(now=NOW)
+            self.assertTrue(result["allowed"])
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["consecutive_broker_failures"], 0)
+
     def test_unknown_corrupt_state_and_account_mismatch_fail_closed(self):
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "risk.json"

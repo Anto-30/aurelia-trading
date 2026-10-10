@@ -350,18 +350,28 @@ class CapitalPlaneExecutor:
             fresh_balance = await self.broker.get_balance()
         except Exception as exc:
             self.circuit_breaker.record_broker_failure()
+            if self.daily_risk_guard is not None:
+                risk = self.daily_risk_guard.record_broker_failure("BROKER_BALANCE_UNKNOWN")
+                if not risk.get("allowed"):
+                    self.activate_kill_switch(str(risk.get("reason") or "BROKER_FAILURE_LIMIT"))
             self._log(
                 "PRE_SUBMISSION_BLOCKED",
                 {"intent_id": intent.intent_id, "reasons": ("BROKER_STATE_UNKNOWN", type(exc).__name__)},
             )
             return ExecutionOutcome(False, "RECOVERY_REQUIRED", ("BROKER_STATE_UNKNOWN",), intent.intent_id)
         if not fresh_balance.is_valid():
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.trip("BROKER_BALANCE_STALE_OR_INVALID")
+                self.activate_kill_switch("BROKER_BALANCE_STALE_OR_INVALID")
             self._log(
                 "PRE_SUBMISSION_BLOCKED",
                 {"intent_id": intent.intent_id, "reasons": ("BROKER_BALANCE_STALE_OR_INVALID",)},
             )
             return ExecutionOutcome(False, "BLOCKED", ("BROKER_BALANCE_STALE_OR_INVALID",), intent.intent_id)
         if fresh_balance.account != context.account:
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.trip("BROKER_ACCOUNT_IDENTITY_CHANGED")
+                self.activate_kill_switch("BROKER_ACCOUNT_IDENTITY_CHANGED")
             self._log(
                 "PRE_SUBMISSION_BLOCKED",
                 {"intent_id": intent.intent_id, "reasons": ("BROKER_ACCOUNT_IDENTITY_CHANGED",)},
@@ -531,6 +541,8 @@ class CapitalPlaneExecutor:
 
         if result.outcome == BrokerOutcome.ACCEPTED:
             self.circuit_breaker.record_success()
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.record_broker_success()
             self.idempotency.record_economic_effect(intent.intent_id)
             self.ledger.post(
                 LedgerEvent(
@@ -563,6 +575,10 @@ class CapitalPlaneExecutor:
             )
 
         self.circuit_breaker.record_broker_failure()
+        if self.daily_risk_guard is not None:
+            risk = self.daily_risk_guard.record_broker_failure("BROKER_REJECTED")
+            if not risk.get("allowed"):
+                self.activate_kill_switch(str(risk.get("reason") or "BROKER_FAILURE_LIMIT"))
         if self.circuit_breaker.tripped:
             self.activate_kill_switch(self.circuit_breaker.reason or "BROKER_FAILURE_THRESHOLD")
         return ExecutionOutcome(

@@ -113,6 +113,7 @@ class PersistentDailyRiskGuard:
         max_daily_drawdown_pct: float = 0.03,
         max_consecutive_losses: int = 3,
         max_balance_age_seconds: float = 15.0,
+        max_consecutive_broker_failures: int = 3,
     ) -> None:
         if not math.isfinite(max_daily_drawdown_pct) or not 0 < max_daily_drawdown_pct <= 0.10:
             raise ValueError("DAILY_RISK_DRAWDOWN_LIMIT_INVALID")
@@ -120,10 +121,13 @@ class PersistentDailyRiskGuard:
             raise ValueError("DAILY_RISK_LOSS_STREAK_LIMIT_INVALID")
         if not math.isfinite(max_balance_age_seconds) or max_balance_age_seconds <= 0:
             raise ValueError("DAILY_RISK_BALANCE_AGE_LIMIT_INVALID")
+        if isinstance(max_consecutive_broker_failures, bool) or max_consecutive_broker_failures < 1:
+            raise ValueError("DAILY_RISK_BROKER_FAILURE_LIMIT_INVALID")
         self.path = Path(path)
         self.max_daily_drawdown_pct = float(max_daily_drawdown_pct)
         self.max_consecutive_losses = int(max_consecutive_losses)
         self.max_balance_age_seconds = float(max_balance_age_seconds)
+        self.max_consecutive_broker_failures = int(max_consecutive_broker_failures)
         self._lock = RLock()
         self._state: dict[str, Any] | None = None
         self._load_error: str | None = None
@@ -192,6 +196,7 @@ class PersistentDailyRiskGuard:
                 "current_balance": None,
                 "daily_realized_pnl": 0.0,
                 "consecutive_losses": 0,
+                "consecutive_broker_failures": 0,
                 "settlements": {},
             }
         self._state["tripped"] = True
@@ -244,11 +249,13 @@ class PersistentDailyRiskGuard:
                     if prior.get("initialized") is not True:
                         raise RuntimeError("DAILY_RISK_STATE_UNINITIALIZED")
                     return False
-                # Daily P&L/reference reset at UTC rollover; loss streak persists
-                # across days to avoid accidental loss-streak erasure on restart.
+                # Daily P&L/reference reset at UTC rollover; loss and API failure
+                # streaks persist across days to prevent restart/rollover evasion.
                 streak = int(prior.get("consecutive_losses", 0))
+                broker_failures = int(prior.get("consecutive_broker_failures", 0))
             else:
                 streak = 0
+                broker_failures = 0
             self._state = {
                 "schema_version": self.SCHEMA_VERSION,
                 "initialized": True,
@@ -260,9 +267,14 @@ class PersistentDailyRiskGuard:
                 "current_balance": ref,
                 "daily_realized_pnl": 0.0,
                 "consecutive_losses": streak,
+                "consecutive_broker_failures": broker_failures,
                 "settlements": {},
-                "tripped": streak >= self.max_consecutive_losses,
-                "reason": "CONSECUTIVE_LOSS_LIMIT" if streak >= self.max_consecutive_losses else None,
+                "tripped": streak >= self.max_consecutive_losses or broker_failures >= self.max_consecutive_broker_failures,
+                "reason": (
+                    "CONSECUTIVE_LOSS_LIMIT" if streak >= self.max_consecutive_losses
+                    else "BROKER_FAILURE_LIMIT" if broker_failures >= self.max_consecutive_broker_failures
+                    else None
+                ),
                 "updated_at_utc": observed.isoformat(),
             }
             self._save()
@@ -298,10 +310,10 @@ class PersistentDailyRiskGuard:
                 return self._decision(False, "BALANCE_CAPTURE_TIME_INVALID")
             age = (observed - captured).total_seconds()
             if age < 0 or age > self.max_balance_age_seconds:
-                return self._decision(False, "BALANCE_SNAPSHOT_STALE")
+                return self._trip_locked("BALANCE_SNAPSHOT_STALE", observed)
             balance = _finite(current_balance)
             if balance is None or balance < 0:
-                return self._decision(False, "BROKER_BALANCE_INVALID")
+                return self._trip_locked("BROKER_BALANCE_INVALID", observed)
             state["current_balance"] = balance
             drawdown = self._drawdown(balance)
             state["updated_at_utc"] = observed.isoformat()
@@ -323,6 +335,42 @@ class PersistentDailyRiskGuard:
     def trip(self, reason: str, *, now: datetime | None = None) -> dict[str, Any]:
         with self._lock:
             return self._trip_locked(str(reason or "DAILY_RISK_TRIPPED"), _utc(now or datetime.now(timezone.utc)))
+
+    def record_broker_failure(
+        self, reason: str = "BROKER_REQUEST_FAILED", *, now: datetime | None = None
+    ) -> dict[str, Any]:
+        """Persist a consecutive broker/API failure count; trip at configured limit."""
+        with self._lock:
+            observed = _utc(now or datetime.now(timezone.utc))
+            if self._load_error:
+                return self._decision(False, "DAILY_RISK_STATE_PERSISTENCE_UNAVAILABLE")
+            if not self.initialized or self._state is None:
+                return self._trip_locked("DAILY_RISK_STATE_UNINITIALIZED", observed)
+            if self._state.get("tripped"):
+                return self._decision(False, str(self._state.get("reason") or "DAILY_RISK_TRIPPED"))
+            self._state["consecutive_broker_failures"] = int(
+                self._state.get("consecutive_broker_failures", 0)
+            ) + 1
+            self._state["updated_at_utc"] = observed.isoformat()
+            if self._state["consecutive_broker_failures"] >= self.max_consecutive_broker_failures:
+                return self._trip_locked("BROKER_FAILURE_LIMIT:" + str(reason), observed)
+            self._save()
+            return self._decision(True, None)
+
+    def record_broker_success(self, *, now: datetime | None = None) -> dict[str, Any]:
+        """Reset the broker failure streak, but never clear a tripped guard."""
+        with self._lock:
+            observed = _utc(now or datetime.now(timezone.utc))
+            if self._load_error:
+                return self._decision(False, "DAILY_RISK_STATE_PERSISTENCE_UNAVAILABLE")
+            if not self.initialized or self._state is None:
+                return self._decision(False, "DAILY_RISK_STATE_UNINITIALIZED")
+            if self._state.get("tripped"):
+                return self._decision(False, str(self._state.get("reason") or "DAILY_RISK_TRIPPED"))
+            self._state["consecutive_broker_failures"] = 0
+            self._state["updated_at_utc"] = observed.isoformat()
+            self._save()
+            return self._decision(True, None)
 
     def record_closed_trade(
         self,
