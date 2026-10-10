@@ -203,6 +203,23 @@ class SessionStructureHypothesisTests(unittest.TestCase):
         self.assertIsNone(session_expansion_observation(signal, following, []).expansion_ratio)
         self.assertIsNone(session_expansion_observation(signal, following, [0.0, 0.0]).expansion_ratio)
 
+    def test_session_summary_rejects_unimplemented_interval(self):
+        with self.assertRaisesRegex(ValueError, "SESSION_SUMMARY_REQUIRES_5M_BARS"):
+            build_session_summaries(
+                make_session_bars(DAY, "EUROPE"),
+                expected_interval=timedelta(minutes=1),
+            )
+
+    def test_structure_rejects_nonpositive_pivot_history_limit(self):
+        with self.assertRaisesRegex(ValueError, "MAX_PIVOTS_MUST_BE_POSITIVE"):
+            structure_asof(
+                structure_bars(),
+                timeframe=timedelta(hours=1),
+                timeframe_label="1H",
+                decision_timestamp=datetime(2026, 1, 6, 0, 0, tzinfo=timezone.utc),
+                max_pivots=0,
+            )
+
     def test_confirmed_pivot_is_unavailable_before_two_right_bars_close(self):
         bars = structure_bars()
         pivots = confirmed_pivots(bars, timeframe=timedelta(hours=1))
