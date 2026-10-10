@@ -4,6 +4,8 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 from research.labs.intraday_bias_cost_model import (
+    ApiRateLimitSimulator,
+    DerivRateLimitProfile,
     InstrumentCostProfile,
     LatencyProfile,
     instrument_cost_adjusted_returns,
@@ -151,3 +153,48 @@ class InstrumentCostModelTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class DerivRateLimitSimulatorTests(unittest.TestCase):
+    def test_websocket_trading_calls_share_one_budget(self):
+        profile = DerivRateLimitProfile(ws_trading_per_minute=2, ws_trading_per_hour=10)
+        sim = ApiRateLimitSimulator(profile)
+        self.assertTrue(sim.simulate_request(protocol="ws", request_type="proposal", timestamp_seconds=0).allowed)
+        self.assertTrue(sim.simulate_request(protocol="ws", request_type="buy", timestamp_seconds=1).allowed)
+        limited = sim.simulate_request(protocol="ws", request_type="sell", timestamp_seconds=2)
+        self.assertFalse(limited.allowed)
+        self.assertEqual(limited.reason, "RATE_LIMITED")
+        self.assertGreater(limited.retry_after_seconds, 0)
+        self.assertTrue(sim.simulate_request(protocol="ws", request_type="sell", timestamp_seconds=60).allowed)
+
+    def test_websocket_hourly_budget_is_separate_from_minute_budget(self):
+        profile = DerivRateLimitProfile(ws_other_per_minute=10, ws_other_per_hour=2)
+        sim = ApiRateLimitSimulator(profile)
+        self.assertTrue(sim.simulate_request(protocol="ws", request_type="authorize", timestamp_seconds=0).allowed)
+        self.assertTrue(sim.simulate_request(protocol="ws", request_type="authorize", timestamp_seconds=1).allowed)
+        self.assertFalse(sim.simulate_request(protocol="ws", request_type="authorize", timestamp_seconds=2).allowed)
+        self.assertTrue(sim.simulate_request(protocol="ws", request_type="authorize", timestamp_seconds=3600).allowed)
+
+    def test_ping_budget_is_per_connection(self):
+        sim = ApiRateLimitSimulator(DerivRateLimitProfile(ws_ping_per_second=2))
+        self.assertTrue(sim.simulate_request(protocol="ws", request_type="ping", timestamp_seconds=0, connection_key="A").allowed)
+        self.assertTrue(sim.simulate_request(protocol="ws", request_type="ping", timestamp_seconds=0.1, connection_key="A").allowed)
+        self.assertFalse(sim.simulate_request(protocol="ws", request_type="ping", timestamp_seconds=0.2, connection_key="A").allowed)
+        self.assertTrue(sim.simulate_request(protocol="ws", request_type="ping", timestamp_seconds=0.2, connection_key="B").allowed)
+
+    def test_rest_limits_are_applied_to_ip_and_account(self):
+        profile = DerivRateLimitProfile(rest_ip_per_minute=10, rest_ip_per_10_minutes=20, rest_account_per_minute=2)
+        sim = ApiRateLimitSimulator(profile)
+        self.assertTrue(sim.simulate_request(protocol="rest", request_type="GET", timestamp_seconds=0, account_key="A", ip_key="X").allowed)
+        self.assertTrue(sim.simulate_request(protocol="rest", request_type="GET", timestamp_seconds=1, account_key="A", ip_key="Y").allowed)
+        denied = sim.simulate_request(protocol="rest", request_type="POST", timestamp_seconds=2, account_key="A", ip_key="Z")
+        self.assertFalse(denied.allowed)
+        self.assertEqual(denied.budget, "rest")
+
+    def test_time_regression_and_unknown_protocol_are_rejected(self):
+        sim = ApiRateLimitSimulator()
+        sim.simulate_request(protocol="ws", request_type="ping", timestamp_seconds=2)
+        with self.assertRaisesRegex(ValueError, "RATE_LIMIT_TIMESTAMP_MUST_BE_MONOTONIC"):
+            sim.simulate_request(protocol="ws", request_type="ping", timestamp_seconds=1)
+        with self.assertRaisesRegex(ValueError, "RATE_LIMIT_PROTOCOL_MUST_BE_WEBSOCKET_OR_REST"):
+            ApiRateLimitSimulator().simulate_request(protocol="tcp", request_type="other", timestamp_seconds=0)
+
