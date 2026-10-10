@@ -462,7 +462,7 @@ async def main() -> None:
             auth_token="",
         )
         keep_readonly_session = (
-            os.getenv("AURELIA_DEPLOYMENT_MODE", "VERIFY_ONLY").strip().upper() == "VERIFY_ONLY"
+            os.getenv("AURELIA_DEPLOYMENT_MODE", "").strip().upper() == "VERIFY_ONLY"
             and os.getenv("AURELIA_AUTONOMOUS_LOOP", "false").strip().lower() != "true"
             and os.getenv("AURELIA_RUN_ONCE", "false").strip().lower() != "true"
         )
