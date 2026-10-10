@@ -102,6 +102,7 @@ AUTH_CONFIGURED=false
 if grep -Eq "^(DERIV_AUTH_TOKEN|DERIV_PAT)=.+$" "$ENV_FILE" \
   && grep -Eq "^(DERIV_EXPECTED_LOGINID|DERIV_AUTHORIZED_ACCOUNT_ID)=.+$" "$ENV_FILE" \
   && grep -Eq "^DERIV_EXPECTED_CURRENCY=.+$" "$ENV_FILE" \
+  && grep -Eq "^DERIV_ENVIRONMENT=real$" "$ENV_FILE" \
   && grep -Eq "^DERIV_AUTH_MODE=(pat|oauth)$" "$ENV_FILE"; then
   if ! grep -Eq "^DERIV_AUTH_MODE=pat$" "$ENV_FILE" \
     || grep -Eq "^DERIV_APP_ID=.+$" "$ENV_FILE"; then
@@ -120,6 +121,10 @@ if [ "$DEPLOYMENT_MODE" = "LIVE" ] && [ "$AUTH_CONFIGURED" != "true" ]; then
   }
   grep -Eq "^DERIV_EXPECTED_CURRENCY=.+$" "$ENV_FILE" || {
     echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_EXPECTED_CURRENCY"
+    exit 2
+  }
+  grep -Eq "^DERIV_ENVIRONMENT=real$" "$ENV_FILE" || {
+    echo "AURELIA_HOST_BLOCKED=LIVE_RUNTIME_REQUIRES_DERIV_ENVIRONMENT_REAL"
     exit 2
   }
   grep -Eq "^DERIV_AUTH_MODE=(pat|oauth)$" "$ENV_FILE" || {
