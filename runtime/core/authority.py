@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import timedelta
 from math import isfinite
 
@@ -13,8 +13,9 @@ from .models import (
     OrderIntent,
     utc_now,
 )
+from .stake_sizing import size_stake_for_balance
 
-MIN_PROBABILITY = 0.55
+MIN_PROBABILITY = 0.50
 MAX_PROBABILITY = 0.75
 STARTING_STAKE = 1.00
 EXECUTION_MINIMUM_STAKE = 1.00
@@ -27,7 +28,10 @@ class GateResult:
 
 
 def probability_is_valid(probability: float) -> bool:
-    return isfinite(probability) and MIN_PROBABILITY <= probability <= MAX_PROBABILITY
+    if isinstance(probability, bool) or not isinstance(probability, (int, float)):
+        return False
+    value = float(probability)
+    return isfinite(value) and MIN_PROBABILITY <= value <= MAX_PROBABILITY
 
 
 def decision_economics_gate(decision: Decision) -> tuple[bool, str, float | None]:
@@ -67,10 +71,17 @@ def requested_stake_is_permitted(
     capital: CapitalSnapshot,
     minimum_stake: float = EXECUTION_MINIMUM_STAKE,
 ) -> bool:
+    if isinstance(requested, bool) or not isinstance(requested, (int, float)):
+        return False
+    if isinstance(capital.available_balance, bool) or not isinstance(
+        capital.available_balance, (int, float)
+    ):
+        return False
+    value = float(requested)
     return bool(
-        isfinite(requested)
-        and requested >= minimum_stake
-        and requested <= capital.available_balance
+        isfinite(value)
+        and value >= minimum_stake
+        and value <= capital.available_balance
         and capital.is_valid()
     )
 
@@ -97,6 +108,7 @@ def authorization_gate(
     execution_mode: str = "LIVE",
 ) -> tuple[GateResult, AuthorizationContext | None]:
     reasons: list[str] = []
+    authorized_live_stake: float | None = None
 
     if account.account_type != "real":
         reasons.append("ACCOUNT_NOT_REAL")
@@ -106,6 +118,8 @@ def authorization_gate(
         reasons.append("CURRENCY_MISMATCH")
     if not capital.is_valid():
         reasons.append("CAPITAL_TRUTH_NOT_FRESH")
+    if execution_mode == "LIVE" and capital.currency.strip().upper() != "USD":
+        reasons.append("USD_STAKE_POLICY_REQUIRES_USD_ACCOUNT")
     if not probability_is_valid(decision.probability):
         reasons.append("PROBABILITY_OUTSIDE_HARD_POLICY")
 
@@ -132,8 +146,20 @@ def authorization_gate(
         reasons.append("STRATEGY_HASH_MISSING")
     if not config_hash or config_hash != runtime_config_hash:
         reasons.append("CONFIG_DIGEST_MISMATCH")
+
+    # Keep the proposed request valid, but do not let a strategy/LLM choose
+    # the final capital amount. LIVE sizing is recalculated deterministically
+    # from the exact fresh available-balance snapshot and then travels in the
+    # authorization context to intent creation.
     if not requested_stake_is_permitted(decision.risk_requested_stake, capital):
         reasons.append("STAKE_NOT_AFFORDABLE_OR_BELOW_BROKER_MINIMUM")
+    if execution_mode == "LIVE":
+        sizing = size_stake_for_balance(capital.available_balance)
+        if sizing.allowed:
+            authorized_live_stake = sizing.stake
+        else:
+            reasons.append(sizing.reason)
+
     if not risk_approved:
         reasons.append("RISK_WARDEN_REJECTED")
     if not firewall_approved:
@@ -155,10 +181,20 @@ def authorization_gate(
         return GateResult(False, tuple(reasons)), None
 
     now = utc_now()
+    authorized_decision = decision
+    if execution_mode == "LIVE":
+        # Rebind stake sizing to this authorization's balance snapshot. This
+        # is an internal risk-plane transformation, not an agent authority.
+        assert authorized_live_stake is not None
+        authorized_decision = replace(
+            decision,
+            risk_requested_stake=authorized_live_stake,
+        )
+
     return (
         GateResult(True, ()),
         AuthorizationContext(
-            decision=decision,
+            decision=authorized_decision,
             account=account,
             capital=capital,
             config_hash=config_hash,
