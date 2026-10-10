@@ -249,5 +249,63 @@
     "live_trading_enabled": false,
     "final_execution_authorization": false,
     "live_execution": "BLOCKED"
+  },
+  "candidate_c_event_study": {
+    "status": "EXPLORATORY_DESCRIPTIVE_ONLY_NOT_QUALIFIED",
+    "query_file": "research/labs/sql/session_reversal_expansion_pilot.sql",
+    "input_contract": "MNQH5",
+    "input_table": "temporary Massive workspace table mnqh5_q1_2025",
+    "source_window_utc": "2024-12-01 through 2025-03-21",
+    "output_session_year": "2025",
+    "signal_definition": "First completed 5-minute candle in a session that sweeps at least one MNQ tick beyond the prior complete session high/low and closes back inside; both-boundary same-candle event is ambiguous.",
+    "outcome_definition": "Following defined session range divided by the median of the preceding 20 complete sessions of the following session type.",
+    "tests_directional_trade_pnl": false,
+    "costs_or_execution_model": false,
+    "oos_sealed": false,
+    "raw_data_persisted": false,
+    "raw_data_sha256": null,
+    "results": [
+      {
+        "current_signal_session": "EUROPE",
+        "next_session_type": "US_DAY",
+        "eligible_transitions": 42,
+        "signal_sessions": 33,
+        "long_signals": 16,
+        "short_signals": 16,
+        "ambiguous_signals": 1,
+        "baseline_next_session_expansion_rate": 0.5,
+        "expansion_rate_after_directional_signal": 0.46875,
+        "mean_expansion_ratio_after_directional_signal": 1.1361
+      },
+      {
+        "current_signal_session": "OVERNIGHT",
+        "next_session_type": "EUROPE",
+        "eligible_transitions": 33,
+        "signal_sessions": 10,
+        "long_signals": 3,
+        "short_signals": 7,
+        "ambiguous_signals": 0,
+        "baseline_next_session_expansion_rate": 0.54545,
+        "expansion_rate_after_directional_signal": 0.5,
+        "mean_expansion_ratio_after_directional_signal": 0.9451
+      },
+      {
+        "current_signal_session": "US_DAY",
+        "next_session_type": "OVERNIGHT",
+        "eligible_transitions": 33,
+        "signal_sessions": 26,
+        "long_signals": 14,
+        "short_signals": 12,
+        "ambiguous_signals": 0,
+        "baseline_next_session_expansion_rate": 0.51515,
+        "expansion_rate_after_directional_signal": 0.57692,
+        "mean_expansion_ratio_after_directional_signal": 1.2257
+      }
+    ],
+    "interpretation": "The observed expansion rate was below baseline for EUROPE and OVERNIGHT signals and modestly above baseline for US_DAY signals. Counts are small, single-contract/single-quarter, serial dependence is not adjusted, and no directional trade P&L is measured. This does not qualify Candidate C."
+  },
+  "candidates_c_and_d": {
+    "candidate_c_session_reversal_expansion": "EXPLORATORY_EXPANSION_EVENT_STUDY_COMPLETE; TRADE_PNL_AND_OOS_NOT_TESTED",
+    "candidate_d_multi_timeframe_structure": "CAUSAL_PIVOT_PRIMITIVES_IMPLEMENTED; ABLATION_AND_OOS_NOT_TESTED"
   }
 }
