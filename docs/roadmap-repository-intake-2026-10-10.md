@@ -71,6 +71,24 @@ Use only tools that are actually connected and whose permissions fit the task. S
 - The repository connector can modify this canonical GitHub repo, but no connected local Desktop Commander device has been confirmed in this task. External agent workspaces are not assumed to be accessible.
 - No quantitative strategy results or live-trading readiness conclusions follow from these educational resources.
 
+## Public GitHub metadata snapshot (2026-10-10)
+
+The GitHub repository metadata API was queried for all nine supplied URLs. This verifies that the repository endpoints resolve and provides default-branch and repository-level licence metadata; it does **not** constitute a full source, licence-text, dependency, security or install-script audit.
+
+| Repository | Default branch | Archived | Last push (UTC) | Repository-level licence metadata | Initial disposition |
+|---|---|---:|---|---|---|
+| nilbuild/developer-roadmap | master | No | 2026-10-09 | NOASSERTION | REFERENCE_ONLY; inspect the actual LICENSE and content-specific attribution before copying material |
+| mouredev/roadmap-retos-programacion | main | No | 2026-10-07 | Apache-2.0 | EXERCISE_SANDBOX; verify the individual exercise/content terms and dependencies |
+| milanm/DevOps-Roadmap | master | No | 2026-07-14 | Apache-2.0 | REFERENCE_ONLY; check current tool versions and links |
+| MoienTajik/AspNetCore-Developer-Roadmap | master | No | 2026-01-29 | No repository-level licence detected | BLOCKED_LICENSE_REVIEW for reuse/redistribution; reading for evaluation is not permission to copy |
+| mrdbourke/machine-learning-roadmap | master | No | 2022-12-08 | MIT | REFERENCE_ONLY; content/tool links may be dated and require freshness review |
+| skydoves/android-developer-roadmap | main | No | 2026-05-08 | Apache-2.0 | REFERENCE_ONLY; inspect assets and attribution terms |
+| ploi/roadmap | main | No | 2026-10-07 | MIT | REFERENCE_ONLY; metadata describes open-source roadmapping software, not merely a learning chart; reassess intended use before any clone/build |
+| amitshekhariitbhu/android-developer-roadmap | master | No | 2026-01-28 | Apache-2.0 | REFERENCE_ONLY; compare with the skydoves roadmap before counting as independent corroboration |
+| s4kibs4mi/java-developer-roadmap | main | No | 2026-10-06 | MIT | REFERENCE_ONLY; verify diagram/source assets and their own attribution |
+
+Repository-level licence metadata is a preliminary signal only. Confirm the checked-out LICENSE text, per-file/asset notices, transitive dependencies, workflow permissions, and any third-party material before copying or executing anything. A missing or `NOASSERTION` licence is a stop condition for reuse/redistribution until clarified.
+
 ## Required completion evidence
 
 A follow-up audit must append a table with each repository's resolved default branch, exact commit SHA, licence and security status, checkout location, tests/scans run, assigned agent's evidence response, disposition and any approved PR. If a field cannot be verified, mark it `UNKNOWN` or `BLOCKED`; do not guess.
