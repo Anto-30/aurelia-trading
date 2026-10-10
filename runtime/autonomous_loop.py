@@ -21,6 +21,7 @@ from runtime.core.models import (
     utc_now,
 )
 from runtime.core.release_gate import read_live_release
+from runtime.strategy.registry import StrategyQualificationRegistry
 
 
 class AutonomousDecisionProvider(Protocol):
@@ -533,11 +534,47 @@ class FederatedDecisionProvider:
     Agents can propose; only the capital plane can authorize and submit.
     """
 
-    def __init__(self, federation, *, consumer: str = "AURELIA") -> None:
+    def __init__(
+        self,
+        federation,
+        *,
+        consumer: str = "AURELIA",
+        strategy_registry: StrategyQualificationRegistry | None = None,
+        registry_path: str | Path | None = None,
+    ) -> None:
         self.federation = federation
         self.consumer = consumer
         self._seen: set[str] = set()
         self._proposal_parameters: dict[str, dict[str, Any]] = {}
+        self._rejections: list[dict[str, Any]] = []
+        self._registry_error: str | None = None
+        if strategy_registry is not None:
+            self.strategy_registry = strategy_registry
+        else:
+            try:
+                self.strategy_registry = StrategyQualificationRegistry.from_file(registry_path)
+            except (OSError, ValueError) as exc:
+                self.strategy_registry = None
+                self._registry_error = type(exc).__name__
+
+    async def _publish_rejection(self, message: dict[str, Any], payload: dict[str, Any]) -> None:
+        publish = getattr(self.federation, "publish", None)
+        if not callable(publish):
+            return
+        sender = str(message.get("sender") or self.consumer).strip() or self.consumer
+        try:
+            await publish(
+                sender="AURELIA",
+                recipients=(sender,),
+                message_type="STRATEGY_PROPOSAL_REJECTED",
+                payload=payload,
+                correlation_id="strategy-gate:" + str(payload.get("message_id") or "unknown"),
+                priority=90,
+                requires_response=False,
+            )
+        except Exception:
+            # Local rejection remains effective even if notifying the proposer fails.
+            return
 
     async def next_decision(self, *, tick, capital, account):
         messages = self.federation.messages_for(self.consumer, limit=100)
@@ -575,6 +612,38 @@ class FederatedDecisionProvider:
             except (KeyError, TypeError, ValueError):
                 self._seen.add(message_id)
                 continue
+            if self.strategy_registry is None:
+                eligibility = {
+                    "eligible": False,
+                    "status": "BLOCKED",
+                    "strategy_id": decision.strategy_id,
+                    "version": decision.strategy_version,
+                    "instrument_id": decision.symbol,
+                    "reasons": ["STRATEGY_REGISTRY_UNAVAILABLE"],
+                }
+                if self._registry_error:
+                    eligibility["registry_error_class"] = self._registry_error
+            else:
+                eligibility = self.strategy_registry.eligibility(
+                    decision.strategy_id,
+                    decision.strategy_version,
+                    decision.symbol,
+                )
+            if not eligibility.get("eligible", False):
+                self._seen.add(message_id)
+                rejected = {
+                    "message_id": message_id,
+                    "decision_id": decision.decision_id,
+                    "strategy_id": decision.strategy_id,
+                    "strategy_version": decision.strategy_version,
+                    "instrument_id": decision.symbol,
+                    "eligible": False,
+                    "reasons": list(eligibility.get("reasons") or ["STRATEGY_ELIGIBILITY_UNKNOWN"]),
+                }
+                self._rejections.append(rejected)
+                await self._publish_rejection(message, rejected)
+                continue
+
             params = payload.get("proposal_parameters")
             if not isinstance(params, dict):
                 self._seen.add(message_id)
