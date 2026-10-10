@@ -62,7 +62,7 @@ Expectancy and drawdown are expressed in initial-risk units \(R\). The “stop-f
 
 ### 2025 historical development sample — 242 eligible sessions
 
-| Variant | Trades | No-trade sessions | Win rate (stop-first) | Avg win (R) | Avg loss (R) | Expectancy / trade (R) | PF stop-first | Expectancy with 1 tick/side slippage (R) | PF with slippage only | Max DD (R) | Longest losing streak |
+| Variant | Trades | No-trade sessions | Win rate (stop-first) | Avg win (R) | Avg loss (R) | Expectancy / trade (R) | PF stop-first | Expectancy with 1 tick/side slippage (R) | PF with slippage only | Max DD (R) | Longest losing-session streak |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | A breakout-candle stop, 2R | 220 | 22 | 31.4% | 1.96 | -0.98 | -0.0604 | 0.911 | -0.0734 | 0.893 | 27.18 | 10 |
 | A opposite-range stop, 2R | 220 | 22 | 47.7% | 1.03 | -0.83 | 0.0576 | 1.132 | 0.0536 | 1.123 | 20.11 | 6 |
@@ -75,7 +75,7 @@ The 2025 A breakout-candle-stop sample had three same-bar stop/target ambiguitie
 
 This segment follows the 2025 development window chronologically, but the hypotheses were not sealed in a preregistered campaign before seeing this data. It is **not** qualified untouched OOS evidence.
 
-| Variant | Trades | No-trade sessions | Win rate | Expectancy / trade (R), stop-first | PF stop-first | 1-tick/side expectancy (R) | PF with slippage only | Max DD (R) | Longest losing streak |
+| Variant | Trades | No-trade sessions | Win rate | Expectancy / trade (R), stop-first | PF stop-first | 1-tick/side expectancy (R) | PF with slippage only | Max DD (R) | Longest losing-session streak |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | A breakout-candle stop, 2R | 49 | 3 | 42.9% | 0.2180 | 1.392 | 0.2101 | 1.375 | 6.17 | 5 |
 | A opposite-range stop, 2R | 49 | 3 | 53.1% | 0.1811 | 1.533 | 0.1782 | 1.522 | 3.96 | 3 |
@@ -86,7 +86,7 @@ This segment follows the 2025 development window chronologically, but the hypoth
 
 This is a separate segment after a major source-data gap, not a continuous OOS campaign.
 
-| Variant | Trades | No-trade sessions | Win rate | Expectancy / trade (R), stop-first | PF stop-first | 1-tick/side expectancy (R) | PF with slippage only | Max DD (R) | Longest losing streak |
+| Variant | Trades | No-trade sessions | Win rate | Expectancy / trade (R), stop-first | PF stop-first | 1-tick/side expectancy (R) | PF with slippage only | Max DD (R) | Longest losing-session streak |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | A breakout-candle stop, 2R | 30 | 8 | 30.0% | -0.1914 | 0.727 | -0.2002 | 0.717 | 10.91 | 6 |
 | A opposite-range stop, 2R | 30 | 8 | 50.0% | 0.1006 | 1.371 | 0.0979 | 1.359 | 3.31 | 3 |
@@ -115,7 +115,8 @@ The draft branch now contains:
 - `research/labs/session_breakout_candidates.py`: causal range builders and A/B completed-close candidate construction, plus explicit A intrabar reference logic.
 - `research/labs/session_breakout_backtest.py`: bar-level stop/target replay, adverse stop-gap treatment, ambiguous same-bar hit marking, no-trade session accounting, time exits, and an optional complete cost model.
 - `research/labs/session_structure_hypotheses.py`: New York session windows, session-completeness checks, candidate C sweep/re-entry observations and next-session expansion ratios, and candidate D confirmed-pivot/as-of structure primitives.
-- `research/labs/tests/test_session_breakout_candidates.py`, `test_session_breakout_backtest.py`, and `test_session_structure_hypotheses.py`: regression tests for time windows, DST, causality, ambiguity, missing bars, costs, pivot confirmation, and UNKNOWN context.
+- `research/labs/sql/session_reversal_expansion_pilot.sql`: the exploratory C event-study query used for the MNQH5 range-expansion table. It requires recreating the temporary source table and does not persist raw market data.
+- `research/labs/tests/test_session_breakout_candidates.py`, `test_session_breakout_backtest.py`, and `test_session_structure_hypotheses.py`: regression tests for time windows, DST, causality, ambiguity, missing bars, costs, pivot confirmation, and UNKNOWN context. The reusable harness separately reports consecutive losing trades and consecutive losing sessions.
 
 These components remain research-only; they are not registered for production, do not have a broker interface, and do not authorise capital. CI at draft PR head `34ce20940156ce88c097ed254c49f5b8dc0aca45` completed successfully: 80 research-plane tests, 49 assurance tests, 173 runtime tests and 12 hardening tests passed; compilation, static acceptance audit, deployment-script syntax, container build, public Deriv market-data WebSocket and release-lock checks passed. The authenticated Deriv real-account-session and verify-only transaction-lifecycle steps were skipped because the protected credentials/prerequisites were not configured. Certification still returned `NOT_READY`; this CI pass does not qualify a strategy.
 
