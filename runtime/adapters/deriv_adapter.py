@@ -35,7 +35,7 @@ class DerivAdapter:
         ws_url: str | None = None,
         auth_token: str | None = None,
         expected_loginid: str | None = None,
-        expected_currency: str = "USD",
+        expected_currency: str | None = None,
         environment: str = "real",
         timeout_seconds: float = 10.0,
     ):
@@ -46,7 +46,8 @@ class DerivAdapter:
         self.expected_loginid = (
             expected_loginid or get_optional_secret("DERIV_EXPECTED_LOGINID")
         )
-        self.expected_currency = expected_currency
+        configured_currency = expected_currency if expected_currency is not None else os.getenv("DERIV_EXPECTED_CURRENCY", "")
+        self.expected_currency = str(configured_currency).strip().upper()
         self.environment = environment
         self.timeout_seconds = timeout_seconds
         self.transport: DerivWebSocketTransport | None = None
@@ -73,6 +74,8 @@ class DerivAdapter:
         if not self.ws_url:
             raise DerivProtocolError("DERIV_AUTHENTICATED_WS_URL_MISSING")
         self._validate_environment_url(self.ws_url)
+        if not self.expected_currency:
+            raise DerivProtocolError("EXPECTED_ACCOUNT_CURRENCY_REQUIRED")
         try:
             self.transport = DerivWebSocketTransport(
                 self.ws_url,
@@ -92,12 +95,14 @@ class DerivAdapter:
                 or identity_payload.get("login_id")
                 or ""
             )
-            currency = str(identity_payload.get("currency") or "")
+            currency = str(identity_payload.get("currency") or "").strip().upper()
             if not loginid:
                 raise DerivProtocolError("ACCOUNT_IDENTITY_UNVERIFIED")
             if self.expected_loginid and loginid != self.expected_loginid:
                 raise DerivProtocolError("ACCOUNT_IDENTITY_MISMATCH")
-            if currency and currency != self.expected_currency:
+            if not currency:
+                raise DerivProtocolError("ACCOUNT_CURRENCY_UNVERIFIED")
+            if currency != self.expected_currency:
                 raise DerivProtocolError("CURRENCY_MISMATCH")
 
             account_type = (
@@ -106,7 +111,7 @@ class DerivAdapter:
             self.account = AccountIdentity(
                 loginid=loginid,
                 account_type=account_type,
-                currency=currency or self.expected_currency,
+                currency=currency,
                 environment=self.environment,
             )
             self.authorized = True

@@ -85,7 +85,7 @@ class DerivSessionManager:
         *,
         expected_loginid: str | None = None,
         expected_environment: str = "real",
-        expected_currency: str = "USD",
+        expected_currency: str | None = None,
         timeout_seconds: float = 10.0,
     ) -> None:
         self.expected_loginid = (
@@ -94,7 +94,8 @@ class DerivSessionManager:
             else os.getenv("DERIV_EXPECTED_LOGINID", "")
         )
         self.expected_environment = expected_environment.lower()
-        self.expected_currency = expected_currency
+        configured_currency = expected_currency if expected_currency is not None else os.getenv("DERIV_EXPECTED_CURRENCY", "")
+        self.expected_currency = str(configured_currency).strip().upper()
         self.timeout_seconds = timeout_seconds
 
     def validate_binding(self, *, loginid: str, environment: str) -> bool:
@@ -152,6 +153,8 @@ class DerivSessionManager:
         raise DerivSessionManagerError("DERIV_ACCOUNT_LIST_MISSING")
 
     def select_account(self, accounts: list[dict[str, Any]]) -> DerivAccountBinding:
+        if not self.expected_currency:
+            raise DerivSessionManagerError("EXPECTED_CURRENCY_REQUIRED")
         candidates: list[DerivAccountBinding] = []
         for row in accounts:
             loginid = str(
@@ -163,12 +166,17 @@ class DerivSessionManager:
             if not loginid:
                 continue
             account_type = str(row.get("account_type") or "").lower()
-            currency = str(row.get("currency") or self.expected_currency)
+            currency = str(row.get("currency") or "").strip().upper()
             environment = "real" if account_type == "real" else "demo"
             if row.get("environment"):
                 environment = str(row["environment"]).lower()
             if environment == "virtual":
                 environment = "demo"
+            targeted_row = environment == self.expected_environment and (not self.expected_loginid or loginid == self.expected_loginid)
+            if targeted_row and not currency:
+                raise DerivSessionManagerError("ACCOUNT_CURRENCY_UNVERIFIED")
+            if not currency:
+                continue
             candidates.append(
                 DerivAccountBinding(
                     loginid=loginid,
