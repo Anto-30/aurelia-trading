@@ -46,10 +46,9 @@ def build_env_text(payload: dict[str, Any]) -> str | None:
         "DERIV_AUTH_MODE",
     )
     values = {name: _value(payload, name) for name in names}
-    # Missing optional credentials should not break a locked VERIFY_ONLY deploy.
-    if not any(values[name] for name in (
-        "DERIV_AUTH_TOKEN", "DERIV_EXPECTED_LOGINID", "DERIV_EXPECTED_CURRENCY"
-    )):
+    # No credential/account binding means public-data-only VERIFY_ONLY mode.
+    # Currency may be configured independently and is not sufficient to attempt auth.
+    if not values["DERIV_AUTH_TOKEN"] and not values["DERIV_EXPECTED_LOGINID"]:
         return None
     required = ("DERIV_AUTH_TOKEN", "DERIV_EXPECTED_LOGINID", "DERIV_EXPECTED_CURRENCY", "DERIV_ENVIRONMENT", "DERIV_AUTH_MODE")
     missing = [name for name in required if not values[name]]
