@@ -377,6 +377,36 @@ class CapitalPlaneExecutor:
                 {"intent_id": intent.intent_id, "reasons": ("BROKER_ACCOUNT_IDENTITY_CHANGED",)},
             )
             return ExecutionOutcome(False, "BLOCKED", ("BROKER_ACCOUNT_IDENTITY_CHANGED",), intent.intent_id)
+        # The authorization snapshot is the capital state against which this
+        # intent was approved. Any balance, available-balance, currency, or
+        # account change at the final capital boundary may indicate an external
+        # transaction or an un-reconciled contract. Never reinterpret it as
+        # harmless drift: require a fresh authorization and reconciliation.
+        if (
+            fresh_balance.balance != context.capital.balance
+            or fresh_balance.available_balance != context.capital.available_balance
+            or fresh_balance.currency != context.capital.currency
+            or fresh_balance.account != context.capital.account
+        ):
+            reason = "STATE_MISMATCH"
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.trip(reason)
+            self.circuit_breaker.record_reconciliation_failure()
+            self._log(
+                "STATE_MISMATCH",
+                {
+                    "intent_id": intent.intent_id,
+                    "reason": "PRE_SUBMISSION_CAPITAL_DIFFERS_FROM_AUTHORIZATION_SNAPSHOT",
+                },
+            )
+            self.activate_kill_switch(reason)
+            return ExecutionOutcome(
+                False,
+                "RECOVERY_REQUIRED",
+                (reason,),
+                intent.intent_id,
+            )
+
         # A purchased Deriv contract's stake is its contractual maximum loss.
         permitted_loss = fresh_balance.balance * self.max_trade_risk_pct
         if intent.stake > permitted_loss + 1e-12:
