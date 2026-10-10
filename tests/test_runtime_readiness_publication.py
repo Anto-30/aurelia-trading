@@ -12,7 +12,7 @@ from unittest.mock import patch
 from runtime.core.health import HealthSnapshot
 from runtime.core.journal import AppendOnlyJournal
 from runtime.core.models import AccountIdentity, CapitalSnapshot
-from runtime.main import _readiness_publisher, _write_runtime_deriv_evidence
+from runtime.main import _balance_poller, _readiness_publisher, _write_runtime_deriv_evidence
 from runtime.ops.readiness_orchestrator import _current_evidence
 
 
@@ -66,6 +66,61 @@ class RuntimeReadinessPublicationTests(unittest.TestCase):
             ):
                 _write_runtime_deriv_evidence(snapshot("demo"), "test-config-hash")
             self.assertIsNone(_current_evidence(output))
+
+
+class ReadonlyBalancePollerTests(unittest.IsolatedAsyncioTestCase):
+    async def test_readonly_poller_refreshes_current_balance_evidence(self):
+        with tempfile.TemporaryDirectory() as td:
+            output = Path(td) / "deriv_authenticated_session.json"
+            journal = AppendOnlyJournal(Path(td) / "events.ndjson")
+            health = HealthSnapshot(process_heartbeat=datetime.now(timezone.utc))
+
+            class FakeReadonlyAdapter:
+                authorized = True
+                account = snapshot().account
+
+                def __init__(self):
+                    self.calls = 0
+
+                async def get_balance(self):
+                    self.calls += 1
+                    return snapshot()
+
+            adapter = FakeReadonlyAdapter()
+            env = {
+                "GITHUB_SHA": "readonly-poller-test-sha",
+                "AURELIA_DERIV_EVIDENCE_PATH": str(output),
+            }
+            with patch.dict(os.environ, env, clear=False):
+                task = asyncio.create_task(
+                    _balance_poller(adapter, health, journal, "readonly-test-config", interval=0.01)
+                )
+                try:
+                    for _ in range(100):
+                        if adapter.calls >= 1 and output.exists():
+                            break
+                        await asyncio.sleep(0.005)
+                    self.assertGreaterEqual(adapter.calls, 1)
+                    first = json.loads(output.read_text(encoding="utf-8"))
+                    first_id = first["evidence_id"]
+
+                    for _ in range(100):
+                        current = json.loads(output.read_text(encoding="utf-8"))
+                        if adapter.calls >= 2 and current.get("evidence_id") != first_id:
+                            break
+                        await asyncio.sleep(0.005)
+                    self.assertGreaterEqual(adapter.calls, 2)
+                    current = json.loads(output.read_text(encoding="utf-8"))
+                    self.assertNotEqual(current["evidence_id"], first_id)
+                    self.assertIsNotNone(_current_evidence(output))
+                    self.assertEqual(current["source_hash"], "readonly-poller-test-sha")
+                    self.assertIs(current["capital_authority_granted"], False)
+                    self.assertIs(current["order_submission_permitted"], False)
+                    self.assertFalse(health.critical_unknowns)
+                finally:
+                    task.cancel()
+                    with self.assertRaises(asyncio.CancelledError):
+                        await task
 
 
 class ReadinessPublisherTests(unittest.IsolatedAsyncioTestCase):
