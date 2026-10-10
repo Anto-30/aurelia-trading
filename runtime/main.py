@@ -321,6 +321,7 @@ async def main() -> None:
     HealthHandler.performance = PersistentAgentPerformance(performance_path)
     public_probe_failed = False
     authenticated_probe_failed = False
+    readonly_adapter: DerivAdapter | None = None
 
     federation_queue: asyncio.Queue[dict[str, object]] = asyncio.Queue()
 
@@ -433,6 +434,7 @@ async def main() -> None:
             )
 
     async def authenticated_probe() -> None:
+        nonlocal readonly_adapter
         manager = DerivSessionManager(
             expected_loginid=os.getenv("DERIV_EXPECTED_LOGINID") or None,
             expected_environment=os.getenv("DERIV_ENVIRONMENT", "real"),
@@ -458,6 +460,11 @@ async def main() -> None:
             expected_currency=bootstrap.binding.currency,
             environment=bootstrap.binding.environment,
             auth_token="",
+        )
+        keep_readonly_session = (
+            os.getenv("AURELIA_DEPLOYMENT_MODE", "VERIFY_ONLY").strip().upper() == "VERIFY_ONLY"
+            and os.getenv("AURELIA_AUTONOMOUS_LOOP", "false").strip().lower() != "true"
+            and os.getenv("AURELIA_RUN_ONCE", "false").strip().lower() != "true"
         )
         try:
             account = await adapter.connect()
@@ -493,8 +500,11 @@ async def main() -> None:
                 kill_switch_off=False,
             )
             health.dependencies_ok = True
+            if keep_readonly_session:
+                readonly_adapter = adapter
         finally:
-            await adapter.close()
+            if readonly_adapter is not adapter:
+                await adapter.close()
 
     if os.getenv("AURELIA_VERIFY_DERIV_AUTH", "false").lower() == "true":
         try:
@@ -617,6 +627,18 @@ async def main() -> None:
                     and continuous_runtime.adapter.authorized
                     and continuous_runtime.adapter.account is not None
                 )
+            elif readonly_adapter is not None:
+                # Keep the read-only broker balance evidence current for a
+                # locked persistent worker; this path has no capital executor.
+                balance_task = asyncio.create_task(
+                    _balance_poller(
+                        readonly_adapter,
+                        health,
+                        journal,
+                        config_hash,
+                    ),
+                    name="aurelia-readonly-balance-poller",
+                )
         except Exception as exc:
             health.critical_unknowns.add("CONTINUOUS_RUNTIME_STARTUP")
             journal.append(
@@ -721,6 +743,9 @@ async def main() -> None:
                 pass
         if continuous_runtime is not None:
             await continuous_runtime.stop()
+        if readonly_adapter is not None:
+            await readonly_adapter.close()
+            readonly_adapter = None
         supervisor.stop()
         await federation_supervisor.stop()
         server.shutdown()
