@@ -108,6 +108,53 @@ class StakeSizingPolicyTests(unittest.TestCase):
         intent = build_intent(context, proposal_id="proposal-test")
         self.assertEqual(intent.stake, 2.00)
 
+    def test_live_authorization_requires_verified_usd_account(self):
+        account = AccountIdentity("CR123456", "real", "EUR", "real")
+        capital = CapitalSnapshot(
+            balance=200.00,
+            currency="EUR",
+            available_balance=200.00,
+            captured_at=utc_now(),
+            source="verified-test-snapshot",
+            account=account,
+        )
+        decision = Decision(
+            decision_id="sizing-test-eur",
+            strategy_id="test-strategy",
+            strategy_version="1",
+            strategy_hash="sha256:test-strategy",
+            symbol="TEST",
+            direction="CALL",
+            probability=0.60,
+            decision_time=utc_now(),
+            market_snapshot_hash="sha256:test-market",
+            risk_requested_stake=1.00,
+            average_win=2.00,
+            average_loss=1.00,
+        )
+        gate, context = authorization_gate(
+            decision=decision,
+            account=account,
+            capital=capital,
+            config_hash="config-digest",
+            runtime_config_hash="config-digest",
+            kill_switch_off=True,
+            risk_approved=True,
+            firewall_approved=True,
+            reconciliation_healthy=True,
+            final_execution_authorization=True,
+            live_trading_enabled=True,
+            probability_calibrated=True,
+            probability_fresh=True,
+            probability_drift_ok=True,
+            market_data_validated=True,
+            exposure_approved=True,
+            execution_mode="LIVE",
+        )
+        self.assertFalse(gate.allowed)
+        self.assertIsNone(context)
+        self.assertIn("USD_STAKE_POLICY_REQUIRES_USD_ACCOUNT", gate.reason_codes)
+
     def test_live_authorization_blocks_when_minimum_stake_breaks_one_percent_budget(self):
         account = AccountIdentity("CR123456", "real", "USD", "real")
         capital = CapitalSnapshot(
