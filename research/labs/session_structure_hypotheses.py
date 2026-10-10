@@ -156,6 +156,8 @@ def build_session_summaries(
     _validate_bars(bars)
     if expected_interval <= timedelta(0):
         raise ValueError("EXPECTED_INTERVAL_MUST_BE_POSITIVE")
+    if expected_interval != timedelta(minutes=5):
+        raise ValueError("SESSION_SUMMARY_REQUIRES_5M_BARS")
     groups: dict[SessionKey, list[OHLCBar]] = {}
     for bar in bars:
         key = classify_new_york_session(bar.timestamp_utc)
@@ -214,6 +216,8 @@ def detect_session_reversal(
     _validate_bars(current_bars)
     if tick_size <= 0 or not isfinite(tick_size):
         raise ValueError("TICK_SIZE_MUST_BE_POSITIVE")
+    if expected_interval != timedelta(minutes=5):
+        raise ValueError("SESSION_REVERSAL_REQUIRES_5M_BARS")
     if not current_bars:
         return None
 
@@ -350,6 +354,8 @@ def structure_asof(
 ) -> StructureState:
     """Calculate structure from pivots whose right-side confirmation is known as-of."""
     decision = _utc(decision_timestamp)
+    if max_pivots < 1:
+        raise ValueError("MAX_PIVOTS_MUST_BE_POSITIVE")
     all_pivots = confirmed_pivots(bars, timeframe=timeframe)
     visible = [p for p in all_pivots if p.confirmation_available_at_utc <= decision]
     highs = tuple(p for p in visible if p.kind == "HIGH")[-max_pivots:]
