@@ -1,0 +1,105 @@
+{
+  "schema": "aurelia.external_intelligence_sources.v1",
+  "updated_at_utc": "2026-10-10",
+  "capital_authority": false,
+  "execution_authority": false,
+  "default_enabled": false,
+  "integration_mode": "READ_ONLY_RESEARCH_ADVISORY",
+  "policy": {
+    "request_timeout_seconds": 3,
+    "max_data_age_seconds": 900,
+    "max_response_bytes": 1500000,
+    "redirects_allowed": false,
+    "raw_article_text_forwarded_to_agents": false,
+    "external_llm_prompts_trusted": false,
+    "may_select_direction": false,
+    "may_authorize_orders": false,
+    "may_override_risk_controls": false
+  },
+  "sources": [
+    {
+      "id": "CRUCIX_CANONICAL",
+      "repository": "https://github.com/calesthio/Crucix",
+      "commit": "3db7068817e0c815df353fa0f19657c85142789d",
+      "license": "AGPL-3.0-only",
+      "role": "Read-only OSINT/news/macro contextual feed",
+      "status": "REVIEWED_CANDIDATE_NOT_DEPLOYED",
+      "preferred": true,
+      "expected_endpoint": "/api/data",
+      "constraints": [
+        "Separate sidecar process; preserve license notices/source availability obligations",
+        "15-minute source sweep; verify timestamps and per-source errors",
+        "Context only; not a scalp entry or exit signal"
+      ]
+    },
+    {
+      "id": "CRUCIX_MARKET_SHOCK_RADAR",
+      "repository": "https://github.com/heckel75/CRUCIX-Market-Shock-Radar",
+      "commit": "0cbdbe287b57add55f921dd7f70e6723b422c458",
+      "license": "AGPL-3.0",
+      "role": "Experimental EOD market-risk transmission/divergence context",
+      "status": "REVIEWED_CANDIDATE_NOT_DEPLOYED",
+      "preferred": false,
+      "expected_endpoint": "/divergence.json",
+      "constraints": [
+        "Use only if marketFreshness.status is current",
+        "EOD ETF/macro transforms are not a live synthetic-index signal",
+        "Current reviewed artifact was lagging: 2026-10-02 close, generated 2026-10-10, 8 calendar days lag"
+      ]
+    },
+    {
+      "id": "CRUCIX_INTELLIGENCE_MIRROR",
+      "repository": "https://github.com/Gui-Ni/crucix-intelligence",
+      "commit": "09a2fb6f5f3da833a694ff58dca39f6836d3c73b",
+      "license": "AGPL-3.0",
+      "role": "Duplicate/mirror candidate",
+      "status": "NOT_SELECTED_AS_CANONICAL",
+      "preferred": false,
+      "constraints": [
+        "README/package structure duplicates canonical Crucix",
+        "Contains a Vercel deploy workflow; do not reuse its deployment tokens/workflow unreviewed"
+      ]
+    },
+    {
+      "id": "CRUCIX_DOCKER_TEMPLATE",
+      "repository": "https://github.com/trxd/crucix",
+      "commit": "2936d44eea1d4f8ecc5b6318e18f1e3825454cd0",
+      "license": "MIT (wrapper only; upstream Crucix is AGPL)",
+      "role": "Container build reference only",
+      "status": "REJECTED_FOR_PRODUCTION_BUILD",
+      "preferred": false,
+      "constraints": [
+        "Dockerfile downloads upstream master without pinning a revision",
+        "Downloads an additional BusyBox binary from a separate host",
+        "Do not use as AURELIA deployment base"
+      ]
+    },
+    {
+      "id": "CRUCIX_BACKUP",
+      "repository": "https://github.com/StoneKolowaka/Crucix-backup",
+      "commit": "0825d8a6828888b27bb643e8cc5e46611a5dadd9",
+      "license": "AGPL-3.0",
+      "role": "Historical backup/reference only",
+      "status": "NOT_SELECTED_AS_CANONICAL",
+      "preferred": false,
+      "constraints": [
+        "Older snapshot with nested pre-ticker backup and operational scripts",
+        "No production deployment or runtime code copied"
+      ]
+    },
+    {
+      "id": "CRUCIX_ARCHIVE_ONLY",
+      "repository": "https://github.com/Salmonfourierseries203/Crucix",
+      "commit": "99ca19c20785ad9426c33b27842d8a9b3d75c665",
+      "license": "UNSPECIFIED",
+      "role": "Unverified archive only",
+      "status": "QUARANTINED_NOT_INSTALLED",
+      "preferred": false,
+      "constraints": [
+        "Repository has only README.md and a ZIP archive",
+        "No license, source manifest, dependency lock, or tests identified",
+        "Do not extract or execute until archive provenance and contents are reviewed"
+      ]
+    }
+  ]
+}
