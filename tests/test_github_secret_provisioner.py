@@ -37,6 +37,20 @@ case "${1:-} ${2:-}" in
       fi
     } | sort -u
     ;;
+  "variable set")
+    name="${3:?variable name missing}"
+    value="$(cat)"
+    test -n "$value"
+    printf '%s\n' "$name" >> "$PROVISIONER_TEST_VARIABLE_RECORD"
+    ;;
+  "variable list")
+    {
+      printf '%s\n' "${PROVISIONER_TEST_EXISTING_VARIABLE_NAMES:-}" | grep -v '^$' || true
+      if [[ -f "$PROVISIONER_TEST_VARIABLE_RECORD" ]]; then
+        cat "$PROVISIONER_TEST_VARIABLE_RECORD"
+      fi
+    } | sort -u
+    ;;
   *)
     echo "unexpected gh command" >&2
     exit 9
@@ -53,6 +67,7 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
         self.bin_dir = self.base / "bin"
         self.bin_dir.mkdir()
         self.record = self.base / "written_secret_names.txt"
+        self.variable_record = self.base / "written_variable_names.txt"
         fake_gh = self.bin_dir / "gh"
         fake_gh.write_text(FAKE_GH, encoding="utf-8")
         fake_gh.chmod(0o700)
@@ -61,12 +76,14 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
             {
                 "PATH": f"{self.bin_dir}{os.pathsep}{self.env.get('PATH', '')}",
                 "PROVISIONER_TEST_RECORD": str(self.record),
+                "PROVISIONER_TEST_VARIABLE_RECORD": str(self.variable_record),
                 "DERIV_AUTH_MODE": "pat",
                 "DERIV_AUTH_TOKEN": "TEST_TOKEN_NEVER_PRINT",
                 "DERIV_APP_ID": "TEST_APP_ID_NEVER_PRINT",
                 "DERIV_EXPECTED_LOGINID": "TEST_LOGINID_NEVER_PRINT",
                 "DERIV_EXPECTED_CURRENCY": "USD",
                 "PROVISIONER_TEST_EXISTING_NAMES": "",
+                "PROVISIONER_TEST_EXISTING_VARIABLE_NAMES": "",
             }
         )
 
@@ -102,20 +119,23 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
                 "DERIV_APP_ID",
                 "DERIV_EXPECTED_LOGINID",
                 "DERIV_EXPECTED_CURRENCY",
-                "DERIV_AUTH_MODE",
             ],
         )
+        self.assertEqual(
+            self.variable_record.read_text(encoding="utf-8").splitlines(),
+            ["DERIV_AUTH_MODE"],
+        )
 
-    def test_existing_secrets_are_not_overwritten(self) -> None:
+    def test_existing_secrets_and_variables_are_not_overwritten(self) -> None:
         self.env["PROVISIONER_TEST_EXISTING_NAMES"] = "\n".join(
             [
                 "DERIV_PAT",
                 "DERIV_APP_ID",
                 "DERIV_EXPECTED_LOGINID",
                 "DERIV_EXPECTED_CURRENCY",
-                "DERIV_AUTH_MODE",
             ]
         )
+        self.env["PROVISIONER_TEST_EXISTING_VARIABLE_NAMES"] = "DERIV_AUTH_MODE"
         self.env.pop("DERIV_AUTH_TOKEN", None)
         self.env.pop("DERIV_PAT", None)
         self.env.pop("DERIV_APP_ID", None)
@@ -127,6 +147,7 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
         self.assertIn("DERIV_SECRET_PROVISIONING=COMPLETE", result.stdout)
         self.assertIn("EXISTING_SECRET_VALUES_OVERWRITTEN=false", result.stdout)
         self.assertFalse(self.record.exists(), "existing GitHub secrets must not be written over")
+        self.assertFalse(self.variable_record.exists(), "existing GitHub variables must not be written over")
         self.assertNotIn("TEST_TOKEN_NEVER_PRINT", result.stdout)
         self.assertNotIn("TEST_TOKEN_NEVER_PRINT", result.stderr)
 

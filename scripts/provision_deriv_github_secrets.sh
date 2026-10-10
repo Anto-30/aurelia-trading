@@ -112,17 +112,27 @@ currency="${DERIV_EXPECTED_CURRENCY:-USD}"
 [[ "$currency" == "USD" ]] || fail "UNEXPECTED_CURRENCY_FOR_THIS_CONFIGURATION"
 set_secret_if_missing "DERIV_EXPECTED_CURRENCY" "$currency"
 
-# If the mode secret already exists, leave it untouched.
-set_secret_if_missing "DERIV_AUTH_MODE" "$mode"
+# Authentication mode is configuration, not a credential. Preserve an existing variable.
+variables="$(gh variable list --env "$environment" --repo "$repo" --json name --jq '.[].name' 2>/dev/null)" \
+  || fail "GITHUB_VARIABLE_LIST_FAILED"
+if ! printf '%s\n' "$variables" | grep -Fxq "DERIV_AUTH_MODE"; then
+  printf '%s' "$mode" | gh variable set DERIV_AUTH_MODE --env "$environment" --repo "$repo" >/dev/null \
+    || fail "GITHUB_VARIABLE_WRITE_FAILED_DERIV_AUTH_MODE"
+  printf 'CONFIGURED_VARIABLE_NAME=%s\n' "DERIV_AUTH_MODE"
+else
+  printf 'PRESERVED_EXISTING_VARIABLE_NAME=%s\n' "DERIV_AUTH_MODE"
+fi
 
 # Verify presence of either supported token and account aliases, plus currency/mode.
 names="$(gh secret list --env "$environment" --repo "$repo" --json name --jq '.[].name' 2>/dev/null)" \
   || fail "GITHUB_SECRET_NAME_VERIFICATION_FAILED"
 has_secret "DERIV_AUTH_TOKEN" || has_secret "DERIV_PAT" || fail "TOKEN_SECRET_NAME_NOT_VISIBLE"
 has_secret "DERIV_EXPECTED_LOGINID" || has_secret "DERIV_AUTHORIZED_ACCOUNT_ID" || fail "ACCOUNT_SECRET_NAME_NOT_VISIBLE"
-for name in DERIV_EXPECTED_CURRENCY DERIV_AUTH_MODE; do
-  has_secret "$name" || fail "SECRET_NAME_NOT_VISIBLE_$name"
-done
+has_secret DERIV_EXPECTED_CURRENCY || fail "SECRET_NAME_NOT_VISIBLE_DERIV_EXPECTED_CURRENCY"
+variables="$(gh variable list --env "$environment" --repo "$repo" --json name --jq '.[].name' 2>/dev/null)" \
+  || fail "GITHUB_VARIABLE_NAME_VERIFICATION_FAILED"
+printf '%s\n' "$variables" | grep -Fxq "DERIV_AUTH_MODE" \
+  || fail "VARIABLE_NAME_NOT_VISIBLE_DERIV_AUTH_MODE"
 if [[ "$mode" == "pat" ]]; then
   has_secret "DERIV_APP_ID" || fail "SECRET_NAME_NOT_VISIBLE_DERIV_APP_ID"
 fi
