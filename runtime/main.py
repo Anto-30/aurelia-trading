@@ -615,16 +615,39 @@ async def main() -> None:
             health.critical_unknowns.add("FEDERATION_EVENT_QUEUE_FAILURE")
 
     def protect(reason: str) -> None:
-        if deadman.tripped or deadman.trip_if_expired():
+        deadman_expired = deadman.tripped or deadman.trip_if_expired()
+        if deadman_expired:
             reason = "DEADMAN_HEARTBEAT_TIMEOUT"
+        active_loop = continuous_runtime.execution_loop if continuous_runtime is not None else None
+        # A dead-man trip must reach the durable Layer 6 guard even if this reason
+        # was logged earlier during slow startup before the executor existed.
+        if deadman_expired and active_loop is not None:
+            risk_guard = getattr(active_loop, "daily_risk_guard", None)
+            if risk_guard is not None:
+                try:
+                    risk_guard.trip(reason)
+                except Exception as exc:
+                    health.critical_unknowns.add("DEADMAN_RISK_PERSISTENCE_FAILURE")
+                    logger.error(
+                        "Dead-man risk trip persistence failed",
+                        extra={"structured_data": {"error_class": type(exc).__name__}},
+                    )
+            if not active_loop.executor.kill_switch:
+                try:
+                    active_loop.executor.activate_kill_switch(reason)
+                except Exception as exc:
+                    health.critical_unknowns.add("CAPITAL_KILL_SWITCH_ACTIVATION_FAILURE")
+                    logger.error(
+                        "Canonical kill-switch activation failed",
+                        extra={"structured_data": {"error_class": type(exc).__name__}},
+                    )
         if reason in health.critical_unknowns:
             return
         health.kill_switch_off = False
         health.critical_unknowns.add(reason)
         HealthHandler.state = RuntimeState.CAPITAL_PROTECTED
-        # Trip the canonical executor when present; no parallel buy-capable engine.
-        active_loop = continuous_runtime.execution_loop if continuous_runtime is not None else None
-        if active_loop is not None:
+        # Ordinary protective transitions also trip the canonical executor.
+        if active_loop is not None and not active_loop.executor.kill_switch:
             try:
                 active_loop.executor.activate_kill_switch(reason)
             except Exception as exc:
@@ -657,6 +680,16 @@ async def main() -> None:
                 federation=federation,
                 federation_supervisor=federation_supervisor,
             )
+            # If the event-loop deadline expired during broker bootstrap, persist
+            # the trip and kill the canonical executor before its scheduled task
+            # gets another opportunity to authorize an order.
+            if deadman.tripped and continuous_runtime.execution_loop is not None:
+                risk_guard = continuous_runtime.execution_loop.daily_risk_guard
+                if risk_guard is not None:
+                    risk_guard.trip("DEADMAN_HEARTBEAT_TIMEOUT")
+                continuous_runtime.execution_loop.executor.activate_kill_switch(
+                    "DEADMAN_HEARTBEAT_TIMEOUT"
+                )
             if continuous_runtime.execution_loop is not None:
                 balance_task = asyncio.create_task(
                     _balance_poller(
