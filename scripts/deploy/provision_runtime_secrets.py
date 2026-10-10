@@ -123,7 +123,7 @@ def provision(payload: dict[str, Any], destination: Path = LIVE_SECRET_FILE) -> 
 def main() -> int:
     try:
         payload = json.load(sys.stdin)
-        provision(payload)
+        provision(payload, LIVE_SECRET_FILE)
     except json.JSONDecodeError:
         print("AURELIA_RUNTIME_SECRET_PROVISIONING=BLOCKED", file=sys.stderr)
         print("REASON=INPUT_JSON_INVALID", file=sys.stderr)
