@@ -344,7 +344,12 @@ class ExecutionEngine:
             return {"buy": bought, "verification": verified}
 
     async def _broker_snapshot(self) -> AccountSnapshot:
-        """Read balance and all open contracts; fail on incomplete responses."""
+        """Read broker balance, enumerate portfolio, and inspect each open contract.
+
+        The portfolio response establishes whether the open-contract set is empty;
+        proposal_open_contract is then queried for each listed contract. This avoids
+        treating a missing streaming update as proof of an empty portfolio.
+        """
         balance_reply = await self.adapter.request({"balance": 1})
         if "error" in balance_reply or not isinstance(balance_reply.get("balance"), dict):
             self._halt("BALANCE_QUERY_FAILED")
@@ -359,34 +364,44 @@ class ExecutionEngine:
         if not loginid or not currency or not amount.is_finite():
             self._halt("BALANCE_IDENTITY_OR_VALUE_UNVERIFIED")
 
-        # Current Deriv API returns the active open-contract stream when
-        # contract_id is omitted. Request one snapshot (not a subscription).
-        contract_reply = await self.adapter.request({"proposal_open_contract": 1})
-        if "error" in contract_reply:
-            self._halt("OPEN_CONTRACT_QUERY_FAILED")
-        rows = contract_reply.get("proposal_open_contract")
-        if rows is None:
-            # Some responses contain a single object; a missing object is not
-            # silently interpreted as an empty portfolio.
-            self._halt("OPEN_CONTRACT_STATE_UNVERIFIABLE")
-        if isinstance(rows, dict):
-            row_list = [rows]
-        elif isinstance(rows, list):
-            row_list = rows
-        else:
-            self._halt("OPEN_CONTRACT_STATE_UNVERIFIABLE")
+        portfolio_reply = await self.adapter.request({"portfolio": 1})
+        if "error" in portfolio_reply or not isinstance(portfolio_reply.get("portfolio"), dict):
+            self._halt("PORTFOLIO_QUERY_FAILED")
+        portfolio = portfolio_reply["portfolio"]
+        portfolio_rows = portfolio.get("contracts")
+        if not isinstance(portfolio_rows, list):
+            self._halt("PORTFOLIO_CONTRACT_SET_UNVERIFIABLE")
+
         contracts: list[tuple[str, str, str, str]] = []
-        for row in row_list:
-            if not isinstance(row, dict):
-                self._halt("OPEN_CONTRACT_STATE_UNVERIFIABLE")
-            contract_id = str(row.get("contract_id") or "")
-            if not contract_id:
-                self._halt("OPEN_CONTRACT_ID_MISSING")
+        seen_ids: set[str] = set()
+        for item in portfolio_rows:
+            if not isinstance(item, dict):
+                self._halt("PORTFOLIO_CONTRACT_UNVERIFIABLE")
+            contract_id = str(item.get("contract_id") or "")
+            if not contract_id or contract_id in seen_ids:
+                self._halt("PORTFOLIO_CONTRACT_ID_MISSING_OR_DUPLICATE")
+            seen_ids.add(contract_id)
+            # Reconcile each currently open contract against the contract-specific
+            # endpoint, rather than trusting portfolio summary fields alone.
+            detail_reply = await self.adapter.request({
+                "proposal_open_contract": 1,
+                "contract_id": int(contract_id),
+            })
+            if "error" in detail_reply or not isinstance(
+                detail_reply.get("proposal_open_contract"), dict
+            ):
+                self._halt("OPEN_CONTRACT_QUERY_FAILED")
+            detail = detail_reply["proposal_open_contract"]
+            if str(detail.get("contract_id") or "") != contract_id:
+                self._halt("OPEN_CONTRACT_ID_MISMATCH")
+            contract_currency = str(detail.get("currency") or "").upper()
+            if contract_currency != currency:
+                self._halt("OPEN_CONTRACT_CURRENCY_MISMATCH")
             contracts.append((
                 contract_id,
-                str(row.get("contract_type") or ""),
-                str(row.get("currency") or "").upper(),
-                str(row.get("buy_price") or ""),
+                str(detail.get("contract_type") or ""),
+                contract_currency,
+                str(detail.get("buy_price") or ""),
             ))
         return AccountSnapshot(
             loginid=loginid,
