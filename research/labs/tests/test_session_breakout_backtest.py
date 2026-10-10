@@ -114,7 +114,7 @@ class SessionBreakoutBacktestTests(unittest.TestCase):
             breakout_close=108.0,
             target_at=time(10, 10),
             target_high=130.0,
-            target_low=107.0,
+            target_low=106.0,
         )
         bars_15m = build_opening_range_15m_from_5m(bars, DAY)
         self.assertEqual(len(bars_15m), 2)
@@ -174,7 +174,7 @@ class SessionBreakoutBacktestTests(unittest.TestCase):
         summary = summarize_sessions([trade, no_trade], variant_id="A_COST_TEST")
         self.assertEqual(summary.net_economics_status, "CALCULATED")
         self.assertIsNotNone(summary.net_expectancy_conservative_r_per_trade)
-        self.assertIsNotNone(summary.net_profit_factor_conservative)
+        self.assertIsNone(summary.net_profit_factor_conservative)  # undefined with no losing observations
 
     def test_cost_model_rejects_negative_costs(self):
         with self.assertRaisesRegex(ValueError, "INVALID_COST"):
