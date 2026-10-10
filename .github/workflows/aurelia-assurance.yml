@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
-      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && ((vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
+      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') != '' && ((vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
       DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -70,12 +70,13 @@ jobs:
               "expected_loginid_present": loginid_present,
               "auth_mode_valid": auth_mode_valid,
               "app_id_present_when_pat": app_id_present if auth_mode == "pat" else auth_mode == "oauth",
+              "expected_currency_present": bool(os.getenv("DERIV_EXPECTED_CURRENCY", "").strip()),
           }
           configured = all(requirements.values())
           evidence = {
               "schema_version": "1",
               "auth_mode": auth_mode,
-              "expected_currency": os.getenv("DERIV_EXPECTED_CURRENCY", "USD"),
+              "expected_currency": os.getenv("DERIV_EXPECTED_CURRENCY", "").strip(),
               "configured": configured,
               "requirements": requirements,
               "secret_values_exposed": False,
@@ -109,7 +110,7 @@ jobs:
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
-          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: "real"
           DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
         run: |
@@ -122,7 +123,7 @@ jobs:
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
-          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: "real"
           DERIV_LIFECYCLE_MODE: "VERIFY_ONLY"
           DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
