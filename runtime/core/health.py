@@ -44,6 +44,23 @@ class HealthSnapshot:
         )
 
 
+def apply_verify_only_runtime_health(health: HealthSnapshot) -> HealthSnapshot:
+    """Represent a persistent verify-only worker without implying broker readiness.
+
+    A worker intentionally running without an autonomous execution loop is not
+    experiencing a broker-session failure. It remains unable to open exposure;
+    unrelated watchdog/worker unknowns are preserved.
+    """
+    health.broker_session = False
+    health.market_data_fresh = False
+    health.capital_fresh = False
+    health.ledger_healthy = False
+    health.reconciliation_healthy = False
+    health.kill_switch_off = False
+    health.critical_unknowns.discard("BROKER_AUTHORIZATION_LOST")
+    return health
+
+
 def refresh_runtime_health(
     health: HealthSnapshot,
     *,
