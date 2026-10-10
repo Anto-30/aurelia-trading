@@ -11,6 +11,7 @@ from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.adapters.deriv_lifecycle import monitor_contract
 from runtime.broker.executor import CapitalPlaneExecutor, ExecutionOutcome
 from runtime.core.events import canonical_json, sha256
+from runtime.core.daily_risk_guard import PersistentDailyRiskGuard
 from runtime.core.fencing import FenceToken
 from runtime.core.models import (
     AccountIdentity,
@@ -118,6 +119,10 @@ class AutonomousExecutionLoop:
         self._fence: FenceToken | None = None
         self.trades_attempted = 0
         self.trades_accepted = 0
+        # Persist the guard beside LIVE_LOCK; corrupt state fails closed.
+        self.daily_risk_guard = PersistentDailyRiskGuard(
+            self.executor.live_lock_path.parent / "DAILY_RISK_STATE.json"
+        )
 
     async def _fresh_authorization(
         self,
@@ -271,6 +276,15 @@ class AutonomousExecutionLoop:
         )
         if not reconciliation.healthy:
             self.executor.activate_kill_switch("POST_TRADE_RECONCILIATION_MISMATCH")
+        else:
+            risk_decision = self.daily_risk_guard.record_settlement(
+                account=intent.account,
+                verified_pre_trade_equity=prior_capital.available_balance,
+                net_pnl=net_delta,
+                now=utc_now(),
+            )
+            if not risk_decision.allowed:
+                self.executor.activate_kill_switch(risk_decision.reason or "DAILY_RISK_GUARD_BLOCKED")
 
         return LifecycleResult(
             intent.intent_id,
@@ -291,6 +305,15 @@ class AutonomousExecutionLoop:
         controls: dict[str, bool],
     ) -> LifecycleResult | ExecutionOutcome:
         self.trades_attempted += 1
+        guard_decision = self.daily_risk_guard.check(
+            account=account,
+            verified_equity=capital.available_balance,
+            now=utc_now(),
+        )
+        if not guard_decision.allowed:
+            reason = guard_decision.reason or "DAILY_RISK_GUARD_BLOCKED"
+            self.executor.activate_kill_switch(reason)
+            return ExecutionOutcome(False, "BLOCKED", (reason,), f"intent:{decision.decision_id}")
         if self._fence is None or not self.executor.fence.valid(self._fence):
             self._fence = self.executor.fence.acquire(self.fence_owner)
 
