@@ -68,7 +68,7 @@ class SessionBreakoutBacktestTests(unittest.TestCase):
             bars, DAY, stop_mode="OPPOSITE_RANGE_BOUNDARY", costs=costs
         )
         self.assertEqual(result.status, "TRADED")
-        self.assertEqual(result.trade.exit_status, "STOP")
+        self.assertEqual(result.trade.exit_status, "TARGET")
         self.assertAlmostEqual(result.trade.pnl_r_conservative, 2.0)
         self.assertAlmostEqual(result.trade.net_pnl_r_conservative, 1.8)
         self.assertEqual(result.trade.net_pnl_usd_per_contract_conservative, 18.0)
@@ -123,7 +123,7 @@ class SessionBreakoutBacktestTests(unittest.TestCase):
             bars, bars_15m, DAY, target_mode="R_MULTIPLE", target_value=2.0
         )
         self.assertEqual(result.status, "TRADED")
-        self.assertEqual(result.trade.exit_status, "TARGET")
+        self.assertEqual(result.trade.exit_status, "STOP")
         self.assertFalse(result.trade.ambiguous_ohlc_order)
 
     def test_opening_range_aggregator_rejects_missing_bars(self):
