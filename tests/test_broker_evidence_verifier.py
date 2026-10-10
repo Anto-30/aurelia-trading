@@ -26,6 +26,11 @@ class BrokerEvidenceVerifierContractTests(unittest.TestCase):
         self.assertNotIn("submit_authorized_order", called)
         self.assertNotIn("buy", called)
 
+    def test_verifier_requires_explicit_currency_before_broker_calls(self):
+        source = (ROOT / "scripts" / "verify_deriv_broker_evidence.py").read_text(encoding="utf-8")
+        self.assertIn("EXPECTED_ACCOUNT_CURRENCY_MISSING", source)
+        self.assertIn("DERIV_EXPECTED_CURRENCY", source)
+
     def test_verifier_declares_no_capital_authority(self):
         source = (ROOT / "scripts" / "verify_deriv_broker_evidence.py").read_text(
             encoding="utf-8"
