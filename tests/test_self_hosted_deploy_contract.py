@@ -44,6 +44,27 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("scripts/deploy/bootstrap_and_deploy.sh", workflow)
         self.assertNotIn("scripts/oci/bootstrap_and_deploy.sh", workflow)
 
+    def test_live_secrets_are_separate_root_only_and_not_loaded_in_verify_only(self):
+        workflow = (ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml").read_text(
+            encoding="utf-8"
+        )
+        deploy = (ROOT / "scripts" / "deploy" / "bootstrap_and_deploy.sh").read_text(
+            encoding="utf-8"
+        )
+        provisioner = (ROOT / "scripts" / "deploy" / "provision_runtime_secrets.py").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("Provision LIVE runtime secrets to root-only host store", workflow)
+        self.assertIn("sudo -n python3 /opt/aurelia/releases/$GITHUB_SHA/scripts/deploy/provision_runtime_secrets.py", workflow)
+        self.assertIn("artifacts/attestations", workflow)
+        self.assertIn('LIVE_SECRET_FILE="$ENV_DIR/aurelia-live-secrets.env"', deploy)
+        self.assertIn('SECRET_ENV_ARGS+=(--env-file "$LIVE_SECRET_FILE")', deploy)
+        self.assertIn('if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then', deploy)
+        self.assertIn("os.fchmod(fd, 0o600)", provisioner)
+        self.assertIn("os.replace(temporary, destination)", provisioner)
+        self.assertIn('CAPITAL_AUTHORITY_GRANTED=false', provisioner)
+
     def test_live_deployment_requires_release_gate(self):
         workflow = (ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml").read_text(
             encoding="utf-8"
