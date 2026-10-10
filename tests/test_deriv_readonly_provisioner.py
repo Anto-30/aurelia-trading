@@ -48,7 +48,7 @@ class ReadOnlyDerivProvisionerTests(unittest.TestCase):
                     "DERIV_AUTH_TOKEN": "",
                     "DERIV_APP_ID": "",
                     "DERIV_EXPECTED_LOGINID": "",
-                    "DERIV_EXPECTED_CURRENCY": "",
+                    "DERIV_EXPECTED_CURRENCY": "USD",
                     "DERIV_ENVIRONMENT": "real",
                     "DERIV_AUTH_MODE": "pat",
                 }, destination)
