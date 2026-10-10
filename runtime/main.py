@@ -22,7 +22,7 @@ from runtime.core.journal import AppendOnlyJournal
 from runtime.core.models import RuntimeState
 from runtime.core.release_gate import read_live_release
 from runtime.core.runtime_config import load_config_hash
-from runtime.core.secrets import get_required_secret, validate_secrets_at_startup
+from runtime.core.secrets import get_optional_secret, validate_secrets_at_startup
 from runtime.core.state import RuntimeStateMachine
 from runtime.core.supervisor import RuntimeSupervisor
 
@@ -293,9 +293,19 @@ async def main() -> None:
             expected_environment=os.getenv("DERIV_ENVIRONMENT", "real"),
             expected_currency=os.getenv("DERIV_EXPECTED_CURRENCY", "USD"),
         )
+        token = (
+            get_optional_secret("DERIV_AUTH_TOKEN")
+            or get_optional_secret("DERIV_PAT")
+        )
+        app_id = get_optional_secret("DERIV_APP_ID") or None
+        auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+        if not token:
+            raise RuntimeError("DERIV_RUNTIME_AUTH_TOKEN_MISSING")
+        if auth_mode == "pat" and not app_id:
+            raise RuntimeError("DERIV_RUNTIME_APP_ID_MISSING_FOR_PAT")
         bootstrap = manager.bootstrap(
-            bearer_token=get_required_secret("DERIV_AUTH_TOKEN"),
-            app_id=get_required_secret("DERIV_APP_ID"),
+            bearer_token=token,
+            app_id=app_id,
         )
         adapter = DerivAdapter(
             ws_url=bootstrap.websocket.url,
