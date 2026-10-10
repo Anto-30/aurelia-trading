@@ -126,14 +126,15 @@ EOF
   sudo chmod 600 "$ENV_FILE"
 fi
 
-ENV_FILES=("$ENV_FILE")
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   test -f "$LIVE_SECRET_FILE" || {
     echo "AURELIA_HOST_BLOCKED=MISSING_RUNTIME_SECRET_STORE"
     exit 2
   }
   sudo chmod 600 "$LIVE_SECRET_FILE"
-  ENV_FILES+=("$LIVE_SECRET_FILE")
+  ENV_FILES=("$LIVE_SECRET_FILE")
+else
+  ENV_FILES=("$ENV_FILE")
 fi
 
 RUNTIME_ID="$(grep -h -E '^AURELIA_RUNTIME_ID=' "${ENV_FILES[@]}" | tail -n 1 | sed 's/^[^=]*=//')"
