@@ -28,7 +28,10 @@ class GateResult:
 
 
 def probability_is_valid(probability: float) -> bool:
-    return isfinite(probability) and MIN_PROBABILITY <= probability <= MAX_PROBABILITY
+    if isinstance(probability, bool) or not isinstance(probability, (int, float)):
+        return False
+    value = float(probability)
+    return isfinite(value) and MIN_PROBABILITY <= value <= MAX_PROBABILITY
 
 
 def decision_economics_gate(decision: Decision) -> tuple[bool, str, float | None]:
@@ -68,10 +71,17 @@ def requested_stake_is_permitted(
     capital: CapitalSnapshot,
     minimum_stake: float = EXECUTION_MINIMUM_STAKE,
 ) -> bool:
+    if isinstance(requested, bool) or not isinstance(requested, (int, float)):
+        return False
+    if isinstance(capital.available_balance, bool) or not isinstance(
+        capital.available_balance, (int, float)
+    ):
+        return False
+    value = float(requested)
     return bool(
-        isfinite(requested)
-        and requested >= minimum_stake
-        and requested <= capital.available_balance
+        isfinite(value)
+        and value >= minimum_stake
+        and value <= capital.available_balance
         and capital.is_valid()
     )
 
