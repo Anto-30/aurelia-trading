@@ -96,3 +96,17 @@ AURELIA's existing account isolation, deterministic risk checks, execution firew
 - License/security reviews: pending.
 - Agent workspace distribution to Grok, JEV, Claude Code and ChatGPT: pending; external workspace access is not implied by GitHub access.
 - Production deployment/live trading authorization: unchanged and not authorized by this intake.
+## Metadata synchronization pass — 2026-10-10
+
+The requested list contains **52 distinct GitHub repository URLs** after correcting the malformed line that combined the Qwen Code and openFrameworks URLs.
+
+- **45 previously unregistered repositories:** added as commit-pinned references to config/external_repo_federation.json on this research branch. Default-branch commit SHAs were resolved from GitHub's repository commits endpoint on 2026-10-10. Each entry includes specialist assignment, mode (REFERENCE_ONLY, TOOLCHAIN_ONLY, or SANDBOX_ONLY for this intake), a review limitation, capital_authority: false, and physical_runtime_install: NOT_CLAIMED.
+- **6 repositories already present:** tradytics/eiten, chrisconlan/algorithmic-trading-with-python, je-suis-tm/quant-trading, anomalyco/opencode, openinterpreter/openinterpreter, and QwenLM/qwen-code. Existing registry records were retained.
+- **1 URL unresolved:** ArtemXTech/claudecode-obsidian-starter returned GitHub API 404 for repository metadata/default branch. It is kept in the submitted URL inventory but was not added to the machine registry. Do not silently replace the source.
+
+The registry grew from 216 to 261 entries on this branch. This is a governed-source registration step only. It does not clone code, install packages, review licenses or vulnerabilities, or provision files in independent Claude Code, Grok, JEV, or ChatGPT workspaces. Source execution remains deny-by-default; main and the capital plane are unchanged unless this draft PR is reviewed and merged.
+
+### External-agent delivery status
+
+ClaudeCode, GrokBot, JEV, and AURELIA's registered research/security agents have machine-readable specialist routing in the registry. ChatGPT is the reviewing coordinator in the PR/manifest; it is not an accepted runtime agent identifier in config/repo_agent_routing.json, so it is not added as a machine execution target. Actual installation into the independent agent hosts remains NOT PERFORMED because no connected development host or agent-workspace installation connector is available in this session.
+
