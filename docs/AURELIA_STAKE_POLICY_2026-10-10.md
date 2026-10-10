@@ -6,15 +6,15 @@ A live candidate's estimated trade probability must be within the inclusive rang
 
 ## Balance-scaled stake
 
-The starting stake reference and execution minimum remain **1.00 in the verified account currency**. For purchased contracts, stake is treated as the contractual maximum loss.
+The starting stake reference and execution minimum are **USD 1.00**. This policy requires the independently verified real account currency to be USD; a non-USD account is blocked rather than treating one unit of another currency as one dollar. For purchased contracts, stake is treated as the contractual maximum loss.
 
 For each live authorization, the canonical sizing rule is:
 
 `authorized_stake = floor_to_cent(verified_available_balance × 0.01)`
 
-This makes the stake rise and fall with fresh, verified available balance while capping the purchased-contract loss budget at 1% of available capital. The user/strategy-proposed stake is not allowed to bypass the deterministic sizing result. Existing Risk Warden, exposure, economics, calibration, freshness, account-isolation, reconciliation, watchdog, kill-switch, and release gates remain mandatory.
+This makes the stake rise and fall with fresh, verified USD available balance while capping the purchased-contract loss budget at 1% of available capital. The user/strategy-proposed stake is not allowed to bypass the deterministic sizing result. Existing Risk Warden, exposure, economics, calibration, freshness, account-isolation, reconciliation, watchdog, kill-switch, and release gates remain mandatory.
 
-Because the minimum stake is 1.00, the 1% risk budget cannot fund an order until verified available balance is at least 100.00 in the stake currency. This is a hard mathematical constraint, not an operational setting to work around. For example, a 1.45 balance cannot safely support a 1.00 maximum-loss stake under a 1% per-trade risk limit. In that case AURELIA must block live trading; it must not silently increase the risk percentage or force a minimum stake above the budget.
+Because the minimum stake is 1.00, the 1% risk budget cannot fund an order until verified available USD available balance is at least USD 100.00. This is a hard mathematical constraint, not an operational setting to work around. For example, a 1.45 balance cannot safely support a 1.00 maximum-loss stake under a 1% per-trade risk limit. In that case AURELIA must block live trading; it must not silently increase the risk percentage or force a minimum stake above the budget.
 
 | Verified available balance | Computed 1% risk budget | Live stake outcome |
 |---:|---:|---|
