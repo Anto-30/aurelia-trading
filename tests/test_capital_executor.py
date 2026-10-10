@@ -284,7 +284,7 @@ class CapitalExecutorHardeningTests(unittest.IsolatedAsyncioTestCase):
                     account=account(),
                 )
 
-        for balance_value, available_value in ((1.50, 1.50), (2.00, 1.50), (1.50, 2.00)):
+        for balance_value, available_value in ((1.50, 1.50), (2.00, 1.50), (1.50, 1.40)):
             with self.subTest(balance=balance_value, available=available_value):
                 with tempfile.TemporaryDirectory() as td:
                     lock = Path(td) / "LIVE_LOCK.yaml"
