@@ -377,6 +377,25 @@ class CapitalPlaneExecutor:
                 {"intent_id": intent.intent_id, "reasons": ("BROKER_ACCOUNT_IDENTITY_CHANGED",)},
             )
             return ExecutionOutcome(False, "BLOCKED", ("BROKER_ACCOUNT_IDENTITY_CHANGED",), intent.intent_id)
+        # A low verified balance is a hard Layer 6 survival halt. Check the
+        # broker snapshot before comparing it with the cached authorization so
+        # low capital always trips the same durable recovery path.
+        if fresh_balance.balance <= 1.50 or fresh_balance.available_balance <= 1.50:
+            reason = "BALANCE_AT_OR_BELOW_MINIMUM_CAPITAL"
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.trip(reason)
+            self._log(
+                "PRE_SUBMISSION_BLOCKED",
+                {
+                    "intent_id": intent.intent_id,
+                    "reasons": (reason,),
+                    "verified_balance": fresh_balance.balance,
+                    "verified_available_balance": fresh_balance.available_balance,
+                },
+            )
+            self.activate_kill_switch(reason)
+            return ExecutionOutcome(False, "BLOCKED", (reason,), intent.intent_id)
+
         # The authorization snapshot is the capital state against which this
         # intent was approved. Any balance, available-balance, currency, or
         # account change at the final capital boundary may indicate an external
