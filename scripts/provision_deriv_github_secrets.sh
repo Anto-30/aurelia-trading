@@ -54,12 +54,34 @@ choose_value() {
   [[ -n "$REPLY" ]] || fail "INPUT_REQUIRED"
 }
 
-mode="${DERIV_AUTH_MODE:-}"
+# Read the existing environment variable value without printing it. Its value
+# takes precedence in GitHub Actions, so a mismatched prompt must fail closed.
+variables="$(gh variable list --env "$environment" --repo "$repo" --json name --jq '.[].name' 2>/dev/null)" \
+  || fail "GITHUB_VARIABLE_LIST_FAILED"
+
+has_variable() {
+  printf '%s\n' "$variables" | grep -Fxq "$1"
+}
+
+existing_mode=""
+if has_variable "DERIV_AUTH_MODE"; then
+  existing_mode="$(gh api "repos/$repo/environments/$environment/variables/DERIV_AUTH_MODE" --jq '.value' 2>/dev/null)" \
+    || fail "EXISTING_DERIV_AUTH_MODE_READ_FAILED"
+  existing_mode="$(printf '%s' "$existing_mode" | tr '[:upper:]' '[:lower:]')"
+  [[ "$existing_mode" == "pat" || "$existing_mode" == "oauth" ]] \
+    || fail "EXISTING_DERIV_AUTH_MODE_INVALID"
+fi
+
+mode="${DERIV_AUTH_MODE:-$existing_mode}"
+mode="$(printf '%s' "$mode" | tr '[:upper:]' '[:lower:]')"
+if [[ -n "$existing_mode" && -n "$mode" && "$mode" != "$existing_mode" ]]; then
+  fail "LOCAL_AUTH_MODE_MISMATCH_WITH_EXISTING_ENVIRONMENT_VARIABLE"
+fi
 if [[ -z "$mode" ]]; then
   read -r -p "Deriv auth mode to use for this setup [pat/oauth; default pat]: " mode </dev/tty
   mode="${mode:-pat}"
+  mode="$(printf '%s' "$mode" | tr '[:upper:]' '[:lower:]')"
 fi
-mode="$(printf '%s' "$mode" | tr '[:upper:]' '[:lower:]')"
 [[ "$mode" == "pat" || "$mode" == "oauth" ]] || fail "INVALID_AUTH_MODE"
 
 # Preserve either configured token alias. Only ask for/store a token if neither exists.
@@ -113,9 +135,7 @@ currency="${DERIV_EXPECTED_CURRENCY:-USD}"
 set_secret_if_missing "DERIV_EXPECTED_CURRENCY" "$currency"
 
 # Authentication mode is configuration, not a credential. Preserve an existing variable.
-variables="$(gh variable list --env "$environment" --repo "$repo" --json name --jq '.[].name' 2>/dev/null)" \
-  || fail "GITHUB_VARIABLE_LIST_FAILED"
-if ! printf '%s\n' "$variables" | grep -Fxq "DERIV_AUTH_MODE"; then
+if ! has_variable "DERIV_AUTH_MODE"; then
   printf '%s' "$mode" | gh variable set DERIV_AUTH_MODE --env "$environment" --repo "$repo" >/dev/null \
     || fail "GITHUB_VARIABLE_WRITE_FAILED_DERIV_AUTH_MODE"
   printf 'CONFIGURED_VARIABLE_NAME=%s\n' "DERIV_AUTH_MODE"
