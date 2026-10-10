@@ -23,6 +23,9 @@ case "${1:-} ${2:-}" in
   "api repos/Anto-30/aurelia-trading/environments/production")
     exit 0
     ;;
+  "api repos/Anto-30/aurelia-trading/environments/production/variables/DERIV_AUTH_MODE")
+    printf '%s\\n' "${PROVISIONER_TEST_EXISTING_VARIABLE_VALUE:-pat}"
+    ;;
   "secret set")
     name="${3:?secret name missing}"
     value="$(cat)"
@@ -84,6 +87,7 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
                 "DERIV_EXPECTED_CURRENCY": "USD",
                 "PROVISIONER_TEST_EXISTING_NAMES": "",
                 "PROVISIONER_TEST_EXISTING_VARIABLE_NAMES": "",
+                "PROVISIONER_TEST_EXISTING_VARIABLE_VALUE": "pat",
             }
         )
 
@@ -125,6 +129,34 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
             self.variable_record.read_text(encoding="utf-8").splitlines(),
             ["DERIV_AUTH_MODE"],
         )
+
+    def test_auth_mode_mismatch_fails_without_overwriting_existing_configuration(self) -> None:
+        self.env["PROVISIONER_TEST_EXISTING_NAMES"] = "\\n".join(
+            [
+                "DERIV_PAT",
+                "DERIV_APP_ID",
+                "DERIV_EXPECTED_LOGINID",
+                "DERIV_EXPECTED_CURRENCY",
+            ]
+        )
+        self.env["PROVISIONER_TEST_EXISTING_VARIABLE_NAMES"] = "DERIV_AUTH_MODE"
+        self.env["PROVISIONER_TEST_EXISTING_VARIABLE_VALUE"] = "pat"
+        self.env["DERIV_AUTH_MODE"] = "oauth"
+        self.env.pop("DERIV_AUTH_TOKEN", None)
+        self.env.pop("DERIV_PAT", None)
+        self.env.pop("DERIV_APP_ID", None)
+        self.env.pop("DERIV_EXPECTED_LOGINID", None)
+        self.env.pop("DERIV_EXPECTED_CURRENCY", None)
+
+        result = self.run_provisioner()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn(
+            "LOCAL_AUTH_MODE_MISMATCH_WITH_EXISTING_ENVIRONMENT_VARIABLE",
+            result.stderr,
+        )
+        self.assertFalse(self.record.exists())
+        self.assertFalse(self.variable_record.exists())
+        self.assertNotIn("TEST_TOKEN_NEVER_PRINT", result.stdout + result.stderr)
 
     def test_existing_secrets_and_variables_are_not_overwritten(self) -> None:
         self.env["PROVISIONER_TEST_EXISTING_NAMES"] = "\n".join(
