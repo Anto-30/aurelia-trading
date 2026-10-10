@@ -459,7 +459,7 @@ async def main() -> None:
         manager = DerivSessionManager(
             expected_loginid=os.getenv("DERIV_EXPECTED_LOGINID") or None,
             expected_environment=os.getenv("DERIV_ENVIRONMENT", "real"),
-            expected_currency=os.getenv("DERIV_EXPECTED_CURRENCY", "USD"),
+            expected_currency=os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper(),
         )
         token = (
             get_optional_secret("DERIV_AUTH_TOKEN")
