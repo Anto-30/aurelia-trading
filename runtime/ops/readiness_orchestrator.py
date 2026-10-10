@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -25,6 +26,66 @@ class Gate:
     @property
     def passed(self) -> bool:
         return self.status == "PASS"
+
+
+MINIMUM_LIVE_BALANCE = 1.50
+MINIMUM_STAKE_BALANCE_FRACTION = 0.01
+
+
+def _minimum_capital_gate(balance: float | None) -> Gate:
+    if (
+        isinstance(balance, bool)
+        or not isinstance(balance, (int, float))
+        or not math.isfinite(float(balance))
+        or balance < 0
+    ):
+        return Gate("MINIMUM_CAPITAL", "UNKNOWN", "requires a fresh, verified broker balance")
+    if balance <= MINIMUM_LIVE_BALANCE:
+        return Gate(
+            "MINIMUM_CAPITAL",
+            "FAIL",
+            "verified account balance must be greater than the hard minimum-capital floor",
+        )
+    return Gate("MINIMUM_CAPITAL", "PASS", "verified account balance is above the minimum-capital floor")
+
+
+def _minimum_available_capital_gate(balance: float | None) -> Gate:
+    if (
+        isinstance(balance, bool)
+        or not isinstance(balance, (int, float))
+        or not math.isfinite(float(balance))
+        or balance < 0
+    ):
+        return Gate("AVAILABLE_CAPITAL", "UNKNOWN", "requires a fresh, verified available balance")
+    if balance <= MINIMUM_LIVE_BALANCE:
+        return Gate(
+            "AVAILABLE_CAPITAL",
+            "FAIL",
+            "verified available balance must be greater than the hard minimum-capital floor",
+        )
+    return Gate("AVAILABLE_CAPITAL", "PASS", "verified available balance is above the minimum-capital floor")
+
+
+def _minimum_stake_risk_gate(available_balance: float | None, minimum_stake: float) -> Gate:
+    if (
+        isinstance(available_balance, bool)
+        or not isinstance(available_balance, (int, float))
+        or not math.isfinite(float(available_balance))
+        or available_balance < 0
+        or isinstance(minimum_stake, bool)
+        or not isinstance(minimum_stake, (int, float))
+        or not math.isfinite(float(minimum_stake))
+        or minimum_stake <= 0
+    ):
+        return Gate("MINIMUM_STAKE_RISK", "UNKNOWN", "requires verified available balance and instrument minimum stake")
+    permitted_minimum_stake = float(available_balance) * MINIMUM_STAKE_BALANCE_FRACTION
+    if float(minimum_stake) > permitted_minimum_stake:
+        return Gate(
+            "MINIMUM_STAKE_RISK",
+            "FAIL",
+            "configured minimum stake exceeds 1% of verified available balance",
+        )
+    return Gate("MINIMUM_STAKE_RISK", "PASS", "configured minimum stake is within 1% of verified available balance")
 
 
 def _flag(name: str) -> bool:
@@ -183,6 +244,15 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
 
     observed = deriv_evidence.get("observed", {}) if isinstance(deriv_evidence, dict) else {}
     observed_balance = observed.get("available_balance") if isinstance(observed, dict) else None
+    raw_account_balance = observed.get("balance") if isinstance(observed, dict) else None
+    account_balance = (
+        float(raw_account_balance)
+        if isinstance(raw_account_balance, (int, float))
+        and not isinstance(raw_account_balance, bool)
+        and math.isfinite(float(raw_account_balance))
+        and raw_account_balance >= 0
+        else None
+    )
     verified_balance = (
         float(observed_balance)
         if balance and isinstance(observed_balance, (int, float)) and not isinstance(observed_balance, bool) and observed_balance >= 0
@@ -191,6 +261,9 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
     starting_stake = 1.0
     execution_minimum_stake = ExecutionLimits().minimum_stake
     minimum_required_balance = max(starting_stake, execution_minimum_stake)
+    minimum_capital_gate = _minimum_capital_gate(account_balance)
+    minimum_available_capital_gate = _minimum_available_capital_gate(verified_balance)
+    minimum_stake_risk_gate = _minimum_stake_risk_gate(verified_balance, execution_minimum_stake)
     stake_affordability_status = (
         "PASS" if verified_balance is not None and verified_balance >= minimum_required_balance
         else "FAIL" if verified_balance is not None
@@ -213,6 +286,9 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         Gate("DERIV_CREDENTIALS", "PASS" if credentials else "FAIL", "presence only; secret values are never emitted"),
         Gate("DERIV_SESSION", "PASS" if session else "UNKNOWN", "requires current PROVEN authenticated modern Options WS evidence"),
         Gate("BALANCE_FRESH", "PASS" if balance else "UNKNOWN", "requires current PROVEN broker balance evidence"),
+        minimum_capital_gate,
+        minimum_available_capital_gate,
+        minimum_stake_risk_gate,
         Gate(
             "STAKE_AFFORDABILITY",
             stake_affordability_status,
@@ -292,8 +368,11 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         "capital": {
             "starting_stake": starting_stake,
             "execution_minimum_stake": execution_minimum_stake,
+            "account_balance": account_balance,
             "verified_balance": verified_balance,
             "stake_ceiling": verified_balance,
+            "hard_minimum_balance": MINIMUM_LIVE_BALANCE,
+            "configured_minimum_stake_risk_fraction": MINIMUM_STAKE_BALANCE_FRACTION
         },
         "controls": {
             "risk_warden": attestation_status["RISK_WARDEN"],
