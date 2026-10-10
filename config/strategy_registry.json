@@ -1,0 +1,408 @@
+{
+  "schema": "aurelia.strategy_registry.v1",
+  "registry_version": "2026-10-10.1",
+  "capital_authority": false,
+  "execution_authority": false,
+  "policy": {
+    "one_canonical_engine": true,
+    "live_admission_is_conjunctive": true,
+    "research_agents_may_not_promote_strategies": true,
+    "unknown_or_stale_evidence_blocks": true,
+    "required_live_evidence": [
+      "implementation_status",
+      "instrument_compatibility_status",
+      "instrument_specification_status",
+      "timeframe_status",
+      "cost_profile_status",
+      "out_of_sample_status",
+      "walk_forward_status",
+      "calibration_status",
+      "net_economics_status",
+      "robustness_status",
+      "statistical_uncertainty_status",
+      "forward_testing_status",
+      "runtime_soak_status",
+      "risk_governance_status",
+      "reviewer",
+      "qualification_evidence_ids",
+      "qualified_source_revision",
+      "strategy_hash"
+    ]
+  },
+  "strategies": [
+    {
+      "strategy_id": "MSNR_LIQUIDITY_SWEEP",
+      "version": "1.0.0",
+      "implementation_path": "research/labs/deterministic_intraday_strategies.py",
+      "implementation_entrypoint": "detect_msnr_liquidity_sweep",
+      "implementation_status": "RESEARCH_ONLY",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [],
+      "verified_instrument_ids": [],
+      "timeframe_status": "CONFIGURATION_REQUIRED",
+      "timeframes": [],
+      "data_requirements": [
+        "closed_ohlc_bars",
+        "confirmed_reference_swing",
+        "verified_tick_size",
+        "timezone_aware_timestamps"
+      ],
+      "risk_profile": "Layer 6 requires verified equity, contract maximum-loss economics, and <=1% planned risk by default; absolute ceiling <=2%.",
+      "execution_assumptions": [
+        "next_bar_open_after_signal",
+        "spread_and_slippage_separately_measured",
+        "no_delta_or_DOM_without_verified_source"
+      ],
+      "qualification_status": "RESEARCH_ONLY_UNQUALIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "UNKNOWN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "IMPLEMENTED_NOT_STRATEGY_SPECIFIC",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "No verified instrument mapping",
+        "No untouched out-of-sample qualification",
+        "No measured cost profile"
+      ]
+    },
+    {
+      "strategy_id": "VWAP_PULLBACK_RECLAIM",
+      "version": "1.0.0",
+      "implementation_path": "research/labs/deterministic_intraday_strategies.py",
+      "implementation_entrypoint": "evaluate_vwap_pullback",
+      "implementation_status": "RESEARCH_ONLY",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [],
+      "verified_instrument_ids": [],
+      "timeframe_status": "CONFIGURATION_REQUIRED",
+      "timeframes": [],
+      "data_requirements": [
+        "closed_ohlc_bars",
+        "session_id",
+        "verified_session_volume",
+        "timezone_aware_timestamps"
+      ],
+      "risk_profile": "Layer 6 requires verified equity, contract maximum-loss economics, and <=1% planned risk by default; absolute ceiling <=2%.",
+      "execution_assumptions": [
+        "session_vwap_definition_required",
+        "down_candle_volume_is_only_a_proxy_not_delta",
+        "next_bar_open_after_signal"
+      ],
+      "qualification_status": "RESEARCH_ONLY_UNQUALIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "UNKNOWN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "IMPLEMENTED_NOT_STRATEGY_SPECIFIC",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "Verified session volume required",
+        "No untouched out-of-sample qualification",
+        "No measured cost profile"
+      ]
+    },
+    {
+      "strategy_id": "OPENING_RANGE_BREAKOUT",
+      "version": "1.0.0",
+      "implementation_path": "research/labs/deterministic_intraday_strategies.py",
+      "implementation_entrypoint": "evaluate_opening_range_breakout",
+      "implementation_status": "RESEARCH_ONLY",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [],
+      "verified_instrument_ids": [],
+      "timeframe_status": "CONFIGURATION_REQUIRED",
+      "timeframes": [],
+      "data_requirements": [
+        "closed_ohlc_bars",
+        "session_id",
+        "session_timezone_and_open_required",
+        "verified_tick_size"
+      ],
+      "risk_profile": "Layer 6 requires verified equity, contract maximum-loss economics, and <=1% planned risk by default; absolute ceiling <=2%.",
+      "execution_assumptions": [
+        "confirmed_closed_bar_breakout",
+        "no_future_candle_confirmation",
+        "next_bar_open_after_signal"
+      ],
+      "qualification_status": "RESEARCH_ONLY_UNQUALIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "UNKNOWN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "IMPLEMENTED_NOT_STRATEGY_SPECIFIC",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "Opening session window/timezone not verified end-to-end",
+        "No untouched out-of-sample qualification",
+        "No measured cost profile"
+      ]
+    },
+    {
+      "strategy_id": "AUTONOMOUS_TICK_RETURN_SHOCK",
+      "version": "runtime-v1",
+      "implementation_path": "runtime/strategy/autonomous_signal_engine.py",
+      "implementation_entrypoint": "AutonomousSignalHunter.observe",
+      "implementation_status": "RESEARCH_ONLY",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [],
+      "verified_instrument_ids": [],
+      "timeframe_status": "TICK_STREAM",
+      "timeframes": [
+        "TICK"
+      ],
+      "data_requirements": [
+        "fresh_deriv_tick_stream",
+        "chronological_tick_timestamps",
+        "probability_calibration_before_promotion"
+      ],
+      "risk_profile": "Layer 6 requires verified equity, contract maximum-loss economics, and <=1% planned risk by default; absolute ceiling <=2%.",
+      "execution_assumptions": [
+        "uncalibrated_research_confidence",
+        "no_order_submission_from_signal_hunter"
+      ],
+      "qualification_status": "RESEARCH_ONLY_UNQUALIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "UNKNOWN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "IMPLEMENTED_NOT_STRATEGY_SPECIFIC",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "Signal confidence is uncalibrated",
+        "No untouched out-of-sample qualification"
+      ]
+    },
+    {
+      "strategy_id": "S7_LRL_IFVG",
+      "version": "UNKNOWN",
+      "implementation_path": null,
+      "implementation_entrypoint": null,
+      "implementation_status": "NOT_VERIFIED",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [],
+      "verified_instrument_ids": [],
+      "timeframe_status": "UNKNOWN",
+      "timeframes": [],
+      "data_requirements": [
+        "implementation_source_and_data_provenance_required"
+      ],
+      "risk_profile": "Layer 6 requires verified equity, contract maximum-loss economics, and <=1% planned risk by default; absolute ceiling <=2%.",
+      "execution_assumptions": [
+        "BLOCKED_UNTIL_VERIFIED"
+      ],
+      "qualification_status": "BLOCKED_IMPLEMENTATION_NOT_VERIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "UNKNOWN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "UNKNOWN",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "Existing strategy identity retained; implementation not verified in canonical main checkout.",
+        "No verified qualification evidence"
+      ]
+    },
+    {
+      "strategy_id": "S6_LIQUIDITY_SWEEP",
+      "version": "UNKNOWN",
+      "implementation_path": null,
+      "implementation_entrypoint": null,
+      "implementation_status": "NOT_VERIFIED",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [],
+      "verified_instrument_ids": [],
+      "timeframe_status": "UNKNOWN",
+      "timeframes": [],
+      "data_requirements": [
+        "implementation_source_and_data_provenance_required"
+      ],
+      "risk_profile": "Layer 6 requires verified equity, contract maximum-loss economics, and <=1% planned risk by default; absolute ceiling <=2%.",
+      "execution_assumptions": [
+        "BLOCKED_UNTIL_VERIFIED"
+      ],
+      "qualification_status": "BLOCKED_IMPLEMENTATION_NOT_VERIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "UNKNOWN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "UNKNOWN",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "Existing strategy identity retained; implementation not verified in canonical main checkout.",
+        "No verified qualification evidence"
+      ]
+    },
+    {
+      "strategy_id": "S3_DONCHIAN_LWTI",
+      "version": "UNKNOWN",
+      "implementation_path": null,
+      "implementation_entrypoint": null,
+      "implementation_status": "NOT_VERIFIED",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [],
+      "verified_instrument_ids": [],
+      "timeframe_status": "UNKNOWN",
+      "timeframes": [],
+      "data_requirements": [
+        "implementation_source_and_data_provenance_required"
+      ],
+      "risk_profile": "Layer 6 requires verified equity, contract maximum-loss economics, and <=1% planned risk by default; absolute ceiling <=2%.",
+      "execution_assumptions": [
+        "BLOCKED_UNTIL_VERIFIED"
+      ],
+      "qualification_status": "BLOCKED_IMPLEMENTATION_NOT_VERIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "UNKNOWN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "UNKNOWN",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "Existing strategy identity retained; implementation not verified in canonical main checkout.",
+        "No verified qualification evidence"
+      ]
+    },
+    {
+      "strategy_id": "CRT",
+      "version": "UNKNOWN",
+      "implementation_path": null,
+      "implementation_entrypoint": null,
+      "implementation_status": "NOT_VERIFIED",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [],
+      "verified_instrument_ids": [],
+      "timeframe_status": "UNKNOWN",
+      "timeframes": [],
+      "data_requirements": [
+        "implementation_source_and_data_provenance_required"
+      ],
+      "risk_profile": "Layer 6 requires verified equity, contract maximum-loss economics, and <=1% planned risk by default; absolute ceiling <=2%.",
+      "execution_assumptions": [
+        "BLOCKED_UNTIL_VERIFIED"
+      ],
+      "qualification_status": "BLOCKED_IMPLEMENTATION_NOT_VERIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "UNKNOWN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "UNKNOWN",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "Existing strategy identity retained; implementation not verified in canonical main checkout.",
+        "No verified qualification evidence"
+      ]
+    },
+    {
+      "strategy_id": "MICRO_SCALP_R100_TICK_MOM",
+      "version": "UNKNOWN",
+      "implementation_path": null,
+      "implementation_entrypoint": null,
+      "implementation_status": "NOT_VERIFIED",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [],
+      "verified_instrument_ids": [],
+      "timeframe_status": "UNKNOWN",
+      "timeframes": [],
+      "data_requirements": [
+        "implementation_source_and_data_provenance_required"
+      ],
+      "risk_profile": "Layer 6 requires verified equity, contract maximum-loss economics, and <=1% planned risk by default; absolute ceiling <=2%.",
+      "execution_assumptions": [
+        "BLOCKED_UNTIL_VERIFIED"
+      ],
+      "qualification_status": "BLOCKED_IMPLEMENTATION_NOT_VERIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "UNKNOWN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "UNKNOWN",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "Existing strategy identity retained; implementation not verified in canonical main checkout.",
+        "No verified qualification evidence"
+      ]
+    }
+  ]
+}
