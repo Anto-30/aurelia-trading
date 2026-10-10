@@ -1,15 +1,15 @@
 # US Session Breakout Historical Pilot — Evidence Report
 
 - Run date: 2026-10-10 UTC
-- Repository target: \`Anto-30/aurelia-trading\`
-- Research branch: \`research/us-open-session-candidates-2026-10-10\`
+- Repository target: `Anto-30/aurelia-trading`
+- Research branch: `research/us-open-session-candidates-2026-10-10`
 - Status: **PRELIMINARY DIAGNOSTIC — NOT QUALIFIED**
 - Capital authority: false; live execution: false
 - This report supersedes the earlier statement that no historical bars were obtained. The bars were retrieved from the connected Massive futures aggregates API into an ephemeral query workspace. They were not present as a tracked AURELIA dataset.
 
 ## 1. Data lineage, coverage and limitations
 
-Source endpoint: Massive futures aggregate bars, \`GET /futures/v1/aggs/{ticker}\`, resolution \`5min\`. Exact queried contract tables and rows:
+Source endpoint: Massive futures aggregate bars, `GET /futures/v1/aggs/{ticker}`, resolution `5min`. Exact queried contract tables and rows:
 
 | Contract | Data request window (UTC date filters) | Rows returned |
 |---|---|---:|
@@ -23,11 +23,13 @@ Source endpoint: Massive futures aggregate bars, \`GET /futures/v1/aggs/{ticker}
 | MNQZ6 (partial September window) | 2026-09-01 to 2026-09-30 | 5,687 |
 | **Total** | **7 distinct contracts** | **121,835** |
 
-The combined queried records contained 121,835 unique \`ticker + window_start\` keys in the workspace. The observed UTC timestamp span was 2024-12-01 23:00 through 2026-09-30 00:00. These figures describe the retrieved rows, not completeness of the exchange calendar. In particular, **April through July 2026 are missing**, and the 2026 data are discontinuous. Requests for MNQM6 and expanded MNQU6/MNQZ6 windows hit the connected data plan's rate limit. Raw bars were not committed to GitHub, both because the workspace is temporary and because redistributing vendor data requires verified entitlement. A cryptographic hash of the raw dataset was not persisted; provenance is therefore incomplete for any formal qualification.
+The combined queried records contained 121,835 unique `ticker + window_start` keys in the workspace. The observed UTC timestamp span was 2024-12-01 23:00 through 2026-09-30 00:00. These figures describe the retrieved rows, not completeness of the exchange calendar. In particular, **April through July 2026 are missing**, and the 2026 data are discontinuous. Requests for MNQM6 and expanded MNQU6/MNQZ6 windows hit the connected data plan's rate limit. Raw bars were not committed to GitHub, both because the workspace is temporary and because redistributing vendor data requires verified entitlement. A cryptographic hash of the raw dataset was not persisted; provenance is therefore incomplete for any formal qualification.
+
+**Reproducibility correction:** the numeric tables below were produced through an exploratory temporary SQL workspace, not by the subsequently checked-in backtest harness. The checked-in code and synthetic fixtures now make the rules and replay mechanics testable, but they do not reproduce these specific values without the raw, correctly licensed bars and query parameters. The machine-readable summary `reports/research/US_SESSION_BREAKOUT_PILOT_2026-10-10.json` records these limits explicitly.
 
 ### Contract roll policy used for this exploratory computation
 
-For each session-end date, the selected contract was the queried contract with the greatest volume on the prior available session; ties were broken by ticker. Duplicate bars were de-duplicated by \`ticker + window_start\`. Roll decisions were made with prior-session volume, not the session being evaluated. Observed transitions included H5→M5 on 2025-03-19, M5→U5 on 2025-06-17, U5→Z5 on 2025-09-17, Z5→H6 on 2025-12-17, and U6→Z6 on 2026-09-16. This is a pilot roll rule, not an exchange-endorsed or fully independently audited continuous-contract history. The lack of MNQM6 and other intervals limits the later roll path.
+For each session-end date, the selected contract was the queried contract with the greatest volume on the prior available session; ties were broken by ticker. Duplicate bars were de-duplicated by `ticker + window_start`. Roll decisions were made with prior-session volume, not the session being evaluated. Observed transitions included H5→M5 on 2025-03-19, M5→U5 on 2025-06-17, U5→Z5 on 2025-09-17, Z5→H6 on 2025-12-17, and U6→Z6 on 2026-09-16. This is a pilot roll rule, not an exchange-endorsed or fully independently audited continuous-contract history. The lack of MNQM6 and other intervals limits the later roll path.
 
 ### Session eligibility
 
@@ -93,7 +95,17 @@ This is a separate segment after a major source-data gap, not a continuous OOS c
 
 The fixed 10-point B target exhibits high win rate but very small mean win; it is negative in the Q1 diagnostic and almost break-even in the disconnected Aug/Sep slice even before spread/commissions. The breakout-candle-stop A variant is negative in 2025 and Aug/Sep, with a materially different Q1 result. This instability is an explicit reason not to promote either rule.
 
-## 4. Interpretation and decision
+## 4. Checked-in research tooling status
+
+The draft branch now contains:
+- `research/labs/session_breakout_candidates.py`: causal range builders and A/B completed-close candidate construction, plus explicit A intrabar reference logic.
+- `research/labs/session_breakout_backtest.py`: bar-level stop/target replay, adverse stop-gap treatment, ambiguous same-bar hit marking, no-trade session accounting, time exits, and an optional complete cost model.
+- `research/labs/session_structure_hypotheses.py`: New York session windows, session-completeness checks, candidate C sweep/re-entry observations and next-session expansion ratios, and candidate D confirmed-pivot/as-of structure primitives.
+- `research/labs/tests/test_session_breakout_candidates.py`, `test_session_breakout_backtest.py`, and `test_session_structure_hypotheses.py`: regression tests for time windows, DST, causality, ambiguity, missing bars, costs, pivot confirmation, and UNKNOWN context.
+
+These components remain research-only; they are not registered for production, do not have a broker interface, and do not authorise capital. The current latest commit's full Assurance workflow was still running when this report was last checked, so the new C/D tests must not be described as green until the run finishes successfully.
+
+## 5. Interpretation and decision
 
 1. **No candidate is qualified.** The results are preliminary descriptive statistics with limited windows and multiple variants. They are not evidence of a robust, statistically significant or executable edge.
 2. **A breakout-candle-stop 2R is rejected from advancement at this stage** because expectancy/PF deteriorates outside the Q1 segment.
@@ -104,10 +116,10 @@ The fixed 10-point B target exhibits high win rate but very small mean win; it i
 7. The data provider response did not include bid/ask/time-sequenced trades, so intrabar first-cross and true stop/target ordering remain NOT_TESTED. Candidate C session reversal and Candidate D multi-timeframe pivot filter remain specifications only.
 8. Results in index points/R are not portable to Deriv R_100, NQ, CFDs or other symbols. MNQ itself cannot meet a $1 loss budget: CME defines MNQ as $2 per Nasdaq-100 index point with a 0.25-point tick ($0.50/tick), so even a one-point stop is $2 per contract before costs. Current account balance/margin and risk capacity must be independently verified; this pilot does not authorize such a trade.
 
-## 5. Next experiment before any re-run
+## 6. Next experiment before any re-run
 
 - Obtain a redistributable/authorized, continuous minute or finer quote/trade dataset for MNQ with complete April–July 2026 coverage, and save dataset SHA-256, request parameters, retrieval date and license/entitlement record.
 - Pre-register A1/A2/B variants and reserve an untouched prospective holdout. Do not retune using the reported 2026 segments.
 - Obtain realistic broker/exchange commissions, bid/ask spreads, slippage/latency distributions and fill assumptions; run sensitivity across 1, 2 and 4 ticks each side plus spread/fee scenarios.
-- Re-run using event-level/tick data to disambiguate stop/target ordering; compare against no-trade and a base reference model; report uncertainty intervals, serial-dependence-aware bootstrap, parameter-search count, symbol/regime segmentation and daily net P&L including zero-trade sessions.
+- Re-run the pilot via the checked-in `research/labs/session_breakout_backtest.py` only after authorized raw bars, a dataset SHA-256, query parameters and the roll policy are persisted. Obtain event-level/tick data to disambiguate stop/target ordering; compare against no-trade and a base reference model; report uncertainty intervals, serial-dependence-aware bootstrap, parameter-search count, symbol/regime segmentation and daily net P&L including zero-trade sessions.
 - Keep all four candidates RESEARCH_ONLY until a separate sealed evaluation, calibration, paper/shadow process, and the current AURELIA deterministic release process are complete. This report does not modify the strategy registry, Risk Warden, Execution Firewall, LIVE_LOCK or deployment.
