@@ -551,6 +551,18 @@ class FederatedDecisionProvider:
         except (KeyError, TypeError, ValueError):
             fresh = False
         controls = report.get("controls", {}) if isinstance(report, dict) else {}
+        # A fresh-looking readiness report from another deployment must never
+        # authorize this worker. In deployed mode GITHUB_SHA binds the report
+        # to the exact source revision mounted into this container.
+        expected_source = (
+            __import__("os").getenv("GITHUB_SHA", "").strip()
+            or __import__("os").getenv("AURELIA_SOURCE_SHA", "").strip()
+        )
+        if expected_source:
+            attestation_bundle = report.get("attestations", {}) if isinstance(report, dict) else {}
+            fresh = fresh and isinstance(attestation_bundle, dict) and (
+                str(attestation_bundle.get("source_sha", "")).strip() == expected_source
+            )
         final_ok = bool(report.get("final_execution_authorization"))
         live_ok = str(report.get("live_execution", "")).upper() == "ENABLED"
         return {
