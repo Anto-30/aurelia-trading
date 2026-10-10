@@ -250,8 +250,26 @@ jobs:
 
           if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
             test -d artifacts/attestations || { echo "LIVE_GATE_BLOCKED=ATTESTATION_BUNDLE_MISSING"; exit 2; }
+            attestation_names=(
+              market_data.json
+              probability.json
+              risk_warden.json
+              execution_firewall.json
+              exposure.json
+              reconciliation.json
+              watchdog.json
+              idempotency.json
+              persistent_worker.json
+            )
+            for name in "${attestation_names[@]}"; do
+              file="artifacts/attestations/$name"
+              test -f "$file" && test ! -L "$file" || {
+                echo "LIVE_GATE_BLOCKED=ATTESTATION_FILE_MISSING_OR_UNSAFE:$name"
+                exit 2
+              }
+            done
             attestation_archive="$RUNNER_TEMP/aurelia-attestations-$GITHUB_SHA.tar.gz"
-            tar -czf "$attestation_archive" -C artifacts/attestations .
+            tar -czf "$attestation_archive" -C artifacts/attestations "${attestation_names[@]}"
             test -s "$attestation_archive"
             echo "AURELIA_ATTESTATION_ARCHIVE=$attestation_archive" >> "$GITHUB_ENV"
           fi
