@@ -251,7 +251,12 @@ class ExecutionEngine:
         """
         if not getattr(self.adapter, "authorized", False):
             self._halt("BROKER_SESSION_NOT_AUTHORIZED")
-        if not await self.status_check():
+        try:
+            status_ok = await self.status_check()
+        except Exception as exc:
+            self._halt("BROKER_TRADING_STATUS_CHECK_FAILED")
+            raise ExecutionHalted("BROKER_TRADING_STATUS_CHECK_FAILED") from exc
+        if not status_ok:
             self._halt("BROKER_TRADING_STATUS_NOT_VERIFIED")
         snapshot = await self._broker_snapshot()
         if self.local_snapshot is not None and snapshot != self.local_snapshot:
@@ -277,7 +282,12 @@ class ExecutionEngine:
             if intent.currency.upper() != intent.currency:
                 self._halt("CURRENCY_NOT_CANONICAL")
 
-            if not await self.status_check():
+            try:
+                status_ok = await self.status_check()
+            except Exception as exc:
+                self._halt("BROKER_TRADING_STATUS_CHECK_FAILED")
+                raise ExecutionHalted("BROKER_TRADING_STATUS_CHECK_FAILED") from exc
+            if not status_ok:
                 self._halt("BROKER_TRADING_STATUS_NOT_VERIFIED")
             fresh = await self._broker_snapshot()
             if self.local_snapshot is None or fresh != self.local_snapshot:
@@ -334,9 +344,21 @@ class ExecutionEngine:
             if not contract_id:
                 self._halt("BUY_CONTRACT_ID_MISSING")
                 raise BrokerAmbiguous("BUY_CONTRACT_ID_MISSING")
-            verified = await self._verify_contract(intent, contract_id)
-            # Refresh state from broker only after a verified contract.
-            self.local_snapshot = await self._broker_snapshot()
+            try:
+                verified = await self._verify_contract(intent, contract_id)
+                # Refresh state from broker only after a verified contract.
+                refreshed = await self._broker_snapshot()
+            except Exception as exc:
+                self._halt("POST_BUY_VERIFICATION_FAILED")
+                raise BrokerAmbiguous(
+                    "POST_BUY_VERIFICATION_FAILED; do not retry automatically"
+                ) from exc
+            matching_ids = [
+                row[0] for row in refreshed.open_contracts if row[0] == contract_id
+            ]
+            if len(matching_ids) != 1:
+                self._halt("POST_BUY_CONTRACT_NOT_UNIQUE_IN_PORTFOLIO")
+            self.local_snapshot = refreshed
             self.logger.info(
                 "Broker contract verified; intent_id=%s contract_id=%s",
                 intent.intent_id, contract_id,
