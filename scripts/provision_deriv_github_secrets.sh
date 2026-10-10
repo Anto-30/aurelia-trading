@@ -93,8 +93,9 @@ if [[ -n "$currency" ]]; then
 fi
 if ! has_secret "DERIV_EXPECTED_CURRENCY"; then
   if [[ -z "$currency" ]]; then
-    [[ -r /dev/tty ]] || fail "DERIV_EXPECTED_CURRENCY_REQUIRED"
-    read -r -p "Enter the exact Deriv Options account currency (currently supported: USD): " currency </dev/tty
+    if ! read -r -p "Enter the exact Deriv Options account currency (currently supported: USD): " currency </dev/tty; then
+      fail "DERIV_EXPECTED_CURRENCY_REQUIRED"
+    fi
     currency="$(printf '%s' "$currency" | tr '[:lower:]' '[:upper:]')"
   fi
   [[ "$currency" == "USD" ]] || fail "UNEXPECTED_CURRENCY_FOR_THIS_CONFIGURATION"
