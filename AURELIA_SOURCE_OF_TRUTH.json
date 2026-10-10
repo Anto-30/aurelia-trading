@@ -34,12 +34,13 @@
   "github_remote_read_verified": true,
   "github_remote_write_verified": true,
   "github_canonical_branch": "main",
-  "note": "Current source is resolved directly from the remote main branch; commit identity must be read from the branch tip at time of use.",
+  "note": "Current source is resolved directly from the remote main branch; commit identity must be read from the branch tip at time of use. LIVE stake sizing is denominated in USD and blocks non-USD accounts until a verified conversion policy exists.",
   "deployment_primary_provider": "self_hosted",
   "deployment_policy": "config/deployment_policy.json",
   "deployment_workflow": ".github/workflows/self-hosted-runtime-deploy.yml",
   "deployment_script": "scripts/deploy/bootstrap_and_deploy.sh",
   "deployment_runtime": "linux_docker",
   "trial_dependency": false,
-  "provider_lock": false
+  "provider_lock": false,
+  "stake_currency": "USD"
 }
