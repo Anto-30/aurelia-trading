@@ -115,6 +115,19 @@ class UnknownBroker(FakeBroker):
         )
 
 
+class BalanceMismatchBroker(FakeBroker):
+    async def get_balance(self):
+        snapshot = capital()
+        return CapitalSnapshot(
+            balance=snapshot.balance - 0.25,
+            currency=snapshot.currency,
+            available_balance=snapshot.available_balance - 0.25,
+            captured_at=datetime.now(UTC),
+            source="test:mismatched-broker",
+            account=snapshot.account,
+        )
+
+
 def make_executor(lock_path: Path, broker=None):
     return CapitalPlaneExecutor(
         broker or FakeBroker(),
@@ -174,6 +187,27 @@ class CapitalExecutorHardeningTests(unittest.IsolatedAsyncioTestCase):
             self.assertFalse(outcome.allowed)
             self.assertIn("NON_LIVE_BROKER_SUBMISSION_FORBIDDEN", outcome.reasons)
             self.assertEqual(broker.calls, 0)
+
+    async def test_pre_submission_state_mismatch_trips_kill_and_halts(self):
+        with tempfile.TemporaryDirectory() as td:
+            lock = Path(td) / "LIVE_LOCK.yaml"
+            self.write_live_release(lock)
+            broker = BalanceMismatchBroker()
+            executor = make_executor(lock, broker)
+            executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
+            auth = context()
+            self.assertTrue(executor.clear_kill_switch_with_fresh_authorization(auth))
+
+            intent = build_intent(auth, proposal_id="P1", mode="LIVE")
+            token = executor.fence.acquire("test")
+            outcome = await executor.execute(intent, auth, token)
+
+            self.assertFalse(outcome.allowed)
+            self.assertEqual(outcome.status, "RECOVERY_REQUIRED")
+            self.assertIn("STATE_MISMATCH", outcome.reasons)
+            self.assertTrue(executor.kill_switch)
+            self.assertEqual(broker.calls, 0)
+            self.assertIn("STATE_MISMATCH", (Path(td) / "events.ndjson").read_text())
 
     async def test_unknown_outcome_blocks_blind_retry(self):
         with tempfile.TemporaryDirectory() as td:
