@@ -65,7 +65,7 @@ The live lock is currently non-live by design. Passing tests or authenticated-se
 
 The hard probability band is **50%–75%**, inclusive, with no clipping. A probability inside the band is insufficient unless calibration, freshness, drift, instrument qualification, and positive net expected value after costs all pass.
 
-The starting stake and contract minimum are `1.00` in the verified account currency. For live purchased contracts, AURELIA computes the stake as 1% of fresh, verified available balance, rounded down to cents. The strategy/agent proposal cannot override the deterministic sizing rule. Since the minimum stake is `1.00`, a 1% budget cannot fund even the starting stake until verified available balance is at least `100.00` in that currency. A lower balance must remain blocked rather than force a risk-budget exception.
+The starting stake and contract minimum are USD `1.00`. For live purchased contracts, AURELIA requires a verified USD account and computes the stake as 1% of fresh, verified available USD balance, rounded down to cents. The strategy/agent proposal cannot override the deterministic sizing rule. Since the minimum stake is USD `1.00`, a 1% budget cannot fund even the starting stake until verified available balance is at least USD `100.00`. Non-USD accounts and lower balances must remain blocked rather than force a currency or risk-budget exception.
 
 Full policy: `docs/AURELIA_STAKE_POLICY_2026-10-10.md`.
 
