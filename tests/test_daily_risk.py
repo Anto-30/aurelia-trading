@@ -31,12 +31,28 @@ class DailyRiskTests(unittest.TestCase):
         self.assertEqual(reference, 100.0)
         self.assertEqual(source, "DERIV_STATEMENT_RECONSTRUCTED")
 
-    def test_missing_currency_truncated_or_inconsistent_statement_is_unknown(self):
+    def test_missing_optional_row_currency_uses_authenticated_account_currency(self):
+        rows = rows_for_day()
+        rows[0].pop("currency")
+        reference, _ = derive_utc_day_start_balance(
+            current_balance=101, transactions=rows, day_start_epoch=0, day_end_epoch=2000,
+            currency="USD",
+        )
+        self.assertEqual(reference, 100.0)
+        mismatch = rows_for_day()
+        mismatch[0]["currency"] = "EUR"
+        with self.assertRaisesRegex(ValueError, "STATEMENT_CURRENCY_MISMATCH"):
+            derive_utc_day_start_balance(
+                current_balance=101, transactions=mismatch, day_start_epoch=0,
+                day_end_epoch=2000, currency="USD",
+            )
+
+    def test_missing_identity_or_truncated_or_inconsistent_statement_is_unknown(self):
         with self.assertRaisesRegex(ValueError, "STATEMENT_FIELDS_UNVERIFIED"):
             derive_utc_day_start_balance(
-                current_balance=101, transactions=[{"transaction_time": 1000, "id": "T",
-                    "amount": 1, "balance_after": 101}], day_start_epoch=0, day_end_epoch=2000,
-                currency="USD",
+                current_balance=101, transactions=[{"transaction_time": 1000,
+                    "amount": 1, "balance_after": 101, "currency": "USD"}],
+                day_start_epoch=0, day_end_epoch=2000, currency="USD",
             )
         with self.assertRaisesRegex(ValueError, "STATEMENT_LIMIT_REACHED"):
             derive_utc_day_start_balance(

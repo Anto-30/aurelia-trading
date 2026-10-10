@@ -190,6 +190,9 @@ async def start_continuous_runtime(
     # Incomplete, truncated or inconsistent statement data blocks startup.
     observed_at = datetime.now(timezone.utc)
     day_start = datetime(observed_at.year, observed_at.month, observed_at.day, tzinfo=timezone.utc)
+    open_contracts = await adapter.portfolio()
+    if open_contracts:
+        raise RuntimeError("DAILY_RISK_OPEN_CONTRACTS_REQUIRE_RECONCILIATION")
     statement = await adapter.statement(
         limit=999,
         date_from=int(day_start.timestamp()),

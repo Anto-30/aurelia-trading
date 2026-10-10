@@ -44,10 +44,11 @@ def derive_utc_day_start_balance(
 ) -> tuple[float, str]:
     """Reconstruct day-opening balance from a complete UTC-day broker statement.
 
-    Statement rows must supply transaction_time, transaction_id/id, amount,
-    balance_after and currency. Missing identity/currency or a truncated
-    statement is UNKNOWN and blocks startup. A genuinely empty day returns the
-    current broker balance as the baseline.
+    Modern Deriv WebSocket statements provide transaction_time, transaction_id,
+    amount and balance_after but may omit transaction currency. The caller must
+    bind this statement to a freshly authenticated account; any currency field
+    that is present must match that verified account currency. Missing identity,
+    inconsistent balance chains or truncation are UNKNOWN and block startup.
     """
     balance = _finite(current_balance)
     code = str(currency or "").strip().upper()
@@ -73,8 +74,8 @@ def derive_utc_day_start_balance(
         amount = _finite(item.get("amount"))
         after = _finite(item.get("balance_after"))
         txid = str(item.get("transaction_id") or item.get("id") or "").strip()
-        row_currency = str(item.get("currency") or "").strip().upper()
-        if stamp is None or amount is None or after is None or not txid or not row_currency:
+        row_currency = str(item.get("currency") or code).strip().upper()
+        if stamp is None or amount is None or after is None or not txid:
             raise ValueError("DAILY_RISK_STATEMENT_FIELDS_UNVERIFIED")
         if not day_start_epoch <= int(stamp) <= day_end_epoch:
             raise ValueError("DAILY_RISK_STATEMENT_WINDOW_MISMATCH")
