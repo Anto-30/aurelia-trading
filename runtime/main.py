@@ -634,7 +634,15 @@ async def main() -> None:
         while True:
             health.process_heartbeat = datetime.now(timezone.utc)
             if continuous_runtime is None:
-                apply_verify_only_runtime_health(health)
+                # A missing runtime object is an operational failure, not an
+                # intentional verify-only mode. Keep readiness blocked.
+                health.broker_session = False
+                health.market_data_fresh = False
+                health.capital_fresh = False
+                health.ledger_healthy = False
+                health.reconciliation_healthy = False
+                health.kill_switch_off = False
+                health.critical_unknowns.add("CONTINUOUS_RUNTIME_UNAVAILABLE")
                 HealthHandler.state = RuntimeState.CAPITAL_PROTECTED
             else:
                 loop = continuous_runtime.execution_loop
