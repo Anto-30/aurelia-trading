@@ -108,6 +108,8 @@ def authorization_gate(
         reasons.append("CURRENCY_MISMATCH")
     if not capital.is_valid():
         reasons.append("CAPITAL_TRUTH_NOT_FRESH")
+    if execution_mode == "LIVE" and capital.currency.strip().upper() != "USD":
+        reasons.append("USD_STAKE_POLICY_REQUIRES_USD_ACCOUNT")
     if not probability_is_valid(decision.probability):
         reasons.append("PROBABILITY_OUTSIDE_HARD_POLICY")
 
