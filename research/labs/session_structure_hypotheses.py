@@ -49,7 +49,7 @@ class SessionReversalSignal:
     signal_price: float
     prior_session_high: float
     prior_session_low: float
-    stop_reference_price: float
+    stop_reference_price: float | None
     ambiguity: bool = False
     research_only: bool = True
     capital_authority: bool = False
@@ -250,7 +250,7 @@ def detect_session_reversal(
                 signal_price=bar.close,
                 prior_session_high=previous_session.high,
                 prior_session_low=previous_session.low,
-                stop_reference_price=float("nan"),
+                stop_reference_price=None,
                 ambiguity=True,
             )
         if long_sweep:
