@@ -98,7 +98,6 @@ def _write_runtime_deriv_evidence(snapshot, config_hash: str) -> None:
             "account_environment_binding",
             "currency_binding",
             "fresh_broker_balance",
-            "no_order_submission",
             "capital_authority_not_granted",
         ],
         invariants_failed=[],
