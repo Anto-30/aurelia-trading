@@ -361,6 +361,34 @@ class CapitalPlaneExecutor:
                 {"intent_id": intent.intent_id, "reasons": ("BROKER_ACCOUNT_IDENTITY_CHANGED",)},
             )
             return ExecutionOutcome(False, "BLOCKED", ("BROKER_ACCOUNT_IDENTITY_CHANGED",), intent.intent_id)
+
+        # The authorization snapshot is the state against which this intent was
+        # approved. If the broker's fresh balance differs at the capital
+        # boundary, do not reinterpret the difference as harmless drift: it may
+        # represent an external transaction or an un-reconciled prior trade.
+        # Trip the kill switch and require a new, explicit reconciliation cycle.
+        if (
+            fresh_balance.balance != context.capital.balance
+            or fresh_balance.available_balance != context.capital.available_balance
+            or fresh_balance.currency != context.capital.currency
+            or fresh_balance.account != context.capital.account
+        ):
+            self._log(
+                "STATE_MISMATCH",
+                {
+                    "intent_id": intent.intent_id,
+                    "reason": "PRE_SUBMISSION_CAPITAL_DIFFERS_FROM_AUTHORIZATION_SNAPSHOT",
+                },
+            )
+            self.circuit_breaker.record_reconciliation_failure()
+            self.activate_kill_switch("STATE_MISMATCH")
+            return ExecutionOutcome(
+                False,
+                "RECOVERY_REQUIRED",
+                ("STATE_MISMATCH",),
+                intent.intent_id,
+            )
+
         if fresh_balance.available_balance < intent.stake:
             self._log(
                 "PRE_SUBMISSION_BLOCKED",
