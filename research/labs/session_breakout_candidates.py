@@ -159,11 +159,15 @@ def premarket_range_5m(bars: Sequence[OHLCBar], session_date: date) -> PriceRang
     )
     start = datetime.combine(session_date, PREMARKET_RANGE_START, NEW_YORK)
     end = datetime.combine(session_date, PREMARKET_RANGE_END, NEW_YORK)
+    range_high = max(bar.high for bar in selected)
+    range_low = min(bar.low for bar in selected)
+    if range_high <= range_low:
+        raise ValueError("DEGENERATE_SESSION_RANGE")
     return PriceRange(
         candidate_id="US_PREMARKET_RANGE_BREAKOUT",
         session_date=session_date,
-        high=max(bar.high for bar in selected),
-        low=min(bar.low for bar in selected),
+        high=range_high,
+        low=range_low,
         start_utc=start.astimezone(timezone.utc),
         end_utc=end.astimezone(timezone.utc),
         bars_count=len(selected),
@@ -179,11 +183,15 @@ def opening_range_30m_from_15m(
     )
     start = datetime.combine(session_date, US_CASH_OPEN, NEW_YORK)
     end = datetime.combine(session_date, OPENING_RANGE_END, NEW_YORK)
+    range_high = max(bar.high for bar in selected)
+    range_low = min(bar.low for bar in selected)
+    if range_high <= range_low:
+        raise ValueError("DEGENERATE_SESSION_RANGE")
     return PriceRange(
         candidate_id="US_OPENING_RANGE_30M_BREAKOUT",
         session_date=session_date,
-        high=max(bar.high for bar in selected),
-        low=min(bar.low for bar in selected),
+        high=range_high,
+        low=range_low,
         start_utc=start.astimezone(timezone.utc),
         end_utc=end.astimezone(timezone.utc),
         bars_count=len(selected),
@@ -254,6 +262,34 @@ def _close_breakout_candidate(
     opposite_boundary_only: bool = False,
 ) -> ResearchDecision:
     _validate_bars(bars_5m)
+    if (
+        price_range.session_date != session_date
+        or not isfinite(price_range.high)
+        or not isfinite(price_range.low)
+        or price_range.high <= price_range.low
+    ):
+        raise ValueError("RANGE_SESSION_OR_PRICE_INVALID")
+    if cutoff <= signal_start:
+        raise ValueError("ENTRY_CUTOFF_MUST_FOLLOW_SIGNAL_START")
+    # A batch result must include every five-minute bar in the candidate window.
+    # Otherwise an earlier breakout may be missing and the first-signal rule cannot be trusted.
+    window_bars = [
+        bar for bar in bars_5m
+        if (local := _utc(bar.timestamp_utc).astimezone(NEW_YORK)).date() == session_date
+        and signal_start <= local.time().replace(tzinfo=None) < cutoff
+    ]
+    expected_window_bars = int(
+        (datetime.combine(session_date, cutoff) - datetime.combine(session_date, signal_start))
+        .total_seconds() // (BAR_MINUTES * 60)
+    )
+    if expected_window_bars <= 0 or len(window_bars) != expected_window_bars:
+        return ResearchDecision("NO_TRADE", "ENTRY_WINDOW_INCOMPLETE")
+    for i, bar in enumerate(window_bars):
+        local = _utc(bar.timestamp_utc).astimezone(NEW_YORK)
+        if local.minute % BAR_MINUTES or local.second or local.microsecond:
+            return ResearchDecision("NO_TRADE", "ENTRY_WINDOW_UNALIGNED")
+        if i and _utc(bar.timestamp_utc) - _utc(window_bars[i - 1].timestamp_utc) != timedelta(minutes=BAR_MINUTES):
+            return ResearchDecision("NO_TRADE", "ENTRY_WINDOW_GAP")
     if not isfinite(tick_size) or tick_size <= 0:
         raise ValueError("TICK_SIZE_MUST_BE_POSITIVE")
     if stop_mode == "OBSERVED_EXTREME_AT_SIGNAL":
@@ -385,6 +421,13 @@ def premarket_intrabar_candidate(
 
     previous_key: tuple[datetime, int] | None = None
     selected: list[QuoteTick] = []
+    if (
+        price_range.session_date != session_date
+        or not isfinite(price_range.high)
+        or not isfinite(price_range.low)
+        or price_range.high <= price_range.low
+    ):
+        raise ValueError("RANGE_SESSION_OR_PRICE_INVALID")
     for tick in ticks:
         stamp = _utc(tick.timestamp_utc)
         key = (stamp, tick.sequence)
@@ -406,7 +449,7 @@ def premarket_intrabar_candidate(
     observed_high: float | None = None
     observed_low: float | None = None
     bar_key: tuple[int, int, int, int, int] | None = None
-    for i, tick in enumerate(selected[:-1]):
+    for i, tick in enumerate(selected):
         local = tick.timestamp_utc.astimezone(NEW_YORK)
         key = (local.year, local.month, local.day, local.hour, local.minute // BAR_MINUTES)
         if key != bar_key:
@@ -424,9 +467,13 @@ def premarket_intrabar_candidate(
         )
         if direction is None:
             continue
-        next_tick = selected[i + 1]
-        if (next_tick.timestamp_utc, next_tick.sequence) <= (tick.timestamp_utc, tick.sequence):
+        if i + 1 >= len(selected):
             return ResearchDecision("NO_TRADE", "NO_POST_SIGNAL_EXECUTABLE_QUOTE")
+        next_tick = selected[i + 1]
+        # Candidates store timestamps but not sub-second event IDs; equal timestamps
+        # therefore cannot prove post-signal ordering in the resulting evidence.
+        if next_tick.timestamp_utc <= tick.timestamp_utc:
+            return ResearchDecision("NO_TRADE", "SAME_TIMESTAMP_QUOTE_ORDER_AMBIGUOUS")
         entry = next_tick.ask if direction == "LONG" else next_tick.bid
         if stop_mode == "OPPOSITE_RANGE_BOUNDARY":
             stop = price_range.low if direction == "LONG" else price_range.high
