@@ -29,6 +29,7 @@ from runtime.ops.latency import LatencyMetrics
 from runtime.core.release_gate import read_live_release
 from runtime.core.production_controls import CircuitBreaker
 from runtime.core.state import RuntimeStateMachine
+from runtime.core.stake_sizing import DEFAULT_MAX_TRADE_RISK_FRACTION
 
 
 @dataclass
@@ -64,7 +65,7 @@ class CapitalPlaneExecutor:
         config_hash: str,
         live_lock_path: Path | str = "config/LIVE_LOCK.yaml",
         daily_risk_guard=None,
-        max_trade_risk_pct: float = 0.01,
+        max_trade_risk_pct: float = DEFAULT_MAX_TRADE_RISK_FRACTION,
     ):
         self.broker = broker
         self.journal = journal
