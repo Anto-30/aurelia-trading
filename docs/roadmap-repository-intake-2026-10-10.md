@@ -92,3 +92,28 @@ Repository-level licence metadata is a preliminary signal only. Confirm the chec
 ## Required completion evidence
 
 A follow-up audit must append a table with each repository's resolved default branch, exact commit SHA, licence and security status, checkout location, tests/scans run, assigned agent's evidence response, disposition and any approved PR. If a field cannot be verified, mark it `UNKNOWN` or `BLOCKED`; do not guess.
+
+
+## Additional AI-model and audio repository intake — 2026-10-10
+
+The following five repository URLs were resolved from the user's message. The second pasted line contained two concatenated URLs; it has been interpreted as `stepfun-ai/Step-3.5-Flash` and `ValyrianTech/ace-step-1.5`.
+
+| Repository | Default branch | Audited head commit (metadata snapshot) | Last push (UTC) | Repository licence | Recommended disposition / agent assignment |
+|---|---|---|---|---|---|
+| [rasbt/LLMs-from-scratch](https://github.com/rasbt/LLMs-from-scratch) | main | `cdbd33e6d57a71e20ea31434841095fac50cecd8` | 2026-10-02 | Apache-2.0 confirmed from `LICENSE.txt`; GitHub API reports NOASSERTION because the licence filename is nonstandard | REFERENCE_ONLY / RESEARCH_SANDBOX. Claude Code: inspect educational architecture and training examples; ChatGPT: review applicability. Do not import notebooks/dependencies into the live trading runtime. |
+| [stepfun-ai/Step-3.5-Flash](https://github.com/stepfun-ai/Step-3.5-Flash) | main | `21d85a5f6c291f3f138da0bc09979af43345251a` | 2026-04-03 | Apache-2.0 | MODEL_EVALUATION_CANDIDATE. Claude Code: assess serving/runtime requirements; Grok: adversarial model/provider and prompt-injection review; JEV: benchmark and reproducibility validation; ChatGPT: coordinate. The README describes a 196B-parameter MoE with about 11B active parameters. Benchmark hardware, memory, latency, model-weight terms and serving costs before any deployment. Not a trading strategy or execution authority. |
+| [ValyrianTech/ace-step-1.5](https://github.com/ValyrianTech/ace-step-1.5) | main | `e5a0a3d527ff9c0fc11451701a0a918833eb880b` | 2026-02-04 | MIT | OPTIONAL_CREATIVE_SERVICE_SANDBOX. This is a Docker/API-server wrapper for ACE-Step 1.5, not the core model repository. Claude Code: container and API security review; JEV: endpoint, image provenance, resource and health-check validation. Keep separate from AURELIA's trading runtime; deploy only if an audio-generation use case is approved. The README describes a roughly 15 GB prebuilt image and GPU support. |
+| [ace-step/ACE-Step-1.5](https://github.com/ace-step/ACE-Step-1.5) | main | `ca1e85fe9430179831e6bc6be790c332190a3866` | 2026-10-05 | MIT (repository code) | OPTIONAL_CREATIVE_RESEARCH. Treat as the upstream source for audio generation, not as a trading dependency. Claude Code: evaluate install/dependency isolation; Grok: inspect download/install scripts and external model provenance; JEV: validate hardware claims and smoke tests. Verify model-weight and dataset terms separately from the code licence. |
+| [koda-dernet/Side-Step](https://github.com/koda-dernet/Side-Step) | main | `fc800935a4b7f13a05103eafb7bacd623d7ed4f7` | 2026-09-01 | CC BY-NC-SA 4.0 | EXCLUDE_FROM_COMMERCIAL_INTEGRATION. README explicitly marks the project deprecated and announces an archival period ending 2027-03-01. Its non-commercial licence is incompatible with unapproved commercial reuse. ChatGPT: record exclusion; Grok: confirm no transitive adoption; JEV: validate no AURELIA dependency. Reference-only inspection may continue; do not vendor, redistribute, or use in commercial workflows without separate rights clearance. |
+
+### Security and integration gates
+
+- The metadata and licence files above were read from the public GitHub API/repository files. This is an intake assessment, not a full dependency, code, container, model-weight, or supply-chain audit.
+- No repository was cloned, installed, executed, or synchronized into Claude Code, Grok, JEV, or a production host in this operation. The required agent workspaces and connected Linux host are not available through the current session; a written assignment is not proof of an actual sync.
+- Do not place any of these projects on AURELIA's capital path by default. A model endpoint can propose research or summarize evidence, but it cannot change risk limits, authorize capital, modify `LIVE_LOCK`, or submit orders.
+- For any candidate promoted beyond reference-only, pin the exact commit, review workflows/install scripts, scan dependencies and containers, record licences for code and model weights independently, run in an isolated sandbox, and attach reproducible tests/benchmarks to a reviewed PR. Preserve the canonical `main` branch and existing risk/release controls.
+- The user's malformed combined URL was normalized without changing repository ownership: `https://github.com/stepfun-ai/Step-3.5-Flash.git` and `https://github.com/ValyrianTech/ace-step-1.5.git`.
+
+### Current status
+
+`INTAKE_RECORDED`; `CLONED=false`; `INSTALLED=false`; `AGENT_WORKSPACE_SYNC=false`; `PRODUCTION_DEPLOYMENT=false`. Do not report these repositories as installed or active until those actions are executed and independently verified.
