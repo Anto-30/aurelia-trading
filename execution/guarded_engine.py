@@ -167,7 +167,8 @@ class SecretMaskFilter(logging.Filter):
         env_secrets = [
             value for key, value in os.environ.items()
             if value and any(word in key.upper() for word in (
-                "TOKEN", "PAT", "SECRET", "PASSWORD", "API_KEY", "OTP"
+                "TOKEN", "PAT", "SECRET", "PASSWORD", "API_KEY", "OTP",
+                "EXPECTED_LOGINID", "AUTHORIZED_ACCOUNT_ID", "ACCOUNT_ID"
             ))
         ]
         self._secrets = sorted(set((secrets or []) + env_secrets), key=len, reverse=True)
@@ -227,9 +228,14 @@ class ExecutionEngine:
         verification_attempts: int = 3,
     ) -> None:
         # LIVE requires an explicit opt-in; every other value is verify-only.
-        requested_mode = (mode or os.getenv("AURELIA_MODE", "VERIFY_ONLY")).upper()
-        if requested_mode not in {"VERIFY_ONLY", "LIVE"}:
+        # The environment variable is the sole authority for LIVE mode.
+        # A constructor argument may not enable LIVE or override the environment.
+        configured_mode = os.getenv("AURELIA_MODE", "VERIFY_ONLY").upper()
+        if configured_mode not in {"VERIFY_ONLY", "LIVE"}:
             raise ValueError("AURELIA_MODE must be VERIFY_ONLY or LIVE")
+        if mode is not None and mode.upper() != configured_mode:
+            raise ValueError("mode argument cannot override AURELIA_MODE")
+        requested_mode = configured_mode
         self.mode = requested_mode
         self.adapter = adapter
         self.risk = risk_manager
