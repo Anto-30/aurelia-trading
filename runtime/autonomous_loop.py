@@ -628,6 +628,7 @@ class FederatedDecisionProvider:
                     decision.strategy_id,
                     decision.strategy_version,
                     decision.symbol,
+                    strategy_hash=decision.strategy_hash,
                 )
             if not eligibility.get("eligible", False):
                 self._seen.add(message_id)
