@@ -78,8 +78,9 @@
         "slippage_only_expectancy_R": -0.0734,
         "slippage_only_profit_factor": 0.893,
         "max_drawdown_R": 27.18,
-        "longest_losing_streak": 10,
-        "ambiguous_bars": 3
+        "longest_losing_session_streak": 10,
+        "ambiguous_bars": 3,
+        "longest_consecutive_losing_trades": null
       },
       {
         "period": "2026-Q1-diagnostic",
@@ -91,7 +92,8 @@
         "slippage_only_expectancy_R": 0.2101,
         "slippage_only_profit_factor": 1.375,
         "max_drawdown_R": 6.17,
-        "longest_losing_streak": 5
+        "longest_losing_session_streak": 5,
+        "longest_consecutive_losing_trades": null
       },
       {
         "period": "2026-Aug-Sep-disconnected",
@@ -103,7 +105,8 @@
         "slippage_only_expectancy_R": -0.2002,
         "slippage_only_profit_factor": 0.717,
         "max_drawdown_R": 10.91,
-        "longest_losing_streak": 6
+        "longest_losing_session_streak": 6,
+        "longest_consecutive_losing_trades": null
       }
     ],
     "A_opposite_range_stop_2R": [
@@ -119,7 +122,8 @@
         "slippage_only_expectancy_R": 0.0536,
         "slippage_only_profit_factor": 1.123,
         "max_drawdown_R": 20.11,
-        "longest_losing_streak": 6
+        "longest_losing_session_streak": 6,
+        "longest_consecutive_losing_trades": null
       },
       {
         "period": "2026-Q1-diagnostic",
@@ -131,7 +135,8 @@
         "slippage_only_expectancy_R": 0.1782,
         "slippage_only_profit_factor": 1.522,
         "max_drawdown_R": 3.96,
-        "longest_losing_streak": 3
+        "longest_losing_session_streak": 3,
+        "longest_consecutive_losing_trades": null
       },
       {
         "period": "2026-Aug-Sep-disconnected",
@@ -143,7 +148,8 @@
         "slippage_only_expectancy_R": 0.0979,
         "slippage_only_profit_factor": 1.359,
         "max_drawdown_R": 3.31,
-        "longest_losing_streak": 3
+        "longest_losing_session_streak": 3,
+        "longest_consecutive_losing_trades": null
       }
     ],
     "B_opposite_range_stop_2R": [
@@ -159,7 +165,8 @@
         "slippage_only_expectancy_R": 0.0316,
         "slippage_only_profit_factor": 1.082,
         "max_drawdown_R": 9.8,
-        "longest_losing_streak": 4
+        "longest_losing_session_streak": 4,
+        "longest_consecutive_losing_trades": null
       },
       {
         "period": "2026-Q1-diagnostic",
@@ -171,7 +178,8 @@
         "slippage_only_expectancy_R": 0.0771,
         "slippage_only_profit_factor": 1.276,
         "max_drawdown_R": 2.54,
-        "longest_losing_streak": 4
+        "longest_losing_session_streak": 4,
+        "longest_consecutive_losing_trades": null
       },
       {
         "period": "2026-Aug-Sep-disconnected",
@@ -183,7 +191,8 @@
         "slippage_only_expectancy_R": -0.0542,
         "slippage_only_profit_factor": 0.845,
         "max_drawdown_R": 6.52,
-        "longest_losing_streak": 4
+        "longest_losing_session_streak": 4,
+        "longest_consecutive_losing_trades": null
       }
     ],
     "B_opposite_range_stop_fixed_10": [
@@ -199,7 +208,8 @@
         "slippage_only_expectancy_R": 0.0136,
         "slippage_only_profit_factor": 1.245,
         "max_drawdown_R": 2.63,
-        "longest_losing_streak": 2
+        "longest_losing_session_streak": 2,
+        "longest_consecutive_losing_trades": null
       },
       {
         "period": "2026-Q1-diagnostic",
@@ -211,7 +221,8 @@
         "slippage_only_expectancy_R": -0.04,
         "slippage_only_profit_factor": 0.542,
         "max_drawdown_R": 2.25,
-        "longest_losing_streak": 1
+        "longest_losing_session_streak": 1,
+        "longest_consecutive_losing_trades": null
       },
       {
         "period": "2026-Aug-Sep-disconnected",
@@ -223,7 +234,8 @@
         "slippage_only_expectancy_R": 0.0019,
         "slippage_only_profit_factor": 1.039,
         "max_drawdown_R": 1.22,
-        "longest_losing_streak": 1
+        "longest_losing_session_streak": 1,
+        "longest_consecutive_losing_trades": null
       }
     ]
   },
@@ -307,5 +319,13 @@
   "candidates_c_and_d": {
     "candidate_c_session_reversal_expansion": "EXPLORATORY_EXPANSION_EVENT_STUDY_COMPLETE; TRADE_PNL_AND_OOS_NOT_TESTED",
     "candidate_d_multi_timeframe_structure": "CAUSAL_PIVOT_PRIMITIVES_IMPLEMENTED; ABLATION_AND_OOS_NOT_TESTED"
+  },
+  "metric_semantics": {
+    "historical_pilot_longest_streak": "consecutive losing sessions; no-trade sessions reset the streak",
+    "historical_pilot_consecutive_losing_trade_streak": "NOT_CALCULATED",
+    "reusable_harness_streaks": [
+      "longest_consecutive_losing_trades",
+      "longest_consecutive_losing_sessions"
+    ]
   }
 }
