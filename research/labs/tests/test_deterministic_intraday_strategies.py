@@ -39,7 +39,7 @@ class DeterministicIntradayStrategyTests(unittest.TestCase):
             b(1,100,100.5,98,99),
             b(2,99,101,98.5,100),
             b(3,100,100.7,99,100),
-            b(4,100,101.5,97,100.9),
+            b(4,100,101.1,97,100.9),
         ]
         result=detect_msnr_liquidity_sweep(
             rows,config=MSNRConfig(lookback_bars=3,tick_size=.1,min_sweep_ticks=2,max_reclaim_bars=2),
@@ -86,9 +86,9 @@ class DeterministicIntradayStrategyTests(unittest.TestCase):
 
     def test_orb_detects_close_confirmed_breakout(self):
         rows=[
-            b(0,100,101,99,100), b(1,100,102,99.5,101),
-            b(2,101,101.5,98.5,100.5), b(3,100.5,101.2,100,101.0),
-            b(4,101,102.5,100.8,102.5),
+            b(0,100,101,99,100), b(1,100,102,99.5,100.7),
+            b(2,100.7,101.5,98.5,101.2), b(3,101.2,101.8,100.8,101.5),
+            b(4,101.5,102.5,100.8,102.5),
         ]
         cfg=ORBConfig(opening_range_bars=3,tick_size=.1,breakout_buffer_ticks=1,
                       minimum_range_ticks=3,atr_lookback_bars=3,maximum_range_atr_multiple=10)
