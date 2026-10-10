@@ -108,7 +108,7 @@ Freeze this initial operationalization before seeing candidate results:
 - Descriptive expansion outcome: compare the following session's high-low range with the median high-low range of the previous 20 completed sessions of the same time-block type. Calculate separately from trade P&L. Directional adverse/favourable excursion, stop/target hits, and next-session range expansion are separate outcome variables.
 - Controls: unconditional next-session range baseline, random/session-label permutation tests that respect serial dependence, and no-trade baseline. Use a locked chronological holdout and correction for all session/sweep/target variants tried. Any result is symbol/regime-specific.
 
-No implementation or backtest result for C is claimed in this change; only the research protocol is specified. Its session windows and signal definitions must be frozen in a versioned campaign manifest before accessing evaluation results.
+Initial research primitives are now implemented in research/labs/session_structure_hypotheses.py: New York session classification, completeness checks, prior-session sweep/re-entry signals, explicit same-candle ambiguity, and following-session expansion metrics. Unit tests cover session windows, long/short reversals, incomplete sessions and expansion baselines. These helpers do not establish a backtested edge; there is no campaign result for C, no next-session fill/exit replay and no sealed evaluation. Signal statistics should not be calculated on partial/gapped sessions.
 
 ## 7. Candidate D — multi-timeframe market structure
 
@@ -120,7 +120,7 @@ No implementation or backtest result for C is claimed in this change; only the r
 - A monthly/weekly/daily/4h/1h cascade may be used as a pre-registered filter variant. At each decision timestamp, all features must have an availability timestamp no later than that decision.
 - Test filter value through ablation: base entry system versus identical entries plus structure filter, with identical dates, exit rules, costs and risk model. Report coverage/accepted signal count, trade expectancy, tail loss, drawdown and uncertainty. If trade count or net expectancy deteriorates, do not make this filter mandatory.
 
-No structure-filter implementation or evidence is claimed in this change. A separate tested feature builder would need causal resampling, pivot-confirmation tests and data-leakage tests before it could be added to a strategy.
+Initial causal structure primitives are now implemented in research/labs/session_structure_hypotheses.py. The builder detects strict two-left/two-right pivots, assigns availability only after the right-side confirmation bar closes, produces as-of structure states, and returns UNKNOWN for missing timeframes. Unit tests cover pivot lookahead, confirmed bullish structure, missing timeframe data and alignment. This is a feature-construction utility only: the monthly/weekly/daily/4h/1h data resampling, ATR-normalized trendlines, base-strategy ablation, costs, OOS results and market-context predictive value remain NOT_TESTED.
 
 ## 8. Contradiction and ambiguity register
 
@@ -174,9 +174,9 @@ Regression tests must cover both DST transitions, timestamp awareness, exact ran
 |---|---|---|
 | Current canonical branch/source inspected | PASS | main tree SHA cd858bec8fb5eb05dfc32733a6062bf2e9c95ae9; live gate remains config/LIVE_LOCK.yaml |
 | Existing research/test/validation architecture inspected | PASS | paths listed in Section 2 |
-| Candidate A/B initial research primitives and tests authored | IMPLEMENTED_ON_RESEARCH_BRANCH | research/labs/session_breakout_candidates.py and research/labs/tests/test_session_breakout_candidates.py; still requires CI execution and review |
+| A/B range/signal primitives and backtest harness | IMPLEMENTED_ON_RESEARCH_BRANCH | research/labs/session_breakout_candidates.py, research/labs/session_breakout_backtest.py and two test modules; CI/review status must be checked at the latest branch head |
 | A/B unambiguous versioned specs | SPECIFIED | Sections 4-5 |
-| Candidate C/D hypotheses | SPECIFIED_NOT_IMPLEMENTED / NOT_TESTED | Sections 6-7; no result metrics claimed |
+| Candidate C/D research primitives | IMPLEMENTED_ON_RESEARCH_BRANCH / NO QUALIFICATION | research/labs/session_structure_hypotheses.py and research/labs/tests/test_session_structure_hypotheses.py; event-study results for C and cross-timeframe ablation results for D remain NOT_TESTED |
 | Authorized CME historical data source and exact contract | PARTIAL / BLOCKED FOR QUALIFICATION | A connected Massive endpoint returned MNQ 5-minute futures aggregates; licensed reuse entitlement is unverified, the raw data were not persisted/hash-pinned, and the timeline has a major gap |
 | Historical Nasdaq OHLCV data available in repo | NOT_FOUND IN REPO; TEMPORARY EXTERNAL DATA RETRIEVED | 121,835 unique rows from seven MNQ quarterly contracts were queried into an ephemeral workspace; source hash and complete continuity not established |
 | A/B historical aggregate-bar pilot | PRELIMINARY DIAGNOSTIC; NOT QUALIFIED | Reported in reports/research/US_SESSION_BREAKOUT_PILOT_2026-10-10.md. Variants were compared across 242 sessions in 2025, 52 Q1 2026 dates and a disconnected 38-session Aug/Sep slice. No sealed OOS, reliable confidence estimates, full costs, or tick-level execution proof |
