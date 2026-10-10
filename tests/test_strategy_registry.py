@@ -46,18 +46,29 @@ class StrategyRegistryTests(unittest.TestCase):
 
     def test_live_eligibility_requires_every_evidence_gate(self):
         registry = StrategyQualificationRegistry.from_mapping(qualified_document())
-        self.assertTrue(registry.eligibility("TEST_STRATEGY", "1.0", "R_100")["eligible"])
+        self.assertTrue(registry.eligibility("TEST_STRATEGY", "1.0", "R_100", strategy_hash="b" * 64)["eligible"])
         doc = qualified_document()
         doc["strategies"][0]["cost_profile_status"] = "UNKNOWN"
-        result = StrategyQualificationRegistry.from_mapping(doc).eligibility("TEST_STRATEGY", "1.0", "R_100")
+        result = StrategyQualificationRegistry.from_mapping(doc).eligibility("TEST_STRATEGY", "1.0", "R_100", strategy_hash="b" * 64)
         self.assertFalse(result["eligible"])
         self.assertIn("COST_PROFILE_STATUS_NOT_PASS", result["reasons"])
+
+    def test_candidate_strategy_hash_must_match_registry_hash(self):
+        registry = StrategyQualificationRegistry.from_mapping(qualified_document())
+        matching = registry.eligibility("TEST_STRATEGY", "1.0", "R_100", strategy_hash="b" * 64)
+        self.assertTrue(matching["eligible"])
+        mismatched = registry.eligibility("TEST_STRATEGY", "1.0", "R_100", strategy_hash="c" * 64)
+        self.assertFalse(mismatched["eligible"])
+        self.assertIn("STRATEGY_HASH_MISMATCH", mismatched["reasons"])
+        missing = registry.eligibility("TEST_STRATEGY", "1.0", "R_100")
+        self.assertFalse(missing["eligible"])
+        self.assertIn("PROPOSAL_STRATEGY_HASH_MISSING", missing["reasons"])
 
     def test_wrong_instrument_and_missing_evidence_block(self):
         doc = qualified_document()
         doc["strategies"][0]["verified_instrument_ids"] = ["EURUSD"]
         doc["strategies"][0]["qualification_evidence_ids"] = []
-        result = StrategyQualificationRegistry.from_mapping(doc).eligibility("TEST_STRATEGY", "1.0", "R_100")
+        result = StrategyQualificationRegistry.from_mapping(doc).eligibility("TEST_STRATEGY", "1.0", "R_100", strategy_hash="b" * 64)
         self.assertFalse(result["eligible"])
         self.assertIn("INSTRUMENT_NOT_VERIFIED_FOR_STRATEGY", result["reasons"])
         self.assertIn("QUALIFICATION_EVIDENCE_IDS_MISSING", result["reasons"])

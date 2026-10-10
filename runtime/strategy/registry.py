@@ -86,7 +86,14 @@ class StrategyQualificationRegistry:
     def strategy_ids(self) -> tuple[str, ...]:
         return tuple(sorted(self._strategies))
 
-    def eligibility(self, strategy_id: str, version: str, instrument_id: str) -> dict[str, Any]:
+    def eligibility(
+        self,
+        strategy_id: str,
+        version: str,
+        instrument_id: str,
+        *,
+        strategy_hash: str | None = None,
+    ) -> dict[str, Any]:
         row = self._strategies.get(strategy_id)
         if row is None:
             return {"eligible": False, "status": "BLOCKED", "strategy_id": strategy_id,
@@ -96,6 +103,14 @@ class StrategyQualificationRegistry:
             reasons.append("STRATEGY_VERSION_MISMATCH")
         if row.get("qualification_status") != LIVE_QUALIFIED:
             reasons.append("STRATEGY_NOT_QUALIFIED_FOR_LIVE")
+        registered_hash = str(row.get("strategy_hash") or "").strip()
+        candidate_hash = str(strategy_hash or "").strip()
+        if not registered_hash:
+            reasons.append("STRATEGY_HASH_MISSING")
+        elif not candidate_hash:
+            reasons.append("PROPOSAL_STRATEGY_HASH_MISSING")
+        elif candidate_hash != registered_hash:
+            reasons.append("STRATEGY_HASH_MISMATCH")
         if row.get("implementation_status") != "VERIFIED":
             reasons.append("STRATEGY_IMPLEMENTATION_NOT_VERIFIED")
         if row.get("instrument_compatibility_status") != PASS:
@@ -115,7 +130,6 @@ class StrategyQualificationRegistry:
         for field, reason in (
             ("reviewer","QUALIFICATION_REVIEWER_MISSING"),
             ("qualified_source_revision","QUALIFIED_SOURCE_REVISION_MISSING"),
-            ("strategy_hash","STRATEGY_HASH_MISSING"),
             ("risk_profile","STRATEGY_RISK_PROFILE_MISSING"),
         ):
             if not str(row.get(field) or "").strip():
