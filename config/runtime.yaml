@@ -5,6 +5,7 @@ probability:
   max_trade_probability: 0.75
   clipping: false
 stake:
+  currency: USD
   starting_stake: 1.00
   execution_minimum_stake: 1.00
   sizing_mode: balance_scaled_max_loss
