@@ -33,6 +33,7 @@ from runtime.core.state import RuntimeStateMachine
 from runtime.core.supervisor import RuntimeSupervisor
 from runtime.ops.readiness_orchestrator import evaluate as evaluate_readiness
 from runtime.ops.deadman import DeadManSwitch
+from runtime.intelligence.crucix_adapter import collect_crucix_advisory
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -222,6 +223,101 @@ if not logger.handlers:
     logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 logger.propagate = False
+
+
+async def _crucix_intelligence_poller(
+    federation: PersistentAgentFederation,
+    journal: AppendOnlyJournal,
+    config_hash: str,
+    recipients: tuple[str, ...],
+) -> None:
+    """Publish metadata-only Crucix advisories to research agents; never to capital authority."""
+    data_url = os.getenv("AURELIA_CRUCIX_DATA_URL", "").strip()
+    if not data_url:
+        journal.append(
+            event_envelope(
+                event_type="CRUCIX_INTELLIGENCE_CONFIG_UNKNOWN",
+                event_id="CRUCIX_INTELLIGENCE_CONFIG_UNKNOWN:missing-data-url",
+                correlation_id="crucix-intelligence",
+                payload={
+                    "reason": "CRUCIX_DATA_URL_MISSING",
+                    "capital_authority_granted": False,
+                    "order_submission_permitted": False,
+                },
+                source_hash=os.getenv("GITHUB_SHA", "runtime-baseline"),
+                config_hash=config_hash,
+            )
+        )
+        return
+
+    try:
+        poll_seconds = max(60.0, min(900.0, float(os.getenv("AURELIA_CRUCIX_POLL_SECONDS", "300"))))
+    except (TypeError, ValueError):
+        poll_seconds = 300.0
+    try:
+        max_age_seconds = max(60.0, min(86400.0, float(os.getenv("AURELIA_CRUCIX_MAX_AGE_SECONDS", "900"))))
+    except (TypeError, ValueError):
+        max_age_seconds = 900.0
+
+    while True:
+        try:
+            advisory = await collect_crucix_advisory(
+                data_url,
+                radar_url=os.getenv("AURELIA_CRUCIX_RADAR_URL", "").strip() or None,
+                shock_url=os.getenv("AURELIA_CRUCIX_SHOCK_URL", "").strip() or None,
+                timeout_seconds=3.0,
+                max_data_age_seconds=max_age_seconds,
+            )
+            payload = advisory.to_payload()
+            event_id = "CRUCIX_INTELLIGENCE_SNAPSHOT:" + str(int(time.time() * 1000))
+            journal.append(
+                event_envelope(
+                    event_type="CRUCIX_INTELLIGENCE_SNAPSHOT",
+                    event_id=event_id,
+                    correlation_id="crucix-intelligence",
+                    payload=payload,
+                    source_hash=os.getenv("GITHUB_SHA", "runtime-baseline"),
+                    config_hash=config_hash,
+                )
+            )
+            await federation.publish(
+                sender="AURELIA",
+                recipients=recipients,
+                message_type="EXTERNAL_INTELLIGENCE_ADVISORY",
+                payload=payload,
+                correlation_id=event_id,
+                priority=40,
+                requires_response=False,
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            # Optional intelligence failures are observable but do not themselves
+            # halt unrelated strategies or weaken/modify any risk control.
+            try:
+                journal.append(
+                    event_envelope(
+                        event_type="CRUCIX_INTELLIGENCE_UNKNOWN",
+                        event_id="CRUCIX_INTELLIGENCE_UNKNOWN:" + str(int(time.time() * 1000)),
+                        correlation_id="crucix-intelligence",
+                        payload={
+                            "error_class": type(exc).__name__,
+                            "capital_authority_granted": False,
+                            "order_submission_permitted": False,
+                        },
+                        source_hash=os.getenv("GITHUB_SHA", "runtime-baseline"),
+                        config_hash=config_hash,
+                    )
+                )
+            except Exception as journal_exc:
+                logger.error(
+                    "Crucix advisory and journal write failed",
+                    extra={"structured_data": {"error_class": type(journal_exc).__name__}},
+                )
+        try:
+            await asyncio.sleep(poll_seconds)
+        except asyncio.CancelledError:
+            raise
 
 
 async def _balance_poller(
@@ -730,6 +826,18 @@ async def main() -> None:
                 )
             )
 
+    crucix_task: asyncio.Task[None] | None = None
+    if os.getenv("AURELIA_CRUCIX_ENABLED", "false").strip().lower() == "true":
+        crucix_task = asyncio.create_task(
+            _crucix_intelligence_poller(
+                federation,
+                journal,
+                config_hash,
+                tuple(federation_supervisor.agents),
+            ),
+            name="aurelia-crucix-intelligence-research",
+        )
+
     try:
         while True:
             loop_monotonic = time.monotonic()
@@ -828,6 +936,12 @@ async def main() -> None:
                     last_runtime_state = machine.state
             await asyncio.sleep(5)
     finally:
+        if crucix_task is not None:
+            crucix_task.cancel()
+            try:
+                await crucix_task
+            except asyncio.CancelledError:
+                pass
         readiness_task.cancel()
         try:
             await readiness_task
