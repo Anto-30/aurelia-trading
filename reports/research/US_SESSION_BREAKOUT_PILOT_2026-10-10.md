@@ -95,7 +95,21 @@ This is a separate segment after a major source-data gap, not a continuous OOS c
 
 The fixed 10-point B target exhibits high win rate but very small mean win; it is negative in the Q1 diagnostic and almost break-even in the disconnected Aug/Sep slice even before spread/commissions. The breakout-candle-stop A variant is negative in 2025 and Aug/Sep, with a materially different Q1 result. This instability is an explicit reason not to promote either rule.
 
-## 4. Checked-in research tooling status
+## 4. Candidate C — session sweep/re-entry and next-session range expansion
+
+A limited descriptive event study was run against the temporary `MNQH5` five-minute aggregate table (`mnqh5_q1_2025`) covering December 2024 through March 2025. It uses the first complete 5-minute candle per session that sweeps by at least one 0.25-point tick beyond the immediately preceding session high or low, then closes back inside. A same-candle sweep of both boundaries is marked ambiguous. The following session's range is compared with the median range of the prior 20 complete sessions of the *following session type*.
+
+| Current signal session | Following session type | Eligible complete transitions | Signal sessions | Long | Short | Ambiguous | Baseline expansion rate | Expansion rate after directional signal | Mean next-range / median ratio |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Europe | US day | 42 | 33 | 16 | 16 | 1 | 50.0% | 46.9% | 1.136 |
+| Overnight | Europe | 33 | 10 | 3 | 7 | 0 | 54.5% | 50.0% | 0.945 |
+| US day | Overnight | 33 | 26 | 14 | 12 | 0 | 51.5% | 57.7% | 1.226 |
+
+**Interpretation:** expansion was below the baseline after Europe and overnight signals, and only modestly above baseline after US-day signals. These are small, single-contract/single-quarter observations with no serial-dependence adjustment, no confidence intervals, and no multiple-testing correction. This test examines the *range-expansion part* of C, not directional price expectancy or an executable entry/stop/target result. The raw data are not persisted or hashed, so this is not sealed OOS evidence. Candidate C remains RESEARCH_ONLY and NOT QUALIFIED.
+
+The query is saved at `research/labs/sql/session_reversal_expansion_pilot.sql`; the exact table `mnqh5_q1_2025` must be recreated from authorized source data before the query can be reproduced.
+
+## 5. Checked-in research tooling status
 
 The draft branch now contains:
 - `research/labs/session_breakout_candidates.py`: causal range builders and A/B completed-close candidate construction, plus explicit A intrabar reference logic.
@@ -105,7 +119,7 @@ The draft branch now contains:
 
 These components remain research-only; they are not registered for production, do not have a broker interface, and do not authorise capital. CI at draft PR head `34ce20940156ce88c097ed254c49f5b8dc0aca45` completed successfully: 80 research-plane tests, 49 assurance tests, 173 runtime tests and 12 hardening tests passed; compilation, static acceptance audit, deployment-script syntax, container build, public Deriv market-data WebSocket and release-lock checks passed. The authenticated Deriv real-account-session and verify-only transaction-lifecycle steps were skipped because the protected credentials/prerequisites were not configured. Certification still returned `NOT_READY`; this CI pass does not qualify a strategy.
 
-## 5. Interpretation and decision
+## 6. Interpretation and decision
 
 1. **No candidate is qualified.** The results are preliminary descriptive statistics with limited windows and multiple variants. They are not evidence of a robust, statistically significant or executable edge.
 2. **A breakout-candle-stop 2R is rejected from advancement at this stage** because expectancy/PF deteriorates outside the Q1 segment.
@@ -116,7 +130,7 @@ These components remain research-only; they are not registered for production, d
 7. The data provider response did not include bid/ask/time-sequenced trades, so intrabar first-cross and true stop/target ordering remain NOT_TESTED. Candidate C session reversal and Candidate D multi-timeframe pivot filter remain specifications only.
 8. Results in index points/R are not portable to Deriv R_100, NQ, CFDs or other symbols. MNQ itself cannot meet a $1 loss budget: CME defines MNQ as $2 per Nasdaq-100 index point with a 0.25-point tick ($0.50/tick), so even a one-point stop is $2 per contract before costs. Current account balance/margin and risk capacity must be independently verified; this pilot does not authorize such a trade.
 
-## 6. Next experiment before any re-run
+## 7. Next experiment before any re-run
 
 - Obtain a redistributable/authorized, continuous minute or finer quote/trade dataset for MNQ with complete April–July 2026 coverage, and save dataset SHA-256, request parameters, retrieval date and license/entitlement record.
 - Pre-register A1/A2/B variants and reserve an untouched prospective holdout. Do not retune using the reported 2026 segments.
