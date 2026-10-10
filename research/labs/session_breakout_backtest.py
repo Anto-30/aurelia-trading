@@ -137,7 +137,8 @@ class BacktestSummary:
     net_profit_factor_conservative: float | None
     expectancy_conservative_r_per_eligible_session: float | None
     max_drawdown_conservative_r: float | None
-    longest_losing_streak: int
+    longest_consecutive_losing_trades: int
+    longest_consecutive_losing_sessions: int
     net_economics_status: Literal["CALCULATED", "UNDETERMINED"]
 
 
@@ -388,8 +389,9 @@ def _max_drawdown(daily_returns: Sequence[float]) -> float | None:
 
 
 def summarize_sessions(results: Sequence[SessionResult], *, variant_id: str) -> BacktestSummary:
-    input_sessions = len(results)
-    eligible = [r for r in results if r.status != "INELIGIBLE"]
+    ordered_results = sorted(results, key=lambda r: r.session_date)
+    input_sessions = len(ordered_results)
+    eligible = [r for r in ordered_results if r.status != "INELIGIBLE"]
     no_trade_sessions = sum(1 for r in eligible if r.status == "NO_TRADE")
     trades = [r.trade for r in eligible if r.trade is not None]
     known = [t for t in trades if t.pnl_r_known is not None]
@@ -406,15 +408,26 @@ def summarize_sessions(results: Sequence[SessionResult], *, variant_id: str) -> 
         r.trade.pnl_r_conservative if r.trade is not None else 0.0 for r in eligible
     ]
 
-    losing_streak = longest_losing_streak = 0
-    for result in eligible:
-        if result.trade is not None and result.trade.pnl_r_conservative < 0:
-            losing_streak += 1
-            longest_losing_streak = max(longest_losing_streak, losing_streak)
-        elif result.trade is not None:
-            losing_streak = 0
+    # Trade streaks ignore valid NO_TRADE sessions but reset across an ineligible
+    # session because missing data cannot be silently bridged.
+    trade_streak = longest_trade_streak = 0
+    session_streak = longest_session_streak = 0
+    for result in ordered_results:
+        if result.status == "INELIGIBLE":
+            trade_streak = 0
+            session_streak = 0
+            continue
+        if result.trade is None:
+            session_streak = 0
+            continue
+        if result.trade.pnl_r_conservative < 0:
+            trade_streak += 1
+            session_streak += 1
+            longest_trade_streak = max(longest_trade_streak, trade_streak)
+            longest_session_streak = max(longest_session_streak, session_streak)
         else:
-            losing_streak = 0
+            trade_streak = 0
+            session_streak = 0
 
     return BacktestSummary(
         variant_id=variant_id,
@@ -438,7 +451,8 @@ def summarize_sessions(results: Sequence[SessionResult], *, variant_id: str) -> 
         net_profit_factor_conservative=_profit_factor(net_conservative) if net_complete else None,
         expectancy_conservative_r_per_eligible_session=_mean(daily_conservative),
         max_drawdown_conservative_r=_max_drawdown(daily_conservative),
-        longest_losing_streak=longest_losing_streak,
+        longest_consecutive_losing_trades=longest_trade_streak,
+        longest_consecutive_losing_sessions=longest_session_streak,
         net_economics_status="CALCULATED" if net_complete else "UNDETERMINED",
     )
 
