@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-09",
+  "generated_date": "2026-10-10",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -2118,8 +2118,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Anil-matcha/open-dots",
-      "head_commit": "3d8de1cd665c7d6d70583f34b89c2dc034512c1ea",
-      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "head_commit": "3d8de1cd6657c6d70583f34b89c2dc034512c1ea",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
       "integration_note": "External reference only; inspect in quarantine before any execution. No capital authority, production deployment authority, secret access, or broker transaction authority."
     },
     {
@@ -4371,6 +4371,766 @@
       "head_commit": "280259f0495f8d37b7cd51a19500e8eb0eab8223",
       "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
       "capital_authority": false
+    },
+    {
+      "repo": "OpenSees/OpenSees",
+      "category": "engineering-simulation",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/OpenSees/OpenSees",
+      "head_commit": "3c546b43be9b837db34083296310a60b3eb8280d",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Separate scientific/engineering software; not a default trading dependency."
+    },
+    {
+      "repo": "lidge-jun/opencodex",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/lidge-jun/opencodex",
+      "head_commit": "848ec37ac230f8d93465c2358ba651a7f9f8764f",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Inspect origin, build/install scripts, telemetry, and permission boundaries before use."
+    },
+    {
+      "repo": "alphaXiv/OpenResearch",
+      "category": "research-platform",
+      "domain": "research",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/alphaXiv/OpenResearch",
+      "head_commit": "603558cbf18207fdf758cc50b317a06e01ba2354",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Research/discovery reference; no automatic data or strategy qualification authority."
+    },
+    {
+      "repo": "ferdikoomen/openapi-typescript-codegen",
+      "category": "api-client-generator",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/ferdikoomen/openapi-typescript-codegen",
+      "head_commit": "e50c094eb73bd842b33bb60f76547d30a6d71afb",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "API code-generation utility; test generated clients in isolation before adoption."
+    },
+    {
+      "repo": "anymorph-ai/Claudable",
+      "category": "coding-agent-ui",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/anymorph-ai/Claudable",
+      "head_commit": "2634077b0eecbf5affd1a8a88fe9f5b5bafde514",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Sandbox-only coding interface; inspect authentication, API routing and dependency chain."
+    },
+    {
+      "repo": "kolevans/FreeClaudeCode",
+      "category": "model-access-proxy-or-setup",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/kolevans/FreeClaudeCode",
+      "head_commit": "6e0fcd33da04ed13440cc82c62c308b7f2c8374d",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Do not run or supply credentials before provider terms, code provenance, billing and credential-handling review."
+    },
+    {
+      "repo": "letianzj/quanttrader",
+      "category": "algorithmic-trading-framework",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/letianzj/quanttrader",
+      "head_commit": "224341d57e146aeaa143516049d2f37ff102dbf0",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Historical quant/trading reference only; no execution integration without independent data and cost validation."
+    },
+    {
+      "repo": "carlvellotti/free-ai-courses",
+      "category": "agent-training-curriculum",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "GLM"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/carlvellotti/free-ai-courses",
+      "head_commit": "45328639a4a62626f00242b3395512c91b56865e",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Reference curriculum only; no runtime dependency."
+    },
+    {
+      "repo": "obra/superpowers",
+      "category": "agent-workflow-toolkit",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/obra/superpowers",
+      "head_commit": "bb92a77741419a4ab5f06e711a283343f1ada0c3",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Review workflow and hooks before adopting; no production execution or capital authority."
+    },
+    {
+      "repo": "soongenwong/claudecode",
+      "category": "coding-agent-reference",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/soongenwong/claudecode",
+      "head_commit": "843a783d946f96535f320e84bc81eaee7e289bc0",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Verify maintainer, licensing, setup scripts and dependencies before sandbox use."
+    },
+    {
+      "repo": "hkqr/my-free-code",
+      "category": "miscellaneous-code-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/hkqr/my-free-code",
+      "head_commit": "574790375d2d593ad379ae64fc3e39dc99be5e2b",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Purpose-specific classification and license review required before any use."
+    },
+    {
+      "repo": "router-for-me/CLIProxyAPI",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/router-for-me/CLIProxyAPI",
+      "head_commit": "d318bcc3afb9ea8782862f5e8cdb541afdc9dfa5",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Gateway/proxy security review required; never supply production tokens or route around provider terms."
+    },
+    {
+      "repo": "codeaashu/free-claude-code",
+      "category": "model-access-proxy-or-setup",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/codeaashu/free-claude-code",
+      "head_commit": "26e0535e821360ab7a98fb80020fb126258c9f7b",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Provenance/provider terms/credential-handling review required; do not execute or install yet."
+    },
+    {
+      "repo": "freecodexyz/free-code",
+      "category": "coding-agent-reference",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/freecodexyz/free-code",
+      "head_commit": "6b25ab68b103a269d6555c3daedc532630c67544",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Review project purpose, license and setup scripts before assignment or use."
+    },
+    {
+      "repo": "siteboon/claudecodeui",
+      "category": "coding-agent-ui",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/siteboon/claudecodeui",
+      "head_commit": "7c3049fe8e157f12b7add3e496d8d2fe6fa5c014",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Sandbox UI only; isolate credentials, session cookies and network access."
+    },
+    {
+      "repo": "decolua/9router",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/decolua/9router",
+      "head_commit": "ce4460ef79382bfddb4aa5fc0ff9f3cb0d5f95a8",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Gateway/provider-terms/security review required; no production tokens or broker sessions."
+    },
+    {
+      "repo": "Rishurajgautam24/free-claude-code",
+      "category": "model-access-proxy-or-setup",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Rishurajgautam24/free-claude-code",
+      "head_commit": "a599319dd6d56cf5ea1db7e52eeac0bc80fccb7c",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Provenance/provider terms/credential-handling review required; no installation before review."
+    },
+    {
+      "repo": "HKUDS/DeepCode",
+      "category": "coding-agent-research",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/HKUDS/DeepCode",
+      "head_commit": "84c37f79c726bd12e74e39541adceb8b5e47b0d5",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Sandbox code-analysis reference; verify data exfiltration, command permissions and dependency behavior."
+    },
+    {
+      "repo": "open-free-llm-api/awesome-freellm-apis",
+      "category": "llm-provider-catalog",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/open-free-llm-api/awesome-freellm-apis",
+      "head_commit": "6cee0559c544e39c0dac24bece170c58ad1a890d",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Catalog only; verify each provider's policies, privacy, rate limits and reliability independently."
+    },
+    {
+      "repo": "Alishahryar1/free-claude-code",
+      "category": "model-access-proxy-or-setup",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Alishahryar1/free-claude-code",
+      "head_commit": "1fe754b69d390f763f9d2e679a62f6c1b575d640",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Provenance/provider terms/credential-handling review required; do not execute or install yet."
+    },
+    {
+      "repo": "AIwithhassan/free-claude-code-setup",
+      "category": "agent-setup-reference",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/AIwithhassan/free-claude-code-setup",
+      "head_commit": "02ac612e930a0224b019132963a188dbdb38f1c9",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Setup scripts must be statically reviewed; prohibit secrets exposure, license evasion and production access."
+    },
+    {
+      "repo": "ssmDo/CodeFreeMax",
+      "category": "coding-agent-reference",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/ssmDo/CodeFreeMax",
+      "head_commit": "a8b5d5ea969465b9dbb702e2fcffc42366ca8455",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Inspect purpose, license and setup scripts before any sandbox execution."
+    },
+    {
+      "repo": "AbuZar-Ansarii/Claude-Ollama-VScode",
+      "category": "local-model-ide-integration",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/AbuZar-Ansarii/Claude-Ollama-VScode",
+      "head_commit": "bc680110e5c9caf07f76e1881e872c4831a29fb8",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Sandbox integration only; inspect local network exposure, model routing and credential storage."
+    },
+    {
+      "repo": "matt1398/claude-devtools",
+      "category": "developer-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/matt1398/claude-devtools",
+      "head_commit": "1486f2042c87bb547a4e34808ab54ab34a33f132",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Developer tooling reference; verify compatibility and permissions before install."
+    },
+    {
+      "repo": "diegosouzapw/OmniRoute",
+      "category": "llm-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/diegosouzapw/OmniRoute",
+      "head_commit": "1d5128f55f3f01e1310caaa1d58046c6f15ebf62",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Gateway/proxy security review required; never route production credentials or broker sessions through it."
+    },
+    {
+      "repo": "getagentseal/codeburn",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/getagentseal/codeburn",
+      "head_commit": "26c99ed8603bca8caeacef6cfab9366ec965fc77",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Sandbox-only; inspect auth, subprocess execution, network activity and dependency chain."
+    },
+    {
+      "repo": "Avijit07x/claude-db",
+      "category": "agent-state-storage",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GoogleAgentSkills"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Avijit07x/claude-db",
+      "head_commit": "f0e86be59a922b19c83f632b68be8d8c196b3538",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Sandbox only; inspect data retention, authentication, access controls and secrets handling."
+    },
+    {
+      "repo": "google/open-location-code",
+      "category": "geo-library",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/google/open-location-code",
+      "head_commit": "83986da0156bbf51fba33d0327d8ca4b7f955c89",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "General-purpose geo library; not a trading dependency."
+    },
+    {
+      "repo": "LING71671/Open-ClaudeCode",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/LING71671/Open-ClaudeCode",
+      "head_commit": "2980105e5ae5910d50c2e8adfa0ce6b5e4907bcc",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Sandbox-only; inspect provider routing, credentials, permissions and provenance before install."
+    },
+    {
+      "repo": "openmrs/openmrs-core",
+      "category": "healthcare-platform-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/openmrs/openmrs-core",
+      "head_commit": "a69b14a84bf925ff7cdf34e93ca1ffb4f257265f",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Unrelated healthcare platform; retain for reference inventory only, not an AURELIA dependency."
+    },
+    {
+      "repo": "CodeEditApp/CodeEdit",
+      "category": "code-editor",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/CodeEditApp/CodeEdit",
+      "head_commit": "fa2aebd86373211c78626074b53ab75010767575",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "macOS editor reference; not a production Linux runtime dependency."
+    },
+    {
+      "repo": "chauncygu/collection-claude-code-source-code",
+      "category": "source-collection",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/chauncygu/collection-claude-code-source-code",
+      "head_commit": "b934603b2800374b315b25061bbeffb40ab6ab26",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Review provenance and licensing; source collections may include material with redistribution restrictions."
+    },
+    {
+      "repo": "continuedev/continue",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/continuedev/continue",
+      "head_commit": "5522c6f44ca0ac3528b37244818fbfa39b5af470",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Sandbox developer-assistant tool; isolate tokens and editor context."
+    },
+    {
+      "repo": "idosal/git-mcp",
+      "category": "git-mcp-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/idosal/git-mcp",
+      "head_commit": "c487a29895dcfcb5b672247e646426a56e2051c1",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Toolchain only; verify repository-scoped permission behavior and data exposure."
+    },
+    {
+      "repo": "alibaba/open-code-review",
+      "category": "code-review-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/alibaba/open-code-review",
+      "head_commit": "357c3f09a264563ab64d8f4fc3b25b186cd3c4a4",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Review-only/tooling reference; CI integrations require permission-scope review."
+    },
+    {
+      "repo": "Fission-AI/OpenSpec",
+      "category": "spec-driven-development",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/Fission-AI/OpenSpec",
+      "head_commit": "9111a7654d7800391459431fff4eaf66e33a3d2e",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Tooling reference; specs/tests must not grant strategy promotion or capital authority."
+    },
+    {
+      "repo": "freeCodeCamp/freeCodeCamp",
+      "category": "developer-education",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/freeCodeCamp/freeCodeCamp",
+      "head_commit": "b592f3fc30d7e7a7acc91ed23d485f13e95c1172",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Educational reference only; no AURELIA runtime dependency."
+    },
+    {
+      "repo": "PawanOsman/OpenCursor",
+      "category": "coding-agent-ide",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/PawanOsman/OpenCursor",
+      "head_commit": "b4528f95ca5ab4cddf22bef3e19431fad00feb01",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Sandbox code editor/agent only; do not connect production credentials or sessions."
+    },
+    {
+      "repo": "OpenCoworkAI/open-codesign",
+      "category": "agentic-design-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/OpenCoworkAI/open-codesign",
+      "head_commit": "e331e69135429b5fbad304d82b26ec92559e7bf8",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Design/workflow reference; no runtime dependency."
+    },
+    {
+      "repo": "codeigniter4/CodeIgniter4",
+      "category": "web-framework",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/codeigniter4/CodeIgniter4",
+      "head_commit": "9c6232378f686b34029c2e28a7c7151419da4df7",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Generic web framework; not an AURELIA runtime dependency."
+    },
+    {
+      "repo": "nexu-io/open-design",
+      "category": "design-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/nexu-io/open-design",
+      "head_commit": "17e255959703a3fad7c8eb7f7b70dcafccc5629a",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Design tool reference; inspect permissions before any workspace integration."
+    },
+    {
+      "repo": "oracle/opengrok",
+      "category": "source-code-search",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/oracle/opengrok",
+      "head_commit": "e3938b252aef086dd92debf5c8b748fb73e8af14",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Source browsing toolchain; isolate indexing of private repositories and credentials."
+    },
+    {
+      "repo": "VRSEN/OpenSwarm",
+      "category": "multi-agent-framework",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/VRSEN/OpenSwarm",
+      "head_commit": "ca0aeb278aee013b12f8e2db71b8d84261153168",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Sandbox-only multi-agent reference; prohibit capital, production secret and order authority."
+    },
+    {
+      "repo": "openframeworks/openFrameworks",
+      "category": "creative-coding-framework",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/openframeworks/openFrameworks",
+      "head_commit": "04d2e088f0fab84cca1c494a8c24d84b2da852af",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Unrelated C++ creative-coding framework; reference inventory only."
+    },
+    {
+      "repo": "codewhale-hq/Codewhale",
+      "category": "coding-agent-platform",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/codewhale-hq/Codewhale",
+      "head_commit": "26249dfdb7851f535392c940566758077d5a6508",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Sandbox coding-agent tooling; inspect deployment, account and token scopes before use."
     }
   ],
   "pin_policy": {
