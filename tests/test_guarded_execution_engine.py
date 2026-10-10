@@ -54,8 +54,10 @@ class RiskManagerCircuitBreakerTests(unittest.TestCase):
                         "currency": "USD",
                         "balance": self.balance,
                     }}
+                if "portfolio" in payload:
+                    return {"portfolio": {"contracts": []}}
                 if "proposal_open_contract" in payload:
-                    return {"proposal_open_contract": self.contracts}
+                    raise AssertionError("no contract-specific query expected for an empty portfolio")
                 raise AssertionError("unexpected endpoint in state mismatch test")
 
         async def status_ok():
