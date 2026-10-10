@@ -101,10 +101,9 @@ class ReadinessEvidenceTests(unittest.TestCase):
                 balance=1.45,
             )
             report = evaluate(root)
-        gate = next(
-            item for item in report["blockers"] if item["gate"] == "STAKE_AFFORDABILITY"
+        self.assertFalse(
+            any(item["gate"] == "STAKE_AFFORDABILITY" for item in report["blockers"])
         )
-        self.assertEqual("PASS", gate["status"])
         self.assertEqual(1.0, report["capital"]["execution_minimum_stake"])
         self.assertEqual(1.0, report["capital"]["starting_stake"])
 
