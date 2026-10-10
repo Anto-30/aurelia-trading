@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from math import isfinite, log, sqrt
 from statistics import fmean, median
 from typing import Sequence
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 RESEARCH_ONLY = True
 CAPITAL_AUTHORITY = False
@@ -311,7 +312,13 @@ def evaluate_vwap_pullback(
 
 @dataclass(frozen=True)
 class ORBConfig:
-    opening_range_bars: int = 5
+    # These are an explicit local-market session configuration, not inferred
+    # from a session label or from the visible historical data.
+    session_timezone: str | None = None
+    session_open_time: str | None = None  # local HH:MM in session_timezone
+    opening_range_minutes: int | None = None
+    bar_duration_seconds: int | None = None
+    opening_range_bars: int | None = None  # optional consistency assertion only
     tick_size: float | None = None
     breakout_buffer_ticks: float = 1.0
     minimum_range_ticks: float = 2.0
@@ -319,10 +326,12 @@ class ORBConfig:
     maximum_range_atr_multiple: float = 4.0
     target_multiple_r: float = 2.0
     allowed_regimes: tuple[str, ...] = ("TRENDING_LOW_VOL",)
-    version: str = "orb-v1"
+    version: str = "orb-v2-session-explicit"
 
     def __post_init__(self) -> None:
-        if self.opening_range_bars < 2 or self.atr_lookback_bars < 2:
+        if self.atr_lookback_bars < 2 or (
+            self.opening_range_bars is not None and self.opening_range_bars < 2
+        ):
             raise ValueError("ORB_LOOKBACK_INVALID")
         if self.tick_size is not None and (not isfinite(self.tick_size) or self.tick_size <= 0):
             raise ValueError("ORB_TICK_SIZE_INVALID")
@@ -330,6 +339,34 @@ class ORBConfig:
             raise ValueError("ORB_RANGE_THRESHOLDS_INVALID")
         if self.maximum_range_atr_multiple <= 0 or self.target_multiple_r <= 0:
             raise ValueError("ORB_RISK_MULTIPLIER_INVALID")
+        if self.session_timezone is not None:
+            try:
+                ZoneInfo(self.session_timezone)
+            except (ZoneInfoNotFoundError, ValueError) as exc:
+                raise ValueError("ORB_SESSION_TIMEZONE_INVALID") from exc
+        if self.session_open_time is not None:
+            try:
+                hour_text, minute_text = self.session_open_time.split(":")
+                hour, minute = int(hour_text), int(minute_text)
+            except (ValueError, AttributeError) as exc:
+                raise ValueError("ORB_SESSION_OPEN_TIME_INVALID") from exc
+            if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                raise ValueError("ORB_SESSION_OPEN_TIME_INVALID")
+        if self.opening_range_minutes is not None:
+            if isinstance(self.opening_range_minutes, bool) or self.opening_range_minutes <= 0:
+                raise ValueError("ORB_OPENING_RANGE_DURATION_INVALID")
+        if self.bar_duration_seconds is not None:
+            if isinstance(self.bar_duration_seconds, bool) or self.bar_duration_seconds <= 0:
+                raise ValueError("ORB_BAR_DURATION_INVALID")
+        if self.opening_range_minutes is not None and self.bar_duration_seconds is not None:
+            duration_seconds = self.opening_range_minutes * 60
+            if duration_seconds % self.bar_duration_seconds != 0:
+                raise ValueError("ORB_RANGE_NOT_DIVISIBLE_BY_BAR_DURATION")
+            derived_bars = duration_seconds // self.bar_duration_seconds
+            if derived_bars < 2:
+                raise ValueError("ORB_OPENING_RANGE_REQUIRES_AT_LEAST_TWO_BARS")
+            if self.opening_range_bars is not None and self.opening_range_bars != derived_bars:
+                raise ValueError("ORB_OPENING_RANGE_BAR_COUNT_MISMATCH")
 
 
 def _true_range(current: StrategyBar, previous_close: float) -> float:
@@ -340,18 +377,48 @@ def evaluate_opening_range_breakout(
     bars: Sequence[StrategyBar], *, config: ORBConfig,
     regime_config: RegimeConfig = RegimeConfig(),
 ) -> StrategyCandidate | None:
-    """First close-confirmed breakout after N session bars; target re-anchors on fill."""
+    """First close-confirmed breakout after an explicit local session window.
+
+    The first bar in each session must align to the configured local open.
+    Opening-range duration is derived from minutes and bar duration, and every
+    bar inside that window must be contiguous. A label alone is not session data.
+    """
     _validate_bars(bars)
     if config.tick_size is None:
         raise ValueError("ORB_TICK_SIZE_REQUIRED")
+    required = (
+        config.session_timezone, config.session_open_time,
+        config.opening_range_minutes, config.bar_duration_seconds,
+    )
+    if any(value is None for value in required):
+        raise ValueError("ORB_SESSION_CONFIGURATION_REQUIRED")
+    opening_range_seconds = int(config.opening_range_minutes) * 60
+    bar_seconds = int(config.bar_duration_seconds)
+    if opening_range_seconds % bar_seconds != 0:
+        raise ValueError("ORB_RANGE_NOT_DIVISIBLE_BY_BAR_DURATION")
+    opening_bar_count = opening_range_seconds // bar_seconds
+    if opening_bar_count < 2:
+        raise ValueError("ORB_OPENING_RANGE_REQUIRES_AT_LEAST_TWO_BARS")
+
     i = len(bars) - 1
     if not bars or not bars[i].session_id:
         return None
     current, start = bars[i], _session_start(bars)
     session = bars[start:i + 1]
-    if len(session) <= config.opening_range_bars or i < 3:
+    if len(session) <= opening_bar_count:
         return None
-    opening = session[:config.opening_range_bars]
+
+    zone = ZoneInfo(str(config.session_timezone))
+    first_local = _utc(session[0].timestamp_utc).astimezone(zone)
+    if first_local.strftime("%H:%M") != config.session_open_time or first_local.second != 0 or first_local.microsecond != 0:
+        return None
+
+    opening = session[:opening_bar_count]
+    for previous, current_bar in zip(opening, opening[1:]):
+        elapsed = (_utc(current_bar.timestamp_utc) - _utc(previous.timestamp_utc)).total_seconds()
+        if elapsed != bar_seconds:
+            raise ValueError("ORB_OPENING_RANGE_BAR_INTERVAL_MISMATCH")
+
     upper, lower = max(b.high for b in opening), min(b.low for b in opening)
     width = upper - lower
     if width < config.minimum_range_ticks * config.tick_size:
@@ -363,8 +430,6 @@ def evaluate_opening_range_breakout(
     atr = fmean(ranges)
     if atr <= 0 or width > config.maximum_range_atr_multiple * atr:
         return None
-    # Regime is measured before the breakout candle to avoid using the breakout
-    # itself to qualify the setup that it creates.
     regime = classify_regime(bars[:i], config=regime_config)
     if regime is None or regime.state not in config.allowed_regimes:
         return None
@@ -372,10 +437,10 @@ def evaluate_opening_range_breakout(
     up, down = upper + config.breakout_buffer_ticks * config.tick_size, lower - config.breakout_buffer_ticks * config.tick_size
     if prev <= up and current.close > up:
         side, stop, target = "LONG", lower, up + config.target_multiple_r * (up - lower)
-        evidence = ("SESSION_OPENING_RANGE_DEFINED", "CLOSE_CONFIRMED_ABOVE_RANGE", "RANGE_QUALITY_PASSED")
+        evidence = ("SESSION_TIMEZONE_VERIFIED", "SESSION_OPEN_CONFIRMED", "OPENING_RANGE_DURATION_VERIFIED", "CLOSE_CONFIRMED_ABOVE_RANGE", "RANGE_QUALITY_PASSED")
     elif prev >= down and current.close < down:
         side, stop, target = "SHORT", upper, down - config.target_multiple_r * (upper - down)
-        evidence = ("SESSION_OPENING_RANGE_DEFINED", "CLOSE_CONFIRMED_BELOW_RANGE", "RANGE_QUALITY_PASSED")
+        evidence = ("SESSION_TIMEZONE_VERIFIED", "SESSION_OPEN_CONFIRMED", "OPENING_RANGE_DURATION_VERIFIED", "CLOSE_CONFIRMED_BELOW_RANGE", "RANGE_QUALITY_PASSED")
     else:
         return None
     return StrategyCandidate(

@@ -84,26 +84,63 @@ class DeterministicIntradayStrategyTests(unittest.TestCase):
         self.assertIn("VWAP_CLOSE_RECLAIM",result.evidence_codes)
         self.assertIn("DOWN_CANDLE_VOLUME_CONTRACTION_PROXY",result.evidence_codes)
 
-    def test_orb_detects_close_confirmed_breakout(self):
+    def test_orb_detects_close_confirmed_breakout_with_explicit_session(self):
         rows=[
             b(0,100,101,99,100), b(1,100,102,99.5,100.7),
             b(2,100.7,101.5,98.5,101.2), b(3,101.2,101.8,100.8,101.5),
             b(4,101.5,102.5,100.8,102.5),
         ]
-        cfg=ORBConfig(opening_range_bars=3,tick_size=.1,breakout_buffer_ticks=1,
-                      minimum_range_ticks=3,atr_lookback_bars=3,maximum_range_atr_multiple=10)
+        cfg=ORBConfig(session_timezone="UTC",session_open_time="00:00",
+                      opening_range_minutes=3,bar_duration_seconds=60,opening_range_bars=3,
+                      tick_size=.1,breakout_buffer_ticks=1,minimum_range_ticks=3,
+                      atr_lookback_bars=3,maximum_range_atr_multiple=10)
         reg=RegimeConfig(lookback_bars=2,trend_efficiency_min=.1,high_volatility_pct=10)
         result=evaluate_opening_range_breakout(rows,config=cfg,regime_config=reg)
         self.assertIsNotNone(result)
         self.assertEqual(result.strategy_id,"OPENING_RANGE_BREAKOUT")
         self.assertEqual(result.direction,"LONG")
         self.assertEqual(result.entry_timing,"NEXT_BAR_OPEN_AFTER_SIGNAL")
+        self.assertIn("SESSION_TIMEZONE_VERIFIED",result.evidence_codes)
         self.assertFalse(result.order_submission_permitted)
+
+    def test_orb_blocks_missing_session_configuration(self):
+        rows=[b(i,100+i,101+i,99+i,100.5+i) for i in range(6)]
+        with self.assertRaisesRegex(ValueError,"ORB_SESSION_CONFIGURATION_REQUIRED"):
+            evaluate_opening_range_breakout(rows,config=ORBConfig(tick_size=.1))
+
+    def test_orb_rejects_wrong_local_session_open(self):
+        rows=[
+            b(1,100,101,99,100), b(2,100,102,99.5,100.7),
+            b(3,100.7,101.5,98.5,101.2), b(4,101.2,101.8,100.8,101.5),
+            b(5,101.5,102.5,100.8,102.5),
+        ]
+        cfg=ORBConfig(session_timezone="UTC",session_open_time="00:00",
+                      opening_range_minutes=3,bar_duration_seconds=60,
+                      tick_size=.1,breakout_buffer_ticks=1,minimum_range_ticks=3,
+                      atr_lookback_bars=3,maximum_range_atr_multiple=10)
+        self.assertIsNone(evaluate_opening_range_breakout(rows,config=cfg,
+            regime_config=RegimeConfig(lookback_bars=2,high_volatility_pct=10)))
+
+    def test_orb_rejects_noncontiguous_opening_bars(self):
+        rows=[
+            b(0,100,101,99,100), b(2,100,102,99.5,100.7),
+            b(3,100.7,101.5,98.5,101.2), b(4,101.2,101.8,100.8,101.5),
+            b(5,101.5,102.5,100.8,102.5),
+        ]
+        cfg=ORBConfig(session_timezone="UTC",session_open_time="00:00",
+                      opening_range_minutes=3,bar_duration_seconds=60,
+                      tick_size=.1,breakout_buffer_ticks=1,minimum_range_ticks=3,
+                      atr_lookback_bars=3,maximum_range_atr_multiple=10)
+        with self.assertRaisesRegex(ValueError,"ORB_OPENING_RANGE_BAR_INTERVAL_MISMATCH"):
+            evaluate_opening_range_breakout(rows,config=cfg,
+                regime_config=RegimeConfig(lookback_bars=2,high_volatility_pct=10))
 
     def test_orb_requires_explicit_tick_size(self):
         rows=[b(i,100+i,101+i,99+i,100.5+i) for i in range(6)]
+        cfg=ORBConfig(session_timezone="UTC",session_open_time="00:00",
+                      opening_range_minutes=3,bar_duration_seconds=60)
         with self.assertRaisesRegex(ValueError,"ORB_TICK_SIZE_REQUIRED"):
-            evaluate_opening_range_breakout(rows,config=ORBConfig())
+            evaluate_opening_range_breakout(rows,config=cfg)
 
     def test_research_plane_flags_are_non_authoritative(self):
         self.assertFalse(CAPITAL_AUTHORITY)
