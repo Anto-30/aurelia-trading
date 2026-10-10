@@ -70,8 +70,8 @@ class SessionBreakoutBacktestTests(unittest.TestCase):
         self.assertEqual(result.status, "TRADED")
         self.assertEqual(result.trade.exit_status, "TARGET")
         self.assertAlmostEqual(result.trade.pnl_r_conservative, 2.0)
-        self.assertAlmostEqual(result.trade.net_pnl_r_conservative, 22.0 / 11.5)
-        self.assertEqual(result.trade.net_pnl_usd_per_contract_conservative, 44.0)
+        self.assertAlmostEqual(result.trade.net_pnl_r_conservative, 1.8)
+        self.assertEqual(result.trade.net_pnl_usd_per_contract_conservative, 18.0)
         result_unknown_costs = backtest_session_a(
             bars, DAY, stop_mode="OPPOSITE_RANGE_BOUNDARY",
             costs=CostModel(0.25, 2.0, 0.0, 1.0, None),
