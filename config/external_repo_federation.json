@@ -2118,8 +2118,8 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Anil-matcha/open-dots",
-      "head_commit": "3d8de1cd665c7d6d70583f34b89c2dc034512c1ea",
-      "pin_source": "github_default_branch_ref_checked_2026-10-08",
+      "head_commit": "3d8de1cd6657c6d70583f34b89c2dc034512c1ea",
+      "pin_source": "github_api_default_branch_commit_checked_2026-10-10",
       "integration_note": "External reference only; inspect in quarantine before any execution. No capital authority, production deployment authority, secret access, or broker transaction authority."
     },
     {
