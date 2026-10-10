@@ -13,6 +13,7 @@ from research.labs.session_structure_hypotheses import (
     confirmed_pivots,
     detect_session_reversal,
     directional_alignment,
+    session_expansion_observation,
     multi_timeframe_context,
     structure_asof,
 )
@@ -156,6 +157,51 @@ class SessionStructureHypothesisTests(unittest.TestCase):
         bars = make_session_bars(DAY, "EUROPE", sweep_first_bar="LONG")
         with self.assertRaisesRegex(ValueError, "SESSION_WINDOW_INCOMPLETE_OR_GAPPED"):
             detect_session_reversal(bars[:-1], key, previous, tick_size=0.25)
+
+    def test_following_session_expansion_is_descriptive_not_authoritative(self):
+        from research.labs.session_structure_hypotheses import SessionReversalSignal
+        key = SessionKey(DAY, "EUROPE")
+        next_key = SessionKey(DAY, "US_DAY")
+        signal = SessionReversalSignal(
+            key=key,
+            direction="LONG",
+            signal_bar_open_utc=datetime(2026, 10, 8, 6, 0, tzinfo=timezone.utc),
+            signal_available_at_utc=datetime(2026, 10, 8, 6, 5, tzinfo=timezone.utc),
+            signal_price=96.0,
+            prior_session_high=105.0,
+            prior_session_low=95.0,
+            stop_reference_price=94.5,
+        )
+        following = SessionSummary(
+            key=next_key,
+            start_utc=datetime(2026, 10, 8, 13, 30, tzinfo=timezone.utc),
+            end_utc=datetime(2026, 10, 8, 21, 0, tzinfo=timezone.utc),
+            high=112.0, low=88.0, bar_count=90, complete_grid=True,
+        )
+        obs = session_expansion_observation(signal, following, [4.0, 5.0, 6.0])
+        self.assertEqual(obs.prior_20_same_type_median_range, 5.0)
+        self.assertAlmostEqual(obs.following_session_range, 24.0)
+        self.assertAlmostEqual(obs.expansion_ratio, 4.8)
+        self.assertFalse(obs.capital_authority)
+
+    def test_zero_or_missing_prior_median_keeps_expansion_ratio_unknown(self):
+        from research.labs.session_structure_hypotheses import SessionReversalSignal
+        key = SessionKey(DAY, "EUROPE")
+        signal = SessionReversalSignal(
+            key=key, direction="LONG",
+            signal_bar_open_utc=datetime(2026, 10, 8, 6, 0, tzinfo=timezone.utc),
+            signal_available_at_utc=datetime(2026, 10, 8, 6, 5, tzinfo=timezone.utc),
+            signal_price=96.0, prior_session_high=105.0, prior_session_low=95.0,
+            stop_reference_price=94.5,
+        )
+        following = SessionSummary(
+            key=SessionKey(DAY, "US_DAY"),
+            start_utc=datetime(2026, 10, 8, 13, 30, tzinfo=timezone.utc),
+            end_utc=datetime(2026, 10, 8, 21, 0, tzinfo=timezone.utc),
+            high=105.0, low=95.0, bar_count=90, complete_grid=True,
+        )
+        self.assertIsNone(session_expansion_observation(signal, following, []).expansion_ratio)
+        self.assertIsNone(session_expansion_observation(signal, following, [0.0, 0.0]).expansion_ratio)
 
     def test_confirmed_pivot_is_unavailable_before_two_right_bars_close(self):
         bars = structure_bars()
