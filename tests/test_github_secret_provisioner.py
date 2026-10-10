@@ -130,6 +130,14 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
             ["DERIV_AUTH_MODE"],
         )
 
+    def test_missing_currency_is_not_synthesized_or_partially_written(self) -> None:
+        self.env.pop("DERIV_EXPECTED_CURRENCY", None)
+        result = self.run_provisioner()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("DERIV_EXPECTED_CURRENCY_REQUIRED", result.stderr)
+        self.assertFalse(self.record.exists(), "missing currency must block before any secret writes")
+        self.assertNotIn("USD", result.stdout + result.stderr)
+
     def test_auth_mode_mismatch_fails_without_overwriting_existing_configuration(self) -> None:
         self.env["PROVISIONER_TEST_EXISTING_NAMES"] = "\\n".join(
             [
