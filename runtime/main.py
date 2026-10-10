@@ -17,7 +17,7 @@ from threading import Thread
 
 from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.continuous_runtime import start_continuous_runtime
-from assurance.evidence_writer import build_evidence, payload_sha256, write_evidence
+from assurance.evidence_writer import build_evidence, payload_sha256
 from runtime.core.events import event_envelope, sha256
 from runtime.core.health import (
     HealthSnapshot,
@@ -95,7 +95,7 @@ def _write_runtime_deriv_evidence(snapshot, config_hash: str) -> None:
         result="PROVEN",
         invariants_checked=[
             "authenticated_account_identity",
-            "real_environment_binding",
+            "account_environment_binding",
             "currency_binding",
             "fresh_broker_balance",
             "no_order_submission",
@@ -114,7 +114,13 @@ def _write_runtime_deriv_evidence(snapshot, config_hash: str) -> None:
     )
     default_path = str(ROOT / "artifacts" / "deriv_authenticated_session.json")
     output = Path(os.getenv("AURELIA_DERIV_EVIDENCE_PATH", default_path))
-    write_evidence(output, enriched)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output.with_name(output.name + ".tmp")
+    temporary.write_text(
+        json.dumps(enriched, sort_keys=True, separators=(",", ":"), ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(output)
 
 
 def _write_readiness_report(output: Path, report: dict) -> None:
