@@ -9,6 +9,7 @@ CURRENT_LINK="$APP_ROOT/current"
 ENV_DIR="/etc/aurelia"
 ENV_FILE="$ENV_DIR/aurelia.env"
 LIVE_SECRET_FILE="$ENV_DIR/aurelia-live-secrets.env"
+READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"
 DATA_DIR="/var/lib/aurelia"
 IMAGE="aurelia-runtime:$SHA"
 CONTAINER="aurelia-runtime"
@@ -135,6 +136,10 @@ if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   ENV_FILES=("$LIVE_SECRET_FILE")
 else
   ENV_FILES=("$ENV_FILE")
+  if [ -f "$READONLY_SECRET_FILE" ]; then
+    sudo chmod 600 "$READONLY_SECRET_FILE"
+    ENV_FILES+=("$READONLY_SECRET_FILE")
+  fi
 fi
 
 RUNTIME_ID="$(grep -h -E '^AURELIA_RUNTIME_ID=' "${ENV_FILES[@]}" | tail -n 1 | sed 's/^[^=]*=//')"
@@ -223,6 +228,8 @@ sudo systemctl enable aurelia-runtime-watchdog.service
 SECRET_ENV_ARGS=()
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   SECRET_ENV_ARGS+=(--env-file "$LIVE_SECRET_FILE")
+elif [ -f "$READONLY_SECRET_FILE" ]; then
+  SECRET_ENV_ARGS+=(--env-file "$READONLY_SECRET_FILE")
 fi
 
 sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"
