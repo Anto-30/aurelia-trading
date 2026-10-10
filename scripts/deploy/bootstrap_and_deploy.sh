@@ -99,10 +99,10 @@ EOF
 fi
 
 AUTH_CONFIGURED=false
-if grep -Eq "^DERIV_AUTH_TOKEN=.+$" "$ENV_FILE" \
-  && grep -Eq "^DERIV_EXPECTED_LOGINID=.+$" "$ENV_FILE" \
+if grep -Eq "^(DERIV_AUTH_TOKEN|DERIV_PAT)=.+$" "$ENV_FILE" \
+  && grep -Eq "^(DERIV_EXPECTED_LOGINID|DERIV_AUTHORIZED_ACCOUNT_ID)=.+$" "$ENV_FILE" \
   && grep -Eq "^DERIV_EXPECTED_CURRENCY=.+$" "$ENV_FILE" \
-  && grep -Eq "^DERIV_AUTH_MODE=.+$" "$ENV_FILE"; then
+  && grep -Eq "^DERIV_AUTH_MODE=(pat|oauth)$" "$ENV_FILE"; then
   if ! grep -Eq "^DERIV_AUTH_MODE=pat$" "$ENV_FILE" \
     || grep -Eq "^DERIV_APP_ID=.+$" "$ENV_FILE"; then
     AUTH_CONFIGURED=true
@@ -110,12 +110,22 @@ if grep -Eq "^DERIV_AUTH_TOKEN=.+$" "$ENV_FILE" \
 fi
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ] && [ "$AUTH_CONFIGURED" != "true" ]; then
-  for key in DERIV_AUTH_TOKEN DERIV_EXPECTED_LOGINID DERIV_EXPECTED_CURRENCY DERIV_AUTH_MODE; do
-    grep -Eq "^$key=.+$" "$ENV_FILE" || {
-      echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:$key"
-      exit 2
-    }
-  done
+  grep -Eq "^(DERIV_AUTH_TOKEN|DERIV_PAT)=.+$" "$ENV_FILE" || {
+    echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_AUTH_TOKEN_OR_DERIV_PAT"
+    exit 2
+  }
+  grep -Eq "^(DERIV_EXPECTED_LOGINID|DERIV_AUTHORIZED_ACCOUNT_ID)=.+$" "$ENV_FILE" || {
+    echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_EXPECTED_LOGINID_OR_DERIV_AUTHORIZED_ACCOUNT_ID"
+    exit 2
+  }
+  grep -Eq "^DERIV_EXPECTED_CURRENCY=.+$" "$ENV_FILE" || {
+    echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_EXPECTED_CURRENCY"
+    exit 2
+  }
+  grep -Eq "^DERIV_AUTH_MODE=(pat|oauth)$" "$ENV_FILE" || {
+    echo "AURELIA_HOST_BLOCKED=DERIV_AUTH_MODE_INVALID_OR_MISSING"
+    exit 2
+  }
   if grep -Eq "^DERIV_AUTH_MODE=pat$" "$ENV_FILE"; then
     grep -Eq "^DERIV_APP_ID=.+$" "$ENV_FILE" || {
       echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_APP_ID"
