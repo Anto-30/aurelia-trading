@@ -23,6 +23,20 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
         ):
             self.assertEqual(await run(), 2)
 
+    async def test_missing_currency_is_not_verified_before_broker_calls(self):
+        with patch.dict(
+            os.environ,
+            {
+                "DERIV_AUTH_TOKEN": "TOKEN",
+                "DERIV_APP_ID": "APP-ID-TEST",
+                "DERIV_EXPECTED_LOGINID": "CRREAL",
+                "DERIV_ENVIRONMENT": "real",
+            },
+            clear=True,
+        ), patch("scripts.verify_deriv_session.DerivSessionManager.bootstrap") as bootstrap:
+            self.assertEqual(await run(), 2)
+            bootstrap.assert_not_called()
+
     async def test_real_session_verifies_without_authorizing_capital(self):
         account = AccountIdentity(
             loginid="CRREAL",
