@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import timedelta
 from math import isfinite
 
@@ -13,8 +13,9 @@ from .models import (
     OrderIntent,
     utc_now,
 )
+from .stake_sizing import size_stake_for_balance
 
-MIN_PROBABILITY = 0.55
+MIN_PROBABILITY = 0.50
 MAX_PROBABILITY = 0.75
 STARTING_STAKE = 1.00
 EXECUTION_MINIMUM_STAKE = 1.00
@@ -97,6 +98,7 @@ def authorization_gate(
     execution_mode: str = "LIVE",
 ) -> tuple[GateResult, AuthorizationContext | None]:
     reasons: list[str] = []
+    authorized_live_stake: float | None = None
 
     if account.account_type != "real":
         reasons.append("ACCOUNT_NOT_REAL")
@@ -132,8 +134,20 @@ def authorization_gate(
         reasons.append("STRATEGY_HASH_MISSING")
     if not config_hash or config_hash != runtime_config_hash:
         reasons.append("CONFIG_DIGEST_MISMATCH")
+
+    # Keep the proposed request valid, but do not let a strategy/LLM choose
+    # the final capital amount. LIVE sizing is recalculated deterministically
+    # from the exact fresh available-balance snapshot and then travels in the
+    # authorization context to intent creation.
     if not requested_stake_is_permitted(decision.risk_requested_stake, capital):
         reasons.append("STAKE_NOT_AFFORDABLE_OR_BELOW_BROKER_MINIMUM")
+    if execution_mode == "LIVE":
+        sizing = size_stake_for_balance(capital.available_balance)
+        if sizing.allowed:
+            authorized_live_stake = sizing.stake
+        else:
+            reasons.append(sizing.reason)
+
     if not risk_approved:
         reasons.append("RISK_WARDEN_REJECTED")
     if not firewall_approved:
@@ -155,10 +169,20 @@ def authorization_gate(
         return GateResult(False, tuple(reasons)), None
 
     now = utc_now()
+    authorized_decision = decision
+    if execution_mode == "LIVE":
+        # Rebind stake sizing to this authorization's balance snapshot. This
+        # is an internal risk-plane transformation, not an agent authority.
+        assert authorized_live_stake is not None
+        authorized_decision = replace(
+            decision,
+            risk_requested_stake=authorized_live_stake,
+        )
+
     return (
         GateResult(True, ()),
         AuthorizationContext(
-            decision=decision,
+            decision=authorized_decision,
             account=account,
             capital=capital,
             config_hash=config_hash,
