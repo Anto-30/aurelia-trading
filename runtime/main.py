@@ -550,6 +550,8 @@ async def main() -> None:
         _readiness_publisher(health, journal, config_hash),
         name="aurelia-readiness-publisher",
     )
+    # Replace any stale persisted authorization report before the execution loop starts.
+    await asyncio.sleep(0)
     supervisor = RuntimeSupervisor(interval_seconds=5)
 
     def heartbeat() -> bool:
