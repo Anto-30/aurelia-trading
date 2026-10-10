@@ -65,16 +65,16 @@ def validate_secrets_at_startup() -> None:
             "AURELIA_AUTONOMOUS_LOOP": os.getenv(
                 "AURELIA_AUTONOMOUS_LOOP", ""
             ).strip().lower() == "false",
-            "AURELIA_VERIFY_DERIV_AUTH": os.getenv(
-                "AURELIA_VERIFY_DERIV_AUTH", ""
-            ).strip().lower() == "false",
         }
-        if all(sealed_flags.values()):
+        if not all(sealed_flags.values()):
+            failed = [name for name, valid in sealed_flags.items() if not valid]
+            raise SecretsError(
+                "VERIFY_ONLY_RUNTIME_NOT_SEALED: " + ",".join(failed)
+            )
+        # Permit a credential-free locked worker to run, but if read-only broker
+        # verification was requested, validate its credentials before startup.
+        if os.getenv("AURELIA_VERIFY_DERIV_AUTH", "").strip().lower() != "true":
             return
-        failed = [name for name, valid in sealed_flags.items() if not valid]
-        raise SecretsError(
-            "VERIFY_ONLY_RUNTIME_NOT_SEALED: " + ",".join(failed)
-        )
 
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
     token = os.getenv("DERIV_AUTH_TOKEN", "").strip() or os.getenv("DERIV_PAT", "").strip()
@@ -103,3 +103,7 @@ def validate_secrets_at_startup() -> None:
         raise SecretsError(
             f"STARTUP_SECRET_VALIDATION_FAILED: missing={missing}"
         )
+    # A locked VERIFY_ONLY process may authenticate and verify its account,
+    # but capital authority and autonomous order execution remain sealed above.
+    if deployment_mode == "VERIFY_ONLY":
+        return
