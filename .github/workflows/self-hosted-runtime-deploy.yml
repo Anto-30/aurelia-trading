@@ -124,6 +124,18 @@ jobs:
 
       - name: Refresh readiness from current evidence; remain fail-closed on any blocker
         if: inputs.deployment_mode == 'LIVE'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_PAT: ${{ secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: real
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          AURELIA_VERIFY_DERIV_PUBLIC: "true"
+          AURELIA_VERIFY_DERIV_AUTH: "true"
+          AURELIA_RUN_ONCE: "true"
         shell: bash
         run: |
           set +e
@@ -137,6 +149,18 @@ jobs:
 
       - name: Require deterministic live release gate for LIVE deployment
         if: inputs.deployment_mode == 'LIVE'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_PAT: ${{ secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: real
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          AURELIA_VERIFY_DERIV_PUBLIC: "true"
+          AURELIA_VERIFY_DERIV_AUTH: "true"
+          AURELIA_RUN_ONCE: "true"
         shell: bash
         run: |
           set -euo pipefail
