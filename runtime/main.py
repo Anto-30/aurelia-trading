@@ -19,7 +19,11 @@ from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.continuous_runtime import start_continuous_runtime
 from assurance.evidence_writer import build_evidence, payload_sha256, write_evidence
 from runtime.core.events import event_envelope, sha256
-from runtime.core.health import HealthSnapshot, refresh_runtime_health
+from runtime.core.health import (
+    HealthSnapshot,
+    apply_verify_only_runtime_health,
+    refresh_runtime_health,
+)
 from runtime.core.journal import AppendOnlyJournal
 from runtime.core.models import RuntimeState
 from runtime.core.release_gate import read_live_release
@@ -630,11 +634,15 @@ async def main() -> None:
         while True:
             health.process_heartbeat = datetime.now(timezone.utc)
             if continuous_runtime is None:
-                health.kill_switch_off = False
+                # A missing runtime object is an operational failure, not an
+                # intentional verify-only mode. Keep readiness blocked.
                 health.broker_session = False
                 health.market_data_fresh = False
                 health.capital_fresh = False
+                health.ledger_healthy = False
                 health.reconciliation_healthy = False
+                health.kill_switch_off = False
+                health.critical_unknowns.add("CONTINUOUS_RUNTIME_UNAVAILABLE")
                 HealthHandler.state = RuntimeState.CAPITAL_PROTECTED
             else:
                 loop = continuous_runtime.execution_loop
@@ -648,38 +656,49 @@ async def main() -> None:
                 else:
                     health.agent_workers_healthy = True
                     health.critical_unknowns.discard("AGENT_WORKER_LIVENESS")
-                broker_authorization_lost = (
-                    adapter is None
-                    or not adapter.authorized
-                    or adapter.account is None
+
+                verify_only_mode = (
+                    loop is None
+                    and os.getenv("AURELIA_AUTONOMOUS_LOOP", "false").strip().lower() != "true"
                 )
-                if broker_authorization_lost:
-                    health.kill_switch_off = False
-                    health.broker_session = False
-                    health.critical_unknowns.add("BROKER_AUTHORIZATION_LOST")
+                if verify_only_mode:
+                    apply_verify_only_runtime_health(health)
                     HealthHandler.state = RuntimeState.CAPITAL_PROTECTED
-                    emit_federation_event(
-                        "WATCHDOG_PROTECT",
-                        reason="BROKER_AUTHORIZATION_LOST",
-                    )
-                    if loop is not None and not loop.executor.kill_switch:
-                        loop.executor.activate_kill_switch("BROKER_AUTHORIZATION_LOST")
                 else:
-                    health.broker_session = bool(adapter.transport is not None)
-                    HealthHandler.state = machine.state
-                task = continuous_runtime.execution_task
-                if task is not None and task.done():
-                    health.critical_unknowns.add("AUTONOMOUS_LOOP_STOPPED")
-                    try:
-                        task.exception()
-                    except asyncio.CancelledError:
-                        pass
-                    if loop is not None:
-                        loop.executor.activate_kill_switch("AUTONOMOUS_LOOP_STOPPED")
+                    broker_authorization_lost = (
+                        adapter is None
+                        or not adapter.authorized
+                        or adapter.account is None
+                    )
+                    if broker_authorization_lost:
+                        health.kill_switch_off = False
+                        health.broker_session = False
+                        health.critical_unknowns.add("BROKER_AUTHORIZATION_LOST")
+                        HealthHandler.state = RuntimeState.CAPITAL_PROTECTED
                         emit_federation_event(
                             "WATCHDOG_PROTECT",
-                            reason="AUTONOMOUS_LOOP_STOPPED",
+                            reason="BROKER_AUTHORIZATION_LOST",
                         )
+                        if loop is not None and not loop.executor.kill_switch:
+                            loop.executor.activate_kill_switch("BROKER_AUTHORIZATION_LOST")
+                    else:
+                        health.broker_session = bool(adapter.transport is not None)
+                        HealthHandler.state = machine.state
+
+                    task = continuous_runtime.execution_task
+                    if task is not None and task.done():
+                        health.critical_unknowns.add("AUTONOMOUS_LOOP_STOPPED")
+                        try:
+                            task.exception()
+                        except asyncio.CancelledError:
+                            pass
+                        if loop is not None:
+                            loop.executor.activate_kill_switch("AUTONOMOUS_LOOP_STOPPED")
+                            emit_federation_event(
+                                "WATCHDOG_PROTECT",
+                                reason="AUTONOMOUS_LOOP_STOPPED",
+                            )
+
                 if machine.state != last_runtime_state:
                     emit_federation_event(
                         "RUNTIME_STATE_TRANSITION",

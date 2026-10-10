@@ -10,7 +10,11 @@ from runtime.core.authority import authorization_gate, decision_economics_gate, 
 from runtime.core.capabilities import Capability, RESEARCH_CAPABILITIES
 from runtime.core.events import event_envelope, sha256
 from runtime.core.fencing import ExecutionFence
-from runtime.core.health import HealthSnapshot, refresh_runtime_health
+from runtime.core.health import (
+    HealthSnapshot,
+    apply_verify_only_runtime_health,
+    refresh_runtime_health,
+)
 from runtime.core.idempotency import IdempotencyStore
 from runtime.core.invariants import (
     check_pre_submission_invariants,
@@ -450,6 +454,36 @@ class TestControls(unittest.TestCase):
         self.assertFalse(health.market_data_fresh)
         self.assertFalse(health.reconciliation_healthy)
         self.assertFalse(health.kill_switch_off)
+
+    def test_verify_only_runtime_is_live_but_never_exposure_ready(self):
+        health = HealthSnapshot(datetime.now(UTC))
+        health.critical_unknowns.add("BROKER_AUTHORIZATION_LOST")
+
+        apply_verify_only_runtime_health(health)
+
+        self.assertNotIn("BROKER_AUTHORIZATION_LOST", health.critical_unknowns)
+        self.assertTrue(health.liveness())
+        self.assertTrue(health.readiness())
+        self.assertFalse(health.broker_session)
+        self.assertFalse(health.capital_fresh)
+        self.assertFalse(health.market_data_fresh)
+        self.assertFalse(health.ledger_healthy)
+        self.assertFalse(health.reconciliation_healthy)
+        self.assertFalse(health.kill_switch_off)
+        self.assertFalse(health.can_open_new_exposure())
+
+    def test_verify_only_health_preserves_unrelated_critical_unknowns(self):
+        health = HealthSnapshot(datetime.now(UTC))
+        health.critical_unknowns.update(
+            {"BROKER_AUTHORIZATION_LOST", "AGENT_WORKER_LIVENESS"}
+        )
+
+        apply_verify_only_runtime_health(health)
+
+        self.assertNotIn("BROKER_AUTHORIZATION_LOST", health.critical_unknowns)
+        self.assertIn("AGENT_WORKER_LIVENESS", health.critical_unknowns)
+        self.assertFalse(health.readiness())
+        self.assertFalse(health.can_open_new_exposure())
 
     def test_health_unknown(self):
         health = HealthSnapshot(datetime.now(UTC))
