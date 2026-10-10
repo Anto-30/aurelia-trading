@@ -8,6 +8,7 @@ RELEASE_DIR="$RELEASE_ROOT/$SHA"
 CURRENT_LINK="$APP_ROOT/current"
 ENV_DIR="/etc/aurelia"
 ENV_FILE="$ENV_DIR/aurelia.env"
+LIVE_SECRET_FILE="$ENV_DIR/aurelia-live-secrets.env"
 DATA_DIR="/var/lib/aurelia"
 IMAGE="aurelia-runtime:$SHA"
 CONTAINER="aurelia-runtime"
@@ -56,12 +57,12 @@ if ! command -v docker >/dev/null 2>&1; then
   fi
 fi
 
-if ! command -v curl >/dev/null 2>&1; then
+if ! command -v curl >/dev/null 2>&1 || ! command -v python3 >/dev/null 2>&1; then
   if command -v apt-get >/dev/null 2>&1; then
     sudo apt-get update
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y curl
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y curl python3
   else
-    echo "AURELIA_HOST_BLOCKED=CURL_MISSING"
+    echo "AURELIA_HOST_BLOCKED=CURL_OR_PYTHON3_MISSING"
     exit 2
   fi
 fi
@@ -74,8 +75,32 @@ sudo install -d -m 755 "$RELEASE_ROOT"
 if [ -f "$ENV_FILE" ]; then
   sudo chmod 600 "$ENV_FILE"
 elif [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
-  echo "AURELIA_HOST_BLOCKED=MISSING_RUNTIME_SECRET_STORE"
-  exit 2
+  if [ ! -f "$LIVE_SECRET_FILE" ]; then
+    echo "AURELIA_HOST_BLOCKED=MISSING_RUNTIME_SECRET_STORE"
+    exit 2
+  fi
+  sudo tee "$ENV_FILE" >/dev/null <<'EOF'
+PORT=8080
+AURELIA_CONTINUOUS_RUNTIME=true
+AURELIA_AUTONOMOUS_LOOP=false
+AURELIA_VERIFY_DERIV_PUBLIC=true
+AURELIA_VERIFY_DERIV_AUTH=true
+AURELIA_RUN_ONCE=false
+AURELIA_DEPLOYMENT_MODE=LIVE
+AURELIA_PERSISTENT_WORKER_HEALTHY=true
+AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json
+AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json
+AURELIA_RUNTIME_ID=aurelia-production-worker
+AURELIA_ATTESTATION_DIR=/tmp/aurelia/attestations
+AURELIA_JOURNAL_PATH=/tmp/aurelia/aurelia-events.ndjson
+AURELIA_FEDERATION_JOURNAL_PATH=/tmp/aurelia/federation-events.ndjson
+AURELIA_FEDERATION_LEASE_PATH=/tmp/aurelia/federation-leases.json
+AURELIA_LEDGER_PATH=/tmp/aurelia/ledger.json
+AURELIA_IDEMPOTENCY_PATH=/tmp/aurelia/idempotency.json
+AURELIA_FENCE_PATH=/tmp/aurelia/executor-fence.txt
+AURELIA_EXECUTION_JOURNAL_PATH=/tmp/aurelia/execution-events.ndjson
+EOF
+  sudo chmod 600 "$ENV_FILE"
 else
   sudo tee "$ENV_FILE" >/dev/null <<'EOF'
 PORT=8080
@@ -101,44 +126,54 @@ EOF
   sudo chmod 600 "$ENV_FILE"
 fi
 
-RUNTIME_ID="$(sed -n 's/^AURELIA_RUNTIME_ID=//p' "$ENV_FILE" | tail -n 1)"
+ENV_FILES=("$ENV_FILE")
+if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
+  test -f "$LIVE_SECRET_FILE" || {
+    echo "AURELIA_HOST_BLOCKED=MISSING_RUNTIME_SECRET_STORE"
+    exit 2
+  }
+  sudo chmod 600 "$LIVE_SECRET_FILE"
+  ENV_FILES+=("$LIVE_SECRET_FILE")
+fi
+
+RUNTIME_ID="$(grep -h -E '^AURELIA_RUNTIME_ID=' "${ENV_FILES[@]}" | tail -n 1 | sed 's/^[^=]*=//')"
 RUNTIME_ID="${RUNTIME_ID:-aurelia-production-worker}"
 
 AUTH_CONFIGURED=false
-if grep -Eq "^(DERIV_AUTH_TOKEN|DERIV_PAT)=.+$" "$ENV_FILE" \
-  && grep -Eq "^(DERIV_EXPECTED_LOGINID|DERIV_AUTHORIZED_ACCOUNT_ID)=.+$" "$ENV_FILE" \
-  && grep -Eq "^DERIV_EXPECTED_CURRENCY=.+$" "$ENV_FILE" \
-  && grep -Eq "^DERIV_ENVIRONMENT=real$" "$ENV_FILE" \
-  && grep -Eq "^DERIV_AUTH_MODE=(pat|oauth)$" "$ENV_FILE"; then
-  if ! grep -Eq "^DERIV_AUTH_MODE=pat$" "$ENV_FILE" \
-    || grep -Eq "^DERIV_APP_ID=.+$" "$ENV_FILE"; then
+if grep -Eq "^(DERIV_AUTH_TOKEN|DERIV_PAT)=.+$" "${ENV_FILES[@]}" \
+  && grep -Eq "^(DERIV_EXPECTED_LOGINID|DERIV_AUTHORIZED_ACCOUNT_ID)=.+$" "${ENV_FILES[@]}" \
+  && grep -Eq "^DERIV_EXPECTED_CURRENCY=.+$" "${ENV_FILES[@]}" \
+  && grep -Eq "^DERIV_ENVIRONMENT=real$" "${ENV_FILES[@]}" \
+  && grep -Eq "^DERIV_AUTH_MODE=(pat|oauth)$" "${ENV_FILES[@]}"; then
+  if ! grep -Eq "^DERIV_AUTH_MODE=pat$" "${ENV_FILES[@]}" \
+    || grep -Eq "^DERIV_APP_ID=.+$" "${ENV_FILES[@]}"; then
     AUTH_CONFIGURED=true
   fi
 fi
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ] && [ "$AUTH_CONFIGURED" != "true" ]; then
-  grep -Eq "^(DERIV_AUTH_TOKEN|DERIV_PAT)=.+$" "$ENV_FILE" || {
+  grep -Eq "^(DERIV_AUTH_TOKEN|DERIV_PAT)=.+$" "${ENV_FILES[@]}" || {
     echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_AUTH_TOKEN_OR_DERIV_PAT"
     exit 2
   }
-  grep -Eq "^(DERIV_EXPECTED_LOGINID|DERIV_AUTHORIZED_ACCOUNT_ID)=.+$" "$ENV_FILE" || {
+  grep -Eq "^(DERIV_EXPECTED_LOGINID|DERIV_AUTHORIZED_ACCOUNT_ID)=.+$" "${ENV_FILES[@]}" || {
     echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_EXPECTED_LOGINID_OR_DERIV_AUTHORIZED_ACCOUNT_ID"
     exit 2
   }
-  grep -Eq "^DERIV_EXPECTED_CURRENCY=.+$" "$ENV_FILE" || {
+  grep -Eq "^DERIV_EXPECTED_CURRENCY=.+$" "${ENV_FILES[@]}" || {
     echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_EXPECTED_CURRENCY"
     exit 2
   }
-  grep -Eq "^DERIV_ENVIRONMENT=real$" "$ENV_FILE" || {
+  grep -Eq "^DERIV_ENVIRONMENT=real$" "${ENV_FILES[@]}" || {
     echo "AURELIA_HOST_BLOCKED=LIVE_RUNTIME_REQUIRES_DERIV_ENVIRONMENT_REAL"
     exit 2
   }
-  grep -Eq "^DERIV_AUTH_MODE=(pat|oauth)$" "$ENV_FILE" || {
+  grep -Eq "^DERIV_AUTH_MODE=(pat|oauth)$" "${ENV_FILES[@]}" || {
     echo "AURELIA_HOST_BLOCKED=DERIV_AUTH_MODE_INVALID_OR_MISSING"
     exit 2
   }
-  if grep -Eq "^DERIV_AUTH_MODE=pat$" "$ENV_FILE"; then
-    grep -Eq "^DERIV_APP_ID=.+$" "$ENV_FILE" || {
+  if grep -Eq "^DERIV_AUTH_MODE=pat$" "${ENV_FILES[@]}"; then
+    grep -Eq "^DERIV_APP_ID=.+$" "${ENV_FILES[@]}" || {
       echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_APP_ID"
       exit 2
     }
@@ -148,7 +183,7 @@ if [ "$DEPLOYMENT_MODE" = "LIVE" ] && [ "$AUTH_CONFIGURED" != "true" ]; then
 fi
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
-  grep -Eq "^AURELIA_ATTESTATION_SIGNING_KEY=.+$" "$ENV_FILE" || {
+  grep -Eq "^AURELIA_ATTESTATION_SIGNING_KEY=.+$" "${ENV_FILES[@]}" || {
     echo "AURELIA_HOST_BLOCKED=READINESS_ATTESTATION_SIGNING_KEY_MISSING"
     exit 2
   }
@@ -184,18 +219,25 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable aurelia-runtime-watchdog.service
 
+SECRET_ENV_ARGS=()
+if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
+  SECRET_ENV_ARGS+=(--env-file "$LIVE_SECRET_FILE")
+fi
+
 sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"
 sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 
 sudo docker run --detach \
   --name "$CONTAINER" \
   --restart unless-stopped \
-  --env-file "$ENV_FILE" \
+  --env-file "$ENV_FILE" "${SECRET_ENV_ARGS[@]}" \
   --env AURELIA_DEPLOYMENT_MODE="$DEPLOYMENT_MODE" \
   --env AURELIA_AUTONOMOUS_LOOP="$AUTONOMOUS_LOOP" \
   --env AURELIA_VERIFY_DERIV_AUTH="$VERIFY_DERIV_AUTH" \
   --env AURELIA_VERIFY_DERIV_PUBLIC="$VERIFY_DERIV_PUBLIC" \
   --env AURELIA_RUN_ONCE=false \
+  --env AURELIA_CONTINUOUS_RUNTIME=true \
+  --env AURELIA_AGENT_WORKERS=true \
   --env AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json \
   --env AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json \
   --env AURELIA_ATTESTATION_DIR=/tmp/aurelia/attestations \
@@ -224,7 +266,7 @@ if [ "$healthy" -ne 1 ]; then
 fi
 
 health="$(cat /tmp/aurelia-health.json)"
-python - "$DEPLOYMENT_MODE" <<'PY'
+python3 - "$DEPLOYMENT_MODE" <<'PY'
 import json
 import sys
 from pathlib import Path
