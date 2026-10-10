@@ -10,14 +10,13 @@ correlation only.
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import os
 import re
 import uuid
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
-from typing import Any, Awaitable, Callable, Mapping, Protocol
+from typing import Any, Awaitable, Callable, Protocol
 
 
 class ExecutionHalted(RuntimeError):
@@ -157,10 +156,10 @@ class SecretMaskFilter(logging.Filter):
     """Mask environment secrets, bearer tokens, and account identifiers in logs."""
 
     _PATTERNS = (
-        re.compile(r"(?i)(bearer\\s+)[A-Za-z0-9._~+/-]+=*"),
-        re.compile(r"(?i)((?:token|pat|api[_-]?key|otp|secret)\\s*[:=]\\s*)[^\\s,;]+"),
-        re.compile(r"(?i)((?:loginid|account[_-]?id)\\s*[:=]\\s*)[A-Z0-9_-]+"),
-        re.compile(r"(?i)(wss://[^\\s?]+\\?[^\\s]*otp=)[^&\\s]+"),
+        re.compile(r"(?i)(bearer\s+)[A-Za-z0-9._~+/-]+=*"),
+        re.compile(r"(?i)((?:token|pat|api[_-]?key|otp|secret)\s*[:=]\s*)[^\s,;]+"),
+        re.compile(r"(?i)((?:loginid|account[_-]?id)\s*[:=]\s*)[A-Z0-9_-]+"),
+        re.compile(r"(?i)(wss://[^\s?]+\?[^\s]*otp=)[^&\s]+"),
     )
 
     def __init__(self, secrets: list[str] | None = None) -> None:
@@ -179,7 +178,7 @@ class SecretMaskFilter(logging.Filter):
             if len(secret) >= 4:
                 rendered = rendered.replace(secret, "[REDACTED]")
         for pattern in self._PATTERNS:
-            rendered = pattern.sub(r"\\1[REDACTED]", rendered)
+            rendered = pattern.sub(r"\1[REDACTED]", rendered)
         record.msg = rendered
         record.args = ()
         return True
