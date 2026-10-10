@@ -23,6 +23,14 @@ def rows_for_day():
 
 
 class DailyRiskTests(unittest.TestCase):
+    def test_daily_drawdown_configuration_cannot_exceed_five_percent(self):
+        with tempfile.TemporaryDirectory() as td:
+            with self.assertRaisesRegex(ValueError, "DAILY_RISK_DRAWDOWN_LIMIT_INVALID"):
+                PersistentDailyRiskGuard(Path(td) / "too-high.json", max_daily_drawdown_pct=0.0501)
+            # Exactly 5% is an allowed upper bound; production defaults remain stricter at 3%.
+            guard = PersistentDailyRiskGuard(Path(td) / "maximum.json", max_daily_drawdown_pct=0.05)
+            self.assertEqual(guard.max_daily_drawdown_pct, 0.05)
+
     def test_statement_reconstructs_start_and_checks_latest_balance(self):
         reference, source = derive_utc_day_start_balance(
             current_balance=101.0, transactions=rows_for_day(), day_start_epoch=0,

@@ -32,6 +32,7 @@ from runtime.core.secrets import get_optional_secret, validate_secrets_at_startu
 from runtime.core.state import RuntimeStateMachine
 from runtime.core.supervisor import RuntimeSupervisor
 from runtime.ops.readiness_orchestrator import evaluate as evaluate_readiness
+from runtime.ops.deadman import DeadManSwitch
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -587,10 +588,18 @@ async def main() -> None:
     )
     # Replace any stale persisted authorization report before the execution loop starts.
     await asyncio.sleep(0)
+    deadman = DeadManSwitch(
+        timeout_seconds=float(os.getenv("AURELIA_DEADMAN_TIMEOUT_SECONDS", "60"))
+    )
+    last_heartbeat_log = 0.0
     supervisor = RuntimeSupervisor(interval_seconds=5)
 
     def heartbeat() -> bool:
-        health.process_heartbeat = datetime.now(timezone.utc)
+        # The watchdog thread observes event-loop progress; it must not refresh
+        # the event-loop heartbeat itself, or a stalled loop would look healthy.
+        if deadman.expired():
+            deadman.trip_if_expired()
+            return False
         return health.liveness() and health.dependencies_ok
 
     def emit_federation_event(event_type: str, **payload: object) -> None:
@@ -606,9 +615,47 @@ async def main() -> None:
             health.critical_unknowns.add("FEDERATION_EVENT_QUEUE_FAILURE")
 
     def protect(reason: str) -> None:
+        deadman_expired = deadman.tripped or deadman.trip_if_expired()
+        if deadman_expired:
+            reason = "DEADMAN_HEARTBEAT_TIMEOUT"
+        active_loop = continuous_runtime.execution_loop if continuous_runtime is not None else None
+        # A dead-man trip must reach the durable Layer 6 guard even if this reason
+        # was logged earlier during slow startup before the executor existed.
+        if deadman_expired and active_loop is not None:
+            risk_guard = getattr(active_loop, "daily_risk_guard", None)
+            if risk_guard is not None:
+                try:
+                    risk_guard.trip(reason)
+                except Exception as exc:
+                    health.critical_unknowns.add("DEADMAN_RISK_PERSISTENCE_FAILURE")
+                    logger.error(
+                        "Dead-man risk trip persistence failed",
+                        extra={"structured_data": {"error_class": type(exc).__name__}},
+                    )
+            if not active_loop.executor.kill_switch:
+                try:
+                    active_loop.executor.activate_kill_switch(reason)
+                except Exception as exc:
+                    health.critical_unknowns.add("CAPITAL_KILL_SWITCH_ACTIVATION_FAILURE")
+                    logger.error(
+                        "Canonical kill-switch activation failed",
+                        extra={"structured_data": {"error_class": type(exc).__name__}},
+                    )
+        if reason in health.critical_unknowns:
+            return
         health.kill_switch_off = False
         health.critical_unknowns.add(reason)
         HealthHandler.state = RuntimeState.CAPITAL_PROTECTED
+        # Ordinary protective transitions also trip the canonical executor.
+        if active_loop is not None and not active_loop.executor.kill_switch:
+            try:
+                active_loop.executor.activate_kill_switch(reason)
+            except Exception as exc:
+                health.critical_unknowns.add("CAPITAL_KILL_SWITCH_ACTIVATION_FAILURE")
+                logger.error(
+                    "Canonical kill-switch activation failed",
+                    extra={"structured_data": {"error_class": type(exc).__name__}},
+                )
         emit_federation_event("WATCHDOG_PROTECT", reason=reason)
         journal.append(
             event_envelope(
@@ -633,6 +680,16 @@ async def main() -> None:
                 federation=federation,
                 federation_supervisor=federation_supervisor,
             )
+            # If the event-loop deadline expired during broker bootstrap, persist
+            # the trip and kill the canonical executor before its scheduled task
+            # gets another opportunity to authorize an order.
+            if deadman.tripped and continuous_runtime.execution_loop is not None:
+                risk_guard = continuous_runtime.execution_loop.daily_risk_guard
+                if risk_guard is not None:
+                    risk_guard.trip("DEADMAN_HEARTBEAT_TIMEOUT")
+                continuous_runtime.execution_loop.executor.activate_kill_switch(
+                    "DEADMAN_HEARTBEAT_TIMEOUT"
+                )
             if continuous_runtime.execution_loop is not None:
                 balance_task = asyncio.create_task(
                     _balance_poller(
@@ -675,6 +732,26 @@ async def main() -> None:
 
     try:
         while True:
+            loop_monotonic = time.monotonic()
+            if loop_monotonic - last_heartbeat_log >= 30.0:
+                heartbeat_event_id = "RUNTIME_HEARTBEAT:" + str(int(time.time() * 1000))
+                journal.append(
+                    event_envelope(
+                        event_type="RUNTIME_HEARTBEAT",
+                        event_id=heartbeat_event_id,
+                        correlation_id="runtime-heartbeat",
+                        payload={
+                            "status": "PASS",
+                            "timeout_seconds": deadman.timeout_seconds,
+                            "capital_authority_granted": False,
+                        },
+                        source_hash=os.getenv("GITHUB_SHA", "runtime-baseline"),
+                        config_hash=config_hash,
+                    )
+                )
+                # The deadline advances only after a durable, successful journal write.
+                deadman.record_success("RUNTIME_HEARTBEAT")
+                last_heartbeat_log = time.monotonic()
             health.process_heartbeat = datetime.now(timezone.utc)
             if continuous_runtime is None:
                 # A missing runtime object is an operational failure, not an
