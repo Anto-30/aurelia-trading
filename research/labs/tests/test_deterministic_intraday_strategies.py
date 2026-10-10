@@ -74,16 +74,15 @@ class DeterministicIntradayStrategyTests(unittest.TestCase):
         rows=[b(i,100+i*.1,100.5+i*.1,99.7+i*.1,100.2+i*.1,volume=100) for i in range(12)]
         rows[-3]=b(9,101.0,101.2,100.5,100.6,volume=80)
         rows[-2]=b(10,100.6,100.7,100.0,100.2,volume=60)
-        rows[-1]=b(11,100.3,101.8,100.0,101.3,volume=55)
+        rows[-1]=b(11,100.3,101.8,100.0,101.1,volume=55)
         cfg=VWAPPullbackConfig(tick_size=.1,trend_lookback_bars=5,pullback_tolerance_bps=100,volume_contraction_bars=2,
                               allowed_regimes=("TRENDING_LOW_VOL","RANGING_LOW_VOL"))
         result=evaluate_vwap_pullback(rows,config=cfg,
             regime_config=RegimeConfig(lookback_bars=5,high_volatility_pct=10),volume_source_verified=True)
-        # Data must pass all explicitly encoded conditions before a signal is emitted.
-        if result is not None:
-            self.assertEqual(result.direction,"LONG")
-            self.assertIn("VWAP_CLOSE_RECLAIM",result.evidence_codes)
-            self.assertIn("DOWN_CANDLE_VOLUME_CONTRACTION_PROXY",result.evidence_codes)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.direction,"LONG")
+        self.assertIn("VWAP_CLOSE_RECLAIM",result.evidence_codes)
+        self.assertIn("DOWN_CANDLE_VOLUME_CONTRACTION_PROXY",result.evidence_codes)
 
     def test_orb_detects_close_confirmed_breakout(self):
         rows=[
