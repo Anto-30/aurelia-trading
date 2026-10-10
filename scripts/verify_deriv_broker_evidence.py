@@ -60,7 +60,7 @@ async def run() -> int:
         or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID")
         or ""
     )
-    expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "USD")
+    expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper()
     environment = os.getenv("DERIV_ENVIRONMENT", "real").strip().lower()
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
     source_hash = os.getenv("GITHUB_SHA", "LOCAL_UNPINNED")
@@ -69,6 +69,8 @@ async def run() -> int:
         return fail("AUTH_TOKEN_MISSING")
     if not expected_loginid:
         return fail("EXPECTED_ACCOUNT_BINDING_MISSING")
+    if not expected_currency:
+        return fail("EXPECTED_ACCOUNT_CURRENCY_MISSING")
     if environment != "real":
         return fail("REAL_ACCOUNT_REQUIRED")
     if auth_mode not in {"pat", "oauth"}:

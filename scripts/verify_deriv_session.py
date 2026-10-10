@@ -34,7 +34,7 @@ async def run() -> int:
     expected_loginid = os.getenv("DERIV_EXPECTED_LOGINID") or os.getenv(
         "DERIV_AUTHORIZED_ACCOUNT_ID", ""
     )
-    expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "USD")
+    expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip()
     expected_environment = os.getenv("DERIV_ENVIRONMENT", "real").lower()
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
     source_hash = os.getenv("GITHUB_SHA", "LOCAL_UNPINNED")
@@ -54,6 +54,10 @@ async def run() -> int:
     if not expected_loginid:
         print("DERIV_AUTH_SESSION=NOT_CONFIGURED")
         print("DERIV_AUTH_SESSION_REASON=EXPECTED_LOGINID_MISSING")
+        return 2
+    if not expected_currency:
+        print("DERIV_AUTH_SESSION=NOT_CONFIGURED")
+        print("DERIV_AUTH_SESSION_REASON=EXPECTED_CURRENCY_MISSING")
         return 2
     if expected_environment not in {"real", "demo"}:
         print("DERIV_AUTH_SESSION=BLOCKED")

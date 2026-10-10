@@ -25,7 +25,7 @@ jobs:
       DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
       DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
       DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
       DERIV_ENVIRONMENT: real
       DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
       FINAL_EXECUTION_AUTHORIZATION: "false"
@@ -45,6 +45,7 @@ jobs:
             test -n "${DERIV_APP_ID}" || { echo "DERIV_AUTH_SESSION=BLOCKED_EXTERNAL_SECRET"; exit 2; }
           fi
           test -n "${DERIV_EXPECTED_LOGINID:-${DERIV_AUTHORIZED_ACCOUNT_ID:-}}" || { echo "DERIV_AUTH_SESSION=BLOCKED_EXTERNAL_SECRET"; exit 2; }
+          test -n "${DERIV_EXPECTED_CURRENCY:-}" || { echo "DERIV_AUTH_SESSION=BLOCKED_EXPECTED_CURRENCY_MISSING"; exit 2; }
           echo "Protected Deriv configuration is present; secret values are not printed."
 
       - name: Install Python dependencies

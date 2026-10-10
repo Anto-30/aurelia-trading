@@ -84,6 +84,23 @@ if [[ -z "$mode" ]]; then
 fi
 [[ "$mode" == "pat" || "$mode" == "oauth" ]] || fail "INVALID_AUTH_MODE"
 
+# Currency must be explicitly supplied or already exist as a protected secret.
+# Never synthesize USD when the account currency binding is absent.
+currency="${DERIV_EXPECTED_CURRENCY:-}"
+if [[ -n "$currency" ]]; then
+  currency="$(printf '%s' "$currency" | tr '[:lower:]' '[:upper:]')"
+  [[ "$currency" == "USD" ]] || fail "UNEXPECTED_CURRENCY_FOR_THIS_CONFIGURATION"
+fi
+if ! has_secret "DERIV_EXPECTED_CURRENCY"; then
+  if [[ -z "$currency" ]]; then
+    if ! read -r -p "Enter the exact Deriv Options account currency (currently supported: USD): " currency </dev/tty; then
+      fail "DERIV_EXPECTED_CURRENCY_REQUIRED"
+    fi
+    currency="$(printf '%s' "$currency" | tr '[:lower:]' '[:upper:]')"
+  fi
+  [[ "$currency" == "USD" ]] || fail "UNEXPECTED_CURRENCY_FOR_THIS_CONFIGURATION"
+fi
+
 # Preserve either configured token alias. Only ask for/store a token if neither exists.
 token_name="DERIV_AUTH_TOKEN"
 if has_secret "DERIV_AUTH_TOKEN"; then
@@ -130,9 +147,11 @@ else
   set_secret_if_missing "DERIV_EXPECTED_LOGINID" "$loginid"
 fi
 
-currency="${DERIV_EXPECTED_CURRENCY:-USD}"
-[[ "$currency" == "USD" ]] || fail "UNEXPECTED_CURRENCY_FOR_THIS_CONFIGURATION"
-set_secret_if_missing "DERIV_EXPECTED_CURRENCY" "$currency"
+if has_secret "DERIV_EXPECTED_CURRENCY"; then
+  printf 'PRESERVED_EXISTING_SECRET_NAME=DERIV_EXPECTED_CURRENCY\n'
+else
+  set_secret_if_missing "DERIV_EXPECTED_CURRENCY" "$currency"
+fi
 
 # Authentication mode is configuration, not a credential. Preserve an existing variable.
 if ! has_variable "DERIV_AUTH_MODE"; then

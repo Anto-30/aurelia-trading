@@ -13,8 +13,10 @@ def test_scheduled_deriv_verifier_loads_production_environment_secrets() -> None
     assert "environment: production" in workflow
     assert "DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}" in workflow
     assert "DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}" in workflow
-    assert "DERIV_AUTH_MODE: ${{ secrets.DERIV_AUTH_MODE || 'pat' }}" in workflow
-    assert "DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}" in workflow
+    assert "DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}" in workflow
+    assert "DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}" in workflow
+    assert "DERIV_AUTH_SESSION=BLOCKED_EXPECTED_CURRENCY_MISSING" in workflow
+    assert "secrets.DERIV_EXPECTED_CURRENCY || 'USD'" not in workflow
 
 
 def test_scheduled_deriv_verifier_keeps_capital_authority_blocked() -> None:

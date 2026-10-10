@@ -3,6 +3,7 @@ import unittest
 from runtime.adapters.deriv_session import DerivSessionError
 from runtime.adapters.session_manager import (
     DerivSessionManager,
+    DerivSessionManagerError,
     derive_ws_environment,
     redact_ws_url,
 )
@@ -37,6 +38,21 @@ class SessionManagerContractTests(unittest.TestCase):
     def test_manager_accepts_exact_real_binding(self):
         manager = DerivSessionManager(expected_loginid="CRREAL", expected_environment="real")
         self.assertTrue(manager.validate_binding(loginid="CRREAL", environment="real"))
+
+    def test_account_selection_requires_explicit_expected_currency(self):
+        manager = DerivSessionManager(expected_loginid="CRREAL", expected_environment="real", expected_currency="")
+        with self.assertRaisesRegex(DerivSessionManagerError, "EXPECTED_CURRENCY_REQUIRED"):
+            manager.select_account([{"account_id": "CRREAL", "account_type": "real", "currency": "USD"}])
+
+    def test_account_selection_rejects_missing_observed_currency(self):
+        manager = DerivSessionManager(expected_loginid="CRREAL", expected_environment="real", expected_currency="USD")
+        with self.assertRaisesRegex(DerivSessionManagerError, "ACCOUNT_CURRENCY_UNVERIFIED"):
+            manager.select_account([{"account_id": "CRREAL", "account_type": "real"}])
+
+    def test_account_selection_normalizes_observed_currency(self):
+        manager = DerivSessionManager(expected_loginid="CRREAL", expected_environment="real", expected_currency="usd")
+        binding = manager.select_account([{"account_id": "CRREAL", "account_type": "real", "currency": "USD"}])
+        self.assertEqual(binding.currency, "USD")
 
     def test_manager_rejects_account_environment_mismatch(self):
         manager = DerivSessionManager(expected_loginid="CRREAL", expected_environment="real")

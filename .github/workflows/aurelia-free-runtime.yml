@@ -25,7 +25,6 @@ jobs:
       AURELIA_VERIFY_DERIV_AUTH: "false"
       AURELIA_CONTINUOUS_RUNTIME: "false"
       AURELIA_AGENT_PERFORMANCE_PATH: "/tmp/aurelia/agent-performance.json"
-      DERIV_EXPECTED_CURRENCY: "USD"
       DERIV_ENVIRONMENT: "real"
     steps:
       - uses: actions/checkout@v7
@@ -71,7 +70,7 @@ jobs:
     permissions:
       contents: read
     env:
-      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || 'USD') != '' && ((vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
+      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') != '' && ((vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
       AURELIA_VERIFY_DERIV_PUBLIC: "true"
       AURELIA_VERIFY_DERIV_AUTH: "true"
       AURELIA_RUN_ONCE: "true"
@@ -80,7 +79,7 @@ jobs:
       DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
       DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
       DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
       DERIV_ENVIRONMENT: "real"
     steps:
       - uses: actions/checkout@v7
@@ -94,7 +93,7 @@ jobs:
         run: |
           echo "DERIV_AUTH_SESSION=NOT_CONFIGURED"
           echo "::error title=DERIV_AUTH_NOT_CONFIGURED::Protected production environment is missing one or more required Deriv secrets."
-          echo "Required secret names: DERIV_AUTH_TOKEN (or DERIV_PAT), DERIV_APP_ID for PAT mode, DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID)."
+          echo "Required secret names: DERIV_AUTH_TOKEN (or DERIV_PAT), DERIV_APP_ID for PAT mode, DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID), and DERIV_EXPECTED_CURRENCY."
           echo "Configure these under Settings > Environments > production > Environment secrets; values are never printed."
           exit 2
       - name: Verify authenticated Deriv session
@@ -125,12 +124,12 @@ jobs:
     permissions:
       contents: read
     env:
-      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || 'USD') != '' && ((vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
+      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') != '' && ((vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
       DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
       DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
       DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
       DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || 'USD' }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
       DERIV_ENVIRONMENT: "real"
       DERIV_LIFECYCLE_MODE: "VERIFY_ONLY"
       DERIV_VERIFY_STAKE: "1.0"
@@ -148,7 +147,7 @@ jobs:
         run: |
           echo "DERIV_TRANSACTION_LIFECYCLE=NOT_CONFIGURED"
           echo "::error title=DERIV_LIFECYCLE_NOT_CONFIGURED::Verify-only lifecycle cannot run without protected Deriv secrets."
-          echo "Required secret names: DERIV_AUTH_TOKEN (or DERIV_PAT), DERIV_APP_ID for PAT mode, DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID)."
+          echo "Required secret names: DERIV_AUTH_TOKEN (or DERIV_PAT), DERIV_APP_ID for PAT mode, DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID), and DERIV_EXPECTED_CURRENCY."
           echo "Configure these under Settings > Environments > production > Environment secrets; values are never printed."
           exit 2
       - name: Verify authenticated Deriv transaction lifecycle without submission
