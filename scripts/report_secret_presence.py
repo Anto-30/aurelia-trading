@@ -13,6 +13,14 @@ SECRET_NAMES = (
     "DERIV_AUTH_MODE",
 )
 
+DEPLOYMENT_SECRET_NAMES = (
+    "AURELIA_HOST",
+    "AURELIA_USER",
+    "AURELIA_SSH_KEY",
+    "AURELIA_KNOWN_HOSTS",
+    "AURELIA_ATTESTATION_SIGNING_KEY",
+)
+
 
 def present(name: str) -> bool:
     return bool(os.getenv(name, "").strip())
@@ -38,6 +46,18 @@ def main() -> int:
     print(f"DERIV_AUTH_MODE_VALID={'true' if auth_mode_valid else 'false'}")
     print(f"DERIV_AUTH_MODE_EFFECTIVE={auth_mode.upper() if auth_mode_valid else 'INVALID'}")
     print(f"DERIV_AUTH_CONFIGURED={'true' if deriv_configured else 'false'}")
+
+    for name in DEPLOYMENT_SECRET_NAMES:
+        print(f"{name}_PRESENT={'true' if present(name) else 'false'}")
+    deployment_secrets_present = all(present(name) for name in DEPLOYMENT_SECRET_NAMES)
+    print(
+        "AURELIA_DEPLOYMENT_SECRET_STORE_CONFIGURED="
+        + ("true" if deployment_secrets_present else "false")
+    )
+    print(
+        "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED="
+        + ("true" if deriv_configured and deployment_secrets_present else "false")
+    )
     print("FINAL_EXECUTION_AUTHORIZATION=false")
     print("LIVE_EXECUTION=BLOCKED")
     print("CAPITAL_MOVEMENT_PERMITTED=false")
