@@ -49,7 +49,7 @@ case "${1:-} ${2:-}" in
       if [[ -f "$PROVISIONER_TEST_VARIABLE_RECORD" ]]; then
         cat "$PROVISIONER_TEST_VARIABLE_RECORD"
       fi
-    } | sort -u | sed 's/^/{"name":"/; s/$/"}/' | awk 'BEGIN { printf "[" } { if (NR > 1) printf ","; printf "%s", $0 } END { printf "]\n" }'
+    } | sort -u
     ;;
   *)
     echo "unexpected gh command" >&2
