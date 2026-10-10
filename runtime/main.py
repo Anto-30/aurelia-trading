@@ -209,6 +209,9 @@ async def _balance_poller(
     while True:
         try:
             snapshot = await adapter.get_balance()
+            if not adapter.authorized or adapter.account is None:
+                raise RuntimeError("DERIV_RUNTIME_SESSION_NOT_AUTHORIZED")
+            _write_runtime_deriv_evidence(snapshot, config_hash)
             health.capital_fresh = snapshot.is_valid()
             health.broker_session = bool(adapter.authorized and adapter.account)
             health.critical_unknowns.discard("DERIV_BALANCE_REFRESH")
@@ -459,6 +462,7 @@ async def main() -> None:
                 raise RuntimeError("DERIV_RUNTIME_ACCOUNT_BINDING_MISMATCH")
             if snapshot.currency != bootstrap.binding.currency:
                 raise RuntimeError("DERIV_RUNTIME_CURRENCY_MISMATCH")
+            _write_runtime_deriv_evidence(snapshot, config_hash)
             journal.append(
                 event_envelope(
                     event_type="AUTHENTICATED_DERIV_SESSION_VERIFIED",
@@ -542,6 +546,10 @@ async def main() -> None:
             raise RuntimeError("AUTHENTICATED_DERIV_SESSION_VERIFICATION_FAILED")
         return
 
+    readiness_task = asyncio.create_task(
+        _readiness_publisher(health, journal, config_hash),
+        name="aurelia-readiness-publisher",
+    )
     supervisor = RuntimeSupervisor(interval_seconds=5)
 
     def heartbeat() -> bool:
@@ -679,6 +687,11 @@ async def main() -> None:
                     last_runtime_state = machine.state
             await asyncio.sleep(5)
     finally:
+        readiness_task.cancel()
+        try:
+            await readiness_task
+        except asyncio.CancelledError:
+            pass
         if balance_task is not None:
             balance_task.cancel()
             try:
