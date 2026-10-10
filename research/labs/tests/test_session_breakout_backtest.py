@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from dataclasses import replace
 from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -179,6 +180,33 @@ class SessionBreakoutBacktestTests(unittest.TestCase):
     def test_cost_model_rejects_negative_costs(self):
         with self.assertRaisesRegex(ValueError, "INVALID_COST"):
             CostModel(0.25, 2.0, -0.1, 1.0, 0.0)
+
+    def test_losing_trade_streak_skips_no_trade_but_session_streak_resets(self):
+        from research.labs.session_breakout_backtest import SessionResult
+        one = backtest_session_a(make_bars(), DAY, stop_mode="OPPOSITE_RANGE_BOUNDARY")
+        self.assertIsNotNone(one.trade)
+        trade = one.trade
+        loss = replace(
+            trade,
+            exit_price_conservative=trade.entry_reference_price-trade.initial_risk_points,
+            gross_pnl_points_conservative=-trade.initial_risk_points,
+            gross_pnl_usd_per_contract_conservative=None,
+            pnl_r_known=-1.0,
+            pnl_r_conservative=-1.0,
+            net_pnl_usd_per_contract_conservative=None,
+            net_pnl_r_conservative=None,
+            exit_status="STOP",
+            ambiguous_ohlc_order=False,
+        )
+        results = [
+            SessionResult(date(2026, 10, 8), "TRADED", "fixture", None, loss),
+            SessionResult(date(2026, 10, 9), "NO_TRADE", "no signal", None, None),
+            SessionResult(date(2026, 10, 10), "TRADED", "fixture", None, loss),
+            SessionResult(date(2026, 10, 11), "TRADED", "fixture", None, loss),
+        ]
+        summary = summarize_sessions(results, variant_id="STREAK_TEST")
+        self.assertEqual(summary.longest_consecutive_losing_trades, 3)
+        self.assertEqual(summary.longest_consecutive_losing_sessions, 2)
 
     def test_daily_drawdown_includes_zero_trade_sessions(self):
         from research.labs.session_breakout_backtest import SessionResult, TradeOutcome
