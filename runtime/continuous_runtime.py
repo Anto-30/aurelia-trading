@@ -6,6 +6,7 @@ import os
 import socket
 import uuid
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 from runtime.adapters.deriv_adapter import DerivAdapter
@@ -18,6 +19,7 @@ from runtime.broker.executor import CapitalPlaneExecutor
 from runtime.core.persistent import PersistentIdempotencyStore
 from runtime.core.journal import AppendOnlyJournal
 from runtime.core.persistent import PersistentExecutionFence, PersistentLedger
+from runtime.core.daily_risk import PersistentDailyRiskGuard, derive_utc_day_start_balance
 from runtime.core.reconcile import Reconciler
 from runtime.core.runtime_config import load_config_hash
 from runtime.core.secrets import get_optional_secret
@@ -161,10 +163,17 @@ async def start_continuous_runtime(
             correlation_id="deriv-app-id", priority=95, requires_response=True)
         return runtime
 
+    expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper()
+    if not expected_currency:
+        await federation.publish(sender="AURELIA", recipients=agents, message_type="BLOCKER",
+            payload={"reason": "DERIV_EXPECTED_CURRENCY_MISSING", "capital_authority": False},
+            correlation_id="deriv-currency", priority=95, requires_response=True)
+        return runtime
+
     manager = DerivSessionManager(
         expected_loginid=loginid,
         expected_environment=os.getenv("DERIV_ENVIRONMENT", "real"),
-        expected_currency=os.getenv("DERIV_EXPECTED_CURRENCY", "USD"),
+        expected_currency=expected_currency,
     )
     bootstrap = manager.bootstrap(bearer_token=token, app_id=app_id or None)
     adapter = DerivAdapter(
@@ -176,6 +185,42 @@ async def start_continuous_runtime(
     )
     account = await adapter.connect()
     capital = await adapter.get_balance()
+
+    # Capture today's risk baseline from the authenticated broker statement.
+    # Incomplete, truncated or inconsistent statement data blocks startup.
+    observed_at = datetime.now(timezone.utc)
+    day_start = datetime(observed_at.year, observed_at.month, observed_at.day, tzinfo=timezone.utc)
+    statement = await adapter.statement(
+        limit=999,
+        date_from=int(day_start.timestamp()),
+        date_to=int(observed_at.timestamp()),
+    )
+    capital = await adapter.get_balance()
+    if capital.account != account or capital.currency != account.currency or not capital.is_valid():
+        raise RuntimeError("DAILY_RISK_BROKER_CAPITAL_UNVERIFIED")
+    reference_balance, baseline_source = derive_utc_day_start_balance(
+        current_balance=capital.balance,
+        transactions=statement,
+        day_start_epoch=int(day_start.timestamp()),
+        day_end_epoch=int(observed_at.timestamp()),
+        currency=account.currency,
+        maximum_transactions=999,
+    )
+    daily_risk_guard = PersistentDailyRiskGuard(
+        os.getenv("AURELIA_DAILY_RISK_PATH", "/var/lib/aurelia/daily-risk.json"),
+        max_daily_drawdown_pct=float(os.getenv("AURELIA_MAX_DAILY_DRAWDOWN_PCT", "0.03")),
+        max_consecutive_losses=int(os.getenv("AURELIA_MAX_CONSECUTIVE_LOSSES", "3")),
+        max_balance_age_seconds=float(os.getenv("AURELIA_MAX_BALANCE_AGE_SECONDS", "15")),
+    )
+    daily_risk_guard.initialize_day(
+        account_loginid=account.loginid,
+        currency=account.currency,
+        utc_day=observed_at.date().isoformat(),
+        reference_balance=reference_balance,
+        baseline_source=baseline_source,
+        now=observed_at,
+    )
+
     machine.transition(__import__("runtime.core.models", fromlist=["RuntimeState"]).RuntimeState.BROKER_CONNECTING)
     machine.transition(__import__("runtime.core.models", fromlist=["RuntimeState"]).RuntimeState.BROKER_VERIFIED)
 
@@ -187,6 +232,8 @@ async def start_continuous_runtime(
         adapter, journal=journal, ledger=ledger, idempotency=idempotency, fence=fence,
         state=machine, reconciler=Reconciler(), source_hash=source_hash,
         config_hash=config_hash, live_lock_path=ROOT / "config" / "LIVE_LOCK.yaml",
+        daily_risk_guard=daily_risk_guard,
+        max_trade_risk_pct=float(os.getenv("AURELIA_MAX_TRADE_RISK_PCT", "0.01")),
     )
     symbols_raw = os.getenv("AURELIA_SYMBOLS", "")
     symbols = tuple(x.strip() for x in symbols_raw.split(",") if x.strip())
@@ -207,6 +254,7 @@ async def start_continuous_runtime(
         adapter=adapter, executor=executor, decision_provider=FederatedDecisionProvider(federation),
         runtime_config_hash=config_hash, symbols=symbols,
         lifecycle_timeout_seconds=float(os.getenv("AURELIA_LIFECYCLE_TIMEOUT_SECONDS", "600")),
+        daily_risk_guard=daily_risk_guard,
     )
     runtime.adapter = adapter
     runtime.execution_task = asyncio.create_task(runtime.execution_loop.run(), name="aurelia-autonomous-execution-loop")

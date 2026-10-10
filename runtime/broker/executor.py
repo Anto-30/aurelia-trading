@@ -63,6 +63,8 @@ class CapitalPlaneExecutor:
         source_hash: str,
         config_hash: str,
         live_lock_path: Path | str = "config/LIVE_LOCK.yaml",
+        daily_risk_guard=None,
+        max_trade_risk_pct: float = 0.01,
     ):
         self.broker = broker
         self.journal = journal
@@ -74,6 +76,10 @@ class CapitalPlaneExecutor:
         self.source_hash = source_hash
         self.config_hash = config_hash
         self.live_lock_path = Path(live_lock_path)
+        if not 0 < float(max_trade_risk_pct) <= 0.02:
+            raise ValueError("MAX_TRADE_RISK_PCT_MUST_BE_IN_(0,0.02]")
+        self.max_trade_risk_pct = float(max_trade_risk_pct)
+        self.daily_risk_guard = daily_risk_guard
         self.kill_switch = True
         self._kill_switch_activated_at = utc_now()
         self._execution_lock = asyncio.Lock()
@@ -361,12 +367,35 @@ class CapitalPlaneExecutor:
                 {"intent_id": intent.intent_id, "reasons": ("BROKER_ACCOUNT_IDENTITY_CHANGED",)},
             )
             return ExecutionOutcome(False, "BLOCKED", ("BROKER_ACCOUNT_IDENTITY_CHANGED",), intent.intent_id)
+        # A purchased Deriv contract's stake is its contractual maximum loss.
+        permitted_loss = fresh_balance.balance * self.max_trade_risk_pct
+        if intent.stake > permitted_loss + 1e-12:
+            self._log("PRE_SUBMISSION_BLOCKED", {
+                "intent_id": intent.intent_id,
+                "reasons": ("TRADE_RISK_BUDGET_EXCEEDED",),
+                "balance": fresh_balance.balance,
+                "stake": intent.stake,
+                "max_trade_risk_pct": self.max_trade_risk_pct,
+            })
+            return ExecutionOutcome(False, "BLOCKED", ("TRADE_RISK_BUDGET_EXCEEDED",), intent.intent_id)
         if fresh_balance.available_balance < intent.stake:
             self._log(
                 "PRE_SUBMISSION_BLOCKED",
                 {"intent_id": intent.intent_id, "reasons": ("STAKE_NO_LONGER_AFFORDABLE",)},
             )
             return ExecutionOutcome(False, "BLOCKED", ("STAKE_NO_LONGER_AFFORDABLE",), intent.intent_id)
+        if self.daily_risk_guard is not None:
+            risk = self.daily_risk_guard.permit(
+                account_loginid=fresh_balance.account.loginid,
+                currency=fresh_balance.currency,
+                current_balance=fresh_balance.balance,
+                captured_at=fresh_balance.captured_at,
+            )
+            if not risk.get("allowed"):
+                reason = str(risk.get("reason") or "DAILY_RISK_DENIED")
+                self._log("DAILY_RISK_BLOCKED", {"intent_id": intent.intent_id, "reason": reason})
+                self.activate_kill_switch(reason)
+                return ExecutionOutcome(False, "BLOCKED", (reason,), intent.intent_id)
         if not self.circuit_breaker.permit():
             self._log(
                 "PRE_SUBMISSION_BLOCKED",
@@ -458,6 +487,8 @@ class CapitalPlaneExecutor:
             )
         except Exception as exc:
             self.idempotency.record_unknown_outcome(intent.intent_id)
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.trip("BROKER_SUBMISSION_OUTCOME_UNKNOWN")
             try:
                 self.state.transition(RuntimeState.RECOVERY)
             except ValueError:
@@ -479,6 +510,8 @@ class CapitalPlaneExecutor:
         if result.outcome == BrokerOutcome.UNKNOWN:
             self.circuit_breaker.record_broker_failure()
             self.idempotency.record_unknown_outcome(intent.intent_id)
+            if self.daily_risk_guard is not None:
+                self.daily_risk_guard.trip("BROKER_OUTCOME_UNKNOWN")
             try:
                 self.state.transition(RuntimeState.RECOVERY)
             except ValueError:

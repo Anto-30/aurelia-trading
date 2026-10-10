@@ -410,12 +410,30 @@ class DerivAdapter:
         *,
         limit: int = 100,
         action_type: str | None = None,
+        date_from: int | None = None,
+        date_to: int | None = None,
+        offset: int = 0,
     ) -> list[dict[str, Any]]:
-        payload: dict[str, Any] = {"statement": 1, "limit": limit}
+        if isinstance(limit, bool) or not 1 <= int(limit) <= 999:
+            raise ValueError("DERIV_STATEMENT_LIMIT_INVALID")
+        if isinstance(offset, bool) or int(offset) < 0:
+            raise ValueError("DERIV_STATEMENT_OFFSET_INVALID")
+        if date_from is not None and (isinstance(date_from, bool) or int(date_from) < 0):
+            raise ValueError("DERIV_STATEMENT_DATE_FROM_INVALID")
+        if date_to is not None and (isinstance(date_to, bool) or int(date_to) < 0):
+            raise ValueError("DERIV_STATEMENT_DATE_TO_INVALID")
+        if date_from is not None and date_to is not None and int(date_to) < int(date_from):
+            raise ValueError("DERIV_STATEMENT_DATE_WINDOW_INVALID")
+        payload: dict[str, Any] = {"statement": 1, "limit": int(limit), "offset": int(offset)}
         if action_type:
             payload["action_type"] = action_type
+        if date_from is not None:
+            payload["date_from"] = int(date_from)
+        if date_to is not None:
+            payload["date_to"] = int(date_to)
         reply = await self.request(payload)
-        return list(reply.get("statement", {}).get("transactions") or [])
+        statement = reply.get("statement") or {}
+        return list(statement.get("transactions") or [])
 
     async def close(self) -> None:
         if self.transport is not None:
