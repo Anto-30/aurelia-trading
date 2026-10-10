@@ -88,6 +88,7 @@ AURELIA_DEPLOYMENT_MODE=VERIFY_ONLY
 AURELIA_PERSISTENT_WORKER_HEALTHY=true
 AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json
 AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json
+AURELIA_RUNTIME_ID=aurelia-production-worker
 AURELIA_ATTESTATION_DIR=/tmp/aurelia/attestations
 AURELIA_JOURNAL_PATH=/tmp/aurelia/aurelia-events.ndjson
 AURELIA_FEDERATION_JOURNAL_PATH=/tmp/aurelia/federation-events.ndjson
@@ -99,6 +100,9 @@ AURELIA_EXECUTION_JOURNAL_PATH=/tmp/aurelia/execution-events.ndjson
 EOF
   sudo chmod 600 "$ENV_FILE"
 fi
+
+RUNTIME_ID="$(sed -n 's/^AURELIA_RUNTIME_ID=//p' "$ENV_FILE" | tail -n 1)"
+RUNTIME_ID="${RUNTIME_ID:-aurelia-production-worker}"
 
 AUTH_CONFIGURED=false
 if grep -Eq "^(DERIV_AUTH_TOKEN|DERIV_PAT)=.+$" "$ENV_FILE" \
@@ -144,6 +148,10 @@ if [ "$DEPLOYMENT_MODE" = "LIVE" ] && [ "$AUTH_CONFIGURED" != "true" ]; then
 fi
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
+  grep -Eq "^AURELIA_ATTESTATION_SIGNING_KEY=.+$" "$ENV_FILE" || {
+    echo "AURELIA_HOST_BLOCKED=READINESS_ATTESTATION_SIGNING_KEY_MISSING"
+    exit 2
+  }
   AUTONOMOUS_LOOP=true
   VERIFY_DERIV_AUTH=true
   VERIFY_DERIV_PUBLIC=true
@@ -191,6 +199,7 @@ sudo docker run --detach \
   --env AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json \
   --env AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json \
   --env AURELIA_ATTESTATION_DIR=/tmp/aurelia/attestations \
+  --env AURELIA_RUNTIME_ID="$RUNTIME_ID" \
   --env FINAL_EXECUTION_AUTHORIZATION="$FINAL_AUTH" \
   --env LIVE_EXECUTION="$LIVE_EXECUTION" \
   --env GITHUB_SHA="$SHA" \
