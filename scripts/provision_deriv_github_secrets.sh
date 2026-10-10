@@ -112,10 +112,16 @@ currency="${DERIV_EXPECTED_CURRENCY:-USD}"
 [[ "$currency" == "USD" ]] || fail "UNEXPECTED_CURRENCY_FOR_THIS_CONFIGURATION"
 set_secret_if_missing "DERIV_EXPECTED_CURRENCY" "$currency"
 
-# Authentication mode is configuration, not a credential. Store it as an environment variable.
-printf '%s' "$mode" | gh variable set DERIV_AUTH_MODE --env "$environment" --repo "$repo" >/dev/null \
-  || fail "GITHUB_VARIABLE_WRITE_FAILED_DERIV_AUTH_MODE"
-printf 'CONFIGURED_VARIABLE_NAME=%s\n' "DERIV_AUTH_MODE"
+# Authentication mode is configuration, not a credential. Preserve an existing variable.
+variables="$(gh variable list --env "$environment" --repo "$repo" --json name --jq '.[].name' 2>/dev/null)" \
+  || fail "GITHUB_VARIABLE_LIST_FAILED"
+if ! printf '%s\n' "$variables" | grep -Fxq "DERIV_AUTH_MODE"; then
+  printf '%s' "$mode" | gh variable set DERIV_AUTH_MODE --env "$environment" --repo "$repo" >/dev/null \
+    || fail "GITHUB_VARIABLE_WRITE_FAILED_DERIV_AUTH_MODE"
+  printf 'CONFIGURED_VARIABLE_NAME=%s\n' "DERIV_AUTH_MODE"
+else
+  printf 'PRESERVED_EXISTING_VARIABLE_NAME=%s\n' "DERIV_AUTH_MODE"
+fi
 
 # Verify presence of either supported token and account aliases, plus currency/mode.
 names="$(gh secret list --env "$environment" --repo "$repo" --json name --jq '.[].name' 2>/dev/null)" \
