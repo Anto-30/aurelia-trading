@@ -267,7 +267,48 @@ class CapitalExecutorHardeningTests(unittest.IsolatedAsyncioTestCase):
             self.assertIn("TRADE_RISK_BUDGET_EXCEEDED", outcome.reasons)
             self.assertEqual(broker.calls, 0)
 
+    async def test_balance_at_or_below_1_50_kills_and_never_submits(self):
+        class LowBalanceBroker(FakeBroker):
+            def __init__(self, balance_value, available_value):
+                super().__init__()
+                self.balance_value = balance_value
+                self.available_value = available_value
+
+            async def get_balance(self):
+                return CapitalSnapshot(
+                    balance=self.balance_value,
+                    currency="USD",
+                    available_balance=self.available_value,
+                    captured_at=datetime.now(UTC),
+                    source="test:low-balance",
+                    account=account(),
+                )
+
+        for balance_value, available_value in ((1.50, 1.50), (2.00, 1.50), (1.50, 2.00)):
+            with self.subTest(balance=balance_value, available=available_value):
+                with tempfile.TemporaryDirectory() as td:
+                    lock = Path(td) / "LIVE_LOCK.yaml"
+                    self.write_live_release(lock)
+                    broker = LowBalanceBroker(balance_value, available_value)
+                    executor = make_executor(lock, broker)
+                    executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
+                    auth = context()  # Stale/higher authorization must not override broker truth.
+                    self.assertTrue(executor.clear_kill_switch_with_fresh_authorization(auth))
+
+                    intent = build_intent(auth, proposal_id="P-LOW-BALANCE", mode="LIVE")
+                    token = executor.fence.acquire("test")
+                    outcome = await executor.execute(intent, auth, token)
+
+                    self.assertFalse(outcome.allowed)
+                    self.assertEqual(outcome.status, "BLOCKED")
+                    self.assertIn("BALANCE_AT_OR_BELOW_MINIMUM_CAPITAL", outcome.reasons)
+                    self.assertTrue(executor.kill_switch)
+                    self.assertEqual(broker.calls, 0)
+                    self.assertIn("BALANCE_AT_OR_BELOW_MINIMUM_CAPITAL",
+                                  (Path(td) / "events.ndjson").read_text())
+
     async def test_duplicate_concurrent_intent_has_one_broker_effect(self):
+
         with tempfile.TemporaryDirectory() as td:
             lock = Path(td) / "LIVE_LOCK.yaml"
             self.write_live_release(lock)
