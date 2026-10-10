@@ -8,7 +8,7 @@
 
 ## 1. Decision and scope
 
-This document turns four session/multitimeframe ideas into pre-registered, separable hypotheses. It does not assert profitability. No real backtest results are published because the inspected repository does not contain historical Nasdaq futures OHLCV data, and no licensed source or authenticated production feed is connected to this research run.
+This document turns four session/multitimeframe ideas into separable hypotheses. The initial A/B specifications and signal primitives were committed before the historical pilot was calculated. The repository itself contains no stored historical Nasdaq futures dataset. A subsequent exploratory pilot used temporary third-party MNQ 5-minute aggregates retrieved on 2026-10-10; the data were not persisted or cryptographically hash-pinned, full broker costs are absent, and parts of 2026 are missing. Preliminary results are documented in [the pilot report](../reports/research/US_SESSION_BREAKOUT_PILOT_2026-10-10.md). These results do not establish profitability or qualification.
 
 Two signal-construction primitives have been added in research/labs/session_breakout_candidates.py. They emit research-only candidates and reference price levels. They are not a complete backtester, an execution adapter, or a strategy registry. A next-bar open or next tick bid/ask used by these primitives is an explicit reference-price convention, not proof of a broker fill.
 
@@ -23,7 +23,7 @@ Two signal-construction primitives have been added in research/labs/session_brea
 - Evidence controls include assurance/research_quality.py, runtime/validation/walk_forward.py and research/ml/schema.py. Future-dated features are rejected by the ML evidence contract.
 - Current strategy lifecycle is defined in runtime/strategy/governance.py: EXPERIMENTAL -> REPLAYABLE -> VALIDATED -> CALIBRATED -> SHADOW -> CANARY -> PRODUCTION; SUSPENDED is a terminal/hold state for promotion. The code in that module requires evidence identifiers and an approver but does not itself inspect the semantic validity of every evidence artifact. The wider certification and capital-release controls remain required.
 - runtime/strategy/__init__.py explicitly says strategy governance lives there, not strategy implementations. This inspection did not find a single central registry file containing all names mentioned by the owner (S7, S6, S3, CRT and MICRO_SCALP_R100_TICK_MOM). This change intentionally does not create a replacement registry or overwrite those strategies. A local/runtime inventory is still needed before any integration.
-- The tracked data/runtime files are readiness/access-state snapshots, not OHLCV price history. No historical CME Nasdaq futures bars were found in the inspected main tree.
+- The tracked data/runtime files are readiness/access-state snapshots, not OHLCV price history. No historical CME Nasdaq futures bars were found in the inspected main tree. Temporary research access later retrieved 121,835 unique MNQ 5-minute aggregate rows across seven quarterly contracts; this was not committed, source hashes were not preserved, and April–July 2026 is missing. That dataset supports only the explicitly preliminary diagnostic report, not a sealed qualification evidence set.
 
 Historical readiness snapshots are not current broker evidence. The newest verified CI runs can be used to establish that tests executed, not to substitute for market, broker, deployment, or strategy qualification evidence.
 
@@ -176,10 +176,10 @@ Regression tests must cover both DST transitions, timestamp awareness, exact ran
 | Existing research/test/validation architecture inspected | PASS | paths listed in Section 2 |
 | Candidate A/B initial research primitives and tests authored | IMPLEMENTED_ON_RESEARCH_BRANCH | research/labs/session_breakout_candidates.py and research/labs/tests/test_session_breakout_candidates.py; still requires CI execution and review |
 | A/B unambiguous versioned specs | SPECIFIED | Sections 4-5 |
-| Candidate C/D hypotheses | SPECIFIED_NOT_IMPLEMENTED | Sections 6-7 |
-| Authorized CME historical data source and exact contract | BLOCKED | No source/entitlement/configuration established |
-| Historical Nasdaq OHLCV data available in repo | NOT_FOUND | Inspected recursive main tree; no such dataset found |
-| Valid net backtests and OOS results A-D | NOT_TESTED | Need data, cost inputs, frozen manifests and runnable evaluation harness |
+| Candidate C/D hypotheses | SPECIFIED_NOT_IMPLEMENTED / NOT_TESTED | Sections 6-7; no result metrics claimed |
+| Authorized CME historical data source and exact contract | PARTIAL / BLOCKED FOR QUALIFICATION | A connected Massive endpoint returned MNQ 5-minute futures aggregates; licensed reuse entitlement is unverified, the raw data were not persisted/hash-pinned, and the timeline has a major gap |
+| Historical Nasdaq OHLCV data available in repo | NOT_FOUND IN REPO; TEMPORARY EXTERNAL DATA RETRIEVED | 121,835 unique rows from seven MNQ quarterly contracts were queried into an ephemeral workspace; source hash and complete continuity not established |
+| A/B historical aggregate-bar pilot | PRELIMINARY DIAGNOSTIC; NOT QUALIFIED | Reported in reports/research/US_SESSION_BREAKOUT_PILOT_2026-10-10.md. Variants were compared across 242 sessions in 2025, 52 Q1 2026 dates and a disconnected 38-session Aug/Sep slice. No sealed OOS, reliable confidence estimates, full costs, or tick-level execution proof |
 | R_100 candidate compatible with US session logic | NOT_ESTABLISHED | Requires separate R_100-specific hypothesis/validation; no transferred stats |
 | Mapping of named existing strategies to current runtime registry | BLOCKED | No central registry containing all owner-named IDs found in inspected tree; local/runtime inventory needed before integration |
 | Strategy lifecycle/governance | INSPECTED | runtime/strategy/governance.py has stricter existing stage names |
