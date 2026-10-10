@@ -24,7 +24,7 @@ case "${1:-} ${2:-}" in
     exit 0
     ;;
   "api repos/Anto-30/aurelia-trading/environments/production/variables/DERIV_AUTH_MODE")
-    printf '%s\\n' "${PROVISIONER_TEST_EXISTING_VARIABLE_VALUE:-pat}"
+    printf '%s\n' "${PROVISIONER_TEST_EXISTING_VARIABLE_VALUE:-pat}"
     ;;
   "secret set")
     name="${3:?secret name missing}"
