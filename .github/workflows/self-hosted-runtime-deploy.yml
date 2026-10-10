@@ -26,10 +26,6 @@ jobs:
     timeout-minutes: 20
     env:
       DEPLOYMENT_MODE: ${{ inputs.deployment_mode }}
-      AURELIA_HOST: ${{ secrets.AURELIA_HOST }}
-      AURELIA_USER: ${{ secrets.AURELIA_USER }}
-      AURELIA_SSH_KEY: ${{ secrets.AURELIA_SSH_KEY }}
-      AURELIA_KNOWN_HOSTS: ${{ secrets.AURELIA_KNOWN_HOSTS }}
 
     steps:
       - name: Checkout exact AURELIA source
@@ -64,8 +60,113 @@ jobs:
           echo "SOURCE_COMMIT=$GITHUB_SHA"
           echo "DEPLOYMENT_MODE=$DEPLOYMENT_MODE"
 
+      - name: Require explicit Deriv account bindings for LIVE verification
+        if: inputs.deployment_mode == 'LIVE'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: real
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$DERIV_AUTH_TOKEN" || { echo "LIVE_GATE_BLOCKED=DERIV_AUTH_TOKEN_MISSING"; exit 2; }
+          test -n "$DERIV_EXPECTED_LOGINID" || { echo "LIVE_GATE_BLOCKED=DERIV_ACCOUNT_BINDING_MISSING"; exit 2; }
+          test -n "$DERIV_EXPECTED_CURRENCY" || { echo "LIVE_GATE_BLOCKED=DERIV_EXPECTED_CURRENCY_MISSING"; exit 2; }
+          test -n "$DERIV_AUTH_MODE" || { echo "LIVE_GATE_BLOCKED=DERIV_AUTH_MODE_MISSING"; exit 2; }
+          test "$DERIV_ENVIRONMENT" = "real"
+          case "${DERIV_AUTH_MODE,,}" in
+            pat) test -n "$DERIV_APP_ID" || { echo "LIVE_GATE_BLOCKED=DERIV_APP_ID_MISSING"; exit 2; } ;;
+            oauth) ;;
+            *) echo "LIVE_GATE_BLOCKED=DERIV_AUTH_MODE_INVALID"; exit 2 ;;
+          esac
+
+      - name: Install dependencies for fresh read-only broker evidence
+        if: inputs.deployment_mode == 'LIVE'
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install runtime dependencies for live gate evidence
+        if: inputs.deployment_mode == 'LIVE'
+        run: pip install -r requirements.txt
+
+      - name: Generate fresh authenticated real-account evidence without submitting orders
+        if: inputs.deployment_mode == 'LIVE'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_PAT: ${{ secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: real
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
+          DERIV_LIFECYCLE_MODE: VERIFY_ONLY
+          DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
+          DERIV_BROKER_EVIDENCE_OUT: artifacts/deriv_broker_account_evidence.json
+          AURELIA_VERIFY_DERIV_PUBLIC: "true"
+          AURELIA_VERIFY_DERIV_AUTH: "true"
+          AURELIA_RUN_ONCE: "true"
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          python scripts/verify_deriv_session.py
+          python scripts/verify_deriv_transaction_lifecycle.py
+          python scripts/verify_deriv_broker_evidence.py
+          jq -e '.orders_submitted == 0 and .capital_authority_granted == false and .order_submission_permitted == false' artifacts/deriv_authenticated_session.json >/dev/null
+          jq -e '.orders_submitted == 0 and .capital_authority_granted == false and .order_submission_permitted == false and .verification_scope == "REAL_DERIV_LIFECYCLE_VERIFY_ONLY"' artifacts/deriv_transaction_lifecycle.json >/dev/null
+          jq -e '.orders_submitted == 0 and .capital_authority_granted == false and .order_submission_permitted == false and .verification_scope == "REAL_DERIV_BROKER_ACCOUNT_READ_ONLY"' artifacts/deriv_broker_account_evidence.json >/dev/null
+
+      - name: Refresh readiness from current evidence; remain fail-closed on any blocker
+        if: inputs.deployment_mode == 'LIVE'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_PAT: ${{ secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: real
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          AURELIA_RUNTIME_ID: ${{ vars.AURELIA_RUNTIME_ID || 'aurelia-production-worker' }}
+          AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
+          AURELIA_ATTESTATION_DIR: artifacts/attestations
+          AURELIA_VERIFY_DERIV_PUBLIC: "true"
+          AURELIA_VERIFY_DERIV_AUTH: "true"
+          AURELIA_RUN_ONCE: "true"
+        shell: bash
+        run: |
+          set +e
+          python -m runtime.ops.readiness_orchestrator
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            echo "LIVE_GATE_BLOCKED=READINESS_HAS_UNRESOLVED_GATES"
+            exit 2
+          fi
+
       - name: Require deterministic live release gate for LIVE deployment
         if: inputs.deployment_mode == 'LIVE'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_PAT: ${{ secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: real
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          AURELIA_RUNTIME_ID: ${{ vars.AURELIA_RUNTIME_ID || 'aurelia-production-worker' }}
+          AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
+          AURELIA_ATTESTATION_DIR: artifacts/attestations
+          AURELIA_VERIFY_DERIV_PUBLIC: "true"
+          AURELIA_VERIFY_DERIV_AUTH: "true"
+          AURELIA_RUN_ONCE: "true"
         shell: bash
         run: |
           set -euo pipefail
@@ -98,6 +199,11 @@ jobs:
           PY
 
       - name: Require self-host transport secrets
+        env:
+          AURELIA_HOST: ${{ secrets.AURELIA_HOST }}
+          AURELIA_USER: ${{ secrets.AURELIA_USER }}
+          AURELIA_SSH_KEY: ${{ secrets.AURELIA_SSH_KEY }}
+          AURELIA_KNOWN_HOSTS: ${{ secrets.AURELIA_KNOWN_HOSTS }}
         shell: bash
         run: |
           set -euo pipefail
@@ -106,6 +212,11 @@ jobs:
           done
 
       - name: Configure strict SSH
+        env:
+          AURELIA_HOST: ${{ secrets.AURELIA_HOST }}
+          AURELIA_USER: ${{ secrets.AURELIA_USER }}
+          AURELIA_SSH_KEY: ${{ secrets.AURELIA_SSH_KEY }}
+          AURELIA_KNOWN_HOSTS: ${{ secrets.AURELIA_KNOWN_HOSTS }}
         shell: bash
         run: |
           set -euo pipefail

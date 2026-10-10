@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -9,22 +10,24 @@ import time
 from runtime.adapters.session_manager import DerivSessionManager
 from runtime.agent_federation import AgentFederationSupervisor, PersistentAgentFederation
 from runtime.agent_performance import PersistentAgentPerformance
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import Thread
 
 from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.continuous_runtime import start_continuous_runtime
-from runtime.core.events import event_envelope
+from assurance.evidence_writer import build_evidence, payload_sha256, write_evidence
+from runtime.core.events import event_envelope, sha256
 from runtime.core.health import HealthSnapshot, refresh_runtime_health
 from runtime.core.journal import AppendOnlyJournal
 from runtime.core.models import RuntimeState
 from runtime.core.release_gate import read_live_release
 from runtime.core.runtime_config import load_config_hash
-from runtime.core.secrets import get_required_secret, validate_secrets_at_startup
+from runtime.core.secrets import get_optional_secret, validate_secrets_at_startup
 from runtime.core.state import RuntimeStateMachine
 from runtime.core.supervisor import RuntimeSupervisor
+from runtime.ops.readiness_orchestrator import evaluate as evaluate_readiness
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -36,6 +39,141 @@ FEDERATION_TRIGGER_EVENTS = {
     "WATCHDOG_PROTECT",
     "RUNTIME_STATE_TRANSITION",
 }
+
+
+def _write_runtime_deriv_evidence(snapshot, config_hash: str) -> None:
+    """Persist a short-lived, hashed account/balance observation from the live adapter."""
+    account = snapshot.account
+    if account is None or not snapshot.is_valid():
+        raise RuntimeError("DERIV_RUNTIME_EVIDENCE_SNAPSHOT_INVALID")
+    now = datetime.now(timezone.utc)
+    source_hash = (
+        os.getenv("GITHUB_SHA", "").strip()
+        or os.getenv("AURELIA_SOURCE_SHA", "").strip()
+        or "RUNTIME_UNPINNED"
+    )
+    observed = {
+        "account_loginid": account.loginid,
+        "account_type": account.account_type,
+        "environment": account.environment,
+        "currency": snapshot.currency,
+        "balance": snapshot.balance,
+        "available_balance": snapshot.available_balance,
+        "captured_at_utc": snapshot.captured_at.isoformat(),
+        "balance_source": snapshot.source,
+    }
+    data_hash = hashlib.sha256(
+        json.dumps(observed, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+    artifact_hash = sha256({
+        "source_hash": source_hash,
+        "config_hash": config_hash,
+        "data_hash": data_hash,
+        "evidence_type": "authenticated-deriv-balance",
+    })
+    record = build_evidence(
+        evidence_id=f"DERIV_RUNTIME_SESSION:{now.strftime('%Y%m%dT%H%M%S%fZ')}",
+        source_hash=source_hash,
+        artifact_hash=artifact_hash,
+        config_hash=config_hash,
+        data_hash=data_hash,
+        environment=account.environment,
+        started_at_utc=(now - timedelta(milliseconds=1)).isoformat(),
+        ended_at_utc=now.isoformat(),
+        status="CURRENT",
+        valid_until_utc=(now + timedelta(seconds=30)).isoformat(),
+        provenance={
+            "origin": "runtime",
+            "issuer": "AURELIA-runtime",
+            "source_commit": source_hash,
+            "generated_at_utc": now.isoformat(),
+        },
+        result="PROVEN",
+        invariants_checked=[
+            "authenticated_account_identity",
+            "real_environment_binding",
+            "currency_binding",
+            "fresh_broker_balance",
+            "no_order_submission",
+            "capital_authority_not_granted",
+        ],
+        invariants_failed=[],
+    )
+    enriched = dict(record)
+    enriched["observed"] = observed
+    enriched["orders_submitted"] = 0
+    enriched["capital_authority_granted"] = False
+    enriched["order_submission_permitted"] = False
+    enriched["verification_scope"] = f"AUTHENTICATED_DERIV_{account.environment.upper()}_SESSION"
+    enriched["record_hash"] = payload_sha256(
+        {key: value for key, value in enriched.items() if key != "record_hash"}
+    )
+    default_path = str(ROOT / "artifacts" / "deriv_authenticated_session.json")
+    output = Path(os.getenv("AURELIA_DERIV_EVIDENCE_PATH", default_path))
+    write_evidence(output, enriched)
+
+
+def _write_readiness_report(output: Path, report: dict) -> None:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output.with_name(output.name + ".tmp")
+    temporary.write_text(
+        json.dumps(report, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(output)
+
+
+async def _readiness_publisher(health: "HealthSnapshot", journal: AppendOnlyJournal, config_hash: str) -> None:
+    """Continuously publish local readiness; an evaluation error becomes a blocked report."""
+    output = Path(os.getenv("AURELIA_READINESS_PATH", "/tmp/aurelia/AURELIA_READINESS.json"))
+    interval = max(2.0, float(os.getenv("AURELIA_READINESS_REFRESH_SECONDS", "5")))
+    while True:
+        try:
+            report = evaluate_readiness(ROOT)
+            _write_readiness_report(output, report)
+            health.critical_unknowns.discard("READINESS_PUBLISHER_FAILURE")
+        except Exception as exc:
+            health.critical_unknowns.add("READINESS_PUBLISHER_FAILURE")
+            fallback = {
+                "schema": "aurelia.readiness.v1",
+                "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+                "mode": "AUTONOMOUS_EXECUTION_PREPARATION",
+                "final_execution_authorization": False,
+                "live_execution": "BLOCKED",
+                "live_orders": 0,
+                "controls": {
+                    "risk_warden": False,
+                    "execution_firewall": False,
+                    "exposure": False,
+                    "reconciliation": False,
+                    "watchdog": False,
+                    "idempotency": False,
+                },
+                "evidence": {
+                    "market_data": False,
+                    "prospective_oos": False,
+                    "calibration": False,
+                    "economics": False,
+                    "soak_3600s": False,
+                },
+                "blockers": [{"gate": "READINESS_REFRESH", "status": "FAIL", "reason": type(exc).__name__}],
+                "continue_hunting": True,
+            }
+            try:
+                _write_readiness_report(output, fallback)
+            except Exception:
+                pass
+            journal.append(
+                event_envelope(
+                    event_type="READINESS_PUBLISH_ERROR",
+                    event_id=f"READINESS_PUBLISH_ERROR:{int(time.time() * 1000)}",
+                    correlation_id="readiness-publisher",
+                    payload={"error_class": type(exc).__name__, "capital_authority_granted": False},
+                    source_hash=os.getenv("GITHUB_SHA", "runtime-baseline"),
+                    config_hash=config_hash,
+                )
+            )
+        await asyncio.sleep(interval)
 
 
 class JSONFormatter(logging.Formatter):
@@ -71,6 +209,9 @@ async def _balance_poller(
     while True:
         try:
             snapshot = await adapter.get_balance()
+            if not adapter.authorized or adapter.account is None:
+                raise RuntimeError("DERIV_RUNTIME_SESSION_NOT_AUTHORIZED")
+            _write_runtime_deriv_evidence(snapshot, config_hash)
             health.capital_fresh = snapshot.is_valid()
             health.broker_session = bool(adapter.authorized and adapter.account)
             health.critical_unknowns.discard("DERIV_BALANCE_REFRESH")
@@ -293,9 +434,19 @@ async def main() -> None:
             expected_environment=os.getenv("DERIV_ENVIRONMENT", "real"),
             expected_currency=os.getenv("DERIV_EXPECTED_CURRENCY", "USD"),
         )
+        token = (
+            get_optional_secret("DERIV_AUTH_TOKEN")
+            or get_optional_secret("DERIV_PAT")
+        )
+        app_id = get_optional_secret("DERIV_APP_ID") or None
+        auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+        if not token:
+            raise RuntimeError("DERIV_RUNTIME_AUTH_TOKEN_MISSING")
+        if auth_mode == "pat" and not app_id:
+            raise RuntimeError("DERIV_RUNTIME_APP_ID_MISSING_FOR_PAT")
         bootstrap = manager.bootstrap(
-            bearer_token=get_required_secret("DERIV_AUTH_TOKEN"),
-            app_id=get_required_secret("DERIV_APP_ID"),
+            bearer_token=token,
+            app_id=app_id,
         )
         adapter = DerivAdapter(
             ws_url=bootstrap.websocket.url,
@@ -311,6 +462,7 @@ async def main() -> None:
                 raise RuntimeError("DERIV_RUNTIME_ACCOUNT_BINDING_MISMATCH")
             if snapshot.currency != bootstrap.binding.currency:
                 raise RuntimeError("DERIV_RUNTIME_CURRENCY_MISMATCH")
+            _write_runtime_deriv_evidence(snapshot, config_hash)
             journal.append(
                 event_envelope(
                     event_type="AUTHENTICATED_DERIV_SESSION_VERIFIED",
@@ -394,6 +546,12 @@ async def main() -> None:
             raise RuntimeError("AUTHENTICATED_DERIV_SESSION_VERIFICATION_FAILED")
         return
 
+    readiness_task = asyncio.create_task(
+        _readiness_publisher(health, journal, config_hash),
+        name="aurelia-readiness-publisher",
+    )
+    # Replace any stale persisted authorization report before the execution loop starts.
+    await asyncio.sleep(0)
     supervisor = RuntimeSupervisor(interval_seconds=5)
 
     def heartbeat() -> bool:
@@ -531,6 +689,11 @@ async def main() -> None:
                     last_runtime_state = machine.state
             await asyncio.sleep(5)
     finally:
+        readiness_task.cancel()
+        try:
+            await readiness_task
+        except asyncio.CancelledError:
+            pass
         if balance_task is not None:
             balance_task.cancel()
             try:

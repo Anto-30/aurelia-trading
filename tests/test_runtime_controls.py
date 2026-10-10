@@ -381,6 +381,44 @@ class TestControls(unittest.TestCase):
         finally:
             os.unlink(path)
 
+    def test_federated_control_snapshot_rejects_readiness_from_another_source_sha(self):
+        report = {
+            "generated_at_utc": datetime.now(UTC).isoformat(),
+            "final_execution_authorization": True,
+            "live_execution": "ENABLED",
+            "controls": {
+                "risk_warden": True,
+                "execution_firewall": True,
+                "reconciliation": True,
+                "exposure": True,
+            },
+            "evidence": {
+                "calibration": True,
+                "market_data": True,
+            },
+            "attestations": {"source_sha": "old-source-sha"},
+        }
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as handle:
+            json.dump(report, handle)
+            path = handle.name
+        try:
+            provider = FederatedDecisionProvider(None)
+            with patch.dict(
+                os.environ,
+                {
+                    "AURELIA_READINESS_PATH": path,
+                    "AURELIA_READINESS_MAX_AGE_SECONDS": "30",
+                    "GITHUB_SHA": "current-source-sha",
+                },
+                clear=False,
+            ):
+                controls = provider.control_snapshot(decision=None, tick=None, capital=None)
+            self.assertFalse(controls["risk_approved"])
+            self.assertFalse(controls["final_execution_authorization"])
+            self.assertFalse(controls["market_data_validated"])
+        finally:
+            os.unlink(path)
+
     def test_runtime_health_requires_fresh_capital_market_data_and_reconciliation(self):
         health = HealthSnapshot(datetime.now(UTC))
         refresh_runtime_health(
