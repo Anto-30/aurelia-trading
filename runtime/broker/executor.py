@@ -544,18 +544,29 @@ class CapitalPlaneExecutor:
             if self.daily_risk_guard is not None:
                 self.daily_risk_guard.record_broker_success()
             self.idempotency.record_economic_effect(intent.intent_id)
-            self.ledger.post(
-                LedgerEvent(
-                    event_id=f"broker:{result.broker_transaction_id or result.request_id}",
-                    intent_id=intent.intent_id,
-                    account=intent.account,
-                    event_type="INTENT_RESERVED",
-                    amount=intent.stake,
-                    currency=intent.account.currency,
-                    occurred_at=result.broker_timestamp or intent.created_at,
-                    broker_transaction_id=result.broker_transaction_id,
-                )
-            )
+            ledger_reservation_posted = False
+            try:
+                ledger_reservation_posted = bool(self.ledger.post(
+                    LedgerEvent(
+                        event_id=f"broker:{result.broker_transaction_id or result.request_id}",
+                        intent_id=intent.intent_id,
+                        account=intent.account,
+                        event_type="INTENT_RESERVED",
+                        amount=intent.stake,
+                        currency=intent.account.currency,
+                        occurred_at=result.broker_timestamp or intent.created_at,
+                        broker_transaction_id=result.broker_transaction_id,
+                    )
+                ))
+            except Exception:
+                ledger_reservation_posted = False
+            if not ledger_reservation_posted:
+                # Broker acceptance has already occurred. Persist a halt, but
+                # return the known broker IDs so the caller can still monitor
+                # and settle the open contract instead of abandoning exposure.
+                if self.daily_risk_guard is not None:
+                    self.daily_risk_guard.trip("BROKER_ACCEPTED_LEDGER_RESERVATION_FAILED")
+                self.activate_kill_switch("BROKER_ACCEPTED_LEDGER_RESERVATION_FAILED")
             self._log(
                 "BROKER_ACCEPTED",
                 {
@@ -568,7 +579,7 @@ class CapitalPlaneExecutor:
             return ExecutionOutcome(
                 True,
                 "ACCEPTED",
-                (),
+                () if ledger_reservation_posted else ("BROKER_ACCEPTED_LEDGER_RESERVATION_FAILED",),
                 intent.intent_id,
                 result.broker_transaction_id,
                 result.contract_id,

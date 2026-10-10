@@ -414,18 +414,19 @@ class AutonomousExecutionLoop:
                 None,
             )
 
-        # The executor's accepted result does not carry the contract ID in its
-        # public outcome. Recover it from the broker portfolio/statement using
-        # the transaction ID rather than guessing.
-        portfolio = await self.adapter.portfolio()
-        candidate = next(
-            (
-                row for row in portfolio
-                if str(row.get("transaction_id") or "") == str(outcome.broker_transaction_id)
-            ),
-            None,
-        )
-        contract_id = str(candidate.get("contract_id")) if candidate and candidate.get("contract_id") else None
+        # Prefer the contract ID already confirmed in the broker buy response.
+        # Fall back to portfolio/statement only for adapters that omit it.
+        contract_id = str(outcome.contract_id) if outcome.contract_id else None
+        if contract_id is None:
+            portfolio = await self.adapter.portfolio()
+            candidate = next(
+                (
+                    row for row in portfolio
+                    if str(row.get("transaction_id") or "") == str(outcome.broker_transaction_id)
+                ),
+                None,
+            )
+            contract_id = str(candidate.get("contract_id")) if candidate and candidate.get("contract_id") else None
         if contract_id is None:
             statement = await self.adapter.statement(limit=100)
             candidate = next(
