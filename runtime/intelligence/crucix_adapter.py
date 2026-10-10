@@ -272,17 +272,25 @@ async def collect_crucix_advisory(
     sources_failed = _as_nonnegative_int(meta.get("sourcesFailed"))
     source_health = raw.get("health")
     sources_stale = 0
+    observed_source_errors = 0
     if isinstance(source_health, list):
         for source in source_health:
             if isinstance(source, dict) and source.get("stale") is True:
                 sources_stale += 1
             if isinstance(source, dict) and source.get("err") is True:
-                sources_failed = max(sources_failed, 1)
+                observed_source_errors += 1
+    sources_failed = max(sources_failed, observed_source_errors)
     if sources_failed:
         warnings.append("CRUCIX_SOURCE_FAILURES_PRESENT")
     if sources_stale:
         warnings.append("CRUCIX_SOURCE_STALENESS_PRESENT")
-    if freshness == "CURRENT" and (sources_failed or sources_stale):
+    if sources_total <= 0 or sources_ok > sources_total or sources_ok + sources_failed > sources_total:
+        freshness = "UNKNOWN"
+        warnings.append("CRUCIX_SOURCE_COVERAGE_INVALID")
+    elif sources_ok == 0 and freshness == "CURRENT":
+        freshness = "DEGRADED"
+        warnings.append("CRUCIX_NO_SOURCES_RETURNED_DATA")
+    elif freshness == "CURRENT" and (sources_failed or sources_stale):
         freshness = "DEGRADED"
 
     radar_freshness = "NOT_CONFIGURED"
