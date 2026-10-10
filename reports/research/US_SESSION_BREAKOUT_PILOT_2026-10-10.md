@@ -103,7 +103,7 @@ The draft branch now contains:
 - `research/labs/session_structure_hypotheses.py`: New York session windows, session-completeness checks, candidate C sweep/re-entry observations and next-session expansion ratios, and candidate D confirmed-pivot/as-of structure primitives.
 - `research/labs/tests/test_session_breakout_candidates.py`, `test_session_breakout_backtest.py`, and `test_session_structure_hypotheses.py`: regression tests for time windows, DST, causality, ambiguity, missing bars, costs, pivot confirmation, and UNKNOWN context.
 
-These components remain research-only; they are not registered for production, do not have a broker interface, and do not authorise capital. The current latest commit's full Assurance workflow was still running when this report was last checked, so the new C/D tests must not be described as green until the run finishes successfully.
+These components remain research-only; they are not registered for production, do not have a broker interface, and do not authorise capital. CI at draft PR head `34ce20940156ce88c097ed254c49f5b8dc0aca45` completed successfully: 80 research-plane tests, 49 assurance tests, 173 runtime tests and 12 hardening tests passed; compilation, static acceptance audit, deployment-script syntax, container build, public Deriv market-data WebSocket and release-lock checks passed. The authenticated Deriv real-account-session and verify-only transaction-lifecycle steps were skipped because the protected credentials/prerequisites were not configured. Certification still returned `NOT_READY`; this CI pass does not qualify a strategy.
 
 ## 5. Interpretation and decision
 
