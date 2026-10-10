@@ -133,6 +133,9 @@ jobs:
           DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: real
           DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          AURELIA_RUNTIME_ID: ${{ vars.AURELIA_RUNTIME_ID || 'aurelia-production-worker' }}
+          AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
+          AURELIA_ATTESTATION_DIR: artifacts/attestations
           AURELIA_VERIFY_DERIV_PUBLIC: "true"
           AURELIA_VERIFY_DERIV_AUTH: "true"
           AURELIA_RUN_ONCE: "true"
@@ -158,6 +161,9 @@ jobs:
           DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: real
           DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          AURELIA_RUNTIME_ID: ${{ vars.AURELIA_RUNTIME_ID || 'aurelia-production-worker' }}
+          AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
+          AURELIA_ATTESTATION_DIR: artifacts/attestations
           AURELIA_VERIFY_DERIV_PUBLIC: "true"
           AURELIA_VERIFY_DERIV_AUTH: "true"
           AURELIA_RUN_ONCE: "true"
