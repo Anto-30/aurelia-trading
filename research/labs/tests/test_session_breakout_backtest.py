@@ -18,6 +18,7 @@ DAY = date(2026, 10, 8)
 
 def make_bars(
     *,
+    session_date: date = DAY,
     breakout_at: time | None = time(9, 30),
     breakout_high: float = 107.0,
     breakout_low: float = 99.0,
@@ -27,8 +28,8 @@ def make_bars(
     target_low: float = 106.0,
 ) -> list:
     bars = []
-    stamp = datetime.combine(DAY, time(4, 0), NY)
-    end = datetime.combine(DAY, time(16, 0), NY)
+    stamp = datetime.combine(session_date, time(4, 0), NY)
+    end = datetime.combine(session_date, time(16, 0), NY)
     while stamp < end:
         local_time = stamp.time()
         values = (100.0, 101.0, 99.0, 100.0)
@@ -141,7 +142,7 @@ class SessionBreakoutBacktestTests(unittest.TestCase):
             make_bars(), DAY, stop_mode="OPPOSITE_RANGE_BOUNDARY"
         )
         no_trade = backtest_session_a(
-            make_bars(breakout_at=None, target_at=None),
+            make_bars(session_date=date(2026, 10, 9), breakout_at=None, target_at=None),
             date(2026, 10, 9),
             stop_mode="OPPOSITE_RANGE_BOUNDARY",
         )
