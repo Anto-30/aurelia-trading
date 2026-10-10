@@ -55,7 +55,7 @@ class DeterministicIntradayStrategyTests(unittest.TestCase):
         rows=[
             b(0,100,101,99,100,volume=10), b(1,100,100.5,98,99,volume=10),
             b(2,99,101,98.5,100,volume=10), b(3,100,100.7,99,100,volume=9),
-            b(4,100,101.5,97,100.9,volume=30),
+            b(4,100,100.9,97,100.9,volume=30),
         ]
         cfg=MSNRConfig(lookback_bars=3,tick_size=.1,min_sweep_ticks=2,max_reclaim_bars=2,
                        require_volume_pop=True,volume_pop_multiplier=1.5)
