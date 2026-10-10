@@ -34,6 +34,12 @@ def test_report_is_boolean_only_and_preserves_capital_lock() -> None:
         DERIV_EXPECTED_LOGINID=fake_login,
         DERIV_EXPECTED_CURRENCY="USD",
         DERIV_AUTH_MODE="pat",
+        AURELIA_HOST="host.example.invalid",
+        AURELIA_USER="runtime-user",
+        AURELIA_SSH_KEY="PRIVATE_KEY_SENTINEL_DO_NOT_PRINT",
+        AURELIA_KNOWN_HOSTS="HOST_KEY_SENTINEL_DO_NOT_PRINT",
+        AURELIA_ATTESTATION_SIGNING_KEY="SIGNING_KEY_SENTINEL_DO_NOT_PRINT",
+        AURELIA_RUNTIME_ID="aurelia-production-worker",
     )
 
     assert result.returncode == 0
@@ -47,6 +53,16 @@ def test_report_is_boolean_only_and_preserves_capital_lock() -> None:
     assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
     assert "LIVE_EXECUTION=BLOCKED" in result.stdout
     assert "CAPITAL_MOVEMENT_PERMITTED=false" in result.stdout
+    assert "AURELIA_HOST_PRESENT=true" in result.stdout
+    assert "AURELIA_USER_PRESENT=true" in result.stdout
+    assert "AURELIA_SSH_KEY_PRESENT=true" in result.stdout
+    assert "AURELIA_KNOWN_HOSTS_PRESENT=true" in result.stdout
+    assert "AURELIA_ATTESTATION_SIGNING_KEY_PRESENT=true" in result.stdout
+    assert "AURELIA_DEPLOYMENT_SECRET_STORE_CONFIGURED=true" in result.stdout
+    assert "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=true" in result.stdout
+    assert "PRIVATE_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
+    assert "HOST_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
+    assert "SIGNING_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
 
 
 def test_invalid_auth_mode_is_rejected_and_not_echoed() -> None:
@@ -64,6 +80,8 @@ def test_invalid_auth_mode_is_rejected_and_not_echoed() -> None:
     assert "DERIV_AUTH_MODE_VALID=false" in result.stdout
     assert "DERIV_AUTH_MODE_EFFECTIVE=INVALID" in result.stdout
     assert "DERIV_AUTH_CONFIGURED=false" in result.stdout
+    assert "AURELIA_DEPLOYMENT_SECRET_STORE_CONFIGURED=false" in result.stdout
+    assert "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=false" in result.stdout
     assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
     assert "LIVE_EXECUTION=BLOCKED" in result.stdout
 
@@ -75,6 +93,11 @@ def test_missing_bindings_report_false_without_defaults() -> None:
         DERIV_EXPECTED_LOGINID="",
         DERIV_EXPECTED_CURRENCY="",
         DERIV_AUTH_MODE="pat",
+        AURELIA_HOST="",
+        AURELIA_USER="",
+        AURELIA_SSH_KEY="",
+        AURELIA_KNOWN_HOSTS="",
+        AURELIA_ATTESTATION_SIGNING_KEY="",
     )
 
     assert result.returncode == 0

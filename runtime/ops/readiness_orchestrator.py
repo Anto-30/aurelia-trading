@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from runtime.core.release_gate import LiveReleaseState, read_live_release
+from runtime.core.limits import ExecutionLimits
 from assurance.certification_evidence import validate_evidence_file
 from runtime.ops.readiness_attestation import REQUIRED_CAPABILITIES, verify_readiness_attestations
 
@@ -180,6 +181,22 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
     attestation_status = {capability: capability in attestations["verified"] for capability in REQUIRED_CAPABILITIES}
     persistent_worker = attestation_status["PERSISTENT_WORKER"]
 
+    observed = deriv_evidence.get("observed", {}) if isinstance(deriv_evidence, dict) else {}
+    observed_balance = observed.get("available_balance") if isinstance(observed, dict) else None
+    verified_balance = (
+        float(observed_balance)
+        if balance and isinstance(observed_balance, (int, float)) and not isinstance(observed_balance, bool) and observed_balance >= 0
+        else None
+    )
+    starting_stake = 1.0
+    execution_minimum_stake = ExecutionLimits().minimum_stake
+    minimum_required_balance = max(starting_stake, execution_minimum_stake)
+    stake_affordability_status = (
+        "PASS" if verified_balance is not None and verified_balance >= minimum_required_balance
+        else "FAIL" if verified_balance is not None
+        else "UNKNOWN"
+    )
+
     evidence_specs = {
         "STRATEGY_LIVE_ELIGIBLE": "evidence/strategy_eligibility.json",
         "PROSPECTIVE_OOS": "evidence/prospective_oos.json",
@@ -196,6 +213,11 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         Gate("DERIV_CREDENTIALS", "PASS" if credentials else "FAIL", "presence only; secret values are never emitted"),
         Gate("DERIV_SESSION", "PASS" if session else "UNKNOWN", "requires current PROVEN authenticated modern Options WS evidence"),
         Gate("BALANCE_FRESH", "PASS" if balance else "UNKNOWN", "requires current PROVEN broker balance evidence"),
+        Gate(
+            "STAKE_AFFORDABILITY",
+            stake_affordability_status,
+            f"requires verified available balance >= {minimum_required_balance:.2f} to afford the starting stake and broker minimum",
+        ),
         Gate("PERSISTENT_WORKER", "PASS" if persistent_worker else "FAIL", "requires an actual healthy persistent execution worker"),
         evidence_gates["STRATEGY_LIVE_ELIGIBLE"],
         evidence_gates["PROSPECTIVE_OOS"],
@@ -212,13 +234,6 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         Gate("IDEMPOTENCY", "PASS" if attestation_status["IDEMPOTENCY"] else "FAIL", "requires a current provenance-bound idempotency attestation"),
     ]
 
-    observed = deriv_evidence.get("observed", {}) if isinstance(deriv_evidence, dict) else {}
-    observed_balance = observed.get("available_balance") if isinstance(observed, dict) else None
-    verified_balance = (
-        float(observed_balance)
-        if balance and isinstance(observed_balance, (int, float)) and observed_balance >= 0
-        else None
-    )
     blockers = [
         {"gate": g.name, "status": g.status, "reason": g.reason}
         for g in gates if not g.passed
@@ -275,8 +290,8 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
             "soak_3600s": evidence_gates["SOAK_3600S"].passed,
         },
         "capital": {
-            "starting_stake": 1.0,
-            "execution_minimum_stake": 1.0,
+            "starting_stake": starting_stake,
+            "execution_minimum_stake": execution_minimum_stake,
             "verified_balance": verified_balance,
             "stake_ceiling": verified_balance,
         },

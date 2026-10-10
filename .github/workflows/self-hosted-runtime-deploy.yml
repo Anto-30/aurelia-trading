@@ -248,7 +248,33 @@ jobs:
           test -s "$archive"
           echo "AURELIA_ARCHIVE=$archive" >> "$GITHUB_ENV"
 
-      - name: Transfer and install exact source commit
+          if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
+            test -d artifacts/attestations || { echo "LIVE_GATE_BLOCKED=ATTESTATION_BUNDLE_MISSING"; exit 2; }
+            attestation_names=(
+              market_data.json
+              probability.json
+              risk_warden.json
+              execution_firewall.json
+              exposure.json
+              reconciliation.json
+              watchdog.json
+              idempotency.json
+              persistent_worker.json
+            )
+            for name in "${attestation_names[@]}"; do
+              file="artifacts/attestations/$name"
+              test -f "$file" && test ! -L "$file" || {
+                echo "LIVE_GATE_BLOCKED=ATTESTATION_FILE_MISSING_OR_UNSAFE:$name"
+                exit 2
+              }
+            done
+            attestation_archive="$RUNNER_TEMP/aurelia-attestations-$GITHUB_SHA.tar.gz"
+            tar -czf "$attestation_archive" -C artifacts/attestations "${attestation_names[@]}"
+            test -s "$attestation_archive"
+            echo "AURELIA_ATTESTATION_ARCHIVE=$attestation_archive" >> "$GITHUB_ENV"
+          fi
+
+      - name: Transfer exact source and validated attestations to target
         shell: bash
         run: |
           set -euo pipefail
@@ -262,8 +288,86 @@ jobs:
              sudo rm -rf /opt/aurelia/releases/$GITHUB_SHA
              sudo mkdir -p /opt/aurelia/releases/$GITHUB_SHA
              sudo cp -a /tmp/aurelia-release-$GITHUB_SHA/. /opt/aurelia/releases/$GITHUB_SHA/
-             sudo env AURELIA_DEPLOYMENT_MODE="$DEPLOYMENT_MODE" bash /opt/aurelia/releases/$GITHUB_SHA/scripts/deploy/bootstrap_and_deploy.sh '$GITHUB_SHA'
              rm -rf /tmp/aurelia-release-$GITHUB_SHA"
+
+          if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
+            scp -F "$HOME/.ssh/config" "$AURELIA_ATTESTATION_ARCHIVE" "aurelia-target:/tmp/aurelia-attestations-$GITHUB_SHA.tar.gz"
+            ssh -F "$HOME/.ssh/config" aurelia-target \
+              "set -euo pipefail
+               sudo install -d -m 700 /var/lib/aurelia/attestations
+               sudo rm -f /var/lib/aurelia/attestations/*.json
+               sudo tar -xzf /tmp/aurelia-attestations-$GITHUB_SHA.tar.gz -C /var/lib/aurelia/attestations
+               sudo rm -f /tmp/aurelia-attestations-$GITHUB_SHA.tar.gz
+               sudo chown -R root:root /var/lib/aurelia/attestations
+               sudo find /var/lib/aurelia/attestations -type f -name '*.json' -exec chmod 600 {} +"
+          fi
+
+      - name: Provision LIVE runtime secrets to root-only host store
+        if: inputs.deployment_mode == 'LIVE'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: real
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
+          AURELIA_RUNTIME_ID: ${{ vars.AURELIA_RUNTIME_ID || 'aurelia-production-worker' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          DERIV_AUTH_MODE="${DERIV_AUTH_MODE,,}"
+          for name in DERIV_AUTH_TOKEN DERIV_EXPECTED_LOGINID DERIV_EXPECTED_CURRENCY AURELIA_ATTESTATION_SIGNING_KEY AURELIA_RUNTIME_ID; do
+            test -n "$(printenv "$name")" || { echo "LIVE_GATE_BLOCKED=RUNTIME_SECRET_MISSING:$name"; exit 2; }
+          done
+          case "$DERIV_AUTH_MODE" in
+            pat) test -n "$DERIV_APP_ID" || { echo "LIVE_GATE_BLOCKED=DERIV_APP_ID_MISSING"; exit 2; } ;;
+            oauth) ;;
+            *) echo "LIVE_GATE_BLOCKED=DERIV_AUTH_MODE_INVALID"; exit 2 ;;
+          esac
+          for name in DERIV_AUTH_TOKEN DERIV_APP_ID DERIV_EXPECTED_LOGINID DERIV_EXPECTED_CURRENCY DERIV_ENVIRONMENT DERIV_AUTH_MODE AURELIA_ATTESTATION_SIGNING_KEY AURELIA_RUNTIME_ID; do
+            value="${!name}"
+            case "$value" in
+              *$'\n'*|*$'\r'*) echo "LIVE_GATE_BLOCKED=MULTILINE_RUNTIME_VALUE:$name"; exit 2 ;;
+            esac
+          done
+          ssh -F "$HOME/.ssh/config" aurelia-target \
+            "set -euo pipefail
+             if ! command -v python3 >/dev/null 2>&1; then
+               sudo -n apt-get update
+               sudo -n DEBIAN_FRONTEND=noninteractive apt-get install -y python3
+             fi"
+
+          python - <<'PY' | ssh -F "$HOME/.ssh/config" aurelia-target "sudo -n python3 /opt/aurelia/releases/$GITHUB_SHA/scripts/deploy/provision_runtime_secrets.py"
+          import json
+          import os
+          import sys
+
+          names = (
+              "DERIV_AUTH_TOKEN",
+              "DERIV_APP_ID",
+              "DERIV_EXPECTED_LOGINID",
+              "DERIV_EXPECTED_CURRENCY",
+              "DERIV_ENVIRONMENT",
+              "DERIV_AUTH_MODE",
+              "AURELIA_ATTESTATION_SIGNING_KEY",
+              "AURELIA_RUNTIME_ID",
+          )
+          payload = {name: os.environ.get(name, "") for name in names}
+          for name, value in payload.items():
+              if "\n" in value or "\r" in value or "\x00" in value:
+                  print(f"RUNTIME_SECRET_VALUE_INVALID={name}", file=sys.stderr)
+                  raise SystemExit(2)
+          json.dump(payload, sys.stdout, separators=(",", ":"))
+          PY
+
+      - name: Install and start exact source revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" aurelia-target \
+            "set -euo pipefail
+             sudo env AURELIA_DEPLOYMENT_MODE=\"$DEPLOYMENT_MODE\" bash /opt/aurelia/releases/$GITHUB_SHA/scripts/deploy/bootstrap_and_deploy.sh '$GITHUB_SHA'"
 
       - name: Verify source, runtime health, and capital state
         shell: bash

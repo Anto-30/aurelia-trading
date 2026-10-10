@@ -24,7 +24,7 @@ class ReadinessEvidenceTests(unittest.TestCase):
         os.environ.update(self.original)
 
     @staticmethod
-    def _write_evidence(root: Path, valid_until: datetime) -> None:
+    def _write_evidence(root: Path, valid_until: datetime, balance: float = 1.45) -> None:
         path = root / "artifacts" / "deriv_authenticated_session.json"
         path.parent.mkdir(parents=True)
         record = {
@@ -46,8 +46,8 @@ class ReadinessEvidenceTests(unittest.TestCase):
                 "account_type": "real",
                 "environment": "real",
                 "currency": "USD",
-                "balance": 1.45,
-                "available_balance": 1.45,
+                "balance": balance,
+                "available_balance": balance,
                 "captured_at_utc": datetime.now(timezone.utc).isoformat(),
             },
             "orders_submitted": 0,
@@ -75,6 +75,37 @@ class ReadinessEvidenceTests(unittest.TestCase):
             report = evaluate(root)
         self.assertEqual("VERIFIED", report["deriv"]["session"])
         self.assertTrue(report["deriv"]["balance_fresh"])
+
+    def test_starting_stake_requires_minimum_available_balance(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_evidence(
+                root,
+                datetime.now(timezone.utc) + timedelta(minutes=5),
+                balance=0.50,
+            )
+            report = evaluate(root)
+        gate = next(
+            item for item in report["blockers"] if item["gate"] == "STAKE_AFFORDABILITY"
+        )
+        self.assertEqual("FAIL", gate["status"])
+        self.assertIn(">= 1.00", gate["reason"])
+        self.assertFalse(report["final_execution_authorization"])
+
+    def test_starting_stake_is_affordable_only_with_current_balance(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_evidence(
+                root,
+                datetime.now(timezone.utc) + timedelta(minutes=5),
+                balance=1.45,
+            )
+            report = evaluate(root)
+        self.assertFalse(
+            any(item["gate"] == "STAKE_AFFORDABILITY" for item in report["blockers"])
+        )
+        self.assertEqual(1.0, report["capital"]["execution_minimum_stake"])
+        self.assertEqual(1.0, report["capital"]["starting_stake"])
 
     def test_missing_evidence_cannot_be_upgraded_by_environment_flags(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

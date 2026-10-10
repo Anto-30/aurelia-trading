@@ -17,7 +17,7 @@ from threading import Thread
 
 from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.continuous_runtime import start_continuous_runtime
-from assurance.evidence_writer import build_evidence, payload_sha256, write_evidence
+from assurance.evidence_writer import build_evidence, payload_sha256
 from runtime.core.events import event_envelope, sha256
 from runtime.core.health import (
     HealthSnapshot,
@@ -95,26 +95,47 @@ def _write_runtime_deriv_evidence(snapshot, config_hash: str) -> None:
         result="PROVEN",
         invariants_checked=[
             "authenticated_account_identity",
-            "real_environment_binding",
+            "account_environment_binding",
             "currency_binding",
             "fresh_broker_balance",
-            "no_order_submission",
             "capital_authority_not_granted",
         ],
         invariants_failed=[],
     )
     enriched = dict(record)
     enriched["observed"] = observed
-    enriched["orders_submitted"] = 0
     enriched["capital_authority_granted"] = False
-    enriched["order_submission_permitted"] = False
-    enriched["verification_scope"] = f"AUTHENTICATED_DERIV_{account.environment.upper()}_SESSION"
+    readonly_scope = (
+        os.getenv("AURELIA_DEPLOYMENT_MODE", "VERIFY_ONLY").strip().upper() != "LIVE"
+    )
+    if readonly_scope:
+        enriched["orders_submitted"] = 0
+        enriched["order_submission_permitted"] = False
+        enriched["verification_scope"] = (
+            f"AUTHENTICATED_DERIV_{account.environment.upper()}_READ_ONLY_SESSION"
+        )
+        enriched["invariants_checked"] = [
+            *enriched.get("invariants_checked", []),
+            "no_order_submission",
+            "order_submission_not_permitted",
+        ]
+    else:
+        enriched["evidence_kind"] = "AUTHENTICATED_BALANCE_SNAPSHOT"
+        enriched["verification_scope"] = (
+            f"AUTHENTICATED_DERIV_{account.environment.upper()}_BALANCE_SNAPSHOT"
+        )
     enriched["record_hash"] = payload_sha256(
         {key: value for key, value in enriched.items() if key != "record_hash"}
     )
     default_path = str(ROOT / "artifacts" / "deriv_authenticated_session.json")
     output = Path(os.getenv("AURELIA_DERIV_EVIDENCE_PATH", default_path))
-    write_evidence(output, enriched)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output.with_name(output.name + ".tmp")
+    temporary.write_text(
+        json.dumps(enriched, sort_keys=True, separators=(",", ":"), ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(output)
 
 
 def _write_readiness_report(output: Path, report: dict) -> None:
@@ -321,6 +342,7 @@ async def main() -> None:
     HealthHandler.performance = PersistentAgentPerformance(performance_path)
     public_probe_failed = False
     authenticated_probe_failed = False
+    readonly_adapter: DerivAdapter | None = None
 
     federation_queue: asyncio.Queue[dict[str, object]] = asyncio.Queue()
 
@@ -433,6 +455,7 @@ async def main() -> None:
             )
 
     async def authenticated_probe() -> None:
+        nonlocal readonly_adapter
         manager = DerivSessionManager(
             expected_loginid=os.getenv("DERIV_EXPECTED_LOGINID") or None,
             expected_environment=os.getenv("DERIV_ENVIRONMENT", "real"),
@@ -458,6 +481,11 @@ async def main() -> None:
             expected_currency=bootstrap.binding.currency,
             environment=bootstrap.binding.environment,
             auth_token="",
+        )
+        keep_readonly_session = (
+            os.getenv("AURELIA_DEPLOYMENT_MODE", "").strip().upper() == "VERIFY_ONLY"
+            and os.getenv("AURELIA_AUTONOMOUS_LOOP", "false").strip().lower() != "true"
+            and os.getenv("AURELIA_RUN_ONCE", "false").strip().lower() != "true"
         )
         try:
             account = await adapter.connect()
@@ -493,8 +521,11 @@ async def main() -> None:
                 kill_switch_off=False,
             )
             health.dependencies_ok = True
+            if keep_readonly_session:
+                readonly_adapter = adapter
         finally:
-            await adapter.close()
+            if readonly_adapter is not adapter:
+                await adapter.close()
 
     if os.getenv("AURELIA_VERIFY_DERIV_AUTH", "false").lower() == "true":
         try:
@@ -617,6 +648,18 @@ async def main() -> None:
                     and continuous_runtime.adapter.authorized
                     and continuous_runtime.adapter.account is not None
                 )
+            elif readonly_adapter is not None:
+                # Keep the read-only broker balance evidence current for a
+                # locked persistent worker; this path has no capital executor.
+                balance_task = asyncio.create_task(
+                    _balance_poller(
+                        readonly_adapter,
+                        health,
+                        journal,
+                        config_hash,
+                    ),
+                    name="aurelia-readonly-balance-poller",
+                )
         except Exception as exc:
             health.critical_unknowns.add("CONTINUOUS_RUNTIME_STARTUP")
             journal.append(
@@ -721,6 +764,9 @@ async def main() -> None:
                 pass
         if continuous_runtime is not None:
             await continuous_runtime.stop()
+        if readonly_adapter is not None:
+            await readonly_adapter.close()
+            readonly_adapter = None
         supervisor.stop()
         await federation_supervisor.stop()
         server.shutdown()
