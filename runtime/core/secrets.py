@@ -53,8 +53,52 @@ def validate_secrets_at_startup() -> None:
             "NON_PRODUCTION_SOAK_NOT_SEALED: " + ",".join(failed)
         )
 
-    required = ["DERIV_AUTH_TOKEN", "DERIV_APP_ID"]
-    missing = [name for name in required if not os.getenv(name, "").strip()]
+    # A locked verify-only worker may run without broker credentials, but
+    # only when every runtime/capital flag is explicitly sealed.
+    deployment_mode = os.getenv("AURELIA_DEPLOYMENT_MODE", "").strip().upper()
+    if deployment_mode == "VERIFY_ONLY":
+        sealed_flags = {
+            "FINAL_EXECUTION_AUTHORIZATION": os.getenv(
+                "FINAL_EXECUTION_AUTHORIZATION", ""
+            ).strip().lower() == "false",
+            "LIVE_EXECUTION": os.getenv("LIVE_EXECUTION", "").strip().upper() == "BLOCKED",
+            "AURELIA_AUTONOMOUS_LOOP": os.getenv(
+                "AURELIA_AUTONOMOUS_LOOP", ""
+            ).strip().lower() == "false",
+            "AURELIA_VERIFY_DERIV_AUTH": os.getenv(
+                "AURELIA_VERIFY_DERIV_AUTH", ""
+            ).strip().lower() == "false",
+        }
+        if all(sealed_flags.values()):
+            return
+        failed = [name for name, valid in sealed_flags.items() if not valid]
+        raise SecretsError(
+            "VERIFY_ONLY_RUNTIME_NOT_SEALED: " + ",".join(failed)
+        )
+
+    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+    token = os.getenv("DERIV_AUTH_TOKEN", "").strip() or os.getenv("DERIV_PAT", "").strip()
+    loginid = os.getenv("DERIV_EXPECTED_LOGINID", "").strip() or os.getenv(
+        "DERIV_AUTHORIZED_ACCOUNT_ID", ""
+    ).strip()
+    currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip()
+    environment = os.getenv("DERIV_ENVIRONMENT", "").strip().lower()
+
+    missing: list[str] = []
+    if not token:
+        missing.append("DERIV_AUTH_TOKEN_OR_DERIV_PAT")
+    if auth_mode not in {"pat", "oauth"}:
+        raise SecretsError("STARTUP_AUTH_MODE_INVALID")
+    if auth_mode == "pat" and not os.getenv("DERIV_APP_ID", "").strip():
+        missing.append("DERIV_APP_ID")
+    if not loginid:
+        missing.append("DERIV_EXPECTED_LOGINID_OR_DERIV_AUTHORIZED_ACCOUNT_ID")
+    if not currency:
+        missing.append("DERIV_EXPECTED_CURRENCY")
+    if environment not in {"real", "demo"}:
+        missing.append("DERIV_ENVIRONMENT")
+    if deployment_mode == "LIVE" and environment != "real":
+        raise SecretsError("LIVE_RUNTIME_REQUIRES_REAL_DERIV_ENVIRONMENT")
     if missing:
         raise SecretsError(
             f"STARTUP_SECRET_VALIDATION_FAILED: missing={missing}"
