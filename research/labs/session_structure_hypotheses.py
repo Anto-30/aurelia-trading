@@ -128,6 +128,25 @@ def classify_new_york_session(timestamp: datetime) -> SessionKey | None:
     return None
 
 
+def _session_bounds(key: SessionKey) -> tuple[datetime, datetime, int]:
+    """Expected exact [start,end) boundary and bar count in New York time."""
+    if key.name == "OVERNIGHT":
+        start_local = datetime.combine(key.session_date - timedelta(days=1), time(18, 0), NEW_YORK)
+        end_local = datetime.combine(key.session_date, time(2, 0), NEW_YORK)
+    elif key.name == "EUROPE":
+        start_local = datetime.combine(key.session_date, time(2, 0), NEW_YORK)
+        end_local = datetime.combine(key.session_date, time(9, 30), NEW_YORK)
+    else:
+        start_local = datetime.combine(key.session_date, time(9, 30), NEW_YORK)
+        end_local = datetime.combine(key.session_date, time(17, 0), NEW_YORK)
+    duration = end_local.astimezone(timezone.utc) - start_local.astimezone(timezone.utc)
+    return (
+        start_local.astimezone(timezone.utc),
+        end_local.astimezone(timezone.utc),
+        int(duration.total_seconds() // 300),
+    )
+
+
 def build_session_summaries(
     bars: Sequence[OHLCBar],
     *,
@@ -154,7 +173,14 @@ def build_session_summaries(
             _utc(rows[i].timestamp_utc) - _utc(rows[i - 1].timestamp_utc)
             for i in range(1, len(rows))
         ]
-        complete = all(delta == expected_interval for delta in deltas)
+        expected_start, expected_end, expected_count = _session_bounds(key)
+        complete = (
+            len(rows) == expected_count
+            and all(delta == expected_interval for delta in deltas)
+            and _utc(rows[0].timestamp_utc) == expected_start
+            and _utc(rows[-1].timestamp_utc) + expected_interval == expected_end
+            and expected_interval == timedelta(minutes=5)
+        )
         summaries.append(SessionSummary(
             key=key,
             start_utc=_utc(rows[0].timestamp_utc),
@@ -198,6 +224,15 @@ def detect_session_reversal(
     if not local_rows:
         return None
     local_rows.sort(key=lambda item: _utc(item.timestamp_utc))
+    expected_start, expected_end, expected_count = _session_bounds(current_key)
+    timestamps = [_utc(item.timestamp_utc) for item in local_rows]
+    if (
+        len(local_rows) != expected_count
+        or timestamps[0] != expected_start
+        or timestamps[-1] + expected_interval != expected_end
+        or any(timestamps[i] - timestamps[i - 1] != expected_interval for i in range(1, len(timestamps)))
+    ):
+        raise ValueError("SESSION_WINDOW_INCOMPLETE_OR_GAPPED")
     for index, bar in enumerate(local_rows):
         stamp = _utc(bar.timestamp_utc)
         close_at = stamp + expected_interval
