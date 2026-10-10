@@ -26,21 +26,6 @@ jobs:
     timeout-minutes: 20
     env:
       DEPLOYMENT_MODE: ${{ inputs.deployment_mode }}
-      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-      DERIV_PAT: ${{ secrets.DERIV_PAT }}
-      DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-      DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
-      DERIV_ENVIRONMENT: real
-      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
-      DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
-      DERIV_LIFECYCLE_MODE: VERIFY_ONLY
-      DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
-      DERIV_BROKER_EVIDENCE_OUT: artifacts/deriv_broker_account_evidence.json
-      AURELIA_VERIFY_DERIV_PUBLIC: "true"
-      AURELIA_VERIFY_DERIV_AUTH: "true"
-      AURELIA_RUN_ONCE: "true"
       AURELIA_HOST: ${{ secrets.AURELIA_HOST }}
       AURELIA_USER: ${{ secrets.AURELIA_USER }}
       AURELIA_SSH_KEY: ${{ secrets.AURELIA_SSH_KEY }}
@@ -81,6 +66,12 @@ jobs:
 
       - name: Require explicit Deriv account bindings for LIVE verification
         if: inputs.deployment_mode == 'LIVE'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
         shell: bash
         run: |
           set -euo pipefail
@@ -107,6 +98,22 @@ jobs:
 
       - name: Generate fresh authenticated real-account evidence without submitting orders
         if: inputs.deployment_mode == 'LIVE'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_PAT: ${{ secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: real
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
+          DERIV_LIFECYCLE_MODE: VERIFY_ONLY
+          DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
+          DERIV_BROKER_EVIDENCE_OUT: artifacts/deriv_broker_account_evidence.json
+          AURELIA_VERIFY_DERIV_PUBLIC: "true"
+          AURELIA_VERIFY_DERIV_AUTH: "true"
+          AURELIA_RUN_ONCE: "true"
         shell: bash
         run: |
           set -euo pipefail
