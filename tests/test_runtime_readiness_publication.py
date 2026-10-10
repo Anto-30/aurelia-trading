@@ -38,6 +38,7 @@ class RuntimeReadinessPublicationTests(unittest.TestCase):
                 os.environ,
                 {
                     "GITHUB_SHA": "test-source-sha",
+                    "AURELIA_DEPLOYMENT_MODE": "VERIFY_ONLY",
                     "AURELIA_DERIV_EVIDENCE_PATH": str(output),
                 },
             ):
@@ -53,6 +54,32 @@ class RuntimeReadinessPublicationTests(unittest.TestCase):
             self.assertIs(record["order_submission_permitted"], False)
             self.assertEqual(record["provenance"]["origin"], "runtime")
             self.assertEqual(record["source_hash"], "test-source-sha")
+
+    def test_live_balance_evidence_does_not_claim_order_submission_is_disabled(self):
+        with tempfile.TemporaryDirectory() as td:
+            output = Path(td) / "deriv_authenticated_session.json"
+            with patch.dict(
+                os.environ,
+                {
+                    "GITHUB_SHA": "live-balance-test-sha",
+                    "AURELIA_DEPLOYMENT_MODE": "LIVE",
+                    "AURELIA_DERIV_EVIDENCE_PATH": str(output),
+                },
+                clear=False,
+            ):
+                _write_runtime_deriv_evidence(snapshot(), "live-test-config")
+
+            record = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(
+                "AUTHENTICATED_DERIV_REAL_BALANCE_SNAPSHOT",
+                record["verification_scope"],
+            )
+            self.assertEqual("AUTHENTICATED_BALANCE_SNAPSHOT", record["evidence_kind"])
+            self.assertNotIn("orders_submitted", record)
+            self.assertNotIn("order_submission_permitted", record)
+            self.assertNotIn("no_order_submission", record["invariants_checked"])
+            self.assertIs(record["capital_authority_granted"], False)
+            self.assertIsNotNone(_current_evidence(output))
 
     def test_demo_balance_cannot_satisfy_real_runtime_evidence_gate(self):
         with tempfile.TemporaryDirectory() as td:
