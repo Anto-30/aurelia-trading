@@ -73,10 +73,15 @@ jobs:
               "expected_currency_present": bool(os.getenv("DERIV_EXPECTED_CURRENCY", "").strip()),
           }
           configured = all(requirements.values())
+          raw_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip()
+          currency_valid = raw_currency == "USD"
+          safe_currency = "USD" if currency_valid else ("missing" if not raw_currency else "invalid")
+          requirements["expected_currency_present"] = currency_valid
+          configured = all(requirements.values())
           evidence = {
               "schema_version": "1",
               "auth_mode": auth_mode,
-              "expected_currency": os.getenv("DERIV_EXPECTED_CURRENCY", "").strip(),
+              "expected_currency": safe_currency,
               "configured": configured,
               "requirements": requirements,
               "secret_values_exposed": False,
