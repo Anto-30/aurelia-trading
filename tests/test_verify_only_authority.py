@@ -88,6 +88,38 @@ class VerifyOnlyAuthorityTest(unittest.TestCase):
         self.assertIn("FINAL_EXECUTION_AUTHORIZATION_FALSE", gate.reason_codes)
         self.assertIn("LIVE_TRADING_DISABLED", gate.reason_codes)
 
+    def test_live_authorization_rejects_account_environment_mismatch(self):
+        account, capital, decision = self._inputs()
+        wrong_environment = AccountIdentity(
+            loginid=account.loginid,
+            account_type="real",
+            currency=account.currency,
+            environment="demo",
+        )
+        gate, context = authorization_gate(
+            decision=decision,
+            account=wrong_environment,
+            capital=capital,
+            config_hash="cfg",
+            runtime_config_hash="cfg",
+            kill_switch_off=True,
+            risk_approved=True,
+            firewall_approved=True,
+            reconciliation_healthy=True,
+            final_execution_authorization=True,
+            live_trading_enabled=True,
+            probability_calibrated=True,
+            probability_fresh=True,
+            probability_drift_ok=True,
+            market_data_validated=True,
+            exposure_approved=True,
+            execution_mode="LIVE",
+        )
+        self.assertFalse(gate.allowed)
+        self.assertIsNone(context)
+        self.assertIn("ACCOUNT_IDENTITY_MISMATCH", gate.reason_codes)
+        self.assertIn("ACCOUNT_ENVIRONMENT_NOT_REAL", gate.reason_codes)
+
 
 if __name__ == "__main__":
     unittest.main()
