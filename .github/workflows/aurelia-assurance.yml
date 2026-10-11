@@ -62,17 +62,17 @@ jobs:
 
           token_present = bool(os.getenv("DERIV_AUTH_TOKEN", "").strip())
           loginid_present = bool(os.getenv("DERIV_EXPECTED_LOGINID", "").strip())
-          auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
-          auth_mode_valid = auth_mode in {"pat", "oauth"}
+          raw_auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+          auth_mode_valid = raw_auth_mode in {"pat", "oauth"}
+          auth_mode = raw_auth_mode if auth_mode_valid else "invalid"
           app_id_present = bool(os.getenv("DERIV_APP_ID", "").strip())
           requirements = {
               "token_present": token_present,
               "expected_loginid_present": loginid_present,
               "auth_mode_valid": auth_mode_valid,
               "app_id_present_when_pat": app_id_present if auth_mode == "pat" else auth_mode == "oauth",
-              "expected_currency_present": bool(os.getenv("DERIV_EXPECTED_CURRENCY", "").strip()),
+              "expected_currency_present": False,
           }
-          configured = all(requirements.values())
           raw_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip()
           currency_valid = raw_currency == "USD"
           safe_currency = "USD" if currency_valid else ("missing" if not raw_currency else "invalid")
