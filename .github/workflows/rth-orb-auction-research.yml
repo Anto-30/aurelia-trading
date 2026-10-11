@@ -1,0 +1,28 @@
+name: RTH ORB Auction Research Tests
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "research/labs/**"
+      - "config/rth_orb_auction_research.json"
+      - ".github/workflows/rth-orb-auction-research.yml"
+  push:
+    branches: [main]
+    paths:
+      - "research/labs/**"
+      - "config/rth_orb_auction_research.json"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e . pytest
+      - run: python -m pytest -q research/labs/tests/
