@@ -38,6 +38,10 @@ The current self-hosted deployment workflow separately requires an owner-control
 - `AURELIA_USER`
 - `AURELIA_SSH_KEY`
 - `AURELIA_KNOWN_HOSTS`
+- `AURELIA_ATTESTATION_SIGNING_KEY`
+- `AURELIA_OPERATOR_RESET_SIGNING_KEY` (at least 32 characters; the deployment preflight rejects missing or short values)
+
+`AURELIA_RUNTIME_ID` is read from the production environment variable when configured; otherwise the workflow uses `aurelia-production-worker`.
 
 Strict SSH host verification must remain enabled. The connected engineering session currently has no remote Desktop Commander device, and no production-host handshake or health check has been observed. Railway is not the active deployment path.
 
