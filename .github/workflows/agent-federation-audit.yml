@@ -25,6 +25,9 @@ jobs:
       - name: Validate federated capability boundary
         run: python scripts/validate_agent_federation.py
 
+      - name: Validate task-aware tool, skill, plugin, and repository assignments
+        run: python scripts/validate_agent_tool_skill_assignments.py
+
       - name: Assert live release remains locked
         shell: bash
         run: |
