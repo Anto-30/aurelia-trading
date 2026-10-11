@@ -33,15 +33,22 @@ MINIMUM_LIVE_BALANCE = 1.50
 MINIMUM_STAKE_BALANCE_FRACTION = DEFAULT_MAX_TRADE_RISK_FRACTION
 
 
+def _finite_number(value: Any) -> float | None:
+    """Convert a numeric input safely; malformed/overflowing values stay unknown."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return number if math.isfinite(number) else None
+
+
 def _minimum_capital_gate(balance: float | None) -> Gate:
-    if (
-        isinstance(balance, bool)
-        or not isinstance(balance, (int, float))
-        or not math.isfinite(float(balance))
-        or balance < 0
-    ):
+    value = _finite_number(balance)
+    if value is None or value < 0:
         return Gate("MINIMUM_CAPITAL", "UNKNOWN", "requires a fresh, verified broker balance")
-    if balance <= MINIMUM_LIVE_BALANCE:
+    if value <= MINIMUM_LIVE_BALANCE:
         return Gate(
             "MINIMUM_CAPITAL",
             "FAIL",
@@ -51,14 +58,10 @@ def _minimum_capital_gate(balance: float | None) -> Gate:
 
 
 def _minimum_available_capital_gate(balance: float | None) -> Gate:
-    if (
-        isinstance(balance, bool)
-        or not isinstance(balance, (int, float))
-        or not math.isfinite(float(balance))
-        or balance < 0
-    ):
+    value = _finite_number(balance)
+    if value is None or value < 0:
         return Gate("AVAILABLE_CAPITAL", "UNKNOWN", "requires a fresh, verified available balance")
-    if balance <= MINIMUM_LIVE_BALANCE:
+    if value <= MINIMUM_LIVE_BALANCE:
         return Gate(
             "AVAILABLE_CAPITAL",
             "FAIL",
@@ -68,19 +71,14 @@ def _minimum_available_capital_gate(balance: float | None) -> Gate:
 
 
 def _minimum_stake_risk_gate(available_balance: float | None, minimum_stake: float) -> Gate:
-    if (
-        isinstance(available_balance, bool)
-        or not isinstance(available_balance, (int, float))
-        or not math.isfinite(float(available_balance))
-        or available_balance < 0
-        or isinstance(minimum_stake, bool)
-        or not isinstance(minimum_stake, (int, float))
-        or not math.isfinite(float(minimum_stake))
-        or minimum_stake <= 0
-    ):
+    balance_value = _finite_number(available_balance)
+    stake_value = _finite_number(minimum_stake)
+    if balance_value is None or balance_value < 0 or stake_value is None or stake_value <= 0:
         return Gate("MINIMUM_STAKE_RISK", "UNKNOWN", "requires verified available balance and instrument minimum stake")
-    permitted_minimum_stake = float(available_balance) * MINIMUM_STAKE_BALANCE_FRACTION
-    if float(minimum_stake) > permitted_minimum_stake:
+    permitted_minimum_stake = balance_value * MINIMUM_STAKE_BALANCE_FRACTION
+    if not math.isfinite(permitted_minimum_stake):
+        return Gate("MINIMUM_STAKE_RISK", "UNKNOWN", "stake-risk calculation is not finite")
+    if stake_value > permitted_minimum_stake:
         return Gate(
             "MINIMUM_STAKE_RISK",
             "FAIL",
