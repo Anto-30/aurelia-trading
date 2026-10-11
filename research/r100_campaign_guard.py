@@ -3,6 +3,7 @@ from __future__ import annotations
 """Classify recovered R100 state before continuing a frozen campaign."""
 
 import json
+import os
 from pathlib import Path
 
 from research.r100_prospective_oos_collector import STRATEGY_ID, STRATEGY_VERSION, research_config_hash
@@ -31,7 +32,8 @@ def inspect_state(path: Path) -> str:
     return 'R100_COMPATIBLE'
 
 def main() -> int:
-    print(inspect_state())
+    state_path = Path(os.getenv("AURELIA_R100_STATE_PATH", ".research_state/aurelia_r100_state.json"))
+    print(inspect_state(state_path))
     return 0
 
 if __name__ == '__main__':
