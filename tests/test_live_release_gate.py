@@ -1,8 +1,11 @@
 import os
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import scripts.live_release_gate as gate
+from runtime.core.release_gate import read_live_release
 
 
 class LiveReleaseGateTests(unittest.TestCase):
@@ -81,6 +84,41 @@ class LiveReleaseGateTests(unittest.TestCase):
                 gate.check_session_evidence()
         finally:
             gate.SESSION_EVIDENCE_PATH = original
+
+    def test_live_release_requires_live_execution_enabled(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = Path(tmp) / "LIVE_LOCK.yaml"
+            lock.write_text(
+                "live_trading_enabled: true\n"
+                "FINAL_EXECUTION_AUTHORIZATION: true\n"
+                "capital_plane_mode: LIVE\n"
+                "LIVE_EXECUTION: ENABLED\n",
+                encoding="utf-8",
+            )
+            self.assertTrue(read_live_release(lock).may_move_capital)
+
+    def test_live_release_blocks_when_execution_field_is_blocked(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = Path(tmp) / "LIVE_LOCK.yaml"
+            lock.write_text(
+                "live_trading_enabled: true\n"
+                "FINAL_EXECUTION_AUTHORIZATION: true\n"
+                "capital_plane_mode: LIVE\n"
+                "LIVE_EXECUTION: BLOCKED\n",
+                encoding="utf-8",
+            )
+            self.assertFalse(read_live_release(lock).may_move_capital)
+
+    def test_live_release_blocks_when_execution_field_is_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = Path(tmp) / "LIVE_LOCK.yaml"
+            lock.write_text(
+                "live_trading_enabled: true\n"
+                "FINAL_EXECUTION_AUTHORIZATION: true\n"
+                "capital_plane_mode: LIVE\n",
+                encoding="utf-8",
+            )
+            self.assertFalse(read_live_release(lock).may_move_capital)
 
 
 if __name__ == "__main__":
