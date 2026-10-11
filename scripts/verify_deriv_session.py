@@ -22,7 +22,11 @@ from runtime.core.models import CapitalSnapshot
 from runtime.core.runtime_config import load_config_hash
 
 
-OUTPUT = Path(os.getenv("DERIV_EVIDENCE_OUT", "artifacts/deriv_authenticated_session.json"))
+OUTPUT = Path(
+    os.getenv("AURELIA_DERIV_EVIDENCE_PATH", "").strip()
+    or os.getenv("DERIV_EVIDENCE_OUT", "").strip()
+    or "artifacts/deriv_authenticated_session.json"
+)
 
 
 async def run() -> int:
