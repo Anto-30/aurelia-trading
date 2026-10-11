@@ -73,20 +73,20 @@ def main() -> int:
         # capital-plane authority constants and canonical README policy. A silent
         # threshold split can cause research, documentation and execution to disagree.
         probability_policy = re.search(
-            r"(?ms)^probability_policy:[ \\t]*\\n(?P<body>(?:^[ \\t]+.*(?:\\n|$))*)",
+            r"(?ms)^probability_policy:[ \t]*\n(?P<body>(?:^[ \t]+.*(?:\n|$))*)",
             standard,
         )
         documented_min = (
-            re.search(r"(?m)^[ \\t]+minimum:\\s*([0-9.]+)\\s*$", probability_policy.group("body"))
+            re.search(r"(?m)^[ \t]+minimum:\s*([0-9.]+)\s*$", probability_policy.group("body"))
             if probability_policy else None
         )
         documented_max = (
-            re.search(r"(?m)^[ \\t]+maximum:\\s*([0-9.]+)\\s*$", probability_policy.group("body"))
+            re.search(r"(?m)^[ \t]+maximum:\s*([0-9.]+)\s*$", probability_policy.group("body"))
             if probability_policy else None
         )
         authority = read("runtime/core/authority.py")
-        runtime_min = re.search(r"(?m)^MIN_PROBABILITY\\s*=\\s*([0-9.]+)\\s*$", authority)
-        runtime_max = re.search(r"(?m)^MAX_PROBABILITY\\s*=\\s*([0-9.]+)\\s*$", authority)
+        runtime_min = re.search(r"(?m)^MIN_PROBABILITY\s*=\s*([0-9.]+)\s*$", authority)
+        runtime_max = re.search(r"(?m)^MAX_PROBABILITY\s*=\s*([0-9.]+)\s*$", authority)
         readme = read("README.md")
         try:
             policy_values = (
