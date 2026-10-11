@@ -46,6 +46,7 @@ jobs:
           fi
           test -n "${DERIV_EXPECTED_LOGINID:-${DERIV_AUTHORIZED_ACCOUNT_ID:-}}" || { echo "DERIV_AUTH_SESSION=BLOCKED_EXTERNAL_SECRET"; exit 2; }
           test -n "${DERIV_EXPECTED_CURRENCY:-}" || { echo "DERIV_AUTH_SESSION=BLOCKED_EXPECTED_CURRENCY_MISSING"; exit 2; }
+          test "$(printf "%s" "${DERIV_EXPECTED_CURRENCY:-}" | tr "[:lower:]" "[:upper:]")" = "USD" || { echo "DERIV_AUTH_SESSION=BLOCKED_UNSUPPORTED_CURRENCY"; exit 2; }
           echo "Protected Deriv configuration is present; secret values are not printed."
 
       - name: Install Python dependencies
