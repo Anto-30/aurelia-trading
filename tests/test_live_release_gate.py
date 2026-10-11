@@ -35,6 +35,32 @@ class LiveReleaseGateTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=False):
             gate.check_environment()
 
+    def test_readiness_is_recomputed_and_never_trusted_from_a_snapshot(self):
+        current = {
+            "final_execution_authorization": False,
+            "live_execution": "BLOCKED",
+            "blockers": [{"gate": "LIVE_RELEASE", "status": "FAIL"}],
+        }
+        with patch.object(gate, "evaluate_readiness", return_value=current) as evaluate:
+            with self.assertRaisesRegex(RuntimeError, "dynamic readiness final_execution_authorization is false"):
+                gate.check_readiness()
+        evaluate.assert_called_once_with(gate.ROOT)
+
+    def test_dynamic_readiness_rejects_blockers_even_if_authorization_flag_is_true(self):
+        current = {
+            "final_execution_authorization": True,
+            "live_execution": "ENABLED",
+            "blockers": [{"gate": "PROSPECTIVE_OOS", "status": "FAIL"}],
+        }
+        with patch.object(gate, "evaluate_readiness", return_value=current):
+            with self.assertRaisesRegex(RuntimeError, "dynamic readiness blockers present"):
+                gate.check_readiness()
+
+    def test_dynamic_readiness_requires_a_well_formed_payload(self):
+        with patch.object(gate, "evaluate_readiness", return_value=None):
+            with self.assertRaisesRegex(RuntimeError, "invalid payload"):
+                gate.check_readiness()
+
     def test_release_gate_cannot_use_missing_session_evidence(self):
         original = gate.SESSION_EVIDENCE_PATH
         try:
