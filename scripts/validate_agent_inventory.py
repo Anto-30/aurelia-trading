@@ -13,6 +13,8 @@ AGENTS = {
     "PlaywrightCLI",
     "JEV",
     "AURELIA",
+    "ChatGPT",
+    "Dev",
 }
 
 
