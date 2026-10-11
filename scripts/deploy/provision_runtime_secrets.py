@@ -24,6 +24,7 @@ REQUIRED = (
     "DERIV_AUTH_MODE",
     "AURELIA_ATTESTATION_SIGNING_KEY",
     "AURELIA_RUNTIME_ID",
+    "AURELIA_OPERATOR_RESET_SIGNING_KEY",
 )
 OPTIONAL = ("DERIV_APP_ID",)
 
@@ -63,6 +64,8 @@ def build_env_text(payload: dict[str, Any]) -> str:
         raise RuntimeSecretProvisioningError("LIVE_RUNTIME_REQUIRES_REAL_ACCOUNT")
     if mode == "pat" and not app_id:
         raise RuntimeSecretProvisioningError("DERIV_APP_ID_REQUIRED_FOR_PAT")
+    if len(values["AURELIA_OPERATOR_RESET_SIGNING_KEY"]) < 32:
+        raise RuntimeSecretProvisioningError("OPERATOR_RESET_SIGNING_KEY_TOO_SHORT")
 
     ordered = [
         ("DERIV_AUTH_TOKEN", values["DERIV_AUTH_TOKEN"]),
@@ -72,6 +75,8 @@ def build_env_text(payload: dict[str, Any]) -> str:
         ("DERIV_AUTH_MODE", mode),
         ("AURELIA_ATTESTATION_SIGNING_KEY", values["AURELIA_ATTESTATION_SIGNING_KEY"]),
         ("AURELIA_RUNTIME_ID", values["AURELIA_RUNTIME_ID"]),
+        ("AURELIA_OPERATOR_RESET_SIGNING_KEY", values["AURELIA_OPERATOR_RESET_SIGNING_KEY"]),
+        ("AURELIA_KILL_SWITCH_STATE_PATH", "/tmp/aurelia/kill-switch-state.json"),
     ]
     if mode == "pat":
         ordered.insert(1, ("DERIV_APP_ID", app_id))
