@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import json
 import os
 import sys
 from pathlib import Path
@@ -12,10 +11,9 @@ if str(ROOT) not in sys.path:
 
 from runtime.core.secrets import get_optional_secret
 from assurance.certification_evidence import validate_evidence_bundle
-from runtime.ops.readiness_orchestrator import _current_evidence
+from runtime.ops.readiness_orchestrator import _current_evidence, evaluate as evaluate_readiness
 
 LIVE_LOCK_PATH = ROOT / "config" / "LIVE_LOCK.yaml"
-READINESS_PATH = ROOT / "data" / "runtime" / "AURELIA_READINESS.json"
 SESSION_EVIDENCE_PATH = ROOT / "artifacts" / "deriv_authenticated_session.json"
 LIFECYCLE_VERIFY_EVIDENCE_PATH = ROOT / "artifacts" / "deriv_transaction_lifecycle.json"
 BROKER_EVIDENCE_PATH = ROOT / "artifacts" / "deriv_broker_account_evidence.json"
@@ -45,16 +43,6 @@ def _read_live_lock(path: Path) -> dict[str, str]:
     return values
 
 
-def _read_json(path: Path) -> dict:
-    if not path.exists():
-        raise RuntimeError(f"missing required artifact: {path}")
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"invalid JSON in {path}") from exc
-    if not isinstance(data, dict):
-        raise RuntimeError(f"artifact {path} must be a JSON object")
-    return data
 
 
 def fail(reason: str) -> int:
@@ -75,7 +63,9 @@ def check_environment() -> None:
         raise RuntimeError("missing required env var: DERIV_AUTH_TOKEN (or DERIV_PAT)")
     if not (os.getenv("DERIV_EXPECTED_LOGINID", "").strip() or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()):
         raise RuntimeError("missing required env var: DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID)")
-    _assert_env("DERIV_EXPECTED_CURRENCY")
+    currency = _assert_env("DERIV_EXPECTED_CURRENCY").upper()
+    if currency != "USD":
+        raise RuntimeError("DERIV_EXPECTED_CURRENCY must be USD for the current AURELIA configuration")
     _assert_env("DERIV_ENVIRONMENT")
     auth_mode = _assert_env("DERIV_AUTH_MODE").lower()
 
@@ -103,14 +93,19 @@ def check_live_lock() -> None:
 
 
 def check_readiness() -> None:
-    report = _read_json(READINESS_PATH)
+    # Never trust a persisted readiness snapshot for release authorization.
+    # Recompute it from the current lock, broker evidence, attestations, and
+    # certification inputs every time the final gate is evaluated.
+    report = evaluate_readiness(ROOT)
+    if not isinstance(report, dict):
+        raise RuntimeError("dynamic readiness evaluation returned an invalid payload")
     if not report.get("final_execution_authorization"):
-        raise RuntimeError("readiness report final_execution_authorization is false")
+        raise RuntimeError("dynamic readiness final_execution_authorization is false")
     if str(report.get("live_execution", "")).upper() != "ENABLED":
-        raise RuntimeError("readiness report live_execution is not ENABLED")
+        raise RuntimeError("dynamic readiness live_execution is not ENABLED")
     blockers = report.get("blockers")
     if blockers:
-        raise RuntimeError(f"readiness blockers present: {blockers}")
+        raise RuntimeError(f"dynamic readiness blockers present: {blockers}")
 
 
 def check_certification_evidence() -> None:
