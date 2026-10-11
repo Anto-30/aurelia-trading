@@ -1,0 +1,41 @@
+name: One-time removal of unsafe Deriv prerequisite artifacts
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/cleanup-unsafe-deriv-artifacts.yml"
+permissions:
+  actions: write
+jobs:
+  remove-identified-artifacts:
+    if: contains(github.event.head_commit.added, '.github/workflows/cleanup-unsafe-deriv-artifacts.yml')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Delete and verify identified artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for artifact_id in 11706133713 11707105236; do
+            code="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+              --request DELETE \
+              --header "Accept: application/vnd.github+json" \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              --header "X-GitHub-Api-Version: 2026-03-10" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id")"
+            if [ "$code" != "204" ] && [ "$code" != "404" ]; then
+              echo "ARTIFACT_DELETE_FAILED id=$artifact_id http=$code"
+              exit 1
+            fi
+            verify_code="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+              --header "Accept: application/vnd.github+json" \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              --header "X-GitHub-Api-Version: 2026-03-10" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id")"
+            if [ "$verify_code" != "404" ]; then
+              echo "ARTIFACT_STILL_ACCESSIBLE id=$artifact_id http=$verify_code"
+              exit 1
+            fi
+            echo "ARTIFACT_REMOVED_OR_ABSENT id=$artifact_id"
+          done
