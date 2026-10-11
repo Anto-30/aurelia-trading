@@ -29,7 +29,11 @@ async def main() -> int:
         "order_submission_permitted": False,
     }
     evidence["record_hash"] = sha256(evidence)
-    output = Path(os.getenv("DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT", "artifacts/deriv_public_transport.json"))
+    output = Path(
+        os.getenv("DERIV_PUBLIC_TRANSPORT_EVIDENCE_PATH", "").strip()
+        or os.getenv("DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT", "").strip()
+        or "artifacts/deriv_public_transport.json"
+    )
     output.parent.mkdir(parents=True, exist_ok=True)
     temp = output.with_name(output.name + ".tmp")
     temp.write_text(json.dumps(evidence, sort_keys=True, indent=2) + "\n", encoding="utf-8")
