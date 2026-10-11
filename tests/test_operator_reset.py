@@ -47,6 +47,44 @@ class OperatorResetProofTests(unittest.TestCase):
         self.assertEqual(reason, "OPERATOR_RESET_VERIFIED")
         self.assertEqual(nonce, "a" * 48)
 
+    def test_proof_binds_fault_source_separately_from_current_source(self):
+        record = create_operator_reset_record(
+            signing_key=KEY,
+            operator_id="operator-test",
+            reason="STATE_MISMATCH",
+            source_sha="source-current",
+            fault_source_sha="source-that-tripped",
+            account_loginid="CRREAL123",
+            kill_switch_generation=7,
+            nonce="b" * 48,
+        )
+        valid, reason, nonce = verify_operator_reset_record(
+            record,
+            signing_key=KEY,
+            expected_reason="STATE_MISMATCH",
+            expected_source_sha="source-current",
+            expected_fault_source_sha="source-that-tripped",
+            expected_account_loginid="CRREAL123",
+            expected_generation=7,
+            now=datetime.now(UTC),
+        )
+        self.assertTrue(valid)
+        self.assertEqual(reason, "OPERATOR_RESET_VERIFIED")
+        self.assertEqual(nonce, "b" * 48)
+
+        valid, reason, _ = verify_operator_reset_record(
+            record,
+            signing_key=KEY,
+            expected_reason="STATE_MISMATCH",
+            expected_source_sha="source-current",
+            expected_fault_source_sha="wrong-fault-source",
+            expected_account_loginid="CRREAL123",
+            expected_generation=7,
+            now=datetime.now(UTC),
+        )
+        self.assertFalse(valid)
+        self.assertEqual(reason, "OPERATOR_RESET_FAULT_SOURCE_MISMATCH")
+
     def test_tampering_with_signed_reason_is_rejected(self):
         record = self.make_record()
         record["reason"] = "OTHER_REASON"
