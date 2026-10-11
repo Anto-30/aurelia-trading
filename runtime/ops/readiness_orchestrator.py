@@ -453,10 +453,9 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
 def main() -> int:
     report = evaluate()
     output = Path(
-        os.getenv(
-            "AURELIA_READINESS_OUT",
-            str(ROOT / "data" / "runtime" / "AURELIA_READINESS.json"),
-        )
+        os.getenv("AURELIA_READINESS_PATH", "").strip()
+        or os.getenv("AURELIA_READINESS_OUT", "").strip()
+        or str(ROOT / "data" / "runtime" / "AURELIA_READINESS.json")
     )
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
