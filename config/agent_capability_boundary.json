@@ -139,6 +139,37 @@
       ],
       "capital_authority": false,
       "runtime_status": "NOT_CONNECTED"
+    },
+    "GrokBot": {
+      "role": "orchestration/research/blocker diagnosis",
+      "may": [
+        "decompose",
+        "research",
+        "propose",
+        "synchronize_skill_registry"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock"
+      ],
+      "capital_authority": false
+    },
+    "JEV": {
+      "role": "validation, evidence audit, workflow and regression review",
+      "may": [
+        "validate_tests",
+        "reconcile_evidence",
+        "review_release_gates",
+        "identify_contradictions"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock",
+        "read_production_secrets"
+      ],
+      "capital_authority": false
     }
   },
   "non_negotiables": [
