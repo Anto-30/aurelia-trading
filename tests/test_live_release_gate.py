@@ -236,40 +236,33 @@ class LiveReleaseGateTests(unittest.TestCase):
         }
 
     def test_readiness_rejects_string_booleans_cross_account_and_stale_source(self):
-        original = gate.READINESS_PATH
-        with tempfile.TemporaryDirectory() as td:
-            path = Path(td) / "readiness.json"
-            gate.READINESS_PATH = path
-            report = self._valid_readiness_fixture()
-            env = {
-                "GITHUB_SHA": "test-source-sha",
-                "DERIV_EXPECTED_LOGINID": "CRTEST",
-                "DERIV_EXPECTED_CURRENCY": "USD",
-                "AURELIA_READINESS_MAX_AGE_SECONDS": "30",
-            }
-            try:
-                with patch.dict(os.environ, env, clear=False):
-                    path.write_text(json.dumps(report), encoding="utf-8")
+        report = self._valid_readiness_fixture()
+        env = {
+            "GITHUB_SHA": "test-source-sha",
+            "DERIV_EXPECTED_LOGINID": "CRTEST",
+            "DERIV_EXPECTED_CURRENCY": "USD",
+            "AURELIA_READINESS_MAX_AGE_SECONDS": "30",
+        }
+        with patch.dict(os.environ, env, clear=False):
+            with patch.object(gate, "evaluate_readiness", return_value=report):
+                gate.check_readiness()
+
+            report["final_execution_authorization"] = "true"
+            with patch.object(gate, "evaluate_readiness", return_value=report):
+                with self.assertRaisesRegex(RuntimeError, "literal true"):
                     gate.check_readiness()
 
-                    report["final_execution_authorization"] = "true"
-                    path.write_text(json.dumps(report), encoding="utf-8")
-                    with self.assertRaisesRegex(RuntimeError, "literal true"):
-                        gate.check_readiness()
+            report["final_execution_authorization"] = True
+            report["deriv"]["account_loginid"] = "CROTHER"
+            with patch.object(gate, "evaluate_readiness", return_value=report):
+                with self.assertRaisesRegex(RuntimeError, "account identity mismatch"):
+                    gate.check_readiness()
 
-                    report["final_execution_authorization"] = True
-                    report["deriv"]["account_loginid"] = "CROTHER"
-                    path.write_text(json.dumps(report), encoding="utf-8")
-                    with self.assertRaisesRegex(RuntimeError, "account identity mismatch"):
-                        gate.check_readiness()
-
-                    report["deriv"]["account_loginid"] = "CRTEST"
-                    report["attestations"]["source_sha"] = "old-source"
-                    path.write_text(json.dumps(report), encoding="utf-8")
-                    with self.assertRaisesRegex(RuntimeError, "source revision mismatch"):
-                        gate.check_readiness()
-            finally:
-                gate.READINESS_PATH = original
+            report["deriv"]["account_loginid"] = "CRTEST"
+            report["attestations"]["source_sha"] = "old-source"
+            with patch.object(gate, "evaluate_readiness", return_value=report):
+                with self.assertRaisesRegex(RuntimeError, "source revision mismatch"):
+                    gate.check_readiness()
 
     def test_public_transport_gate_requires_fresh_hash_linked_read_only_evidence(self):
         original = gate.PUBLIC_TRANSPORT_EVIDENCE_PATH

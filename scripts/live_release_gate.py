@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from runtime.core.secrets import get_optional_secret
+from runtime.core.events import sha256
 from assurance.certification_evidence import validate_evidence_bundle
 from runtime.ops.readiness_attestation import config_hash as readiness_config_hash
 from runtime.ops.readiness_orchestrator import _current_evidence, evaluate as evaluate_readiness
@@ -134,9 +135,12 @@ def check_readiness() -> None:
     if not isinstance(report, dict):
         raise RuntimeError("dynamic readiness evaluation returned an invalid payload")
     if report.get("final_execution_authorization") is not True:
-        raise RuntimeError("dynamic readiness final_execution_authorization is not literal true")
+        raise RuntimeError("dynamic readiness final_execution_authorization is false or not literal true")
     if not isinstance(report.get("live_execution"), str) or report["live_execution"].strip().upper() != "ENABLED":
         raise RuntimeError("dynamic readiness live_execution is not ENABLED")
+    blockers = report.get("blockers")
+    if not isinstance(blockers, list) or blockers:
+        raise RuntimeError(f"dynamic readiness blockers present or malformed: {blockers}")
 
     try:
         max_age = float(os.getenv("AURELIA_READINESS_MAX_AGE_SECONDS", "30"))
@@ -182,9 +186,6 @@ def check_readiness() -> None:
         if expiry.tzinfo is None or expiry <= datetime.now(timezone.utc):
             raise RuntimeError(f"dynamic readiness attestation expired: {capability}")
 
-    blockers = report.get("blockers")
-    if not isinstance(blockers, list) or blockers:
-        raise RuntimeError(f"dynamic readiness blockers present or malformed: {blockers}")
     controls = report.get("controls")
     if not isinstance(controls, dict) or any(
         controls.get(k) is not True
@@ -293,20 +294,53 @@ def check_broker_account_evidence() -> None:
 
 
 def check_runtime_verification_flags() -> None:
-    if not _as_bool(os.getenv("AURELIA_VERIFY_DERIV_PUBLIC")):
-        raise RuntimeError("AURELIA_VERIFY_DERIV_PUBLIC must be true")
-    if not _as_bool(os.getenv("AURELIA_VERIFY_DERIV_AUTH")):
-        raise RuntimeError("AURELIA_VERIFY_DERIV_AUTH must be true")
-    if not _as_bool(os.getenv("AURELIA_RUN_ONCE")):
-        raise RuntimeError(
-            "AURELIA_RUN_ONCE must be true during live gate verification"
+    """Check current, source-bound read-only transport evidence instead of booleans."""
+    if not PUBLIC_TRANSPORT_EVIDENCE_PATH.exists():
+        raise RuntimeError("public Deriv transport evidence is missing")
+    try:
+        evidence = json.loads(PUBLIC_TRANSPORT_EVIDENCE_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        raise RuntimeError("public Deriv transport evidence is invalid JSON") from exc
+    if not isinstance(evidence, dict):
+        raise RuntimeError("public Deriv transport evidence must be a JSON object")
+    if evidence.get("schema") != "aurelia.deriv_public_transport.v1":
+        raise RuntimeError("public Deriv transport evidence schema is invalid")
+    expected_source = (
+        os.getenv("GITHUB_SHA", "").strip()
+        or os.getenv("AURELIA_SOURCE_SHA", "").strip()
+    )
+    if not expected_source or evidence.get("source_sha") != expected_source:
+        raise RuntimeError("public Deriv transport source revision mismatch")
+    unsigned = {key: value for key, value in evidence.items() if key != "record_hash"}
+    if not isinstance(evidence.get("record_hash"), str) or sha256(unsigned) != evidence["record_hash"]:
+        raise RuntimeError("public Deriv transport evidence hash mismatch")
+    try:
+        generated = datetime.fromisoformat(
+            str(evidence["generated_at_utc"]).replace("Z", "+00:00")
         )
+        max_age = float(os.getenv("AURELIA_PUBLIC_TRANSPORT_MAX_AGE_SECONDS", "900"))
+        age = (datetime.now(timezone.utc) - generated).total_seconds()
+    except (KeyError, TypeError, ValueError, OverflowError) as exc:
+        raise RuntimeError("public Deriv transport evidence timestamp is invalid") from exc
+    if (
+        generated.tzinfo is None or not math.isfinite(max_age) or max_age <= 0
+        or age < 0 or age > max_age
+    ):
+        raise RuntimeError("public Deriv transport evidence is stale or from the future")
+    count = evidence.get("active_symbol_count")
+    if isinstance(count, bool) or not isinstance(count, int) or count < 1:
+        raise RuntimeError("public Deriv transport reports no active symbols")
+    if (
+        evidence.get("capital_authority_granted") is not False
+        or evidence.get("order_submission_permitted") is not False
+    ):
+        raise RuntimeError("public Deriv transport probe is not read-only")
 
 
 def main() -> int:
     try:
-        check_environment()
         check_live_lock()
+        check_environment()
         check_readiness()
         check_certification_evidence()
         check_session_evidence()
