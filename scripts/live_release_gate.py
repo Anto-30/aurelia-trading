@@ -63,7 +63,9 @@ def check_environment() -> None:
         raise RuntimeError("missing required env var: DERIV_AUTH_TOKEN (or DERIV_PAT)")
     if not (os.getenv("DERIV_EXPECTED_LOGINID", "").strip() or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()):
         raise RuntimeError("missing required env var: DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID)")
-    _assert_env("DERIV_EXPECTED_CURRENCY")
+    currency = _assert_env("DERIV_EXPECTED_CURRENCY").upper()
+    if currency != "USD":
+        raise RuntimeError("DERIV_EXPECTED_CURRENCY must be USD for the current AURELIA configuration")
     _assert_env("DERIV_ENVIRONMENT")
     auth_mode = _assert_env("DERIV_AUTH_MODE").lower()
 
