@@ -3,19 +3,13 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "research/labs/rth_orb_auction.py"
-      - "research/labs/session_data_guard.py"
-      - "research/labs/tests/test_rth_orb_auction.py"
-      - "research/labs/tests/test_session_data_guard.py"
+      - "research/labs/**"
       - "config/rth_orb_auction_research.json"
       - ".github/workflows/rth-orb-auction-research.yml"
   push:
     branches: [main]
     paths:
-      - "research/labs/rth_orb_auction.py"
-      - "research/labs/session_data_guard.py"
-      - "research/labs/tests/test_rth_orb_auction.py"
-      - "research/labs/tests/test_session_data_guard.py"
+      - "research/labs/**"
       - "config/rth_orb_auction_research.json"
   workflow_dispatch:
 permissions:
@@ -29,5 +23,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python -m pip install --upgrade pip pytest
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e . pytest
       - run: python -m pytest -q research/labs/tests/
