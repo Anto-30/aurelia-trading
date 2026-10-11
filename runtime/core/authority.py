@@ -30,7 +30,10 @@ class GateResult:
 def probability_is_valid(probability: float) -> bool:
     if isinstance(probability, bool) or not isinstance(probability, (int, float)):
         return False
-    value = float(probability)
+    try:
+        value = float(probability)
+    except (TypeError, ValueError, OverflowError):
+        return False
     return isfinite(value) and MIN_PROBABILITY <= value <= MAX_PROBABILITY
 
 
