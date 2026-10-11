@@ -79,7 +79,20 @@ Do not select `LIVE` mode to test connectivity. Do not call a public market-data
 - For any eventual broker transaction qualification, use only the reviewed verify-only lifecycle until the release authority has accepted all prerequisites. Reconcile broker-confirmed transaction/fill state against the ledger; never infer a fill from a request acknowledgement.
 - Keep `R100_TICK_MOMENTUM_PROSPECTIVE_V0.2.0` disqualified after its negative quoted net economics result. Archive that sealed campaign and conduct any next evaluation on a new, prospectively sealed sample with realized cost assumptions, calibration and uncertainty analysis.
 - Keep S7, S6, S3, CRT and `MICRO_SCALP_R100_TICK_MOM` blocked until the actual canonical implementation, instrument mapping/specification, timeframe rules, OOS/walk-forward, calibration, economics, robustness, forward test, runtime soak and independent reviewer evidence are linked in the strategy registry.
-- Configure branch protection only after selecting the actual required status-check names from successful runs. Do not enable an empty ruleset or allow unreviewed bypasses.
+
+### Branch ruleset correction (repository-admin action; verified 2026-10-11)
+
+The repository's `Execution` ruleset (ID `24423833`, [settings page](https://github.com/Anto-30/aurelia-trading/rules/24423833)) was observed with **enforcement disabled**, an empty `required_status_checks` list, empty ref include/exclude patterns, and multiple integration bypass actors set to `always`. Do not treat this as active branch protection.
+
+From a repository-owner/admin browser session, correct the ruleset before authorizing a release:
+
+1. Set enforcement to **Active** and scope the release-protection ruleset explicitly to `refs/heads/main`.
+2. Configure the strict required check contexts observed passing on the reviewed PR head `a4de7b933d0d4609f471174f02e805c5bf213fd1`: `assurance`, `federation-audit`, and `continuity`. Reconfirm these exact names on a fresh pull request before saving. Do not require the scheduled heartbeat, one-hour soak, or prospective collector as PR checks unless those workflows are deliberately changed to run on every PR.
+3. Require pull-request review and resolved review conversations where the repository's maintainer model supports independent review. Do not use self-approval as a substitute for independent review.
+4. Remove force-push/deletion allowances and review every bypass actor. Remove any `always` bypass not explicitly justified by the release-governance policy; do not enable the current empty ruleset unchanged.
+5. After saving, reread the ruleset and verify it is active, scoped to `main`, has non-empty required checks, and has only approved bypass actors. Then open a fresh test PR and verify the required checks actually block merge when one fails.
+
+The current connected GitHub integration can read the ruleset but receives HTTP 403 on the branch-protection administration endpoint, so this settings change must be made by an authorized repository administrator. A documentation change or green CI run does not change the GitHub ruleset.
 
 ## 5. Release decision
 
