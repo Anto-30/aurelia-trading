@@ -384,12 +384,15 @@
         "KimiK3",
         "GrokBot",
         "ClaudeCode",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/OpenByteInc/QuantDinger",
       "head_commit": "ba8cd667acca3e934bbc1cb354922eff413393dc",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09"
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-11",
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
     },
     {
       "repo": "Mathieu2301/TradingView-API",
@@ -2936,7 +2939,8 @@
         "AURELIA",
         "JEV",
         "GLM",
-        "GoogleAgentSkills"
+        "GoogleAgentSkills",
+        "ChatGPT"
       ],
       "sync_targets": [
         "GrokBot",
@@ -2946,15 +2950,17 @@
         "KimiK3",
         "GLM",
         "GoogleAgentSkills",
-        "PlaywrightCLI"
+        "PlaywrightCLI",
+        "ChatGPT"
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/openinterpreter/openinterpreter",
-      "head_commit": "cc054cf52fa3585a3de50e0d4e0be6f9ee6677e8",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "head_commit": "ac1fcc8fe57aba51fcc3c79afd57a0883237fe87",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-11",
       "physical_runtime_install": "NOT_CLAIMED",
       "integration_note": "Sandbox-only computer-use/automation evaluation; deny access to broker sessions, secrets, and production hosts.",
-      "capital_authority": false
+      "capital_authority": false,
+      "security_review_status": "PENDING"
     },
     {
       "repo": "anomalyco/opencode",
@@ -4381,7 +4387,8 @@
         "KimiK3",
         "GrokBot",
         "ClaudeCode",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/The-Swarm-Corporation/AutoHedge",
       "head_commit": "c549c7950da112286e76725d49f6a25de8fa99bd",
@@ -4405,7 +4412,8 @@
         "KimiK3",
         "GrokBot",
         "ClaudeCode",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/microsoft/qlib",
       "head_commit": "54355232463878d2eebb91fe0ee5fa7fa1f5976c",
@@ -4429,7 +4437,8 @@
         "KimiK3",
         "GrokBot",
         "ClaudeCode",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/qusong0627/QuantMind",
       "head_commit": "7d8019cac06e5f44de5f19b501481886535a6c32",
@@ -4453,7 +4462,8 @@
         "KimiK3",
         "GrokBot",
         "ClaudeCode",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/quantskills/quantskills",
       "head_commit": "c4f36bfa795a4455804c5e4c2cfd028cb882fcc2",
@@ -4477,7 +4487,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/quantalogic/quantalogic",
       "head_commit": "bdcc7f267353b64965e7a3aa6b1c9bd5469df1ea",
@@ -4500,7 +4511,8 @@
         "KimiK3",
         "GrokBot",
         "ClaudeCode",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/openbq-org/OpenBB",
       "head_commit": "ae0268771f761b036996d81bd21522ce79d95415",
@@ -4524,7 +4536,8 @@
         "KimiK3",
         "GrokBot",
         "ClaudeCode",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/Barca0412/Introduction-to-Quantitative-Finance",
       "head_commit": "08a5fbf70915e72c7a52fa1ed700d1068051e452",
@@ -4547,7 +4560,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/QuantumByteOSS/quantumbyte",
       "head_commit": "6eaa965a018332dd4407a13466d2a9973a448fc5",
@@ -4570,7 +4584,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/cookiy-ai/user-research-skill",
       "head_commit": "21eea10a34d3c9b4e711e3d19f0457603dd33e19",
@@ -4593,7 +4608,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/ruvnet/RuVector",
       "head_commit": "07933730fac709457e0c5f41444c9a4adc505aee",
@@ -4616,7 +4632,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/ruvnet/rudevolution",
       "head_commit": "b99ec70c780e249b151de5c32ee9839784671962",
@@ -4640,7 +4657,8 @@
         "GrokBot",
         "PlaywrightCLI",
         "GLM",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/ruvnet/obsidian-brain",
       "head_commit": "68457cea6ab42c10dcd74ebdb84616ce2f2f9c87",
@@ -4663,7 +4681,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/ruvnet/helix",
       "head_commit": "e8d8fe780becff4d95008e052742e5c3b0ad3b5c",
@@ -4686,7 +4705,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/ruvnet/RuLake",
       "head_commit": "e83df644d63adf0d155cc733cffe4539a93f9fbf",
@@ -4708,7 +4728,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "PlaywrightCLI",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/ruvnet/rupixel",
       "head_commit": "bb1269fb9f4b0920de5944d248e4e79a01f3b80c",
@@ -4731,7 +4752,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/Jakeschincariol/arena-skill",
       "head_commit": "df07b8e518e10cdecd8cd7712d9958b6f396250e",
@@ -4753,7 +4775,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "PlaywrightCLI",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/chongdashu/threejs-toonshooter",
       "head_commit": "c76d2ed62955c6c6944ff305f641cf956b740c50",
@@ -4776,7 +4799,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/appwrite/arena",
       "head_commit": "a515cf4b06fe4e6e8eecacecac9494884540e970",
@@ -4799,7 +4823,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/zhjai/agent-arena",
       "head_commit": "df21e673ed4b38fccd81b1a10c438e94e906e81c",
@@ -4822,7 +4847,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/esengine/DeepSeek-Reasonix",
       "head_commit": "5f0bb7d845a6cf84f6048edec1fbd74ac900f303",
@@ -4844,7 +4870,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/jnMetaCode/agency-agents-zh",
       "head_commit": "e5a6c0a730878aaa871ec5b95859aec2c2728475",
@@ -4867,7 +4894,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/zhu1090093659/deepseek-pp",
       "head_commit": "0a02c72b135bf2936e11aa78fd6136931ed65908",
@@ -4889,7 +4917,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/Dominic789654/awesome-deepseek-harness",
       "head_commit": "980958d3404c6ffd7c42b94582d49f3e58fb377d",
@@ -4912,7 +4941,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/PySpur-Dev/pyspur",
       "head_commit": "97b9856e49f227a52868b73493c23c43fb4de358",
@@ -4934,7 +4964,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/yetone/magpie",
       "head_commit": "8902ec2179ddaa6b6b252e00b8161be1c514f40b",
@@ -4956,7 +4987,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/he-yufeng/CoreCoder",
       "head_commit": "19daf432fec0e566081897da77a9d50691dd1b08",
@@ -4979,7 +5011,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/mnemon-dev/mnemon",
       "head_commit": "30e0062e7a58f19d20efe0766081b567aaba4fc1",
@@ -5002,7 +5035,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/zilliztech/memsearch",
       "head_commit": "09e07d86b31ff81938b4f44a57099b6a9fc8723f",
@@ -5024,7 +5058,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/LangcliTeam/langcli",
       "head_commit": "fc668d6529281db6170a03e1579411dcc884c24e",
@@ -5047,7 +5082,8 @@
         "GoogleAgentSkills",
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/looplj/axonhub",
       "head_commit": "931fafff819a9202f48645839a0c47d3ccfe70fa",
@@ -5069,7 +5105,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/LnYo-Cly/ai4j",
       "head_commit": "628c3f9acc5f50adfb0517720ec5588760cf06e3",
@@ -5092,7 +5129,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/usewhale/Whale",
       "head_commit": "676a0a228882c457ff4dc00d9d285d972aea4a43",
@@ -5115,7 +5153,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/syncable-dev/memtrace-public",
       "head_commit": "3a3084dd88e4b49adcb185eb09173dbf0bd547d3",
@@ -5138,7 +5177,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/Q00/ouroboros",
       "head_commit": "188020bf1e406e0d276e8cfdd5f95f92e9fed7f5",
@@ -5161,7 +5201,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/hexabot-ai/Hexabot",
       "head_commit": "3c5473d1f0a3c99f47a2c88cb6e8bd1e9b2e9e5e",
@@ -5184,7 +5225,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/Aisland-SJL/dsh-worktable",
       "head_commit": "6cb86b6c73b3c356373e06cd81e08952542ea040",
@@ -5207,7 +5249,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/NanmiCoder/dsh-agent-teams",
       "head_commit": "1094b84add6f2fb19edf659367fe2fd5f7f14154",
@@ -5230,7 +5273,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/gptme/gptme",
       "head_commit": "b1af28ed8015025f8b0ccc04ea3816a386cb52f0",
@@ -5253,7 +5297,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/open-multi-agent/open-multi-agent",
       "head_commit": "6ec5498643c7e431aa66751f17f47a529e7f927c",
@@ -5276,7 +5321,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/amemiya02/deepseekcode",
       "head_commit": "5fbf1a9a87b43bcbd46f90b567c4ca3a0af87f50",
@@ -5299,7 +5345,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/PsChina/deepseek-as-subagent",
       "head_commit": "7e54026392f85ccfc796f947faf9ffac3968a49e",
@@ -5321,7 +5368,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/limecloud/lime",
       "head_commit": "64292f0b6462ca189ba5b5e7668065970f07f999",
@@ -5344,7 +5392,8 @@
         "PlaywrightCLI",
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/platonai/Browser4",
       "head_commit": "0fdba82a60edf7365cd74069ea5f367eadc2946a",
@@ -5366,7 +5415,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "PlaywrightCLI",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/omdsh-dev/DSH-better-sidebar",
       "head_commit": "64a61ccfe42f96e950c7e837c4cbc09942090ac9",
@@ -5389,7 +5439,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/xszyou/Fay",
       "head_commit": "d49f4769d46c2b5ece1fd15f0f1260afba7d2ccf",
@@ -5411,7 +5462,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/benman1/generative_ai_with_langchain",
       "head_commit": "87e17fd2057946d51f062764eb508b68692332a4",
@@ -5433,7 +5485,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/Derpyu520/qq-bridge",
       "head_commit": "9df6a7e7fc5abcb36793337f778483bd442a3d2d",
@@ -5455,7 +5508,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/8treenet/goraven",
       "head_commit": "26a8e6cef6ab4cfa0aa2a8e1d6e2ced172210d3f",
@@ -5478,7 +5532,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/pengyue-polaron/deepseek-harness-genui",
       "head_commit": "f6289bc709c5b1992c851bf5e63237a5fa453e1f",
@@ -5500,7 +5555,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/YaoApp/yao",
       "head_commit": "eea1e7e1011375705ea329a0d12ea7b1e949b2ed",
@@ -5522,7 +5578,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/laxmimerit/LangGraph-and-Ollama",
       "head_commit": "d0ec774d107c20a61e1c76cb7055a13067aee282",
@@ -5545,7 +5602,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/langgenius/dify",
       "head_commit": "2de5d891cbd5f59314f1813fc1db7c623ad762e3",
@@ -5568,7 +5626,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/aingdesk/AingDesk",
       "head_commit": "40b1be5119cfb77cf8c5e5131288992e32d26c68",
@@ -5591,7 +5650,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/Alex-Yanggg/awesome-DSH-plugin",
       "head_commit": "3b44fe8ffddbf19ccebd459829e5a8ae2cbb0fa6",
@@ -5613,7 +5673,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/wangrongding/wechat-bot",
       "head_commit": "43c6c5075393ca50a430629108251d9be104d5b9",
@@ -5635,7 +5696,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/CommandCodeAI/command-code",
       "head_commit": "5c8f1b48c9d6704210cb3f9a476fdcffe5093e9a",
@@ -5657,7 +5719,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/moonbitlang/openseek",
       "head_commit": "cc277d8fd01b0eb6f6ec93a0346d91ae5e074817",
@@ -5679,7 +5742,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/Soodok/Deepseek-Harness-Local-Android",
       "head_commit": "0b88f8c395cc6f4d3498a1faf56727f029bd7c47",
@@ -5702,7 +5766,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/MichengAI/dsh-agency-agents",
       "head_commit": "416d2a675ad01c943b336dcc4232876e0a48200e",
@@ -5724,7 +5789,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/DirectorySurf/awesome-ai-agents-directories",
       "head_commit": "4a754788f59a1427983ee8ded7a090e4eaa4980a",
@@ -5747,7 +5813,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/yuruotong1/autoMate",
       "head_commit": "afb89b9d67a2d7c49ca09298191fbebe9ded238a",
@@ -5770,7 +5837,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/text2future/flowix",
       "head_commit": "cec714b001958e7a65230f6adf7f016ae5020466",
@@ -5793,7 +5861,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/oil-oil/codex-deepseek-subagent",
       "head_commit": "978b079524d22318625d14fe7d7f40cc8ec66fce",
@@ -5816,7 +5885,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/mindsdb/mindshub",
       "head_commit": "780bbcbb8b9367c667e9b6af2aecc8277f24c0ad",
@@ -5838,7 +5908,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/sandbaseai/deepseek-harness-handbook",
       "head_commit": "425dd255f9be22c97b2273cd0c38b3951aecddc3",
@@ -5861,7 +5932,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/Devin-AXIS/iPolloWork",
       "head_commit": "4483434be463de3c137889e80ce38c97512478b3",
@@ -5883,7 +5955,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "PlaywrightCLI",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/LibreChat-AI/LibreChat",
       "head_commit": "e1dfc10449ff713faffacd60273fddcfe2c0a698",
@@ -5905,7 +5978,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
-        "GoogleAgentSkills"
+        "GoogleAgentSkills",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/promptfoo/promptfoo",
       "head_commit": "b8123755f4d115be1398ff507203485c2e011c39",
@@ -5928,7 +6002,8 @@
         "GoogleAgentSkills",
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/BlockRunAI/ClawRouter",
       "head_commit": "b758e036bbd1290c0997ad14c9812a106ef8d72b",
@@ -5950,7 +6025,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "PlaywrightCLI",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/thinkany-ai/dscode",
       "head_commit": "e2a131c7f87a209a3b3b03a2fbc2f16c11041a46",
@@ -5972,7 +6048,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "PlaywrightCLI",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/nexu-io/open-design",
       "head_commit": "17e255959703a3fad7c8eb7f7b70dcafccc5629a",
@@ -5994,7 +6071,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/eosphoros-ai/DB-GPT",
       "head_commit": "361eb34476970ae4dba6d33454a45669ec6851bb",
@@ -6017,7 +6095,8 @@
         "PlaywrightCLI",
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/sauravpanda/BrowserAI",
       "head_commit": "7da5f50f7dbc00131399ea66e93fda0601e01a67",
@@ -6040,7 +6119,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/xuanyuanzhifeng/dsh-plugin-agent-workflow",
       "head_commit": "f2031b34443bf820a1a7cc7bace9b2d8cae99412",
@@ -6063,7 +6143,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/zhayujie/CowAgent",
       "head_commit": "34335f7a955c2555a669ba2f718979162d3bcb5d",
@@ -6086,7 +6167,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/simstudioai/sim",
       "head_commit": "c2d446f6c8a1c51923d24c8ba73b2fe6d1f805d5",
@@ -6108,7 +6190,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/sopaco/deepwiki-rs",
       "head_commit": "27dbd3ed74535213e7c40be8abcdcec4145bebf2",
@@ -6131,7 +6214,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/MemTensor/MemOS",
       "head_commit": "a7367d07e55db61099f7b4e2c1108bc5831a24f3",
@@ -6154,7 +6238,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/lobehub/lobehub",
       "head_commit": "d4f369d6df88e6346b9e6fbb295d98366b1c3884",
@@ -6176,7 +6261,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/Zain-ul-din/whatsapp-agents",
       "head_commit": "429e6bc7291e9f45e6aec77cf0dde8c283d104fa",
@@ -6198,7 +6284,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/lessweb/deepcode-cli",
       "head_commit": "857b58c12fed11bad90704a0e32767270a1784f8",
@@ -6220,7 +6307,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "PlaywrightCLI",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "source_url": "https://github.com/CherryHQ/cherry-studio",
       "head_commit": "f429fc4ced7e8d158639a63fcb6e5524445196e1",
@@ -6643,70 +6731,19 @@
     "date": "2026-10-09",
     "summary": "Added 19 Freebuff-related sources as pinned reference/sandbox entries; all external capital authority remains false.",
     "intake_2026_10_11": {
-      "requested_unique_repository_count": 83,
-      "added_to_external_repo_registry": 82,
-      "skipped_as_existing_duplicates": [
-        "OpenByteInc/QuantDinger"
+      "provided_repository_urls_count": 84,
+      "unique_supplied_repositories_count": 84,
+      "newly_added_to_external_repo_registry": 82,
+      "existing_repositories_refreshed": [
+        "OpenByteInc/QuantDinger",
+        "openinterpreter/openinterpreter"
       ],
+      "existing_sources_not_reinstalled": true,
       "skill_source_entries_added": 51,
-      "skill_sources_added": [
-        "cookiy-ai/user-research-skill",
-        "ruvnet/rudevolution",
-        "ruvnet/obsidian-brain",
-        "ruvnet/helix",
-        "Jakeschincariol/arena-skill",
-        "zhjai/agent-arena",
-        "esengine/DeepSeek-Reasonix",
-        "jnMetaCode/agency-agents-zh",
-        "zhu1090093659/deepseek-pp",
-        "Dominic789654/awesome-deepseek-harness",
-        "PySpur-Dev/pyspur",
-        "mnemon-dev/mnemon",
-        "zilliztech/memsearch",
-        "LangcliTeam/langcli",
-        "looplj/axonhub",
-        "usewhale/Whale",
-        "syncable-dev/memtrace-public",
-        "Q00/ouroboros",
-        "hexabot-ai/Hexabot",
-        "Aisland-SJL/dsh-worktable",
-        "NanmiCoder/dsh-agent-teams",
-        "gptme/gptme",
-        "open-multi-agent/open-multi-agent",
-        "amemiya02/deepseekcode",
-        "PsChina/deepseek-as-subagent",
-        "limecloud/lime",
-        "platonai/Browser4",
-        "xszyou/Fay",
-        "pengyue-polaron/deepseek-harness-genui",
-        "laxmimerit/LangGraph-and-Ollama",
-        "langgenius/dify",
-        "aingdesk/AingDesk",
-        "Alex-Yanggg/awesome-DSH-plugin",
-        "CommandCodeAI/command-code",
-        "moonbitlang/openseek",
-        "Soodok/Deepseek-Harness-Local-Android",
-        "MichengAI/dsh-agency-agents",
-        "DirectorySurf/awesome-ai-agents-directories",
-        "yuruotong1/autoMate",
-        "text2future/flowix",
-        "oil-oil/codex-deepseek-subagent",
-        "mindsdb/mindshub",
-        "sandbaseai/deepseek-harness-handbook",
-        "Devin-AXIS/iPolloWork",
-        "BlockRunAI/ClawRouter",
-        "xuanyuanzhifeng/dsh-plugin-agent-workflow",
-        "zhayujie/CowAgent",
-        "simstudioai/sim",
-        "MemTensor/MemOS",
-        "lobehub/lobehub",
-        "lessweb/deepcode-cli"
-      ],
-      "all_added_repos_pinned": true,
+      "all_source_heads_pinned": true,
+      "assigned_agents": "Relevant specialist primary + supporting reviewers + ChatGPT supervisory review; Dev excluded from execution until connected.",
       "physical_runtime_install": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
       "security_review_status": "PENDING",
-      "assigned_agent_policy": "Assigned in ordered list: first primary, remaining supporting. All entries remain non-authoritative. ChatGPT supervises the registry per config/agent_tool_skill_assignment.json; Dev runtime is not connected.",
-      "pin_source": "https://api.github.com/repos/{owner}/{repo}/commits/HEAD",
       "date": "2026-10-11"
     }
   }
