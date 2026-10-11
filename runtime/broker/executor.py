@@ -110,6 +110,7 @@ class CapitalPlaneExecutor:
         )
         self._kill_switch_reason = "STARTUP_LOCKED"
         self._kill_switch_generation = 0
+        self._fault_source_sha: str | None = None
         self._last_reset_nonce: str | None = None
         self._startup_clearance_pending = True
         self._fault_latched = False
@@ -156,6 +157,10 @@ class CapitalPlaneExecutor:
             ),
             "last_reset_nonce": self._last_reset_nonce,
             "source_sha": self.source_hash,
+            "fault_source_sha": (
+                self._fault_source_sha
+                or (self.source_hash if state == "TRIPPED" else None)
+            ),
             "updated_at_utc": utc_now().isoformat(),
         }
         try:
@@ -202,6 +207,10 @@ class CapitalPlaneExecutor:
                 if isinstance(data.get("last_reset_nonce"), str) else None
             )
             if data.get("state") == "TRIPPED":
+                fault_source = data.get("fault_source_sha") or data.get("source_sha")
+                if not isinstance(fault_source, str) or not fault_source.strip():
+                    raise ValueError("KILL_SWITCH_FAULT_SOURCE_SHA_MISSING")
+                self._fault_source_sha = fault_source.strip()
                 self._kill_switch_reason = str(data.get("reason") or "KILL_SWITCH_STATE_REASON_MISSING")
                 activated = datetime.fromisoformat(
                     str(data.get("activated_at_utc") or "").replace("Z", "+00:00")
@@ -218,6 +227,7 @@ class CapitalPlaneExecutor:
             # startup lock requires a new full startup authorization; a prior
             # TRIPPED state remains latched until explicitly reset.
             self._kill_switch_reason = "STARTUP_LOCKED"
+            self._fault_source_sha = None
             self._kill_switch_activated_at = utc_now()
             self.kill_switch = True
             self._fault_latched = False
@@ -230,6 +240,7 @@ class CapitalPlaneExecutor:
             self.kill_switch = True
             self._kill_switch_generation = max(1, self._kill_switch_generation + 1)
             self._kill_switch_reason = "KILL_SWITCH_STATE_CORRUPT"
+            self._fault_source_sha = self.source_hash
             self._kill_switch_activated_at = utc_now()
             self._fault_latched = True
             self._startup_clearance_pending = False
@@ -237,10 +248,15 @@ class CapitalPlaneExecutor:
                 self._kill_switch_state_store_failed = True
 
     def activate_kill_switch(self, reason: str) -> None:
+        normalized_reason = str(reason or "UNSPECIFIED_KILL_SWITCH_REASON")
+        new_fault = not self._fault_latched
+        changed_fault = self._fault_latched and normalized_reason != self._kill_switch_reason
+        if new_fault or changed_fault:
+            self._kill_switch_generation += 1
+            self._kill_switch_reason = normalized_reason
+            self._fault_source_sha = self.source_hash
+            self._kill_switch_activated_at = utc_now()
         self.kill_switch = True
-        self._kill_switch_activated_at = utc_now()
-        self._kill_switch_generation += 1
-        self._kill_switch_reason = str(reason or "UNSPECIFIED_KILL_SWITCH_REASON")
         self._startup_clearance_pending = False
         self._fault_latched = True
         self.fence.revoke()
@@ -252,7 +268,9 @@ class CapitalPlaneExecutor:
                 pass
         self._log("KILL_SWITCH_ACTIVATED", {
             "reason": self._kill_switch_reason,
+            "trigger_reason": normalized_reason,
             "generation": self._kill_switch_generation,
+            "new_incident": bool(new_fault or changed_fault),
             "persistent_state_ok": not self._kill_switch_state_store_failed,
         })
 
@@ -334,6 +352,7 @@ class CapitalPlaneExecutor:
                 signing_key=self._operator_reset_signing_key,
                 expected_reason=self._kill_switch_reason,
                 expected_source_sha=self.source_hash,
+                expected_fault_source_sha=self._fault_source_sha or self.source_hash,
                 expected_account_loginid=authorization.account.loginid,
                 expected_generation=self._kill_switch_generation,
                 last_consumed_nonce=self._last_reset_nonce,
@@ -369,11 +388,13 @@ class CapitalPlaneExecutor:
         self._fault_latched = False
         self._startup_clearance_pending = False
         self._kill_switch_reason = "CLEARED"
+        self._fault_source_sha = None
         if not self._persist_kill_switch_state("CLEARED"):
             self.kill_switch = True
             self._fault_latched = True
             self._startup_clearance_pending = False
             self._kill_switch_reason = "KILL_SWITCH_STATE_PERSISTENCE_FAILED"
+            self._fault_source_sha = self.source_hash
             self._persist_kill_switch_state("TRIPPED")
             self._log(
                 "KILL_SWITCH_CLEAR_BLOCKED",
