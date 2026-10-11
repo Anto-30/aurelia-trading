@@ -64,6 +64,7 @@ class AssuranceContractsTest(unittest.TestCase):
         self.assertFalse(probability_policy_valid(True))
         self.assertFalse(probability_policy_valid(float("nan")))
         self.assertFalse(probability_policy_valid(float("inf")))
+        self.assertFalse(probability_policy_valid(10**10000))
         self.assertFalse(probability_policy_valid(0.499999))
         self.assertTrue(probability_policy_valid(0.50))
         self.assertTrue(probability_policy_valid(0.55))
