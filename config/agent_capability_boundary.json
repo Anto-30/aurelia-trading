@@ -102,6 +102,74 @@
         "accept_unknown_as_success"
       ],
       "capital_authority": true
+    },
+    "ChatGPT": {
+      "role": "supervisory reasoning, research, tool selection, independent evidence review",
+      "may": [
+        "decompose",
+        "research",
+        "inspect_repository",
+        "use_connected_read_tools",
+        "propose_changes",
+        "cross_validate_evidence"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock",
+        "read_or_print_production_secrets",
+        "claim_unverified_runtime_install"
+      ],
+      "capital_authority": false
+    },
+    "Dev": {
+      "role": "implementation and runtime diagnostics only after an authorized host is connected",
+      "may": [
+        "inspect_code",
+        "modify_sandbox_code",
+        "run_tests",
+        "capture_runtime_evidence"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock",
+        "read_production_secrets",
+        "bypass_release_gates"
+      ],
+      "capital_authority": false,
+      "runtime_status": "NOT_CONNECTED"
+    },
+    "GrokBot": {
+      "role": "orchestration/research/blocker diagnosis",
+      "may": [
+        "decompose",
+        "research",
+        "propose",
+        "synchronize_skill_registry"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock"
+      ],
+      "capital_authority": false
+    },
+    "JEV": {
+      "role": "validation, evidence audit, workflow and regression review",
+      "may": [
+        "validate_tests",
+        "reconcile_evidence",
+        "review_release_gates",
+        "identify_contradictions"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock",
+        "read_production_secrets"
+      ],
+      "capital_authority": false
     }
   },
   "non_negotiables": [
@@ -111,6 +179,8 @@
     "No external repository may receive capital authority.",
     "No secret values may be committed or logged.",
     "Simulation evidence must never be relabeled as authenticated broker, transaction, production, or live evidence.",
-    "Every repair must be smallest-change, test-backed, and lineage-verifiable."
+    "Every repair must be smallest-change, test-backed, and lineage-verifiable.",
+    "ChatGPT and Dev are non-capital roles; Dev tools remain inactive until a user-controlled host is connected and verified.",
+    "Tool, skill, plugin, and repository assignments describe eligible use; they do not prove physical installation or a live authenticated connector."
   ]
 }

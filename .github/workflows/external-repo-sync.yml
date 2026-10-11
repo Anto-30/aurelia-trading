@@ -43,17 +43,18 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY' > /tmp/external-repo-sync.json
-          import json, subprocess
+          import concurrent.futures, json, subprocess
           from pathlib import Path
           p=json.loads(Path("config/external_repo_federation.json").read_text())
-          out=[]
-          for r in p["repositories"]:
+          def check(r):
               try:
                   head=subprocess.check_output(["git","ls-remote",r["source_url"],"HEAD"],text=True,timeout=20).strip()
                   sha=head.split()[0] if head else None
-                  out.append({"repo":r["repo"],"reachable":bool(sha),"head_commit":sha})
+                  return {"repo":r["repo"],"reachable":bool(sha),"head_commit":sha}
               except Exception as e:
-                  out.append({"repo":r["repo"],"reachable":False,"error":type(e).__name__})
+                  return {"repo":r["repo"],"reachable":False,"error":type(e).__name__}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+              out=list(pool.map(check,p["repositories"]))
           print(json.dumps({"schema":"aurelia.external_repo_sync.v1","repositories":out},indent=2))
           PY
           python - <<'PY'
@@ -64,7 +65,6 @@ jobs:
           bad=[r for r in x["repositories"] if not r.get("reachable")]
           unresolved=[r["repo"] for r in p["repositories"] if r.get("head_commit") == "SYNC_REQUIRED"]
           print("EXTERNAL_REPO_REACHABLE=%d/%d"%(len(x["repositories"])-len(bad),len(x["repositories"])))
-          unresolved=[r["repo"] for r in p["repositories"] if r.get("head_commit") == "SYNC_REQUIRED"]
           print("EXTERNAL_REPO_PINNED=%d/%d"%(len(p["repositories"])-len(unresolved),len(p["repositories"])))
           print("EXTERNAL_REPO_UNRESOLVED_PIN_COUNT=%d"%len(unresolved))
           if bad:

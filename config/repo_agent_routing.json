@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.repo_agent_routing.v1",
-  "generated_date": "2026-10-09",
+  "generated_date": "2026-10-11",
   "purpose": "Deterministically route every federated external repository to the agents best suited to consume its engineering, research, security, multimodal, browser, deployment, or orchestration capabilities. Includes security-first routing for LLM gateway and Freebuff-related reference sources.",
   "admission_policy": {
     "assignment_required": true,
@@ -99,6 +99,31 @@
         "cross-agent-coordination",
         "capital-plane-policy-enforcement"
       ]
+    },
+    "ChatGPT": {
+      "role": "supervisory_reasoning_tool_selection_and_evidence_review",
+      "capabilities": [
+        "task-decomposition",
+        "research-synthesis",
+        "cross-agent-review",
+        "tool-selection",
+        "source-provenance",
+        "risk-boundary-review"
+      ],
+      "runtime_status": "CURRENT_CHAT_SESSION_ONLY"
+    },
+    "Dev": {
+      "role": "implementation_and_runtime_operations_when_connected",
+      "capabilities": [
+        "git",
+        "local-shell",
+        "python-tests",
+        "docker",
+        "log-inspection",
+        "browser-e2e"
+      ],
+      "runtime_status": "NOT_CONNECTED",
+      "activation_gate": "Authorized host must be connected and runtime identity verified before tool execution."
     }
   },
   "routing_rules": [
@@ -313,7 +338,8 @@
         "reason",
         "reviewed_by",
         "review_date"
-      ]
+      ],
+      "available_sources_note": "Assigned agents are logical routing permissions. They do not prove a repository clone, skill activation, plugin connection, or physical runtime installation."
     },
     "capability_mapping_semantics": "agent_skill_federation entry is required only when the repository is consumed as a skill/plugin/agent source; repository-agent assignment is mandatory for every federated repository."
   }

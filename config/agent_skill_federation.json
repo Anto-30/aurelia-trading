@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_skill_federation.v1",
-  "generated_date": "2026-10-09",
+  "generated_date": "2026-10-11",
   "purpose": "Research/engineering capability federation. No external agent, skill, plugin, MCP server, hook, or marketplace entry may obtain capital authority.",
   "default_policy": {
     "external_code_execution": "DENY_BY_DEFAULT",
@@ -2254,10 +2254,1122 @@
         "JEV"
       ],
       "integration_note": "Sandbox-only CLI review. It can generate provider configuration; never write secrets or config into production hosts automatically."
+    },
+    {
+      "name": "cookiy-ai-user-research-skill",
+      "owner": "cookiy-ai",
+      "repo": "cookiy-ai/user-research-skill",
+      "pinned_commit": "21eea10a34d3c9b4e711e3d19f0457603dd33e19",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "toolchain-evaluation",
+        "isolated-test-integration"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/cookiy-ai/user-research-skill"
+    },
+    {
+      "name": "ruvnet-rudevolution",
+      "owner": "ruvnet",
+      "repo": "ruvnet/rudevolution",
+      "pinned_commit": "b99ec70c780e249b151de5c32ee9839784671962",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/ruvnet/rudevolution"
+    },
+    {
+      "name": "ruvnet-obsidian-brain",
+      "owner": "ruvnet",
+      "repo": "ruvnet/obsidian-brain",
+      "pinned_commit": "68457cea6ab42c10dcd74ebdb84616ce2f2f9c87",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "memory-architecture-review",
+        "data-isolation-evaluation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/ruvnet/obsidian-brain"
+    },
+    {
+      "name": "ruvnet-helix",
+      "owner": "ruvnet",
+      "repo": "ruvnet/helix",
+      "pinned_commit": "e8d8fe780becff4d95008e052742e5c3b0ad3b5c",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/ruvnet/helix"
+    },
+    {
+      "name": "jakeschincariol-arena-skill",
+      "owner": "Jakeschincariol",
+      "repo": "Jakeschincariol/arena-skill",
+      "pinned_commit": "df07b8e518e10cdecd8cd7712d9958b6f396250e",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "toolchain-evaluation",
+        "isolated-test-integration"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/Jakeschincariol/arena-skill"
+    },
+    {
+      "name": "zhjai-agent-arena",
+      "owner": "zhjai",
+      "repo": "zhjai/agent-arena",
+      "pinned_commit": "df21e673ed4b38fccd81b1a10c438e94e906e81c",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/zhjai/agent-arena"
+    },
+    {
+      "name": "esengine-deepseek-reasonix",
+      "owner": "esengine",
+      "repo": "esengine/DeepSeek-Reasonix",
+      "pinned_commit": "5f0bb7d845a6cf84f6048edec1fbd74ac900f303",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/esengine/DeepSeek-Reasonix"
+    },
+    {
+      "name": "jnmetacode-agency-agents-zh",
+      "owner": "jnMetaCode",
+      "repo": "jnMetaCode/agency-agents-zh",
+      "pinned_commit": "e5a6c0a730878aaa871ec5b95859aec2c2728475",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "source-provenance"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/jnMetaCode/agency-agents-zh"
+    },
+    {
+      "name": "zhu1090093659-deepseek-pp",
+      "owner": "zhu1090093659",
+      "repo": "zhu1090093659/deepseek-pp",
+      "pinned_commit": "0a02c72b135bf2936e11aa78fd6136931ed65908",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/zhu1090093659/deepseek-pp"
+    },
+    {
+      "name": "dominic789654-awesome-deepseek-harness",
+      "owner": "Dominic789654",
+      "repo": "Dominic789654/awesome-deepseek-harness",
+      "pinned_commit": "980958d3404c6ffd7c42b94582d49f3e58fb377d",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "source-provenance"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/Dominic789654/awesome-deepseek-harness"
+    },
+    {
+      "name": "pyspur-dev-pyspur",
+      "owner": "PySpur-Dev",
+      "repo": "PySpur-Dev/pyspur",
+      "pinned_commit": "97b9856e49f227a52868b73493c23c43fb4de358",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/PySpur-Dev/pyspur"
+    },
+    {
+      "name": "mnemon-dev-mnemon",
+      "owner": "mnemon-dev",
+      "repo": "mnemon-dev/mnemon",
+      "pinned_commit": "30e0062e7a58f19d20efe0766081b567aaba4fc1",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "memory-architecture-review",
+        "data-isolation-evaluation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/mnemon-dev/mnemon"
+    },
+    {
+      "name": "zilliztech-memsearch",
+      "owner": "zilliztech",
+      "repo": "zilliztech/memsearch",
+      "pinned_commit": "09e07d86b31ff81938b4f44a57099b6a9fc8723f",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "memory-architecture-review",
+        "data-isolation-evaluation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/zilliztech/memsearch"
+    },
+    {
+      "name": "langcliteam-langcli",
+      "owner": "LangcliTeam",
+      "repo": "LangcliTeam/langcli",
+      "pinned_commit": "fc668d6529281db6170a03e1579411dcc884c24e",
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "capabilities": [
+        "source-review",
+        "isolated-toolchain-evaluation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/LangcliTeam/langcli"
+    },
+    {
+      "name": "looplj-axonhub",
+      "owner": "looplj",
+      "repo": "looplj/axonhub",
+      "pinned_commit": "931fafff819a9202f48645839a0c47d3ccfe70fa",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "gateway-architecture-review",
+        "tool-routing-review"
+      ],
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/looplj/axonhub"
+    },
+    {
+      "name": "usewhale-whale",
+      "owner": "usewhale",
+      "repo": "usewhale/Whale",
+      "pinned_commit": "676a0a228882c457ff4dc00d9d285d972aea4a43",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/usewhale/Whale"
+    },
+    {
+      "name": "syncable-dev-memtrace-public",
+      "owner": "syncable-dev",
+      "repo": "syncable-dev/memtrace-public",
+      "pinned_commit": "3a3084dd88e4b49adcb185eb09173dbf0bd547d3",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "memory-architecture-review",
+        "data-isolation-evaluation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/syncable-dev/memtrace-public"
+    },
+    {
+      "name": "q00-ouroboros",
+      "owner": "Q00",
+      "repo": "Q00/ouroboros",
+      "pinned_commit": "188020bf1e406e0d276e8cfdd5f95f92e9fed7f5",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/Q00/ouroboros"
+    },
+    {
+      "name": "hexabot-ai-hexabot",
+      "owner": "hexabot-ai",
+      "repo": "hexabot-ai/Hexabot",
+      "pinned_commit": "3c5473d1f0a3c99f47a2c88cb6e8bd1e9b2e9e5e",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/hexabot-ai/Hexabot"
+    },
+    {
+      "name": "aisland-sjl-dsh-worktable",
+      "owner": "Aisland-SJL",
+      "repo": "Aisland-SJL/dsh-worktable",
+      "pinned_commit": "6cb86b6c73b3c356373e06cd81e08952542ea040",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/Aisland-SJL/dsh-worktable"
+    },
+    {
+      "name": "nanmicoder-dsh-agent-teams",
+      "owner": "NanmiCoder",
+      "repo": "NanmiCoder/dsh-agent-teams",
+      "pinned_commit": "1094b84add6f2fb19edf659367fe2fd5f7f14154",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/NanmiCoder/dsh-agent-teams"
+    },
+    {
+      "name": "gptme-gptme",
+      "owner": "gptme",
+      "repo": "gptme/gptme",
+      "pinned_commit": "b1af28ed8015025f8b0ccc04ea3816a386cb52f0",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/gptme/gptme"
+    },
+    {
+      "name": "open-multi-agent-open-multi-agent",
+      "owner": "open-multi-agent",
+      "repo": "open-multi-agent/open-multi-agent",
+      "pinned_commit": "6ec5498643c7e431aa66751f17f47a529e7f927c",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/open-multi-agent/open-multi-agent"
+    },
+    {
+      "name": "amemiya02-deepseekcode",
+      "owner": "amemiya02",
+      "repo": "amemiya02/deepseekcode",
+      "pinned_commit": "5fbf1a9a87b43bcbd46f90b567c4ca3a0af87f50",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/amemiya02/deepseekcode"
+    },
+    {
+      "name": "pschina-deepseek-as-subagent",
+      "owner": "PsChina",
+      "repo": "PsChina/deepseek-as-subagent",
+      "pinned_commit": "7e54026392f85ccfc796f947faf9ffac3968a49e",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/PsChina/deepseek-as-subagent"
+    },
+    {
+      "name": "limecloud-lime",
+      "owner": "limecloud",
+      "repo": "limecloud/lime",
+      "pinned_commit": "64292f0b6462ca189ba5b5e7668065970f07f999",
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "capabilities": [
+        "source-review",
+        "isolated-toolchain-evaluation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/limecloud/lime"
+    },
+    {
+      "name": "platonai-browser4",
+      "owner": "platonai",
+      "repo": "platonai/Browser4",
+      "pinned_commit": "0fdba82a60edf7365cd74069ea5f367eadc2946a",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "browser-agent-evaluation",
+        "isolated-ui-testing"
+      ],
+      "assigned_agents": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/platonai/Browser4"
+    },
+    {
+      "name": "xszyou-fay",
+      "owner": "xszyou",
+      "repo": "xszyou/Fay",
+      "pinned_commit": "d49f4769d46c2b5ece1fd15f0f1260afba7d2ccf",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/xszyou/Fay"
+    },
+    {
+      "name": "pengyue-polaron-deepseek-harness-genui",
+      "owner": "pengyue-polaron",
+      "repo": "pengyue-polaron/deepseek-harness-genui",
+      "pinned_commit": "f6289bc709c5b1992c851bf5e63237a5fa453e1f",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/pengyue-polaron/deepseek-harness-genui"
+    },
+    {
+      "name": "laxmimerit-langgraph-and-ollama",
+      "owner": "laxmimerit",
+      "repo": "laxmimerit/LangGraph-and-Ollama",
+      "pinned_commit": "d0ec774d107c20a61e1c76cb7055a13067aee282",
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "capabilities": [
+        "source-review",
+        "isolated-toolchain-evaluation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/laxmimerit/LangGraph-and-Ollama"
+    },
+    {
+      "name": "langgenius-dify",
+      "owner": "langgenius",
+      "repo": "langgenius/dify",
+      "pinned_commit": "2de5d891cbd5f59314f1813fc1db7c623ad762e3",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/langgenius/dify"
+    },
+    {
+      "name": "aingdesk-aingdesk",
+      "owner": "aingdesk",
+      "repo": "aingdesk/AingDesk",
+      "pinned_commit": "40b1be5119cfb77cf8c5e5131288992e32d26c68",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/aingdesk/AingDesk"
+    },
+    {
+      "name": "alex-yanggg-awesome-dsh-plugin",
+      "owner": "Alex-Yanggg",
+      "repo": "Alex-Yanggg/awesome-DSH-plugin",
+      "pinned_commit": "3b44fe8ffddbf19ccebd459829e5a8ae2cbb0fa6",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/Alex-Yanggg/awesome-DSH-plugin"
+    },
+    {
+      "name": "commandcodeai-command-code",
+      "owner": "CommandCodeAI",
+      "repo": "CommandCodeAI/command-code",
+      "pinned_commit": "5c8f1b48c9d6704210cb3f9a476fdcffe5093e9a",
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "capabilities": [
+        "toolchain-evaluation",
+        "isolated-test-integration"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/CommandCodeAI/command-code"
+    },
+    {
+      "name": "moonbitlang-openseek",
+      "owner": "moonbitlang",
+      "repo": "moonbitlang/openseek",
+      "pinned_commit": "cc277d8fd01b0eb6f6ec93a0346d91ae5e074817",
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "capabilities": [
+        "source-review",
+        "isolated-toolchain-evaluation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/moonbitlang/openseek"
+    },
+    {
+      "name": "soodok-deepseek-harness-local-android",
+      "owner": "Soodok",
+      "repo": "Soodok/Deepseek-Harness-Local-Android",
+      "pinned_commit": "0b88f8c395cc6f4d3498a1faf56727f029bd7c47",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "source-provenance"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/Soodok/Deepseek-Harness-Local-Android"
+    },
+    {
+      "name": "michengai-dsh-agency-agents",
+      "owner": "MichengAI",
+      "repo": "MichengAI/dsh-agency-agents",
+      "pinned_commit": "416d2a675ad01c943b336dcc4232876e0a48200e",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/MichengAI/dsh-agency-agents"
+    },
+    {
+      "name": "directorysurf-awesome-ai-agents-directories",
+      "owner": "DirectorySurf",
+      "repo": "DirectorySurf/awesome-ai-agents-directories",
+      "pinned_commit": "4a754788f59a1427983ee8ded7a090e4eaa4980a",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "source-provenance"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/DirectorySurf/awesome-ai-agents-directories"
+    },
+    {
+      "name": "yuruotong1-automate",
+      "owner": "yuruotong1",
+      "repo": "yuruotong1/autoMate",
+      "pinned_commit": "afb89b9d67a2d7c49ca09298191fbebe9ded238a",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/yuruotong1/autoMate"
+    },
+    {
+      "name": "text2future-flowix",
+      "owner": "text2future",
+      "repo": "text2future/flowix",
+      "pinned_commit": "cec714b001958e7a65230f6adf7f016ae5020466",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/text2future/flowix"
+    },
+    {
+      "name": "oil-oil-codex-deepseek-subagent",
+      "owner": "oil-oil",
+      "repo": "oil-oil/codex-deepseek-subagent",
+      "pinned_commit": "978b079524d22318625d14fe7d7f40cc8ec66fce",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/oil-oil/codex-deepseek-subagent"
+    },
+    {
+      "name": "mindsdb-mindshub",
+      "owner": "mindsdb",
+      "repo": "mindsdb/mindshub",
+      "pinned_commit": "780bbcbb8b9367c667e9b6af2aecc8277f24c0ad",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "memory-architecture-review",
+        "data-isolation-evaluation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/mindsdb/mindshub"
+    },
+    {
+      "name": "sandbaseai-deepseek-harness-handbook",
+      "owner": "sandbaseai",
+      "repo": "sandbaseai/deepseek-harness-handbook",
+      "pinned_commit": "425dd255f9be22c97b2273cd0c38b3951aecddc3",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "source-provenance"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/sandbaseai/deepseek-harness-handbook"
+    },
+    {
+      "name": "devin-axis-ipollowork",
+      "owner": "Devin-AXIS",
+      "repo": "Devin-AXIS/iPolloWork",
+      "pinned_commit": "4483434be463de3c137889e80ce38c97512478b3",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/Devin-AXIS/iPolloWork"
+    },
+    {
+      "name": "blockrunai-clawrouter",
+      "owner": "BlockRunAI",
+      "repo": "BlockRunAI/ClawRouter",
+      "pinned_commit": "b758e036bbd1290c0997ad14c9812a106ef8d72b",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "gateway-architecture-review",
+        "tool-routing-review"
+      ],
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/BlockRunAI/ClawRouter"
+    },
+    {
+      "name": "xuanyuanzhifeng-dsh-plugin-agent-workflow",
+      "owner": "xuanyuanzhifeng",
+      "repo": "xuanyuanzhifeng/dsh-plugin-agent-workflow",
+      "pinned_commit": "f2031b34443bf820a1a7cc7bace9b2d8cae99412",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/xuanyuanzhifeng/dsh-plugin-agent-workflow"
+    },
+    {
+      "name": "zhayujie-cowagent",
+      "owner": "zhayujie",
+      "repo": "zhayujie/CowAgent",
+      "pinned_commit": "34335f7a955c2555a669ba2f718979162d3bcb5d",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/zhayujie/CowAgent"
+    },
+    {
+      "name": "simstudioai-sim",
+      "owner": "simstudioai",
+      "repo": "simstudioai/sim",
+      "pinned_commit": "c2d446f6c8a1c51923d24c8ba73b2fe6d1f805d5",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/simstudioai/sim"
+    },
+    {
+      "name": "memtensor-memos",
+      "owner": "MemTensor",
+      "repo": "MemTensor/MemOS",
+      "pinned_commit": "a7367d07e55db61099f7b4e2c1108bc5831a24f3",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "memory-architecture-review",
+        "data-isolation-evaluation"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/MemTensor/MemOS"
+    },
+    {
+      "name": "lobehub-lobehub",
+      "owner": "lobehub",
+      "repo": "lobehub/lobehub",
+      "pinned_commit": "d4f369d6df88e6346b9e6fbb295d98366b1c3884",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "agent-workflow-evaluation",
+        "prompt-and-tool-boundary-review"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/lobehub/lobehub"
+    },
+    {
+      "name": "lessweb-deepcode-cli",
+      "owner": "lessweb",
+      "repo": "lessweb/deepcode-cli",
+      "pinned_commit": "857b58c12fed11bad90704a0e32767270a1784f8",
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "capabilities": [
+        "toolchain-evaluation",
+        "isolated-test-integration"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/lessweb/deepcode-cli"
     }
   ],
   "last_sync": {
-    "completed_at": "2026-10-09",
+    "completed_at": "2026-10-11",
     "source": "user-supplied GitHub repositories; commits pinned from default branches",
     "targets": [
       "GrokBot",
@@ -2274,7 +3386,7 @@
       "Anil-matcha/open-dots",
       "CopilotKit/OpenDots"
     ],
-    "physical_runtime_install": "NOT_CLAIMED",
+    "physical_runtime_install": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
     "assignment_policy": "Mapped to canonical agent IDs. User label 'Dev' is not a separate registered agent; use ClaudeCode for engineering workflow until a distinct runtime identity is verified.",
     "assigned_agents": [
       "AURELIA",
@@ -2445,6 +3557,64 @@
       }
     ],
     "date": "2026-10-09",
-    "summary": "Added 19 Freebuff sources as pinned non-authoritative research/tooling references; all stay sandbox/reference only."
+    "summary": "Added 19 Freebuff sources as pinned non-authoritative research/tooling references; all stay sandbox/reference only.",
+    "batch": "User-supplied agent framework, harness, memory, and skill repositories",
+    "added": [
+      "cookiy-ai/user-research-skill",
+      "ruvnet/rudevolution",
+      "ruvnet/obsidian-brain",
+      "ruvnet/helix",
+      "Jakeschincariol/arena-skill",
+      "zhjai/agent-arena",
+      "esengine/DeepSeek-Reasonix",
+      "jnMetaCode/agency-agents-zh",
+      "zhu1090093659/deepseek-pp",
+      "Dominic789654/awesome-deepseek-harness",
+      "PySpur-Dev/pyspur",
+      "mnemon-dev/mnemon",
+      "zilliztech/memsearch",
+      "LangcliTeam/langcli",
+      "looplj/axonhub",
+      "usewhale/Whale",
+      "syncable-dev/memtrace-public",
+      "Q00/ouroboros",
+      "hexabot-ai/Hexabot",
+      "Aisland-SJL/dsh-worktable",
+      "NanmiCoder/dsh-agent-teams",
+      "gptme/gptme",
+      "open-multi-agent/open-multi-agent",
+      "amemiya02/deepseekcode",
+      "PsChina/deepseek-as-subagent",
+      "limecloud/lime",
+      "platonai/Browser4",
+      "xszyou/Fay",
+      "pengyue-polaron/deepseek-harness-genui",
+      "laxmimerit/LangGraph-and-Ollama",
+      "langgenius/dify",
+      "aingdesk/AingDesk",
+      "Alex-Yanggg/awesome-DSH-plugin",
+      "CommandCodeAI/command-code",
+      "moonbitlang/openseek",
+      "Soodok/Deepseek-Harness-Local-Android",
+      "MichengAI/dsh-agency-agents",
+      "DirectorySurf/awesome-ai-agents-directories",
+      "yuruotong1/autoMate",
+      "text2future/flowix",
+      "oil-oil/codex-deepseek-subagent",
+      "mindsdb/mindshub",
+      "sandbaseai/deepseek-harness-handbook",
+      "Devin-AXIS/iPolloWork",
+      "BlockRunAI/ClawRouter",
+      "xuanyuanzhifeng/dsh-plugin-agent-workflow",
+      "zhayujie/CowAgent",
+      "simstudioai/sim",
+      "MemTensor/MemOS",
+      "lobehub/lobehub",
+      "lessweb/deepcode-cli"
+    ],
+    "security_review_status": "PENDING",
+    "assigned_chatgpt_as_supervisory_reviewer": true,
+    "runtime_install_status": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
+    "source_security_status": "PENDING"
   }
 }
