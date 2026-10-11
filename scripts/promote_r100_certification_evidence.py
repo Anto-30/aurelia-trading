@@ -97,7 +97,7 @@ def main() -> int:
             "archive_hash": archive_hash,
             "strategy_version": str(report["strategy_version"]),
             "oos_window": f"{manifest['oos_start_at_utc']}..{ended_raw}",
-            "min_trades_per_strategy_symbol_regime": oos_count,
+            "min_trades_per_strategy_symbol_regime": int(report["min_trades_per_strategy_symbol_regime"]),
         })
         record["record_hash"] = hash_payload({k: v for k, v in record.items() if k != "record_hash"})
         write_evidence(Path("evidence/prospective_oos.json"), record)
