@@ -77,6 +77,7 @@ def build_env_text(payload: dict[str, Any]) -> str:
         ("AURELIA_RUNTIME_ID", values["AURELIA_RUNTIME_ID"]),
         ("AURELIA_OPERATOR_RESET_SIGNING_KEY", values["AURELIA_OPERATOR_RESET_SIGNING_KEY"]),
         ("AURELIA_KILL_SWITCH_STATE_PATH", "/tmp/aurelia/kill-switch-state.json"),
+        ("AURELIA_OPERATOR_RESET_PATH", "/tmp/aurelia/operator-kill-switch-reset.json"),
     ]
     if mode == "pat":
         ordered.insert(1, ("DERIV_APP_ID", app_id))
