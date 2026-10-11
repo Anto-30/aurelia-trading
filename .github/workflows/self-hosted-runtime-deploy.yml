@@ -320,14 +320,19 @@ jobs:
           DERIV_ENVIRONMENT: real
           DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
           AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
+          AURELIA_OPERATOR_RESET_SIGNING_KEY: ${{ secrets.AURELIA_OPERATOR_RESET_SIGNING_KEY }}
           AURELIA_RUNTIME_ID: ${{ vars.AURELIA_RUNTIME_ID || 'aurelia-production-worker' }}
         shell: bash
         run: |
           set -euo pipefail
           DERIV_AUTH_MODE="${DERIV_AUTH_MODE,,}"
-          for name in DERIV_AUTH_TOKEN DERIV_EXPECTED_LOGINID DERIV_EXPECTED_CURRENCY AURELIA_ATTESTATION_SIGNING_KEY AURELIA_RUNTIME_ID; do
+          for name in DERIV_AUTH_TOKEN DERIV_EXPECTED_LOGINID DERIV_EXPECTED_CURRENCY AURELIA_ATTESTATION_SIGNING_KEY AURELIA_OPERATOR_RESET_SIGNING_KEY AURELIA_RUNTIME_ID; do
             test -n "$(printenv "$name")" || { echo "LIVE_GATE_BLOCKED=RUNTIME_SECRET_MISSING:$name"; exit 2; }
           done
+          test "${#AURELIA_OPERATOR_RESET_SIGNING_KEY}" -ge 32 || {
+            echo "LIVE_GATE_BLOCKED=OPERATOR_RESET_SIGNING_KEY_TOO_SHORT"
+            exit 2
+          }
           case "$DERIV_AUTH_MODE" in
             pat) test -n "$DERIV_APP_ID" || { echo "LIVE_GATE_BLOCKED=DERIV_APP_ID_MISSING"; exit 2; } ;;
             oauth) ;;
@@ -359,6 +364,7 @@ jobs:
               "DERIV_ENVIRONMENT",
               "DERIV_AUTH_MODE",
               "AURELIA_ATTESTATION_SIGNING_KEY",
+              "AURELIA_OPERATOR_RESET_SIGNING_KEY",
               "AURELIA_RUNTIME_ID",
           )
           payload = {name: os.environ.get(name, "") for name in names}
