@@ -8,7 +8,6 @@ permissions:
   actions: write
 jobs:
   remove-identified-artifacts:
-    if: contains(github.event.head_commit.added, '.github/workflows/cleanup-unsafe-deriv-artifacts.yml')
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
