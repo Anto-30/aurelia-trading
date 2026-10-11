@@ -30,6 +30,7 @@ class PersistentIdempotencyStore:
                 broker_transaction_id=item.get("broker_transaction_id"),
                 economic_effect_count=int(item.get("economic_effect_count", 0)),
                 broker_outcome_unknown=bool(item.get("broker_outcome_unknown", False)),
+                resolution_evidence_id=item.get("resolution_evidence_id"),
             )
             self._records[record.intent_id] = record
 
@@ -58,7 +59,10 @@ class PersistentIdempotencyStore:
             current = self._records[intent_id]
             if current.broker_transaction_id and current.broker_transaction_id != txid:
                 raise RuntimeError("BROKER_TRANSACTION_CONFLICT")
-            updated = IntentRecord(intent_id, txid, current.economic_effect_count, False)
+            updated = IntentRecord(
+                intent_id, txid, current.economic_effect_count, False,
+                current.resolution_evidence_id,
+            )
             self._records[intent_id] = updated
             self._save()
             return updated
@@ -73,10 +77,62 @@ class PersistentIdempotencyStore:
                 None,
                 current.economic_effect_count,
                 True,
+                None,
             )
             self._records[intent_id] = updated
             self._save()
             return updated
+
+    def resolve_unknown_outcome(
+        self,
+        intent_id: str,
+        *,
+        broker_state_known: bool,
+        reconciliation_healthy: bool,
+        economic_effect_confirmed: bool,
+        broker_transaction_id: str | None,
+        resolution_evidence_id: str,
+    ) -> IntentRecord:
+        """Resolve UNKNOWN only after authenticated broker lookup and reconciliation.
+
+        This mutates durable state but does not verify the evidence itself. Only
+        the controlled recovery path may call it with a verified evidence ID.
+        """
+        if broker_state_known is not True or reconciliation_healthy is not True:
+            raise RuntimeError("UNKNOWN_OUTCOME_RECOVERY_EVIDENCE_INCOMPLETE")
+        if not isinstance(economic_effect_confirmed, bool):
+            raise ValueError("ECONOMIC_EFFECT_CONFIRMATION_MUST_BE_BOOLEAN")
+        evidence_id = str(resolution_evidence_id or "").strip()
+        txid = str(broker_transaction_id or "").strip() or None
+        if not evidence_id:
+            raise ValueError("RECOVERY_EVIDENCE_ID_REQUIRED")
+        if economic_effect_confirmed and not txid:
+            raise ValueError("CONFIRMED_ECONOMIC_EFFECT_REQUIRES_TRANSACTION_ID")
+        if not economic_effect_confirmed and txid:
+            raise ValueError("NO_EFFECT_RESOLUTION_CANNOT_INCLUDE_TRANSACTION_ID")
+        with self._lock:
+            current = self._records.get(intent_id)
+            if current is None or not current.broker_outcome_unknown:
+                raise RuntimeError("UNKNOWN_OUTCOME_RECORD_NOT_FOUND")
+            updated = IntentRecord(
+                intent_id=intent_id,
+                broker_transaction_id=txid,
+                economic_effect_count=1 if economic_effect_confirmed else 0,
+                broker_outcome_unknown=False,
+                resolution_evidence_id=evidence_id,
+            )
+            self._records[intent_id] = updated
+            self._save()
+            return updated
+
+    def unresolved_unknown_intents(self) -> tuple[str, ...]:
+        """Return every persisted intent whose broker outcome still needs recovery."""
+        with self._lock:
+            return tuple(sorted(
+                intent_id
+                for intent_id, record in self._records.items()
+                if record.broker_outcome_unknown and not record.broker_transaction_id
+            ))
 
     def record_economic_effect(self, intent_id: str) -> IntentRecord:
         with self._lock:

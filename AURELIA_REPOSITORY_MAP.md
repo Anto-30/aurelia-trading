@@ -61,7 +61,7 @@ This is the browsable map of the current AURELIA implementation on `main`.
 - Modern Deriv path: `docs/AURELIA_MODERN_DERIV_PATH_2026-10-03.md`
 - Deriv authentication verification: `docs/AURELIA_DERIV_AUTH_VERIFICATION_2026-10-03.md`
 - Operational handoff: `docs/AURELIA_OPERATIONAL_HANDOFF_2026-10-03.md`
-- Stake policy: `docs/AURELIA_STAKE_POLICY_2026-10-03.md`
+- Stake policy: `docs/AURELIA_STAKE_POLICY_2026-10-10.md`
 - Runtime baseline: `docs/AURELIA_RUNTIME_BASELINE_2026-10-03.md`
 - Status model: `docs/AURELIA_STATUS_MODEL.yaml`
 - Deployment policy: `config/deployment_policy.json`

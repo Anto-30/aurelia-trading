@@ -99,6 +99,17 @@ def validate_secrets_at_startup() -> None:
         missing.append("DERIV_ENVIRONMENT")
     if deployment_mode == "LIVE" and environment != "real":
         raise SecretsError("LIVE_RUNTIME_REQUIRES_REAL_DERIV_ENVIRONMENT")
+    if deployment_mode == "LIVE":
+        reset_key = os.getenv("AURELIA_OPERATOR_RESET_SIGNING_KEY", "").strip()
+        if len(reset_key) < 32:
+            missing.append("AURELIA_OPERATOR_RESET_SIGNING_KEY")
+        if not os.getenv("AURELIA_KILL_SWITCH_STATE_PATH", "").strip():
+            missing.append("AURELIA_KILL_SWITCH_STATE_PATH")
+        if not (
+            os.getenv("GITHUB_SHA", "").strip()
+            or os.getenv("AURELIA_SOURCE_SHA", "").strip()
+        ):
+            missing.append("GITHUB_SHA_OR_AURELIA_SOURCE_SHA")
     if missing:
         raise SecretsError(
             f"STARTUP_SECRET_VALIDATION_FAILED: missing={missing}"

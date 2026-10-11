@@ -10,6 +10,7 @@ from runtime.core.authority import build_intent
 from runtime.core.fencing import ExecutionFence
 from runtime.core.idempotency import IdempotencyStore
 from runtime.core.ledger import InMemoryLedger
+from runtime.core.operator_reset import create_operator_reset_record
 from runtime.core.models import (
     AccountIdentity,
     AuthorizationContext,
@@ -93,9 +94,17 @@ class DeterministicBroker:
     def __init__(self):
         self.calls = 0
         self.economic_effects = 0
+        self.proposal_calls = 0
+
+    async def request_proposal(self, parameters):
+        self.proposal_calls += 1
+        return str(parameters["test_proposal_id"])
 
     async def get_balance(self):
         return _capital()
+
+    async def portfolio(self):
+        return []
 
     async def submit_authorized_order(self, payload):
         self.calls += 1
@@ -122,6 +131,50 @@ class DeterministicBroker:
         )
 
 
+async def _bound_intent(executor: CapitalPlaneExecutor, authorization: AuthorizationContext, proposal_id: str):
+    decision = authorization.decision
+    parameters = {
+        "contract_type": "CALL" if str(decision.direction).upper() in {"CALL", "UP", "RISE", "BUY", "LONG"} else "PUT",
+        "currency": authorization.account.currency,
+        "underlying_symbol": decision.symbol,
+        "basis": "stake",
+        "amount": float(decision.risk_requested_stake),
+        # Consumed only by DeterministicBroker inside this test fixture.
+        "test_proposal_id": proposal_id,
+    }
+    bound_proposal = await executor.prepare_proposal(parameters)
+    binding_hash = executor.proposal_binding_hash(bound_proposal)
+    if binding_hash is None:
+        raise AssertionError("soak proposal binding was not registered")
+    from runtime.core.authority import build_intent
+    return build_intent(
+        authorization,
+        proposal_id=bound_proposal,
+        mode="LIVE",
+        proposal_parameters_hash=binding_hash,
+    )
+
+
+SOAK_OPERATOR_RESET_KEY = "deterministic-soak-operator-reset-key-32-chars-min"
+
+
+def _write_simulated_operator_reset(executor: CapitalPlaneExecutor, authorization: AuthorizationContext) -> None:
+    path = executor._operator_reset_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    record = create_operator_reset_record(
+        signing_key=executor._operator_reset_signing_key,
+        operator_id="deterministic-soak-operator",
+        reason=executor._kill_switch_reason,
+        source_sha=executor.source_hash,
+        account_loginid=authorization.account.loginid,
+        kill_switch_generation=executor._kill_switch_generation,
+    )
+    path.write_text(
+        __import__("json").dumps(record, sort_keys=True, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+
+
 def _executor(lock_path: Path, broker, journal, idempotency: IdempotencyStore, ledger: InMemoryLedger, fence):
     return CapitalPlaneExecutor(
         broker,
@@ -134,6 +187,8 @@ def _executor(lock_path: Path, broker, journal, idempotency: IdempotencyStore, l
         source_hash="soak-source",
         config_hash="config-hash",
         live_lock_path=lock_path,
+        operator_reset_path=lock_path.parent / "operator-reset.json",
+        operator_reset_signing_key=SOAK_OPERATOR_RESET_KEY,
     )
 
 
@@ -155,7 +210,12 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
             "live_trading_enabled: true\n"
             "FINAL_EXECUTION_AUTHORIZATION: true\n"
             "LIVE_EXECUTION: ENABLED\n"
-            "capital_plane_mode: LIVE\n",
+            "capital_plane_mode: LIVE\n"
+            "research_capital_authority: false\n"
+            "external_repositories_capital_forbidden: true\n"
+            "blind_resubmission: false\n"
+            "kill_switch_independent: true\n"
+            "schema: aurelia.live_lock.v1\n",
             encoding="utf-8",
         )
         broker = DeterministicBroker()
@@ -177,10 +237,31 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                     return {"passed": False, "reason": "RESTART_AUTH_FAILED"}
 
             if executor.kill_switch:
+                # The deterministic broker stub has enough information to
+                # reconcile its own UNKNOWN/timeout test outcomes. Do that before
+                # attempting a latch reset; this is not production broker evidence.
+                for unresolved_id in idempotency.unresolved_unknown_intents():
+                    idempotency.resolve_unknown_outcome(
+                        unresolved_id,
+                        broker_state_known=True,
+                        reconciliation_healthy=True,
+                        economic_effect_confirmed=False,
+                        broker_transaction_id=None,
+                        resolution_evidence_id=f"SIMULATED_STUB_RECOVERY_BEFORE_RESET:{second}:{unresolved_id}",
+                    )
                 executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
                 auth = _context(sequence=second)
+                if executor._fault_latched:
+                    _write_simulated_operator_reset(executor, auth)
                 if not executor.clear_kill_switch_with_fresh_authorization(auth):
-                    return {"passed": False, "reason": "FRESH_AUTH_FAILED"}
+                    return {
+                        "passed": False,
+                        "reason": "FRESH_AUTH_FAILED",
+                        "kill_reason": executor._kill_switch_reason,
+                        "fault_latched": executor._fault_latched,
+                        "unresolved_unknown": idempotency.unresolved_unknown_intents(),
+                        "state_persistence_failed": executor._kill_switch_state_store_failed,
+                    }
                 # Circuit-breaker recovery is an explicit operator/test action;
                 # clearing the kill switch alone must not silently reset it.
                 if executor.circuit_breaker.tripped:
@@ -189,14 +270,15 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 auth = _context(sequence=second)
 
             if second and second % 127 == 0:
-                stale = _context(
+                stale_source = _context(
+                    sequence=second,
                     issued_at=datetime.now(UTC) - timedelta(seconds=60),
                     expired=True,
                 )
-                stale_intent = build_intent(
-                    _context(sequence=second, issued_at=datetime.now(UTC) - timedelta(seconds=1)),
-                    proposal_id=f"P-ST-{second}",
-                    mode="LIVE",
+                stale = stale_source
+                proposal_source = _context(sequence=second)
+                stale_intent = await _bound_intent(
+                    executor, proposal_source, f"P-ST-{second}"
                 )
                 token = executor.fence.acquire(f"stale-{second}")
                 before_calls = broker.calls
@@ -207,7 +289,9 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
 
             if second and second % 149 == 0:
                 executor.activate_kill_switch(f"SOAK_KILL_{second}")
-                killed_intent = build_intent(auth, proposal_id=f"P-KILL-{second}", mode="LIVE")
+                killed_intent = await _bound_intent(
+                    executor, auth, f"P-KILL-{second}"
+                )
                 before_calls = broker.calls
                 result = await executor.execute(killed_intent, auth, executor.fence.acquire(f"kill-{second}"))
                 blocked += int(not result.allowed)
@@ -215,10 +299,11 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                     return {"passed": False, "reason": "KILL_SWITCH_ESCAPED"}
                 executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
                 auth = _context(sequence=second)
+                _write_simulated_operator_reset(executor, auth)
                 if not executor.clear_kill_switch_with_fresh_authorization(auth):
                     return {"passed": False, "reason": "POST_KILL_AUTH_FAILED"}
 
-            intent = build_intent(auth, proposal_id=f"P-{second}", mode="LIVE")
+            intent = await _bound_intent(executor, auth, f"P-{second}")
             token = executor.fence.acquire(f"owner-{second}")
 
             if second and second % 113 == 0:
@@ -300,9 +385,35 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 if reconciliation.healthy:
                     return {"passed": False, "reason": "RECONCILIATION_FAILURE_ACCEPTED"}
 
+            # This local stub knows that UNKNOWN/timeout responses above had
+            # no economic effect. Exercise explicit reconciliation before the
+            # next cycle; live runtime must provide authenticated broker
+            # lookup, a complete balance reconciliation and an evidence ID.
+            for unresolved_id in idempotency.unresolved_unknown_intents():
+                idempotency.resolve_unknown_outcome(
+                    unresolved_id,
+                    broker_state_known=True,
+                    reconciliation_healthy=True,
+                    economic_effect_confirmed=False,
+                    broker_transaction_id=None,
+                    resolution_evidence_id=f"SIMULATED_STUB_RECOVERY:{second}:{unresolved_id}",
+                )
+
         total_effects = sum(r.economic_effect_count for r in idempotency._records.values())
-        unknown_records = sum(1 for r in idempotency._records.values() if r.broker_outcome_unknown)
-        passed = total_effects == broker.economic_effects and unknown_records >= 1
+        unknown_records = len(idempotency.unresolved_unknown_intents())
+        unknown_outcomes_observed = sum(
+            1
+            for event in journal.events
+            if event.get("event_type") in {
+                "BROKER_OUTCOME_UNKNOWN",
+                "BROKER_SUBMISSION_EXCEPTION",
+            }
+        )
+        passed = (
+            total_effects == broker.economic_effects
+            and unknown_outcomes_observed >= 1
+            and unknown_records == 0
+        )
         result = {
             "passed": passed,
             "iterations": iterations,
@@ -310,6 +421,7 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
             "economic_effects": broker.economic_effects,
             "idempotent_effects_recorded": total_effects,
             "unknown_records": unknown_records,
+            "unknown_outcomes_observed": unknown_outcomes_observed,
             "blocked": blocked,
             "recovered": recovered,
             "rejected": rejected,

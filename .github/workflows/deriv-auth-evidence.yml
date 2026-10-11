@@ -58,6 +58,11 @@ jobs:
         run: |
           python scripts/verify_deriv_session.py
 
+      - name: Verify authenticated broker account evidence (read-only)
+        env:
+          DERIV_BROKER_EVIDENCE_OUT: artifacts/deriv_broker_account_evidence.json
+        run: python scripts/verify_deriv_broker_evidence.py
+
       - name: Assert no capital authority
         run: |
           test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
@@ -71,6 +76,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: deriv-authenticated-session-evidence
-          path: artifacts/deriv_authenticated_session.json
+          path: |
+            artifacts/deriv_authenticated_session.json
+            artifacts/deriv_broker_account_evidence.json
           if-no-files-found: ignore
           retention-days: 14

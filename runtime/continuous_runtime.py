@@ -22,6 +22,7 @@ from runtime.core.persistent import PersistentExecutionFence, PersistentLedger
 from runtime.core.daily_risk import PersistentDailyRiskGuard, derive_utc_day_start_balance
 from runtime.core.reconcile import Reconciler
 from runtime.core.runtime_config import load_config_hash
+from runtime.core.release_gate import read_live_release
 from runtime.core.secrets import get_optional_secret
 from runtime.core.state import RuntimeStateMachine
 from runtime.strategy.research_supervisor import build_research_signal_supervisor
@@ -33,6 +34,48 @@ DEFAULT_AGENTS = (
 )
 
 
+def resolve_runtime_symbols(
+    configured_raw: str,
+    active_symbol_rows: list[dict],
+    *,
+    live_release_enabled: bool,
+    max_symbols: int = 20,
+) -> tuple[str, ...]:
+    """Resolve symbols from broker metadata and explicit live allowlisting."""
+    active: list[str] = []
+    for row in active_symbol_rows:
+        if not isinstance(row, dict):
+            continue
+        value = str(row.get("symbol") or row.get("underlying_symbol") or "").strip()
+        if value and value not in active:
+            active.append(value)
+    available = set(active)
+    if not available:
+        raise RuntimeError("NO_DERIV_SYMBOLS_AVAILABLE")
+
+    raw = str(configured_raw or "")
+    if raw.strip():
+        parts = [item.strip() for item in raw.split(",")]
+        if not parts or any(not item for item in parts):
+            raise RuntimeError("AURELIA_SYMBOL_ALLOWLIST_INVALID")
+        if len(set(parts)) != len(parts):
+            raise RuntimeError("AURELIA_SYMBOL_ALLOWLIST_HAS_DUPLICATES")
+        unknown = [item for item in parts if item not in available]
+        if unknown:
+            raise RuntimeError("AURELIA_CONFIGURED_SYMBOL_NOT_ACTIVE")
+        return tuple(parts)
+
+    if live_release_enabled:
+        raise RuntimeError("AURELIA_LIVE_SYMBOL_ALLOWLIST_REQUIRED")
+    try:
+        limit = int(max_symbols)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise RuntimeError("AURELIA_MAX_SYMBOLS_INVALID") from exc
+    if limit < 1:
+        raise RuntimeError("AURELIA_MAX_SYMBOLS_INVALID")
+    return tuple(active[:limit])
+
+
 @dataclass
 class ContinuousRuntime:
     federation: PersistentAgentFederation
@@ -42,6 +85,7 @@ class ContinuousRuntime:
     adapter: DerivAdapter | None = None
     execution_loop: AutonomousExecutionLoop | None = None
     execution_task: asyncio.Task[None] | None = None
+    execution_restart_attempts: int = 0
     heartbeat_task: asyncio.Task[None] | None = None
     research_signal_task: asyncio.Task[None] | None = None
 
@@ -78,7 +122,11 @@ async def start_continuous_runtime(
     federation_supervisor: AgentFederationSupervisor | None = None,
 ) -> ContinuousRuntime:
     config_hash = load_config_hash(ROOT)
-    source_hash = os.getenv("GITHUB_SHA", "RUNTIME_UNPINNED")
+    source_hash = (
+        os.getenv("GITHUB_SHA", "").strip()
+        or os.getenv("AURELIA_SOURCE_SHA", "").strip()
+        or "RUNTIME_UNPINNED"
+    )
     if federation is None:
         federation = PersistentAgentFederation(
             journal_path=os.getenv("AURELIA_FEDERATION_JOURNAL_PATH", "/tmp/aurelia/federation-events.ndjson"),
@@ -237,13 +285,24 @@ async def start_continuous_runtime(
         config_hash=config_hash, live_lock_path=ROOT / "config" / "LIVE_LOCK.yaml",
         daily_risk_guard=daily_risk_guard,
         max_trade_risk_pct=float(os.getenv("AURELIA_MAX_TRADE_RISK_PCT", "0.01")),
+        kill_switch_state_path=os.getenv(
+            "AURELIA_KILL_SWITCH_STATE_PATH",
+            "/var/lib/aurelia/kill-switch-state.json",
+        ),
+        operator_reset_path=os.getenv(
+            "AURELIA_OPERATOR_RESET_PATH",
+            "/run/aurelia/operator-kill-switch-reset.json",
+        ),
+        operator_reset_signing_key=get_optional_secret("AURELIA_OPERATOR_RESET_SIGNING_KEY"),
     )
     symbols_raw = os.getenv("AURELIA_SYMBOLS", "")
-    symbols = tuple(x.strip() for x in symbols_raw.split(",") if x.strip())
-    if not symbols:
-        active = await adapter.active_symbols()
-        limit = max(1, int(os.getenv("AURELIA_MAX_SYMBOLS", "20")))
-        symbols = tuple(str(x.get("symbol")) for x in active if x.get("symbol"))[:limit]
+    active = await adapter.active_symbols()
+    symbols = resolve_runtime_symbols(
+        symbols_raw,
+        active,
+        live_release_enabled=read_live_release(ROOT / "config" / "LIVE_LOCK.yaml").may_move_capital,
+        max_symbols=os.getenv("AURELIA_MAX_SYMBOLS", "20"),
+    )
     if os.getenv("AURELIA_RESEARCH_SIGNAL_HUNT", "true").strip().lower() == "true":
         research_supervisor = build_research_signal_supervisor(adapter, federation, symbols)
         runtime.research_signal_task = research_supervisor.start_task()

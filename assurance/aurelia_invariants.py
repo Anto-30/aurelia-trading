@@ -6,6 +6,7 @@ submit orders, mutate broker state, or grant authority.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 from typing import Optional
 
 
@@ -29,8 +30,14 @@ class AuthorizationInputs:
 
 
 def probability_policy_valid(probability: Optional[float]) -> bool:
-    """Validate without clipping. 0.55-0.75 is inclusive."""
-    return probability is not None and 0.55 <= probability <= 0.75
+    """Validate finite numeric probability without clipping. 0.50–0.75 is inclusive."""
+    if isinstance(probability, bool) or not isinstance(probability, (int, float)):
+        return False
+    try:
+        value = float(probability)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return isfinite(value) and 0.50 <= value <= 0.75
 
 
 def final_execution_authorized(x: AuthorizationInputs) -> bool:

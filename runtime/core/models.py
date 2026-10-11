@@ -37,16 +37,41 @@ class CapitalSnapshot:
     account: AccountIdentity
 
     def is_valid(self, max_age_seconds: float = 15.0) -> bool:
-        if not all(isfinite(v) and v >= 0 for v in (self.balance, self.available_balance)):
+        if isinstance(max_age_seconds, bool) or not isinstance(max_age_seconds, (int, float)):
             return False
-        if self.available_balance > self.balance:
+        if isinstance(self.balance, bool) or not isinstance(self.balance, (int, float)):
             return False
-        if self.currency != self.account.currency:
+        if isinstance(self.available_balance, bool) or not isinstance(
+            self.available_balance, (int, float)
+        ):
+            return False
+        try:
+            max_age = float(max_age_seconds)
+            balance = float(self.balance)
+            available = float(self.available_balance)
+        except (TypeError, ValueError, OverflowError):
+            return False
+        if not isfinite(max_age) or max_age <= 0:
+            return False
+        if not isfinite(balance) or not isfinite(available) or balance < 0 or available < 0:
+            return False
+        if available > balance:
+            return False
+        if not isinstance(self.account, AccountIdentity):
+            return False
+        if not isinstance(self.currency, str) or not self.currency.strip():
+            return False
+        if self.currency.strip().upper() != str(self.account.currency).strip().upper():
             return False
         if self.account.environment not in {"real", "demo", "virtual"}:
             return False
-        age=(utc_now()-self.captured_at).total_seconds()
-        return 0 <= age <= max_age_seconds
+        if not isinstance(self.captured_at, datetime) or self.captured_at.tzinfo is None:
+            return False
+        try:
+            age = (utc_now() - self.captured_at).total_seconds()
+        except (TypeError, ValueError, OverflowError):
+            return False
+        return isfinite(age) and 0 <= age <= max_age
 
 
 @dataclass(frozen=True)
@@ -58,7 +83,27 @@ class MarketTick:
     sequence: int|None=None
 
     def valid(self) -> bool:
-        return bool(self.symbol) and isfinite(self.quote) and self.quote >= 0 and self.epoch > 0
+        if not isinstance(self.symbol, str) or not self.symbol.strip():
+            return False
+        if isinstance(self.quote, bool) or not isinstance(self.quote, (int, float)):
+            return False
+        try:
+            quote = float(self.quote)
+        except (TypeError, ValueError, OverflowError):
+            return False
+        if not isfinite(quote) or quote < 0:
+            return False
+        if isinstance(self.epoch, bool) or not isinstance(self.epoch, int) or self.epoch <= 0:
+            return False
+        if not isinstance(self.received_at, datetime) or self.received_at.tzinfo is None:
+            return False
+        if self.sequence is not None and (
+            isinstance(self.sequence, bool)
+            or not isinstance(self.sequence, int)
+            or self.sequence < 0
+        ):
+            return False
+        return True
 
 
 @dataclass(frozen=True)
@@ -115,6 +160,7 @@ class OrderIntent:
     config_hash: str
     execution_mode: str
     proposal_id: str|None=None
+    proposal_parameters_hash: str|None=None
 
 
 @dataclass(frozen=True)

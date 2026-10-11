@@ -29,7 +29,11 @@ from runtime.core.runtime_config import load_config_hash
 from runtime.core.state import RuntimeStateMachine
 
 
-OUTPUT = Path(os.getenv("DERIV_LIFECYCLE_EVIDENCE_OUT", "artifacts/deriv_transaction_lifecycle.json"))
+OUTPUT = Path(
+    os.getenv("AURELIA_DERIV_LIFECYCLE_EVIDENCE_PATH", "").strip()
+    or os.getenv("DERIV_LIFECYCLE_EVIDENCE_OUT", "").strip()
+    or "artifacts/deriv_transaction_lifecycle.json"
+)
 INPUT = Path(os.getenv("AURELIA_LIVE_DECISION_ARTIFACT", "artifacts/live_canary_decision.json"))
 
 
@@ -102,7 +106,7 @@ async def run() -> int:
         fence = ExecutionFence()
         state = RuntimeStateMachine(RuntimeState.BROKER_CONNECTING)
         reconciler = Reconciler()
-        source_hash = os.getenv("GITHUB_SHA", "LOCAL_UNPINNED")
+        source_hash = os.getenv("GITHUB_SHA", "").strip() or os.getenv("AURELIA_SOURCE_SHA", "").strip() or "LOCAL_UNPINNED"
         executor = CapitalPlaneExecutor(
             adapter,
             journal=journal,
@@ -161,7 +165,7 @@ async def run() -> int:
             except ValueError:
                 return fail("VERIFY_ONLY_PROBABILITY_INVALID")
             if not isfinite(verify_probability) or not (
-                0.55 <= verify_probability <= 0.75
+                0.50 <= verify_probability <= 0.75
             ):
                 return fail("VERIFY_ONLY_PROBABILITY_OUTSIDE_HARD_POLICY")
 
@@ -282,7 +286,7 @@ async def run() -> int:
                 ),
                 config_hash=load_config_hash(ROOT),
                 data_hash=data_hash,
-                environment="ci",
+                environment=account.environment,
                 started_at_utc=prior.captured_at.isoformat(),
                 ended_at_utc=ended.isoformat(),
                 status="CURRENT",
@@ -569,7 +573,7 @@ async def run() -> int:
             ),
             config_hash=load_config_hash(ROOT),
             data_hash=data_hash,
-            environment="production",
+            environment=account.environment,
             started_at_utc=prior.captured_at.isoformat(),
             ended_at_utc=ended.isoformat(),
             status="CURRENT",

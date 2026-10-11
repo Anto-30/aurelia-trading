@@ -100,6 +100,7 @@ AURELIA_LEDGER_PATH=/tmp/aurelia/ledger.json
 AURELIA_IDEMPOTENCY_PATH=/tmp/aurelia/idempotency.json
 AURELIA_FENCE_PATH=/tmp/aurelia/executor-fence.txt
 AURELIA_EXECUTION_JOURNAL_PATH=/tmp/aurelia/execution-events.ndjson
+AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json
 EOF
   sudo chmod 600 "$ENV_FILE"
 else
@@ -123,9 +124,17 @@ AURELIA_LEDGER_PATH=/tmp/aurelia/ledger.json
 AURELIA_IDEMPOTENCY_PATH=/tmp/aurelia/idempotency.json
 AURELIA_FENCE_PATH=/tmp/aurelia/executor-fence.txt
 AURELIA_EXECUTION_JOURNAL_PATH=/tmp/aurelia/execution-events.ndjson
+AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json
 EOF
   sudo chmod 600 "$ENV_FILE"
 fi
+
+# Migrate pre-existing hosts too. The kill-switch state must live on the
+# mounted persistent data directory and must never silently fall back to
+# an ephemeral container filesystem.
+sudo sed -i '/^AURELIA_KILL_SWITCH_STATE_PATH=/d' "$ENV_FILE"
+printf '%s\n' 'AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json' | sudo tee -a "$ENV_FILE" >/dev/null
+sudo chmod 600 "$ENV_FILE"
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   test -f "$LIVE_SECRET_FILE" || {
@@ -189,8 +198,8 @@ if [ "$DEPLOYMENT_MODE" = "LIVE" ] && [ "$AUTH_CONFIGURED" != "true" ]; then
 fi
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
-  grep -Eq "^AURELIA_ATTESTATION_SIGNING_KEY=.+$" "${ENV_FILES[@]}" || {
-    echo "AURELIA_HOST_BLOCKED=READINESS_ATTESTATION_SIGNING_KEY_MISSING"
+  grep -Fxq 'AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json' "$ENV_FILE" || {
+    echo "AURELIA_HOST_BLOCKED=KILL_SWITCH_STATE_NOT_PERSISTENT"
     exit 2
   }
   AUTONOMOUS_LOOP=true
@@ -248,6 +257,9 @@ sudo docker run --detach \
   --env AURELIA_AGENT_WORKERS=true \
   --env AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json \
   --env AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json \
+  --env AURELIA_DERIV_LIFECYCLE_EVIDENCE_PATH=/tmp/aurelia/deriv_transaction_lifecycle.json \
+  --env AURELIA_DERIV_BROKER_EVIDENCE_PATH=/tmp/aurelia/deriv_broker_account_evidence.json \
+  --env DERIV_PUBLIC_TRANSPORT_EVIDENCE_PATH=/tmp/aurelia/deriv_public_transport.json \
   --env AURELIA_ATTESTATION_DIR=/tmp/aurelia/attestations \
   --env AURELIA_RUNTIME_ID="$RUNTIME_ID" \
   --env FINAL_EXECUTION_AUTHORIZATION="$FINAL_AUTH" \

@@ -35,7 +35,7 @@ on:
         default: "1.0"
         type: string
       probability:
-        description: Synthetic verify-only probability within AURELIA hard policy 0.55-0.75
+        description: Synthetic verify-only probability within AURELIA hard policy 0.50-0.75
         required: true
         default: "0.60"
         type: string

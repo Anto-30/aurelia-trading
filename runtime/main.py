@@ -766,6 +766,14 @@ async def main() -> None:
 
     supervisor.start(heartbeat, protect)
 
+    def attach_execution_health_hook(target_loop) -> None:
+        def on_validated_tick() -> None:
+            health.kill_switch_off = not target_loop.executor.kill_switch
+            # A validated tick proves the task recovered. The capital plane can
+            # still be blocked by its latched kill switch until authorized reset.
+            health.critical_unknowns.discard("AUTONOMOUS_LOOP_STOPPED")
+        target_loop.on_validated_tick = on_validated_tick
+
     continuous_runtime = None
     balance_task: asyncio.Task[None] | None = None
     last_runtime_state = machine.state
@@ -787,6 +795,7 @@ async def main() -> None:
                     "DEADMAN_HEARTBEAT_TIMEOUT"
                 )
             if continuous_runtime.execution_loop is not None:
+                attach_execution_health_hook(continuous_runtime.execution_loop)
                 balance_task = asyncio.create_task(
                     _balance_poller(
                         continuous_runtime.adapter,
@@ -915,17 +924,116 @@ async def main() -> None:
 
                     task = continuous_runtime.execution_task
                     if task is not None and task.done():
+                        first_detection = "AUTONOMOUS_LOOP_STOPPED" not in health.critical_unknowns
                         health.critical_unknowns.add("AUTONOMOUS_LOOP_STOPPED")
+                        failure = None
                         try:
-                            task.exception()
+                            if not task.cancelled():
+                                failure = task.exception()
                         except asyncio.CancelledError:
-                            pass
-                        if loop is not None:
+                            failure = None
+
+                        # Trip only once. Repeatedly incrementing the durable
+                        # kill-switch generation makes a valid operator reset
+                        # impossible while this watchdog sees the stopped task.
+                        if (
+                            first_detection
+                            and loop is not None
+                            and (
+                                not loop.executor.kill_switch
+                                or not getattr(loop.executor, "_fault_latched", False)
+                            )
+                        ):
+                            # Convert a mere startup lock into a durable fault
+                            # latch on task failure. If already fault-latched,
+                            # preserve the original reason and generation.
                             loop.executor.activate_kill_switch("AUTONOMOUS_LOOP_STOPPED")
+                        if first_detection:
                             emit_federation_event(
                                 "WATCHDOG_PROTECT",
                                 reason="AUTONOMOUS_LOOP_STOPPED",
                             )
+                            journal.append(event_envelope(
+                                event_type="AUTONOMOUS_LOOP_STOPPED",
+                                event_id=f"AUTONOMOUS_LOOP_STOPPED:{int(time.time() * 1000)}",
+                                correlation_id="autonomous-execution-loop",
+                                payload={
+                                    "error_class": type(failure).__name__ if failure is not None else None,
+                                    "restart_attempts": continuous_runtime.execution_restart_attempts,
+                                    "capital_authority_granted": False,
+                                    "order_submission_permitted": False,
+                                },
+                                source_hash=os.getenv("GITHUB_SHA", "runtime-baseline"),
+                                config_hash=config_hash,
+                            ))
+
+                        try:
+                            max_restarts = int(os.getenv("AURELIA_EXECUTION_LOOP_MAX_RESTARTS", "3"))
+                        except (TypeError, ValueError, OverflowError):
+                            max_restarts = 0
+                        can_restart = (
+                            loop is not None
+                            and not loop._stop.is_set()
+                            and not task.cancelled()
+                            and adapter is not None
+                            and adapter.authorized
+                            and adapter.account is not None
+                            and adapter.transport is not None
+                            and continuous_runtime.execution_restart_attempts < max(0, min(max_restarts, 3))
+                        )
+                        if can_restart:
+                            attempt = continuous_runtime.execution_restart_attempts + 1
+                            try:
+                                replacement = type(loop)(
+                                    adapter=adapter,
+                                    executor=loop.executor,
+                                    decision_provider=loop.decision_provider,
+                                    runtime_config_hash=loop.runtime_config_hash,
+                                    fence_owner=loop.fence_owner,
+                                    symbols=loop.symbols,
+                                    lifecycle_timeout_seconds=loop.lifecycle_timeout_seconds,
+                                    tick_timeout_seconds=loop.tick_timeout_seconds,
+                                    daily_risk_guard=loop.daily_risk_guard,
+                                )
+                                attach_execution_health_hook(replacement)
+                                continuous_runtime.execution_loop = replacement
+                                continuous_runtime.execution_restart_attempts = attempt
+                                continuous_runtime.execution_task = asyncio.create_task(
+                                    replacement.run(),
+                                    name=f"aurelia-autonomous-execution-loop-restart-{attempt}",
+                                )
+                                journal.append(event_envelope(
+                                    event_type="AUTONOMOUS_LOOP_RESTART_STARTED",
+                                    event_id=f"AUTONOMOUS_LOOP_RESTART_STARTED:{attempt}:{int(time.time() * 1000)}",
+                                    correlation_id="autonomous-execution-loop",
+                                    payload={
+                                        "attempt": attempt,
+                                        "max_attempts": max(0, min(max_restarts, 3)),
+                                        "kill_switch_latched": replacement.executor.kill_switch,
+                                        "operator_reset_required": getattr(replacement.executor, "_fault_latched", False),
+                                        "capital_authority_granted": False,
+                                        "order_submission_permitted": False,
+                                    },
+                                    source_hash=os.getenv("GITHUB_SHA", "runtime-baseline"),
+                                    config_hash=config_hash,
+                                ))
+                            except Exception as exc:
+                                health.critical_unknowns.add("AUTONOMOUS_LOOP_RESTART_FAILED")
+                                journal.append(event_envelope(
+                                    event_type="AUTONOMOUS_LOOP_RESTART_FAILED",
+                                    event_id=f"AUTONOMOUS_LOOP_RESTART_FAILED:{attempt}:{int(time.time() * 1000)}",
+                                    correlation_id="autonomous-execution-loop",
+                                    payload={
+                                        "attempt": attempt,
+                                        "error_class": type(exc).__name__,
+                                        "capital_authority_granted": False,
+                                        "order_submission_permitted": False,
+                                    },
+                                    source_hash=os.getenv("GITHUB_SHA", "runtime-baseline"),
+                                    config_hash=config_hash,
+                                ))
+                        else:
+                            health.critical_unknowns.add("AUTONOMOUS_LOOP_RESTART_EXHAUSTED")
 
                 if machine.state != last_runtime_state:
                     emit_federation_event(

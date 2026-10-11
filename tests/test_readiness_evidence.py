@@ -14,6 +14,9 @@ from runtime.ops.readiness_orchestrator import evaluate
 class ReadinessEvidenceTests(unittest.TestCase):
     def setUp(self) -> None:
         self.original = dict(os.environ)
+        os.environ["GITHUB_SHA"] = "TEST"
+        os.environ["DERIV_EXPECTED_LOGINID"] = "CRTEST"
+        os.environ["DERIV_EXPECTED_CURRENCY"] = "USD"
         os.environ["AURELIA_DERIV_SESSION_VERIFIED"] = "true"
         os.environ["AURELIA_BALANCE_VERIFIED"] = "true"
         os.environ["AURELIA_VERIFIED_AVAILABLE_BALANCE"] = "1.45"
@@ -29,7 +32,7 @@ class ReadinessEvidenceTests(unittest.TestCase):
         path.parent.mkdir(parents=True)
         record = {
             "evidence_id": "test",
-            "source_hash": "source",
+            "source_hash": "TEST",
             "artifact_hash": "artifact",
             "config_hash": "config",
             "data_hash": "data",
@@ -150,6 +153,41 @@ class ReadinessEvidenceTests(unittest.TestCase):
             path = root / "artifacts" / "deriv_authenticated_session.json"
             record = json.loads(path.read_text(encoding="utf-8"))
             record["observed"]["available_balance"] = 99.0
+            path.write_text(json.dumps(record), encoding="utf-8")
+            report = evaluate(root)
+        self.assertEqual("UNKNOWN", report["deriv"]["session"])
+        self.assertFalse(report["deriv"]["balance_fresh"])
+
+    def test_evidence_from_another_account_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_evidence(root, datetime.now(timezone.utc) + timedelta(minutes=5))
+            path = root / "artifacts" / "deriv_authenticated_session.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record["observed"]["account_loginid"] = "CROTHER"
+            canonical = json.dumps(
+                {key: value for key, value in record.items() if key != "record_hash"},
+                sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+            )
+            record["record_hash"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            path.write_text(json.dumps(record), encoding="utf-8")
+            report = evaluate(root)
+        self.assertEqual("UNKNOWN", report["deriv"]["session"])
+        self.assertFalse(report["deriv"]["balance_fresh"])
+
+    def test_evidence_from_another_source_revision_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._write_evidence(root, datetime.now(timezone.utc) + timedelta(minutes=5))
+            path = root / "artifacts" / "deriv_authenticated_session.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record["source_hash"] = "OLD-SOURCE"
+            record["provenance"]["source_commit"] = "OLD-SOURCE"
+            canonical = json.dumps(
+                {key: value for key, value in record.items() if key != "record_hash"},
+                sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+            )
+            record["record_hash"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             path.write_text(json.dumps(record), encoding="utf-8")
             report = evaluate(root)
         self.assertEqual("UNKNOWN", report["deriv"]["session"])

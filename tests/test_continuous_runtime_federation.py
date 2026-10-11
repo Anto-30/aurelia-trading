@@ -41,5 +41,38 @@ class ContinuousRuntimeFederationTests(unittest.IsolatedAsyncioTestCase):
                 os.environ.update(original)
 
 
+    def test_live_mode_requires_explicit_allowlisted_symbols(self):
+        from runtime.continuous_runtime import resolve_runtime_symbols
+
+        active = [{"symbol": "R_100"}, {"underlying_symbol": "R_75"}]
+        with self.assertRaisesRegex(RuntimeError, "AURELIA_LIVE_SYMBOL_ALLOWLIST_REQUIRED"):
+            resolve_runtime_symbols("", active, live_release_enabled=True)
+
+        self.assertEqual(
+            resolve_runtime_symbols("R_100,R_75", active, live_release_enabled=True),
+            ("R_100", "R_75"),
+        )
+
+    def test_symbol_allowlist_rejects_inactive_duplicates_and_empty_items(self):
+        from runtime.continuous_runtime import resolve_runtime_symbols
+
+        active = [{"symbol": "R_100"}, {"symbol": "R_75"}]
+        with self.assertRaisesRegex(RuntimeError, "AURELIA_CONFIGURED_SYMBOL_NOT_ACTIVE"):
+            resolve_runtime_symbols("R_100,UNKNOWN", active, live_release_enabled=False)
+        with self.assertRaisesRegex(RuntimeError, "AURELIA_SYMBOL_ALLOWLIST_HAS_DUPLICATES"):
+            resolve_runtime_symbols("R_100,R_100", active, live_release_enabled=False)
+        with self.assertRaisesRegex(RuntimeError, "AURELIA_SYMBOL_ALLOWLIST_INVALID"):
+            resolve_runtime_symbols("R_100,", active, live_release_enabled=False)
+
+    def test_research_mode_can_use_bounded_active_symbol_discovery(self):
+        from runtime.continuous_runtime import resolve_runtime_symbols
+
+        active = [{"symbol": f"R_{index}"} for index in range(5)]
+        self.assertEqual(
+            resolve_runtime_symbols("", active, live_release_enabled=False, max_symbols=2),
+            ("R_0", "R_1"),
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -63,6 +63,9 @@ class RuntimeSecretModeTests(unittest.TestCase):
     def test_pat_accepts_canonical_token_and_exact_real_account_binding(self):
         env = {
             "AURELIA_DEPLOYMENT_MODE": "LIVE",
+            "AURELIA_OPERATOR_RESET_SIGNING_KEY": "unit-test-reset-signing-key-more-than-32-chars",
+            "AURELIA_KILL_SWITCH_STATE_PATH": "/tmp/aurelia-test/kill-switch-state.json",
+            "GITHUB_SHA": "unit-test-source-sha",
             "DERIV_AUTH_MODE": "pat",
             "DERIV_AUTH_TOKEN": "placeholder",
             "DERIV_APP_ID": "12345",
@@ -76,6 +79,9 @@ class RuntimeSecretModeTests(unittest.TestCase):
     def test_pat_accepts_supported_aliases_but_still_requires_app_id(self):
         env = {
             "AURELIA_DEPLOYMENT_MODE": "LIVE",
+            "AURELIA_OPERATOR_RESET_SIGNING_KEY": "unit-test-reset-signing-key-more-than-32-chars",
+            "AURELIA_KILL_SWITCH_STATE_PATH": "/tmp/aurelia-test/kill-switch-state.json",
+            "GITHUB_SHA": "unit-test-source-sha",
             "DERIV_AUTH_MODE": "pat",
             "DERIV_PAT": "placeholder",
             "DERIV_APP_ID": "12345",
@@ -89,6 +95,9 @@ class RuntimeSecretModeTests(unittest.TestCase):
     def test_oauth_accepts_token_alias_without_pat_app_id(self):
         env = {
             "AURELIA_DEPLOYMENT_MODE": "LIVE",
+            "AURELIA_OPERATOR_RESET_SIGNING_KEY": "unit-test-reset-signing-key-more-than-32-chars",
+            "AURELIA_KILL_SWITCH_STATE_PATH": "/tmp/aurelia-test/kill-switch-state.json",
+            "GITHUB_SHA": "unit-test-source-sha",
             "DERIV_AUTH_MODE": "oauth",
             "DERIV_PAT": "placeholder-oauth-bearer",
             "DERIV_AUTHORIZED_ACCOUNT_ID": "CR123",

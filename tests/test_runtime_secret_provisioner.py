@@ -23,6 +23,7 @@ def payload(mode: str = "pat") -> dict[str, str]:
         "DERIV_AUTH_MODE": mode,
         "AURELIA_ATTESTATION_SIGNING_KEY": "SENSITIVE_SIGNING_KEY_DO_NOT_PRINT",
         "AURELIA_RUNTIME_ID": "aurelia-production-worker",
+        "AURELIA_OPERATOR_RESET_SIGNING_KEY": "SENSITIVE_OPERATOR_RESET_KEY_DO_NOT_PRINT_32_CHARS",
     }
 
 
@@ -43,6 +44,7 @@ class RuntimeSecretProvisionerTests(unittest.TestCase):
             self.assertIn("CAPITAL_AUTHORITY_GRANTED=false", out.getvalue())
             self.assertNotIn("SENSITIVE_TOKEN_DO_NOT_PRINT", out.getvalue() + err.getvalue())
             self.assertNotIn("SENSITIVE_SIGNING_KEY_DO_NOT_PRINT", out.getvalue() + err.getvalue())
+            self.assertNotIn("SENSITIVE_OPERATOR_RESET_KEY_DO_NOT_PRINT_32_CHARS", out.getvalue() + err.getvalue())
 
             mode = stat.S_IMODE(destination.stat().st_mode)
             self.assertEqual(mode, 0o600)
@@ -51,6 +53,26 @@ class RuntimeSecretProvisionerTests(unittest.TestCase):
             self.assertIn("DERIV_APP_ID=12345\n", text)
             self.assertIn("DERIV_ENVIRONMENT=real\n", text)
             self.assertIn("AURELIA_RUNTIME_ID=aurelia-production-worker\n", text)
+            self.assertIn("AURELIA_OPERATOR_RESET_SIGNING_KEY=SENSITIVE_OPERATOR_RESET_KEY_DO_NOT_PRINT_32_CHARS\n", text)
+            self.assertIn("AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json\n", text)
+            self.assertIn("AURELIA_OPERATOR_RESET_PATH=/tmp/aurelia/operator-kill-switch-reset.json\n", text)
+
+    def test_operator_reset_key_is_required_and_minimum_length(self):
+        value = payload()
+        value.pop("AURELIA_OPERATOR_RESET_SIGNING_KEY")
+        with self.assertRaisesRegex(
+            provisioner.RuntimeSecretProvisioningError,
+            "REQUIRED_VALUE_MISSING_AURELIA_OPERATOR_RESET_SIGNING_KEY",
+        ):
+            provisioner.build_env_text(value)
+
+        value = payload()
+        value["AURELIA_OPERATOR_RESET_SIGNING_KEY"] = "too-short"
+        with self.assertRaisesRegex(
+            provisioner.RuntimeSecretProvisioningError,
+            "OPERATOR_RESET_SIGNING_KEY_TOO_SHORT",
+        ):
+            provisioner.build_env_text(value)
 
     def test_oauth_does_not_require_pat_app_id(self):
         content = provisioner.build_env_text(payload("oauth"))

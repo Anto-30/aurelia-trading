@@ -22,7 +22,11 @@ from runtime.core.models import CapitalSnapshot
 from runtime.core.runtime_config import load_config_hash
 
 
-OUTPUT = Path(os.getenv("DERIV_EVIDENCE_OUT", "artifacts/deriv_authenticated_session.json"))
+OUTPUT = Path(
+    os.getenv("AURELIA_DERIV_EVIDENCE_PATH", "").strip()
+    or os.getenv("DERIV_EVIDENCE_OUT", "").strip()
+    or "artifacts/deriv_authenticated_session.json"
+)
 
 
 async def run() -> int:
@@ -37,7 +41,7 @@ async def run() -> int:
     expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper()
     expected_environment = os.getenv("DERIV_ENVIRONMENT", "real").lower()
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
-    source_hash = os.getenv("GITHUB_SHA", "LOCAL_UNPINNED")
+    source_hash = os.getenv("GITHUB_SHA", "").strip() or os.getenv("AURELIA_SOURCE_SHA", "").strip() or "LOCAL_UNPINNED"
 
     if auth_mode not in {"pat", "oauth"}:
         print("DERIV_AUTH_SESSION=BLOCKED")
@@ -135,7 +139,7 @@ async def run() -> int:
             artifact_hash=artifact_hash,
             config_hash=load_config_hash(ROOT),
             data_hash=data_hash,
-            environment="ci",
+            environment=expected_environment,
             started_at_utc=started.isoformat(),
             ended_at_utc=ended.isoformat(),
             status="CURRENT",
