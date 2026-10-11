@@ -45,7 +45,7 @@ class R100CertificationPromotionTests(unittest.TestCase):
             "retuning_after_seal": False,
             "multiple_testing": {"status": "ACCOUNTED"},
             "min_trades_per_strategy_symbol_regime": 120,
-            "oos_observations": 120,
+            "oos_observations": 150,
             "archive_hash": "archive-hash",
             "probability": {
                 "calibration_status": "VALIDATED_RESEARCH",
