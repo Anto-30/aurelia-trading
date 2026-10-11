@@ -257,6 +257,9 @@ sudo docker run --detach \
   --env AURELIA_AGENT_WORKERS=true \
   --env AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json \
   --env AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json \
+  --env AURELIA_DERIV_LIFECYCLE_EVIDENCE_PATH=/tmp/aurelia/deriv_transaction_lifecycle.json \
+  --env AURELIA_DERIV_BROKER_EVIDENCE_PATH=/tmp/aurelia/deriv_broker_account_evidence.json \
+  --env DERIV_PUBLIC_TRANSPORT_EVIDENCE_PATH=/tmp/aurelia/deriv_public_transport.json \
   --env AURELIA_ATTESTATION_DIR=/tmp/aurelia/attestations \
   --env AURELIA_RUNTIME_ID="$RUNTIME_ID" \
   --env FINAL_EXECUTION_AUTHORIZATION="$FINAL_AUTH" \
