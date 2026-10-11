@@ -2,12 +2,7 @@
   "schema": "aurelia.rth_orb_auction_research.v1",
   "status": "RESEARCH_ONLY_NO_LIVE_ORDERS",
   "timezone": "America/New_York",
-  "instruments": [
-    "NQ",
-    "ES",
-    "MNQ",
-    "MES"
-  ],
+  "instruments": ["NQ", "ES", "MNQ", "MES"],
   "session": {
     "start": "09:30",
     "end": "16:00",
@@ -41,11 +36,13 @@
     "live_orders": false
   },
   "gaps": [
-    "exchange holiday/early-close calendar",
-    "verified dated futures contract specs and fees",
-    "point-in-time economic calendar",
-    "event-driven fill simulator",
-    "structure confirmation and signal conflict resolver",
-    "historical data and OOS results"
+    "authoritative exchange holiday/early-close calendar",
+    "verified dated futures contract specifications and fees",
+    "production point-in-time economic calendar and historical market data",
+    "structure/follow-through confirmation and stop/target rules",
+    "event-driven fill simulator with partial fills and ambiguous-bar handling",
+    "portfolio-level daily-loss enforcement, idempotency, ledger and reconciliation",
+    "historical, walk-forward and locked out-of-sample results",
+    "paper-trading soak and runtime evidence"
   ]
 }
