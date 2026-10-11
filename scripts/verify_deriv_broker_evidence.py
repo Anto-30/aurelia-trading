@@ -19,10 +19,9 @@ from runtime.core.secrets import get_optional_secret
 
 
 OUTPUT = Path(
-    os.getenv(
-        "DERIV_BROKER_EVIDENCE_OUT",
-        "artifacts/deriv_broker_account_evidence.json",
-    )
+    os.getenv("AURELIA_DERIV_BROKER_EVIDENCE_PATH", "").strip()
+    or os.getenv("DERIV_BROKER_EVIDENCE_OUT", "").strip()
+    or "artifacts/deriv_broker_account_evidence.json"
 )
 
 
