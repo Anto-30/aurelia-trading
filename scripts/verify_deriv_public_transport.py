@@ -32,7 +32,7 @@ async def main() -> int:
     output = Path(os.getenv("DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT", "artifacts/deriv_public_transport.json"))
     output.parent.mkdir(parents=True, exist_ok=True)
     temp = output.with_name(output.name + ".tmp")
-    temp.write_text(json.dumps(evidence, sort_keys=True, indent=2) + "\\n", encoding="utf-8")
+    temp.write_text(json.dumps(evidence, sort_keys=True, indent=2) + "\n", encoding="utf-8")
     temp.replace(output)
     print(json.dumps({
         "component": "AURELIA",
