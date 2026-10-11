@@ -29,7 +29,11 @@ from runtime.core.runtime_config import load_config_hash
 from runtime.core.state import RuntimeStateMachine
 
 
-OUTPUT = Path(os.getenv("DERIV_LIFECYCLE_EVIDENCE_OUT", "artifacts/deriv_transaction_lifecycle.json"))
+OUTPUT = Path(
+    os.getenv("AURELIA_DERIV_LIFECYCLE_EVIDENCE_PATH", "").strip()
+    or os.getenv("DERIV_LIFECYCLE_EVIDENCE_OUT", "").strip()
+    or "artifacts/deriv_transaction_lifecycle.json"
+)
 INPUT = Path(os.getenv("AURELIA_LIVE_DECISION_ARTIFACT", "artifacts/live_canary_decision.json"))
 
 
