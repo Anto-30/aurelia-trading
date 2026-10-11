@@ -49,6 +49,7 @@ def test_report_is_boolean_only_and_preserves_capital_lock() -> None:
     assert "DERIV_APP_ID_PRESENT=true" in result.stdout
     assert "DERIV_EXPECTED_LOGINID_PRESENT=true" in result.stdout
     assert "DERIV_EXPECTED_CURRENCY_PRESENT=true" in result.stdout
+    assert "DERIV_EXPECTED_CURRENCY_SUPPORTED=true" in result.stdout
     assert "DERIV_AUTH_CONFIGURED=true" in result.stdout
     assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
     assert "LIVE_EXECUTION=BLOCKED" in result.stdout
@@ -106,3 +107,28 @@ def test_missing_bindings_report_false_without_defaults() -> None:
     assert "DERIV_EXPECTED_LOGINID_PRESENT=false" in result.stdout
     assert "DERIV_EXPECTED_CURRENCY_PRESENT=false" in result.stdout
     assert "DERIV_AUTH_CONFIGURED=false" in result.stdout
+
+
+def test_unsupported_currency_is_not_configured_and_is_not_echoed() -> None:
+    marker = "CURRENCY_PRIVATE_MARKER"
+    result = run_report(
+        DERIV_AUTH_TOKEN="FAKE_TOKEN",
+        DERIV_APP_ID="12345",
+        DERIV_EXPECTED_LOGINID="CRTEST",
+        DERIV_EXPECTED_CURRENCY=marker,
+        DERIV_AUTH_MODE="pat",
+        AURELIA_HOST="host.example.invalid",
+        AURELIA_USER="runtime-user",
+        AURELIA_SSH_KEY="PRIVATE_KEY_SENTINEL_DO_NOT_PRINT",
+        AURELIA_KNOWN_HOSTS="HOST_KEY_SENTINEL_DO_NOT_PRINT",
+        AURELIA_ATTESTATION_SIGNING_KEY="SIGNING_KEY_SENTINEL_DO_NOT_PRINT",
+    )
+
+    assert result.returncode == 0
+    assert marker not in result.stdout
+    assert "DERIV_EXPECTED_CURRENCY_PRESENT=true" in result.stdout
+    assert "DERIV_EXPECTED_CURRENCY_SUPPORTED=false" in result.stdout
+    assert "DERIV_AUTH_CONFIGURED=false" in result.stdout
+    assert "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=false" in result.stdout
+    assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
+    assert "LIVE_EXECUTION=BLOCKED" in result.stdout
