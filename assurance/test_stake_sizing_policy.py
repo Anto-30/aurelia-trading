@@ -39,10 +39,12 @@ class StakeSizingPolicyTests(unittest.TestCase):
         self.assertEqual(result.stake, 2.34)
 
     def test_invalid_balance_and_risk_fraction_are_rejected(self):
-        for balance in (True, -1, float("nan"), float("inf"), "100"):
-            with self.subTest(balance=balance):
+        for balance in (True, -1, float("nan"), float("inf"), "100", 10**10000):
+            with self.subTest(balance_type=type(balance).__name__):
                 self.assertFalse(size_stake_for_balance(balance).allowed)
         self.assertFalse(size_stake_for_balance(100, maximum_risk_fraction=0.03).allowed)
+        self.assertFalse(size_stake_for_balance(100, maximum_risk_fraction=10**10000).allowed)
+        self.assertFalse(size_stake_for_balance(100, minimum_stake=10**10000).allowed)
 
     def test_probability_band_is_50_to_75_percent_without_clipping(self):
         self.assertEqual(MIN_PROBABILITY, 0.50)
@@ -53,6 +55,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
         self.assertFalse(probability_is_valid(0.7501))
         self.assertFalse(probability_is_valid(float("nan")))
         self.assertFalse(probability_is_valid(float("inf")))
+        self.assertFalse(probability_is_valid(10**10000))
 
     def test_live_authorization_uses_balance_scaled_stake(self):
         account = AccountIdentity(
@@ -108,55 +111,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
         self.assertEqual(intent.stake, 2.00)
 
 
-    def test_live_authorization_rejects_unscaled_proposal_stake(self):
-        account = AccountIdentity("CR123456", "real", "USD", "real")
-        capital = CapitalSnapshot(
-            balance=200.00,
-            currency="USD",
-            available_balance=200.00,
-            captured_at=utc_now(),
-            source="verified-test-snapshot",
-            account=account,
-        )
-        decision = Decision(
-            decision_id="sizing-test-mismatch",
-            strategy_id="test-strategy",
-            strategy_version="1",
-            strategy_hash="sha256:test-strategy",
-            symbol="TEST",
-            direction="CALL",
-            probability=0.60,
-            decision_time=utc_now(),
-            market_snapshot_hash="sha256:test-market",
-            risk_requested_stake=2.00,
-            average_win=2.00,
-            average_loss=1.00,
-        )
-        gate, context = authorization_gate(
-            decision=decision,
-            account=account,
-            capital=capital,
-            config_hash="config-digest",
-            runtime_config_hash="config-digest",
-            kill_switch_off=True,
-            risk_approved=True,
-            firewall_approved=True,
-            reconciliation_healthy=True,
-            final_execution_authorization=True,
-            live_trading_enabled=True,
-            probability_calibrated=True,
-            probability_fresh=True,
-            probability_drift_ok=True,
-            market_data_validated=True,
-            exposure_approved=True,
-            execution_mode="LIVE",
-        )
-        self.assertFalse(gate.allowed)
-        self.assertIsNone(context)
-        self.assertIn("LIVE_STAKE_NOT_POLICY_SIZED", gate.reason_codes)
-
-
-    def test_live_authorization_rejects_unscaled_proposal_stake(self):
+    def test_live_authorization_rejects_stake_below_policy_sized_amount(self):
         account = AccountIdentity("CR123456", "real", "USD", "real")
         capital = CapitalSnapshot(
             balance=200.00,
