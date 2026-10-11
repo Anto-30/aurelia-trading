@@ -67,7 +67,7 @@ jobs:
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: real
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
         shell: bash
         run: |
@@ -103,7 +103,7 @@ jobs:
           DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: real
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
           DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
           DERIV_LIFECYCLE_MODE: VERIFY_ONLY
           DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
@@ -132,7 +132,7 @@ jobs:
           DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: real
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
           AURELIA_RUNTIME_ID: ${{ vars.AURELIA_RUNTIME_ID || 'aurelia-production-worker' }}
           AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
           AURELIA_ATTESTATION_DIR: artifacts/attestations
@@ -160,7 +160,7 @@ jobs:
           DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: real
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
           AURELIA_RUNTIME_ID: ${{ vars.AURELIA_RUNTIME_ID || 'aurelia-production-worker' }}
           AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
           AURELIA_ATTESTATION_DIR: artifacts/attestations
@@ -310,7 +310,7 @@ jobs:
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: real
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
           AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
           AURELIA_RUNTIME_ID: ${{ vars.AURELIA_RUNTIME_ID || 'aurelia-production-worker' }}
         shell: bash
