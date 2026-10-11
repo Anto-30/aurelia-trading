@@ -2269,7 +2269,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2290,7 +2291,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2312,7 +2314,8 @@
         "GrokBot",
         "PlaywrightCLI",
         "GLM",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2333,7 +2336,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2354,7 +2358,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2375,7 +2380,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2396,7 +2402,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2416,7 +2423,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2437,7 +2445,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2457,7 +2466,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2478,7 +2488,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2499,7 +2510,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2520,7 +2532,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2540,7 +2553,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2561,7 +2575,8 @@
         "GoogleAgentSkills",
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2582,7 +2597,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2603,7 +2619,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2624,7 +2641,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2645,7 +2663,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2666,7 +2685,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2687,7 +2707,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2708,7 +2729,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2729,7 +2751,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2750,7 +2773,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2771,7 +2795,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2791,7 +2816,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2812,7 +2838,8 @@
         "PlaywrightCLI",
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2833,7 +2860,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2854,7 +2882,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2874,7 +2903,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2895,7 +2925,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2916,7 +2947,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2937,7 +2969,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2957,7 +2990,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2977,7 +3011,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -2997,7 +3032,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3018,7 +3054,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3038,7 +3075,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3059,7 +3097,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3080,7 +3119,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3101,7 +3141,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3122,7 +3163,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3142,7 +3184,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3163,7 +3206,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3184,7 +3228,8 @@
         "GoogleAgentSkills",
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3205,7 +3250,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3226,7 +3272,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3247,7 +3294,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3268,7 +3316,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3289,7 +3338,8 @@
         "GrokBot",
         "ClaudeCode",
         "GoogleAgentSkills",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3309,7 +3359,8 @@
       "assigned_agents": [
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT"
       ],
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
@@ -3561,6 +3612,9 @@
       "lobehub/lobehub",
       "lessweb/deepcode-cli"
     ],
-    "security_review_status": "PENDING"
+    "security_review_status": "PENDING",
+    "assigned_chatgpt_as_supervisory_reviewer": true,
+    "runtime_install_status": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
+    "source_security_status": "PENDING"
   }
 }
