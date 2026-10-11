@@ -116,3 +116,7 @@ The regression contract is `assurance/test_intelligence_source_routing.py`. Exte
 ## Federated agent skills
 
 AURELIA maintains a pinned cross-agent engineering capability registry at `config/agent_skill_federation.json`. The registry covers Claude Code, Kimi K3/Kimi Code, Grok Bot, Google Agent Skills, GLM Skills, and Playwright CLI. All external capabilities are advisory/engineering-only and cannot authorize or submit capital-moving actions.
+
+## Agent tool, skill, and plugin assignment
+
+Task-aware role routing is defined in `config/agent_tool_skill_assignment.json`. It assigns each canonical agent its primary tools, skill bundle, eligible plugins, independent reviewer, and security boundary. The audit is enforced by `scripts/validate_agent_tool_skill_assignments.py` in CI. A plugin or source appearing in a registry does not prove it is connected or installed in a runtime. `Dev` remains inactive until an authorized device is connected and verified. The external-repository intake manifest is `config/external_repo_intake_2026-10-11.json`; entries are pinned references pending review, not production dependencies.
