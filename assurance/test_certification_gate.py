@@ -79,10 +79,12 @@ class CertificationEvidenceTest(unittest.TestCase):
             "drift_monitoring": True,
             "sample_count": 1000,
             "reliability_buckets": [
-                {"bucket": "0.55-0.60", "count": 100},
-                {"bucket": "0.60-0.65", "count": 100},
-                {"bucket": "0.65-0.70", "count": 100},
+                {"bucket": "0.55-0.60", "count": 100, "mean_probability": 0.575, "realized_rate": 0.57},
+                {"bucket": "0.60-0.65", "count": 100, "mean_probability": 0.625, "realized_rate": 0.62},
+                {"bucket": "0.65-0.70", "count": 100, "mean_probability": 0.675, "realized_rate": 0.67},
             ],
+            "max_reliability_gap": 0.005,
+            "drift_detected": False,
             "brier_score": 0.2,
             "log_loss": 0.6,
             "net_expectancy_status": "KNOWN",
@@ -159,6 +161,36 @@ class CertificationEvidenceTest(unittest.TestCase):
             status, detail = validate_evidence_bundle(root)
             self.assertEqual(status, "BLOCKED")
             self.assertIn("broker lifecycle", detail)
+
+    def test_detected_probability_drift_blocks_calibration(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            path = root / "evidence/calibration.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record["drift_detected"] = True
+            record["record_hash"] = payload_sha256(
+                {key: value for key, value in record.items() if key != "record_hash"}
+            )
+            path.write_text(json.dumps(record), encoding="utf-8")
+            status, detail = validate_evidence_bundle(root)
+            self.assertEqual(status, "BLOCKED")
+            self.assertIn("calibration or drift", detail)
+
+    def test_nonfinite_calibration_metric_blocks(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            path = root / "evidence/calibration.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record["brier_score"] = float("inf")
+            record["record_hash"] = payload_sha256(
+                {key: value for key, value in record.items() if key != "record_hash"}
+            )
+            path.write_text(json.dumps(record, allow_nan=True), encoding="utf-8")
+            status, detail = validate_evidence_bundle(root)
+            self.assertEqual(status, "BLOCKED")
+            self.assertIn("calibration or drift", detail)
 
     def test_tampered_evidence_hash_blocks(self):
         with tempfile.TemporaryDirectory() as d:

@@ -13,8 +13,9 @@ from .models import (
     OrderIntent,
     utc_now,
 )
+from .stake_sizing import size_stake_for_balance
 
-MIN_PROBABILITY = 0.55
+MIN_PROBABILITY = 0.50
 MAX_PROBABILITY = 0.75
 STARTING_STAKE = 1.00
 EXECUTION_MINIMUM_STAKE = 1.00
@@ -27,14 +28,32 @@ class GateResult:
 
 
 def probability_is_valid(probability: float) -> bool:
-    return isfinite(probability) and MIN_PROBABILITY <= probability <= MAX_PROBABILITY
+    if isinstance(probability, bool) or not isinstance(probability, (int, float)):
+        return False
+    value = float(probability)
+    return isfinite(value) and MIN_PROBABILITY <= value <= MAX_PROBABILITY
 
 
 def decision_economics_gate(decision: Decision) -> tuple[bool, str, float | None]:
     if any(value is None for value in (decision.average_win, decision.average_loss)):
         return False, "ECONOMICS_INPUTS_MISSING", None
 
+    raw_values = (
+        decision.probability,
+        decision.average_win,
+        decision.average_loss,
+        decision.execution_cost,
+        decision.slippage_cost,
+        decision.quote_cost,
+    )
+    if any(
+        isinstance(value, bool) or not isinstance(value, (int, float))
+        for value in raw_values
+    ):
+        return False, "ECONOMICS_INPUTS_INVALID", None
     try:
+        if not all(isfinite(float(value)) for value in raw_values):
+            return False, "ECONOMICS_INPUTS_INVALID", None
         economics = TradeEconomics(
             probability=float(decision.probability),
             average_win=float(decision.average_win),
@@ -49,9 +68,13 @@ def decision_economics_gate(decision: Decision) -> tuple[bool, str, float | None
     allowed, reason = economics.gate()
     computed = economics.expected_value if isfinite(economics.expected_value) else None
     if decision.expected_value is not None:
+        if isinstance(decision.expected_value, bool) or not isinstance(
+            decision.expected_value, (int, float)
+        ):
+            return False, "EXPECTED_VALUE_INVALID", computed
         try:
             supplied = float(decision.expected_value)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             return False, "EXPECTED_VALUE_INVALID", computed
         if not isfinite(supplied):
             return False, "EXPECTED_VALUE_NON_FINITE", computed
@@ -67,11 +90,31 @@ def requested_stake_is_permitted(
     capital: CapitalSnapshot,
     minimum_stake: float = EXECUTION_MINIMUM_STAKE,
 ) -> bool:
+    # External strategy payloads are untrusted. Malformed or extreme numeric
+    # values must become a denial, not an exception that bypasses the gate.
+    if isinstance(requested, bool) or not isinstance(requested, (int, float)):
+        return False
+    if isinstance(capital.available_balance, bool) or not isinstance(
+        capital.available_balance, (int, float)
+    ):
+        return False
+    if isinstance(minimum_stake, bool) or not isinstance(minimum_stake, (int, float)):
+        return False
+    try:
+        value = float(requested)
+        available = float(capital.available_balance)
+        minimum = float(minimum_stake)
+        valid_capital = capital.is_valid()
+    except (TypeError, ValueError, OverflowError):
+        return False
     return bool(
-        isfinite(requested)
-        and requested >= minimum_stake
-        and requested <= capital.available_balance
-        and capital.is_valid()
+        isfinite(value)
+        and isfinite(available)
+        and isfinite(minimum)
+        and minimum > 0
+        and value >= minimum
+        and value <= available
+        and valid_capital
     )
 
 
@@ -100,12 +143,18 @@ def authorization_gate(
 
     if account.account_type != "real":
         reasons.append("ACCOUNT_NOT_REAL")
-    if account.loginid != capital.account.loginid:
+    if account != capital.account:
         reasons.append("ACCOUNT_IDENTITY_MISMATCH")
+    if execution_mode == "LIVE" and (
+        account.environment != "real" or capital.account.environment != "real"
+    ):
+        reasons.append("ACCOUNT_ENVIRONMENT_NOT_REAL")
     if account.currency != capital.currency:
         reasons.append("CURRENCY_MISMATCH")
     if not capital.is_valid():
         reasons.append("CAPITAL_TRUTH_NOT_FRESH")
+    if execution_mode == "LIVE" and capital.currency.strip().upper() != "USD":
+        reasons.append("USD_STAKE_POLICY_REQUIRES_USD_ACCOUNT")
     if not probability_is_valid(decision.probability):
         reasons.append("PROBABILITY_OUTSIDE_HARD_POLICY")
 
@@ -132,8 +181,28 @@ def authorization_gate(
         reasons.append("STRATEGY_HASH_MISSING")
     if not config_hash or config_hash != runtime_config_hash:
         reasons.append("CONFIG_DIGEST_MISMATCH")
+
+    # Keep the proposed request valid, but do not let a strategy/LLM choose
+    # the final capital amount. LIVE sizing is recalculated deterministically
+    # from the exact fresh available-balance snapshot and then travels in the
+    # authorization context to intent creation.
     if not requested_stake_is_permitted(decision.risk_requested_stake, capital):
         reasons.append("STAKE_NOT_AFFORDABLE_OR_BELOW_BROKER_MINIMUM")
+    if execution_mode == "LIVE":
+        sizing = size_stake_for_balance(capital.available_balance)
+        if not sizing.allowed:
+            reasons.append(sizing.reason)
+        else:
+            try:
+                proposed_stake = float(decision.risk_requested_stake)
+            except (TypeError, ValueError, OverflowError):
+                proposed_stake = float("nan")
+            # Risk/exposure controls must evaluate the exact stake that will be
+            # submitted. Do not silently resize after those approvals were
+            # computed against a strategy/agent-proposed amount.
+            if not isfinite(proposed_stake) or abs(proposed_stake - float(sizing.stake)) > 1e-9:
+                reasons.append("LIVE_STAKE_NOT_POLICY_SIZED")
+
     if not risk_approved:
         reasons.append("RISK_WARDEN_REJECTED")
     if not firewall_approved:
@@ -179,6 +248,7 @@ def build_intent(
     *,
     proposal_id: str | None,
     mode: str = "LIVE",
+    proposal_parameters_hash: str | None = None,
 ) -> OrderIntent:
     if mode == "VERIFY_ONLY":
         now = utc_now()
@@ -199,4 +269,5 @@ def build_intent(
         config_hash=context.config_hash,
         execution_mode=mode,
         proposal_id=proposal_id,
+        proposal_parameters_hash=proposal_parameters_hash,
     )

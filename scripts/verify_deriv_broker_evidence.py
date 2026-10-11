@@ -63,7 +63,7 @@ async def run() -> int:
     expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper()
     environment = os.getenv("DERIV_ENVIRONMENT", "real").strip().lower()
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
-    source_hash = os.getenv("GITHUB_SHA", "LOCAL_UNPINNED")
+    source_hash = os.getenv("GITHUB_SHA", "").strip() or os.getenv("AURELIA_SOURCE_SHA", "").strip() or "LOCAL_UNPINNED"
 
     if not token:
         return fail("AUTH_TOKEN_MISSING")
@@ -154,7 +154,7 @@ async def run() -> int:
             ),
             config_hash=load_config_hash(ROOT),
             data_hash=data_hash,
-            environment="production",
+            environment=account.environment,
             started_at_utc=started.isoformat(),
             ended_at_utc=ended.isoformat(),
             status="CURRENT",

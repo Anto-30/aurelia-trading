@@ -29,8 +29,10 @@ class AuthorizationInputs:
 
 
 def probability_policy_valid(probability: Optional[float]) -> bool:
-    """Validate without clipping. 0.55-0.75 is inclusive."""
-    return probability is not None and 0.55 <= probability <= 0.75
+    """Validate finite numeric probability without clipping. 0.50–0.75 is inclusive."""
+    if isinstance(probability, bool) or not isinstance(probability, (int, float)):
+        return False
+    return __import__("math").isfinite(float(probability)) and 0.50 <= float(probability) <= 0.75
 
 
 def final_execution_authorized(x: AuthorizationInputs) -> bool:

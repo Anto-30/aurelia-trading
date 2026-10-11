@@ -248,19 +248,50 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
 
     if name == "calibration.json":
         buckets = record.get("reliability_buckets")
+        sample_count = record.get("sample_count")
+        brier = record.get("brier_score")
+        log_loss = record.get("log_loss")
+        max_gap = record.get("max_reliability_gap")
+        finite_metrics = all(
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and __import__("math").isfinite(float(value))
+            for value in (brier, log_loss, max_gap)
+        )
+        buckets_valid = (
+            isinstance(buckets, list)
+            and len(buckets) >= 3
+            and all(
+                isinstance(bucket, dict)
+                and isinstance(bucket.get("count"), int)
+                and not isinstance(bucket.get("count"), bool)
+                and bucket["count"] >= 10
+                and isinstance(bucket.get("mean_probability"), (int, float))
+                and not isinstance(bucket.get("mean_probability"), bool)
+                and __import__("math").isfinite(float(bucket["mean_probability"]))
+                and 0 <= float(bucket["mean_probability"]) <= 1
+                and isinstance(bucket.get("realized_rate"), (int, float))
+                and not isinstance(bucket.get("realized_rate"), bool)
+                and __import__("math").isfinite(float(bucket["realized_rate"]))
+                and 0 <= float(bucket["realized_rate"]) <= 1
+                and abs(float(bucket["mean_probability"]) - float(bucket["realized_rate"])) <= 0.05
+                for bucket in buckets
+            )
+        )
         ok = (
             record.get("calibration_validated") is True
             and record.get("drift_monitoring") is True
-            and isinstance(record.get("sample_count"), int)
-            and record["sample_count"] > 0
-            and isinstance(buckets, list)
-            and len(buckets) >= 3
-            and isinstance(record.get("brier_score"), (int, float))
-            and isinstance(record.get("log_loss"), (int, float))
-            and record["brier_score"] >= 0
-            and record["log_loss"] >= 0
+            and record.get("drift_detected") is False
+            and isinstance(sample_count, int)
+            and not isinstance(sample_count, bool)
+            and sample_count >= 100
+            and buckets_valid
+            and finite_metrics
+            and float(brier) >= 0
+            and float(log_loss) >= 0
+            and float(max_gap) <= 0.05
         )
-        return ok, "valid" if ok else "probability calibration evidence incomplete"
+        return ok, "valid" if ok else "probability calibration or drift evidence incomplete"
 
     if name == "execution_economics.json":
         costs = record.get("cost_components")

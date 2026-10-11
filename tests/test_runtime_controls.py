@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta, timezone
 import json
 import os
@@ -6,7 +7,12 @@ import unittest
 from unittest.mock import patch
 
 from runtime.autonomous_loop import FederatedDecisionProvider
-from runtime.core.authority import authorization_gate, decision_economics_gate, probability_is_valid
+from runtime.core.authority import (
+    authorization_gate,
+    decision_economics_gate,
+    probability_is_valid,
+    requested_stake_is_permitted,
+)
 from runtime.core.capabilities import Capability, RESEARCH_CAPABILITIES
 from runtime.core.events import event_envelope, sha256
 from runtime.core.fencing import ExecutionFence
@@ -29,6 +35,7 @@ from runtime.core.models import (
     AuthorizationContext,
     CapitalSnapshot,
     Decision,
+    MarketTick,
     OrderIntent,
     RuntimeState,
 )
@@ -83,14 +90,33 @@ def dec(probability: float = 0.60, stake: float = 2.0) -> Decision:
 
 class TestControls(unittest.TestCase):
     def test_probability_no_clipping(self):
+        self.assertTrue(probability_is_valid(0.50))
         self.assertTrue(probability_is_valid(0.55))
         self.assertTrue(probability_is_valid(0.75))
+        self.assertFalse(probability_is_valid(0.49))
         self.assertFalse(probability_is_valid(0.76))
         self.assertFalse(probability_is_valid(0.82))
+        self.assertFalse(probability_is_valid(True))
+        self.assertFalse(probability_is_valid(float("nan")))
 
     def test_low_balance_is_not_readiness_blocker(self):
         from assurance.aurelia_invariants import capital_readiness_blocker_for_balance
         self.assertFalse(capital_readiness_blocker_for_balance(1))
+
+    def test_requested_stake_malformed_numeric_values_fail_closed(self):
+        self.assertFalse(requested_stake_is_permitted(True, cap()))
+        self.assertFalse(requested_stake_is_permitted(10**10000, cap()))
+        self.assertFalse(requested_stake_is_permitted("1.00", cap()))
+
+        malformed_capital = CapitalSnapshot(
+            balance="bad",
+            currency="USD",
+            available_balance=10.0,
+            captured_at=datetime.now(UTC),
+            source="test",
+            account=ident(),
+        )
+        self.assertFalse(requested_stake_is_permitted(1.0, malformed_capital))
 
     def test_stake_policy_uses_one_dollar_floor(self):
         limits = ExecutionLimits()
@@ -231,7 +257,10 @@ class TestControls(unittest.TestCase):
         gate, ctx = authorization_gate(
             decision=dec(),
             account=ident(),
-            capital=cap(),
+            # A $2 stake at a 1% maximum-loss cap requires at least $200
+            # of verified available USD balance; the prior $10 fixture is
+            # correctly rejected by the new deterministic sizing policy.
+            capital=cap(200.0),
             config_hash="h",
             runtime_config_hash="h",
             kill_switch_off=True,
@@ -246,8 +275,9 @@ class TestControls(unittest.TestCase):
             market_data_validated=True,
             exposure_approved=True,
         )
-        self.assertTrue(gate.allowed)
+        self.assertTrue(gate.allowed, gate.reason_codes)
         self.assertIsNotNone(ctx)
+        self.assertEqual(ctx.decision.risk_requested_stake, 2.00)
 
     def test_locked_baseline(self):
         gate, ctx = authorization_gate(
@@ -422,6 +452,154 @@ class TestControls(unittest.TestCase):
             self.assertFalse(controls["market_data_validated"])
         finally:
             os.unlink(path)
+
+    def test_federated_control_snapshot_binds_identity_config_and_expiry(self):
+        now = datetime.now(UTC)
+        source_sha = "current-source-sha"
+        capabilities = (
+            "MARKET_DATA", "PROBABILITY", "RISK_WARDEN", "EXECUTION_FIREWALL",
+            "EXPOSURE", "RECONCILIATION", "WATCHDOG", "IDEMPOTENCY", "PERSISTENT_WORKER",
+        )
+        verified = {
+            name: {
+                "status": "PASS", "issuer": "test-issuer", "subject": "test-subject",
+                "evidence_hash": "hash-" + name, "provenance": "test",
+                "expires_at_utc": (now + timedelta(minutes=5)).isoformat(),
+            }
+            for name in capabilities
+        }
+        report = {
+            "generated_at_utc": now.isoformat(),
+            "final_execution_authorization": True,
+            "live_execution": "ENABLED",
+            "controls": {
+                "risk_warden": True, "execution_firewall": True,
+                "reconciliation": True, "exposure": True,
+            },
+            "evidence": {"calibration": True, "market_data": True},
+            "deriv": {
+                "account_loginid": "CR123", "account_type": "real",
+                "environment": "real", "currency": "USD",
+                "balance": 10.0, "balance_fresh": True,
+            },
+            "attestations": {
+                "source_sha": source_sha, "config_hash": "cfg",
+                "runtime_id": "runtime", "all_passed": True,
+                "verified": verified, "failures": {},
+            },
+        }
+        provider = FederatedDecisionProvider(None)
+        provider._expected_config_hash = "cfg"
+        path = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+        path.close()
+
+        def read_controls(payload):
+            with open(path.name, "w", encoding="utf-8") as handle:
+                json.dump(payload, handle)
+            with patch.dict(os.environ, {
+                "AURELIA_READINESS_PATH": path.name,
+                "AURELIA_READINESS_MAX_AGE_SECONDS": "30",
+                "GITHUB_SHA": source_sha,
+            }, clear=False):
+                return provider.control_snapshot(decision=None, tick=None, capital=cap())
+
+        try:
+            valid = read_controls(report)
+            self.assertTrue(all(valid.values()), valid)
+
+            report["controls"]["risk_warden"] = "true"
+            malformed_bool = read_controls(report)
+            self.assertFalse(malformed_bool["risk_approved"])
+            self.assertTrue(malformed_bool["firewall_approved"])
+
+            report["controls"]["risk_warden"] = True
+            report["deriv"]["account_loginid"] = "CROTHER"
+            wrong_account = read_controls(report)
+            self.assertFalse(wrong_account["risk_approved"])
+            self.assertFalse(wrong_account["market_data_validated"])
+
+            report["deriv"]["account_loginid"] = "CR123"
+            report["attestations"]["verified"]["MARKET_DATA"]["expires_at_utc"] = (
+                now - timedelta(seconds=1)
+            ).isoformat()
+            expired = read_controls(report)
+            self.assertFalse(expired["risk_approved"])
+            self.assertFalse(expired["probability_calibrated"])
+        finally:
+            os.unlink(path.name)
+
+    def test_federated_decision_rejects_boolean_numeric_payloads(self):
+        now = datetime.now(UTC)
+
+        class FakeRegistry:
+            def eligibility(self, *args, **kwargs):
+                return {"eligible": True, "status": "PASS", "reasons": []}
+
+        class FakeFederation:
+            def __init__(self, message):
+                self.message = message
+                self.published = []
+
+            def messages_for(self, consumer, limit=100):
+                return [self.message]
+
+            async def publish(self, **kwargs):
+                self.published.append(kwargs)
+
+        def make_message(field):
+            payload = {
+                "decision_id": "D-BOOL",
+                "strategy_id": "S",
+                "strategy_version": "1",
+                "strategy_hash": "hash",
+                "symbol": "R_100",
+                "direction": "CALL",
+                "probability": 0.60,
+                "decision_time": now.isoformat(),
+                "market_snapshot_hash": "market",
+                "risk_requested_stake": 1.0,
+                "rationale_codes": ["TEST"],
+                "average_win": 2.0,
+                "average_loss": 1.0,
+                "execution_cost": 0.0,
+                "slippage_cost": 0.0,
+                "quote_cost": 0.0,
+                "expected_value": 0.8,
+                "proposal_parameters": {
+                    "contract_type": "CALL",
+                    "currency": "USD",
+                    "underlying_symbol": "R_100",
+                    "basis": "stake",
+                },
+                "account_loginid": "CR123",
+            }
+            payload[field] = True
+            return {
+                "message_id": f"message-{field}",
+                "sender": "test-agent",
+                "message_type": "DECISION_PROPOSAL",
+                "payload": payload,
+            }
+
+        async def run_one(field):
+            federation = FakeFederation(make_message(field))
+            provider = FederatedDecisionProvider(
+                federation,
+                strategy_registry=FakeRegistry(),
+            )
+            decision = await provider.next_decision(
+                tick=MarketTick("R_100", 100.0, int(now.timestamp()), now),
+                capital=cap(),
+                account=ident(),
+            )
+            return decision, provider, federation
+
+        for field in ("probability", "risk_requested_stake", "average_win", "expected_value"):
+            decision, provider, federation = asyncio.run(run_one(field))
+            self.assertIsNone(decision, field)
+            self.assertEqual(len(provider._rejections), 1, field)
+            self.assertEqual(provider._rejections[0]["reasons"], ["DECISION_PAYLOAD_INVALID"])
+            self.assertEqual(len(federation.published), 1)
 
     def test_runtime_health_requires_fresh_capital_market_data_and_reconciliation(self):
         health = HealthSnapshot(datetime.now(UTC))

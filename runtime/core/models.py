@@ -115,6 +115,7 @@ class OrderIntent:
     config_hash: str
     execution_mode: str
     proposal_id: str|None=None
+    proposal_parameters_hash: str|None=None
 
 
 @dataclass(frozen=True)

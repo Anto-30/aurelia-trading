@@ -21,6 +21,12 @@ def test_scheduled_deriv_verifier_loads_production_environment_secrets() -> None
     assert "secrets.DERIV_EXPECTED_CURRENCY || 'USD'" not in workflow
 
 
+def test_scheduled_workflow_generates_read_only_broker_account_evidence() -> None:
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+    assert "python scripts/verify_deriv_broker_evidence.py" in workflow
+    assert "artifacts/deriv_broker_account_evidence.json" in workflow
+
+
 def test_scheduled_deriv_verifier_keeps_capital_authority_blocked() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
 

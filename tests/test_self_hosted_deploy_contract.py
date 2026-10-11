@@ -85,6 +85,10 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         )
         self.assertIn("python scripts/live_release_gate.py", workflow)
         self.assertIn("if: inputs.deployment_mode == 'LIVE'", workflow)
+        self.assertIn("AURELIA_READINESS_OUT: artifacts/AURELIA_READINESS.current.json", workflow)
+        self.assertIn("AURELIA_READINESS_PATH: artifacts/AURELIA_READINESS.current.json", workflow)
+        self.assertIn("DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT: artifacts/deriv_public_transport.json", workflow)
+        self.assertIn("python scripts/verify_deriv_public_transport.py", workflow)
 
 
 if __name__ == "__main__":

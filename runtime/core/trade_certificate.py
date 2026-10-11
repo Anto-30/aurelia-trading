@@ -26,6 +26,7 @@ class TradeCertificate:
     account_environment: str
     market_snapshot_hash: str
     proposal_id: str
+    proposal_parameters_hash: str
     authorization_id: str
     config_hash: str
     idempotency_key: str
@@ -69,6 +70,7 @@ class TradeCertificate:
             account_environment=intent.account.environment,
             market_snapshot_hash=decision.market_snapshot_hash,
             proposal_id=str(intent.proposal_id),
+            proposal_parameters_hash=str(intent.proposal_parameters_hash or ""),
             authorization_id=authorization.authorization_id,
             config_hash=intent.config_hash,
             idempotency_key=intent.intent_id,

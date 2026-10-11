@@ -59,9 +59,13 @@ class AssuranceContractsTest(unittest.TestCase):
         self.assertFalse(final_execution_authorized(stale))
         self.assertFalse(final_execution_authorized(unknown))
 
-    def test_probability_is_not_clipped(self):
+    def test_probability_is_not_clipped_and_matches_canonical_50_to_75_policy(self):
         self.assertFalse(probability_policy_valid(None))
-        self.assertFalse(probability_policy_valid(0.549999))
+        self.assertFalse(probability_policy_valid(True))
+        self.assertFalse(probability_policy_valid(float("nan")))
+        self.assertFalse(probability_policy_valid(float("inf")))
+        self.assertFalse(probability_policy_valid(0.499999))
+        self.assertTrue(probability_policy_valid(0.50))
         self.assertTrue(probability_policy_valid(0.55))
         self.assertTrue(probability_policy_valid(0.75))
         self.assertFalse(probability_policy_valid(0.750001))
