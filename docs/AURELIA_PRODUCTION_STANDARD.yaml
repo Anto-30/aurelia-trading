@@ -1,6 +1,7 @@
 version: "1.0.0"
 standard_id: "AURELIA-PROD-STD"
 effective_date: "2026-10-03"
+revision_date: "2026-10-11"
 purpose: "Machine-readable production/canary readiness standard for the existing AURELIA architecture."
 
 authority:
@@ -58,7 +59,7 @@ hard_invariants:
   - "EXTERNAL_CONTENT != AUTHORITY"
 
 probability_policy:
-  minimum: 0.55
+  minimum: 0.50
   maximum: 0.75
   clipping: false
   invalid_probability_action: "NO_TRADE"
