@@ -52,53 +52,7 @@ jobs:
           DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts
-          python - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          token_present = bool(os.getenv("DERIV_AUTH_TOKEN", "").strip())
-          loginid_present = bool(os.getenv("DERIV_EXPECTED_LOGINID", "").strip())
-          raw_auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
-          auth_mode_valid = raw_auth_mode in {"pat", "oauth"}
-          auth_mode = raw_auth_mode if auth_mode_valid else "invalid"
-          app_id_present = bool(os.getenv("DERIV_APP_ID", "").strip())
-          requirements = {
-              "token_present": token_present,
-              "expected_loginid_present": loginid_present,
-              "auth_mode_valid": auth_mode_valid,
-              "app_id_present_when_pat": app_id_present if auth_mode == "pat" else auth_mode == "oauth",
-              "expected_currency_present": False,
-          }
-          raw_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip()
-          currency_valid = raw_currency == "USD"
-          safe_currency = "USD" if currency_valid else ("missing" if not raw_currency else "invalid")
-          requirements["expected_currency_present"] = currency_valid
-          configured = all(requirements.values())
-          evidence = {
-              "schema_version": "1",
-              "auth_mode": auth_mode,
-              "expected_currency": safe_currency,
-              "configured": configured,
-              "requirements": requirements,
-              "secret_values_exposed": False,
-          }
-          Path("artifacts/deriv_auth_prerequisites.json").write_text(
-              json.dumps(evidence, indent=2, sort_keys=True) + "\n",
-              encoding="utf-8",
-          )
-          print("DERIV_AUTH_PREREQUISITES=" + ("READY" if configured else "NOT_READY"))
-          print("DERIV_AUTH_MODE=" + (auth_mode.upper() if auth_mode_valid else "INVALID"))
-          print("DERIV_AUTH_MODE_VALID=" + str(auth_mode_valid).lower())
-          print("DERIV_TOKEN_PRESENT=" + str(token_present).lower())
-          print("DERIV_EXPECTED_LOGINID_PRESENT=" + str(loginid_present).lower())
-          print("DERIV_APP_ID_REQUIRED=" + str(auth_mode == "pat").lower())
-          print("DERIV_APP_ID_PRESENT_WHEN_REQUIRED=" + str(requirements["app_id_present_when_pat"]).lower())
-          raise SystemExit(0)
-          PY
+        run: python scripts/deriv_auth_prerequisites.py
 
       - name: Upload Deriv authentication prerequisite evidence
         if: always()
