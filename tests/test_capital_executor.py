@@ -142,7 +142,7 @@ class BalanceMismatchBroker(FakeBroker):
 TEST_OPERATOR_RESET_KEY = "unit-test-operator-reset-key-at-least-32-characters"
 
 
-def make_executor(lock_path: Path, broker=None, *, kill_switch_state_path=None):
+def make_executor(lock_path: Path, broker=None, *, kill_switch_state_path=None, source_hash="source"):
     return CapitalPlaneExecutor(
         broker or FakeBroker(),
         journal=AppendOnlyJournal(lock_path.parent / "events.ndjson"),
@@ -151,7 +151,7 @@ def make_executor(lock_path: Path, broker=None, *, kill_switch_state_path=None):
         fence=ExecutionFence(),
         state=RuntimeStateMachine(),
         reconciler=Reconciler(),
-        source_hash="source",
+        source_hash=source_hash,
         config_hash="config-hash",
         live_lock_path=lock_path,
         kill_switch_state_path=kill_switch_state_path,
@@ -168,6 +168,7 @@ def write_operator_reset(executor, authorization):
         operator_id="unit-test-operator",
         reason=executor._kill_switch_reason,
         source_sha=executor.source_hash,
+        fault_source_sha=executor._fault_source_sha or executor.source_hash,
         account_loginid=authorization.account.loginid,
         kill_switch_generation=executor._kill_switch_generation,
     )
@@ -254,20 +255,27 @@ class CapitalExecutorHardeningTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(first.clear_kill_switch_with_fresh_authorization(startup_auth))
 
             first.activate_kill_switch("PERSISTED_TEST_FAULT")
-            restarted = make_executor(lock, kill_switch_state_path=state_path)
+            restarted = make_executor(
+                lock, kill_switch_state_path=state_path, source_hash="source-after-upgrade"
+            )
             self.assertTrue(restarted.kill_switch)
             self.assertTrue(restarted._fault_latched)
             fresh = context(issued_at=datetime.now(UTC))
             self.assertFalse(restarted.clear_kill_switch_with_fresh_authorization(fresh))
 
             write_operator_reset(restarted, fresh)
+            reset_record = json.loads(restarted._operator_reset_path.read_text(encoding="utf-8"))
+            self.assertEqual(reset_record["source_sha"], "source-after-upgrade")
+            self.assertEqual(reset_record["fault_source_sha"], "source")
             self.assertTrue(restarted.clear_kill_switch_with_fresh_authorization(fresh))
             self.assertFalse(restarted.kill_switch)
             self.assertEqual(json.loads(state_path.read_text())["state"], "CLEARED")
 
             # A clean process restart relocks for fresh startup authorization,
             # but does not relatch the already-reset historical fault.
-            next_process = make_executor(lock, kill_switch_state_path=state_path)
+            next_process = make_executor(
+                lock, kill_switch_state_path=state_path, source_hash="source-after-upgrade"
+            )
             self.assertTrue(next_process.kill_switch)
             self.assertFalse(next_process._fault_latched)
             next_auth = context(issued_at=datetime.now(UTC))
