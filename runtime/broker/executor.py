@@ -140,7 +140,10 @@ class CapitalPlaneExecutor:
         if not all(
             (
                 authorization.account.account_type == "real",
+                authorization.account.environment == "real",
                 authorization.capital.is_valid(),
+                authorization.capital.account == authorization.account,
+                authorization.capital.account.environment == "real",
                 authorization.risk_approved,
                 authorization.firewall_approved,
                 authorization.reconciliation_healthy,
