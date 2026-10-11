@@ -35,7 +35,8 @@ def main() -> int:
     auth_present = present("DERIV_AUTH_TOKEN") or present("DERIV_PAT")
     login_present = present("DERIV_EXPECTED_LOGINID") or present("DERIV_AUTHORIZED_ACCOUNT_ID")
     currency_present = present("DERIV_EXPECTED_CURRENCY")
-    deriv_core = auth_present and login_present and currency_present
+    currency_supported = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper() == "USD"
+    deriv_core = auth_present and login_present and currency_supported
     deriv_configured = (
         deriv_core
         and auth_mode_valid
@@ -45,6 +46,7 @@ def main() -> int:
     print(f"DERIV_AUTH_MODE_PRESENT={'true' if present('DERIV_AUTH_MODE') else 'false'}")
     print(f"DERIV_AUTH_MODE_VALID={'true' if auth_mode_valid else 'false'}")
     print(f"DERIV_AUTH_MODE_EFFECTIVE={auth_mode.upper() if auth_mode_valid else 'INVALID'}")
+    print(f"DERIV_EXPECTED_CURRENCY_SUPPORTED={str(currency_supported).lower()}")
     print(f"DERIV_AUTH_CONFIGURED={'true' if deriv_configured else 'false'}")
 
     for name in DEPLOYMENT_SECRET_NAMES:
