@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -40,7 +44,7 @@ class FreshAuthEvidenceContractTests(unittest.TestCase):
         self.assertIn("jev-typed-decision-challenger", payload["agents"]["GrokBot"]["skills"])
 
     def test_campaign_guard_detects_config_drift(self):
-        from research.r100_campaign_guard import inspect_state
+        from research.r100_campaign_guard import inspect_state, main
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "state.json"
             path.write_text(json.dumps({
@@ -54,6 +58,17 @@ class FreshAuthEvidenceContractTests(unittest.TestCase):
                 },
             }), encoding="utf-8")
             self.assertEqual(inspect_state(path), "R100_ROLLOVER_REQUIRED:R100_CONFIG_HASH_MISMATCH")
+
+
+    def test_campaign_guard_entrypoint_uses_configured_state_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state_path = Path(tmp) / "missing-state.json"
+            output = StringIO()
+            with patch.dict(os.environ, {"AURELIA_R100_STATE_PATH": str(state_path)}):
+                with redirect_stdout(output):
+                    result = main()
+            self.assertEqual(result, 0)
+            self.assertEqual(output.getvalue().strip(), "R100_NO_STATE")
 
 if __name__ == "__main__":
     unittest.main()
