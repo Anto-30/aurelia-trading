@@ -141,7 +141,7 @@ def test_unsupported_currency_is_not_configured_and_is_not_echoed() -> None:
 
 def test_missing_operator_reset_signing_key_blocks_deployment_prerequisites() -> None:
     result = run_report(
-        DERIV_AUTH_TOKEN="FAKE_DERIV_TOKEN",
+        DERIV_AUTH_TOKEN="FAKE_TOKEN",
         DERIV_APP_ID="12345",
         DERIV_EXPECTED_LOGINID="CRTEST",
         DERIV_EXPECTED_CURRENCY="USD",
@@ -175,7 +175,7 @@ def test_secret_presence_workflow_binds_operator_reset_key_from_production_envir
 
 def test_short_operator_reset_signing_key_blocks_deployment_prerequisites() -> None:
     result = run_report(
-        DERIV_AUTH_TOKEN="FAKE_DERIV_TOKEN",
+        DERIV_AUTH_TOKEN="FAKE_TOKEN",
         DERIV_APP_ID="12345",
         DERIV_EXPECTED_LOGINID="CRTEST",
         DERIV_EXPECTED_CURRENCY="USD",
