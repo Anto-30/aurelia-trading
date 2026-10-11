@@ -61,6 +61,18 @@ class LiveReleaseGateTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "invalid payload"):
                 gate.check_readiness()
 
+    def test_unsupported_currency_is_rejected(self):
+        env = {
+            "DERIV_AUTH_TOKEN": "test-token",
+            "DERIV_EXPECTED_LOGINID": "CRTEST",
+            "DERIV_EXPECTED_CURRENCY": "EUR",
+            "DERIV_ENVIRONMENT": "real",
+            "DERIV_AUTH_MODE": "oauth",
+        }
+        with patch.dict(os.environ, env, clear=False):
+            with self.assertRaisesRegex(RuntimeError, "DERIV_EXPECTED_CURRENCY must be USD"):
+                gate.check_environment()
+
     def test_release_gate_cannot_use_missing_session_evidence(self):
         original = gate.SESSION_EVIDENCE_PATH
         try:
