@@ -60,13 +60,15 @@ async def run() -> int:
     expected_loginid = os.getenv("DERIV_EXPECTED_LOGINID") or os.getenv(
         "DERIV_AUTHORIZED_ACCOUNT_ID", ""
     )
-    expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip()
+    expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper()
     if not token:
         return fail("REQUIRED_SECRET_OR_BINDING_MISSING:DERIV_AUTH_TOKEN_OR_DERIV_PAT")
     if not expected_loginid:
         return fail("REQUIRED_SECRET_OR_BINDING_MISSING:DERIV_EXPECTED_LOGINID_OR_DERIV_AUTHORIZED_ACCOUNT_ID")
     if not expected_currency:
         return fail("REQUIRED_SECRET_OR_BINDING_MISSING:DERIV_EXPECTED_CURRENCY")
+    if expected_currency != "USD":
+        return fail("UNSUPPORTED_DERIV_CURRENCY_FOR_CURRENT_CONFIGURATION")
     if not os.getenv("DERIV_ENVIRONMENT"):
         return fail("REQUIRED_SECRET_OR_BINDING_MISSING:DERIV_ENVIRONMENT")
 
