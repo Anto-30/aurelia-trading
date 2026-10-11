@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import math
-from typing import Iterable, Sequence
+from typing import Iterable
 
 
 @dataclass(frozen=True)
@@ -38,7 +38,7 @@ class Candle:
         if now is not None:
             if now.tzinfo is None or now.utcoffset() is None:
                 raise ValueError("now must be timezone-aware")
-            if self.end > now:
+            if self.end.astimezone(timezone.utc) > now.astimezone(timezone.utc):
                 raise ValueError("candle has not ended by evaluation time")
 
 
@@ -52,8 +52,12 @@ def validate_candle_series(
     rows = list(candles)
     if not rows:
         raise ValueError("INSUFFICIENT EVIDENCE: empty candle series")
+    if expected_interval is not None and expected_interval <= timedelta(0):
+        raise ValueError("expected interval must be positive")
     for candle in rows:
         candle.validate(now=now)
+        if expected_interval is not None and candle.end.astimezone(timezone.utc) - candle.start.astimezone(timezone.utc) != expected_interval:
+            raise ValueError("candle interval mismatch")
     starts = [c.start.astimezone(timezone.utc) for c in rows]
     if starts != sorted(starts) or len(set(starts)) != len(starts):
         raise ValueError("candle starts must be unique and ordered")
@@ -62,12 +66,8 @@ def validate_candle_series(
         current_start = current.start.astimezone(timezone.utc)
         if current_start < previous_end:
             raise ValueError("overlapping candles")
-        if reject_gaps and expected_interval is not None and current_start - previous_end != timedelta(0):
-            # A gap is only flagged when consecutive expected bars should be contiguous.
-            if current_start - previous_end > timedelta(0):
-                raise ValueError("candle gap requires explicit session/calendar handling")
-        if expected_interval is not None and current.end - current.start != expected_interval:
-            raise ValueError("candle interval mismatch")
+        if reject_gaps and expected_interval is not None and current_start > previous_end:
+            raise ValueError("candle gap requires explicit session/calendar handling")
     return rows
 
 
@@ -89,7 +89,9 @@ def news_window_blocked(
     """Block entries if calendar data is absent/stale/invalid or within an event window."""
     if now.tzinfo is None or now.utcoffset() is None:
         return True, "evaluation time is timezone-naive"
-    if snapshot is None or not snapshot.source.strip():
+    if max_age < timedelta(0) or before < timedelta(0) or after < timedelta(0):
+        return True, "invalid calendar guard configuration"
+    if snapshot is None or not isinstance(snapshot.source, str) or not snapshot.source.strip():
         return True, "economic calendar unavailable"
     if snapshot.fetched_at.tzinfo is None or snapshot.fetched_at.utcoffset() is None:
         return True, "calendar timestamp is timezone-naive"
