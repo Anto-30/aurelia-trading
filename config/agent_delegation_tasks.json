@@ -1,8 +1,8 @@
 {
   "schema": "aurelia.agent_delegation_tasks.v1",
-  "generated": "2026-10-08",
+  "generated": "2026-10-11",
   "orchestrator": "ClaudeCode",
-  "purpose": "One explicit delegated engineering/verification task per registered agent. Assignment proof is separate from runtime execution proof.",
+  "purpose": "One explicit delegated engineering/verification task per registered agent role. Unconnected or non-persistent roles may be assigned or blocked, while runtime execution proof remains false until attributable lifecycle evidence exists.",
   "execution_proof_policy": {
     "configuration_is_not_execution": true,
     "required_runtime_event": "subagent.started",
@@ -19,7 +19,7 @@
       "objective": "Repair and certify the agent delegation proof chain, including inventory validation and continuity evidence.",
       "acceptance_criteria": [
         "inventory validator passes",
-        "all eight agents have exactly one task",
+        "all ten agents have exactly one task",
         "delegation evidence is attributable"
       ],
       "evidence_path": "artifacts/agent-delegation/claudecode.json",
@@ -50,9 +50,9 @@
       "status": "assigned",
       "objective": "Coordinate the federated task queue and identify any blocked or unassigned agent work.",
       "acceptance_criteria": [
-        "all eight tasks visible",
+        "all ten tasks visible",
         "blocked work explicitly reported",
-        "results routed back to Claude"
+        "results routed back to ClaudeCode"
       ],
       "evidence_path": "artifacts/agent-delegation/grokbot.json",
       "runtime_proof": {
@@ -139,7 +139,40 @@
         "required_event": "subagent.started",
         "execution_proof": false
       }
+    },
+    {
+      "task_id": "AGT-CHATGPT-001",
+      "agent": "ChatGPT",
+      "status": "assigned",
+      "objective": "Supervise task decomposition, choose only relevant connected tools and skills, and independently cross-check material repository and policy changes without assuming persistent runtime access.",
+      "acceptance_criteria": [
+        "role-scoped tool and skill policy is internally consistent",
+        "evidence claims distinguish registry configuration from actual runtime installation",
+        "no secret or capital authority is assigned"
+      ],
+      "evidence_path": "artifacts/agent-delegation/chatgpt.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
+    },
+    {
+      "task_id": "AGT-DEV-001",
+      "agent": "Dev",
+      "status": "blocked",
+      "objective": "After an authorized development device is connected, inspect the local runtime, safely clone or update the canonical AURELIA repository, run tests, and capture runtime evidence without access to production secrets or capital authority.",
+      "acceptance_criteria": [
+        "authorized Desktop Commander device is connected and identity verified",
+        "canonical repository path and branch are confirmed",
+        "tests run in an isolated workspace and outputs are attributable",
+        "no production secrets or live order authority is exposed"
+      ],
+      "evidence_path": "artifacts/agent-delegation/dev-runtime.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
     }
   ],
-  "revision": 2
+  "revision": 3
 }
