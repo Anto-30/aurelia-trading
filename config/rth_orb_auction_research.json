@@ -1,0 +1,51 @@
+{
+  "schema": "aurelia.rth_orb_auction_research.v1",
+  "status": "RESEARCH_ONLY_NO_LIVE_ORDERS",
+  "timezone": "America/New_York",
+  "instruments": [
+    "NQ",
+    "ES",
+    "MNQ",
+    "MES"
+  ],
+  "session": {
+    "start": "09:30",
+    "end": "16:00",
+    "opening_range_end": "09:45",
+    "earliest_entry": "09:45",
+    "last_entry": "15:30",
+    "exchange_calendar_required": true
+  },
+  "profile": {
+    "value_area_fraction": 0.7,
+    "ohlcv_profile": "approximate only; true volume-at-price requires trade-level data"
+  },
+  "risk": {
+    "starting_fraction": 0.0025,
+    "max_fraction": 0.005,
+    "daily_loss_fraction": 0.01,
+    "max_entries_per_session": 1,
+    "integer_contracts_only": true,
+    "zero_contracts": "NO_TRADE"
+  },
+  "news": {
+    "pre_minutes": 15,
+    "post_minutes": 15,
+    "missing_or_stale_calendar": "BLOCK"
+  },
+  "validation": {
+    "chronological_splits": true,
+    "walk_forward": true,
+    "locked_oos": true,
+    "stress_slippage_multiplier": 2,
+    "live_orders": false
+  },
+  "gaps": [
+    "exchange holiday/early-close calendar",
+    "verified dated futures contract specs and fees",
+    "point-in-time economic calendar",
+    "event-driven fill simulator",
+    "structure confirmation and signal conflict resolver",
+    "historical data and OOS results"
+  ]
+}
