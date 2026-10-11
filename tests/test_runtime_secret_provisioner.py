@@ -55,6 +55,7 @@ class RuntimeSecretProvisionerTests(unittest.TestCase):
             self.assertIn("AURELIA_RUNTIME_ID=aurelia-production-worker\n", text)
             self.assertIn("AURELIA_OPERATOR_RESET_SIGNING_KEY=SENSITIVE_OPERATOR_RESET_KEY_DO_NOT_PRINT_32_CHARS\n", text)
             self.assertIn("AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json\n", text)
+            self.assertIn("AURELIA_OPERATOR_RESET_PATH=/tmp/aurelia/operator-kill-switch-reset.json\n", text)
 
     def test_operator_reset_key_is_required_and_minimum_length(self):
         value = payload()
