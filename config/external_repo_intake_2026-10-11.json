@@ -1,0 +1,1503 @@
+{
+  "schema": "aurelia.external_repo_intake.v1",
+  "date": "2026-10-11",
+  "request_source": "User-provided GitHub URLs in the 2026-10-11 conversation",
+  "provided_repository_count": 84,
+  "registry_additions": 82,
+  "preexisting_entries_refreshed": [
+    "OpenByteInc/QuantDinger",
+    "openinterpreter/openinterpreter"
+  ],
+  "source_heads_pinned_at_intake": true,
+  "physical_runtime_install": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
+  "security_review_status": "PENDING",
+  "policy": "All items remain RESEARCH_ONLY, SANDBOX_ONLY, TOOLCHAIN_ONLY, or REFERENCE_ONLY. No external source is authorized to access secrets, mutate LIVE_LOCK, or execute orders.",
+  "sources": [
+    {
+      "repo": "8treenet/goraven",
+      "source_url": "https://github.com/8treenet/goraven",
+      "head_commit": "26a8e6cef6ab4cfa0aa2a8e1d6e2ced172210d3f",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "aingdesk/AingDesk",
+      "source_url": "https://github.com/aingdesk/AingDesk",
+      "head_commit": "40b1be5119cfb77cf8c5e5131288992e32d26c68",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "Aisland-SJL/dsh-worktable",
+      "source_url": "https://github.com/Aisland-SJL/dsh-worktable",
+      "head_commit": "6cb86b6c73b3c356373e06cd81e08952542ea040",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "Alex-Yanggg/awesome-DSH-plugin",
+      "source_url": "https://github.com/Alex-Yanggg/awesome-DSH-plugin",
+      "head_commit": "3b44fe8ffddbf19ccebd459829e5a8ae2cbb0fa6",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "amemiya02/deepseekcode",
+      "source_url": "https://github.com/amemiya02/deepseekcode",
+      "head_commit": "5fbf1a9a87b43bcbd46f90b567c4ca3a0af87f50",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "appwrite/arena",
+      "source_url": "https://github.com/appwrite/arena",
+      "head_commit": "a515cf4b06fe4e6e8eecacecac9494884540e970",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "Barca0412/Introduction-to-Quantitative-Finance",
+      "source_url": "https://github.com/Barca0412/Introduction-to-Quantitative-Finance",
+      "head_commit": "08a5fbf70915e72c7a52fa1ed700d1068051e452",
+      "category": "algorithmic-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "benman1/generative_ai_with_langchain",
+      "source_url": "https://github.com/benman1/generative_ai_with_langchain",
+      "head_commit": "87e17fd2057946d51f062764eb508b68692332a4",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "BlockRunAI/ClawRouter",
+      "source_url": "https://github.com/BlockRunAI/ClawRouter",
+      "head_commit": "b758e036bbd1290c0997ad14c9812a106ef8d72b",
+      "category": "llm-gateway",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "CherryHQ/cherry-studio",
+      "source_url": "https://github.com/CherryHQ/cherry-studio",
+      "head_commit": "f429fc4ced7e8d158639a63fcb6e5524445196e1",
+      "category": "developer-ui-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "chongdashu/threejs-toonshooter",
+      "source_url": "https://github.com/chongdashu/threejs-toonshooter",
+      "head_commit": "c76d2ed62955c6c6944ff305f641cf956b740c50",
+      "category": "developer-ui-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "CommandCodeAI/command-code",
+      "source_url": "https://github.com/CommandCodeAI/command-code",
+      "head_commit": "5c8f1b48c9d6704210cb3f9a476fdcffe5093e9a",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "cookiy-ai/user-research-skill",
+      "source_url": "https://github.com/cookiy-ai/user-research-skill",
+      "head_commit": "21eea10a34d3c9b4e711e3d19f0457603dd33e19",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "Derpyu520/qq-bridge",
+      "source_url": "https://github.com/Derpyu520/qq-bridge",
+      "head_commit": "9df6a7e7fc5abcb36793337f778483bd442a3d2d",
+      "category": "developer-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "Devin-AXIS/iPolloWork",
+      "source_url": "https://github.com/Devin-AXIS/iPolloWork",
+      "head_commit": "4483434be463de3c137889e80ce38c97512478b3",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "DirectorySurf/awesome-ai-agents-directories",
+      "source_url": "https://github.com/DirectorySurf/awesome-ai-agents-directories",
+      "head_commit": "4a754788f59a1427983ee8ded7a090e4eaa4980a",
+      "category": "developer-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "Dominic789654/awesome-deepseek-harness",
+      "source_url": "https://github.com/Dominic789654/awesome-deepseek-harness",
+      "head_commit": "980958d3404c6ffd7c42b94582d49f3e58fb377d",
+      "category": "developer-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "eosphoros-ai/DB-GPT",
+      "source_url": "https://github.com/eosphoros-ai/DB-GPT",
+      "head_commit": "361eb34476970ae4dba6d33454a45669ec6851bb",
+      "category": "software-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "esengine/DeepSeek-Reasonix",
+      "source_url": "https://github.com/esengine/DeepSeek-Reasonix",
+      "head_commit": "5f0bb7d845a6cf84f6048edec1fbd74ac900f303",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "gptme/gptme",
+      "source_url": "https://github.com/gptme/gptme",
+      "head_commit": "b1af28ed8015025f8b0ccc04ea3816a386cb52f0",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "he-yufeng/CoreCoder",
+      "source_url": "https://github.com/he-yufeng/CoreCoder",
+      "head_commit": "19daf432fec0e566081897da77a9d50691dd1b08",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "hexabot-ai/Hexabot",
+      "source_url": "https://github.com/hexabot-ai/Hexabot",
+      "head_commit": "3c5473d1f0a3c99f47a2c88cb6e8bd1e9b2e9e5e",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "Jakeschincariol/arena-skill",
+      "source_url": "https://github.com/Jakeschincariol/arena-skill",
+      "head_commit": "df07b8e518e10cdecd8cd7712d9958b6f396250e",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "jnMetaCode/agency-agents-zh",
+      "source_url": "https://github.com/jnMetaCode/agency-agents-zh",
+      "head_commit": "e5a6c0a730878aaa871ec5b95859aec2c2728475",
+      "category": "developer-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "LangcliTeam/langcli",
+      "source_url": "https://github.com/LangcliTeam/langcli",
+      "head_commit": "fc668d6529281db6170a03e1579411dcc884c24e",
+      "category": "software-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "langgenius/dify",
+      "source_url": "https://github.com/langgenius/dify",
+      "head_commit": "2de5d891cbd5f59314f1813fc1db7c623ad762e3",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "laxmimerit/LangGraph-and-Ollama",
+      "source_url": "https://github.com/laxmimerit/LangGraph-and-Ollama",
+      "head_commit": "d0ec774d107c20a61e1c76cb7055a13067aee282",
+      "category": "software-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "lessweb/deepcode-cli",
+      "source_url": "https://github.com/lessweb/deepcode-cli",
+      "head_commit": "857b58c12fed11bad90704a0e32767270a1784f8",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "LibreChat-AI/LibreChat",
+      "source_url": "https://github.com/LibreChat-AI/LibreChat",
+      "head_commit": "e1dfc10449ff713faffacd60273fddcfe2c0a698",
+      "category": "developer-ui-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "limecloud/lime",
+      "source_url": "https://github.com/limecloud/lime",
+      "head_commit": "64292f0b6462ca189ba5b5e7668065970f07f999",
+      "category": "software-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "LnYo-Cly/ai4j",
+      "source_url": "https://github.com/LnYo-Cly/ai4j",
+      "head_commit": "628c3f9acc5f50adfb0517720ec5588760cf06e3",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "lobehub/lobehub",
+      "source_url": "https://github.com/lobehub/lobehub",
+      "head_commit": "d4f369d6df88e6346b9e6fbb295d98366b1c3884",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "looplj/axonhub",
+      "source_url": "https://github.com/looplj/axonhub",
+      "head_commit": "931fafff819a9202f48645839a0c47d3ccfe70fa",
+      "category": "llm-gateway",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "MemTensor/MemOS",
+      "source_url": "https://github.com/MemTensor/MemOS",
+      "head_commit": "a7367d07e55db61099f7b4e2c1108bc5831a24f3",
+      "category": "memory-knowledge-toolchain",
+      "domain": "memory",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "MichengAI/dsh-agency-agents",
+      "source_url": "https://github.com/MichengAI/dsh-agency-agents",
+      "head_commit": "416d2a675ad01c943b336dcc4232876e0a48200e",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "microsoft/qlib",
+      "source_url": "https://github.com/microsoft/qlib",
+      "head_commit": "54355232463878d2eebb91fe0ee5fa7fa1f5976c",
+      "category": "algorithmic-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "mindsdb/mindshub",
+      "source_url": "https://github.com/mindsdb/mindshub",
+      "head_commit": "780bbcbb8b9367c667e9b6af2aecc8277f24c0ad",
+      "category": "memory-knowledge-toolchain",
+      "domain": "memory",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "mnemon-dev/mnemon",
+      "source_url": "https://github.com/mnemon-dev/mnemon",
+      "head_commit": "30e0062e7a58f19d20efe0766081b567aaba4fc1",
+      "category": "memory-knowledge-toolchain",
+      "domain": "memory",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "moonbitlang/openseek",
+      "source_url": "https://github.com/moonbitlang/openseek",
+      "head_commit": "cc277d8fd01b0eb6f6ec93a0346d91ae5e074817",
+      "category": "software-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "NanmiCoder/dsh-agent-teams",
+      "source_url": "https://github.com/NanmiCoder/dsh-agent-teams",
+      "head_commit": "1094b84add6f2fb19edf659367fe2fd5f7f14154",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "nexu-io/open-design",
+      "source_url": "https://github.com/nexu-io/open-design",
+      "head_commit": "17e255959703a3fad7c8eb7f7b70dcafccc5629a",
+      "category": "ui-design-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "oil-oil/codex-deepseek-subagent",
+      "source_url": "https://github.com/oil-oil/codex-deepseek-subagent",
+      "head_commit": "978b079524d22318625d14fe7d7f40cc8ec66fce",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "omdsh-dev/DSH-better-sidebar",
+      "source_url": "https://github.com/omdsh-dev/DSH-better-sidebar",
+      "head_commit": "64a61ccfe42f96e950c7e837c4cbc09942090ac9",
+      "category": "developer-ui-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "open-multi-agent/open-multi-agent",
+      "source_url": "https://github.com/open-multi-agent/open-multi-agent",
+      "head_commit": "6ec5498643c7e431aa66751f17f47a529e7f927c",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "openbq-org/OpenBB",
+      "source_url": "https://github.com/openbq-org/OpenBB",
+      "head_commit": "ae0268771f761b036996d81bd21522ce79d95415",
+      "category": "market-data-research-platform",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "OpenByteInc/QuantDinger",
+      "source_url": "https://github.com/OpenByteInc/QuantDinger",
+      "head_commit": "ba8cd667acca3e934bbc1cb354922eff413393dc",
+      "category": "quant-trading-platform",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "openinterpreter/openinterpreter",
+      "source_url": "https://github.com/openinterpreter/openinterpreter",
+      "head_commit": "ac1fcc8fe57aba51fcc3c79afd57a0883237fe87",
+      "category": "desktop-computer-use-agent",
+      "domain": "engineering",
+      "assigned_agents": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3",
+        "AURELIA",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "pengyue-polaron/deepseek-harness-genui",
+      "source_url": "https://github.com/pengyue-polaron/deepseek-harness-genui",
+      "head_commit": "f6289bc709c5b1992c851bf5e63237a5fa453e1f",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "platonai/Browser4",
+      "source_url": "https://github.com/platonai/Browser4",
+      "head_commit": "0fdba82a60edf7365cd74069ea5f367eadc2946a",
+      "category": "browser-automation-toolchain",
+      "domain": "browser",
+      "assigned_agents": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "promptfoo/promptfoo",
+      "source_url": "https://github.com/promptfoo/promptfoo",
+      "head_commit": "b8123755f4d115be1398ff507203485c2e011c39",
+      "category": "testing-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GoogleAgentSkills",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "PsChina/deepseek-as-subagent",
+      "source_url": "https://github.com/PsChina/deepseek-as-subagent",
+      "head_commit": "7e54026392f85ccfc796f947faf9ffac3968a49e",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "PySpur-Dev/pyspur",
+      "source_url": "https://github.com/PySpur-Dev/pyspur",
+      "head_commit": "97b9856e49f227a52868b73493c23c43fb4de358",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "Q00/ouroboros",
+      "source_url": "https://github.com/Q00/ouroboros",
+      "head_commit": "188020bf1e406e0d276e8cfdd5f95f92e9fed7f5",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "quantalogic/quantalogic",
+      "source_url": "https://github.com/quantalogic/quantalogic",
+      "head_commit": "bdcc7f267353b64965e7a3aa6b1c9bd5469df1ea",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "quantskills/quantskills",
+      "source_url": "https://github.com/quantskills/quantskills",
+      "head_commit": "c4f36bfa795a4455804c5e4c2cfd028cb882fcc2",
+      "category": "algorithmic-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "QuantumByteOSS/quantumbyte",
+      "source_url": "https://github.com/QuantumByteOSS/quantumbyte",
+      "head_commit": "6eaa965a018332dd4407a13466d2a9973a448fc5",
+      "category": "developer-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "qusong0627/QuantMind",
+      "source_url": "https://github.com/qusong0627/QuantMind",
+      "head_commit": "7d8019cac06e5f44de5f19b501481886535a6c32",
+      "category": "algorithmic-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "ruvnet/helix",
+      "source_url": "https://github.com/ruvnet/helix",
+      "head_commit": "e8d8fe780becff4d95008e052742e5c3b0ad3b5c",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "ruvnet/obsidian-brain",
+      "source_url": "https://github.com/ruvnet/obsidian-brain",
+      "head_commit": "68457cea6ab42c10dcd74ebdb84616ce2f2f9c87",
+      "category": "obsidian-knowledge-tooling",
+      "domain": "memory",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "PlaywrightCLI",
+        "GLM",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "ruvnet/rudevolution",
+      "source_url": "https://github.com/ruvnet/rudevolution",
+      "head_commit": "b99ec70c780e249b151de5c32ee9839784671962",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "ruvnet/RuLake",
+      "source_url": "https://github.com/ruvnet/RuLake",
+      "head_commit": "e83df644d63adf0d155cc733cffe4539a93f9fbf",
+      "category": "memory-knowledge-toolchain",
+      "domain": "memory",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "ruvnet/rupixel",
+      "source_url": "https://github.com/ruvnet/rupixel",
+      "head_commit": "bb1269fb9f4b0920de5944d248e4e79a01f3b80c",
+      "category": "developer-ui-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "ruvnet/RuVector",
+      "source_url": "https://github.com/ruvnet/RuVector",
+      "head_commit": "07933730fac709457e0c5f41444c9a4adc505aee",
+      "category": "memory-knowledge-toolchain",
+      "domain": "memory",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "sandbaseai/deepseek-harness-handbook",
+      "source_url": "https://github.com/sandbaseai/deepseek-harness-handbook",
+      "head_commit": "425dd255f9be22c97b2273cd0c38b3951aecddc3",
+      "category": "developer-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "sauravpanda/BrowserAI",
+      "source_url": "https://github.com/sauravpanda/BrowserAI",
+      "head_commit": "7da5f50f7dbc00131399ea66e93fda0601e01a67",
+      "category": "browser-automation-toolchain",
+      "domain": "browser",
+      "assigned_agents": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "simstudioai/sim",
+      "source_url": "https://github.com/simstudioai/sim",
+      "head_commit": "c2d446f6c8a1c51923d24c8ba73b2fe6d1f805d5",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "Soodok/Deepseek-Harness-Local-Android",
+      "source_url": "https://github.com/Soodok/Deepseek-Harness-Local-Android",
+      "head_commit": "0b88f8c395cc6f4d3498a1faf56727f029bd7c47",
+      "category": "developer-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "sopaco/deepwiki-rs",
+      "source_url": "https://github.com/sopaco/deepwiki-rs",
+      "head_commit": "27dbd3ed74535213e7c40be8abcdcec4145bebf2",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "syncable-dev/memtrace-public",
+      "source_url": "https://github.com/syncable-dev/memtrace-public",
+      "head_commit": "3a3084dd88e4b49adcb185eb09173dbf0bd547d3",
+      "category": "memory-knowledge-toolchain",
+      "domain": "memory",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "text2future/flowix",
+      "source_url": "https://github.com/text2future/flowix",
+      "head_commit": "cec714b001958e7a65230f6adf7f016ae5020466",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "The-Swarm-Corporation/AutoHedge",
+      "source_url": "https://github.com/The-Swarm-Corporation/AutoHedge",
+      "head_commit": "c549c7950da112286e76725d49f6a25de8fa99bd",
+      "category": "algorithmic-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "thinkany-ai/dscode",
+      "source_url": "https://github.com/thinkany-ai/dscode",
+      "head_commit": "e2a131c7f87a209a3b3b03a2fbc2f16c11041a46",
+      "category": "developer-ui-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "usewhale/Whale",
+      "source_url": "https://github.com/usewhale/Whale",
+      "head_commit": "676a0a228882c457ff4dc00d9d285d972aea4a43",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "wangrongding/wechat-bot",
+      "source_url": "https://github.com/wangrongding/wechat-bot",
+      "head_commit": "43c6c5075393ca50a430629108251d9be104d5b9",
+      "category": "developer-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "xszyou/Fay",
+      "source_url": "https://github.com/xszyou/Fay",
+      "head_commit": "d49f4769d46c2b5ece1fd15f0f1260afba7d2ccf",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "xuanyuanzhifeng/dsh-plugin-agent-workflow",
+      "source_url": "https://github.com/xuanyuanzhifeng/dsh-plugin-agent-workflow",
+      "head_commit": "f2031b34443bf820a1a7cc7bace9b2d8cae99412",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "YaoApp/yao",
+      "source_url": "https://github.com/YaoApp/yao",
+      "head_commit": "eea1e7e1011375705ea329a0d12ea7b1e949b2ed",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "yetone/magpie",
+      "source_url": "https://github.com/yetone/magpie",
+      "head_commit": "8902ec2179ddaa6b6b252e00b8161be1c514f40b",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "yuruotong1/autoMate",
+      "source_url": "https://github.com/yuruotong1/autoMate",
+      "head_commit": "afb89b9d67a2d7c49ca09298191fbebe9ded238a",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "Zain-ul-din/whatsapp-agents",
+      "source_url": "https://github.com/Zain-ul-din/whatsapp-agents",
+      "head_commit": "429e6bc7291e9f45e6aec77cf0dde8c283d104fa",
+      "category": "developer-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "zhayujie/CowAgent",
+      "source_url": "https://github.com/zhayujie/CowAgent",
+      "head_commit": "34335f7a955c2555a669ba2f718979162d3bcb5d",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "zhjai/agent-arena",
+      "source_url": "https://github.com/zhjai/agent-arena",
+      "head_commit": "df21e673ed4b38fccd81b1a10c438e94e906e81c",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "zhu1090093659/deepseek-pp",
+      "source_url": "https://github.com/zhu1090093659/deepseek-pp",
+      "head_commit": "0a02c72b135bf2936e11aa78fd6136931ed65908",
+      "category": "agent-orchestration-framework",
+      "domain": "agent_platform",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    },
+    {
+      "repo": "zilliztech/memsearch",
+      "source_url": "https://github.com/zilliztech/memsearch",
+      "head_commit": "09e07d86b31ff81938b4f44a57099b6a9fc8723f",
+      "category": "memory-knowledge-toolchain",
+      "domain": "memory",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
+    }
+  ]
+}
