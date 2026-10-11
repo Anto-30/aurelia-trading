@@ -23,3 +23,8 @@ Continuous availability means the agent can be restarted and re-enter this start
 ## External LLM gateway sources
 
 The LiteLLM/agent-control-plane repositories are pinned in `config/external_repo_federation.json` and routed in `config/agent_capability_matrix.json`. Read `docs/AURELIA_LLM_GATEWAY_INTEGRATION_GUIDE.md` before working with them. Registry membership does not mean a gateway, Claude Code variant, local development service, or ChatGPT connector is installed. No external source may read production secrets, access the Deriv capital plane, or override LIVE_LOCK.
+
+
+## Tool, skill, plugin, and repository assignment contract
+
+Before selecting tools for a task, read `config/agent_tool_skill_assignment.json`. It defines the primary agent, reviewers, task-scoped tools, skill bundles, plugin activation conditions, and source modes. Tool/plugin registry membership is not proof of a live connection or installation. Use least privilege, verify the connector at execution time, and keep all external code outside capital/execution paths. The Dev profile is inactive until an authorized development device is connected and its runtime identity verified. ChatGPT is a supervisory role in the current conversation, not a persistent local daemon.
