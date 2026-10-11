@@ -31,28 +31,37 @@ def size_stake_for_balance(
     broker's minimum stake, no live stake is returned; the minimum is never
     forced above the account's risk budget.
     """
-    if (
-        isinstance(verified_available_balance, bool)
-        or not isinstance(verified_available_balance, (int, float, Decimal))
-        or not isfinite(float(verified_available_balance))
-        or float(verified_available_balance) < 0
+    if isinstance(verified_available_balance, bool) or not isinstance(
+        verified_available_balance, (int, float, Decimal)
     ):
         return StakeSizingResult(False, None, None, "AVAILABLE_BALANCE_INVALID")
+    try:
+        balance_value = float(verified_available_balance)
+    except (TypeError, ValueError, OverflowError):
+        return StakeSizingResult(False, None, None, "AVAILABLE_BALANCE_INVALID")
+    if not isfinite(balance_value) or balance_value < 0:
+        return StakeSizingResult(False, None, None, "AVAILABLE_BALANCE_INVALID")
 
-    if (
-        isinstance(maximum_risk_fraction, bool)
-        or not isinstance(maximum_risk_fraction, (int, float, Decimal))
-        or not isfinite(float(maximum_risk_fraction))
-        or not 0 < float(maximum_risk_fraction) <= 0.02
+    if isinstance(maximum_risk_fraction, bool) or not isinstance(
+        maximum_risk_fraction, (int, float, Decimal)
     ):
         return StakeSizingResult(False, None, None, "MAX_TRADE_RISK_FRACTION_INVALID")
+    try:
+        fraction_value = float(maximum_risk_fraction)
+    except (TypeError, ValueError, OverflowError):
+        return StakeSizingResult(False, None, None, "MAX_TRADE_RISK_FRACTION_INVALID")
+    if not isfinite(fraction_value) or not 0 < fraction_value <= 0.02:
+        return StakeSizingResult(False, None, None, "MAX_TRADE_RISK_FRACTION_INVALID")
 
-    if (
-        isinstance(minimum_stake, bool)
-        or not isinstance(minimum_stake, (int, float, Decimal))
-        or not isfinite(float(minimum_stake))
-        or float(minimum_stake) <= 0
+    if isinstance(minimum_stake, bool) or not isinstance(
+        minimum_stake, (int, float, Decimal)
     ):
+        return StakeSizingResult(False, None, None, "MINIMUM_STAKE_INVALID")
+    try:
+        minimum_value = float(minimum_stake)
+    except (TypeError, ValueError, OverflowError):
+        return StakeSizingResult(False, None, None, "MINIMUM_STAKE_INVALID")
+    if not isfinite(minimum_value) or minimum_value <= 0:
         return StakeSizingResult(False, None, None, "MINIMUM_STAKE_INVALID")
 
     try:
