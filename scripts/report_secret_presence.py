@@ -52,7 +52,17 @@ def main() -> int:
 
     for name in DEPLOYMENT_SECRET_NAMES:
         print(f"{name}_PRESENT={'true' if present(name) else 'false'}")
-    deployment_secrets_present = all(present(name) for name in DEPLOYMENT_SECRET_NAMES)
+    operator_reset_key_length_valid = (
+        len(os.getenv("AURELIA_OPERATOR_RESET_SIGNING_KEY", "").strip()) >= 32
+    )
+    print(
+        "AURELIA_OPERATOR_RESET_SIGNING_KEY_LENGTH_VALID="
+        + ("true" if operator_reset_key_length_valid else "false")
+    )
+    deployment_secrets_present = (
+        all(present(name) for name in DEPLOYMENT_SECRET_NAMES)
+        and operator_reset_key_length_valid
+    )
     print(
         "AURELIA_DEPLOYMENT_SECRET_STORE_CONFIGURED="
         + ("true" if deployment_secrets_present else "false")
