@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import replace
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -169,6 +170,42 @@ class CapitalExecutorHardeningTests(unittest.IsolatedAsyncioTestCase):
             fresh = context(issued_at=datetime.now(UTC) - timedelta(seconds=1))
             self.assertTrue(executor.clear_kill_switch_with_fresh_authorization(fresh))
             self.assertFalse(executor.kill_switch)
+
+    async def test_kill_switch_cannot_clear_with_mismatched_capital_account_binding(self):
+        with tempfile.TemporaryDirectory() as td:
+            lock = Path(td) / "LIVE_LOCK.yaml"
+            self.write_live_release(lock)
+            executor = make_executor(lock)
+            executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
+            valid = context()
+            demo_binding = AccountIdentity(
+                loginid=valid.account.loginid,
+                account_type="real",
+                currency=valid.account.currency,
+                environment="demo",
+            )
+            invalid_capital = replace(valid.capital, account=demo_binding)
+            invalid = replace(valid, capital=invalid_capital)
+            self.assertTrue(invalid.capital.is_valid())
+            self.assertFalse(executor.clear_kill_switch_with_fresh_authorization(invalid))
+            self.assertTrue(executor.kill_switch)
+
+    async def test_kill_switch_cannot_clear_for_non_real_authorization_environment(self):
+        with tempfile.TemporaryDirectory() as td:
+            lock = Path(td) / "LIVE_LOCK.yaml"
+            self.write_live_release(lock)
+            executor = make_executor(lock)
+            executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
+            valid = context()
+            demo_account = AccountIdentity(
+                loginid=valid.account.loginid,
+                account_type="real",
+                currency=valid.account.currency,
+                environment="demo",
+            )
+            invalid = replace(valid, account=demo_account)
+            self.assertFalse(executor.clear_kill_switch_with_fresh_authorization(invalid))
+            self.assertTrue(executor.kill_switch)
 
     async def test_non_live_mode_cannot_reach_broker(self):
         with tempfile.TemporaryDirectory() as td:
