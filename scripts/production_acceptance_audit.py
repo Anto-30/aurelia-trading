@@ -69,6 +69,39 @@ def main() -> int:
             if f"id: {cert_id}" not in standard:
                 failures.append(f"MISSING_STANDARD_REQUIREMENT:{cert_id}")
 
+        # Keep the human-facing production standard aligned with the deterministic
+        # capital-plane authority constants and canonical README policy. A silent
+        # threshold split can cause research, documentation and execution to disagree.
+        probability_policy = re.search(
+            r"(?ms)^probability_policy:[ \t]*\n(?P<body>(?:^[ \t]+.*(?:\n|$))*)",
+            standard,
+        )
+        documented_min = (
+            re.search(r"(?m)^[ \t]+minimum:\s*([0-9.]+)\s*$", probability_policy.group("body"))
+            if probability_policy else None
+        )
+        documented_max = (
+            re.search(r"(?m)^[ \t]+maximum:\s*([0-9.]+)\s*$", probability_policy.group("body"))
+            if probability_policy else None
+        )
+        authority = read("runtime/core/authority.py")
+        runtime_min = re.search(r"(?m)^MIN_PROBABILITY\s*=\s*([0-9.]+)\s*$", authority)
+        runtime_max = re.search(r"(?m)^MAX_PROBABILITY\s*=\s*([0-9.]+)\s*$", authority)
+        readme = read("README.md")
+        try:
+            policy_values = (
+                float(documented_min.group(1)) if documented_min else None,
+                float(documented_max.group(1)) if documented_max else None,
+                float(runtime_min.group(1)) if runtime_min else None,
+                float(runtime_max.group(1)) if runtime_max else None,
+            )
+        except (TypeError, ValueError):
+            policy_values = (None, None, None, None)
+        if policy_values != (0.50, 0.75, 0.50, 0.75):
+            failures.append("PROBABILITY_POLICY_RANGE_MISMATCH_EXPECTED_0.50_TO_0.75")
+        if "hard probability band is **50%–75%**" not in readme:
+            failures.append("README_PROBABILITY_POLICY_RANGE_MISMATCH")
+
     # Scan text files for obvious credential material. This is deliberately
     # conservative: false positives are reported for human review rather than
     # suppressing a possible leak.
@@ -92,6 +125,7 @@ def main() -> int:
         return 1
 
     print("AURELIA_PRODUCTION_ACCEPTANCE=AUDIT_PASS")
+    print("PROBABILITY_POLICY_RANGE=0.50..0.75")
     print("CAPITAL_MOVEMENT_PERMITTED=false")
     print("FINAL_EXECUTION_AUTHORIZATION=false")
     print("LIVE_EXECUTION=BLOCKED")
