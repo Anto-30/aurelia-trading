@@ -100,8 +100,12 @@ def authorization_gate(
 
     if account.account_type != "real":
         reasons.append("ACCOUNT_NOT_REAL")
-    if account.loginid != capital.account.loginid:
+    if account != capital.account:
         reasons.append("ACCOUNT_IDENTITY_MISMATCH")
+    if execution_mode == "LIVE" and (
+        account.environment != "real" or capital.account.environment != "real"
+    ):
+        reasons.append("ACCOUNT_ENVIRONMENT_NOT_REAL")
     if account.currency != capital.currency:
         reasons.append("CURRENCY_MISMATCH")
     if not capital.is_valid():
