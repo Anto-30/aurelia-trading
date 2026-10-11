@@ -39,6 +39,7 @@ def create_operator_reset_record(
     operator_id: str,
     reason: str,
     source_sha: str,
+    fault_source_sha: str | None = None,
     account_loginid: str,
     kill_switch_generation: int,
     issued_at: datetime | None = None,
@@ -55,7 +56,8 @@ def create_operator_reset_record(
         raise ValueError("OPERATOR_RESET_TTL_OUT_OF_RANGE")
     if isinstance(kill_switch_generation, bool) or not isinstance(kill_switch_generation, int) or kill_switch_generation < 1:
         raise ValueError("OPERATOR_RESET_GENERATION_INVALID")
-    required = (operator_id, reason, source_sha, account_loginid)
+    fault_source = source_sha if fault_source_sha is None else fault_source_sha
+    required = (operator_id, reason, source_sha, fault_source, account_loginid)
     if any(not isinstance(value, str) or not value.strip() for value in required):
         raise ValueError("OPERATOR_RESET_BINDING_FIELDS_REQUIRED")
     record: dict[str, Any] = {
@@ -64,6 +66,7 @@ def create_operator_reset_record(
         "operator_id": operator_id.strip(),
         "reason": reason.strip(),
         "source_sha": source_sha.strip(),
+        "fault_source_sha": fault_source.strip(),
         "account_loginid": account_loginid.strip(),
         "kill_switch_generation": kill_switch_generation,
         "issued_at_utc": now.astimezone(timezone.utc).isoformat(),
@@ -79,6 +82,7 @@ def verify_operator_reset_record(
     signing_key: str,
     expected_reason: str,
     expected_source_sha: str,
+    expected_fault_source_sha: str | None = None,
     expected_account_loginid: str,
     expected_generation: int,
     last_consumed_nonce: str | None = None,
@@ -89,7 +93,7 @@ def verify_operator_reset_record(
         return False, "OPERATOR_RESET_RECORD_INVALID", None
     required = (
         "schema", "nonce", "operator_id", "reason", "source_sha",
-        "account_loginid", "kill_switch_generation", "issued_at_utc",
+        "fault_source_sha", "account_loginid", "kill_switch_generation", "issued_at_utc",
         "expires_at_utc", "signature",
     )
     if any(not isinstance(record.get(key), str) or not record[key].strip()
@@ -111,6 +115,13 @@ def verify_operator_reset_record(
         return False, "OPERATOR_RESET_REASON_MISMATCH", None
     if record.get("source_sha") != expected_source_sha or not expected_source_sha.strip():
         return False, "OPERATOR_RESET_SOURCE_MISMATCH", None
+    expected_fault_source = expected_source_sha if expected_fault_source_sha is None else expected_fault_source_sha
+    if (
+        record.get("fault_source_sha") != expected_fault_source
+        or not isinstance(expected_fault_source, str)
+        or not expected_fault_source.strip()
+    ):
+        return False, "OPERATOR_RESET_FAULT_SOURCE_MISMATCH", None
     if record.get("account_loginid") != expected_account_loginid or not expected_account_loginid.strip():
         return False, "OPERATOR_RESET_ACCOUNT_MISMATCH", None
     try:
