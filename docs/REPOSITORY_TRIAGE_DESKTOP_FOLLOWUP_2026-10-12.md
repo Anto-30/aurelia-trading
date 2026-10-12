@@ -74,3 +74,12 @@ Repository metadata was queried on 2026-10-12. `pushed_at` is an upstream activi
 | `railwayapp/cli` | MIT | 2026-10-12 | Reference only; no deployment action taken because the current handoff identifies a different active deployment path |
 
 These are preliminary screening outcomes, not full license opinions, dependency scans, code reviews, or runtime tests. No candidate was cloned or installed. Repository default branches and metadata can change; adoption decisions must pin exact commits and review the actual license text at that commit.
+
+
+## Follow-up: completed baseline CI run
+
+AURELIA Assurance run [38271166786](https://github.com/Anto-30/aurelia-trading/actions/runs/38271166786) completed successfully for commit `95ee60dd1ee65c4ae10503ddf84d6b2e3354eb8a`. All listed software tests, container build, public Deriv market-data transport check, readiness report, worker health check and fail-closed release-gate check passed in that run.
+
+That successful repository CI run does **not** qualify live execution. The same run reported `DERIV_AUTH_CONFIGURED=false`; authenticated real-account session, broker-account and verify-only transaction lifecycle steps were skipped. The readiness report returned `final_execution_authorization=false` and `live_execution=BLOCKED`, and the worker health check reported `DEGRADED` with `CONTINUOUS_RUNTIME_UNAVAILABLE`. The run also reported the legacy Railway path as `NOT_CONFIGURED`.
+
+Two later assurance runs were observed running against the documentation branch at the time of the latest check; the newest documentation commit has not yet been independently confirmed by a completed assurance result. The prior successful run is evidence for its own exact commit only.
