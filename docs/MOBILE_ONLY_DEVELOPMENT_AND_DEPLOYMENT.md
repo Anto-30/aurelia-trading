@@ -50,3 +50,8 @@ Before a production deployment, an authorized host and protected secret store mu
 ## Hosting-provider check (2026-10-12)
 
 The connected Vercel account was inspected. Its linked projects were `tales-and-trails-safaris` and `tales-and-trails-safaris-hjip`; no AURELIA project was returned. Therefore Vercel is not a verified AURELIA production target in this account, and no deployment was attempted. The checked-in AURELIA deployment policy remains the source of truth and specifies a persistent Linux/Docker host rather than a serverless web project.
+
+
+## Codespaces cost guard
+
+GitHub's current billing documentation states that personal Free accounts include 120 core-hours and 15 GB-month of Codespaces storage per month. Usage beyond included quota can be billed if a payment method and budget permit it; without a valid payment method, usage is blocked when quota is exhausted. Check current usage and budgets before leaving a Codespace running: https://docs.github.com/en/billing/concepts/product-billing/github-codespaces
