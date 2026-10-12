@@ -81,3 +81,13 @@ Forbidden: bypass failing gates, manufacture evidence, reset safety locks, acces
 - [ ] Assign concrete tasks through agent/task systems and verify each agent's actual tool permissions.
 - [ ] Run candidate-specific tests and create evidence-backed integration PRs only where justified.
 - [ ] Physically sync repository checkouts to each agent runtime; not yet verified or completed by this documentation change.
+
+
+## Latest supplemental intake — ten MCP/developer tooling repositories (2026-10-12)
+Detailed README-level triage, agent ownership, risk controls, and staged validation are recorded in [`docs/REPOSITORY_TRIAGE_MCP_TOOLING_2026-10-12.md`](REPOSITORY_TRIAGE_MCP_TOOLING_2026-10-12.md). The short version:
+- Claude Code + Dev AI: inspect Copilot plugins; use `jscpd` as report-only duplication analysis; evaluate `jcodemunch-mcp` only after commercial-license clearance.
+- JEV + Claude Code: sandbox `mcp-github-project-manager` with least-privilege scopes and human approval for writes; evaluate the official `github/github-mcp-server` as the single primary GitHub MCP.
+- Grok: compare `mcp-omnisearch` and Kindly Web Search against existing search capabilities; pilot at most one at a time with no secrets in prompts/configuration.
+- ChatGPT + Grok: optional `idea-reality-mcp` for product/tool novelty research only; it is not a trading signal validator and its README reports maintenance mode.
+- Dev AI: `zed-mcp-server-github` is editor-specific; `idosal/git-mcp` is a documentation-context candidate requiring privacy and prompt-injection review.
+- All 10 are **candidates**, not installations. External repositories are pull-only in the connected GitHub integration. Physical clones, agent-runtime configuration, and end-to-end operation remain unverified. No live-trading or capital authority changes are allowed.
