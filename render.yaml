@@ -5,7 +5,6 @@ services:
     plan: starter
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /health
     autoDeployTrigger: off
     disk:
       name: aurelia-runtime-data
