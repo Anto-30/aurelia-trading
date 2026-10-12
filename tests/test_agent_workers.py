@@ -10,7 +10,7 @@ from runtime.agent_workers import AgentWorkerSupervisor
 
 
 @pytest.mark.asyncio
-async def test_worker_heartbeat_requires_real_configured_command(tmp_path):
+async def test_unconfigured_provider_does_not_emit_agent_liveness(tmp_path):
     federation = PersistentAgentFederation(
         journal_path=tmp_path / "journal.ndjson",
         lease_path=tmp_path / "leases.json",
@@ -23,9 +23,13 @@ async def test_worker_heartbeat_requires_real_configured_command(tmp_path):
         federation, agents=("ClaudeCode",), interval_seconds=0.05
     )
     supervisor.start()
-    await asyncio.sleep(0.15)
-    assert "ClaudeCode" in federation.active_agents()
-    await supervisor.stop()
+    try:
+        await asyncio.sleep(0.15)
+        assert "ClaudeCode" not in federation.active_agents()
+        messages = federation.messages_for("ClaudeCode")
+        assert any(x["message_type"] == "CONNECTOR_REQUIRED" for x in messages)
+    finally:
+        await supervisor.stop()
 
 
 @pytest.mark.asyncio
