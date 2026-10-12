@@ -74,6 +74,26 @@ class AgentWorkerSupervisor:
                     priority=60,
                     requires_response=False,
                 )
+                if process is None:
+                    # A local supervisor loop is not proof that the provider agent
+                    # is connected. Do not emit an agent heartbeat or claim work
+                    # until an explicitly configured provider command is running.
+                    await self.federation.publish(
+                        sender="AURELIA",
+                        recipients=(spec.agent,),
+                        message_type="CONNECTOR_REQUIRED",
+                        payload={
+                            "agent": spec.agent,
+                            "reason": "NO_AUTHENTICATED_PROVIDER_COMMAND",
+                            "provider_session": "NOT_CONFIGURED",
+                            "capital_authority": False,
+                        },
+                        correlation_id=f"connector-required:{spec.agent}",
+                        priority=95,
+                        requires_response=False,
+                    )
+                    await asyncio.sleep(self.interval_seconds)
+                    continue
                 while self._running:
                     await self.federation.heartbeat(
                         spec.agent,
