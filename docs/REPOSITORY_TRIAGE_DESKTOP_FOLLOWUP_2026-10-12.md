@@ -83,3 +83,17 @@ AURELIA Assurance run [38271166786](https://github.com/Anto-30/aurelia-trading/a
 That successful repository CI run does **not** qualify live execution. The same run reported `DERIV_AUTH_CONFIGURED=false`; authenticated real-account session, broker-account and verify-only transaction lifecycle steps were skipped. The readiness report returned `final_execution_authorization=false` and `live_execution=BLOCKED`, and the worker health check reported `DEGRADED` with `CONTINUOUS_RUNTIME_UNAVAILABLE`. The run also reported the legacy Railway path as `NOT_CONFIGURED`.
 
 Two later assurance runs were observed running against the documentation branch at the time of the latest check; the newest documentation commit has not yet been independently confirmed by a completed assurance result. The prior successful run is evidence for its own exact commit only.
+
+
+## Additional quant and trading-repository screen
+
+| Repository | Metadata / README evidence | Preliminary disposition |
+|---|---|---|
+| `blampe/IbPy` | Archived; GitHub API returned `NOASSERTION` for license; README says the official Interactive Brokers Python API makes this project largely superfluous except for legacy Python 2 | Reject for new work; do not introduce an archived legacy broker adapter |
+| `QuantConnect/Tutorials` | Apache-2.0; Jupyter/WordPress tutorials for LEAN and financial concepts; last push observed 2025-07-28 | Educational/research reference; not a drop-in AURELIA runtime or Deriv adapter |
+| `cuemacro/finmarketpy` | Apache-2.0; market analysis, backtesting templates, seasonality and event-study utilities; last push observed 2026-04-16 | Research-plane candidate only; inspect dependency health and validate all results against AURELIA's independent backtest protocol |
+| `SockTrader/SockTrader` | GPL-3.0; crypto trading bot; last push observed 2023-12-01 | Reject as an embedded component without GPL review; age and venue assumptions make it a low-priority reference |
+| `mapalochuka81-spec/chuka-ai-trading-bot` | MIT; README makes broad production-ready claims and lists Deriv, Weltrade, Exness and MT5; last push observed 2026-08-24; only one star at metadata check | Do not trust claims without source-level verification; review broker credential handling, order path, minimum-stake rules, duplicate protection, transaction verification and reconciliation before any sandbox execution |
+| `hyperliquid-dex/hyperliquid-python-sdk` | MIT; official-style Python SDK for Hyperliquid API trading; last push observed 2026-06-04 | Out of AURELIA's immediate Deriv scope; research reference only unless a separately approved Hyperliquid venue adapter is planned |
+
+A missing or unclear license, an archived repository, or a low activity signal is grounds to defer adoption—not a reason to bypass legal or security review. No trading bot from this list is approved for live execution.
