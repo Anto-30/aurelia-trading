@@ -42,3 +42,15 @@ Canonical target remains `Anto-30/aurelia-trading` on `main`; this document belo
 
 ## Verified current limits
 The GitHub connector confirmed all ten repositories are public and non-archived at the time of this intake. Its permissions for these external repositories are pull-only. This connector does not provide a local shell, bulk clone, or connected agent-runtime deployment, so physical synchronization to Claude Code, Grok, JEV or other agent environments remains **NOT VERIFIED**. No production credentials were accessed and no broker order was submitted.
+
+
+## Latest exact-head verification update (2026-10-12)
+Commit `21f027bcb1bf37445bcc7bdd7ea16472ddbbae4d` was checked through GitHub Actions:
+- [AURELIA Assurance run 38284857062](https://github.com/Anto-30/aurelia-trading/actions/runs/38284857062): workflow completed successfully. Compilation, production acceptance audit, shell syntax, research tests, assurance tests, runtime tests, secret-presence tests, hardening tests, container build, public Deriv transport, worker health, and fail-closed certification assertions passed.
+- [Agent Federation Audit run 38284857046](https://github.com/Anto-30/aurelia-trading/actions/runs/38284857046): success.
+- [Agent Continuity Watchdog run 38284857047](https://github.com/Anto-30/aurelia-trading/actions/runs/38284857047): success.
+- Authenticated Deriv prerequisite, session, account and verify-only lifecycle steps were **skipped** because `DERIV_AUTH_CONFIGURED=false`; logs also report missing expected currency and PAT app ID. This is a configuration gap, not a reason to expose credentials in chat.
+- Certification explicitly returned `CERTIFICATION_RESULT=NOT_READY`, `FINAL_EXECUTION_AUTHORIZATION=FALSE`, `LIVE_EXECUTION=BLOCKED`. Required missing artifacts: `evidence/broker_lifecycle.json`, `evidence/recovery_matrix.json`, `evidence/soak_3600s.json`, `evidence/prospective_oos.json`, `evidence/calibration.json`, `evidence/execution_economics.json`, `evidence/security_audit.json`, `evidence/deployment.json`, and `evidence/strategy_eligibility.json`.
+- Canonical `main/config/LIVE_LOCK.yaml` remains `live_trading_enabled: false`, `FINAL_EXECUTION_AUTHORIZATION: false`, `LIVE_EXECUTION: BLOCKED`, and `capital_plane_mode: VERIFY_ONLY`.
+
+These are actual hosted-runner results for the named commit. They do not show that a Codespace or agent runtime was created, external repositories were cloned, or production prerequisites were completed.
