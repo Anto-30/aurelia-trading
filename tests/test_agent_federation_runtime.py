@@ -62,8 +62,12 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
             )
             await federation.register_agents(["ClaudeCode", "KimiK3"])
             await federation.broadcast_roundtable()
-            rows = federation.messages_for("ClaudeCode")
-            self.assertTrue(any(x["message_type"] == "ROUND_TABLE" for x in rows))
+            for agent in ("ClaudeCode", "KimiK3", "GrokBot", "GoogleAgentSkills", "GLM", "PlaywrightCLI", "JEV", "ChatGPT", "Dev"):
+                rows = federation.messages_for(agent)
+                self.assertTrue(
+                    any(x["message_type"] == "ROUND_TABLE" for x in rows),
+                    f"default roundtable omitted registered role {agent}",
+                )
 
 
     async def test_task_queue_is_durable_priority_ordered_and_idempotent(self):
