@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: aurelia-runtime
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: false
+    disk:
+      name: aurelia-runtime-data
+      mountPath: /var/lib/aurelia
+      sizeGB: 1
+    envVars:
+      - key: AURELIA_CONTINUOUS_RUNTIME
+        value: "true"
+      - key: FINAL_EXECUTION_AUTHORIZATION
+        value: "false"
+      - key: LIVE_EXECUTION
+        value: "BLOCKED"
+      - key: AURELIA_JOURNAL_PATH
+        value: /var/lib/aurelia/aurelia-events.ndjson
+      - key: AURELIA_FEDERATION_JOURNAL_PATH
+        value: /var/lib/aurelia/agent-federation.ndjson
+      - key: AURELIA_FEDERATION_LEASE_PATH
+        value: /var/lib/aurelia/agent-federation-leases.json
+      - key: AURELIA_FEDERATION_TASK_PATH
+        value: /var/lib/aurelia/agent-federation-tasks.json
+      - key: AURELIA_AGENT_PERFORMANCE_PATH
+        value: /var/lib/aurelia/agent-performance.json
+      - key: AURELIA_READINESS_PATH
+        value: /var/lib/aurelia/AURELIA_READINESS.json
+      - key: AURELIA_DERIV_EVIDENCE_PATH
+        value: /var/lib/aurelia/DERIV_RUNTIME_EVIDENCE.json
