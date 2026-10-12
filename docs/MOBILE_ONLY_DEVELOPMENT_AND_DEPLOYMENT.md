@@ -77,3 +77,20 @@ This checklist is for the repository owner. It does not grant live trading autho
 The self-hosted deployment workflow additionally expects `AURELIA_HOST`, `AURELIA_USER`, `AURELIA_SSH_KEY`, and `AURELIA_KNOWN_HOSTS` environment secrets. Generate a dedicated least-privilege deployment identity on the actual Linux host and populate `AURELIA_KNOWN_HOSTS` from a trusted, independently verified SSH host key; do not disable strict host checking. The LIVE path also references `AURELIA_ATTESTATION_SIGNING_KEY`, `AURELIA_OPERATOR_RESET_SIGNING_KEY`, and the `AURELIA_RUNTIME_ID` variable. Those are not substitutes for a host, security review, attestations, recovery testing, or runtime qualification.
 
 The GitHub connector available to the engineering assistant does not expose an operation for creating environment secrets, configuring environment protection, or provisioning a Codespace/production host. These account-owner UI operations therefore cannot be performed by the assistant. After the owner completes the steps above, the assistant can inspect workflow results and help diagnose failures without seeing secret values.
+
+
+## Latest exact-head verification (2026-10-12)
+
+The newest verified review-branch commit is `bafa0d860a2b16600a5ab26c829632690217ee30` (the documentation update after assurance run commit `21f027bcb1bf37445bcc7bdd7ea16472ddbbae4d`). For the tested commit, these hosted workflows completed successfully:
+
+- [AURELIA Assurance run 38284857062](https://github.com/Anto-30/aurelia-trading/actions/runs/38284857062)
+- [Agent Federation Audit run 38284857046](https://github.com/Anto-30/aurelia-trading/actions/runs/38284857046)
+- [Agent Continuity Watchdog run 38284857047](https://github.com/Anto-30/aurelia-trading/actions/runs/38284857047)
+
+The Assurance run passed compilation, the static production acceptance audit, shell syntax validation, research/assurance/runtime tests, secret-presence tests, hardening tests, container build, public Deriv transport verification, worker health, and assertions that the release remains fail-closed.
+
+**The run did not qualify production.** Authenticated Deriv session/account/verify-only lifecycle steps were skipped because `DERIV_AUTH_CONFIGURED=false`; the log identifies missing expected currency and PAT App ID prerequisites. Certification emitted `CERTIFICATION_RESULT=NOT_READY`, `FINAL_EXECUTION_AUTHORIZATION=FALSE`, and `LIVE_EXECUTION=BLOCKED`. Missing evidence artifacts remain broker lifecycle, recovery matrix, 3600-second soak, prospective OOS, calibration, execution economics, security audit, deployment, and strategy eligibility.
+
+### Policy reconciliation item
+
+The current repository's production standard, runtime authority, README and acceptance audit consistently specify a 0.50–0.75 probability band. The separately recorded owner requirement for AURELIA specifies a 0.55 minimum and 0.75 maximum, with no clipping. This is a policy discrepancy that must be reconciled in a reviewed code-and-test change before relying on probability-gated decisions. Do not resolve it by editing only documentation or by weakening tests; the canonical runtime constant, validators, tests, standard, README and audit expectations must agree. This is separate from the missing production evidence and does not change the live lock.
