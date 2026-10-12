@@ -51,3 +51,26 @@ The PR's combined commit-status endpoint returned no external status entries; th
 - Keep all findings and integration changes on a review branch; use a separate reviewed PR for each actual code integration.
 - Preserve the single canonical AURELIA engine, capital plane, release authority and evidence lineage. External agents and research tools must not gain capital authority.
 - Do not change `LIVE_LOCK`, bypass the Risk Warden/execution firewall, or authorize live orders based on CI success alone.
+
+
+## Public metadata and license pass
+
+Repository metadata was queried on 2026-10-12. `pushed_at` is an upstream activity signal, not proof that a release is secure or production-ready.
+
+| Repository | Declared SPDX license | Last push observed (UTC) | Preliminary decision |
+|---|---|---:|---|
+| `siteboon/claudecodeui` | AGPL-3.0 | 2026-10-12 | Do not deploy into a proprietary hosted product until AGPL obligations and remote-session security are reviewed |
+| `leepokai/Codync` | Apache-2.0 | 2026-10-12 | Highest-priority desktop/agent UX candidate for isolated evaluation; still requires threat-model, dependency and installer review |
+| `yeshrajawat/codync` | No license declared by GitHub API | 2022-06-03 | Reject as an install candidate unless ownership, provenance, maintenance and license are clarified; treat as stale/duplicate relative to the actively updated Codync project |
+| `QwenLM/qwen-code` | Apache-2.0 | 2026-10-12 | Candidate for isolated specialist-agent evaluation; do not alter AURELIA's primary-agent configuration automatically |
+| `openinterpreter/openinterpreter` | Apache-2.0 | 2026-10-11 | Research-only; requires strict tool-execution sandbox and permission review |
+| `anomalyco/opencode` | MIT | 2026-10-12 | Candidate for isolated agent workflow evaluation; pin commit and inspect plugins/extensions before use |
+| `jesse-ai/jesse` | MIT | 2026-10-12 | Research/backtesting reference only; crypto execution model is not automatically compatible with Deriv Options |
+| `hummingbot/hummingbot` | Apache-2.0 | 2026-10-06 | Research/exchange-adapter reference only; architecture and venue assumptions differ from AURELIA's Deriv capital plane |
+| `Drakkar-Software/OctoBot` | GPL-3.0 | 2026-10-12 | Do not embed into a proprietary distribution without GPL compatibility review; research-only until reviewed |
+| `ccxt/ccxt` | MIT | 2026-10-12 | General exchange API reference; it does not replace the Deriv-specific broker adapter or source-of-truth checks |
+| `bmoscon/cryptofeed` | NOASSERTION | 2026-10-10 | No clear SPDX license was returned; do not adopt until license is verified from the repository's license files |
+| `google-github-actions/auth` | Apache-2.0 | 2026-07-29 | CI identity reference only; use workload identity federation rather than introducing long-lived service-account keys |
+| `railwayapp/cli` | MIT | 2026-10-12 | Reference only; no deployment action taken because the current handoff identifies a different active deployment path |
+
+These are preliminary screening outcomes, not full license opinions, dependency scans, code reviews, or runtime tests. No candidate was cloned or installed. Repository default branches and metadata can change; adoption decisions must pin exact commits and review the actual license text at that commit.
