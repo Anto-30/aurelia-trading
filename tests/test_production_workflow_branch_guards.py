@@ -49,6 +49,14 @@ class ProductionWorkflowBranchGuardTests(unittest.TestCase):
                         "without a job-level main-branch guard",
                     )
 
+    def test_verify_only_contract_input_is_limited_to_supported_types(self) -> None:
+        workflow = (WORKFLOWS / "deriv-verify-only-lifecycle.yml").read_text(encoding="utf-8")
+        contract_input = workflow.split("      contract_type:", 1)[1].split("      duration:", 1)[0]
+        self.assertIn("type: choice", contract_input)
+        self.assertIn("- CALL", contract_input)
+        self.assertIn("- PUT", contract_input)
+        self.assertNotIn("type: string", contract_input)
+
     def test_verify_only_lifecycle_dispatch_is_main_branch_only(self) -> None:
         workflow = (WORKFLOWS / "deriv-verify-only-lifecycle.yml").read_text(encoding="utf-8")
         body = job_body(workflow, "verify-only")
