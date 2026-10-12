@@ -5,7 +5,7 @@ services:
     plan: 0.5c-512mb
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    autoDeployTrigger: off
+    autoDeployTrigger: "off"
     disk:
       name: aurelia-runtime-data
       mountPath: /var/lib/aurelia
