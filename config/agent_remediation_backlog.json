@@ -112,7 +112,7 @@
       "priority": "P0",
       "status": "verification_required",
       "title": "Reconcile PR #115/#116 agent continuity watchdog regression",
-      "finding": "PR #116 watchdog run 38256742518 failed at agent_worker_probe.py. The probe reported no active workers and all seven expected advisory workers missing after unconfigured providers stopped emitting heartbeats. PR #115's evidence-labeling change passed separately; combined behavior needs a coherent test-versus-production model.",
+      "finding": "The initial PR #116 watchdog run 38256742518 failed because the probe expected unconfigured workers to heartbeat. The probe now explicitly configures disposable local child processes for simulation, labels output EPHEMERAL_SIMULATION, and states persistent runtime proof is NOT_VERIFIED. Latest watchdog runs 38258302724 (PR #116 head) and 38258277908 (PR #115 head) succeeded; the latest PR #116 assurance run 38258302744 was still pending at last check.",
       "owner": "ClaudeCode",
       "collaborators": [
         "JEV",
@@ -125,7 +125,10 @@
       "references": [
         "https://github.com/Anto-30/aurelia-trading/pull/115",
         "https://github.com/Anto-30/aurelia-trading/pull/116",
-        "https://github.com/Anto-30/aurelia-trading/actions/runs/38256742518"
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38256742518",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38258302724",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38258277908",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38258302744"
       ],
       "acceptance_criteria": [
         "simulation probe explicitly tests simulation-only mechanics or verifies inactive/unconfigured behavior without claiming production liveness",
