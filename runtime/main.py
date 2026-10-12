@@ -464,13 +464,19 @@ async def main() -> None:
     federation_supervisor = AgentFederationSupervisor(
         federation,
         agents=(
+            # Keep this inventory aligned with config/agent_delegation_tasks.json.
+            # Registry membership permits advisory task routing only; it is not
+            # proof of provider authentication, worker liveness, or task execution.
             "ClaudeCode",
             "KimiK3",
             "GrokBot",
             "GoogleAgentSkills",
             "GLM",
             "PlaywrightCLI",
+            "JEV",
             "AURELIA",
+            "ChatGPT",
+            "Dev",
         ),
         event_queue=federation_queue,
     )
