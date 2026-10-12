@@ -82,7 +82,7 @@ AURELIA Assurance run [38271166786](https://github.com/Anto-30/aurelia-trading/a
 
 That successful repository CI run does **not** qualify live execution. The same run reported `DERIV_AUTH_CONFIGURED=false`; authenticated real-account session, broker-account and verify-only transaction lifecycle steps were skipped. The readiness report returned `final_execution_authorization=false` and `live_execution=BLOCKED`, and the worker health check reported `DEGRADED` with `CONTINUOUS_RUNTIME_UNAVAILABLE`. The run also reported the legacy Railway path as `NOT_CONFIGURED`.
 
-Two later assurance runs were observed running against the documentation branch at the time of the latest check; the newest documentation commit has not yet been independently confirmed by a completed assurance result. The prior successful run is evidence for its own exact commit only.
+Latest exact-head verification (2026-10-12): branch head `d6c490994e658fd89ad22c6e7d4de5d562ebf96a` was verified by AURELIA Assurance push run [38275087510](https://github.com/Anto-30/aurelia-trading/actions/runs/38275087510) and pull-request run [38275094620](https://github.com/Anto-30/aurelia-trading/actions/runs/38275094620); both workflow conclusions were `success` for that exact commit. The tests/build and fail-closed assertions passed, but the generated certification remains `NOT_READY`: `DERIV_AUTH_CONFIGURED=false`, authenticated account/lifecycle checks were skipped, required production evidence is missing, continuous runtime is unavailable, and `FINAL_EXECUTION_AUTHORIZATION=false` / `LIVE_EXECUTION=BLOCKED`. Workflow success is not production approval.
 
 
 ## Additional quant and trading-repository screen
