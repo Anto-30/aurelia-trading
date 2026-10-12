@@ -12,7 +12,10 @@ on:
         description: Deriv proposal contract type
         required: true
         default: CALL
-        type: string
+        type: choice
+        options:
+          - CALL
+          - PUT
       duration:
         description: Proposal duration
         required: true
@@ -46,8 +49,8 @@ permissions:
 jobs:
   verify-only:
     environment: production
-    # Verify-only is intentionally branch-independent so the current canonical main can be verified.
-    # Capital-moving execution remains independently blocked by LIVE_LOCK and FINAL_EXECUTION_AUTHORIZATION.
+    # Authenticated verification runs only from canonical main because this job binds the protected production environment.
+    # This workflow never submits orders; capital-moving execution remains blocked by LIVE_LOCK and final authorization.
     if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
