@@ -1,0 +1,53 @@
+# Repository and Desktop Access Follow-up — 2026-10-12
+
+## Status and scope
+
+This is a research-only follow-up to the repository intake. No external project has been installed into the production runtime, no external repository has been merged into `main`, and no live-trading gate has been relaxed.
+
+## Desktop/agent access diagnosis
+
+The connected Desktop Commander account authenticates successfully, but its device inventory returns **zero connected devices**. Therefore this session cannot inspect, clone, modify, or execute commands on the user's desktop through Desktop Commander yet. This is a pairing/availability blocker, not a demonstrated bug in AURELIA itself.
+
+Official setup reference: https://github.com/desktop-commander/remote-desktop-commander/blob/main/docs/SETUP.md
+
+On the target computer:
+1. Ensure Node.js 18 or newer is installed (`node --version`).
+2. Open a terminal on that computer and run `npx @wonderwhy-er/desktop-commander@latest remote`.
+3. Complete the browser device authorization and confirm the code displayed in the browser matches the code printed in that terminal.
+4. Keep the terminal process running; the remote device disconnects when it stops.
+5. Confirm the machine appears online in the Desktop Commander device dashboard, then retry device listing/ping from this session.
+
+Do not paste pairing codes, session files, API tokens, private keys, or other credentials into chat. If the command errors, capture only the non-secret error text and version/platform details.
+
+## Additional repository README triage
+
+The following public repository metadata and README files were accessible during this pass. These are classification signals only; no code was cloned, executed, or dependency-audited in this pass.
+
+| Repository | README-level purpose | Preliminary disposition |
+|---|---|---|
+| `siteboon/claudecodeui` | Desktop/mobile UI for Claude Code, Cursor CLI and Codex; local or remote project/session access | Candidate for agent UX; inspect authentication, network exposure, telemetry and permissions before use |
+| `leepokai/Codync` | Open-source desktop application that lets users message coding agents as teammates; README advertises Windows/macOS/Linux builds | Candidate for agent workflow UX; verify release provenance, update mechanism, credential storage and license before installing |
+| `QwenLM/qwen-code` | Open-source coding agent for terminal, editor, desktop, browser and chat; README indicates Node.js >=22 | Research/agent tooling candidate; evaluate as an optional specialist, not a change to the selected primary-agent architecture |
+| `openinterpreter/openinterpreter` | Coding agent optimized for lower-cost models; README advertises Apache-2.0 licensing | Research-only candidate; review current architecture, tool permissions and execution sandbox before enabling |
+| `anomalyco/opencode` | Open-source AI coding agent; repository default branch is `dev` | Candidate for isolated evaluation; pin an immutable commit and inspect the actual license and release provenance |
+| `google-github-actions/auth` | GitHub Action for Google Cloud authentication; README recommends Workload Identity Federation over long-lived service-account keys | CI identity reference only; not a desktop repair tool and not a replacement for AURELIA's protected deployment credentials |
+| `goauthentik/authentik` | Identity-provider platform | Out of scope for immediate desktop diagnosis unless AURELIA needs a separately approved identity service |
+| `better-auth/better-auth` | TypeScript authentication/authorization framework | Application-layer reference only; no integration justified by the current desktop connectivity evidence |
+| `railwayapp/cli` | Railway CLI | Reference only until the deployment target is explicitly confirmed; current handoff notes say Railway is not the active deployment path |
+
+Other metadata lookups confirmed public repositories and default branches for these candidates, but that is not proof of safety, maintenance quality, compatibility, or license compliance.
+
+## AURELIA CI evidence observed
+
+For PR #119, the agent-federation audit completed successfully. The AURELIA Assurance run was still in progress when checked: compilation, static production acceptance audit, deployment/secret-script syntax validation and research-plane tests had completed successfully; the assurance test step was still running and downstream steps were pending. No passing result is claimed for the whole workflow until GitHub reports a completed conclusion.
+
+The PR's combined commit-status endpoint returned no external status entries; this must not be interpreted as proof that all required checks passed.
+
+## Acceptance conditions before adopting any repository
+
+- Pin a reviewed immutable commit; record upstream URL, license, release status, maintenance signals and dependency inventory.
+- Inspect install scripts, lifecycle hooks, network calls, credential handling, filesystem scope and execution permissions.
+- Run dependency/security and tests in an isolated disposable environment with no production secrets and no broker trading permissions.
+- Keep all findings and integration changes on a review branch; use a separate reviewed PR for each actual code integration.
+- Preserve the single canonical AURELIA engine, capital plane, release authority and evidence lineage. External agents and research tools must not gain capital authority.
+- Do not change `LIVE_LOCK`, bypass the Risk Warden/execution firewall, or authorize live orders based on CI success alone.
