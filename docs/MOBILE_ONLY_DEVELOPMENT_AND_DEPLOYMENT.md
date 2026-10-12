@@ -55,3 +55,25 @@ The connected Vercel account was inspected. Its linked projects were `tales-and-
 ## Codespaces cost guard
 
 GitHub's current billing documentation states that personal Free accounts include 120 core-hours and 15 GB-month of Codespaces storage per month. Usage beyond included quota can be billed if a payment method and budget permit it; without a valid payment method, usage is blocked when quota is exhausted. Check current usage and budgets before leaving a Codespace running: https://docs.github.com/en/billing/concepts/product-billing/github-codespaces
+
+
+## Protected GitHub Actions configuration — Deriv verify-only
+
+This checklist is for the repository owner. It does not grant live trading authority and does not replace production-host provisioning.
+
+1. Open the repository in a browser, then **Settings → Environments → production**. Confirm the environment exists and retain any configured required reviewers / deployment branch restrictions. Add environment secrets here rather than committing them to files.
+2. For PAT authentication, add these exact names as **environment secrets**:
+   - `DERIV_AUTH_TOKEN` (preferred canonical name) **or** `DERIV_PAT` — a newly created Deriv Personal Access Token with only the permissions needed for the account-read and verify-only checks.
+   - `DERIV_APP_ID` — the application ID for the Deriv application associated with that PAT.
+   - `DERIV_EXPECTED_LOGINID` — the exact account login ID AURELIA is authorized to inspect; alternatively use `DERIV_AUTHORIZED_ACCOUNT_ID`.
+   - `DERIV_EXPECTED_CURRENCY` — `USD` for the currently supported verification path.
+3. Under **Settings → Environments → production → Environment variables**, set `DERIV_AUTH_MODE=pat`. The workflows default to `pat` if this variable is absent. Only choose `oauth` if the OAuth integration has been configured and tested according to its own flow; do not mix OAuth and PAT assumptions.
+4. Never send or paste the token, app credentials, private keys, or secret values into ChatGPT, issue comments, PR text, workflow inputs, logs, or source files. If a value may have been exposed, revoke it and create a replacement before proceeding.
+5. Once secrets are saved, open **Actions** on the canonical `main` branch and manually run **AURELIA Deriv Authenticated Session Verification** with environment `real` for account verification. Inspect the run and its uploaded evidence; do not treat secret-presence alone as authentication. Then run **AURELIA Deriv Verify-Only Evidence** and **AURELIA Deriv Verify-Only Lifecycle** only after the preceding session/account evidence passes. The lifecycle workflow validates a proposal/intent and explicitly asserts zero submitted orders.
+6. These workflows intentionally pin `FINAL_EXECUTION_AUTHORIZATION=false` and `LIVE_EXECUTION=BLOCKED`. Do not dispatch the self-hosted deployment workflow in `LIVE` mode to test credentials.
+
+### Additional secrets required only after a real production host is provisioned
+
+The self-hosted deployment workflow additionally expects `AURELIA_HOST`, `AURELIA_USER`, `AURELIA_SSH_KEY`, and `AURELIA_KNOWN_HOSTS` environment secrets. Generate a dedicated least-privilege deployment identity on the actual Linux host and populate `AURELIA_KNOWN_HOSTS` from a trusted, independently verified SSH host key; do not disable strict host checking. The LIVE path also references `AURELIA_ATTESTATION_SIGNING_KEY`, `AURELIA_OPERATOR_RESET_SIGNING_KEY`, and the `AURELIA_RUNTIME_ID` variable. Those are not substitutes for a host, security review, attestations, recovery testing, or runtime qualification.
+
+The GitHub connector available to the engineering assistant does not expose an operation for creating environment secrets, configuring environment protection, or provisioning a Codespace/production host. These account-owner UI operations therefore cannot be performed by the assistant. After the owner completes the steps above, the assistant can inspect workflow results and help diagnose failures without seeing secret values.
