@@ -6,7 +6,7 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /health
-    autoDeploy: false
+    autoDeployTrigger: off
     disk:
       name: aurelia-runtime-data
       mountPath: /var/lib/aurelia
