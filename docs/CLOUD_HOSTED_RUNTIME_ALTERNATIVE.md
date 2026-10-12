@@ -75,3 +75,8 @@ A configured command or a running process is not sufficient evidence that an age
 ## Current decision
 
 The fastest viable route without the user's desktop is: (1) deploy the canonical runtime on a user-authorized persistent cloud host; (2) make the durable task queue and provider request/result protocol operational for all ten registered roles; (3) validate each connector and recovery behavior; (4) complete Deriv verify-only, strategy qualification and release certification. The owner must authorize the host account and its costs; do not claim provisioning or agent connectivity before the resulting evidence exists.
+
+
+### Current implementation gap to resolve before claiming all-agent runtime
+
+A source inspection of `runtime/main.py` on `main` shows its `AgentFederationSupervisor` currently lists seven agents (`ClaudeCode`, `KimiK3`, `GrokBot`, `GoogleAgentSkills`, `GLM`, `PlaywrightCLI`, and `AURELIA`). The broader delegation registry contains additional roles such as `JEV`, `ChatGPT`, and `Dev`; they must be wired into the canonical runtime with explicit per-role task allowlists and connector availability checks before the system can claim fleet-wide dispatch. Do not count a role in configuration/backlog as a running or authenticated agent. This integration is separate from provisioning the host.
