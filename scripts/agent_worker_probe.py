@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import shlex
+import sys
 import tempfile
 from pathlib import Path
 
@@ -34,6 +37,14 @@ async def main() -> int:
             source_hash="probe",
             lease_seconds=45,
         )
+        # Configure harmless disposable child processes explicitly so this simulation
+        # tests lease mechanics after unconfigured providers were made fail-closed.
+        # The child processes do no provider work and confer no capital authority.
+        for agent in ADVISORY_WORKERS:
+            env_name = AgentWorkerSupervisor._env_name(agent)
+            os.environ[env_name] = shlex.join(
+                [sys.executable, "-c", "import time; time.sleep(30)"]
+            )
         workers = AgentWorkerSupervisor(
             federation, agents=(*ADVISORY_WORKERS, CAPITAL_AUTHORITY), interval_seconds=2
         )
