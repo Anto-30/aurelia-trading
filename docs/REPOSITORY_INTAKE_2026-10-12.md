@@ -104,3 +104,23 @@ Policy: reference-only unless a direct dependency on a defined AURELIA requireme
 
 ## Acceptance criteria
 A repository is not marked integrated until the exact commit/tag, license, files adopted, changes made, tests run, security findings, integration boundary, rollback path and review outcome are recorded. No candidate is accepted solely because it is popular or appears in this intake list.
+
+
+## Supplemental intake — repositories supplied 2026-10-12
+
+Duplicate URL deduplicated: `47thtechcorner/RayCodes_TimesFM3.0` was supplied twice and is recorded once.
+
+### P0 — Quantitative research and forecasting
+- `google-research/timesfm` — upstream time-series foundation model; evaluate for forecasting research, not as a standalone signal.
+- `47thtechcorner/RayCodes_TimesFM3.0` — community stock-forecasting wrapper around TimesFM 3.0; audit wrapper provenance and model-weight license separately.
+- `AI4Finance-Foundation/FinRL-Trading` — FinRL-X research/backtesting infrastructure; compare components only, without replacing AURELIA's broker adapter or capital plane.
+- `OpenByteInc/QuantDinger` — self-hosted AI trading platform advertising strategy generation, backtesting, paper/live execution and monitoring; high-risk architecture review required.
+- `Signal-Execution-Labs/forex-trading-ai-agent` — autonomous forex-agent project; provenance and execution-path review required before sandbox evaluation.
+- `simonlin1212/TradingAgents-astock` — multi-agent A-share research fork; architecture reference only because its market rules and data sources differ from Deriv.
+
+### P1 — Charting, strategy workflow and agent skills
+- `tradesdontlie/tradingview-mcp` — local TradingView Desktop MCP/CDP bridge for chart inspection and Pine Script workflows; not a broker executor.
+- `BaggaT236/AI-Trading-Skills` — TypeScript CLI and workflow/skill catalog; verify repository identity and upstream lineage before reuse.
+- `gr33njj/multi-setup-tradingview` — claimed Wyckoff/Quasimodo/intraday/liquidity setup collection; reference-only until license, source script and reproducible tests are available.
+
+These are intake classifications only, not approvals to install, execute, merge or trade. Before promotion, review immutable commits, license files, dependencies, install scripts, CI, secret access, look-ahead/data leakage, fees/slippage and reproducible out-of-sample performance.
