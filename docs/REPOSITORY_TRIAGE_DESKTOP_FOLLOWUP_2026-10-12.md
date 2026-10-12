@@ -97,3 +97,29 @@ Latest exact-head verification (2026-10-12): branch head `d6c490994e658fd89ad22c
 | `hyperliquid-dex/hyperliquid-python-sdk` | MIT; official-style Python SDK for Hyperliquid API trading; last push observed 2026-06-04 | Out of AURELIA's immediate Deriv scope; research reference only unless a separately approved Hyperliquid venue adapter is planned |
 
 A missing or unclear license, an archived repository, or a low activity signal is grounds to defer adoption—not a reason to bypass legal or security review. No trading bot from this list is approved for live execution.
+
+
+## Supplemental repository triage — 2026-10-12
+
+This is a preliminary README and license spot-check, not a full security audit or local test. The duplicate RayCodes URL was counted once.
+
+| Repository | Initial finding | Disposition |
+|---|---|---|
+| `google-research/timesfm` | Code license Apache-2.0. Upstream README says TimesFM 3.0 weights have a separate non-commercial license, unlike earlier checkpoints. | Priority forecasting research. Check the exact checkpoint license for intended use; evaluate with rolling-origin OOS data and simple baselines. |
+| `47thtechcorner/RayCodes_TimesFM3.0` | README shows an Apache badge, but no top-level LICENSE file was found in the checked branch. | Reference-only until a license is verified. The upstream checkpoint terms still apply. |
+| `tradesdontlie/tradingview-mcp` | MIT license. Local TradingView Desktop bridge using Chrome DevTools Protocol and undocumented internal APIs. | P1 chart/Pine workflow reference only. Requires a desktop and review of local debugging-port exposure; not a phone-only desktop replacement. |
+| `AI4Finance-Foundation/FinRL-Trading` | Apache-2.0. FinRL-X research and trading infrastructure. | P0 research reference. Reproduce backtests with strict temporal splits, realistic costs and independent baselines. Do not replace AURELIA's capital plane. |
+| `OpenByteInc/QuantDinger` | Apache-2.0. Self-hosted platform covering AI strategy generation, backtesting, paper/live execution and monitoring. | High-risk architecture reference only; review authentication, secrets, generated code and execution paths before isolated evaluation. |
+| `Signal-Execution-Labs/forex-trading-ai-agent` | MIT license. README indicates a different maintainer/fork lineage. | Defer pending upstream identity and source-lineage review; inspect installation, dashboard, credential and order-flow behavior. |
+| `BaggaT236/AI-Trading-Skills` | MIT license. TypeScript CLI and skill/workflow catalog; README quick-start clones a differently named repository. | P1 workflow reference. Resolve provenance and inspect every script/workflow before reuse. |
+| `simonlin1212/TradingAgents-astock` | Apache-2.0. Research/educational multi-agent framework specialized for China A-shares. | Architecture reference only; its market rules and data vendors are not directly portable to Deriv. |
+| `gr33njj/multi-setup-tradingview` | README describes Wyckoff, Quasimodo, intraday and liquidity setups; no top-level LICENSE file found. | Reference-only until permissions and exact rules are verified; independently test for repainting and look-ahead bias. |
+
+### Recommended evaluation sequence
+1. Resolve TimesFM 3.0 checkpoint licensing before choosing a deployment path; compare forecasts with naive/statistical baselines and rolling-origin evaluation. Forecast accuracy alone does not establish a trading edge.
+2. Review FinRL-X and TradingAgents-Astock for research abstractions only; preserve AURELIA's existing strategy registry, risk engine, broker truth and release authority.
+3. Review TradingView MCP and skills workflows for local access, command scope and provenance in an isolated environment.
+4. Defer QuantDinger and the forex agent until source-level architecture and execution-path reviews are complete. Do not provide real broker credentials during intake.
+5. Do not copy the multi-setup script until its license is verified. Convert any candidate rules into explicit testable hypotheses and require costs-aware out-of-sample evidence.
+
+No repositories were cloned, installed or executed during this pass. No production secrets were used and no strategy was enabled.
