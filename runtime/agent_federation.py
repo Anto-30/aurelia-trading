@@ -477,7 +477,7 @@ class PersistentAgentFederation:
         }
         return await self.publish(
             sender=chair,
-            recipients=agents or ("ClaudeCode", "KimiK3", "GrokBot", "GoogleAgentSkills", "GLM", "PlaywrightCLI"),
+            recipients=agents or ("ClaudeCode", "KimiK3", "GrokBot", "GoogleAgentSkills", "GLM", "PlaywrightCLI", "JEV", "ChatGPT", "Dev"),
             message_type="ROUND_TABLE",
             payload=prompt,
             correlation_id=f"roundtable:{int(datetime.now(timezone.utc).timestamp())}",
