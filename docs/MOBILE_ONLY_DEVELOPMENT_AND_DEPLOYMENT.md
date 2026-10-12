@@ -43,5 +43,10 @@ Before a production deployment, an authorized host and protected secret store mu
 ## Current mobile unblock status
 
 - Desktop Commander: no paired device was visible, so remote desktop commands cannot run against a phone alone.
-- Browser-based Codespaces: repository configuration is being added on the review branch. Starting a Codespace requires the account owner to initiate it in GitHub's UI; this connector cannot create one on the user's behalf.
+- Browser-based Codespaces: `.devcontainer/devcontainer.json` and this guide are committed on the review branch in PR #119. The agent federation audit and continuity watchdog passed for the latest branch commit; the full assurance run is still in progress. Starting a Codespace requires the account owner to initiate it in GitHub's UI; this connector cannot create one on the user's behalf.
 - Production deployment: not executed. No host credentials, deployment target or production secret values are requested or recorded in this document.
+
+
+## Hosting-provider check (2026-10-12)
+
+The connected Vercel account was inspected. Its linked projects were `tales-and-trails-safaris` and `tales-and-trails-safaris-hjip`; no AURELIA project was returned. Therefore Vercel is not a verified AURELIA production target in this account, and no deployment was attempted. The checked-in AURELIA deployment policy remains the source of truth and specifies a persistent Linux/Docker host rather than a serverless web project.
