@@ -87,9 +87,9 @@
     {
       "id": "TASK-003",
       "priority": "P0",
-      "status": "open",
+      "status": "verification_required",
       "title": "Implement a real provider task request/result protocol",
-      "finding": "Source review shows the supervisor launches a configured command and publishes AGENT_TASK_CLAIMED, but does not establish that a provider receives the payload and returns a terminal result to federation.",
+      "finding": "A bounded JSON Lines request/result protocol was implemented on PR #116 head 5f04fbc41da8cb9c130a0876c6160ff507def58f. Each request carries a versioned schema, task/correlation IDs, payload, deadline, advisory-only scope, and capital_authority=false. Results must echo the task ID and use an allowed terminal status; malformed, mismatched, or timed-out responses fail the task. CI watchdog and federation audit passed for this commit; assurance run 38258872303 was pending at last check, and the provider integration itself is not yet connected or authenticated.",
       "owner": "ClaudeCode",
       "collaborators": [
         "GrokBot",
@@ -101,11 +101,19 @@
       ],
       "acceptance_criteria": [
         "versioned request/result schema includes task ID, correlation ID, payload, deadline, and authorized tool scope",
-        "provider receives tasks through a documented IPC/API protocol and returns COMPLETED, FAILED, or BLOCKED with an evidence reference",
+        "provider receives tasks through documented JSON Lines request/result protocol and returns COMPLETED, FAILED, or BLOCKED with an evidence reference",
         "timeout, process crash, malformed result, duplicate result, and unknown outcome paths are bounded and tested",
-        "only attributable lifecycle events establish execution proof"
+        "only attributable lifecycle events establish execution proof",
+        "automated protocol regression test and full assurance workflow pass on the proposed commit",
+        "actual provider integration remains separately marked blocked until authenticated provider execution is evidenced"
       ],
-      "evidence_path": "artifacts/agent-delegation/claudecode.json"
+      "evidence_path": "artifacts/agent-delegation/claudecode.json",
+      "references": [
+        "https://github.com/Anto-30/aurelia-trading/pull/116",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38258872303",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38258872335",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38258872316"
+      ]
     },
     {
       "id": "CI-004",
