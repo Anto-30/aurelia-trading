@@ -202,32 +202,15 @@ def authorization_gate(
             )
         except (TypeError, ValueError, OverflowError):
             broker_minimum_value = float("nan")
-        minimum_is_verified = isfinite(broker_minimum_value) and broker_minimum_value > 0
-        if not minimum_is_verified:
-            reasons.append("BROKER_MINIMUM_STAKE_UNVERIFIED")
-        else:
-            if not requested_stake_is_permitted(
-                decision.risk_requested_stake,
-                capital,
-                minimum_stake=broker_minimum_value,
-            ):
-                reasons.append("STAKE_NOT_AFFORDABLE_OR_BELOW_BROKER_MINIMUM")
-            sizing = size_stake_for_balance(
-                capital.available_balance,
-                minimum_stake=broker_minimum_value,
-            )
-            if not sizing.allowed:
-                reasons.append(sizing.reason)
-            else:
-                try:
-                    proposed_stake = float(decision.risk_requested_stake)
-                except (TypeError, ValueError, OverflowError):
-                    proposed_stake = float("nan")
-                # Risk/exposure controls must evaluate the exact stake that will be
-                # submitted. Do not silently resize after those approvals were
-                # computed against a strategy/agent-proposed amount.
-                if not isfinite(proposed_stake) or abs(proposed_stake - float(sizing.stake)) > 1e-9:
-                    reasons.append("LIVE_STAKE_NOT_POLICY_SIZED")
+        # A numeric value is not evidence of broker provenance, freshness, account
+        # binding, currency binding, or exact-contract binding. The production
+        # Deriv adapter does not yet issue a source-bound minimum-stake evidence
+        # object, so no caller-supplied scalar can satisfy this LIVE gate.
+        # Keep the scalar parameter temporarily for compatibility, but never
+        # treat it as verified broker evidence. This is an intentional fail-closed
+        # release blocker until a verified adapter-to-authority evidence contract
+        # and adversarial tests are implemented.
+        reasons.append("BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED")
     elif not requested_stake_is_permitted(decision.risk_requested_stake, capital):
         reasons.append("STAKE_NOT_AFFORDABLE_OR_BELOW_BROKER_MINIMUM")
 
