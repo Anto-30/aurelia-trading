@@ -76,3 +76,23 @@ Keep one canonical AURELIA repository, one capital plane, one release authority 
 3. Run component-specific tests in a disposable, credential-free environment. For market-data sources test timestamps, staleness, symbols, terms/rate limits and fail-closed behavior; for agent gateways test auth, remote exposure, tool scope, prompt injection and secret isolation; for trading code use mocks only.
 4. Obtain an independent human review and explicit approval before moving any candidate out of its present registry mode.
 5. Keep the PR draft and do not merge until all required CI and human-review gates pass.
+
+
+## Latest supply-chain audit result and disposition (2026-10-13 UTC)
+
+- Latest observed 30-source audit run: [run 38433360726](https://github.com/Anto-30/aurelia-trading/actions/runs/38433360726), commit `1bd7015209ddbe536f5e2f482769adc0b6a06917`. The job completed with **failure by design of the fail-closed acceptance gate**, not a clean pass.
+- The pinned-source inventory found 28 of 30 archives complete. `openclaw/openclaw` and `stablyai/orca` exceeded the configured archive download cap; those snapshots are not fully inventoried. Do not treat them as scanned or cleared. Raising resource limits blindly is not approved; first evaluate repository size, archive expansion, and whether a bounded Git-tree/path inventory can cover them safely.
+- OSV-Scanner produced a report containing 2,278 vulnerability records across 271 distinct vulnerable package coordinates. The job log includes critical/high-severity examples such as Next.js Image Optimization API RCE (GHSA-2xp9-vwfh-vxw4) and Tinypool worker-options prototype-pollution RCE (GHSA-5gmw-xhrv-c9v3). These are **scanner detections requiring triage**, not yet proof that each dependency is reachable or exploitable in AURELIA. Before reuse, resolve exact repository, lockfile, package version, advisory affected range, dependency reachability, execution path, and fixed release. Do not suppress or waive the records just to make CI green.
+- ScanCode emitted a JSON report covering 76 files and 40 license-expression detections. Expressions included MIT, Apache-2.0, AGPL-3.0, BSD, BSL-1.1, OFL-1.1, and proprietary-license detections, including mixed expressions. Automated detections are not legal clearance. Confirm exact file-level license, source headers, copied/vendored material, package metadata, and intended use; route AGPL/proprietary/mixed-license findings for explicit legal review before reuse.
+- The artifact was uploaded as [repository-intake-supply-chain-audit](https://github.com/Anto-30/aurelia-trading/actions/runs/38433360726/artifacts/11831333784), SHA-256 `866be127ee071be59a8617d9330cbfa25d3df6244ee27917277bb8ebed0b002a`, with 14-day retention. It must be preserved/reviewed while available; the workflow log confirms the acceptance gate failed for the two incomplete inventories and OSV findings.
+- On the same current branch snapshot, gstack Workflow Federation Assurance, AURELIA Agent Federation Audit, and Continuity Watchdog completed successfully. AURELIA Assurance was still running at the last status check; earlier runs were cancelled as the PR head advanced. Recheck current-head CI after the next commit rather than reusing statuses from older SHAs.
+- The PR remains draft and unmerged. No independent human review submission or requested reviewer is recorded. Reviewer assignment cannot be completed safely until a real, authorized GitHub user/team is established; do not fabricate a reviewer identity.
+- No candidate source was installed or executed; no production secrets, LIVE_LOCK, capital-plane, or live-order authorization settings were changed. All 20 supplemental candidates remain unapproved for production use.
+
+### Required follow-up gates
+
+1. Triage the OSV report by repository and package coordinate, prioritizing critical/high severity; document affected/fixed versions and disposition. Upgrade/fork or exclude candidates only after verifying the fix and regression tests. Keep unresolved candidates research-only.
+2. Resolve full-inventory coverage for OpenClaw and Orca using a bounded, auditable method; do not mark either complete until the exact pinned source has verifiable coverage and hashes.
+3. Review ScanCode JSON per file and resolve mixed/AGPL/proprietary expressions with a documented license decision.
+4. Re-run the full audit on the latest PR head, inspect uploaded reports, and ensure every acceptance criterion passes or has an explicit fail-closed disposition.
+5. Complete isolated component tests and obtain authorized independent human review. Keep the PR draft until then; do not merge or alter the capital/execution safety boundary.
