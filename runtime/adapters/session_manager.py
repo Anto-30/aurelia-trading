@@ -91,7 +91,10 @@ class DerivSessionManager:
         self.expected_loginid = (
             expected_loginid
             if expected_loginid is not None
-            else os.getenv("DERIV_EXPECTED_LOGINID", "")
+            else (
+                os.getenv("DERIV_EXPECTED_LOGINID", "").strip()
+                or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()
+            )
         )
         self.expected_environment = expected_environment.lower()
         configured_currency = expected_currency if expected_currency is not None else os.getenv("DERIV_EXPECTED_CURRENCY", "")
