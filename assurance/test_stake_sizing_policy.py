@@ -223,9 +223,9 @@ class StakeSizingPolicyTests(unittest.TestCase):
     def test_live_authorization_blocks_when_minimum_stake_breaks_one_percent_budget(self):
         account = AccountIdentity("CR123456", "real", "USD", "real")
         capital = CapitalSnapshot(
-            balance=99.99,
+            balance=145.00,
             currency="USD",
-            available_balance=99.99,
+            available_balance=145.00,
             captured_at=utc_now(),
             source="verified-test-snapshot",
             account=account,
@@ -240,7 +240,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
             probability=0.60,
             decision_time=utc_now(),
             market_snapshot_hash="sha256:test-market",
-            risk_requested_stake=1.00,
+            risk_requested_stake=1.50,
             average_win=2.00,
             average_loss=1.00,
         )
@@ -262,7 +262,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
             market_data_validated=True,
             exposure_approved=True,
             execution_mode="LIVE",
-            broker_minimum_stake=1.00,
+            broker_minimum_stake=1.50,
         )
         self.assertFalse(gate.allowed)
         self.assertIsNone(context)
