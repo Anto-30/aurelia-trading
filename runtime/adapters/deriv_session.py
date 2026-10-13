@@ -82,16 +82,27 @@ def validate_modern_options_ws_url(
     """
     if not isinstance(url, str) or not url:
         raise DerivSessionError("DERIV_WS_URL_MISSING")
-    parts = urlsplit(url)
-    if parts.scheme != "wss" or parts.hostname != MODERN_OPTIONS_WS_HOST:
+    try:
+        parts = urlsplit(url)
+        port = parts.port
+    except (TypeError, ValueError):
+        raise DerivSessionError("DERIV_WS_URL_INVALID") from None
+    if (
+        parts.scheme != "wss"
+        or parts.hostname != MODERN_OPTIONS_WS_HOST
+        or parts.username is not None
+        or parts.password is not None
+        or port not in (None, 443)
+        or parts.fragment
+    ):
         raise DerivSessionError("LEGACY_OR_UNSUPPORTED_DERIV_WS_ENDPOINT")
     path = parts.path.rstrip("/")
-    prefix = MODERN_OPTIONS_WS_PREFIX.rstrip("/")
-    if not path.startswith(prefix + "/"):
+    prefix = MODERN_OPTIONS_WS_PREFIX.rstrip("/") + "/"
+    if not path.startswith(prefix):
         raise DerivSessionError("DERIV_OPTIONS_WS_PATH_INVALID")
-    environment = path.rsplit("/", 1)[-1].lower()
+    environment = path[len(prefix):].lower()
     if environment not in {"real", "demo"}:
-        raise DerivSessionError("UNKNOWN_DERIV_WS_ENVIRONMENT")
+        raise DerivSessionError("DERIV_OPTIONS_WS_PATH_INVALID")
     if expected_environment and environment != expected_environment.lower():
         raise DerivSessionError("AUTHENTICATED_URL_ENVIRONMENT_MISMATCH")
     return True
@@ -121,7 +132,7 @@ def get_authenticated_ws_url(
     token = (
         bearer_token
         if bearer_token is not None
-        else get_optional_secret("DERIV_AUTH_TOKEN")
+        else (get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT"))
     )
     application_id = (
         app_id
