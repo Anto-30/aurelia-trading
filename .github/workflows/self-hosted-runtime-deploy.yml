@@ -298,6 +298,12 @@ jobs:
              sudo cp -a /tmp/aurelia-release-$GITHUB_SHA/. /opt/aurelia/releases/$GITHUB_SHA/
              rm -rf /tmp/aurelia-release-$GITHUB_SHA"
 
+          # Every deployment starts with an empty attestation set. VERIFY_ONLY must not inherit old LIVE attestations.
+          ssh -F "$HOME/.ssh/config" aurelia-target \
+            "set -euo pipefail
+             sudo install -d -o root -g 10001 -m 750 /var/lib/aurelia-attestations
+             sudo find /var/lib/aurelia-attestations -type f -name '*.json' -delete"
+
           if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
             scp -F "$HOME/.ssh/config" "$AURELIA_ATTESTATION_ARCHIVE" "aurelia-target:/tmp/aurelia-attestations-$GITHUB_SHA.tar.gz"
             ssh -F "$HOME/.ssh/config" aurelia-target \
