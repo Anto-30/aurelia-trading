@@ -130,8 +130,9 @@ def _write_runtime_deriv_evidence(snapshot, config_hash: str) -> None:
     enriched["record_hash"] = payload_sha256(
         {key: value for key, value in enriched.items() if key != "record_hash"}
     )
-    default_path = str(ROOT / "artifacts" / "deriv_authenticated_session.json")
-    output = Path(os.getenv("AURELIA_DERIV_EVIDENCE_PATH", default_path))
+    output = state_path(
+        "AURELIA_DERIV_EVIDENCE_PATH", "deriv_authenticated_session.json"
+    )
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_name(output.name + ".tmp")
     temporary.write_text(
