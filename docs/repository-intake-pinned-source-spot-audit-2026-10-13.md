@@ -92,3 +92,17 @@ The inspected Claude settings include command hooks that invoke a project-local 
 At pinned commit `a95518f0cb67e86230119da40429169bc4c35a6f`, the inspected `.claude/settings.json` blob `976575dbb2eaa1f03c9d4f954a563e51b38fd81c` contains command hooks for prompt submission and tool use. A post-edit hook invokes `npx prettier --write`; another hook invokes `npm install` automatically when a `package.json` file changes. This is an example configuration, not a passive collection of markdown prompts: importing it can cause shell commands and dependency installation during agent operations.
 
 The root `LICENSE` path returned 404 at the pinned revision. That alone does not prove the repository has no license elsewhere, but reuse rights remain unconfirmed. **Decision:** keep reference-only, do not copy or redistribute code until license terms are established, and do not import the hook settings into AURELIA. Review hook scripts and package-install behavior independently even if a license is later found.
+
+
+## Scrapling Fetch MCP: URL destination and resource-exhaustion follow-up
+
+**Pinned upstream commit:** `8ed4c0df0979ca758e6e13ae84e6cdbe129e1a7a`  
+**Inspected files:** `src/scrapling_fetch_mcp/_fetcher.py` blob `5a14a816f3b5b95f50018f2432f9d424522b1f5a`; `src/scrapling_fetch_mcp/_scrapling.py` blob `a39c9428deb89d9955194254096e2bfd5baa0531`; `src/scrapling_fetch_mcp/mcp.py` blob `d3cde9c0a8f7c44ca0db6997cedc4bee3cb11b67`.
+
+A deeper read of the pinned fetch path confirms that `_require_web_url` checks only the URL scheme (`http` or `https`). In the inspected files, there is no destination-IP policy for loopback, private, link-local or cloud metadata ranges, nor an explicit redirect-target/DNS-rebinding check before the fetcher follows a destination. The actual guarantees of the transitive Scrapling fetchers have not been exhaustively established, so this is a missing application-level control requiring verification, not proof that every redirect is exploitable.
+
+The pattern-search tool applies Python's regular-expression engine to the full fetched document using `list(compile(pattern).finditer(content))`. Output truncation happens after the search. The exposed tool arguments do not show explicit upper bounds for `search_pattern`, `context_chars`, `max_length`, or `start_index`. This creates a potential resource-exhaustion/regex-denial-of-service surface when a caller can supply adversarial patterns or extreme parameters; it needs bounded inputs, safer matching or execution time/resource limits, plus tests.
+
+The server uses MCP stdio transport in the inspected entrypoint, which reduces network-listener exposure in that path but does not remove risks from a connected model/client requesting unsafe destinations or expensive patterns. Do not use it with broker credentials or trusted internal network access. Before reconsideration, test loopback/private/link-local/metadata URLs, redirects to forbidden targets, DNS changes between validation and connection, oversized arguments, pathological regex patterns, response-size limits, fetch timeouts, concurrency/resource ceilings, and outbound egress restrictions in an isolated environment.
+
+**Decision unchanged:** `BLOCKED_PENDING_SSRF_AUTH_AND_EGRESS_TESTS`; no install or runtime test was performed during this source review.
