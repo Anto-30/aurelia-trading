@@ -193,15 +193,6 @@ def authorization_gate(
     if execution_mode == "LIVE":
         # A live order must carry a fresh, verified minimum stake from the
         # broker for this exact contract. The local default is not broker proof.
-        try:
-            broker_minimum_value = (
-                float(broker_minimum_stake)
-                if not isinstance(broker_minimum_stake, bool)
-                and isinstance(broker_minimum_stake, (int, float))
-                else float("nan")
-            )
-        except (TypeError, ValueError, OverflowError):
-            broker_minimum_value = float("nan")
         # A numeric value is not evidence of broker provenance, freshness, account
         # binding, currency binding, or exact-contract binding. The production
         # Deriv adapter does not yet issue a source-bound minimum-stake evidence
