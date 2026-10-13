@@ -6,7 +6,7 @@ from math import isfinite
 from typing import Any
 
 
-FIXED_MICRO_STAKE_USD = Decimal("1.00")
+FIXED_MICRO_STAKE_USD = Decimal("0.35")
 
 
 @dataclass(frozen=True)
@@ -38,7 +38,7 @@ def evaluate_micro_capital_stake(
     kill_switch_clear: bool,
     canonical_release_gate_passed: bool,
 ) -> MicroStakeDecision:
-    """Fail-closed decision helper for the separately governed $1 micro mode.
+    """Fail-closed decision helper for the separately governed $0.35 micro mode.
 
     This helper is a policy pre-check, not a live-authority decision. The caller
     must obtain source-bound broker evidence and pass the canonical release gate.
@@ -74,7 +74,7 @@ def evaluate_micro_capital_stake(
     if exact_contract_quote_verified is not True:
         reasons.append("EXACT_CONTRACT_QUOTE_UNVERIFIED")
     if quote is None or quote != FIXED_MICRO_STAKE_USD:
-        reasons.append("QUOTED_STAKE_NOT_EXACTLY_USD_1")
+        reasons.append("QUOTED_STAKE_NOT_EXACTLY_USD_0_35")
     if max_loss is None or max_loss < 0 or max_loss > FIXED_MICRO_STAKE_USD:
         reasons.append("CONTRACT_MAX_LOSS_INVALID_OR_OVER_LIMIT")
     if balance is not None and quote is not None and balance < quote:
