@@ -602,6 +602,7 @@ class CapitalPlaneExecutor:
         exposure_approved: bool = False,
         proposal_id: str | None = None,
         mode: str = "LIVE",
+        broker_minimum_stake: float | None = None,
     ) -> tuple[GateResult, AuthorizationContext | None, OrderIntent | None]:
         release = read_live_release(self.live_lock_path)
         if mode == "LIVE" and not release.may_move_capital:
@@ -645,6 +646,7 @@ class CapitalPlaneExecutor:
             market_data_validated=market_data_validated,
             exposure_approved=exposure_approved,
             execution_mode=mode,
+            broker_minimum_stake=broker_minimum_stake,
         )
         self._log(
             "AUTHORIZATION_DECISION",
@@ -691,6 +693,7 @@ class CapitalPlaneExecutor:
         probability_drift_ok: bool = False,
         market_data_validated: bool = False,
         exposure_approved: bool = False,
+        broker_minimum_stake: float | None = None,
     ) -> tuple[GateResult, AuthorizationContext | None]:
         """Evaluate a fresh live control chain before clearing the startup kill switch."""
         release = read_live_release(self.live_lock_path)
@@ -721,6 +724,8 @@ class CapitalPlaneExecutor:
             probability_drift_ok=probability_drift_ok,
             market_data_validated=market_data_validated,
             exposure_approved=exposure_approved,
+            execution_mode="LIVE",
+            broker_minimum_stake=broker_minimum_stake,
         )
         self._log(
             "PREFLIGHT_AUTHORIZATION",
