@@ -136,7 +136,7 @@ class DerivSessionManager:
         request = Request(url, method=method, headers=headers)
         try:
             # B310: URL scheme/host/port are allowlisted immediately above.
-            with urlopen(request, timeout=self.timeout_seconds) as response:  # nosec B310 — allowlisted HTTPS host/port above
+            with urlopen(request, timeout=self.timeout_seconds) as response:  # nosec B310
                 payload = json.loads(response.read().decode("utf-8"))
         except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
             raise DerivSessionManagerError("DERIV_ACCOUNT_REQUEST_FAILED") from exc
