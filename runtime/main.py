@@ -410,8 +410,8 @@ class HealthHandler(BaseHTTPRequestHandler):
 
 
 def start_server(port: int) -> ThreadingHTTPServer:
-    # The deployer publishes this port on host loopback only; container probes need the bridge interface.
-    server = ThreadingHTTPServer((os.getenv("AURELIA_HEALTH_HOST", "0.0.0.0"), port), HealthHandler)
+    # Bind locally by default; container deployments explicitly opt into bridge-interface probes.
+    server = ThreadingHTTPServer((os.getenv("AURELIA_HEALTH_HOST", "127.0.0.1"), port), HealthHandler)
     Thread(target=server.serve_forever, name="aurelia-health", daemon=True).start()
     return server
 
