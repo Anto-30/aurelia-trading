@@ -74,3 +74,21 @@ A second pass over the same pinned `server/modules/auth/auth.middleware.ts` (blo
 Required gates before reconsideration: fail startup for unsafe auth-mode/configuration combinations; tests for unset API_KEY, invalid/missing tokens, platform-mode behavior, WebSocket and SSE paths; verify query-token redaction and restrictive cache/referrer/logging headers; and test auth on every terminal, file, Git, plugin, session, and WebSocket route. The source spot check is not sufficient to establish route coverage.
 
 **Decision unchanged:** `BLOCKED_PENDING_REGRESSION_TESTS_AND_FULL_SOURCE_REVIEW`; sandbox-only, no runtime installation. These are risks requiring verification, not a claim that the upstream project is exploitable in every deployment.
+
+
+## Platinum SEO Engine: MCP command and hook risks
+
+**Pinned upstream commit:** `ffdf24da84cd5d52f755f156707d9bd14f7c0135`  
+**Inspected files:** `.mcp.json` blob `3d61ab1934052da771b9da042b0bdbb9bba094b3`; `.claude/settings.json` blob `976575dbb2eaa1f03c9d4f954a563e51b38fd81c`. The repository is AGPL-3.0.
+
+The MCP configuration runs `bash -c`, sources a local `.env` into the child environment, then invokes package names through `npx -y`. It also includes a machine-specific absolute path under `/Users/apple/Downloads/` and local HTTP endpoints. These are not appropriate to copy into AURELIA's shared agent configuration: shell-based launch, environment inheritance and on-demand package resolution create an execution/supply-chain boundary that must be isolated and pinned.
+
+The inspected Claude settings include command hooks that invoke a project-local script, run `npx prettier`, and automatically run `npm install` when a `package.json` file changes. These hooks can execute code in response to agent file edits and should not be imported wholesale into a trading repository. Before any adaptation, review every hook script and matcher, replace implicit package downloads with lockfile-verified installation in a disposable workspace, and test that secrets are not inherited or logged.
+
+**Decision:** marketing reference only, separate workspace; do not copy its MCP configuration or hooks into AURELIA. Require legal review for AGPL reuse and a dedicated security review for any selected component. No commands were executed as part of this review.
+
+## Claude Code Showcase: executable hook behavior
+
+At pinned commit `a95518f0cb67e86230119da40429169bc4c35a6f`, the inspected `.claude/settings.json` blob `976575dbb2eaa1f03c9d4f954a563e51b38fd81c` contains command hooks for prompt submission and tool use. A post-edit hook invokes `npx prettier --write`; another hook invokes `npm install` automatically when a `package.json` file changes. This is an example configuration, not a passive collection of markdown prompts: importing it can cause shell commands and dependency installation during agent operations.
+
+The root `LICENSE` path returned 404 at the pinned revision. That alone does not prove the repository has no license elsewhere, but reuse rights remain unconfirmed. **Decision:** keep reference-only, do not copy or redistribute code until license terms are established, and do not import the hook settings into AURELIA. Review hook scripts and package-install behavior independently even if a license is later found.
