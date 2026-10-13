@@ -76,6 +76,8 @@ sudo install -d -m 700 "$ENV_DIR"
 sudo install -d -m 700 "$DATA_DIR"
 # Move legacy host-owned deployment metadata out of the runtime-writable state volume.
 sudo rm -f "$DATA_DIR/DEPLOYMENT_LINEAGE.json" "$DATA_DIR/DEPLOYED_SOURCE_SHA" "$DATA_DIR/LAST_HEALTH.json"
+sudo rm -rf "$DATA_DIR/attestations"
+sudo install -d -o 10001 -g 10001 -m 700 "$DATA_DIR/attestations"
 sudo chown -R 10001:10001 "$DATA_DIR"
 sudo chmod 700 "$DATA_DIR"
 sudo install -d -o root -g 10001 -m 750 "$ATTESTATION_DIR"
