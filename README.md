@@ -63,9 +63,9 @@ The live lock is currently non-live by design. Passing tests or authenticated-se
 
 ## Probability and stake policy
 
-The hard probability band is **50%–75%**, inclusive, with no clipping. A probability inside the band is insufficient unless calibration, freshness, drift, instrument qualification, and positive net expected value after costs all pass.
+The hard probability band is **55%–75%**, inclusive, with no clipping. A probability inside the band is insufficient unless calibration, freshness, drift, instrument qualification, and positive net expected value after costs all pass.
 
-The starting stake and contract minimum are USD `1.00`. For live purchased contracts, AURELIA requires a verified USD account and computes the stake as 1% of fresh, verified available USD balance, rounded down to cents. The strategy/agent proposal cannot override the deterministic sizing rule. Since the minimum stake is USD `1.00`, a 1% budget cannot fund even the starting stake until verified available balance is at least USD `100.00`. Non-USD accounts and lower balances must remain blocked rather than force a currency or risk-budget exception.
+For live purchased contracts, AURELIA requires a verified USD account, fresh available balance, and a fresh broker-reported minimum stake for the exact contract. It computes the risk budget as 1% of verified available USD balance, rounded down to cents; the broker minimum is never hardcoded as a universal contract floor. The risk budget must be at least the broker-reported minimum, and the proposed stake must equal the deterministic policy-sized amount. For example, a $1.00 minimum requires at least $100.00 verified available balance at a 1% budget; a $1.50 minimum requires at least $150.00. Missing, stale, malformed, or unaffordable minimums block the order. Non-USD accounts and lower balances remain blocked rather than forcing a currency or risk-budget exception.
 
 Full policy: `docs/AURELIA_STAKE_POLICY_2026-10-10.md`.
 
