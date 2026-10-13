@@ -105,7 +105,7 @@ jobs:
           ]
           source_root = pathlib.Path("/tmp/pinned-intake-sources")
           report_root = pathlib.Path("/tmp/pinned-intake-audit")
-          max_archive = 80 * 1024 * 1024
+          max_archive = 256 * 1024 * 1024
           max_total_download = 4 * 1024 * 1024 * 1024
           max_member = 30 * 1024 * 1024
           max_total_uncompressed = 8 * 1024 * 1024 * 1024
