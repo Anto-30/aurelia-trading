@@ -83,7 +83,13 @@ def evaluate_micro_capital_stake(
         reasons.append("OPEN_CONTRACT_LIMIT_EXCEEDED")
     if session_loss is None or session_loss < 0:
         reasons.append("SESSION_LOSS_INVALID")
-    elif session_loss + (max_loss if max_loss is not None else FIXED_MICRO_STAKE_USD) > FIXED_MICRO_STAKE_USD:
+    elif (
+        session_loss >= FIXED_MICRO_STAKE_USD
+        or session_loss + (max_loss if max_loss is not None else FIXED_MICRO_STAKE_USD)
+        > FIXED_MICRO_STAKE_USD
+    ):
+        # Reaching the cap blocks immediately, even if the next contract's
+        # quoted maximum loss is zero or malformed.
         reasons.append("MICRO_SESSION_LOSS_LIMIT_REACHED")
     if transaction_state_reconciled is not True:
         reasons.append("TRANSACTION_RECONCILIATION_REQUIRED")
