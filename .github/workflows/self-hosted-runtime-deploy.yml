@@ -397,10 +397,10 @@ jobs:
           ssh -F "$HOME/.ssh/config" aurelia-target \
             "set -euo pipefail
              sudo test -f /var/lib/aurelia-host/DEPLOYED_SOURCE_SHA
-             test \"$(sudo cat /var/lib/aurelia-host/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
+             test \"\$(sudo cat /var/lib/aurelia-host/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
              sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_DEPLOYMENT_MODE=$DEPLOYMENT_MODE'
              curl --fail --silent --show-error http://127.0.0.1:8080/health
-             test \"$(sudo docker inspect aurelia-runtime --format '{{.HostConfig.RestartPolicy.Name}}')\" = 'unless-stopped'"
+             test \"\$(sudo docker inspect aurelia-runtime --format '{{.HostConfig.RestartPolicy.Name}}')\" = 'unless-stopped'"
 
           if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
             ssh -F "$HOME/.ssh/config" aurelia-target \
