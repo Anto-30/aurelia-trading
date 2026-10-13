@@ -578,9 +578,11 @@ class CapitalPlaneExecutor:
         error = self._proposal_binding_error(intent)
         if error:
             return error
-        assert intent.proposal_id is not None
-        self._proposal_bindings.pop(intent.proposal_id, None)
-        self._consumed_proposal_ids.add(intent.proposal_id)
+        proposal_id = intent.proposal_id
+        if proposal_id is None:
+            return "PROPOSAL_ID_MISSING"
+        self._proposal_bindings.pop(proposal_id, None)
+        self._consumed_proposal_ids.add(proposal_id)
         return None
 
     async def authorize_and_build_intent(
