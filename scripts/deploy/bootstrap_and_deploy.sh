@@ -11,6 +11,8 @@ ENV_FILE="$ENV_DIR/aurelia.env"
 LIVE_SECRET_FILE="$ENV_DIR/aurelia-live-secrets.env"
 READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"
 DATA_DIR="/var/lib/aurelia"
+ATTESTATION_DIR="/var/lib/aurelia-attestations"
+HOST_EVIDENCE_DIR="/var/lib/aurelia-host"
 OPERATOR_RESET_DIR="/run/aurelia"
 IMAGE="aurelia-runtime:$SHA"
 CONTAINER="aurelia-runtime"
@@ -73,6 +75,8 @@ sudo systemctl enable --now docker
 sudo install -d -m 700 "$ENV_DIR"
 sudo install -d -m 700 "$DATA_DIR"
 sudo chown 10001:10001 "$DATA_DIR"
+sudo install -d -o root -g 10001 -m 750 "$ATTESTATION_DIR"
+sudo install -d -m 700 "$HOST_EVIDENCE_DIR"
 sudo install -d -o root -g 10001 -m 750 "$OPERATOR_RESET_DIR"
 sudo install -d -m 755 "$RELEASE_ROOT"
 
@@ -270,6 +274,7 @@ sudo docker run --detach \
   --env LIVE_EXECUTION="$LIVE_EXECUTION" \
   --env GITHUB_SHA="$SHA" \
   --mount "type=bind,src=$DATA_DIR,dst=/var/lib/aurelia" \
+  --mount "type=bind,src=$ATTESTATION_DIR,dst=/var/lib/aurelia/attestations,readonly" \
   --mount "type=bind,src=$OPERATOR_RESET_DIR,dst=/run/aurelia,readonly" \
   --publish 127.0.0.1:8080:8080 \
   "$IMAGE"
@@ -309,7 +314,7 @@ sudo docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{e
 image_id="$(sudo docker inspect "$CONTAINER" --format '{{.Image}}')"
 runtime_source_hash="$(find "$RELEASE_DIR" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}')"
 runtime_health_hash="$(printf '%s' "$health" | sha256sum | awk '{print $1}')"
-cat <<EOF | sudo tee "$DATA_DIR/DEPLOYMENT_LINEAGE.json" >/dev/null
+cat <<EOF | sudo tee "$HOST_EVIDENCE_DIR/DEPLOYMENT_LINEAGE.json" >/dev/null
 {
   "schema": "aurelia.deployment_lineage.v2",
   "source_commit": "$SHA",
@@ -323,12 +328,12 @@ cat <<EOF | sudo tee "$DATA_DIR/DEPLOYMENT_LINEAGE.json" >/dev/null
   "generated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 EOF
-sudo chmod 600 "$DATA_DIR/DEPLOYMENT_LINEAGE.json"
+sudo chmod 600 "$HOST_EVIDENCE_DIR/DEPLOYMENT_LINEAGE.json"
 
 sudo systemctl restart aurelia-runtime-watchdog.service
 sudo ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
-printf '%s\n' "$SHA" | sudo tee "$DATA_DIR/DEPLOYED_SOURCE_SHA" >/dev/null
-printf '%s\n' "$health" | sudo tee "$DATA_DIR/LAST_HEALTH.json" >/dev/null
+printf '%s\n' "$SHA" | sudo tee "$HOST_EVIDENCE_DIR/DEPLOYED_SOURCE_SHA" >/dev/null
+printf '%s\n' "$health" | sudo tee "$HOST_EVIDENCE_DIR/LAST_HEALTH.json" >/dev/null
 
 echo "AURELIA_RUNTIME_DEPLOYMENT=SUCCESS"
 echo "AURELIA_SOURCE_COMMIT=$SHA"
