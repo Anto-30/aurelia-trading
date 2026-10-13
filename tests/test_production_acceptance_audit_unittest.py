@@ -7,6 +7,7 @@ from pathlib import Path
 from scripts.deriv_auth_prerequisites import build_evidence
 from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_ws_url
 from runtime.adapters.session_manager import DerivSessionManager, DerivSessionManagerError
+from runtime.core.paths import state_path
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -118,6 +119,34 @@ class DerivEndpointHardeningTests(unittest.TestCase):
                 )
             open_url.assert_not_called()
 
+
+
+class DurableStatePathTests(unittest.TestCase):
+    def test_state_path_defaults_outside_os_temp_directory(self):
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(
+                str(state_path("AURELIA_JOURNAL_PATH", "events.ndjson")),
+                "/var/lib/aurelia/events.ndjson",
+            )
+
+    def test_state_path_honors_state_directory_and_explicit_override(self):
+        with patch.dict("os.environ", {"AURELIA_STATE_DIR": "/data/aurelia"}, clear=True):
+            self.assertEqual(
+                str(state_path("AURELIA_JOURNAL_PATH", "events.ndjson")),
+                "/data/aurelia/events.ndjson",
+            )
+        with patch.dict(
+            "os.environ",
+            {
+                "AURELIA_STATE_DIR": "/data/aurelia",
+                "AURELIA_JOURNAL_PATH": "/custom/journal.ndjson",
+            },
+            clear=True,
+        ):
+            self.assertEqual(
+                str(state_path("AURELIA_JOURNAL_PATH", "events.ndjson")),
+                "/custom/journal.ndjson",
+            )
 
 if __name__ == "__main__":
     unittest.main()
