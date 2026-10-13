@@ -6,7 +6,7 @@ ENV AURELIA_HEALTH_HOST=0.0.0.0
 WORKDIR /app
 COPY pyproject.toml requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt \
-    && useradd --system --uid 10001 --create-home aurelia \
+    && useradd --system --uid 10001 --user-group --create-home aurelia \
     && mkdir -p /var/lib/aurelia \
     && chown aurelia:aurelia /var/lib/aurelia
 COPY runtime ./runtime
