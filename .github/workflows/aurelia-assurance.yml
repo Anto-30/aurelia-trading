@@ -222,12 +222,21 @@ jobs:
           AURELIA_VERIFY_DERIV_AUTH: "false"
           AURELIA_CONTINUOUS_RUNTIME: "false"
           AURELIA_RUN_ONCE: "false"
+          AURELIA_STATE_DIR: /tmp/aurelia
         run: |
+          set -euo pipefail
+          mkdir -p /tmp/aurelia
           python -m runtime.main >/tmp/aurelia-worker.log 2>&1 &
           PID=$!
           trap 'kill $PID || true' EXIT
-          sleep 2
-          curl --fail --silent --show-error http://127.0.0.1:8080/health
+          for attempt in $(seq 1 15); do
+            if curl --fail --silent --show-error http://127.0.0.1:8080/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/aurelia-worker.log
+          exit 1
       - name: Run repository certification gate
         id: certification
         continue-on-error: true
