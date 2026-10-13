@@ -96,3 +96,16 @@ Keep one canonical AURELIA repository, one capital plane, one release authority 
 3. Review ScanCode JSON per file and resolve mixed/AGPL/proprietary expressions with a documented license decision.
 4. Re-run the full audit on the latest PR head, inspect uploaded reports, and ensure every acceptance criterion passes or has an explicit fail-closed disposition.
 5. Complete isolated component tests and obtain authorized independent human review. Keep the PR draft until then; do not merge or alter the capital/execution safety boundary.
+
+
+## Current-head AURELIA assurance evidence (2026-10-13 UTC)
+
+- Assurance run [38433714926](https://github.com/Anto-30/aurelia-trading/actions/runs/38433714926) for head `2378417e6c5d76f3a6aa8a61aff94c15c190b61d` was still reported in progress when polled, but its job log had reached the certification/release-gate steps and returned `CERTIFICATION_RESULT=NOT_READY`, `FINAL_EXECUTION_AUTHORIZATION=FALSE`, and `LIVE_EXECUTION=BLOCKED`.
+- The certification output reports missing evidence artifacts including broker lifecycle, recovery matrix, 3600-second soak, prospective out-of-sample evaluation, calibration, execution economics, security audit, deployment, strategy eligibility, and additional runtime-cycle evidence. The log also states `DERIV_AUTH_CONFIGURED=false`.
+- `scripts/live_release_gate.py` returned `LIVE_RELEASE_GATE=BLOCKED` with reason `config/LIVE_LOCK.yaml disables live trading`. This is the intended fail-closed outcome while genuine evidence and authorized broker verification are absent. Do not change LIVE_LOCK or manufacture evidence to satisfy CI.
+- On the same head, Agent Federation Audit, gstack Workflow Federation Assurance, and Agent Continuity Watchdog each completed successfully. Those passing policy checks do not substitute for missing runtime/broker evidence or the failed supply-chain gate.
+- The assurance output is a separate blocker from the external-repository intake: repository registration and CI wiring do not establish Deriv authentication, production deployment health, strategy qualification, or live-trading authorization.
+
+### Closure rule
+
+The intake PR can only be considered for merge after the source inventory, OSV, license, isolated component-test and independent review gates are resolved. Live execution requires its own authenticated Deriv verify-only evidence, reconciled broker lifecycle, calibration/OOS/economic evidence, recovery and soak evidence, runtime/deployment verification, and explicit release approval. Keep the PR draft and live execution blocked until those gates are independently verified.
