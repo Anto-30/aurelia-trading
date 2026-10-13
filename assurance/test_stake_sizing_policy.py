@@ -313,7 +313,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
         )
         self.assertFalse(gate.allowed)
         self.assertIsNone(context)
-        self.assertIn("BROKER_MINIMUM_STAKE_UNVERIFIED", gate.reason_codes)
+        self.assertIn("BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED", gate.reason_codes)
 
 
 if __name__ == "__main__":
