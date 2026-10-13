@@ -6446,7 +6446,7 @@
       "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
       "capital_authority": false,
       "physical_runtime_install": "NOT_CLAIMED",
-      "security_review_status": "BLOCKED_PENDING_ADVISORY_RECONCILIATION",
+      "security_review_status": "BLOCKED_PENDING_REGRESSION_TESTS_AND_FULL_SOURCE_REVIEW",
       "trust": "UPSTREAM_REVIEW_PENDING",
       "capabilities": [
         "web-ui",
@@ -6454,7 +6454,7 @@
         "git-operations",
         "agent-session-ui"
       ],
-      "integration_note": "Blocked pending exact-version security advisory reconciliation and regression tests. Root license file is AGPL-3.0; review licensing obligations."
+      "integration_note": "Pinned source spot-check found mitigations in inspected auth and Git routes (generated JWT secret fallback, WebSocket user-existence check, shell:false Git spawner), but full route/terminal/plugin/filesystem review and regression tests remain unperformed. Keep sandbox-only; AGPL-3.0-or-later review required."
     },
     {
       "repo": "ChrisWiles/claude-code-showcase",
@@ -6578,7 +6578,7 @@
         "web-extraction",
         "browser-fetchers"
       ],
-      "integration_note": "Blocked pending auth, SSRF/redirect/DNS revalidation, private-network denylist, time/size limits and low-volume tests."
+      "integration_note": "Pinned source uses stdio MCP transport and HTTP(S)-scheme checks, but no loopback/private/link-local/metadata IP denial or redirect/DNS revalidation was found in inspected fetcher. Require isolated egress controls, redirect checks, resource limits, SBOM and dependency audit before any trial."
     },
     {
       "repo": "popiliadam/platinum-seo-engine",
@@ -7182,7 +7182,7 @@
         }
       ],
       "pin_source": "GitHub API default-branch HEAD queried 2026-10-13 UTC",
-      "security_review_status": "PENDING_OR_BLOCKED_PER_REPOSITORY",
+      "security_review_status": "PENDING_OR_BLOCKED_PER_REPOSITORY; PINNED_SOURCE_SPOT_AUDIT_ADDED_2026-10-13",
       "runtime_installation": "NOT_CLAIMED",
       "agent_skill_federation_update": "NOT_APPLICABLE: candidates are not admitted as installed agent/skill/plugin sources",
       "capital_authority": false
