@@ -106,6 +106,9 @@ def main() -> int:
             failures.append("BROKER_MINIMUM_STAKE_SOURCE_NOT_CONTRACT_SPECIFIC")
         if "broker_minimum_stake: float | None = None" not in authority or "BROKER_MINIMUM_STAKE_UNVERIFIED" not in authority:
             failures.append("RUNTIME_BROKER_MINIMUM_STAKE_GATE_MISSING")
+        executor = read("runtime/broker/executor.py")
+        if executor.count("broker_minimum_stake=broker_minimum_stake") < 2:
+            failures.append("EXECUTOR_BROKER_MINIMUM_STAKE_NOT_PROPAGATED")
 
     # Scan text files for obvious credential material. This is deliberately
     # conservative: false positives are reported for human review rather than
