@@ -409,7 +409,7 @@ class HealthHandler(BaseHTTPRequestHandler):
 
 
 def start_server(port: int) -> ThreadingHTTPServer:
-    server = ThreadingHTTPServer((os.getenv("AURELIA_HEALTH_HOST", "127.0.0.1"), port), HealthHandler)
+    server = ThreadingHTTPServer((os.getenv("AURELIA_HEALTH_HOST", "0.0.0.0"), port), HealthHandler)  # nosec B104 — container service must accept platform health probes
     Thread(target=server.serve_forever, name="aurelia-health", daemon=True).start()
     return server
 
