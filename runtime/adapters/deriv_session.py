@@ -144,6 +144,7 @@ def get_authenticated_ws_url(
         headers=headers,
     )
     try:
+        # B310: OTP_ENDPOINT is a module constant pinned to the Deriv HTTPS API host.
         with urlopen(request, timeout=timeout_seconds) as response:
             payload = json.loads(response.read().decode("utf-8"))
     except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
