@@ -75,7 +75,7 @@ def evaluate_micro_capital_stake(
         reasons.append("EXACT_CONTRACT_QUOTE_UNVERIFIED")
     if quote is None or quote != FIXED_MICRO_STAKE_USD:
         reasons.append("QUOTED_STAKE_NOT_EXACTLY_USD_0_35")
-    if max_loss is None or max_loss < 0 or max_loss > FIXED_MICRO_STAKE_USD:
+    if max_loss is None or max_loss <= 0 or max_loss > FIXED_MICRO_STAKE_USD:
         reasons.append("CONTRACT_MAX_LOSS_INVALID_OR_OVER_LIMIT")
     if balance is not None and quote is not None and balance < quote:
         reasons.append("STAKE_UNAFFORDABLE")
