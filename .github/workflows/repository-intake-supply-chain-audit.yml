@@ -148,7 +148,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          scancode --classify --license --copyright --package --summary --processes 2 --timeout 120 --json-pp /tmp/pinned-intake-audit/scancode-report.json /tmp/pinned-intake-sources > /tmp/pinned-intake-audit/scancode.log 2>&1
+          scancode --classify --license --copyright --processes 4 --timeout 60 --json-pp /tmp/pinned-intake-audit/scancode-report.json /tmp/pinned-intake-sources > /tmp/pinned-intake-audit/scancode.log 2>&1
           status=$?
           echo "$status" > /tmp/pinned-intake-audit/scancode.exit
           echo "ScanCode exit status: $status"
