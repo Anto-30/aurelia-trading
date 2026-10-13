@@ -372,7 +372,8 @@
       "supporting_agents": [
         "ClaudeCode",
         "PlaywrightCLI",
-        "JEV"
+        "JEV",
+        "GrokBot"
       ],
       "mode_default": "SANDBOX_ONLY",
       "rationale": "Agent UIs with terminal, session, or remote-control surfaces require security-first review before isolated evaluation."
@@ -388,7 +389,8 @@
       "supporting_agents": [
         "ClaudeCode",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT"
       ],
       "mode_default": "SANDBOX_ONLY",
       "rationale": "CDP/browser-control tools require disposable profiles, strict target restrictions, and no authenticated broker sessions."
