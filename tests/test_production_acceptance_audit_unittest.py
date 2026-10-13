@@ -1,9 +1,12 @@
 import subprocess
 import sys
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from scripts.deriv_auth_prerequisites import build_evidence
+from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_ws_url
+from runtime.adapters.session_manager import DerivSessionManager, DerivSessionManagerError
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -66,6 +69,54 @@ class DerivAuthPrerequisitesAliasTests(unittest.TestCase):
         self.assertFalse(result["configured"])
         self.assertFalse(result["requirements"]["expected_currency_present"])
         self.assertNotIn("PAT_SECRET", repr(result))
+
+
+class DerivEndpointHardeningTests(unittest.TestCase):
+    def test_account_id_path_injection_is_rejected_before_network(self):
+        with patch("runtime.adapters.deriv_session.urlopen") as open_url:
+            with self.assertRaisesRegex(DerivSessionError, "ACCOUNT_ID_INVALID"):
+                get_authenticated_ws_url(
+                    "CR123/../../attacker?x=1",
+                    bearer_token="test-token",
+                    app_id="test-app",
+                )
+            open_url.assert_not_called()
+
+    def test_non_deriv_host_is_rejected_before_sending_bearer_token(self):
+        manager = DerivSessionManager(
+            expected_loginid="CR123",
+            expected_environment="real",
+            expected_currency="USD",
+        )
+        with patch("runtime.adapters.session_manager.urlopen") as open_url:
+            with self.assertRaisesRegex(
+                DerivSessionManagerError, "DERIV_ACCOUNT_ENDPOINT_INVALID"
+            ):
+                manager._request_json(
+                    method="GET",
+                    url="https://attacker.example/accounts",
+                    bearer_token="test-token",
+                    app_id="test-app",
+                )
+            open_url.assert_not_called()
+
+    def test_malformed_port_is_rejected_without_leaking_parser_error(self):
+        manager = DerivSessionManager(
+            expected_loginid="CR123",
+            expected_environment="real",
+            expected_currency="USD",
+        )
+        with patch("runtime.adapters.session_manager.urlopen") as open_url:
+            with self.assertRaisesRegex(
+                DerivSessionManagerError, "DERIV_ACCOUNT_ENDPOINT_INVALID"
+            ):
+                manager._request_json(
+                    method="GET",
+                    url="https://api.derivws.com:invalid/accounts",
+                    bearer_token="test-token",
+                    app_id="test-app",
+                )
+            open_url.assert_not_called()
 
 
 if __name__ == "__main__":
