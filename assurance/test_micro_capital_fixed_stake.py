@@ -36,7 +36,7 @@ class MicroCapitalPolicyTests(unittest.TestCase):
         result = evaluate_micro_capital_stake(**valid_inputs())
         self.assertTrue(result.allowed)
         self.assertEqual(result.stake, Decimal("0.35"))
-        self.assertAlmostEqual(float(result.loss_fraction), 1 / 1.45, places=6)
+        self.assertAlmostEqual(float(result.loss_fraction), 0.35 / 1.45, places=6)
         self.assertIn("MICRO_STAKE_POLICY_PASSED_RELEASE_GATE_STILL_REQUIRED", result.reason_codes)
 
     def test_broker_minimum_above_035_is_not_forced_down(self):
