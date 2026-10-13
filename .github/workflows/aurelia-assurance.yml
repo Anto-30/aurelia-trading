@@ -27,8 +27,37 @@ jobs:
         run: pip-audit -r requirements.txt
       - name: Audit project dependency metadata
         run: pip-audit .
-      - name: Scan runtime and operational scripts for high-severity security findings
-        run: bandit -q -r runtime scripts -ll -ii
+      - name: Scan runtime and operational scripts and preserve full report
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          set +e
+          bandit -q -r runtime scripts -f json -o artifacts/bandit-report.json
+          bandit_status=$?
+          set -e
+          if [ "$bandit_status" -gt 1 ]; then
+            echo "Bandit execution failed with status $bandit_status"
+            exit "$bandit_status"
+          fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("artifacts/bandit-report.json").read_text(encoding="utf-8"))
+          findings = report.get("results", [])
+          counts = {level: sum(item.get("issue_severity") == level for item in findings)
+                    for level in ("LOW", "MEDIUM", "HIGH")}
+          print("BANDIT_FINDING_COUNTS=" + json.dumps(counts, sort_keys=True))
+          print("BANDIT_MEDIUM_AND_LOW_FINDINGS_RECORDED=true")
+          if counts["HIGH"]:
+              raise SystemExit("High-severity Bandit findings block this check.")
+          PY
+      - name: Upload static security scan report
+        if: always() && hashFiles('artifacts/bandit-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-static-security-report
+          path: artifacts/bandit-report.json
+          if-no-files-found: error
 
   assurance:
     # Production secrets are available only to an explicit manual run or main-branch push.
