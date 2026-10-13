@@ -26,6 +26,7 @@ from runtime.core.health import (
 )
 from runtime.core.journal import AppendOnlyJournal
 from runtime.core.models import RuntimeState
+from runtime.core.paths import state_path
 from runtime.core.release_gate import read_live_release
 from runtime.core.runtime_config import load_config_hash
 from runtime.core.secrets import get_optional_secret, validate_secrets_at_startup
@@ -152,7 +153,7 @@ def _write_readiness_report(output: Path, report: dict) -> None:
 
 async def _readiness_publisher(health: "HealthSnapshot", journal: AppendOnlyJournal, config_hash: str) -> None:
     """Continuously publish local readiness; an evaluation error becomes a blocked report."""
-    output = Path(os.getenv("AURELIA_READINESS_PATH", "/tmp/aurelia/AURELIA_READINESS.json"))
+    output = state_path("AURELIA_READINESS_PATH", "AURELIA_READINESS.json")
     interval = max(2.0, float(os.getenv("AURELIA_READINESS_REFRESH_SECONDS", "5")))
     while True:
         try:
@@ -408,7 +409,7 @@ class HealthHandler(BaseHTTPRequestHandler):
 
 
 def start_server(port: int) -> ThreadingHTTPServer:
-    server = ThreadingHTTPServer(("0.0.0.0", port), HealthHandler)
+    server = ThreadingHTTPServer((os.getenv("AURELIA_HEALTH_HOST", "127.0.0.1"), port), HealthHandler)
     Thread(target=server.serve_forever, name="aurelia-health", daemon=True).start()
     return server
 
@@ -417,7 +418,7 @@ async def main() -> None:
     validate_secrets_at_startup()
     server = start_server(int(os.getenv("PORT", "8080")))
     journal = AppendOnlyJournal(
-        os.getenv("AURELIA_JOURNAL_PATH", "/tmp/aurelia/aurelia-events.ndjson")
+        str(state_path("AURELIA_JOURNAL_PATH", "aurelia-events.ndjson"))
     )
     config_hash = load_config_hash(ROOT)
     release = read_live_release(ROOT / "config" / "LIVE_LOCK.yaml")
@@ -435,7 +436,7 @@ async def main() -> None:
     )
     HealthHandler.health = health
     HealthHandler.state = machine.state
-    performance_path = os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/tmp/aurelia/agent-performance.json")
+    performance_path = str(state_path("AURELIA_AGENT_PERFORMANCE_PATH", "agent-performance.json"))
     HealthHandler.performance = PersistentAgentPerformance(performance_path)
     public_probe_failed = False
     authenticated_probe_failed = False
