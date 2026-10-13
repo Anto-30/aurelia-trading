@@ -7,6 +7,7 @@ on:
       - "config/external_repo_federation.json"
       - "config/repo_agent_routing.json"
       - "docs/repository-intake-**"
+      - "docs/intake/**"
       - ".github/workflows/repository-intake-supply-chain-audit.yml"
   workflow_dispatch:
 
@@ -67,13 +68,47 @@ jobs:
               ("morluto/rea", "93e29d242ae60a3d2daec355e7a31b4a0bdd4234"),
               ("Adamant-im/adamant-tradebot", "9f81feaab1404961a764ddbecc6cc225c94e0b10"),
               ("storytold/wordcraft", "159b84f54c74e9e82fb3109b758ae7dd6f4e3ab0"),
+              ("infiniflow/ragflow", "d2ede485bfe87dc42b6c23598a2e36ab8f964030"),
+              ("raga-ai-hub/RagaAI-Catalyst", "ab67893310891140211280a496402003e52cdab5"),
+              ("HKUDS/RAG-Anything", "da6e2d87a7d3f2746c4541f59953b8764213f6a2"),
+              ("HKUDS/LightRAG", "4d0afc1bc36e6a34d4a5895b68efe9413748627a"),
+              ("NirDiamant/RAG_Techniques", "cbf9e528206bbb5cd23970ff612d12c1074e02dc"),
+              ("souravkl11/raganork", "4161bec86639ae8234d81ed8fd7f7dcf4099e2e2"),
+              ("datawhalechina/all-in-rag", "cec956e80ae28d6c0ca84c9d39dddcf61ad633fd"),
+              ("vibrantlabsai/ragas", "298b68274234c060deacab3cf5fb52aa3a20e885"),
+              ("bragai/bRAG-langchain", "33aca8325f728ab3e96988add9f8bdd2987dadc6"),
+              ("GiovanniPasq/agentic-rag-for-dummies", "f0d9a3c89adc7ebd146ffe173057fe013dd41739"),
+              ("str4d/rage", "b5b68c4f4f7ea5c368bc060f6fe0237549c3a13f"),
+              ("Azure-Samples/rag-postgres-openai-python", "2c23c488bb8698159739b0a01c22396b788f7de6"),
+              ("Andrew-Jang/RAGHub", "bd7f46a3cb47ea78ba5044b74cf166f9c5b9fef9"),
+              ("LibreChat-AI/rag-api", "c4e5cbf79fcece1df9adfff5dfed983a5990ca9f"),
+              ("rag-web-ui/rag-web-ui", "905fb04669ae6f2a0cb3690d82a547b860e80dd4"),
+              ("datawhalechina/hello-agents", "930c0b2bc80880c24ad0eca17de23fe9680c8a5f"),
+              ("mll-lab-nu/RAGEN", "d97bb3284e99568adfd44ee15c736d7685c07512"),
+              ("RUC-NLPIR/FlashRAG", "f7be4d976b10e2d590451533486c03761c29f6b9"),
+              ("datawhalechina/happy-llm", "1e0b3a1e6f8936b8ba4bbd0673e8e2227d196c96"),
+              ("patchy631/ai-engineering-hub", "be534adc47ae3357253025d6e0ab769b465086d7"),
+              ("datawhalechina/llm-universe", "77beb748047e8a0d8ff708716606a8e0b132dc45"),
+              ("OSU-NLP-Group/HippoRAG", "d5c8329422e0a0b834a15874545cb6a74b4f9b26"),
+              ("honeyandme/RAGQnASystem", "6d91e2ec76f70dd604b8a897a63b2ac6fba3ec95"),
+              ("langchain-ai/rag-from-scratch", "1fdb7d0e4f1d3e731c8397332452715512f18667"),
+              ("nageoffer/ragent", "34b438d3f2ef356ad49a28becb058b1d69985fae"),
+              ("VectifyAI/PageIndex", "af92d9658a6a9c0ae31171b43198db28951af2f4"),
+              ("Marker-Inc-Korea/AutoRAG", "5dd4066340e8f3cc1c8024d5af04062b9e46f717"),
+              ("OpenBMB/UltraRAG", "185e2032d9f134099405b8b483edbbad95274080"),
+              ("microsoft/graphrag", "5faaaf4f5685fa2056fa8c3bf9342cb089f2942f"),
+              ("vitali87/code-graph-rag", "fb6799e94d99da674d8525b21e2b0f298731f1be"),
+              ("ragapp/ragapp", "f7f88892a92c110853dfa019f2c4a605a4a7b6f5"),
+              ("StarTrail-org/PixelRAG", "b4fe76301465eaee3d8ac75e0bec54664e53c072"),
+              ("souravkl11/raganork-md", "82816b1e1fc5e8c9740f4f37872fe2656fc01251"),
+              ("Shubhamsaboo/awesome-llm-apps", "4bf51ab704fb2c5b3803cd5191b30d7dcdb51dc2"),
           ]
           source_root = pathlib.Path("/tmp/pinned-intake-sources")
           report_root = pathlib.Path("/tmp/pinned-intake-audit")
           max_archive = 80 * 1024 * 1024
-          max_total_download = 1800 * 1024 * 1024
+          max_total_download = 4 * 1024 * 1024 * 1024
           max_member = 30 * 1024 * 1024
-          max_total_uncompressed = 3600 * 1024 * 1024
+          max_total_uncompressed = 8 * 1024 * 1024 * 1024
           max_members_per_archive = 35000
           total_download = total_uncompressed = 0
           manifest_names = {
@@ -309,7 +344,7 @@ jobs:
           if not inv.exists(): problems.append("source inventory missing")
           else:
               report=json.loads(inv.read_text()); repos=report.get("repos",[])
-              if len(repos)!=30: problems.append(f"inventory includes {len(repos)} of 30 pinned repositories")
+              if len(repos)!=64: problems.append(f"inventory includes {len(repos)} of 64 pinned repositories")
               for r in repos:
                   if r.get("errors") or not r.get("archive_sha256"): problems.append(r.get("repo","unknown")+" archive inventory incomplete: "+str(r.get("errors",[])))
           sx=root/"scancode.exit"; sr=root/"scancode-report.json"
