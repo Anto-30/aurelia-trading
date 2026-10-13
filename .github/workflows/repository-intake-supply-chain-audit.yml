@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "config/external_repo_federation.json"
+      - "config/repo_agent_routing.json"
       - "docs/repository-intake-**"
       - ".github/workflows/repository-intake-supply-chain-audit.yml"
   workflow_dispatch:
@@ -19,7 +20,7 @@ jobs:
   pinned-source-audit:
     name: Pinned-source inventory, OSV, and license scan
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 90
     permissions: {}
     steps:
       - name: Set up Python
@@ -46,13 +47,33 @@ jobs:
               ("D4Vinci/Scrapling", "7a684934907a8c7feaafe9ff1ccfd9d45cc26faf"),
               ("cyberchitta/scrapling-fetch-mcp", "8ed4c0df0979ca758e6e13ae84e6cdbe129e1a7a"),
               ("popiliadam/platinum-seo-engine", "ffdf24da84cd5d52f755f156707d9bd14f7c0135"),
+              ("kOs-tile/oracle", "1af1f3a8dc38efca399eb7e296cc8db95e4da929"),
+              ("AstermarkLabs/Oracle", "b0bf5020d7b66acba21ab462da32596a26a59fe7"),
+              ("iruzen-dono/hermes-project-oracle", "fe96bc811dce8b11d7484e30bc8dcd5969c0a0ab"),
+              ("jasperan/orahermes-agent", "027f043c47514972efb40eb9b56a98e59bc47545"),
+              ("gizdusum/hermes-blockchain-oracle", "0f086e3d992e53164c279319d44c93301e9a8be1"),
+              ("dultimateade/hermes", "6ab212b3c58057255a62df75f46b3d9dc06ec916"),
+              ("the-oracle-keeps-the-human-human/hermes-book-oracle", "54170bc05e03ace83554155c53c06106d4623990"),
+              ("shingyusik/oracle-todo", "c4d41f5539727bbbfc5975c8913ed3968d20e0bb"),
+              ("paras200/hermes-anywhere", "fb6d567a41b76f0e124a58629118f35b78e329f0"),
+              ("xl3v3r/hermes-oracle-memory", "bf2199d571d572596f51b2bd946e32b73aa4ffe1"),
+              ("shner-elmo/TradingView-Screener", "5422d9012752353c59a31d13f54ceba55c265d9d"),
+              ("shopsmartai/oracleops", "b273da3f46bb057c5fe2a2009f02db7e6b13fe72"),
+              ("Mathieu2301/TradingView-API", "6a4f8ff9a2b332d0a59dbd27c75201eb84663045"),
+              ("openclaw/openclaw", "28ee33394fe3ae90b74fefeb2ddd9e30649d6432"),
+              ("just-nilux/awesome-tradingview", "03d16ff0366351a0eff3945afba212caa410455b"),
+              ("stablyai/orca", "9f2abd5e70517c4838282595f02d04736c273cf1"),
+              ("Dr-Amp/adaptative-living-library", "9689f7f080a4052469213f4ef474d8ac0dc6e057"),
+              ("morluto/rea", "93e29d242ae60a3d2daec355e7a31b4a0bdd4234"),
+              ("Adamant-im/adamant-tradebot", "9f81feaab1404961a764ddbecc6cc225c94e0b10"),
+              ("storytold/wordcraft", "159b84f54c74e9e82fb3109b758ae7dd6f4e3ab0"),
           ]
           source_root = pathlib.Path("/tmp/pinned-intake-sources")
           report_root = pathlib.Path("/tmp/pinned-intake-audit")
           max_archive = 80 * 1024 * 1024
-          max_total_download = 450 * 1024 * 1024
+          max_total_download = 1800 * 1024 * 1024
           max_member = 30 * 1024 * 1024
-          max_total_uncompressed = 1200 * 1024 * 1024
+          max_total_uncompressed = 3600 * 1024 * 1024
           max_members_per_archive = 35000
           total_download = total_uncompressed = 0
           manifest_names = {
@@ -284,7 +305,7 @@ jobs:
           if not inv.exists(): problems.append("source inventory missing")
           else:
               report=json.loads(inv.read_text()); repos=report.get("repos",[])
-              if len(repos)!=10: problems.append(f"inventory includes {len(repos)} of 10 pinned repositories")
+              if len(repos)!=30: problems.append(f"inventory includes {len(repos)} of 30 pinned repositories")
               for r in repos:
                   if r.get("errors") or not r.get("archive_sha256"): problems.append(r.get("repo","unknown")+" archive inventory incomplete: "+str(r.get("errors",[])))
           sx=root/"scancode.exit"; sr=root/"scancode-report.json"
