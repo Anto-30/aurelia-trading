@@ -128,6 +128,85 @@
   },
   "routing_rules": [
     {
+      "priority": 105,
+      "when": {
+        "category_contains_any": [
+          "oracle-provenance",
+          "market-data-screener",
+          "market-data-api",
+          "blockchain-oracle"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode_default": "RESEARCH_ONLY",
+      "rationale": "Market-data/oracle adapters require provenance, freshness, source terms and fail-closed validation; broker account truth and execution authority remain separate."
+    },
+    {
+      "priority": 104,
+      "when": {
+        "category_contains_any": [
+          "crypto-market-making"
+        ]
+      },
+      "primary_agent": "JEV",
+      "supporting_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode_default": "RESEARCH_ONLY",
+      "rationale": "Trading bot code is restricted to static review and credential-free mock tests until order idempotency, reconciliation, risk caps and kill-switch tests pass."
+    },
+    {
+      "priority": 103,
+      "when": {
+        "category_contains_any": [
+          "agent-gateway",
+          "multi-agent-orchestration",
+          "agent-framework",
+          "agent-terminal-ui",
+          "remote-agent-deployment",
+          "agent-memory",
+          "agent-oracle-python"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "mode_default": "SANDBOX_ONLY",
+      "rationale": "Agent runtime/orchestration sources require isolated execution, least-privilege tools, prompt-injection controls, secret isolation and no release/capital authority."
+    },
+    {
+      "priority": 102,
+      "when": {
+        "category_contains_any": [
+          "unknown-oracle-project",
+          "unknown-library",
+          "unknown-cli-library",
+          "task-workflow",
+          "database-operations-plugin",
+          "content-reference",
+          "tradingview-resource-index",
+          "writing-editor"
+        ]
+      },
+      "primary_agent": "ChatGPT",
+      "supporting_agents": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "Unknown-purpose, documentation, task and administrative repositories remain reference-only until a concrete use case and source/license review establish relevance."
+    },
+    {
       "priority": 100,
       "when": {
         "category_contains_any": [
@@ -152,213 +231,6 @@
       ],
       "mode_default": "RESEARCH_ONLY",
       "rationale": "Quantitative and trading repositories require research, statistical validation, implementation review, and adversarial challenge."
-    },
-    {
-      "priority": 96,
-      "when": {
-        "category_contains_any": [
-          "llm-inference-quantization",
-          "post-training-quantization",
-          "low-bit-inference"
-        ]
-      },
-      "primary_agent": "ClaudeCode",
-      "supporting_agents": [
-        "KimiK3",
-        "JEV",
-        "GrokBot",
-        "ChatGPT",
-        "AURELIA"
-      ],
-      "mode_default": "RESEARCH_ONLY",
-      "rationale": "LLM quantization and inference optimization require implementation feasibility, measured model-quality/performance evaluation, deterministic test evidence, and adversarial review. Keep experiments isolated from trading decision and capital paths."
-    },
-    {
-      "priority": 93,
-      "when": {
-        "category_contains_any": [
-          "desktop-download-utility",
-          "network-aggregation",
-          "download-manager"
-        ]
-      },
-      "primary_agent": "ClaudeCode",
-      "supporting_agents": [
-        "PlaywrightCLI",
-        "GrokBot",
-        "JEV",
-        "ChatGPT",
-        "AURELIA"
-      ],
-      "mode_default": "REFERENCE_ONLY",
-      "rationale": "Desktop and network utility sources are assessed for troubleshooting relevance, UI behavior, and supply-chain risk; registration does not imply installation or remote-device access."
-    },
-    {
-      "priority": 95,
-      "when": {
-        "category_contains_any": [
-          "agent-security",
-          "security",
-          "gateway",
-          "MCP-security",
-          "llm-gateway"
-        ]
-      },
-      "primary_agent": "GoogleAgentSkills",
-      "supporting_agents": [
-        "ClaudeCode",
-        "GrokBot"
-      ],
-      "mode_default": "SANDBOX_ONLY",
-      "rationale": "Security-sensitive agent infrastructure is reviewed by a security-focused specialist before engineering integration."
-    },
-    {
-      "priority": 94,
-      "when": {
-        "category_contains_any": [
-          "browser-toolchain",
-          "chrome-devtools",
-          "browser-automation"
-        ]
-      },
-      "primary_agent": "PlaywrightCLI",
-      "supporting_agents": [
-        "ClaudeCode",
-        "GrokBot",
-        "JEV"
-      ],
-      "mode_default": "TOOLCHAIN_ONLY",
-      "rationale": "Browser diagnostics and UI automation are owned by PlaywrightCLI with implementation, orchestration and evidence-validation support. Use isolated browser profiles and do not expose authenticated broker sessions."
-    },
-    {
-      "priority": 92,
-      "when": {
-        "category_contains_any": [
-          "obsidian"
-        ]
-      },
-      "primary_agent": "ClaudeCode",
-      "supporting_agents": [
-        "GrokBot",
-        "PlaywrightCLI",
-        "GLM",
-        "JEV"
-      ],
-      "mode_default": "SANDBOX_ONLY",
-      "rationale": "Obsidian vault and plugin integration is led by engineering, with orchestration, browser verification, multimodal review, and decision verification support. Vault access and third-party plugins remain sandboxed and cannot access production secrets or capital authority."
-    },
-    {
-      "priority": 90,
-      "when": {
-        "category_contains_any": [
-          "browser",
-          "web-testing",
-          "ui",
-          "editor-platform",
-          "desktop",
-          "visual"
-        ]
-      },
-      "primary_agent": "PlaywrightCLI",
-      "supporting_agents": [
-        "ClaudeCode"
-      ],
-      "mode_default": "TOOLCHAIN_ONLY",
-      "rationale": "Browser, UI, desktop, and visual verification belongs with the browser/E2E specialist and implementation owner."
-    },
-    {
-      "priority": 85,
-      "when": {
-        "category_contains_any": [
-          "OCR",
-          "document",
-          "multimodal",
-          "vision",
-          "visual-analysis"
-        ]
-      },
-      "primary_agent": "GLM",
-      "supporting_agents": [
-        "ClaudeCode"
-      ],
-      "mode_default": "REFERENCE_ONLY",
-      "rationale": "Document and multimodal sources are routed to the visual/document specialist."
-    },
-    {
-      "priority": 80,
-      "when": {
-        "category_contains_any": [
-          "agent-team",
-          "orchestration",
-          "workflow",
-          "kanban",
-          "coordination",
-          "hermes",
-          "agentplane",
-          "plugin",
-          "agent-control-plane",
-          "agent-orchestration"
-        ]
-      },
-      "primary_agent": "GrokBot",
-      "supporting_agents": [
-        "ClaudeCode",
-        "KimiK3"
-      ],
-      "mode_default": "SANDBOX_ONLY",
-      "rationale": "Agent orchestration and workflow sources are primarily intelligence/orchestration inputs, not capital-plane authorities."
-    },
-    {
-      "priority": 70,
-      "when": {
-        "category_contains_any": [
-          "railway",
-          "deployment",
-          "iac",
-          "cloud",
-          "devops"
-        ]
-      },
-      "primary_agent": "ClaudeCode",
-      "supporting_agents": [
-        "GrokBot",
-        "PlaywrightCLI"
-      ],
-      "mode_default": "TOOLCHAIN_ONLY",
-      "rationale": "Deployment tooling is implemented by ClaudeCode and independently reviewed for orchestration and endpoint behavior."
-    },
-    {
-      "priority": 60,
-      "when": {
-        "category_contains_any": [
-          "python",
-          "rust",
-          "coding-agent",
-          "framework",
-          "library",
-          "toolchain",
-          "git-ci",
-          "notifications"
-        ]
-      },
-      "primary_agent": "ClaudeCode",
-      "supporting_agents": [
-        "KimiK3"
-      ],
-      "mode_default": "TOOLCHAIN_ONLY",
-      "rationale": "General software tooling is consumed primarily by the implementation agent."
-    },
-    {
-      "priority": 10,
-      "when": {
-        "domain": "reference"
-      },
-      "primary_agent": "ClaudeCode",
-      "supporting_agents": [
-        "GrokBot"
-      ],
-      "mode_default": "REFERENCE_ONLY",
-      "rationale": "Unclassified reference material is kept available to engineering and external-intelligence review without execution authority."
     },
     {
       "priority": 99,
@@ -413,20 +285,98 @@
       "rationale": "Web extraction and MCP fetchers require SSRF, egress, authentication, prompt-injection and resource-limit review."
     },
     {
-      "priority": 84,
+      "priority": 96,
       "when": {
         "category_contains_any": [
-          "agent-workflow-reference"
+          "llm-inference-quantization",
+          "post-training-quantization",
+          "low-bit-inference"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "KimiK3",
+        "JEV",
+        "GrokBot",
+        "ChatGPT",
+        "AURELIA"
+      ],
+      "mode_default": "RESEARCH_ONLY",
+      "rationale": "LLM quantization and inference optimization require implementation feasibility, measured model-quality/performance evaluation, deterministic test evidence, and adversarial review. Keep experiments isolated from trading decision and capital paths."
+    },
+    {
+      "priority": 95,
+      "when": {
+        "category_contains_any": [
+          "agent-security",
+          "security",
+          "gateway",
+          "MCP-security",
+          "llm-gateway"
+        ]
+      },
+      "primary_agent": "GoogleAgentSkills",
+      "supporting_agents": [
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode_default": "SANDBOX_ONLY",
+      "rationale": "Security-sensitive agent infrastructure is reviewed by a security-focused specialist before engineering integration."
+    },
+    {
+      "priority": 94,
+      "when": {
+        "category_contains_any": [
+          "browser-toolchain",
+          "chrome-devtools",
+          "browser-automation"
+        ]
+      },
+      "primary_agent": "PlaywrightCLI",
+      "supporting_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode_default": "TOOLCHAIN_ONLY",
+      "rationale": "Browser diagnostics and UI automation are owned by PlaywrightCLI with implementation, orchestration and evidence-validation support. Use isolated browser profiles and do not expose authenticated broker sessions."
+    },
+    {
+      "priority": 93,
+      "when": {
+        "category_contains_any": [
+          "desktop-download-utility",
+          "network-aggregation",
+          "download-manager"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "PlaywrightCLI",
+        "GrokBot",
+        "JEV",
+        "ChatGPT",
+        "AURELIA"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "Desktop and network utility sources are assessed for troubleshooting relevance, UI behavior, and supply-chain risk; registration does not imply installation or remote-device access."
+    },
+    {
+      "priority": 92,
+      "when": {
+        "category_contains_any": [
+          "obsidian"
         ]
       },
       "primary_agent": "ClaudeCode",
       "supporting_agents": [
         "GrokBot",
-        "JEV",
-        "ChatGPT"
+        "PlaywrightCLI",
+        "GLM",
+        "JEV"
       ],
-      "mode_default": "REFERENCE_ONLY",
-      "rationale": "Agent workflow examples are selectively reused only after hook, workflow and token-scope review."
+      "mode_default": "SANDBOX_ONLY",
+      "rationale": "Obsidian vault and plugin integration is led by engineering, with orchestration, browser verification, multimodal review, and decision verification support. Vault access and third-party plugins remain sandboxed and cannot access production secrets or capital authority."
     },
     {
       "priority": 91,
@@ -445,6 +395,59 @@
       "rationale": "Quickstart applications are design references; examples are not presumed production-safe."
     },
     {
+      "priority": 90,
+      "when": {
+        "category_contains_any": [
+          "browser",
+          "web-testing",
+          "ui",
+          "editor-platform",
+          "desktop",
+          "visual"
+        ]
+      },
+      "primary_agent": "PlaywrightCLI",
+      "supporting_agents": [
+        "ClaudeCode"
+      ],
+      "mode_default": "TOOLCHAIN_ONLY",
+      "rationale": "Browser, UI, desktop, and visual verification belongs with the browser/E2E specialist and implementation owner."
+    },
+    {
+      "priority": 85,
+      "when": {
+        "category_contains_any": [
+          "OCR",
+          "document",
+          "multimodal",
+          "vision",
+          "visual-analysis"
+        ]
+      },
+      "primary_agent": "GLM",
+      "supporting_agents": [
+        "ClaudeCode"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "Document and multimodal sources are routed to the visual/document specialist."
+    },
+    {
+      "priority": 84,
+      "when": {
+        "category_contains_any": [
+          "agent-workflow-reference"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "Agent workflow examples are selectively reused only after hook, workflow and token-scope review."
+    },
+    {
       "priority": 82,
       "when": {
         "category_contains_any": [
@@ -461,6 +464,49 @@
       "rationale": "SEO and marketing automation is segregated from the trading runtime and requires license/configuration review."
     },
     {
+      "priority": 80,
+      "when": {
+        "category_contains_any": [
+          "agent-team",
+          "orchestration",
+          "workflow",
+          "kanban",
+          "coordination",
+          "hermes",
+          "agentplane",
+          "plugin",
+          "agent-control-plane",
+          "agent-orchestration"
+        ]
+      },
+      "primary_agent": "GrokBot",
+      "supporting_agents": [
+        "ClaudeCode",
+        "KimiK3"
+      ],
+      "mode_default": "SANDBOX_ONLY",
+      "rationale": "Agent orchestration and workflow sources are primarily intelligence/orchestration inputs, not capital-plane authorities."
+    },
+    {
+      "priority": 70,
+      "when": {
+        "category_contains_any": [
+          "railway",
+          "deployment",
+          "iac",
+          "cloud",
+          "devops"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "GrokBot",
+        "PlaywrightCLI"
+      ],
+      "mode_default": "TOOLCHAIN_ONLY",
+      "rationale": "Deployment tooling is implemented by ClaudeCode and independently reviewed for orchestration and endpoint behavior."
+    },
+    {
       "priority": 61,
       "when": {
         "category_contains_any": [
@@ -474,6 +520,39 @@
       ],
       "mode_default": "TOOLCHAIN_ONLY",
       "rationale": "Java-specific skills are evaluated only when Java implementation is in scope."
+    },
+    {
+      "priority": 60,
+      "when": {
+        "category_contains_any": [
+          "python",
+          "rust",
+          "coding-agent",
+          "framework",
+          "library",
+          "toolchain",
+          "git-ci",
+          "notifications"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "KimiK3"
+      ],
+      "mode_default": "TOOLCHAIN_ONLY",
+      "rationale": "General software tooling is consumed primarily by the implementation agent."
+    },
+    {
+      "priority": 10,
+      "when": {
+        "domain": "reference"
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "GrokBot"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "Unclassified reference material is kept available to engineering and external-intelligence review without execution authority."
     }
   ],
   "assignment_contract": {
