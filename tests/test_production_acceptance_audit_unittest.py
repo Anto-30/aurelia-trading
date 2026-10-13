@@ -5,7 +5,7 @@ from unittest.mock import patch
 from pathlib import Path
 
 from scripts.deriv_auth_prerequisites import build_evidence
-from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_ws_url
+from runtime.adapters.deriv_session import AuthenticatedWebSocketUrl, DerivSessionError, get_authenticated_ws_url
 from runtime.adapters.session_manager import DerivSessionManager, DerivSessionManagerError
 from runtime.core.paths import state_path
 
@@ -101,6 +101,35 @@ class DerivEndpointHardeningTests(unittest.TestCase):
                 )
             open_url.assert_not_called()
 
+
+
+    def test_session_manager_bootstrap_reads_deriv_pat_alias(self):
+        manager = DerivSessionManager(
+            expected_loginid="CR123",
+            expected_environment="real",
+            expected_currency="USD",
+        )
+        manager.list_accounts = lambda **kwargs: [
+            {"account_id": "CR123", "account_type": "real", "currency": "USD"}
+        ]
+        websocket = AuthenticatedWebSocketUrl(
+            account_id="CR123",
+            url="wss://api.derivws.com/trading/v1/options/ws/real?otp=redacted",
+        )
+        with patch.dict("os.environ", {}, clear=True):
+            with patch(
+                "runtime.adapters.session_manager.get_optional_secret",
+                side_effect=lambda name: {
+                    "DERIV_PAT": "test-pat",
+                    "DERIV_APP_ID": "test-app",
+                }.get(name),
+            ), patch(
+                "runtime.adapters.session_manager.get_authenticated_ws_url",
+                return_value=websocket,
+            ) as get_ws:
+                result = manager.bootstrap()
+        self.assertEqual(result.binding.loginid, "CR123")
+        self.assertEqual(get_ws.call_args.kwargs["bearer_token"], "test-pat")
 
     def test_nested_or_nonstandard_deriv_websocket_path_is_rejected(self):
         from runtime.adapters.deriv_session import validate_modern_options_ws_url
