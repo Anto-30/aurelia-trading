@@ -231,7 +231,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          /tmp/osv-scanner scan source --recursive /tmp/pinned-intake-sources --format json --output-file /tmp/pinned-intake-audit/osv-report.json > /tmp/pinned-intake-audit/osv-scanner.log 2>&1
+          timeout --signal=TERM --kill-after=30s 25m /tmp/osv-scanner scan source --recursive /tmp/pinned-intake-sources --format json --output-file /tmp/pinned-intake-audit/osv-report.json > /tmp/pinned-intake-audit/osv-scanner.log 2>&1
           status=$?
           echo "$status" > /tmp/pinned-intake-audit/osv.exit
           echo "OSV-Scanner exit status: $status"
@@ -258,7 +258,7 @@ jobs:
           manifests=sum(len(r.get("manifests",[])) for r in repos)
           license_paths=sum(len(r.get("license_notice_paths",[])) for r in repos)
           complete=sum(bool(r.get("archive_sha256")) and not r.get("errors") for r in repos)
-          summary += ["## Pinned-source supply-chain audit","",f"- Pinned source archives downloaded and inventoried without hard errors: {complete} / {len(repos)}",f"- Source archive bytes: {inventory.get('total_archive_bytes','unknown')}",f"- Manifest/lockfile candidates: {manifests}",f"- License/NOTICE-like paths inventoried: {license_paths}","- Target source code was not executed and target-repository dependencies were not installed.","- Scope is ten exact pinned snapshots. Symlinks and oversized members were excluded; unsupported manifest formats and dependencies outside recognized lockfiles may not be represented.",""]
+          summary += ["## Pinned-source supply-chain audit","",f"- Pinned source archives downloaded and inventoried without hard errors: {complete} / {len(repos)}",f"- Source archive bytes: {inventory.get('total_archive_bytes','unknown')}",f"- Manifest/lockfile candidates: {manifests}",f"- License/NOTICE-like paths inventoried: {license_paths}","- Target source code was not executed and target-repository dependencies were not installed.","- Scope is 64 exact pinned snapshots. Symlinks and oversized members were excluded; unsupported manifest formats and dependencies outside recognized lockfiles may not be represented.",""]
           if errors: summary += ["### Source inventory errors"] + [f"- {x}" for x in errors[:50]] + [""]
           if skipped: summary += ["### Skipped symlinks (inventory limitation)"] + [f"- {x}" for x in skipped[:50]] + [""]
           scancode_exit=(root/"scancode.exit").read_text().strip() if (root/"scancode.exit").exists() else "not-run"
