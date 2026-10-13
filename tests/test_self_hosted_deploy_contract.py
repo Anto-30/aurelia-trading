@@ -90,6 +90,20 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT: artifacts/deriv_public_transport.json", workflow)
         self.assertIn("python scripts/verify_deriv_public_transport.py", workflow)
 
+        deploy = (ROOT / "scripts" / "deploy" / "bootstrap_and_deploy.sh").read_text(
+            encoding="utf-8"
+        )
+        dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+        self.assertIn('AURELIA_LIVE_PREFLIGHT=RUNNING', deploy)
+        self.assertIn('"$IMAGE" python scripts/live_release_gate.py', deploy)
+        self.assertIn('--mount "type=bind,src=$DATA_DIR/evidence,dst=/app/evidence,readonly"', deploy)
+        self.assertIn("COPY scripts/live_release_gate.py ./scripts/live_release_gate.py", dockerfile)
+        self.assertLess(
+            deploy.index('AURELIA_LIVE_PREFLIGHT=RUNNING'),
+            deploy.index('sudo docker rm -f "$CONTAINER"'),
+            "LIVE release gate must run before stopping the current runtime",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
