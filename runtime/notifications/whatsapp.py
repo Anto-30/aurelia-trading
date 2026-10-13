@@ -275,6 +275,7 @@ class WhatsAppAlertSink:
             method="POST",
         )
         try:
+            # B310: the request URL is fixed to Twilio's HTTPS API host above.
             with urlopen(request, timeout=self.config.timeout_seconds) as response:
                 body = json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
