@@ -24,6 +24,7 @@ from runtime.core.reconcile import Reconciler
 from runtime.core.runtime_config import load_config_hash
 from runtime.core.release_gate import read_live_release
 from runtime.core.secrets import get_optional_secret
+from runtime.core.paths import state_path
 from runtime.core.state import RuntimeStateMachine
 from runtime.strategy.research_supervisor import build_research_signal_supervisor
 
@@ -129,12 +130,12 @@ async def start_continuous_runtime(
     )
     if federation is None:
         federation = PersistentAgentFederation(
-            journal_path=os.getenv("AURELIA_FEDERATION_JOURNAL_PATH", "/tmp/aurelia/federation-events.ndjson"),
-            lease_path=os.getenv("AURELIA_FEDERATION_LEASE_PATH", "/tmp/aurelia/federation-leases.json"),
+            journal_path=state_path("AURELIA_FEDERATION_JOURNAL_PATH", "federation-events.ndjson"),
+            lease_path=state_path("AURELIA_FEDERATION_LEASE_PATH", "federation-leases.json"),
             config_hash=config_hash,
             source_hash=source_hash,
             lease_seconds=float(os.getenv("AURELIA_AGENT_LEASE_SECONDS", "45")),
-            performance_path=os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/var/lib/aurelia/agent-performance.json"),
+            performance_path=state_path("AURELIA_AGENT_PERFORMANCE_PATH", "agent-performance.json"),
         )
     agents = DEFAULT_AGENTS
     matrix_path = ROOT / "config" / "agent_capability_matrix.json"
@@ -258,7 +259,7 @@ async def start_continuous_runtime(
         maximum_transactions=999,
     )
     daily_risk_guard = PersistentDailyRiskGuard(
-        os.getenv("AURELIA_DAILY_RISK_PATH", "/var/lib/aurelia/daily-risk.json"),
+        state_path("AURELIA_DAILY_RISK_PATH", "daily-risk.json"),
         max_daily_drawdown_pct=float(os.getenv("AURELIA_MAX_DAILY_DRAWDOWN_PCT", "0.03")),
         max_consecutive_losses=int(os.getenv("AURELIA_MAX_CONSECUTIVE_LOSSES", "3")),
         max_balance_age_seconds=float(os.getenv("AURELIA_MAX_BALANCE_AGE_SECONDS", "15")),
@@ -275,19 +276,18 @@ async def start_continuous_runtime(
     machine.transition(__import__("runtime.core.models", fromlist=["RuntimeState"]).RuntimeState.BROKER_CONNECTING)
     machine.transition(__import__("runtime.core.models", fromlist=["RuntimeState"]).RuntimeState.BROKER_VERIFIED)
 
-    ledger = PersistentLedger(os.getenv("AURELIA_LEDGER_PATH", "/tmp/aurelia/ledger.json"))
-    idempotency = PersistentIdempotencyStore(os.getenv("AURELIA_IDEMPOTENCY_PATH", "/tmp/aurelia/idempotency.json"))
-    fence = PersistentExecutionFence(os.getenv("AURELIA_FENCE_PATH", "/tmp/aurelia/executor-fence.txt"))
-    journal = AppendOnlyJournal(os.getenv("AURELIA_EXECUTION_JOURNAL_PATH", "/tmp/aurelia/execution-events.ndjson"))
+    ledger = PersistentLedger(state_path("AURELIA_LEDGER_PATH", "ledger.json"))
+    idempotency = PersistentIdempotencyStore(state_path("AURELIA_IDEMPOTENCY_PATH", "idempotency.json"))
+    fence = PersistentExecutionFence(state_path("AURELIA_FENCE_PATH", "executor-fence.txt"))
+    journal = AppendOnlyJournal(state_path("AURELIA_EXECUTION_JOURNAL_PATH", "execution-events.ndjson"))
     executor = CapitalPlaneExecutor(
         adapter, journal=journal, ledger=ledger, idempotency=idempotency, fence=fence,
         state=machine, reconciler=Reconciler(), source_hash=source_hash,
         config_hash=config_hash, live_lock_path=ROOT / "config" / "LIVE_LOCK.yaml",
         daily_risk_guard=daily_risk_guard,
         max_trade_risk_pct=float(os.getenv("AURELIA_MAX_TRADE_RISK_PCT", "0.01")),
-        kill_switch_state_path=os.getenv(
-            "AURELIA_KILL_SWITCH_STATE_PATH",
-            "/var/lib/aurelia/kill-switch-state.json",
+        kill_switch_state_path=state_path(
+            "AURELIA_KILL_SWITCH_STATE_PATH", "kill-switch-state.json"
         ),
         operator_reset_path=os.getenv(
             "AURELIA_OPERATOR_RESET_PATH",
