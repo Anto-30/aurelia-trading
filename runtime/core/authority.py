@@ -15,7 +15,7 @@ from .models import (
 )
 from .stake_sizing import size_stake_for_balance
 
-MIN_PROBABILITY = 0.50
+MIN_PROBABILITY = 0.55
 MAX_PROBABILITY = 0.75
 STARTING_STAKE = 1.00
 EXECUTION_MINIMUM_STAKE = 1.00
@@ -141,6 +141,7 @@ def authorization_gate(
     exposure_approved: bool = False,
     authorization_ttl_seconds: float = 30.0,
     execution_mode: str = "LIVE",
+    broker_minimum_stake: float | None = None,
 ) -> tuple[GateResult, AuthorizationContext | None]:
     reasons: list[str] = []
 
@@ -189,22 +190,42 @@ def authorization_gate(
     # the final capital amount. LIVE sizing is recalculated deterministically
     # from the exact fresh available-balance snapshot and then travels in the
     # authorization context to intent creation.
-    if not requested_stake_is_permitted(decision.risk_requested_stake, capital):
-        reasons.append("STAKE_NOT_AFFORDABLE_OR_BELOW_BROKER_MINIMUM")
     if execution_mode == "LIVE":
-        sizing = size_stake_for_balance(capital.available_balance)
-        if not sizing.allowed:
-            reasons.append(sizing.reason)
+        # A live order must carry a fresh, verified minimum stake from the
+        # broker for this exact contract. The local default is not broker proof.
+        minimum_is_verified = (
+            not isinstance(broker_minimum_stake, bool)
+            and isinstance(broker_minimum_stake, (int, float))
+            and isfinite(float(broker_minimum_stake))
+            and float(broker_minimum_stake) > 0
+        )
+        if not minimum_is_verified:
+            reasons.append("BROKER_MINIMUM_STAKE_UNVERIFIED")
         else:
-            try:
-                proposed_stake = float(decision.risk_requested_stake)
-            except (TypeError, ValueError, OverflowError):
-                proposed_stake = float("nan")
-            # Risk/exposure controls must evaluate the exact stake that will be
-            # submitted. Do not silently resize after those approvals were
-            # computed against a strategy/agent-proposed amount.
-            if not isfinite(proposed_stake) or abs(proposed_stake - float(sizing.stake)) > 1e-9:
-                reasons.append("LIVE_STAKE_NOT_POLICY_SIZED")
+            if not requested_stake_is_permitted(
+                decision.risk_requested_stake,
+                capital,
+                minimum_stake=float(broker_minimum_stake),
+            ):
+                reasons.append("STAKE_NOT_AFFORDABLE_OR_BELOW_BROKER_MINIMUM")
+            sizing = size_stake_for_balance(
+                capital.available_balance,
+                minimum_stake=float(broker_minimum_stake),
+            )
+            if not sizing.allowed:
+                reasons.append(sizing.reason)
+            else:
+                try:
+                    proposed_stake = float(decision.risk_requested_stake)
+                except (TypeError, ValueError, OverflowError):
+                    proposed_stake = float("nan")
+                # Risk/exposure controls must evaluate the exact stake that will be
+                # submitted. Do not silently resize after those approvals were
+                # computed against a strategy/agent-proposed amount.
+                if not isfinite(proposed_stake) or abs(proposed_stake - float(sizing.stake)) > 1e-9:
+                    reasons.append("LIVE_STAKE_NOT_POLICY_SIZED")
+    elif not requested_stake_is_permitted(decision.risk_requested_stake, capital):
+        reasons.append("STAKE_NOT_AFFORDABLE_OR_BELOW_BROKER_MINIMUM")
 
     if not risk_approved:
         reasons.append("RISK_WARDEN_REJECTED")
