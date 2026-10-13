@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
@@ -12,6 +13,7 @@ from runtime.core.secrets import get_optional_secret
 OTP_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts/{account_id}/otp"
 MODERN_OPTIONS_WS_HOST = "api.derivws.com"
 MODERN_OPTIONS_WS_PREFIX = "/trading/v1/options/ws/"
+ACCOUNT_ID_RE = re.compile(r"^[A-Za-z0-9]{1,64}$")
 
 
 class DerivSessionError(ValueError):
@@ -127,8 +129,8 @@ def get_authenticated_ws_url(
         else get_optional_secret("DERIV_APP_ID")
     )
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
-    if not account_id:
-        raise DerivSessionError("ACCOUNT_ID_REQUIRED")
+    if not isinstance(account_id, str) or not ACCOUNT_ID_RE.fullmatch(account_id):
+        raise DerivSessionError("ACCOUNT_ID_INVALID")
     if not token:
         raise DerivSessionError("DERIV_BEARER_TOKEN_MISSING")
     if auth_mode == "pat" and not application_id:
