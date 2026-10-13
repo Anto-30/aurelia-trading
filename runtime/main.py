@@ -409,7 +409,8 @@ class HealthHandler(BaseHTTPRequestHandler):
 
 
 def start_server(port: int) -> ThreadingHTTPServer:
-    server = ThreadingHTTPServer((os.getenv("AURELIA_HEALTH_HOST", "0.0.0.0"), port), HealthHandler)  # Platform health probes require an externally reachable container interface; restrict ingress at the host.
+    # The deployer publishes this port on host loopback only; container probes need the bridge interface.
+    server = ThreadingHTTPServer((os.getenv("AURELIA_HEALTH_HOST", "0.0.0.0"), port), HealthHandler)  # nosec B104
     Thread(target=server.serve_forever, name="aurelia-health", daemon=True).start()
     return server
 
