@@ -34,9 +34,9 @@ Authorize only if every required gate returns a verified pass. Otherwise return 
 - USD 0.35 proposal request uses stake basis and the exact contract fields.
 - Broker rejects $0.35 or returns a quote above $0.35 => blocked.
 - Stale/missing quote, wrong currency/account/contract, or missing proposal ID => blocked.
-- Balance under $1 plus applicable charges => blocked.
+- Balance under $0.35 plus applicable charges => blocked.
 - $1.45 balance illustrates 24.14% stake exposure and is visibly flagged high-risk; the existing 1% policy remains unchanged.
-- Existing $1.50 minimum with $0.35 requested stake => blocked, never rounded upward.
+- Existing $0.50 minimum with $0.35 requested stake => blocked, never rounded upward.
 - Probability below 55% or above 75%, uncalibrated/drifted signal, negative net economics, unqualified strategy, stale balance, kill switch, or live lock => blocked.
 - Duplicate/timeout/partial buy => UNKNOWN and no retry until reconciled.
 - Property/adversarial tests prove no configuration or caller-supplied scalar can bypass the live lock or evidence provenance.
