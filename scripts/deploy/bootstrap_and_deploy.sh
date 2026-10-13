@@ -74,6 +74,7 @@ fi
 sudo systemctl enable --now docker
 sudo install -d -m 700 "$ENV_DIR"
 sudo install -d -m 700 "$DATA_DIR"
+sudo install -d -o 10001 -g 10001 -m 700 "$DATA_DIR/evidence"
 # Move legacy host-owned deployment metadata out of the runtime-writable state volume.
 sudo rm -f "$DATA_DIR/DEPLOYMENT_LINEAGE.json" "$DATA_DIR/DEPLOYED_SOURCE_SHA" "$DATA_DIR/LAST_HEALTH.json"
 sudo rm -rf "$DATA_DIR/attestations"
@@ -255,6 +256,41 @@ elif [ -f "$READONLY_SECRET_FILE" ]; then
 fi
 
 sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"
+
+# A LIVE deployment must pass the exact-candidate release gate before the
+# currently running worker is stopped. This verifier is read-only and never
+# submits an order; it consumes only existing, source-bound evidence.
+if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
+  echo "AURELIA_LIVE_PREFLIGHT=RUNNING"
+  if ! sudo docker run --rm \
+    --env-file "$ENV_FILE" \
+    --env-file "$LIVE_SECRET_FILE" \
+    --env AURELIA_DEPLOYMENT_MODE=LIVE \
+    --env AURELIA_STATE_DIR=/var/lib/aurelia \
+    --env AURELIA_READINESS_PATH=/var/lib/aurelia/AURELIA_READINESS.json \
+    --env AURELIA_DERIV_EVIDENCE_PATH=/var/lib/aurelia/deriv_authenticated_session.json \
+    --env AURELIA_DERIV_LIFECYCLE_EVIDENCE_PATH=/var/lib/aurelia/deriv_transaction_lifecycle.json \
+    --env AURELIA_DERIV_BROKER_EVIDENCE_PATH=/var/lib/aurelia/deriv_broker_account_evidence.json \
+    --env DERIV_PUBLIC_TRANSPORT_EVIDENCE_PATH=/var/lib/aurelia/deriv_public_transport.json \
+    --env AURELIA_ATTESTATION_DIR=/var/lib/aurelia/attestations \
+    --env AURELIA_VERIFY_DERIV_AUTH=true \
+    --env AURELIA_VERIFY_DERIV_PUBLIC=true \
+    --env AURELIA_CONTINUOUS_RUNTIME=true \
+    --env AURELIA_AUTONOMOUS_LOOP=false \
+    --env AURELIA_RUN_ONCE=false \
+    --env FINAL_EXECUTION_AUTHORIZATION=true \
+    --env LIVE_EXECUTION=ENABLED \
+    --env GITHUB_SHA="$SHA" \
+    --mount "type=bind,src=$DATA_DIR,dst=/var/lib/aurelia" \
+    --mount "type=bind,src=$DATA_DIR/evidence,dst=/app/evidence,readonly" \
+    --mount "type=bind,src=$ATTESTATION_DIR,dst=/var/lib/aurelia/attestations,readonly" \
+    "$IMAGE" python scripts/live_release_gate.py; then
+    echo "AURELIA_HOST_BLOCKED=LIVE_RELEASE_GATE_REJECTED"
+    exit 2
+  fi
+  echo "AURELIA_LIVE_PREFLIGHT=PASS"
+fi
+
 sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 
 sudo docker run --detach \
