@@ -6,7 +6,6 @@ from runtime.core.authority import (
     MAX_PROBABILITY,
     MIN_PROBABILITY,
     authorization_gate,
-    build_intent,
     probability_is_valid,
 )
 from runtime.core.models import AccountIdentity, CapitalSnapshot, Decision, utc_now
