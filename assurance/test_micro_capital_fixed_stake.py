@@ -98,6 +98,11 @@ class MicroCapitalPolicyTests(unittest.TestCase):
         self.assertIn("KILL_SWITCH_ACTIVE", result.reason_codes)
         self.assertIn("LIVE_RELEASE_GATE_BLOCKED", result.reason_codes)
 
+    def test_truthy_non_boolean_gate_values_fail_closed(self):
+        result = evaluate_micro_capital_stake(**valid_inputs(account_verified="false"))
+        self.assertFalse(result.allowed)
+        self.assertIn("ACCOUNT_UNVERIFIED", result.reason_codes)
+
     def test_invalid_values_fail_closed(self):
         for balance in (True, "NaN", "-1", None):
             with self.subTest(balance=balance):
