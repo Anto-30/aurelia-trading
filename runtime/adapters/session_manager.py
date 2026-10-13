@@ -230,8 +230,19 @@ class DerivSessionManager:
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> DerivSessionBootstrap:
-        token = bearer_token if bearer_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
-        application_id = app_id if app_id is not None else os.getenv("DERIV_APP_ID", "")
+        token = (
+            bearer_token
+            if bearer_token is not None
+            else (
+                get_optional_secret("DERIV_AUTH_TOKEN")
+                or get_optional_secret("DERIV_PAT")
+            )
+        )
+        application_id = (
+            app_id
+            if app_id is not None
+            else get_optional_secret("DERIV_APP_ID")
+        )
         accounts = self.list_accounts(
             bearer_token=token,
             app_id=application_id,
