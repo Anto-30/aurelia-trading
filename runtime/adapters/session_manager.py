@@ -117,13 +117,17 @@ class DerivSessionManager:
         app_id: str | None,
     ) -> dict[str, Any]:
         # Never send a bearer token to a caller-controlled or non-Deriv URL.
-        parts = urlsplit(url)
+        try:
+            parts = urlsplit(url)
+            port = parts.port
+        except (TypeError, ValueError):
+            raise DerivSessionManagerError("DERIV_ACCOUNT_ENDPOINT_INVALID") from None
         if (
             parts.scheme != "https"
             or parts.hostname != "api.derivws.com"
             or parts.username is not None
             or parts.password is not None
-            or parts.port not in (None, 443)
+            or port not in (None, 443)
         ):
             raise DerivSessionManagerError("DERIV_ACCOUNT_ENDPOINT_INVALID")
         headers = {"Authorization": f"Bearer {bearer_token}"}
