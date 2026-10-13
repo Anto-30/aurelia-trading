@@ -276,7 +276,7 @@ class WhatsAppAlertSink:
         )
         try:
             # B310: the request URL is fixed to Twilio's HTTPS API host above.
-            with urlopen(request, timeout=self.config.timeout_seconds) as response:
+            with urlopen(request, timeout=self.config.timeout_seconds) as response:  # nosec B310 — fixed HTTPS Twilio API host
                 body = json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
             raise RuntimeError(f"TWILIO_HTTP_{exc.code}") from None
