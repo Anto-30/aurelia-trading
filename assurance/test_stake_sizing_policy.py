@@ -69,7 +69,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
         self.assertFalse(probability_is_valid(float("inf")))
         self.assertFalse(probability_is_valid(10**10000))
 
-    def test_live_authorization_uses_balance_scaled_stake(self):
+    def test_live_authorization_blocks_until_source_bound_broker_evidence_exists(self):
         account = AccountIdentity(
             loginid="CR123456",
             account_type="real",
@@ -118,10 +118,9 @@ class StakeSizingPolicyTests(unittest.TestCase):
             execution_mode="LIVE",
             broker_minimum_stake=1.00,
         )
-        self.assertTrue(gate.allowed, gate.reason_codes)
-        self.assertIsNotNone(context)
-        intent = build_intent(context, proposal_id="proposal-test")
-        self.assertEqual(intent.stake, 2.00)
+        self.assertFalse(gate.allowed)
+        self.assertIsNone(context)
+        self.assertIn("BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED", gate.reason_codes)
 
 
     def test_live_authorization_rejects_stake_below_policy_sized_amount(self):
