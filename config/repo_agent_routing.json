@@ -166,7 +166,9 @@
       "supporting_agents": [
         "KimiK3",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "ChatGPT",
+        "AURELIA"
       ],
       "mode_default": "RESEARCH_ONLY",
       "rationale": "LLM quantization and inference optimization require implementation feasibility, measured model-quality/performance evaluation, deterministic test evidence, and adversarial review. Keep experiments isolated from trading decision and capital paths."
@@ -184,7 +186,9 @@
       "supporting_agents": [
         "PlaywrightCLI",
         "GrokBot",
-        "JEV"
+        "JEV",
+        "ChatGPT",
+        "AURELIA"
       ],
       "mode_default": "REFERENCE_ONLY",
       "rationale": "Desktop and network utility sources are assessed for troubleshooting relevance, UI behavior, and supply-chain risk; registration does not imply installation or remote-device access."
