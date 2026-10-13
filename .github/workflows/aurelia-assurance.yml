@@ -101,6 +101,49 @@ jobs:
         run: python -m unittest assurance.test_hardening_controls -v
       - name: Build clean runtime container
         run: docker build --pull -t aurelia-runtime:ci .
+      - name: Smoke-test the built runtime container without broker credentials
+        env:
+          AURELIA_STATE_DIR: /var/lib/aurelia
+        run: |
+          set -euo pipefail
+          docker rm -f aurelia-health-smoke >/dev/null 2>&1 || true
+          cleanup() { docker logs aurelia-health-smoke 2>&1 || true; docker rm -f aurelia-health-smoke >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          docker run --detach --name aurelia-health-smoke \
+            --publish 127.0.0.1:18080:8080 \
+            --env PORT=8080 \
+            --env AURELIA_STATE_DIR=/var/lib/aurelia \
+            --env AURELIA_NON_PRODUCTION_SOAK=true \
+            --env FINAL_EXECUTION_AUTHORIZATION=false \
+            --env LIVE_EXECUTION=BLOCKED \
+            --env AURELIA_VERIFY_DERIV_PUBLIC=false \
+            --env AURELIA_VERIFY_DERIV_AUTH=false \
+            --env AURELIA_CONTINUOUS_RUNTIME=false \
+            --env AURELIA_RUN_ONCE=false \
+            aurelia-runtime:ci
+          ready=0
+          for attempt in $(seq 1 30); do
+            if curl --silent --show-error http://127.0.0.1:18080/health -o /tmp/aurelia-container-health.json; then
+              if python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path("/tmp/aurelia-container-health.json").read_text(encoding="utf-8"))
+          raise SystemExit(0 if p.get("liveness") is True and p.get("capital_can_open_new_exposure") is False else 1)
+          PY
+              then
+                ready=1
+                break
+              fi
+            fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then
+            cat /tmp/aurelia-container-health.json 2>/dev/null || true
+            docker logs aurelia-health-smoke 2>&1 || true
+            exit 1
+          fi
+          echo "BUILT_CONTAINER_LIVENESS=true"
+          echo "BUILT_CONTAINER_NEW_EXPOSURE=false"
       - name: Verify public Deriv market-data WebSocket
         env:
           DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT: artifacts/deriv_public_transport.json
