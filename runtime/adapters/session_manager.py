@@ -116,11 +116,22 @@ class DerivSessionManager:
         bearer_token: str,
         app_id: str | None,
     ) -> dict[str, Any]:
+        # Never send a bearer token to a caller-controlled or non-Deriv URL.
+        parts = urlsplit(url)
+        if (
+            parts.scheme != "https"
+            or parts.hostname != "api.derivws.com"
+            or parts.username is not None
+            or parts.password is not None
+            or parts.port not in (None, 443)
+        ):
+            raise DerivSessionManagerError("DERIV_ACCOUNT_ENDPOINT_INVALID")
         headers = {"Authorization": f"Bearer {bearer_token}"}
         if app_id:
             headers["Deriv-App-ID"] = app_id
         request = Request(url, method=method, headers=headers)
         try:
+            # B310: URL scheme/host/port are allowlisted immediately above.
             with urlopen(request, timeout=self.timeout_seconds) as response:
                 payload = json.loads(response.read().decode("utf-8"))
         except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
