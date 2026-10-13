@@ -42,3 +42,11 @@ Keep `SANDBOX_ONLY` and `BLOCKED_PENDING_SSRF_AUTH_AND_EGRESS_TESTS`. Before eve
 
 ## Non-claims
 No repository was installed or executed by this review. No agent runtime was configured. No trading logic, LIVE_LOCK, broker configuration, production secrets, release authority, or capital plane was changed. These findings do not establish live-trading readiness.
+
+
+## Claude Code Viewer
+
+**Pinned upstream commit:** `9367cf006be9965c954e6cd36526f2195dce67ea`  
+**Manifest:** `package.json` blob `9123f9001a1c36ab4242151915423280960751b2`; version `0.8.2`; license `MIT`. README blob `69ccaf6b50ecc6ec946ad46a45650964d3c93b7f`.
+
+The README documents a default bind hostname of `localhost`, a password option (`--password`), and an explicit hostname option. It also documents an integrated terminal and live session/history visibility. The default localhost bind is a useful safe default, but it does not establish safety when operators configure a remote hostname. For any remote exposure, require explicit authentication, TLS/private network access, firewall/allowlisting, session and filesystem isolation, and tests that prove unauthenticated clients cannot read sessions or operate the terminal. Keep `SANDBOX_ONLY`; do not expose on a public interface or place in a broker-credential-bearing environment before those checks. No tests were run by this review.
