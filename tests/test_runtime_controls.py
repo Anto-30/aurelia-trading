@@ -257,9 +257,8 @@ class TestControls(unittest.TestCase):
         gate, ctx = authorization_gate(
             decision=dec(),
             account=ident(),
-            # A $2 stake at a 1% maximum-loss cap requires at least $200
-            # of verified available USD balance; the prior $10 fixture is
-            # correctly rejected by the new deterministic sizing policy.
+            # Even a nominally affordable stake cannot pass LIVE authorization
+            # while the broker-minimum evidence contract is unimplemented.
             capital=cap(200.0),
             config_hash="h",
             runtime_config_hash="h",
