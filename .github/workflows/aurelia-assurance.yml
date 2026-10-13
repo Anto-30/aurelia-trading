@@ -3,6 +3,7 @@ on:
   push:
     branches: ["**"]
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 
@@ -10,9 +11,29 @@ concurrency:
   group: aurelia-assurance-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  security_dependency:
+    # This isolated job has no production environment and receives no broker secrets.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install isolated audit tools
+        run: python -m pip install --disable-pip-version-check pip-audit bandit
+      - name: Audit locked runtime requirements
+        run: pip-audit -r requirements.txt
+      - name: Audit project dependency metadata
+        run: pip-audit .
+      - name: Scan runtime and operational scripts for high-severity security findings
+        run: bandit -q -r runtime scripts -ll -ii
+
   assurance:
-    # Load production-scoped Actions secrets for authenticated verification.
-    environment: production
+    # Production secrets are available only to an explicit manual run or main-branch push.
+    # Pull requests and non-main branch pushes use the non-secret CI environment.
+    environment: ${{ (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && 'production' || 'ci' }}
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
