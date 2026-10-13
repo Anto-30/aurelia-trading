@@ -193,24 +193,28 @@ def authorization_gate(
     if execution_mode == "LIVE":
         # A live order must carry a fresh, verified minimum stake from the
         # broker for this exact contract. The local default is not broker proof.
-        minimum_is_verified = (
-            not isinstance(broker_minimum_stake, bool)
-            and isinstance(broker_minimum_stake, (int, float))
-            and isfinite(float(broker_minimum_stake))
-            and float(broker_minimum_stake) > 0
-        )
+        try:
+            broker_minimum_value = (
+                float(broker_minimum_stake)
+                if not isinstance(broker_minimum_stake, bool)
+                and isinstance(broker_minimum_stake, (int, float))
+                else float("nan")
+            )
+        except (TypeError, ValueError, OverflowError):
+            broker_minimum_value = float("nan")
+        minimum_is_verified = isfinite(broker_minimum_value) and broker_minimum_value > 0
         if not minimum_is_verified:
             reasons.append("BROKER_MINIMUM_STAKE_UNVERIFIED")
         else:
             if not requested_stake_is_permitted(
                 decision.risk_requested_stake,
                 capital,
-                minimum_stake=float(broker_minimum_stake),
+                minimum_stake=broker_minimum_value,
             ):
                 reasons.append("STAKE_NOT_AFFORDABLE_OR_BELOW_BROKER_MINIMUM")
             sizing = size_stake_for_balance(
                 capital.available_balance,
-                minimum_stake=float(broker_minimum_stake),
+                minimum_stake=broker_minimum_value,
             )
             if not sizing.allowed:
                 reasons.append(sizing.reason)
