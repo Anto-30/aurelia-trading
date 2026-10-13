@@ -6446,7 +6446,7 @@
       "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
       "capital_authority": false,
       "physical_runtime_install": "NOT_CLAIMED",
-      "security_review_status": "BLOCKED_PENDING_REGRESSION_TESTS_AND_FULL_SOURCE_REVIEW",
+      "security_review_status": "BLOCKED_PENDING_REGRESSION_TESTS_FULL_SOURCE_REVIEW_AND_AUTH_MODE_TESTS",
       "trust": "UPSTREAM_REVIEW_PENDING",
       "capabilities": [
         "web-ui",
@@ -6454,7 +6454,7 @@
         "git-operations",
         "agent-session-ui"
       ],
-      "integration_note": "Pinned source spot-check found mitigations in inspected auth and Git routes (generated JWT secret fallback, WebSocket user-existence check, shell:false Git spawner), but full route/terminal/plugin/filesystem review and regression tests remain unperformed. Keep sandbox-only; AGPL-3.0-or-later review required."
+      "integration_note": "Pinned auth/Git spot checks found JWT secret fallback, shell:false and input-validation mitigations, but follow-up found configuration-sensitive auth risks: API-key middleware is skipped when API_KEY is unset; IS_PLATFORM bypasses bearer-token validation for HTTP/WebSocket; SSE accepts query-string tokens. These require mode/configuration guards and regression tests. Full route/terminal/plugin/filesystem review and AGPL-3.0-or-later compliance review remain required. Sandbox-only; no installation."
     },
     {
       "repo": "ChrisWiles/claude-code-showcase",
