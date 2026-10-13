@@ -355,6 +355,119 @@
       ],
       "mode_default": "REFERENCE_ONLY",
       "rationale": "Unclassified reference material is kept available to engineering and external-intelligence review without execution authority."
+    },
+    {
+      "priority": 99,
+      "when": {
+        "category_contains_any": [
+          "agent-ui-security",
+          "agent-session-ui-security"
+        ]
+      },
+      "primary_agent": "GoogleAgentSkills",
+      "supporting_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "JEV"
+      ],
+      "mode_default": "SANDBOX_ONLY",
+      "rationale": "Agent UIs with terminal, session, or remote-control surfaces require security-first review before isolated evaluation."
+    },
+    {
+      "priority": 98,
+      "when": {
+        "category_contains_any": [
+          "browser-cdp-skill"
+        ]
+      },
+      "primary_agent": "PlaywrightCLI",
+      "supporting_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode_default": "SANDBOX_ONLY",
+      "rationale": "CDP/browser-control tools require disposable profiles, strict target restrictions, and no authenticated broker sessions."
+    },
+    {
+      "priority": 97,
+      "when": {
+        "category_contains_any": [
+          "web-extraction",
+          "MCP-network-ingestion"
+        ]
+      },
+      "primary_agent": "GoogleAgentSkills",
+      "supporting_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode_default": "SANDBOX_ONLY",
+      "rationale": "Web extraction and MCP fetchers require SSRF, egress, authentication, prompt-injection and resource-limit review."
+    },
+    {
+      "priority": 84,
+      "when": {
+        "category_contains_any": [
+          "agent-workflow-reference"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "Agent workflow examples are selectively reused only after hook, workflow and token-scope review."
+    },
+    {
+      "priority": 83,
+      "when": {
+        "category_contains_any": [
+          "agent-quickstarts"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "Quickstart applications are design references; examples are not presumed production-safe."
+    },
+    {
+      "priority": 82,
+      "when": {
+        "category_contains_any": [
+          "seo-marketing-plugin"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "SEO and marketing automation is segregated from the trading runtime and requires license/configuration review."
+    },
+    {
+      "priority": 61,
+      "when": {
+        "category_contains_any": [
+          "java-toolchain"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode_default": "TOOLCHAIN_ONLY",
+      "rationale": "Java-specific skills are evaluated only when Java implementation is in scope."
     }
   ],
   "assignment_contract": {
