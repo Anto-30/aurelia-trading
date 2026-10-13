@@ -7,16 +7,13 @@ on:
       - "config/external_repo_federation.json"
       - "docs/repository-intake-**"
       - ".github/workflows/repository-intake-supply-chain-audit.yml"
-  push:
-    branches:
-      - research/repository-intake-2026-10-13
-    paths:
-      - "config/external_repo_federation.json"
-      - "docs/repository-intake-**"
-      - ".github/workflows/repository-intake-supply-chain-audit.yml"
   workflow_dispatch:
 
 permissions: {}
+
+concurrency:
+  group: repository-intake-supply-chain-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   pinned-source-audit:
@@ -144,7 +141,7 @@ jobs:
           set -euo pipefail
           python -m pip install --disable-pip-version-check --no-input --no-cache-dir "scancode-toolkit==32.5.0"
 
-      - name: Scan source for license and package evidence (source code is not executed)
+      - name: Scan source for license and copyright evidence (source code is not executed)
         shell: bash
         run: |
           set +e
