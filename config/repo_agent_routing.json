@@ -427,7 +427,7 @@
       "rationale": "Agent workflow examples are selectively reused only after hook, workflow and token-scope review."
     },
     {
-      "priority": 83,
+      "priority": 91,
       "when": {
         "category_contains_any": [
           "agent-quickstarts"
