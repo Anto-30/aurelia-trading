@@ -62,6 +62,14 @@ class MicroCapitalPolicyTests(unittest.TestCase):
         self.assertFalse(result.allowed)
         self.assertIn("MICRO_SESSION_LOSS_LIMIT_REACHED", result.reason_codes)
 
+    def test_session_loss_cap_blocks_even_when_next_contract_loss_is_zero(self):
+        result = evaluate_micro_capital_stake(**valid_inputs(
+            session_loss_usd="0.35",
+            quoted_max_loss="0.00",
+        ))
+        self.assertFalse(result.allowed)
+        self.assertIn("MICRO_SESSION_LOSS_LIMIT_REACHED", result.reason_codes)
+
     def test_unqualified_or_uncalibrated_strategy_blocks(self):
         result = evaluate_micro_capital_stake(**valid_inputs(
             strategy_qualified=False,
