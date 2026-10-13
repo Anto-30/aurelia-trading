@@ -61,7 +61,8 @@ class DerivWebSocketTransport:
         self._reader_task = asyncio.create_task(self._reader_loop())
 
     async def _reader_loop(self) -> None:
-        assert self.ws is not None
+        if self.ws is None:
+            raise RuntimeError("DERIV_WEBSOCKET_NOT_CONNECTED")
         try:
             while True:
                 raw = await self.ws.recv()
