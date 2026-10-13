@@ -308,9 +308,10 @@ from pathlib import Path
 
 mode = sys.argv[1]
 payload = json.loads(Path("/tmp/aurelia-health.json").read_text(encoding="utf-8"))
-assert payload.get("liveness") is True, payload
-if mode == "VERIFY_ONLY":
-    assert payload.get("capital_can_open_new_exposure") is False, payload
+if payload.get("liveness") is not True:
+    raise SystemExit(f"deployment health evidence does not confirm liveness: {payload!r}")
+if mode == "VERIFY_ONLY" and payload.get("capital_can_open_new_exposure") is not False:
+    raise SystemExit(f"VERIFY_ONLY deployment unexpectedly permits new exposure: {payload!r}")
 PY
 sudo docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx "AURELIA_AUTONOMOUS_LOOP=$AUTONOMOUS_LOOP"
 sudo docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx "FINAL_EXECUTION_AUTHORIZATION=$FINAL_AUTH"
