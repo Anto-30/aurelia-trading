@@ -60,3 +60,17 @@ The README documents a default bind hostname of `localhost`, a password option (
 The README explicitly says this tool connects to the user's live Chrome session and can read and interact with tabs that are already logged in. The command surface includes page JavaScript evaluation, navigation, clicks, typing, raw CDP passthrough and network-resource inspection. Chrome remote debugging must be enabled. This grants access to whatever authenticated pages the connected browser can reach, including internal tools.
 
 Decision: keep `SANDBOX_ONLY`. Do not point it at a daily-use browser, any logged-in broker portal, production GitHub credentials, password manager, email, or AURELIA admin surfaces. If ever tested, use a disposable browser profile with no sessions, no saved secrets, restricted target allowlist, and remote-debugging access bound to loopback only. No runtime test was performed.
+
+
+## CloudCLI follow-up: authentication mode and credential transport
+
+A second pass over the same pinned `server/modules/auth/auth.middleware.ts` (blob `da451961b526eeec9f9514316817287b4a9b376a`) identified additional configuration-sensitive risks that need explicit regression tests:
+
+- `validateApiKey` skips API-key validation entirely when `API_KEY` is unset. This may be intended for local OSS mode, but deployments must not assume the optional middleware provides a security boundary unless configuration is enforced and tested.
+- In `IS_PLATFORM` mode, both HTTP and WebSocket authentication return the first database user without validating a bearer token. This may be a product-specific platform trust boundary, but it is a critical mode switch and must never be enabled accidentally in a self-hosted/remote deployment.
+- The middleware accepts an authentication token from the query string for SSE endpoints. URL-carried bearer tokens can leak through access logs, browser history, telemetry, reverse proxies, or referrer propagation unless carefully constrained.
+- The inspected code logs authentication failures. Verify logs never include bearer tokens, secrets, request URLs containing credentials, or other sensitive request context.
+
+Required gates before reconsideration: fail startup for unsafe auth-mode/configuration combinations; tests for unset API_KEY, invalid/missing tokens, platform-mode behavior, WebSocket and SSE paths; verify query-token redaction and restrictive cache/referrer/logging headers; and test auth on every terminal, file, Git, plugin, session, and WebSocket route. The source spot check is not sufficient to establish route coverage.
+
+**Decision unchanged:** `BLOCKED_PENDING_REGRESSION_TESTS_AND_FULL_SOURCE_REVIEW`; sandbox-only, no runtime installation. These are risks requiring verification, not a claim that the upstream project is exploitable in every deployment.
