@@ -84,6 +84,12 @@ jobs:
         run: |
           bash -n scripts/deploy/bootstrap_and_deploy.sh
           bash -n scripts/provision_deriv_github_secrets.sh
+      - name: Verify governance validators under Python optimization
+        run: |
+          python -O scripts/agent_continuity_check.py
+          python -O scripts/validate_agent_federation.py
+          python -O scripts/validate_agent_inventory.py
+          python -O scripts/validate_agent_tool_skill_assignments.py
       - name: Run research-plane tests
         run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
       - name: Run assurance tests
