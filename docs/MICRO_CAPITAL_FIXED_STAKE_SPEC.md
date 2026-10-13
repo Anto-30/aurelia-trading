@@ -1,6 +1,6 @@
 # AURELIA $0.35 Micro-Capital Mode — Engineering Specification
 
-Status: **proposed; not implemented or live-authorized**  
+Status: **policy helper and unit tests committed; canonical executor integration and live authorization remain blocked**  
 Canonical PR: #123  
 Branch: `fix/probability-broker-minimum-policy-2026-10-13`
 
