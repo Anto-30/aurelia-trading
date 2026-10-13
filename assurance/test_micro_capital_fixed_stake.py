@@ -69,6 +69,12 @@ class MicroCapitalPolicyTests(unittest.TestCase):
         ))
         self.assertFalse(result.allowed)
         self.assertIn("MICRO_SESSION_LOSS_LIMIT_REACHED", result.reason_codes)
+        self.assertIn("CONTRACT_MAX_LOSS_INVALID_OR_OVER_LIMIT", result.reason_codes)
+
+    def test_zero_contract_max_loss_is_invalid(self):
+        result = evaluate_micro_capital_stake(**valid_inputs(quoted_max_loss="0.00"))
+        self.assertFalse(result.allowed)
+        self.assertIn("CONTRACT_MAX_LOSS_INVALID_OR_OVER_LIMIT", result.reason_codes)
 
     def test_unqualified_or_uncalibrated_strategy_blocks(self):
         result = evaluate_micro_capital_stake(**valid_inputs(
