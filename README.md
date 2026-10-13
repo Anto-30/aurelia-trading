@@ -69,6 +69,12 @@ For live purchased contracts, AURELIA requires a verified USD account, fresh ava
 
 Full policy: `docs/AURELIA_STAKE_POLICY_2026-10-10.md`.
 
+## Runtime state and container hardening
+
+The runtime container runs as the unprivileged `aurelia` user (UID 10001). Durable journals, readiness reports, idempotency state, execution ledger, fencing state, agent leases, and performance state default to `/var/lib/aurelia`, configurable with `AURELIA_STATE_DIR`. Individual file paths remain explicitly overridable with their existing `AURELIA_*_PATH` environment variables.
+
+For a self-hosted Docker deployment, mount a durable host volume at `/var/lib/aurelia` and grant UID 10001 write access to that directory before starting the container. Without a durable volume, container replacement can still lose local state; the runtime must not be considered production-qualified until persistence and recovery have been tested. Do not mount source code or secrets as writable state. The health listener binds to `0.0.0.0` for container/platform probes; set `AURELIA_HEALTH_HOST` only when the deployment network is configured to reach the selected interface. Network policy and TLS termination must be provided by the hosting layer.
+
 ## Verification
 
 Run the assurance suite with:
