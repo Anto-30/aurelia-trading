@@ -65,11 +65,11 @@ def evaluate_micro_capital_stake(
         reasons.append("BALANCE_INVALID")
     if str(currency or "").strip().upper() != "USD":
         reasons.append("CURRENCY_MISMATCH")
-    if not account_verified:
+    if account_verified is not True:
         reasons.append("ACCOUNT_UNVERIFIED")
-    if not balance_fresh:
+    if balance_fresh is not True:
         reasons.append("BALANCE_STALE")
-    if not exact_contract_quote_verified:
+    if exact_contract_quote_verified is not True:
         reasons.append("EXACT_CONTRACT_QUOTE_UNVERIFIED")
     if quote is None or quote != FIXED_MICRO_STAKE_USD:
         reasons.append("QUOTED_STAKE_NOT_EXACTLY_USD_1")
@@ -77,29 +77,29 @@ def evaluate_micro_capital_stake(
         reasons.append("CONTRACT_MAX_LOSS_INVALID_OR_OVER_LIMIT")
     if balance is not None and quote is not None and balance < quote:
         reasons.append("STAKE_UNAFFORDABLE")
-    if not one_open_contract_or_less:
+    if one_open_contract_or_less is not True:
         reasons.append("OPEN_CONTRACT_LIMIT_EXCEEDED")
     if session_loss is None or session_loss < 0:
         reasons.append("SESSION_LOSS_INVALID")
     elif session_loss + (max_loss if max_loss is not None else FIXED_MICRO_STAKE_USD) > FIXED_MICRO_STAKE_USD:
         reasons.append("MICRO_SESSION_LOSS_LIMIT_REACHED")
-    if not transaction_state_reconciled:
+    if transaction_state_reconciled is not True:
         reasons.append("TRANSACTION_RECONCILIATION_REQUIRED")
-    if not strategy_qualified:
+    if strategy_qualified is not True:
         reasons.append("STRATEGY_NOT_QUALIFIED")
     if prob is None or not Decimal("0.55") <= prob <= Decimal("0.75"):
         reasons.append("PROBABILITY_OUTSIDE_HARD_POLICY")
-    if not probability_calibrated:
+    if probability_calibrated is not True:
         reasons.append("PROBABILITY_NOT_CALIBRATED")
-    if not probability_fresh:
+    if probability_fresh is not True:
         reasons.append("PROBABILITY_NOT_FRESH")
-    if not probability_drift_ok:
+    if probability_drift_ok is not True:
         reasons.append("PROBABILITY_DRIFT_DETECTED_OR_UNVERIFIED")
-    if not net_economics_positive:
+    if net_economics_positive is not True:
         reasons.append("NET_ECONOMICS_NOT_POSITIVE")
-    if not kill_switch_clear:
+    if kill_switch_clear is not True:
         reasons.append("KILL_SWITCH_ACTIVE")
-    if not live_lock_enabled:
+    if live_lock_enabled is not True:
         reasons.append("LIVE_RELEASE_GATE_BLOCKED")
 
     if reasons:
