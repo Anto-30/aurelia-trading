@@ -58,3 +58,21 @@ The pins above are observed default-branch tip SHAs from GitHub on 2026-10-13 UT
 ## Invariants
 
 Keep one canonical AURELIA repository, one capital plane, one release authority and one evidence lineage. Claude Code is the implementation lead; ChatGPT is architecture/assurance; Grok is independent market/news research; JEV is deterministic QA/operations. Agent rankings or successful CI cannot grant capital authority. Existing live execution remains blocked unless its separate broker, risk, calibration, soak, runtime and release evidence gates pass.
+
+
+## Registration and CI update (2026-10-13 UTC)
+
+- Added the 18 candidates not already present and refreshed the observed pins for the two candidates already registered (`Mathieu2301/TradingView-API` and `stablyai/orca`) in `config/external_repo_federation.json`. Registry count is now 327; exact repository-name duplicates: 0.
+- Added four deterministic routing rules to `config/repo_agent_routing.json` for oracle/market-data sources, crypto market-making code, agent runtimes/orchestration, and reference/out-of-scope repositories. All registered repository agent references resolve to known agent IDs in the config-level validation.
+- Expanded `.github/workflows/repository-intake-supply-chain-audit.yml` from 10 to 30 pinned source snapshots, added the routing config to workflow path triggers, increased the job timeout to 90 minutes and adjusted bounded archive/uncompressed-data limits. This is a code change to the audit gate, not a successful scan result.
+- Static consistency check performed against the checked-out GitHub file contents: 30 workflow pins, no duplicate workflow pins, every workflow pin matches a registry `head_commit`, 327 registry entries, no duplicate repository keys, and no unknown agent IDs in registry assignments.
+- CI observed for head commit `62f219ba8c775cda269414dd0c5a59cb47d42ba4`: Agent Federation Audit and gstack Workflow Federation Assurance completed successfully. AURELIA Assurance and Repository Intake Supply-Chain Audit were pending at the last check; the Continuity Watchdog was still in progress. The supply-chain audit had not yet exposed a job result, so no dependency/security scan pass is claimed.
+- No source code from the candidate repositories was installed, executed, vendored, or granted production access. The existing PR remains draft pending the CI results, source-level audit evidence, and independent human review. No reviewer had submitted a review at the last check; an available authorized reviewer identity was not established by the current connector context.
+
+### Still blocking admission
+
+1. Wait for the 30-repository pinned-source audit to complete; inspect its artifact and all OSV/ScanCode findings. Any incomplete archive inventory or scanner failure blocks admission.
+2. Verify exact advisory applicability and license obligations at pinned revisions; complete the transitive dependency/SBOM and executable-config review.
+3. Run component-specific tests in a disposable, credential-free environment. For market-data sources test timestamps, staleness, symbols, terms/rate limits and fail-closed behavior; for agent gateways test auth, remote exposure, tool scope, prompt injection and secret isolation; for trading code use mocks only.
+4. Obtain an independent human review and explicit approval before moving any candidate out of its present registry mode.
+5. Keep the PR draft and do not merge until all required CI and human-review gates pass.
