@@ -8003,8 +8003,8 @@
     "automatic_upstream_execution": false
   },
   "last_sync": {
-    "completed_at": "2026-10-11",
-    "source": "User-supplied GitHub repository batch; current default HEAD commit pins queried through GitHub API",
+    "completed_at": "2026-10-13",
+    "source": "User-supplied 34-repository RAG/LLM/agent research batch; upstream default-branch HEAD commits checked through GitHub API",
     "unique_repositories_added_or_refreshed": [
       "ychampion/melete",
       "yxq953/MuseLite",
@@ -8322,77 +8322,9 @@
         "physical_runtime_install": "NOT_CLAIMED"
       }
     ],
-    "physical_runtime_install": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
+    "physical_runtime_install": "NOT_CLAIMED_NO_REMOTE_DEVICE_CONNECTED",
     "note": "Pinned registry sync only; no external source copied into execution paths.",
-    "latest_batch": [
-      {
-        "repo": "CryptoSignal/Crypto-Signal",
-        "head_commit": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
-        "assigned_agents": [
-          "KimiK3",
-          "GrokBot",
-          "ClaudeCode",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "Kappaemme-git/codex-first-customer-finder-skill",
-        "head_commit": "d3f6964bd989745ac183edbd545c588a68451146",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "Neeeophytee/finding-unknowns-skills",
-        "head_commit": "ca5696a0f08d2de6b2997fff1d6cc05c3ed587cc",
-        "assigned_agents": [
-          "ClaudeCode",
-          "JEV",
-          "GrokBot",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "he-yufeng/FindJobs-Agent",
-        "head_commit": "591fe6b451db98fe0bebb8f92a7b9902b0fd6079",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "davepoon/buildwithclaude",
-        "head_commit": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "workersio/skills",
-        "head_commit": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
-        "assigned_agents": [
-          "ClaudeCode",
-          "JEV",
-          "GrokBot",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      }
-    ],
+    "latest_batch": [],
     "legacy_head_pinning": {
       "previously_unpinned": 73,
       "now_pinned": 73,
@@ -8403,7 +8335,7 @@
     "repository_count": 154,
     "all_repository_heads_pinned": true,
     "date": "2026-10-13",
-    "summary": "Extended the 2026-10-13 intake batch with Plexo and Intel AutoRound; pinned upstream HEADs, assigned specialist routing, and kept both non-authoritative pending review.",
+    "summary": "Registered 0 unique repositories from the 2026-10-13 RAG/LLM batch; commit-pinned for review only. No source was installed or executed.",
     "intake_2026_10_11": {
       "provided_repository_urls_count": 84,
       "unique_supplied_repositories_count": 84,
@@ -8457,7 +8389,8 @@
       "runtime_installation": "NOT_CLAIMED",
       "agent_skill_federation_update": "NOT_APPLICABLE: neither repository is being admitted as an agent/skill/plugin source",
       "capital_authority": false
-    }
+    },
+    "security_review_status": "PENDING; registration is not security clearance"
   },
   "intake_batches": {
     "intake_2026_10_13_ten_repo_batch": {
@@ -8577,6 +8510,17 @@
       "runtime_installation": "NOT_CLAIMED",
       "agent_skill_federation_update": "NOT_APPLICABLE: candidates are not admitted as installed agent/skill/plugin sources",
       "capital_authority": false
+    },
+    "intake_2026_10_13_rag_llm_batch": {
+      "provided_repository_urls_count": 34,
+      "unique_repositories_added_or_refreshed": [],
+      "pin_source": "GitHub API latest commit on default branch checked 2026-10-13 UTC",
+      "security_review_status": "PENDING_PER_REPOSITORY",
+      "license_review_status": "PENDING_PER_REPOSITORY",
+      "runtime_installation": "NOT_CLAIMED",
+      "capital_authority": false,
+      "duplicate_inputs": "none in supplied list",
+      "note": "RAG retrieval, evaluation, graph/document indexing, agent examples and learning resources are registered as non-authoritative candidates. This batch does not approve dependencies or enable trading/runtime execution."
     }
   }
 }
