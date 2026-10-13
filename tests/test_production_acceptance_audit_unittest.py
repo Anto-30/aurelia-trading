@@ -101,6 +101,40 @@ class DerivEndpointHardeningTests(unittest.TestCase):
                 )
             open_url.assert_not_called()
 
+
+    def test_nested_or_nonstandard_deriv_websocket_path_is_rejected(self):
+        from runtime.adapters.deriv_session import validate_modern_options_ws_url
+
+        for url in (
+            "wss://api.derivws.com:444/trading/v1/options/ws/real",
+            "wss://api.derivws.com/trading/v1/options/ws/extra/real",
+            "wss://user@api.derivws.com/trading/v1/options/ws/real",
+            "wss://api.derivws.com/trading/v1/options/ws/real#fragment",
+        ):
+            with self.subTest(url=url):
+                with self.assertRaises(DerivSessionError):
+                    validate_modern_options_ws_url(url)
+
+    def test_deriv_pat_alias_is_used_for_otp_bootstrap(self):
+        from runtime.adapters.deriv_session import get_authenticated_ws_url
+
+        response = unittest.mock.MagicMock()
+        response.__enter__.return_value = response
+        response.read.return_value = (
+            b'{"data":{"url":"wss://api.derivws.com/trading/v1/options/ws/real?otp=redacted"}}'
+        )
+        with patch.dict("os.environ", {"DERIV_AUTH_MODE": "pat"}, clear=True):
+            with patch(
+                "runtime.adapters.deriv_session.get_optional_secret",
+                side_effect=lambda name: {"DERIV_PAT": "test-pat"}.get(name),
+            ), patch(
+                "runtime.adapters.deriv_session.urlopen", return_value=response
+            ) as open_url:
+                result = get_authenticated_ws_url("CR123", app_id="test-app")
+        self.assertEqual(result.account_id, "CR123")
+        self.assertIn("DERIV_PAT", repr(open_url.call_args))
+        self.assertNotIn("test-pat", repr(result))
+
     def test_malformed_port_is_rejected_without_leaking_parser_error(self):
         manager = DerivSessionManager(
             expected_loginid="CR123",
