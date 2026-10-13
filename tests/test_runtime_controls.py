@@ -253,7 +253,7 @@ class TestControls(unittest.TestCase):
         self.assertFalse(gate.allowed)
         self.assertIn("RECONCILIATION_UNHEALTHY", gate.reason_codes)
 
-    def test_full_gate_can_pass_only_with_all_validation_inputs(self):
+    def test_live_gate_blocks_even_when_arbitrary_numeric_minimum_is_supplied(self):
         gate, ctx = authorization_gate(
             decision=dec(),
             account=ident(),
@@ -276,9 +276,9 @@ class TestControls(unittest.TestCase):
             exposure_approved=True,
             broker_minimum_stake=1.00,
         )
-        self.assertTrue(gate.allowed, gate.reason_codes)
-        self.assertIsNotNone(ctx)
-        self.assertEqual(ctx.decision.risk_requested_stake, 2.00)
+        self.assertFalse(gate.allowed)
+        self.assertIsNone(ctx)
+        self.assertIn("BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED", gate.reason_codes)
 
     def test_locked_baseline(self):
         gate, ctx = authorization_gate(
