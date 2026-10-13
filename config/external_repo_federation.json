@@ -6378,6 +6378,232 @@
         "quantized-model-benchmarking"
       ],
       "integration_note": "Evaluate only as an isolated LLM inference optimization candidate. Benchmark accuracy, latency, memory, hardware compatibility, reproducibility and model-specific regression before adoption. No effect on strategy logic, probability gates, capital authority, broker execution, or release authorization."
+    },
+    {
+      "repo": "pasky/chrome-cdp-skill",
+      "category": "browser-cdp-skill",
+      "domain": "engineering",
+      "assigned_agents": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/pasky/chrome-cdp-skill",
+      "head_commit": "ffea76a24b0471663ddd9d9f24335bbc442b6266",
+      "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_REVIEW_PENDING",
+      "capabilities": [
+        "browser-automation",
+        "Chrome-DevTools-Protocol",
+        "browser-session-inspection"
+      ],
+      "integration_note": "High-risk browser control: disposable profile only; no authenticated broker sessions, production secrets, public remote debugging, or trading actions."
+    },
+    {
+      "repo": "anthropics/claude-quickstarts",
+      "category": "agent-quickstarts",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/anthropics/claude-quickstarts",
+      "head_commit": "9ec32b91df50b0d4906cae64b13c6298055ff40d",
+      "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_REFERENCE_ONLY",
+      "capabilities": [
+        "agent-app-examples",
+        "browser-use-examples",
+        "financial-analyst-demo"
+      ],
+      "integration_note": "Selected examples are design references only. Audit dependencies, secrets handling, shell/network permissions, and demo-vs-production limitations."
+    },
+    {
+      "repo": "siteboon/claudecodeui",
+      "category": "agent-ui-security",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/siteboon/claudecodeui",
+      "head_commit": "7c3049fe8e157f12b7add3e496d8d2fe6fa5c014",
+      "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "BLOCKED_PENDING_ADVISORY_RECONCILIATION",
+      "trust": "UPSTREAM_REVIEW_PENDING",
+      "capabilities": [
+        "web-ui",
+        "terminal-access",
+        "git-operations",
+        "agent-session-ui"
+      ],
+      "integration_note": "Blocked pending exact-version security advisory reconciliation and regression tests. Root license file is AGPL-3.0; review licensing obligations."
+    },
+    {
+      "repo": "ChrisWiles/claude-code-showcase",
+      "category": "agent-workflow-reference",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/ChrisWiles/claude-code-showcase",
+      "head_commit": "a95518f0cb67e86230119da40429169bc4c35a6f",
+      "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_REFERENCE_ONLY",
+      "capabilities": [
+        "agent-skills",
+        "hooks",
+        "MCP-examples",
+        "CI-workflows"
+      ],
+      "integration_note": "Reference only. Root LICENSE path was not found; reuse rights unconfirmed. Review hooks, CI permissions and token scopes."
+    },
+    {
+      "repo": "decebals/claude-code-java",
+      "category": "java-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/decebals/claude-code-java",
+      "head_commit": "0d98fe9bd62923e819568ee1e041a1bf320f74d4",
+      "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_REVIEW_PENDING",
+      "capabilities": [
+        "Java-development-skills",
+        "Java-workflow-templates"
+      ],
+      "integration_note": "Only evaluate if Java components are in scope. Root license advertises MIT; audit setup scripts and license at pinned revision."
+    },
+    {
+      "repo": "d-kimuson/claude-code-viewer",
+      "category": "agent-session-ui-security",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/d-kimuson/claude-code-viewer",
+      "head_commit": "9367cf006be9965c954e6cd36526f2195dce67ea",
+      "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_REVIEW_PENDING",
+      "capabilities": [
+        "agent-session-viewer",
+        "terminal-control",
+        "session-management"
+      ],
+      "integration_note": "No internet-facing or credential-bearing use until authentication, host binding, session storage and terminal permissions are verified."
+    },
+    {
+      "repo": "D4Vinci/Scrapling",
+      "category": "web-extraction",
+      "domain": "research",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/D4Vinci/Scrapling",
+      "head_commit": "7a684934907a8c7feaafe9ff1ccfd9d45cc26faf",
+      "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_REVIEW_PENDING",
+      "capabilities": [
+        "web-extraction",
+        "research-ingestion",
+        "browser-fetchers"
+      ],
+      "integration_note": "Isolated low-volume research only; deny private/metadata ranges, revalidate redirects/DNS, enforce rate/content limits, respect site terms, treat output as untrusted."
+    },
+    {
+      "repo": "cyberchitta/scrapling-fetch-mcp",
+      "category": "MCP-network-ingestion",
+      "domain": "research",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/cyberchitta/scrapling-fetch-mcp",
+      "head_commit": "8ed4c0df0979ca758e6e13ae84e6cdbe129e1a7a",
+      "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "BLOCKED_PENDING_SSRF_AUTH_AND_EGRESS_TESTS",
+      "trust": "UPSTREAM_REVIEW_PENDING",
+      "capabilities": [
+        "MCP-fetch-server",
+        "web-extraction",
+        "browser-fetchers"
+      ],
+      "integration_note": "Blocked pending auth, SSRF/redirect/DNS revalidation, private-network denylist, time/size limits and low-volume tests."
+    },
+    {
+      "repo": "popiliadam/platinum-seo-engine",
+      "category": "seo-marketing-plugin",
+      "domain": "marketing",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/popiliadam/platinum-seo-engine",
+      "head_commit": "ffdf24da84cd5d52f755f156707d9bd14f7c0135",
+      "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_REFERENCE_ONLY",
+      "capabilities": [
+        "SEO-workflows",
+        "MCP-configurations",
+        "marketing-automation"
+      ],
+      "integration_note": "Marketing workspace only, not trading runtime. Root license is AGPL-3.0; inspected MCP config includes shell invocation, local .env sourcing and machine-specific path; do not copy as-is."
     }
   ],
   "pin_policy": {
@@ -6839,6 +7065,126 @@
       "security_review_status": "PENDING",
       "runtime_installation": "NOT_CLAIMED",
       "agent_skill_federation_update": "NOT_APPLICABLE: neither repository is being admitted as an agent/skill/plugin source",
+      "capital_authority": false
+    }
+  },
+  "intake_batches": {
+    "intake_2026_10_13_ten_repo_batch": {
+      "provided_repository_urls_count": 10,
+      "unique_repositories_added_or_refreshed": [
+        {
+          "repo": "pasky/chrome-cdp-skill",
+          "head_commit": "ffea76a24b0471663ddd9d9f24335bbc442b6266",
+          "mode": "SANDBOX_ONLY",
+          "assigned_agents": [
+            "PlaywrightCLI",
+            "ClaudeCode",
+            "GrokBot",
+            "JEV",
+            "ChatGPT"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "anthropics/claude-quickstarts",
+          "head_commit": "9ec32b91df50b0d4906cae64b13c6298055ff40d",
+          "mode": "REFERENCE_ONLY",
+          "assigned_agents": [
+            "ClaudeCode",
+            "GrokBot",
+            "JEV",
+            "ChatGPT"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "siteboon/claudecodeui",
+          "head_commit": "7c3049fe8e157f12b7add3e496d8d2fe6fa5c014",
+          "mode": "SANDBOX_ONLY",
+          "assigned_agents": [
+            "GoogleAgentSkills",
+            "ClaudeCode",
+            "JEV",
+            "GrokBot"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "ChrisWiles/claude-code-showcase",
+          "head_commit": "a95518f0cb67e86230119da40429169bc4c35a6f",
+          "mode": "REFERENCE_ONLY",
+          "assigned_agents": [
+            "ClaudeCode",
+            "GrokBot",
+            "JEV",
+            "ChatGPT"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "decebals/claude-code-java",
+          "head_commit": "0d98fe9bd62923e819568ee1e041a1bf320f74d4",
+          "mode": "TOOLCHAIN_ONLY",
+          "assigned_agents": [
+            "ClaudeCode",
+            "JEV",
+            "ChatGPT"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "d-kimuson/claude-code-viewer",
+          "head_commit": "9367cf006be9965c954e6cd36526f2195dce67ea",
+          "mode": "SANDBOX_ONLY",
+          "assigned_agents": [
+            "GoogleAgentSkills",
+            "ClaudeCode",
+            "PlaywrightCLI",
+            "JEV"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "D4Vinci/Scrapling",
+          "head_commit": "7a684934907a8c7feaafe9ff1ccfd9d45cc26faf",
+          "mode": "SANDBOX_ONLY",
+          "assigned_agents": [
+            "GoogleAgentSkills",
+            "ClaudeCode",
+            "GrokBot",
+            "JEV"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "cyberchitta/scrapling-fetch-mcp",
+          "head_commit": "8ed4c0df0979ca758e6e13ae84e6cdbe129e1a7a",
+          "mode": "SANDBOX_ONLY",
+          "assigned_agents": [
+            "GoogleAgentSkills",
+            "ClaudeCode",
+            "GrokBot",
+            "JEV"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "popiliadam/platinum-seo-engine",
+          "head_commit": "ffdf24da84cd5d52f755f156707d9bd14f7c0135",
+          "mode": "REFERENCE_ONLY",
+          "assigned_agents": [
+            "ClaudeCode",
+            "GrokBot",
+            "JEV",
+            "ChatGPT"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        }
+      ],
+      "pin_source": "GitHub API default-branch HEAD queried 2026-10-13 UTC",
+      "security_review_status": "PENDING_OR_BLOCKED_PER_REPOSITORY",
+      "runtime_installation": "NOT_CLAIMED",
+      "agent_skill_federation_update": "NOT_APPLICABLE: candidates are not admitted as installed agent/skill/plugin sources",
       "capital_authority": false
     }
   }
