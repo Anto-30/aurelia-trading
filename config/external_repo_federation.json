@@ -6883,6 +6883,1118 @@
         "visual-thinking"
       ],
       "integration_note": "Registry pin only: no automatic installation or execution. Review license/dependencies/security first. Obsidian vault content remains private; do not embed API keys or sync secrets."
+    },
+    {
+      "repo": "infiniflow/ragflow",
+      "category": "rag-retrieval-engine",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/infiniflow/ragflow",
+      "head_commit": "d2ede485bfe87dc42b6c23598a2e36ab8f964030",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. RAG ingestion/retrieval and agent-context evaluation; assess API authentication, parser isolation, tenant boundaries, ingestion SSRF, plugin execution, dependencies, license and resource ceilings. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "raga-ai-hub/RagaAI-Catalyst",
+      "category": "rag-evaluation-observability",
+      "domain": "engineering",
+      "assigned_agents": [
+        "JEV",
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/raga-ai-hub/RagaAI-Catalyst",
+      "head_commit": "ab67893310891140211280a496402003e52cdab5",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "rag-evaluation",
+        "retrieval-metrics",
+        "reproducible-benchmarks",
+        "dataset-governance"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Agent/LLM tracing and observability candidate. Verify telemetry redaction, data retention, outbound endpoints, SDK permissions, and whether traces can expose secrets or account data. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "HKUDS/RAG-Anything",
+      "category": "multimodal-rag",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/HKUDS/RAG-Anything",
+      "head_commit": "da6e2d87a7d3f2746c4541f59953b8764213f6a2",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Multimodal document retrieval research. Review parser/file handling, untrusted document prompt injection, OCR/image pipeline dependencies and data exfiltration boundaries. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "HKUDS/LightRAG",
+      "category": "graph-rag",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/HKUDS/LightRAG",
+      "head_commit": "4d0afc1bc36e6a34d4a5895b68efe9413748627a",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "graph-retrieval",
+        "retrieval-evaluation",
+        "source-provenance",
+        "prompt-injection-resistance"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Graph-based retrieval candidate. Benchmark factuality, provenance, update consistency, poisoning resistance, graph-store isolation and reproducibility. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "NirDiamant/RAG_Techniques",
+      "category": "rag-techniques-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/NirDiamant/RAG_Techniques",
+      "head_commit": "cbf9e528206bbb5cd23970ff612d12c1074e02dc",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "learning-material",
+        "selective-pattern-review"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Educational technique examples only. Select individual approaches for reproducible experiments; do not import notebooks or dependencies wholesale. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "souravkl11/raganork",
+      "category": "deprecated-chatbot-project",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/souravkl11/raganork",
+      "head_commit": "4161bec86639ae8234d81ed8fd7f7dcf4099e2e2",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Latest commit labels the project archived/deprecated. Preserve for historical reference only; do not deploy or depend on it. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "datawhalechina/all-in-rag",
+      "category": "rag-learning-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/datawhalechina/all-in-rag",
+      "head_commit": "cec956e80ae28d6c0ca84c9d39dddcf61ad633fd",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "learning-material",
+        "selective-pattern-review"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Curated learning material. Check individual linked projects, attribution and license before copying examples. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "vibrantlabsai/ragas",
+      "category": "rag-evaluation",
+      "domain": "research",
+      "assigned_agents": [
+        "JEV",
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/vibrantlabsai/ragas",
+      "head_commit": "298b68274234c060deacab3cf5fb52aa3a20e885",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "rag-evaluation",
+        "retrieval-metrics",
+        "reproducible-benchmarks",
+        "dataset-governance"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Priority evaluation candidate for retrieval faithfulness, answer relevance and context precision/recall. Validate judge-model bias, metric calibration and deterministic test fixtures. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "bragai/bRAG-langchain",
+      "category": "agentic-rag-framework",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/bragai/bRAG-langchain",
+      "head_commit": "33aca8325f728ab3e96988add9f8bdd2987dadc6",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. LangChain-oriented RAG framework candidate. Review tool routing, prompt-injection handling, dependency graph and source provenance. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "GiovanniPasq/agentic-rag-for-dummies",
+      "category": "agentic-rag-learning",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/GiovanniPasq/agentic-rag-for-dummies",
+      "head_commit": "f0d9a3c89adc7ebd146ffe173057fe013dd41739",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "learning-material",
+        "selective-pattern-review"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Educational agentic-RAG example. Review updated dependencies and workflow commands before selectively adapting patterns. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "str4d/rage",
+      "category": "secure-file-encryption-utility",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/str4d/rage",
+      "head_commit": "b5b68c4f4f7ea5c368bc060f6fe0237549c3a13f",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Name collision rather than a RAG candidate; classify separately as an encryption utility. Only assess if a concrete security use case exists. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "Azure-Samples/rag-postgres-openai-python",
+      "category": "postgres-rag-reference",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Azure-Samples/rag-postgres-openai-python",
+      "head_commit": "2c23c488bb8698159739b0a01c22396b788f7de6",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "learning-material",
+        "selective-pattern-review"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. SQL-backed RAG reference. Latest commit fixes SQL injection in search filters; independently inspect the patch, parameterization, tenant scoping, database roles and tests. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "Andrew-Jang/RAGHub",
+      "category": "rag-application-framework",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Andrew-Jang/RAGHub",
+      "head_commit": "bd7f46a3cb47ea78ba5044b74cf166f9c5b9fef9",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. RAG application framework candidate. Validate auth, upload/parser boundaries, vector-store isolation, prompt injection and deployment defaults. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "LibreChat-AI/rag-api",
+      "category": "rag-api-service",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/LibreChat-AI/rag-api",
+      "head_commit": "c4e5cbf79fcece1df9adfff5dfed983a5990ca9f",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. RAG API service candidate. Review API auth, legacy mirror gating, file ingestion, SSRF, tenant isolation and secrets handling. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "rag-web-ui/rag-web-ui",
+      "category": "rag-web-interface",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/rag-web-ui/rag-web-ui",
+      "head_commit": "905fb04669ae6f2a0cb3690d82a547b860e80dd4",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. RAG web UI reference. Test authentication, upload limits, stored credentials, cross-origin controls and backend endpoint configuration. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "datawhalechina/hello-agents",
+      "category": "agent-learning-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/datawhalechina/hello-agents",
+      "head_commit": "930c0b2bc80880c24ad0eca17de23fe9680c8a5f",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "learning-material",
+        "selective-pattern-review"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Agent learning resource; use for architecture patterns only after review of each example's dependency and execution behavior. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "mll-lab-nu/RAGEN",
+      "category": "agentic-rag-research",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/mll-lab-nu/RAGEN",
+      "head_commit": "d97bb3284e99568adfd44ee15c736d7685c07512",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Research candidate; establish exact scope and reproducible baseline before adapting code. No trading strategy or execution authority. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "RUC-NLPIR/FlashRAG",
+      "category": "rag-research-benchmark",
+      "domain": "research",
+      "assigned_agents": [
+        "JEV",
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/RUC-NLPIR/FlashRAG",
+      "head_commit": "f7be4d976b10e2d590451533486c03761c29f6b9",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "rag-evaluation",
+        "retrieval-metrics",
+        "reproducible-benchmarks",
+        "dataset-governance"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. RAG research and benchmark framework. Check dataset licenses, benchmark leakage, evaluation reproducibility and dependency exposure. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "datawhalechina/happy-llm",
+      "category": "llm-learning-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/datawhalechina/happy-llm",
+      "head_commit": "1e0b3a1e6f8936b8ba4bbd0673e8e2227d196c96",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "learning-material",
+        "selective-pattern-review"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. LLM learning content; educational only, with per-example license and dependency review before reuse. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "patchy631/ai-engineering-hub",
+      "category": "ai-engineering-examples",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/patchy631/ai-engineering-hub",
+      "head_commit": "be534adc47ae3357253025d6e0ab769b465086d7",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "learning-material",
+        "selective-pattern-review"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Collection of AI engineering examples. Treat each subproject as a separate dependency, license and security boundary. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "datawhalechina/llm-universe",
+      "category": "llm-learning-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/datawhalechina/llm-universe",
+      "head_commit": "77beb748047e8a0d8ff708716606a8e0b132dc45",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "learning-material",
+        "selective-pattern-review"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. LLM learning collection; use as reading material and individually vet any copied code or datasets. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "OSU-NLP-Group/HippoRAG",
+      "category": "graph-rag-research",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/OSU-NLP-Group/HippoRAG",
+      "head_commit": "d5c8329422e0a0b834a15874545cb6a74b4f9b26",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "graph-retrieval",
+        "retrieval-evaluation",
+        "source-provenance",
+        "prompt-injection-resistance"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Graph retrieval research candidate; review new Claude Code/MCP integration separately, constrain tool permissions, and benchmark retrieval quality and poisoning resistance. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "honeyandme/RAGQnASystem",
+      "category": "rag-qa-system",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/honeyandme/RAGQnASystem",
+      "head_commit": "6d91e2ec76f70dd604b8a897a63b2ac6fba3ec95",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Small RAG Q&A system candidate. Confirm maintenance, license, secret handling and dependency age before any adaptation. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "langchain-ai/rag-from-scratch",
+      "category": "rag-learning-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/langchain-ai/rag-from-scratch",
+      "head_commit": "1fdb7d0e4f1d3e731c8397332452715512f18667",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "learning-material",
+        "selective-pattern-review"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Foundational tutorial source. Use as an educational baseline, not as a production service or dependency. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "nageoffer/ragent",
+      "category": "agentic-rag-memory",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/nageoffer/ragent",
+      "head_commit": "34b438d3f2ef356ad49a28becb058b1d69985fae",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Agent/memory framework candidate. Inspect memory arbitration, tool execution, persistence, model-call changes and prompt-injection controls. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "VectifyAI/PageIndex",
+      "category": "document-indexing-rag",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/VectifyAI/PageIndex",
+      "head_commit": "af92d9658a6a9c0ae31171b43198db28951af2f4",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Hierarchical/document indexing candidate. Benchmark citation grounding and retrieval cost against vector and graph baselines; inspect document parsing and data boundaries. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "Marker-Inc-Korea/AutoRAG",
+      "category": "rag-evaluation-optimization",
+      "domain": "research",
+      "assigned_agents": [
+        "JEV",
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/Marker-Inc-Korea/AutoRAG",
+      "head_commit": "5dd4066340e8f3cc1c8024d5af04062b9e46f717",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "rag-evaluation",
+        "retrieval-metrics",
+        "reproducible-benchmarks",
+        "dataset-governance"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. RAG pipeline evaluation/optimization candidate. Verify evaluation split isolation, embedding/model version pinning, runtime artifact handling and metric stability. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "OpenBMB/UltraRAG",
+      "category": "rag-pipeline-framework",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/OpenBMB/UltraRAG",
+      "head_commit": "185e2032d9f134099405b8b483edbbad95274080",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. RAG workflow framework. Review UI/frontend dependencies, model/tool orchestration, code execution surfaces and tenant/auth boundaries. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "microsoft/graphrag",
+      "category": "graph-rag",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/microsoft/graphrag",
+      "head_commit": "5faaaf4f5685fa2056fa8c3bf9342cb089f2942f",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "graph-retrieval",
+        "retrieval-evaluation",
+        "source-provenance",
+        "prompt-injection-resistance"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. GraphRAG candidate for structured corpus retrieval. Measure indexing cost, entity/relationship extraction errors, provenance, graph updates and prompt injection. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "vitali87/code-graph-rag",
+      "category": "code-graph-rag",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/vitali87/code-graph-rag",
+      "head_commit": "fb6799e94d99da674d8525b21e2b0f298731f1be",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "graph-retrieval",
+        "retrieval-evaluation",
+        "source-provenance",
+        "prompt-injection-resistance"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Code graph retrieval candidate. Treat repository contents as untrusted instructions; review indexing access, generated code paths, model endpoints and filesystem scope. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "ragapp/ragapp",
+      "category": "rag-application-framework",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/ragapp/ragapp",
+      "head_commit": "f7f88892a92c110853dfa019f2c4a605a4a7b6f5",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Last observed commit is from 2024; maintenance freshness is a concern. Verify compatibility and security status before any experiment. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "StarTrail-org/PixelRAG",
+      "category": "multimodal-rag",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/StarTrail-org/PixelRAG",
+      "head_commit": "b4fe76301465eaee3d8ac75e0bec54664e53c072",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Multimodal retrieval candidate. Validate image/document parsing, dataset licensing, model provenance and CPU/GPU reproducibility. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "souravkl11/raganork-md",
+      "category": "messaging-bot-project",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/souravkl11/raganork-md",
+      "head_commit": "82816b1e1fc5e8c9740f4f37872fe2656fc01251",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "retrieval-augmented-generation",
+        "document-ingestion",
+        "retrieval-quality",
+        "security-evaluation"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Likely unrelated to RAG retrieval; isolate as a messaging-bot source pending purpose and security review. No deployment or credentials. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
+    },
+    {
+      "repo": "Shubhamsaboo/awesome-llm-apps",
+      "category": "llm-apps-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Shubhamsaboo/awesome-llm-apps",
+      "head_commit": "4bf51ab704fb2c5b3803cd5191b30d7dcdb51dc2",
+      "pin_source": "github_api_commits_default_branch_checked_2026-10-13",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "architecture-reference",
+        "learning-material",
+        "selective-pattern-review"
+      ],
+      "integration_note": "Intake registration only; not cloned, installed, executed or approved. Curated application examples; each linked app has independent license, dependency and security status. Do not treat the list as a vetted bill of materials. No capital authority, production secrets, broker writes, LIVE_LOCK mutation, release authority, or production deployment permission."
     }
   ],
   "pin_policy": {
