@@ -445,18 +445,9 @@ async def main() -> None:
     federation_queue: asyncio.Queue[dict[str, object]] = asyncio.Queue()
 
     federation = PersistentAgentFederation(
-        journal_path=os.getenv(
-            "AURELIA_FEDERATION_JOURNAL_PATH",
-            "/tmp/aurelia/agent-federation.ndjson",
-        ),
-        lease_path=os.getenv(
-            "AURELIA_FEDERATION_LEASE_PATH",
-            "/tmp/aurelia/agent-federation-leases.json",
-        ),
-        task_path=os.getenv(
-            "AURELIA_FEDERATION_TASK_PATH",
-            "/tmp/aurelia/agent-federation-tasks.json",
-        ),
+        journal_path=str(state_path("AURELIA_FEDERATION_JOURNAL_PATH", "agent-federation.ndjson")),
+        lease_path=str(state_path("AURELIA_FEDERATION_LEASE_PATH", "agent-federation-leases.json")),
+        task_path=str(state_path("AURELIA_FEDERATION_TASK_PATH", "agent-federation-tasks.json")),
         config_hash=config_hash,
         source_hash="runtime-baseline",
         lease_seconds=float(os.getenv("AURELIA_AGENT_LEASE_SECONDS", "45")),
