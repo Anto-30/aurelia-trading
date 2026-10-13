@@ -36,13 +36,15 @@ def evaluate_micro_capital_stake(
     probability_drift_ok: bool,
     net_economics_positive: bool,
     kill_switch_clear: bool,
-    live_lock_enabled: bool,
+    canonical_release_gate_passed: bool,
 ) -> MicroStakeDecision:
     """Fail-closed decision helper for the separately governed $1 micro mode.
 
-    This helper is deliberately not a live-authority bypass. The caller must
-    still obtain source-bound broker evidence and pass the canonical release
-    gate. Until integrated and reviewed, it must not be used to submit orders.
+    This helper is a policy pre-check, not a live-authority decision. The caller
+    must obtain source-bound broker evidence and pass the canonical release gate.
+    `canonical_release_gate_passed` must mean the independently evaluated gate
+    passed; it must never be populated from the raw LIVE_LOCK enabled/disabled
+    flag. Until integrated and reviewed, this helper must not be used to submit orders.
     """
     reasons: list[str] = []
 
@@ -99,7 +101,7 @@ def evaluate_micro_capital_stake(
         reasons.append("NET_ECONOMICS_NOT_POSITIVE")
     if kill_switch_clear is not True:
         reasons.append("KILL_SWITCH_ACTIVE")
-    if live_lock_enabled is not True:
+    if canonical_release_gate_passed is not True:
         reasons.append("LIVE_RELEASE_GATE_BLOCKED")
 
     if reasons:
