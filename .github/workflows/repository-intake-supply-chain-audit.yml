@@ -70,7 +70,7 @@ jobs:
               return b in {"unlicense","authors"} or bool(re.match(r"^(license|licence|copying|copyright|notice)(\.|$|-|_)", b))
           report = {"audit": "read-only pinned source download and manifest/license inventory", "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "source_execution": "NONE", "dependency_installation_from_targets": "NONE", "repos": [], "limits": {"max_archive_bytes": max_archive, "max_member_bytes": max_member, "max_total_download_bytes": max_total_download, "max_total_uncompressed_bytes": max_total_uncompressed}}
           for repo, sha in repositories:
-              row = {"repo": repo, "pinned_sha": sha, "archive_sha256": None, "archive_bytes": None, "files_extracted": 0, "manifests": [], "license_notice_paths": [], "large_files_skipped": [], "errors": []}
+              row = {"repo": repo, "pinned_sha": sha, "archive_sha256": None, "archive_bytes": None, "files_extracted": 0, "manifests": [], "license_notice_paths": [], "large_files_skipped": [], "skipped_symlinks": [], "warnings": [], "errors": []}
               try:
                   url = f"https://codeload.github.com/{repo}/zip/{sha}"
                   req = urllib.request.Request(url, headers={"User-Agent":"AURELIA-repository-intake-audit/1.0"})
@@ -100,7 +100,7 @@ jobs:
                               continue
                           mode = (info.external_attr >> 16) & 0o170000
                           if mode == stat.S_IFLNK:
-                              row["errors"].append("symlink member skipped: " + relative[:200])
+                              row["skipped_symlinks"].append(relative[:200])
                               continue
                           low = path.name.lower()
                           if low in manifest_names:
@@ -148,7 +148,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          scancode --license --copyright --package --summary --processes 2 --timeout 120 --json-pp /tmp/pinned-intake-audit/scancode-report.json /tmp/pinned-intake-sources > /tmp/pinned-intake-audit/scancode.log 2>&1
+          scancode --classify --license --copyright --package --summary --processes 2 --timeout 120 --json-pp /tmp/pinned-intake-audit/scancode-report.json /tmp/pinned-intake-sources > /tmp/pinned-intake-audit/scancode.log 2>&1
           status=$?
           echo "$status" > /tmp/pinned-intake-audit/scancode.exit
           echo "ScanCode exit status: $status"
@@ -165,16 +165,16 @@ jobs:
           set -euo pipefail
           curl --fail --location --retry 3 --retry-delay 2 \
             https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64 \
-            --output /tmp/pinned-intake-audit/osv-scanner
-          echo "160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b  /tmp/pinned-intake-audit/osv-scanner" | sha256sum --check -
-          chmod 0755 /tmp/pinned-intake-audit/osv-scanner
-          /tmp/pinned-intake-audit/osv-scanner --version
+            --output /tmp/osv-scanner
+          echo "160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b  /tmp/osv-scanner" | sha256sum --check -
+          chmod 0755 /tmp/osv-scanner
+          /tmp/osv-scanner --version
 
       - name: Scan lockfiles and known vulnerability advisories
         shell: bash
         run: |
           set +e
-          /tmp/pinned-intake-audit/osv-scanner scan source --recursive /tmp/pinned-intake-sources --format json --output-file /tmp/pinned-intake-audit/osv-report.json > /tmp/pinned-intake-audit/osv-scanner.log 2>&1
+          /tmp/osv-scanner scan source --recursive /tmp/pinned-intake-sources --format json --output-file /tmp/pinned-intake-audit/osv-report.json > /tmp/pinned-intake-audit/osv-scanner.log 2>&1
           status=$?
           echo "$status" > /tmp/pinned-intake-audit/osv.exit
           echo "OSV-Scanner exit status: $status"
@@ -197,62 +197,76 @@ jobs:
           inventory=json.loads(invpath.read_text()) if invpath.exists() else {}
           repos=inventory.get("repos",[])
           errors=[f"{r.get('repo')}: {e}" for r in repos for e in r.get("errors",[])]
-          root_licenses=sum(bool(r.get("root_license_notice_found")) for r in repos)
-          nested_license_paths=sum(len(r.get("license_notice_paths",[])) for r in repos)
+          skipped=[f"{r.get('repo')}: {p}" for r in repos for p in r.get("skipped_symlinks",[])]
           manifests=sum(len(r.get("manifests",[])) for r in repos)
-          summary += ["## Pinned-source supply-chain audit", "", f"- Repositories targeted: {len(repos)}", f"- Archives downloaded without reported errors: {sum(not r.get('errors') for r in repos)} / {len(repos)}", f"- Exact pinned archive bytes: {inventory.get('total_archive_bytes','unknown')}", f"- Manifest/lockfile candidates: {manifests}", f"- License/NOTICE-like paths inventoried: {nested_license_paths}", f"- Repositories with at least one root license/notice candidate: {root_licenses} / {len(repos)}", "- Source from these repositories was not executed; dependency installation from target repositories was not performed.", ""]
-          if errors:
-              summary += ["### Source inventory gaps"] + [f"- {e}" for e in errors[:50]] + [""]
-          osvexit=(root/"osv.exit").read_text().strip() if (root/"osv.exit").exists() else "not-run"
-          scancodeexit=(root/"scancode.exit").read_text().strip() if (root/"scancode.exit").exists() else "not-run"
-          summary += [f"- OSV-Scanner exit status: {osvexit}", f"- ScanCode exit status: {scancodeexit}"]
+          license_paths=sum(len(r.get("license_notice_paths",[])) for r in repos)
+          complete=sum(bool(r.get("archive_sha256")) and not r.get("errors") for r in repos)
+          summary += ["## Pinned-source supply-chain audit","",f"- Pinned source archives downloaded and inventoried without hard errors: {complete} / {len(repos)}",f"- Source archive bytes: {inventory.get('total_archive_bytes','unknown')}",f"- Manifest/lockfile candidates: {manifests}",f"- License/NOTICE-like paths inventoried: {license_paths}","- Target source code was not executed and target-repository dependencies were not installed.","- Scope is ten exact pinned snapshots. Symlinks and oversized members were excluded; unsupported manifest formats and dependencies outside recognized lockfiles may not be represented.",""]
+          if errors: summary += ["### Source inventory errors"] + [f"- {x}" for x in errors[:50]] + [""]
+          if skipped: summary += ["### Skipped symlinks (inventory limitation)"] + [f"- {x}" for x in skipped[:50]] + [""]
+          scancode_exit=(root/"scancode.exit").read_text().strip() if (root/"scancode.exit").exists() else "not-run"
+          osv_exit=(root/"osv.exit").read_text().strip() if (root/"osv.exit").exists() else "not-run"
+          summary += [f"- ScanCode process exit status: {scancode_exit}",f"- OSV-Scanner process exit status: {osv_exit}"]
+          results=[]
           osvpath=root/"osv-report.json"
-          osvrecs=[]
-          if osvpath.exists():
+          try:
+              raw=json.loads(osvpath.read_text()); results=raw.get("results",[])
+          except Exception as e: summary.append(f"- OSV report parse error: {type(e).__name__}: {e}")
+          repo_stats={}; vulnerable_coords=set(); advisory_ids=set(); vuln_records=0; top_by_coord={}
+          for result in results:
+              path=result.get("source",{}).get("path",""); repo="unknown"; rel=path
+              for rr in repos:
+                  prefix="/tmp/pinned-intake-sources/"+rr.get("repo","").replace("/","__")+"/"
+                  if path.startswith(prefix): repo=rr["repo"]; rel=path[len(prefix):]; break
+              stat=repo_stats.setdefault(repo,{"paths":set(),"coords":set(),"records":0,"ids":set(),"max":0.0})
+              stat["paths"].add(rel)
+              for p in result.get("packages",[]) or []:
+                  pkg=p.get("package",{}) or {}; eco=pkg.get("ecosystem","unknown"); name=pkg.get("name","unknown"); ver=pkg.get("version","unknown")
+                  vulns=p.get("vulnerabilities",[]) or []; sev=0.0
+                  for group in p.get("groups",[]) or []:
+                      try: sev=max(sev,float(group.get("max_severity") or 0))
+                      except (ValueError,TypeError): pass
+                  stat["max"]=max(stat["max"],sev)
+                  if vulns: vulnerable_coords.add((eco,name,ver)); stat["coords"].add((eco,name,ver))
+                  for v in vulns:
+                      vuln_records+=1; stat["records"]+=1
+                      if v.get("id"): advisory_ids.add(v["id"]); stat["ids"].add(v["id"] )
+                      for alias in v.get("aliases",[]) or []:
+                          if isinstance(alias,str): advisory_ids.add(alias); stat["ids"].add(alias)
+                      key=(eco,name,ver); aliases=sorted(set(a for a in (v.get("aliases",[]) or []) if isinstance(a,str)))[:6]
+                      old=top_by_coord.get(key)
+                      if old is None or sev>old["severity"]:
+                          top_by_coord[key]={"repo":repo,"path":rel,"ecosystem":eco,"name":name,"version":ver,"severity":sev,"advisory":v.get("id","unknown"),"aliases":aliases,"summary":(v.get("summary") or "").replace("\n"," ")[:170]}
+          summary += [f"- OSV lockfile/requirement result paths with advisories: {len(results)}",f"- Distinct vulnerable package coordinates (ecosystem/name/version): {len(vulnerable_coords)}",f"- Vulnerability records (some advisories may appear through aliases or across manifests): {vuln_records}",f"- Distinct advisory IDs and aliases in report: {len(advisory_ids)}","- These records describe upstream candidate repositories, including demo, example, development, or test manifests where present. They are not evidence that any package is installed in AURELIA runtime.","","### OSV findings by upstream repository"]
+          for repo,st in sorted(repo_stats.items(),key=lambda x:(-x[1]["records"],x[0])):
+              summary.append(f"- {repo}: {len(st['paths'])} result paths; {len(st['coords'])} vulnerable coordinates; {st['records']} vulnerability records; max reported group severity {st['max']:.1f}")
+          summary += ["","### Highest reported package-level severities (deduplicated by coordinate)"]
+          for item in sorted(top_by_coord.values(),key=lambda x:(-x["severity"],x["repo"],x["ecosystem"],x["name"]))[:15]:
+              summary.append(f"- {item['severity']:.1f} — {item['repo']} — {item['ecosystem']}:{item['name']}@{item['version']}; advisory {item['advisory']}; path {item['path']}. {item['summary']}")
+          scpath=root/"scancode-report.json"
+          if scpath.exists():
               try:
-                  o=json.loads(osvpath.read_text())
-                  def walk(x):
-                      if isinstance(x,dict):
-                          for k,v in x.items():
-                              if k in ("vulns","vulnerabilities") and isinstance(v,list):
-                                  for it in v:
-                                      if isinstance(it,dict) and it.get("id"):
-                                          osvrecs.append((it.get("id"),it.get("summary","")))
-                              walk(v)
-                      elif isinstance(x,list):
-                          for it in x: walk(it)
-                  walk(o)
-              except Exception as e:
-                  summary.append(f"- OSV report parse error: {type(e).__name__}: {e}")
-          ids=sorted(set(i for i,_ in osvrecs))
-          summary += [f"- OSV vulnerability/advisory identifiers observed in report: {len(ids)} unique" + ((" ("+", ".join(ids[:30])+(" …" if len(ids)>30 else "")+")") if ids else "")]
-          scanpath=root/"scancode-report.json"
-          if scanpath.exists():
-              try:
-                  sc=json.loads(scanpath.read_text())
-                  files=sc.get("files",[]) if isinstance(sc,dict) else []
-                  found=[]
+                  sc=json.loads(scpath.read_text()); files=sc.get("files",[]); found=[]
                   for f in files:
                       if not isinstance(f,dict): continue
-                      for d in f.get("license_detections",[]) or []:
-                          if isinstance(d,dict):
-                              e=d.get("license_expression") or d.get("license_expression_spdx")
-                              if e: found.append(e)
+                      for det in f.get("license_detections",[]) or []:
+                          if isinstance(det,dict):
+                              expr=det.get("license_expression") or det.get("license_expression_spdx")
+                              if expr: found.append(expr)
                       ex=f.get("license_expressions",[]) or []
                       if isinstance(ex,str): found.append(ex)
                       elif isinstance(ex,list): found.extend(x for x in ex if isinstance(x,str))
                   counts={}
-                  for e in found: counts[e]=counts.get(e,0)+1
-                  summary += [f"- ScanCode files represented in JSON: {len(files)}", f"- License-expression detections counted: {len(found)}", "- Most common detected license expressions (not legal clearance):"]
-                  summary += [f"  - {e}: {n}" for e,n in sorted(counts.items(),key=lambda kv:(-kv[1],kv[0]))[:20]] or ["  - No expressions extracted by the summary parser; inspect the raw report."]
-              except Exception as e:
-                  summary.append(f"- ScanCode report parse error: {type(e).__name__}: {e}")
-          summary += ["", "Raw reports and logs are attached as the repository-intake-supply-chain-audit artifact. A scan is not a substitute for application-level SSRF/authentication testing or legal license review."]
+                  for expr in found: counts[expr]=counts.get(expr,0)+1
+                  summary += ["","### ScanCode license-expression detections (not legal clearance)",f"- Files represented in JSON: {len(files)}",f"- License-expression detections tallied: {len(found)}"]
+                  summary += [f"- {expr}: {count}" for expr,count in sorted(counts.items(),key=lambda x:(-x[1],x[0]))[:20]]
+              except Exception as e: summary.append(f"- ScanCode report parse error: {type(e).__name__}: {e}")
+          else: summary.append("- ScanCode JSON report missing; license scan did not complete.")
+          summary += ["","### Gate disposition","- The gate remains BLOCKED if OSV reports vulnerable versions, the inventory is incomplete, ScanCode fails, or reports cannot be interpreted.","- Validate exact direct/transitive reachability, affected-version ranges, severity, and fixed releases before recommending reuse or remediation.","- Dynamic auth/SSRF/redirect/DNS-rebinding/regex/egress/browser-session tests and legal license review remain separate gates."]
           pathlib.Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(summary)+"\n")
           (root/"audit-summary.md").write_text("\n".join(summary)+"\n")
           print("\n".join(summary))
           PY
-
       - name: Upload scan evidence (14-day retention)
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -262,36 +276,38 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Enforce complete inventory and successful scanners
+      - name: Enforce complete inventory and audit acceptance criteria
         if: always()
         shell: bash
         run: |
           python - <<'PY'
           import json, pathlib, sys
-          root=pathlib.Path("/tmp/pinned-intake-audit")
-          problems=[]
+          root=pathlib.Path("/tmp/pinned-intake-audit"); problems=[]
           inv=root/"source-inventory.json"
-          if not inv.exists():
-              problems.append("source inventory missing")
+          if not inv.exists(): problems.append("source inventory missing")
           else:
-              report=json.loads(inv.read_text())
-              if len(report.get("repos",[])) != 10:
-                  problems.append("inventory did not include all 10 pinned repositories")
-              for r in report.get("repos",[]):
-                  if r.get("errors"):
-                      problems.append(r.get("repo","unknown")+" has archive/manifest inventory errors")
-          for name in ("scancode","osv"):
-              f=root/(name+".exit")
-              if not f.exists():
-                  problems.append(name+" did not complete")
-              elif f.read_text().strip() != "0":
-                  problems.append(name+" reported findings or exited unsuccessfully; review raw report/log")
-          for name in ("scancode-report.json","osv-report.json"):
-              if not (root/name).exists():
-                  problems.append(name+" is missing")
+              report=json.loads(inv.read_text()); repos=report.get("repos",[])
+              if len(repos)!=10: problems.append(f"inventory includes {len(repos)} of 10 pinned repositories")
+              for r in repos:
+                  if r.get("errors") or not r.get("archive_sha256"): problems.append(r.get("repo","unknown")+" archive inventory incomplete: "+str(r.get("errors",[])))
+          sx=root/"scancode.exit"; sr=root/"scancode-report.json"
+          if not sx.exists() or sx.read_text().strip()!="0": problems.append("ScanCode did not complete cleanly (exit "+(sx.read_text().strip() if sx.exists() else "missing")+"); inspect scancode.log")
+          if not sr.exists(): problems.append("ScanCode JSON report missing")
+          ox=root/"osv.exit"; op=root/"osv-report.json"
+          if not ox.exists(): problems.append("OSV-Scanner exit status missing")
+          elif ox.read_text().strip() not in {"0","1"}: problems.append("OSV-Scanner process failure, exit "+ox.read_text().strip())
+          if not op.exists(): problems.append("OSV-Scanner JSON report missing")
+          else:
+              try:
+                  data=json.loads(op.read_text()); results=data.get("results",[])
+                  records=sum(len(p.get("vulnerabilities",[]) or []) for r in results for p in (r.get("packages",[]) or []))
+                  coords={(p.get("package",{}).get("ecosystem"),p.get("package",{}).get("name"),p.get("package",{}).get("version")) for r in results for p in (r.get("packages",[]) or []) if p.get("vulnerabilities")}
+                  if records: problems.append(f"OSV reported {records} vulnerability records across {len(coords)} distinct vulnerable package coordinates")
+                  elif ox.exists() and ox.read_text().strip()!="0": problems.append("OSV returned a non-zero status with no vulnerability records; inspect raw logs")
+              except Exception as e: problems.append("OSV report parse failed: "+type(e).__name__+": "+str(e))
           if problems:
               print("AUDIT GATE: BLOCKED")
-              for problem in problems: print("- "+problem)
+              for p in problems: print("- "+p)
               sys.exit(1)
-          print("AUDIT GATE: scanners exited successfully and all 10 pinned archives were inventoried. Manual interpretation and dynamic regression tests remain necessary.")
+          print("AUDIT GATE: passed scanner process and source inventory checks with no detected vulnerability records; independent license interpretation and dynamic tests still required.")
           PY
