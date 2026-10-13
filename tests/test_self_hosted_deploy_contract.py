@@ -21,7 +21,7 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         policy = json.loads(policy_path.read_text(encoding="utf-8"))
         self.assertEqual(policy["primary_provider"], "self_hosted")
         self.assertTrue(policy["no_trial_dependency"])
-        self.assertEqual(policy["capital_authority"], "LIVE_LOCK_only")
+        self.assertEqual(policy["capital_authority"], "LIVE_LOCK_plus_source_bound_release_gate")
 
     def test_expired_railway_surface_is_removed(self):
         self.assertFalse((ROOT / ".github" / "workflows" / "railway-deploy.yml").exists())
