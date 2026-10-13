@@ -132,7 +132,8 @@ class DerivEndpointHardeningTests(unittest.TestCase):
             ) as open_url:
                 result = get_authenticated_ws_url("CR123", app_id="test-app")
         self.assertEqual(result.account_id, "CR123")
-        self.assertIn("DERIV_PAT", repr(open_url.call_args))
+        request = open_url.call_args.args[0]
+        self.assertEqual(request.get_header("Authorization"), "Bearer test-pat")
         self.assertNotIn("test-pat", repr(result))
 
     def test_malformed_port_is_rejected_without_leaking_parser_error(self):
