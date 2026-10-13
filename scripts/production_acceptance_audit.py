@@ -101,6 +101,11 @@ def main() -> int:
             failures.append("PROBABILITY_POLICY_RANGE_MISMATCH_EXPECTED_0.55_TO_0.75")
         if "hard probability band is **55%–75%**" not in readme:
             failures.append("README_PROBABILITY_POLICY_RANGE_MISMATCH")
+        stake_policy = read("docs/AURELIA_STAKE_POLICY_2026-10-10.md")
+        if "55% to 75%" not in stake_policy:
+            failures.append("STAKE_POLICY_PROBABILITY_RANGE_MISMATCH")
+        if "fresh, source-bound broker-reported minimum stake" not in stake_policy:
+            failures.append("STAKE_POLICY_BROKER_MINIMUM_SOURCE_MISSING")
 
         if "execution_minimum_stake: null" not in standard or "execution_minimum_stake_source: \"FRESH_VERIFIED_BROKER_CONTRACT\"" not in standard:
             failures.append("BROKER_MINIMUM_STAKE_SOURCE_NOT_CONTRACT_SPECIFIC")
