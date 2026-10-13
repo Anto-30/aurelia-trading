@@ -6,7 +6,8 @@
 - Upstream commit pins were queried from GitHub's latest-commit API on 2026-10-13 UTC.
 - **All 34 sources remain unapproved.** Registration does not establish license clearance, security clearance, production suitability, or successful installation.
 - No candidate source was cloned, installed, executed, vendored, or connected to a production credential.
-- Canonical registry and routing configuration were not updated in this change because the write attempts were blocked. This document and manifest are supplemental evidence only.
+- Read-only reconciliation against the current PR head confirmed that all 34 sources already exist in `config/external_repo_federation.json`, their pinned commits match this manifest, and every category matches a defined rule in `config/repo_agent_routing.json`. All assigned agents are defined. This is configuration coverage, not security clearance or runtime installation.
+- The existing supply-chain workflow was updated to audit the original 30 pins plus these 34 RAG/LLM pins (64 total), and its PR path filter now includes `docs/intake/**`. The scan is pending; results must be reviewed before any approval.
 
 ## Suggested specialist routing
 
@@ -41,9 +42,9 @@ This routing is a proposal; it has **not** been written to `config/repo_agent_ro
 
 ## Current PR gate state
 
-PR #122 remains draft. The current-head Agent Federation Audit and Agent Continuity Watchdog passed. Repository Intake Supply-Chain Audit and AURELIA Assurance were pending at the time of this note:
+PR #122 remains draft. The latest observed Agent Federation Audit, Agent Continuity Watchdog, and gstack Workflow Federation Assurance runs passed on commit `6d8a68cf30d9ff892150a52832312fa6a3f2308a`. Repository Intake Supply-Chain Audit and AURELIA Assurance were still in progress at the time of this note:
 
-- https://github.com/Anto-30/aurelia-trading/actions/runs/38437361047
-- https://github.com/Anto-30/aurelia-trading/actions/runs/38437361185
+- https://github.com/Anto-30/aurelia-trading/actions/runs/38438067535
+- https://github.com/Anto-30/aurelia-trading/actions/runs/38438067611
 
 Do not merge until required independent review and applicable gates are complete. Do not interpret this intake as evidence that AURELIA is qualified for live trading.
