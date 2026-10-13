@@ -11,6 +11,7 @@ ENV_FILE="$ENV_DIR/aurelia.env"
 LIVE_SECRET_FILE="$ENV_DIR/aurelia-live-secrets.env"
 READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"
 DATA_DIR="/var/lib/aurelia"
+OPERATOR_RESET_DIR="/run/aurelia"
 IMAGE="aurelia-runtime:$SHA"
 CONTAINER="aurelia-runtime"
 DEPLOYMENT_MODE="${AURELIA_DEPLOYMENT_MODE:-VERIFY_ONLY}"
@@ -72,6 +73,7 @@ sudo systemctl enable --now docker
 sudo install -d -m 700 "$ENV_DIR"
 sudo install -d -m 700 "$DATA_DIR"
 sudo chown 10001:10001 "$DATA_DIR"
+sudo install -d -o root -g 10001 -m 750 "$OPERATOR_RESET_DIR"
 sudo install -d -m 755 "$RELEASE_ROOT"
 
 if [ -f "$ENV_FILE" ]; then
@@ -268,6 +270,7 @@ sudo docker run --detach \
   --env LIVE_EXECUTION="$LIVE_EXECUTION" \
   --env GITHUB_SHA="$SHA" \
   --mount "type=bind,src=$DATA_DIR,dst=/var/lib/aurelia" \
+  --mount "type=bind,src=$OPERATOR_RESET_DIR,dst=/run/aurelia,readonly" \
   --publish 127.0.0.1:8080:8080 \
   "$IMAGE"
 
