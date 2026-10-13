@@ -52,3 +52,23 @@ These are observations of root license files, not legal advice, not a complete a
 3. Generate an SBOM and full transitive dependency/license report for each candidate; check the full license/notice tree, not only root LICENSE.
 4. Review MCP and hook configs as executable code. No imported agent config may access production secrets, write to main, change release gates or route broker orders.
 5. Keep PR #122 draft until selected code has reproducible test evidence and a human review. No code was installed, executed or merged as part of this spot check.
+
+
+## Immutable-revision license recheck (2026-10-13)
+
+The root `LICENSE` path was re-fetched using each exact upstream commit SHA in the registry, rather than the moving default branch. Git blob IDs returned by GitHub:
+
+| Repository | Pinned commit | Root LICENSE blob | Result |
+|---|---|---|---|
+| `pasky/chrome-cdp-skill` | `ffea76a24b0471663ddd9d9f24335bbc442b6266` | `e0cb6b81ad2c4dfe17b2fd93b9387b6fff573aa6` | Found; MIT |
+| `anthropics/claude-quickstarts` | `9ec32b91df50b0d4906cae64b13c6298055ff40d` | `e0d914d8c81feba1a081620902f8c4877ad6313d` | Found; MIT |
+| `siteboon/claudecodeui` | `7c3049fe8e157f12b7add3e496d8d2fe6fa5c014` | `b9620f502de0874d9c8b145aa505c8b1447eebe0` | Found; AGPL-3.0-or-later |
+| `ChrisWiles/claude-code-showcase` | `a95518f0cb67e86230119da40429169bc4c35a6f` | — | Root path returns 404; license remains unconfirmed |
+| `decebals/claude-code-java` | `0d98fe9bd62923e819568ee1e041a1bf320f74d4` | `85c2f8765b2abb92096668fa9e0e808edafadc19` | Found; MIT |
+| `d-kimuson/claude-code-viewer` | `9367cf006be9965c954e6cd36526f2195dce67ea` | `fc5beba21eefa1dfa6753ba19c2cbfb175b5b268` | Found; MIT |
+| `intel/auto-round` | `4663212ac4fd18be2b4ec4fa7c79c6e2e6fa9ce1` | `2bb9ad240fa04c8cf706a4901c4807878e90c2dc` | Found; Apache-2.0 |
+| `D4Vinci/Scrapling` | `7a684934907a8c7feaafe9ff1ccfd9d45cc26faf` | `41615aad07eb42df7f09997f207950098e853a68` | Found; BSD 3-Clause |
+| `cyberchitta/scrapling-fetch-mcp` | `8ed4c0df0979ca758e6e13ae84e6cdbe129e1a7a` | `f49a4e16e68b128803cc2dcea614603632b04eac` | Found; Apache-2.0 |
+| `popiliadam/platinum-seo-engine` | `ffdf24da84cd5d52f755f156707d9bd14f7c0135` | `be3f7b28e564e7dd05eaf59d64adba1a4065ac0e` | Found; AGPL-3.0 |
+
+This closes the narrow question of whether the root license file exists at each pinned revision for nine of the ten candidates. It does **not** establish complete license compliance: nested notices, vendored components, transitive dependencies, generated assets, and attribution obligations have not been exhaustively scanned. For Claude Code Showcase, inspect repository metadata and nested license/notice files and obtain maintainer clarification before copying or redistributing any source.
