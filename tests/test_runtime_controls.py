@@ -90,7 +90,7 @@ def dec(probability: float = 0.60, stake: float = 2.0) -> Decision:
 
 class TestControls(unittest.TestCase):
     def test_probability_no_clipping(self):
-        self.assertTrue(probability_is_valid(0.50))
+        self.assertFalse(probability_is_valid(0.50))
         self.assertTrue(probability_is_valid(0.55))
         self.assertTrue(probability_is_valid(0.75))
         self.assertFalse(probability_is_valid(0.49))
@@ -274,6 +274,7 @@ class TestControls(unittest.TestCase):
             probability_drift_ok=True,
             market_data_validated=True,
             exposure_approved=True,
+            broker_minimum_stake=1.00,
         )
         self.assertTrue(gate.allowed, gate.reason_codes)
         self.assertIsNotNone(ctx)
