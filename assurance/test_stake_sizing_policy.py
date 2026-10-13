@@ -166,6 +166,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
             market_data_validated=True,
             exposure_approved=True,
             execution_mode="LIVE",
+            broker_minimum_stake=1.00,
         )
         self.assertFalse(gate.allowed)
         self.assertIsNone(context)
@@ -213,6 +214,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
             market_data_validated=True,
             exposure_approved=True,
             execution_mode="LIVE",
+            broker_minimum_stake=1.00,
         )
         self.assertFalse(gate.allowed)
         self.assertIsNone(context)
@@ -260,6 +262,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
             market_data_validated=True,
             exposure_approved=True,
             execution_mode="LIVE",
+            broker_minimum_stake=1.00,
         )
         self.assertFalse(gate.allowed)
         self.assertIsNone(context)
