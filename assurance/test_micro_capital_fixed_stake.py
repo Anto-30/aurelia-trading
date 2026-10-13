@@ -111,5 +111,14 @@ class MicroCapitalPolicyTests(unittest.TestCase):
                 self.assertIn("BALANCE_INVALID", result.reason_codes)
 
 
+    def test_usd_35_balance_keeps_fixed_loss_at_one_percent(self):
+        result = evaluate_micro_capital_stake(**valid_inputs(
+            available_balance="35.00",
+        ))
+        self.assertTrue(result.allowed)
+        self.assertEqual(result.stake, Decimal("0.35"))
+        self.assertAlmostEqual(float(result.loss_fraction), 0.01, places=8)
+
+
 if __name__ == "__main__":
     unittest.main()
