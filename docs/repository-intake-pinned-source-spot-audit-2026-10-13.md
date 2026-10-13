@@ -50,3 +50,13 @@ No repository was installed or executed by this review. No agent runtime was con
 **Manifest:** `package.json` blob `9123f9001a1c36ab4242151915423280960751b2`; version `0.8.2`; license `MIT`. README blob `69ccaf6b50ecc6ec946ad46a45650964d3c93b7f`.
 
 The README documents a default bind hostname of `localhost`, a password option (`--password`), and an explicit hostname option. It also documents an integrated terminal and live session/history visibility. The default localhost bind is a useful safe default, but it does not establish safety when operators configure a remote hostname. For any remote exposure, require explicit authentication, TLS/private network access, firewall/allowlisting, session and filesystem isolation, and tests that prove unauthenticated clients cannot read sessions or operate the terminal. Keep `SANDBOX_ONLY`; do not expose on a public interface or place in a broker-credential-bearing environment before those checks. No tests were run by this review.
+
+
+## Chrome CDP Skill
+
+**Pinned upstream commit:** `ffea76a24b0471663ddd9d9f24335bbc442b6266`  
+**Manifest:** `package.json` blob `3c87071888c082482104ddc5557d2f42a8aec75c`; version `1.1.0`; license `MIT`. README blob `877d4d412b12d97304a524bde386027d7f99815a`.
+
+The README explicitly says this tool connects to the user's live Chrome session and can read and interact with tabs that are already logged in. The command surface includes page JavaScript evaluation, navigation, clicks, typing, raw CDP passthrough and network-resource inspection. Chrome remote debugging must be enabled. This grants access to whatever authenticated pages the connected browser can reach, including internal tools.
+
+Decision: keep `SANDBOX_ONLY`. Do not point it at a daily-use browser, any logged-in broker portal, production GitHub credentials, password manager, email, or AURELIA admin surfaces. If ever tested, use a disposable browser profile with no sessions, no saved secrets, restricted target allowlist, and remote-debugging access bound to loopback only. No runtime test was performed.
