@@ -6472,7 +6472,7 @@
       "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
       "capital_authority": false,
       "physical_runtime_install": "NOT_CLAIMED",
-      "security_review_status": "PENDING",
+      "security_review_status": "BLOCKED_PENDING_LICENSE_CLARIFICATION_AND_HOOK_REVIEW",
       "trust": "UPSTREAM_REFERENCE_ONLY",
       "capabilities": [
         "agent-skills",
@@ -6480,7 +6480,7 @@
         "MCP-examples",
         "CI-workflows"
       ],
-      "integration_note": "Reference only. Root LICENSE path was not found; reuse rights unconfirmed. Review hooks, CI permissions and token scopes."
+      "integration_note": "Reference-only. Root LICENSE path returned 404 at the pinned revision; this does not prove no license exists elsewhere, so reuse rights remain unconfirmed. Pinned settings include command hooks that invoke npx prettier and npm install on file edits; do not import hooks or redistribute code until license and hook behavior are reviewed."
     },
     {
       "repo": "decebals/claude-code-java",
@@ -6596,14 +6596,14 @@
       "pin_source": "github_api_default_branch_HEAD_checked_2026-10-13",
       "capital_authority": false,
       "physical_runtime_install": "NOT_CLAIMED",
-      "security_review_status": "PENDING",
+      "security_review_status": "BLOCKED_PENDING_ISOLATED_HOOK_AND_MCP_REVIEW",
       "trust": "UPSTREAM_REFERENCE_ONLY",
       "capabilities": [
         "SEO-workflows",
         "MCP-configurations",
         "marketing-automation"
       ],
-      "integration_note": "Marketing workspace only, not trading runtime. Root license is AGPL-3.0; inspected MCP config includes shell invocation, local .env sourcing and machine-specific path; do not copy as-is."
+      "integration_note": "Marketing workspace only, not trading runtime. AGPL-3.0; pinned MCP config runs bash -c, sources local .env, invokes npx packages, and contains machine-specific/local endpoints. Pinned Claude hooks invoke npx prettier and npm install after edits. Do not copy MCP config or hooks as-is; isolate, pin dependencies, review legal obligations."
     }
   ],
   "pin_policy": {
