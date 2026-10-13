@@ -426,7 +426,7 @@ jobs:
             echo "DEPLOYMENT_MODE=$DEPLOYMENT_MODE"
             echo "PERSISTENT_RUNTIME=true"
             echo "TRIAL_DEPENDENCY=false"
-            echo "CAPITAL_AUTHORITY=LIVE_LOCK_only"
+            echo "CAPITAL_AUTHORITY=LIVE_LOCK_plus_source_bound_release_gate"
             echo "FINAL_EXECUTION_AUTHORIZATION=$([ "$DEPLOYMENT_MODE" = "LIVE" ] && echo true || echo false)"
             echo "LIVE_EXECUTION=$([ "$DEPLOYMENT_MODE" = "LIVE" ] && echo ENABLED || echo BLOCKED)"
           } >> "$GITHUB_STEP_SUMMARY"
