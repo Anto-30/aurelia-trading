@@ -29,7 +29,7 @@ The 1% risk budget must be at least the exact contract's broker-reported minimum
 | 200.00 | 2.00 | 2.00 | 2.00 |
 | 350.99 | 3.50 | 3.50 | 3.50 |
 
-The sizing calculation uses available balance rather than stale UI state or an assumed deposit. It rounds down to cents. If available balance falls, the next authorized stake decreases; if the balance, contract minimum, or minimum's freshness/source binding is invalid or stale, no live authorization is permitted. The current Deriv adapter does not yet provide a source-bound minimum-stake value, so LIVE authorization remains blocked until that integration is implemented and verified.
+The sizing calculation uses available balance rather than stale UI state or an assumed deposit. It rounds down to cents. If available balance falls, the next authorized stake decreases; if the balance, contract minimum, or minimum's freshness/source binding is invalid or stale, no live authorization is permitted. The current Deriv adapter does not yet provide a source-bound minimum-stake evidence object. The runtime therefore rejects LIVE authorization with `BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED` even if a caller supplies a positive numeric minimum. A scalar is not proof of provenance, freshness, account/currency binding, or exact-contract binding. LIVE remains blocked until the adapter-to-authority evidence contract and adversarial tests are implemented and verified.
 
 ## Go-live status is separate
 
