@@ -19,7 +19,7 @@
 | Agent memory and agentic RAG: `nageoffer/ragent`, `mll-lab-nu/RAGEN`, `datawhalechina/hello-agents` | ClaudeCode | ChatGPT, JEV, GrokBot | SANDBOX_ONLY or REFERENCE_ONLY per manifest |
 | Tutorials and curated indexes | ChatGPT | ClaudeCode, JEV | REFERENCE_ONLY |
 
-This routing is a proposal; it has **not** been written to `config/repo_agent_routing.json`.
+This routing is a proposal for the RAG/LLM specialist workstreams. Separately, commit `e221294ead47dcbdcabae6b6d602d949b0411289` added `multi-agent-development-orchestrator` to the existing priority-80 orchestration rule in `config/repo_agent_routing.json`, closing the previously identified `stablyai/orca` category-match gap. The change preserves `SANDBOX_ONLY` as the rule default and grants no capital-plane authority.
 
 ## Required checks before reuse
 
@@ -42,9 +42,6 @@ This routing is a proposal; it has **not** been written to `config/repo_agent_ro
 
 ## Current PR gate state
 
-PR #122 remains draft. The latest observed Agent Federation Audit, Agent Continuity Watchdog, and gstack Workflow Federation Assurance runs passed on commit `6d8a68cf30d9ff892150a52832312fa6a3f2308a`. Repository Intake Supply-Chain Audit and AURELIA Assurance were still in progress at the time of this note:
-
-- https://github.com/Anto-30/aurelia-trading/actions/runs/38438067535
-- https://github.com/Anto-30/aurelia-trading/actions/runs/38438067611
+PR #122 remains draft. The routing correction was committed on `e221294ead47dcbdcabae6b6d602d949b0411289`. New workflow runs for that head were queued/pending at the latest check; inspect the run results before treating the change as CI-verified. The 64-source supply-chain scan had not yet produced a final report or acceptance result. See https://github.com/Anto-30/aurelia-trading/actions/runs/38441269085 and https://github.com/Anto-30/aurelia-trading/actions/runs/38441269132.
 
 Do not merge until required independent review and applicable gates are complete. Do not interpret this intake as evidence that AURELIA is qualified for live trading.
