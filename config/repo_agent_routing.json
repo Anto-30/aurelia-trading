@@ -128,6 +128,95 @@
   },
   "routing_rules": [
     {
+      "priority": 112,
+      "when": {
+        "category_contains_any": [
+          "rag-evaluation",
+          "rag-evaluation-optimization",
+          "rag-evaluation-observability",
+          "rag-research-benchmark"
+        ]
+      },
+      "primary_agent": "JEV",
+      "supporting_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot"
+      ],
+      "mode_default": "RESEARCH_ONLY",
+      "rationale": "RAG evaluation and observability candidates are routed to deterministic QA first; evaluation data must be isolated, metrics calibrated, traces redacted, and results reproducible. They cannot modify capital or execution policy."
+    },
+    {
+      "priority": 111,
+      "when": {
+        "category_contains_any": [
+          "rag-retrieval-engine",
+          "graph-rag",
+          "graph-rag-research",
+          "multimodal-rag",
+          "rag-api-service",
+          "rag-application-framework",
+          "rag-web-interface",
+          "rag-pipeline-framework",
+          "agentic-rag-framework",
+          "agentic-rag-research",
+          "agentic-rag-memory",
+          "postgres-rag-reference",
+          "document-indexing-rag",
+          "code-graph-rag",
+          "rag-qa-system"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "ChatGPT",
+        "JEV",
+        "GrokBot"
+      ],
+      "mode_default": "SANDBOX_ONLY",
+      "rationale": "RAG engines and retrieval services require isolated engineering evaluation, auth/tenant boundary review, parser and ingestion hardening, prompt-injection tests, source provenance, and least-privilege tool access."
+    },
+    {
+      "priority": 110,
+      "when": {
+        "category_contains_any": [
+          "rag-techniques-reference",
+          "rag-learning-reference",
+          "agentic-rag-learning",
+          "agent-learning-reference",
+          "llm-learning-reference",
+          "ai-engineering-examples",
+          "llm-apps-reference",
+          "rag-apps-reference"
+        ]
+      },
+      "primary_agent": "ChatGPT",
+      "supporting_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "Educational and curated example repositories are reference material only. Each copied example or linked subproject requires separate licensing, dependency, and security review."
+    },
+    {
+      "priority": 109,
+      "when": {
+        "category_contains_any": [
+          "deprecated-chatbot-project",
+          "messaging-bot-project",
+          "secure-file-encryption-utility"
+        ]
+      },
+      "primary_agent": "ChatGPT",
+      "supporting_agents": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "Name collisions, deprecated projects and out-of-scope utilities must not be misclassified as RAG dependencies. Require an explicit use case before further evaluation."
+    },
+    {
       "priority": 105,
       "when": {
         "category_contains_any": [
