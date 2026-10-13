@@ -22,6 +22,7 @@ from runtime.core.events import canonical_json, sha256
 from runtime.core.fencing import ExecutionFence
 from runtime.core.idempotency import IdempotencyStore
 from runtime.core.journal import AppendOnlyJournal
+from runtime.core.paths import state_path
 from runtime.core.ledger import InMemoryLedger
 from runtime.core.models import Decision, RuntimeState
 from runtime.core.reconcile import Reconciler
@@ -99,7 +100,7 @@ async def run() -> int:
         )
 
         journal = AppendOnlyJournal(
-            os.getenv("AURELIA_JOURNAL_PATH", "/tmp/aurelia/lifecycle.ndjson")
+            str(state_path("AURELIA_JOURNAL_PATH", "lifecycle.ndjson"))
         )
         ledger = InMemoryLedger()
         idempotency = IdempotencyStore()
