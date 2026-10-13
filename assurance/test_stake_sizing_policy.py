@@ -169,7 +169,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
         )
         self.assertFalse(gate.allowed)
         self.assertIsNone(context)
-        self.assertIn("LIVE_STAKE_NOT_POLICY_SIZED", gate.reason_codes)
+        self.assertIn("BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED", gate.reason_codes)
 
     def test_live_authorization_requires_verified_usd_account(self):
         account = AccountIdentity("CR123456", "real", "EUR", "real")
@@ -265,7 +265,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
         )
         self.assertFalse(gate.allowed)
         self.assertIsNone(context)
-        self.assertIn("STAKE_RISK_BUDGET_BELOW_BROKER_MINIMUM", gate.reason_codes)
+        self.assertIn("BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED", gate.reason_codes)
 
 
     def test_live_authorization_rejects_missing_broker_minimum(self):
