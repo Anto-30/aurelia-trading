@@ -32,7 +32,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/pinned-intake-sources /tmp/pinned-intake-audit
+          mkdir -p /tmp/pinned-intake-sources /tmp/pinned-intake-license-targets /tmp/pinned-intake-audit
           python - <<'PY'
           import hashlib, io, json, pathlib, re, stat, time, urllib.request, zipfile
 
@@ -143,6 +143,10 @@ jobs:
                                       raise ValueError("member exceeded streamed extraction cap")
                                   dst.write(block)
                           row["files_extracted"] += 1
+                          if is_license(relative):
+                              license_target = pathlib.Path("/tmp/pinned-intake-license-targets") / repo.replace("/", "__") / pathlib.Path(*path.parts)
+                              license_target.parent.mkdir(parents=True, exist_ok=True)
+                              license_target.write_bytes(target.read_bytes())
                   row["manifests"] = sorted(set(row["manifests"]))
                   row["license_notice_paths"] = sorted(set(row["license_notice_paths"]))
                   row["root_license_notice_found"] = any("/" not in p for p in row["license_notice_paths"])
@@ -162,11 +166,11 @@ jobs:
           set -euo pipefail
           python -m pip install --disable-pip-version-check --no-input --no-cache-dir "scancode-toolkit==32.5.0"
 
-      - name: Scan source for license and copyright evidence (source code is not executed)
+      - name: Scan inventoried LICENSE and NOTICE files (source code is not executed)
         shell: bash
         run: |
           set +e
-          scancode --license --copyright --processes 4 --timeout 30 --json-pp /tmp/pinned-intake-audit/scancode-report.json /tmp/pinned-intake-sources > /tmp/pinned-intake-audit/scancode.log 2>&1
+          scancode --license --copyright --processes 4 --timeout 30 --json-pp /tmp/pinned-intake-audit/scancode-report.json /tmp/pinned-intake-license-targets > /tmp/pinned-intake-audit/scancode.log 2>&1
           status=$?
           echo "$status" > /tmp/pinned-intake-audit/scancode.exit
           echo "ScanCode exit status: $status"
