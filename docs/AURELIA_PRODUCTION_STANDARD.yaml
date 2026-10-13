@@ -74,6 +74,8 @@ affordability:
   execution_minimum_stake: null
   execution_minimum_stake_source: "FRESH_VERIFIED_BROKER_CONTRACT"
   execution_minimum_stake_source_status: "NOT_IMPLEMENTED_BLOCK_LIVE"
+  runtime_gate: "BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED"
+  caller_supplied_numeric_minimum_is_evidence: false
   missing_or_stale_minimum_action: "NO_TRADE"
   global_readiness_blocker: false
   order_level_blocker: true
