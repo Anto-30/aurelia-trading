@@ -557,6 +557,7 @@
       "when": {
         "category_contains_any": [
           "agent-team",
+          "multi-agent-development-orchestrator",
           "orchestration",
           "workflow",
           "kanban",
