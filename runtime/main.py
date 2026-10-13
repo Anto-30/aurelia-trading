@@ -547,8 +547,14 @@ async def main() -> None:
 
     async def authenticated_probe() -> None:
         nonlocal readonly_adapter
+        expected_loginid = (
+            os.getenv("DERIV_EXPECTED_LOGINID", "").strip()
+            or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()
+        )
+        if not expected_loginid:
+            raise RuntimeError("DERIV_RUNTIME_EXPECTED_ACCOUNT_LOGINID_MISSING")
         manager = DerivSessionManager(
-            expected_loginid=os.getenv("DERIV_EXPECTED_LOGINID") or None,
+            expected_loginid=expected_loginid,
             expected_environment=os.getenv("DERIV_ENVIRONMENT", "real"),
             expected_currency=os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper(),
         )
