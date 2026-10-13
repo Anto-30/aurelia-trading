@@ -48,8 +48,8 @@ jobs:
                     for level in ("LOW", "MEDIUM", "HIGH")}
           print("BANDIT_FINDING_COUNTS=" + json.dumps(counts, sort_keys=True))
           print("BANDIT_MEDIUM_AND_LOW_FINDINGS_RECORDED=true")
-          if counts["HIGH"]:
-              raise SystemExit("High-severity Bandit findings block this check.")
+          if counts["HIGH"] or counts["MEDIUM"]:
+              raise SystemExit("Medium- or high-severity Bandit findings block this check; review and remediate before proceeding.")
           PY
       - name: Upload static security scan report
         if: always() && hashFiles('artifacts/bandit-report.json') != ''
