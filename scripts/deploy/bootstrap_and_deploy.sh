@@ -71,6 +71,7 @@ fi
 sudo systemctl enable --now docker
 sudo install -d -m 700 "$ENV_DIR"
 sudo install -d -m 700 "$DATA_DIR"
+sudo chown 10001:10001 "$DATA_DIR"
 sudo install -d -m 755 "$RELEASE_ROOT"
 
 if [ -f "$ENV_FILE" ]; then
@@ -82,6 +83,7 @@ elif [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   fi
   sudo tee "$ENV_FILE" >/dev/null <<'EOF'
 PORT=8080
+AURELIA_STATE_DIR=/var/lib/aurelia
 AURELIA_CONTINUOUS_RUNTIME=true
 AURELIA_AUTONOMOUS_LOOP=false
 AURELIA_VERIFY_DERIV_PUBLIC=true
@@ -89,18 +91,18 @@ AURELIA_VERIFY_DERIV_AUTH=true
 AURELIA_RUN_ONCE=false
 AURELIA_DEPLOYMENT_MODE=LIVE
 AURELIA_PERSISTENT_WORKER_HEALTHY=true
-AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json
-AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json
+AURELIA_READINESS_PATH=/var/lib/aurelia/AURELIA_READINESS.json
+AURELIA_DERIV_EVIDENCE_PATH=/var/lib/aurelia/deriv_authenticated_session.json
 AURELIA_RUNTIME_ID=aurelia-production-worker
-AURELIA_ATTESTATION_DIR=/tmp/aurelia/attestations
-AURELIA_JOURNAL_PATH=/tmp/aurelia/aurelia-events.ndjson
-AURELIA_FEDERATION_JOURNAL_PATH=/tmp/aurelia/federation-events.ndjson
-AURELIA_FEDERATION_LEASE_PATH=/tmp/aurelia/federation-leases.json
-AURELIA_LEDGER_PATH=/tmp/aurelia/ledger.json
-AURELIA_IDEMPOTENCY_PATH=/tmp/aurelia/idempotency.json
-AURELIA_FENCE_PATH=/tmp/aurelia/executor-fence.txt
-AURELIA_EXECUTION_JOURNAL_PATH=/tmp/aurelia/execution-events.ndjson
-AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json
+AURELIA_ATTESTATION_DIR=/var/lib/aurelia/attestations
+AURELIA_JOURNAL_PATH=/var/lib/aurelia/aurelia-events.ndjson
+AURELIA_FEDERATION_JOURNAL_PATH=/var/lib/aurelia/federation-events.ndjson
+AURELIA_FEDERATION_LEASE_PATH=/var/lib/aurelia/federation-leases.json
+AURELIA_LEDGER_PATH=/var/lib/aurelia/ledger.json
+AURELIA_IDEMPOTENCY_PATH=/var/lib/aurelia/idempotency.json
+AURELIA_FENCE_PATH=/var/lib/aurelia/executor-fence.txt
+AURELIA_EXECUTION_JOURNAL_PATH=/var/lib/aurelia/execution-events.ndjson
+AURELIA_KILL_SWITCH_STATE_PATH=/var/lib/aurelia/kill-switch-state.json
 EOF
   sudo chmod 600 "$ENV_FILE"
 else
@@ -113,18 +115,18 @@ AURELIA_VERIFY_DERIV_AUTH=false
 AURELIA_RUN_ONCE=false
 AURELIA_DEPLOYMENT_MODE=VERIFY_ONLY
 AURELIA_PERSISTENT_WORKER_HEALTHY=true
-AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json
-AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json
+AURELIA_READINESS_PATH=/var/lib/aurelia/AURELIA_READINESS.json
+AURELIA_DERIV_EVIDENCE_PATH=/var/lib/aurelia/deriv_authenticated_session.json
 AURELIA_RUNTIME_ID=aurelia-production-worker
-AURELIA_ATTESTATION_DIR=/tmp/aurelia/attestations
-AURELIA_JOURNAL_PATH=/tmp/aurelia/aurelia-events.ndjson
-AURELIA_FEDERATION_JOURNAL_PATH=/tmp/aurelia/federation-events.ndjson
-AURELIA_FEDERATION_LEASE_PATH=/tmp/aurelia/federation-leases.json
-AURELIA_LEDGER_PATH=/tmp/aurelia/ledger.json
-AURELIA_IDEMPOTENCY_PATH=/tmp/aurelia/idempotency.json
-AURELIA_FENCE_PATH=/tmp/aurelia/executor-fence.txt
-AURELIA_EXECUTION_JOURNAL_PATH=/tmp/aurelia/execution-events.ndjson
-AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json
+AURELIA_ATTESTATION_DIR=/var/lib/aurelia/attestations
+AURELIA_JOURNAL_PATH=/var/lib/aurelia/aurelia-events.ndjson
+AURELIA_FEDERATION_JOURNAL_PATH=/var/lib/aurelia/federation-events.ndjson
+AURELIA_FEDERATION_LEASE_PATH=/var/lib/aurelia/federation-leases.json
+AURELIA_LEDGER_PATH=/var/lib/aurelia/ledger.json
+AURELIA_IDEMPOTENCY_PATH=/var/lib/aurelia/idempotency.json
+AURELIA_FENCE_PATH=/var/lib/aurelia/executor-fence.txt
+AURELIA_EXECUTION_JOURNAL_PATH=/var/lib/aurelia/execution-events.ndjson
+AURELIA_KILL_SWITCH_STATE_PATH=/var/lib/aurelia/kill-switch-state.json
 EOF
   sudo chmod 600 "$ENV_FILE"
 fi
@@ -133,7 +135,7 @@ fi
 # mounted persistent data directory and must never silently fall back to
 # an ephemeral container filesystem.
 sudo sed -i '/^AURELIA_KILL_SWITCH_STATE_PATH=/d' "$ENV_FILE"
-printf '%s\n' 'AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json' | sudo tee -a "$ENV_FILE" >/dev/null
+printf '%s\n' 'AURELIA_KILL_SWITCH_STATE_PATH=/var/lib/aurelia/kill-switch-state.json' | sudo tee -a "$ENV_FILE" >/dev/null
 sudo chmod 600 "$ENV_FILE"
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
@@ -198,7 +200,7 @@ if [ "$DEPLOYMENT_MODE" = "LIVE" ] && [ "$AUTH_CONFIGURED" != "true" ]; then
 fi
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
-  grep -Fxq 'AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json' "$ENV_FILE" || {
+  grep -Fxq 'AURELIA_KILL_SWITCH_STATE_PATH=/var/lib/aurelia/kill-switch-state.json' "$ENV_FILE" || {
     echo "AURELIA_HOST_BLOCKED=KILL_SWITCH_STATE_NOT_PERSISTENT"
     exit 2
   }
@@ -255,17 +257,17 @@ sudo docker run --detach \
   --env AURELIA_RUN_ONCE=false \
   --env AURELIA_CONTINUOUS_RUNTIME=true \
   --env AURELIA_AGENT_WORKERS=true \
-  --env AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json \
-  --env AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json \
-  --env AURELIA_DERIV_LIFECYCLE_EVIDENCE_PATH=/tmp/aurelia/deriv_transaction_lifecycle.json \
-  --env AURELIA_DERIV_BROKER_EVIDENCE_PATH=/tmp/aurelia/deriv_broker_account_evidence.json \
-  --env DERIV_PUBLIC_TRANSPORT_EVIDENCE_PATH=/tmp/aurelia/deriv_public_transport.json \
-  --env AURELIA_ATTESTATION_DIR=/tmp/aurelia/attestations \
+  --env AURELIA_READINESS_PATH=/var/lib/aurelia/AURELIA_READINESS.json \
+  --env AURELIA_DERIV_EVIDENCE_PATH=/var/lib/aurelia/deriv_authenticated_session.json \
+  --env AURELIA_DERIV_LIFECYCLE_EVIDENCE_PATH=/var/lib/aurelia/deriv_transaction_lifecycle.json \
+  --env AURELIA_DERIV_BROKER_EVIDENCE_PATH=/var/lib/aurelia/deriv_broker_account_evidence.json \
+  --env DERIV_PUBLIC_TRANSPORT_EVIDENCE_PATH=/var/lib/aurelia/deriv_public_transport.json \
+  --env AURELIA_ATTESTATION_DIR=/var/lib/aurelia/attestations \
   --env AURELIA_RUNTIME_ID="$RUNTIME_ID" \
   --env FINAL_EXECUTION_AUTHORIZATION="$FINAL_AUTH" \
   --env LIVE_EXECUTION="$LIVE_EXECUTION" \
   --env GITHUB_SHA="$SHA" \
-  --mount "type=bind,src=$DATA_DIR,dst=/tmp/aurelia" \
+  --mount "type=bind,src=$DATA_DIR,dst=/var/lib/aurelia" \
   --publish 127.0.0.1:8080:8080 \
   "$IMAGE"
 
