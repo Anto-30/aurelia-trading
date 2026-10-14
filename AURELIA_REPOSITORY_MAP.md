@@ -12,7 +12,8 @@ This is the browsable map of the current AURELIA implementation on `main`.
 - Readiness orchestrator: `runtime/ops/readiness_orchestrator.py`
 - Source-of-truth metadata: `AURELIA_SOURCE_OF_TRUTH.json`
 - Operational handoff: `docs/AURELIA_OPERATIONAL_HANDOFF_2026-10-03.md`
-- External repository capability review: `docs/EXTERNAL_REPOSITORY_CAPABILITY_REVIEW_2026-10-14.md` (initial README-level triage; pending review, not approval to integrate)
+- External repository capability review: `docs/EXTERNAL_REPOSITORY_CAPABILITY_REVIEW_2026-10-14.md` (initial README/license triage; not integration approval)
+- External repository validation gates: `docs/EXTERNAL_REPOSITORY_VALIDATION_GATES_2026-10-14.md` (research-only acceptance criteria; no candidate dependencies approved)
 
 ## Capital and execution
 
