@@ -74,6 +74,8 @@ def monthly_walk_forward_splits(
         raise ValueError("END_MONTH_MUST_FOLLOW_START_MONTH")
     if in_sample_months < 1 or out_of_sample_months < 1 or step_months < 1:
         raise ValueError("WALK_FORWARD_MONTH_COUNTS_MUST_BE_POSITIVE")
+    if step_months < out_of_sample_months:
+        raise ValueError("OUT_OF_SAMPLE_WINDOWS_MUST_NOT_OVERLAP")
     if purge_days < 0:
         raise ValueError("PURGE_DAYS_MUST_NOT_BE_NEGATIVE")
     if purge_days >= in_sample_months * 28:
