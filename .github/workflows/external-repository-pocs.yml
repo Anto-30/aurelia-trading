@@ -1,0 +1,56 @@
+name: External Repository Research Proofs of Concept
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: external-repository-poc-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  synthetic-cvxpy-and-clickhouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      clickhouse:
+        image: clickhouse/clickhouse-server:25.3
+        env:
+          CLICKHOUSE_USER: default
+          CLICKHOUSE_PASSWORD: ci-test-password
+          CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+        ports:
+          - 8123:8123
+        options: >-
+          --health-cmd "wget --no-verbose --tries=1 --spider http://127.0.0.1:8123/ping || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 20s
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install isolated proof-of-concept dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "cvxpy==1.7.3" "clickhouse-connect==0.9.2"
+
+      - name: Validate synthetic CVXPY allocation constraints and failure cases
+        run: python research/external_pocs/cvxpy_allocation_poc.py
+
+      - name: Validate ClickHouse read-only reporting permissions and duplicate handling
+        env:
+          CLICKHOUSE_HOST: 127.0.0.1
+          CLICKHOUSE_PORT: "8123"
+          CLICKHOUSE_ADMIN_USER: default
+          CLICKHOUSE_ADMIN_PASSWORD: ci-test-password
+        run: python research/external_pocs/clickhouse_readonly_poc.py
