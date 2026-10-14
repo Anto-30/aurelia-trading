@@ -227,20 +227,81 @@ jobs:
           chmod 0755 /tmp/osv-scanner
           /tmp/osv-scanner --version
 
-      - name: Scan lockfiles and known vulnerability advisories
+      - name: Scan lockfiles and known vulnerability advisories in bounded shards
         shell: bash
         run: |
-          set +e
-          timeout --signal=TERM --kill-after=30s 25m /tmp/osv-scanner scan source --recursive /tmp/pinned-intake-sources --format json --output-file /tmp/pinned-intake-audit/osv-report.json > /tmp/pinned-intake-audit/osv-scanner.log 2>&1
-          status=$?
-          echo "$status" > /tmp/pinned-intake-audit/osv.exit
-          echo "OSV-Scanner exit status: $status"
-          if [ -f /tmp/pinned-intake-audit/osv-report.json ]; then
-            echo "OSV report written."
-          else
-            echo "OSV report missing; see osv-scanner.log."
-          fi
-          exit 0
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib, shutil, subprocess, time
+          root = pathlib.Path("/tmp/pinned-intake-audit")
+          source_root = pathlib.Path("/tmp/pinned-intake-sources")
+          inventory = json.loads((root / "source-inventory.json").read_text())
+          eligible = [r for r in inventory.get("repos", []) if r.get("archive_sha256") and not r.get("errors")]
+          shards = [[] for _ in range(4)]
+          for i, repo in enumerate(eligible):
+              shards[i % len(shards)].append(repo["repo"])
+          combined = {"results": []}
+          statuses = []
+          log_parts = []
+          for idx, repos in enumerate(shards):
+              shard_root = pathlib.Path(f"/tmp/osv-shard-{idx + 1}")
+              if shard_root.exists():
+                  shutil.rmtree(shard_root)
+              shard_root.mkdir(parents=True)
+              for repo in repos:
+                  source = source_root / repo.replace("/", "__")
+                  if source.exists():
+                      shutil.copytree(source, shard_root / repo.replace("/", "__"))
+              report_path = root / f"osv-report-shard-{idx + 1}.json"
+              log_path = root / f"osv-shard-{idx + 1}.log"
+              cmd = [
+                  "timeout", "--signal=TERM", "--kill-after=30s", "15m",
+                  "/tmp/osv-scanner", "scan", "source", "--recursive",
+                  str(shard_root), "--format", "json", "--output-file", str(report_path),
+              ]
+              proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+              log_path.write_text(proc.stdout or "", encoding="utf-8")
+              statuses.append(proc.returncode)
+              log_parts.append(f"=== shard {idx + 1}; repositories={len(repos)}; exit={proc.returncode} ===\n{proc.stdout or ''}")
+              if report_path.exists():
+                  try:
+                      shard_report = json.loads(report_path.read_text(encoding="utf-8"))
+                      combined["results"].extend(shard_report.get("results", []))
+                  except Exception as exc:
+                      statuses[-1] = 125
+                      log_parts.append(f"SHARD_REPORT_PARSE_ERROR={type(exc).__name__}: {exc}")
+              else:
+                  log_parts.append("SHARD_REPORT_MISSING=true")
+                  if proc.returncode in (0, 1):
+                      statuses[-1] = 125
+          (root / "osv-report.json").write_text(json.dumps(combined, indent=2) + "\n", encoding="utf-8")
+          (root / "osv-shard-status.json").write_text(json.dumps({
+              "shard_count": len(shards),
+              "eligible_repository_count": len(eligible),
+              "repositories_per_shard": [len(s) for s in shards],
+              "exit_codes": statuses,
+              "reports_merged": True,
+              "results_count": len(combined["results"]),
+              "timeout_seconds_per_shard": 900,
+          }, indent=2) + "\n", encoding="utf-8")
+          (root / "osv-scanner.log").write_text("\n".join(log_parts), encoding="utf-8")
+          if any(code not in (0, 1) for code in statuses):
+              final_status = 124 if 124 in statuses else 125
+          elif any(code == 1 for code in statuses):
+              final_status = 1
+          else:
+              final_status = 0
+          (root / "osv.exit").write_text(str(final_status) + "\n", encoding="utf-8")
+          print(json.dumps({
+              "eligible_repositories": len(eligible),
+              "repositories_not_scanned": [r.get("repo") for r in inventory.get("repos", []) if not r.get("archive_sha256") or r.get("errors")],
+              "shard_exit_codes": statuses,
+              "combined_results": len(combined["results"]),
+              "aggregate_exit": final_status,
+          }, indent=2))
+          if final_status not in (0, 1):
+              raise SystemExit(final_status)
+          PY
 
       - name: Summarize report completeness and findings
         if: always()
