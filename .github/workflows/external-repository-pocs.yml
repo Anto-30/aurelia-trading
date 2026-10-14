@@ -39,14 +39,18 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install pinned isolated proof-of-concept dependencies
+      - name: Install pinned isolated proof-of-concept dependencies and audit tools
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "cvxpy==1.9.3" "clickhouse-connect==1.4.0" pip-audit
+          python -m pip install "cvxpy==1.9.3" "clickhouse-connect==1.4.0" pip-audit "pip-licenses==5.0.0"
 
       - name: Audit isolated proof-of-concept dependency set
         run: |
           pip-audit --format json --output external-poc-pip-audit-report.json
+
+      - name: Inventory isolated proof-of-concept licenses
+        run: |
+          pip-licenses --format=json --output-file external-poc-license-report.json
 
       - name: Validate synthetic CVXPY allocation constraints and failure cases
         run: python research/external_pocs/cvxpy_allocation_poc.py
@@ -59,11 +63,13 @@ jobs:
           CLICKHOUSE_ADMIN_PASSWORD: ci-test-password
         run: python research/external_pocs/clickhouse_readonly_poc.py
 
-      - name: Upload isolated POC dependency audit report
+      - name: Upload isolated POC dependency and license reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: external-poc-dependency-audit
-          path: external-poc-pip-audit-report.json
+          path: |
+            external-poc-pip-audit-report.json
+            external-poc-license-report.json
           if-no-files-found: warn
           retention-days: 14
