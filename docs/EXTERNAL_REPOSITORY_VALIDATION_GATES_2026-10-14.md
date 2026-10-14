@@ -85,7 +85,8 @@ For any future candidate integration:
 
 - Read from current default branch: `pyproject.toml`, `requirements.txt`, `requirements-assurance.txt`, `AGENTS.md`, `config/LIVE_LOCK.yaml`, and `.github/workflows/aurelia-assurance.yml`.
 - The existing assurance workflow's compile, static production acceptance audit, shell syntax checks, and research-plane tests passed on the observed PR run; assurance tests were still running at the last observation. Later runtime tests, container build, public transport verification, secret prerequisites, authenticated broker evidence, readiness, and certification steps were pending at that time.
-- The PR has no submitted review yet.
+- The PR has no submitted review yet. GitHub API read of repository rulesets showed the existing `Execution` branch ruleset is `disabled` and has an empty required-status-check list. The branch-protection endpoint itself returned 403 to this connector, so branch protection is not independently verified; a repository administrator must inspect and restore enforcement.
+- The newest assurance run for commit `9ad95d4a65915d44122fdbda832baa5310c16254` was pending at the latest check. An earlier run for `8efab0a91f8e2af579fc9b0c647d46b615b00695` remained in progress with assurance tests running; do not treat either as a final green result.
 - No isolated CVXPY or ClickHouse experiment, source-level audit of all nine upstream repositories, full transitive SBOM, or external vulnerability scan has been run.
 - Live trading remains blocked; no orders were placed and no candidate dependency was installed.
 
