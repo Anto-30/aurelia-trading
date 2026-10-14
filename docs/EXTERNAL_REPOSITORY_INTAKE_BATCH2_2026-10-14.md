@@ -50,3 +50,15 @@ The user supplied the 13 repositories below. This document records a preliminary
 - No source has been copied into AURELIA's execution paths; no candidate dependency has been added to the production runtime.
 - No live orders were submitted; `config/LIVE_LOCK.yaml` remains the controlling release gate and must stay fail-closed.
 - Next permitted work: resolve exact repository metadata and commit pins; run static/source/license/dependency review in isolated CI; produce findings and evidence; request independent human review.
+
+## Batch 3 — additional catalogs supplied 2026-10-14
+
+Five additional repositories were added to the audit after immutable default-branch commit resolution:
+
+- [Shubhamsaboo/awesome-llm-apps](https://github.com/Shubhamsaboo/awesome-llm-apps/commit/4bf51ab704fb2c5b3803cd5191b30d7dcdb51dc2) — Apache-2.0 root license; curated app list; per-example licenses/dependencies are separate.
+- [Arindam200/awesome-ai-apps](https://github.com/Arindam200/awesome-ai-apps/commit/e5065fd86b79fd48f52c0b3261b5256ae71f6eb6) — MIT root license; self-contained examples may require separate provider API keys and manifests.
+- [ContextJet-ai/awesome-llm-observability](https://github.com/ContextJet-ai/awesome-llm-observability/commit/4b8383014ddd54c10d17e170a066beb3a23bdc7a) — CC0 catalog and skills; helper tracing captures prompt content by default unless configured otherwise. No AURELIA/broker data may be traced until privacy boundaries are validated.
+- [hasitpbhatt/awesome-ai-apps](https://github.com/hasitpbhatt/awesome-ai-apps/commit/8c2744a62ae0f036d7c1fe179c0683246e25e3ee) — MIT curated index; linked apps remain individually unreviewed.
+- [vonzosten/awesome-LangGraph](https://github.com/vonzosten/awesome-LangGraph/commit/68509d7485a280eea0e638ef86428dd9a61fbea1) — CC0 curated list with unlocked npm maintenance tooling and GitHub API calls; do not pass privileged AURELIA tokens to the tooling.
+
+The immutable pins, README/LICENSE blob hashes, root manifest and lockfile observations, dispositions and expanded risks are recorded in [EXTERNAL_REPOSITORY_AUDIT_2026-10-14.md](EXTERNAL_REPOSITORY_AUDIT_2026-10-14.md). Total candidates covered by that preliminary audit: 18. No candidate was installed or added to AURELIA runtime; full code-level review, CVE/SBOM scans and legal checks for each linked project are still incomplete. All remain reference/sandbox/toolchain-only, not production dependencies.
