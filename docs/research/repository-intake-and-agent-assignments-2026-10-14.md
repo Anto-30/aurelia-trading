@@ -81,3 +81,29 @@ An intake item may be marked **Accepted for prototype** only when commit SHA, li
 - `tensorflow/rust` was reported archived.
 - The connected GitHub account reported write permission on `Anto-30/aurelia-trading`; upstream repositories were read-only.
 - This document is a planning/intake artifact. It does not assert that repositories were cloned, dependencies installed, tests executed, production secrets provisioned, or trading qualification completed.
+
+
+## 7. Actual tool / plugin availability assessment (2026-10-14)
+
+**Available and exercised in this run**
+- GitHub connector: repository metadata reads, branch creation, file creation/read-back, and draft PR creation. PR #128 is open as a draft.
+- Web research: public project documentation used to classify Eiten, SIE and RustQuant.
+- Installed skill library: public-equity-investing router was read; it is relevant to Eiten's listed-equity portfolio research but is not a substitute for a derivatives-specific validation workflow.
+
+**Useful installed skills for subsequent work**
+- `data-analytics/index`: route dataset, metric and research tasks.
+- `data-analytics/analyze-data-quality`: check data freshness, grain, missingness, duplication and leakage risks.
+- `data-analytics/validate-data`: validate methodology, calculations, source provenance and conclusions.
+- `data-analytics/visualize-data`: quantitative charts for reports and durable artifacts.
+- `public-equity-investing/idea-generation`: use only for the equity/portfolio component of Eiten; do not generalize results to synthetic indices or Deriv products.
+- `supabase/supabase`: mandatory before any task that changes or queries AURELIA's Supabase schema/data.
+- `notion/notion-spec-to-implementation`: optional only if a relevant Notion specification is actually available and connected.
+- GitHub connector and repository-local CI: source-control/evidence channel; use PRs and branch isolation.
+
+**Not confirmed available in this session**
+- A local shell/worktree with the Rust compiler, Cargo, Python environments or containerized build sandbox for these repositories.
+- An authenticated Claude Code, Grok, JEV or Dev AI execution session that can be directly assigned tasks from this chat.
+- Permission to install tools on the user's workstation or cloud worker, configure agent credentials, provision third-party API keys, or create GitHub secrets.
+- Passing workflow runs for this documentation commit; the GitHub workflow-run query returned no runs for the commit.
+
+Therefore, this run establishes a reviewed plan and draft PR, but does not claim to have provisioned external agents, installed local toolchains, cloned repositories, or run source-level tests. To equip the execution environment, the responsible developer/agent must install the toolchain in an isolated runner and attach logs/artifacts to the PR. No credentials should be shared in chat or committed to the repository.
