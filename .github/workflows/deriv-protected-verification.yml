@@ -139,7 +139,7 @@ jobs:
                   "redaction": "account identifiers, balances, proposals, intents, transaction IDs, contract IDs, and raw observed payload omitted",
                   "evidence": {key: data[key] for key in allowed if key in data},
               }
-              (target / name).write_text(json.dumps(summary, sort_keys=True, indent=2) + "\\n", encoding="utf-8")
+              (target / name).write_text(json.dumps(summary, sort_keys=True, indent=2) + "\n", encoding="utf-8")
           print("Sanitized evidence summaries prepared; raw broker evidence will not be uploaded.")
           PY
       - name: Upload sanitized read-only verification evidence
