@@ -52,6 +52,22 @@ class EventDrivenBacktestTests(unittest.TestCase):
         result = run_backtest(candles, signals)
         self.assertEqual(result.skipped_signals, ((1, "POSITION_ALREADY_OPEN"),))
 
+    def test_signal_is_skipped_if_position_was_open_at_next_bar_open(self):
+        candles = bars([
+            (100, 101, 99, 100),
+            (100, 102, 99, 101),
+            (101, 102, 94, 95),
+            (95, 96, 94, 95),
+        ])
+        signals = [
+            TradeSignal(0, "LONG", 5, 50, 0.60),
+            TradeSignal(1, "SHORT", 5, 10, 0.60),
+        ]
+        result = run_backtest(candles, signals)
+        self.assertEqual(result.trades[0].exit_reason, "STOP")
+        self.assertEqual(result.trades[0].exit_index, 2)
+        self.assertEqual(result.skipped_signals, ((1, "POSITION_ALREADY_OPEN"),))
+
     def test_invalid_ohlc_and_duplicate_signal_fail_closed(self):
         with self.assertRaisesRegex(BacktestInputError, "CANDLE_OHLC_INVALID"):
             run_backtest(bars([(100, 99, 98, 100), (100, 101, 99, 100)]), [])
