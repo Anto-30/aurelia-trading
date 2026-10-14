@@ -31,6 +31,8 @@ jobs:
           python-version: "3.13"
       - name: Install pinned runtime dependencies
         run: pip install -r requirements.txt
+      - name: Prepare evidence directory
+        run: mkdir -p artifacts
       - name: Verify protected Deriv configuration exists
         env:
           DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
@@ -68,11 +70,17 @@ jobs:
               if not p.is_file():
                   raise SystemExit(f"missing required evidence: {name}")
           lifecycle = json.loads(Path("artifacts/deriv_transaction_lifecycle.json").read_text())
-          if lifecycle.get("mode") != "VERIFY_ONLY" and lifecycle.get("lifecycle_mode") != "VERIFY_ONLY":
+          observed = lifecycle.get("observed") or {}
+          if observed.get("mode") != "VERIFY_ONLY":
               raise SystemExit("lifecycle evidence is not VERIFY_ONLY")
-          for key in ("orders_submitted", "real_orders", "capital_movement"):
-              if lifecycle.get(key) not in (0, False, None):
-                  raise SystemExit(f"unexpected order/capital field: {key}")
+          if lifecycle.get("orders_submitted") != 0:
+              raise SystemExit("lifecycle evidence does not prove zero orders")
+          if lifecycle.get("capital_authority_granted") is not False:
+              raise SystemExit("lifecycle evidence unexpectedly grants capital authority")
+          if lifecycle.get("order_submission_permitted") is not False:
+              raise SystemExit("lifecycle evidence unexpectedly permits order submission")
+          if observed.get("broker_submission_performed") is not False or observed.get("capital_movement") is not False:
+              raise SystemExit("lifecycle evidence does not prove no submission/capital movement")
           print("VERIFY_ONLY evidence present; no order submission is authorized by this workflow.")
           PY
       - name: Upload sanitized read-only verification evidence
