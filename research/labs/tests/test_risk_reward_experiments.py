@@ -135,6 +135,26 @@ class RiskRewardExperimentTests(unittest.TestCase):
         self.assertEqual(result.exit_reason, "TIME_STOP")
         self.assertIsNone(result.net_r)
 
+    def test_bootstrap_rejects_non_integer_parameters_and_boolean_seed(self):
+        values = [1.0, -0.5, 0.25]
+        with self.assertRaisesRegex(ValueError, "BOOTSTRAP_BLOCK_LENGTH_INVALID"):
+            block_bootstrap_mean_ci(values, block_length=1.5, replicates=100)
+        with self.assertRaisesRegex(ValueError, "BOOTSTRAP_REPLICATES_INVALID"):
+            block_bootstrap_mean_ci(values, block_length=1, replicates=100.5)
+        with self.assertRaisesRegex(ValueError, "BOOTSTRAP_SEED_INVALID"):
+            block_bootstrap_mean_ci(values, block_length=1, replicates=100, seed=True)
+
+    def test_bootstrap_rejects_non_finite_or_out_of_range_confidence(self):
+        values = [1.0, -0.5, 0.25]
+        for confidence in (float("nan"), float("inf"), 0.0, 1.0):
+            with self.subTest(confidence=confidence):
+                with self.assertRaisesRegex(ValueError, "BOOTSTRAP_CONFIDENCE"):
+                    block_bootstrap_mean_ci(values, confidence=confidence, replicates=100)
+
+    def test_bootstrap_validates_configuration_even_for_short_samples(self):
+        with self.assertRaisesRegex(ValueError, "BOOTSTRAP_REPLICATES_INVALID"):
+            block_bootstrap_mean_ci([1.0], replicates=100.5)
+
     def test_invalid_policy_rejected(self):
         with self.assertRaisesRegex(ValueError, "MUST_BE_POSITIVE"):
             ExitPolicy("bad", target_r=0).validate()
