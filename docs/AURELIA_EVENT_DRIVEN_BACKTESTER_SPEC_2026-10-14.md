@@ -13,7 +13,7 @@ This module provides a deterministic OHLC replay kernel for strategy hypotheses 
 - Remaining positions are marked out at the last close with exit costs. The report is not a broker ledger or account-equity reconciliation.
 
 ## Metrics
-Returns per-unit net PnL, gross winning PnL, absolute gross losing PnL, profit factor, win rate, expectancy, and peak-to-trough drawdown on the configured initial-equity series. Since no account sizing, contract payout, financing, margin, latency, rejected-order, or broker reconciliation model is included, these are screening metrics only.
+Returns per-unit net PnL, the sum of positive trade PnLs, the absolute sum of negative trade PnLs, profit factor, win rate, expectancy, and peak-to-trough drawdown on the closed-trade equity curve. Drawdown is not marked-to-market intratrade drawdown. Since no account sizing, contract payout, financing, margin, latency, rejected-order, or broker reconciliation model is included, these are screening metrics only.
 
 ## Required validation before any strategy conclusions
 1. Add independent hand-calculated parity fixtures and randomized/property tests.
