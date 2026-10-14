@@ -59,6 +59,10 @@ Priority is an initial hypothesis, not a statement that the repository is produc
 | https://github.com/rust-lang/cargo | Build/dependency tooling reference | P2 | Use supported Cargo toolchain; do not vendor Cargo |
 | https://github.com/rust-lang/rust-bindgen | C interoperability | P3 | Only if an audited C API integration is required |
 | https://github.com/avhz/RustQuant | Quantitative finance research | P1 | Prototype isolated math/pricing utilities; independent numerical tests and license review required |
+| https://github.com/xirong/my-git | Git workflow and AI change governance | P1 | Strong reference for PR/change-control, evidence-linked review and multi-agent Git workflows; documentation only until its practices are reconciled with AURELIA's existing controls |
+| https://github.com/GitAlias/gitalias | Developer productivity | P3 | Optional local Git aliases; inspect alias definitions and user shell impact before adoption; not a runtime dependency |
+| https://github.com/actions/actions-runner-controller | CI runner infrastructure | P2 | Kubernetes operator for scalable self-hosted GitHub Actions runners; deploy only if an existing controlled Kubernetes cluster, admin ownership, isolation and patching plan are available; never expose Deriv credentials to repository research jobs |
+| https://github.com/inversify/InversifyJS | TypeScript dependency injection | P3 | Optional only if AURELIA has a TypeScript service that benefits from IoC; upstream README says future work/releases are moving to inversify/monorepo, so evaluate that canonical destination before any dependency adoption |
 
 ## 4. Recommended execution sequence
 
@@ -77,7 +81,7 @@ An intake item may be marked **Accepted for prototype** only when commit SHA, li
 
 ## 6. Current execution record
 
-- GitHub repository metadata was checked for all 23 supplied upstreams on 2026-10-14; all were reported public/readable by the connected GitHub tool.
+- GitHub repository metadata was checked for all 27 supplied upstreams on 2026-10-14; all were reported public/readable by the connected GitHub tool.
 - `tensorflow/rust` was reported archived.
 - The connected GitHub account reported write permission on `Anto-30/aurelia-trading`; upstream repositories were read-only.
 - This document is a planning/intake artifact. It does not assert that repositories were cloned, dependencies installed, tests executed, production secrets provisioned, or trading qualification completed.
@@ -130,6 +134,8 @@ Next authorized work should start with a controlled GitHub Actions or dedicated 
 
 ## 10. Immutable upstream snapshot pins (retrieved 2026-10-14)
 
+The first 23 rows below are the initial intake batch. The four additional repositories supplied afterward are pinned in the supplemental table at the end of this section.
+
 These full commit SHAs pin the exact default-branch snapshots observed during intake. They are **source identity pins only**; they do not imply the projects have passed license review, security scanning, compilation, tests, or AURELIA integration. Branches may advance after this snapshot.
 
 | Repository | Observed default branch | Pinned commit | Commit date (UTC) |
@@ -159,3 +165,15 @@ These full commit SHAs pin the exact default-branch snapshots observed during in
 | https://github.com/avhz/RustQuant | main | `8a7e038c7563e77bf5f5a973ef673316a40f3b3d` | 2026-10-04 |
 
 Snapshot method: GitHub repository metadata provided each default branch; the GitHub commit API returned the full SHA and committer date for that branch at lookup time. No code was cloned or executed by this pinning step.
+
+
+### Supplemental pins for the four additional repositories
+
+| Repository | Observed default branch | Pinned commit | Commit date (UTC) | Initial triage |
+|---|---|---|---|---|
+| https://github.com/xirong/my-git | master | `5fc8f5baf97b7c5efd7f9eb3da98ed75303a2438` | 2026-09-09 | P1 — governance/change-control reference; documentation inspection only |
+| https://github.com/GitAlias/gitalias | main | `7653169af41a9fa93d6f5c5e2aedb4c7ce801840` | 2026-08-06 | P3 — optional local developer aliases; no runtime integration |
+| https://github.com/actions/actions-runner-controller | master | `5aed393af8a412f6b0fe27507713687a6beeb000` | 2026-10-02 | P2 — infrastructure candidate only if a controlled Kubernetes runner environment is available |
+| https://github.com/inversify/InversifyJS | master | `fdd9186891e777884012984c64c271e576155f08` | 2025-11-19 | P3 — TypeScript IoC candidate; README points future development/releases to inversify/monorepo |
+
+These are immutable source identity pins, not security, build, test or integration approvals. The metadata and README reads were performed through the connected GitHub tool; no upstream code was executed.
