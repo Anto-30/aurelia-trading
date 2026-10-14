@@ -126,3 +126,36 @@ Not completed or not verifiable in this session: immutable SHA pinning for all 2
 Reason: the available connected GitHub tool provides remote source-control operations and read-only file access, but no confirmed local shell/worktree or authenticated execution sessions for Claude Code, Grok, JEV, or Dev AI. Do not mark these items complete without a connected runner/agent and its verifiable logs.
 
 Next authorized work should start with a controlled GitHub Actions or dedicated isolated runner that checks out pinned commits, installs only audited dependencies, runs repository-specific tests, uploads logs/SBOM/license reports, and opens follow-up PRs. Do not place Deriv credentials in runner environments for repository research. Keep `LIVE_LOCK` unchanged.
+
+
+## 10. Immutable upstream snapshot pins (retrieved 2026-10-14)
+
+These full commit SHAs pin the exact default-branch snapshots observed during intake. They are **source identity pins only**; they do not imply the projects have passed license review, security scanning, compilation, tests, or AURELIA integration. Branches may advance after this snapshot.
+
+| Repository | Observed default branch | Pinned commit | Commit date (UTC) |
+|---|---|---|---|
+| https://github.com/tradytics/eiten | master | `44536c58887833b7b9bbcb30f2a270db2c712ea6` | 2020-09-21 |
+| https://github.com/superlinked/sie | main | `03dd3fd3c79535cfcc052ea3be379c87413d7962` | 2026-10-14 |
+| https://github.com/rust-lang/rust | main | `d8ef4f3fe7031514cbd7d056b7b058814987ecec` | 2026-10-14 |
+| https://github.com/TheAlgorithms/Rust | master | `fed66cb0c74c4a939ec5163648458a8c2b46fd4c` | 2026-10-08 |
+| https://github.com/rustdesk/rustdesk | master | `256dc9bc12c717dea84f6a41371c67acc47edb62` | 2026-10-14 |
+| https://github.com/tensorflow/rust | master | `1ddf5a348037402f87d67c076bf3019857eae05f` | 2025-01-12 |
+| https://github.com/exercism/rust | main | `cc099ae090a6acbe6f53f1e36325263046ba333e` | 2026-10-09 |
+| https://github.com/RustPython/RustPython | main | `016ed92f9ef919125781842537c299fd4bbd250d` | 2026-10-14 |
+| https://github.com/bee-san/RustScan | master | `937903340aa6266abb26e93ea3241026b3fd8150` | 2026-10-05 |
+| https://github.com/rust-unofficial/awesome-rust | main | `42c574875b21266f4667442ca80d10582c0183b1` | 2026-10-14 |
+| https://github.com/rustfs/rustfs | main | `08ac1ec21808e29ab69bdfe3ec4bd16e43051e22` | 2026-10-14 |
+| https://github.com/google/comprehensive-rust | main | `1b82ec405d6346932e10363248b23cd6e38df050` | 2026-10-06 |
+| https://github.com/rust-lang/rust-analyzer | master | `dd5ed69d4b5b26fe7f91013b1d02608cd37ae199` | 2026-10-12 |
+| https://github.com/rustdesk/rustdesk-server | master | `873230e35a8805de7fd057e7eb763c46f7a174ef` | 2026-10-10 |
+| https://github.com/rust-lang/rust-clippy | master | `4fc115b7d555c8057e1736871c592aa45831b02a` | 2026-10-13 |
+| https://github.com/rust-lang/rustup | main | `fa0650ae0931f1f38d77310b7ff9b00aa3523486` | 2026-10-14 |
+| https://github.com/rust-lang/rustfmt | main | `c69af7786cdfef5da968f53eebd6c9b1af242b5f` | 2026-10-14 |
+| https://github.com/grpc/grpc-rust | master | `17352c8233cf0280d16a24343f2f568b7d31eae4` | 2026-10-13 |
+| https://github.com/rustls/rustls | main | `f238d682f46a64d089d5a0fc3607ef2073fb145f` | 2026-10-14 |
+| https://github.com/nikivdev/rust | main | `0d4c744eb9624f2d85fa7b1f9e5bf37647282713` | 2026-01-20 |
+| https://github.com/rust-lang/cargo | master | `377340976b3fafadb61a78ef192665518f085c57` | 2026-10-14 |
+| https://github.com/rust-lang/rust-bindgen | main | `841f911a8085dcf6fad69ddd67d17f0f6d8f8e24` | 2026-10-14 |
+| https://github.com/avhz/RustQuant | main | `8a7e038c7563e77bf5f5a973ef673316a40f3b3d` | 2026-10-04 |
+
+Snapshot method: GitHub repository metadata provided each default branch; the GitHub commit API returned the full SHA and committer date for that branch at lookup time. No code was cloned or executed by this pinning step.
