@@ -40,7 +40,11 @@ jobs:
           if start_marker not in text or end_marker not in text:
               sys.exit("FAIL: inventory section markers are missing")
           section = text.split(start_marker, 1)[1].split(end_marker, 1)[0]
-          urls = re.findall(r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", section)
+          extra_start = "## 11. Additional repositories supplied on 2026-10-14"
+          if extra_start not in text:
+              sys.exit("FAIL: additional repository section is missing")
+          extra_section = text.split(extra_start, 1)[1]
+          urls = re.findall(r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", section + "\n" + extra_section)
           unique = sorted(set(url.rstrip(".") for url in urls))
           if len(urls) != 27 or len(unique) != 27:
               sys.exit(f"FAIL: expected 27 unique upstream URLs; found {len(urls)} URLs and {len(unique)} unique")
