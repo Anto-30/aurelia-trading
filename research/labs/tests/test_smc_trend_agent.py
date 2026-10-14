@@ -232,7 +232,7 @@ class SMCTrendAgentTests(unittest.TestCase):
         ]
         status = assess_pending_setup(setup, safe_bars)
         self.assertEqual(status.status, "EXPIRED")
-        self.assertEqual(status.elapsed_bars, 3)
+        self.assertEqual(status.bars_elapsed, 3)
         self.assertEqual(status.reason, "PENDING_SETUP_TIME_TO_LIVE_EXCEEDED")
 
     def test_follow_up_bar_at_or_before_signal_is_rejected(self) -> None:
