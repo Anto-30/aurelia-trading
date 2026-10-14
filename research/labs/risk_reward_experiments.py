@@ -37,6 +37,15 @@ def _number(value: object, field: str) -> float:
     return value
 
 
+def _integer(value: object, field: str, *, minimum: int | None = None) -> int:
+    """Validate integer configuration without accepting bool or coercing floats."""
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{field.upper()}_INVALID")
+    if minimum is not None and value < minimum:
+        raise ValueError(f"{field.upper()}_OUT_OF_RANGE")
+    return value
+
+
 def _aware_utc(value: str, field: str) -> datetime:
     try:
         parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
@@ -323,20 +332,22 @@ def block_bootstrap_mean_ci(
 ) -> tuple[float, float] | None:
     """Circular moving-block bootstrap CI; dependence beyond block length remains unmodelled."""
     xs = [_number(x, "bootstrap_value") for x in values]
+    confidence_value = _number(confidence, "bootstrap_confidence")
+    block_length_value = _integer(block_length, "bootstrap_block_length", minimum=1)
+    replicates_value = _integer(replicates, "bootstrap_replicates", minimum=100)
+    seed_value = _integer(seed, "bootstrap_seed")
+    if not 0 < confidence_value < 1:
+        raise ValueError("BOOTSTRAP_CONFIDENCE_OUT_OF_RANGE")
     if len(xs) < 2:
         return None
-    if not 0 < confidence < 1 or isinstance(block_length, bool) or block_length < 1:
-        raise ValueError("BOOTSTRAP_PARAMETERS_INVALID")
-    if isinstance(replicates, bool) or replicates < 100:
-        raise ValueError("BOOTSTRAP_REPLICATES_TOO_SMALL")
-    rng = Random(seed)
+    rng = Random(seed_value)
     n = len(xs)
     estimates: list[float] = []
-    for _ in range(replicates):
+    for _ in range(replicates_value):
         sample: list[float] = []
         while len(sample) < n:
             start = rng.randrange(n)
-            sample.extend(xs[(start + j) % n] for j in range(block_length))
+            sample.extend(xs[(start + j) % n] for j in range(block_length_value))
         estimates.append(mean(sample[:n]))
     estimates.sort()
     alpha = (1.0 - confidence) / 2.0
