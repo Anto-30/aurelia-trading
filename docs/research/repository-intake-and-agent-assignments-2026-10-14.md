@@ -171,9 +171,17 @@ Snapshot method: GitHub repository metadata provided each default branch; the Gi
 
 | Repository | Observed default branch | Pinned commit | Commit date (UTC) | Initial triage |
 |---|---|---|---|---|
-| https://github.com/xirong/my-git | master | `5fc8f5baf97b7c5efd7f9eb3da98ed75303a2438` | 2026-09-09 | P1 — governance/change-control reference; documentation inspection only |
-| https://github.com/GitAlias/gitalias | main | `7653169af41a9fa93d6f5c5e2aedb4c7ce801840` | 2026-08-06 | P3 — optional local developer aliases; no runtime integration |
-| https://github.com/actions/actions-runner-controller | master | `5aed393af8a412f6b0fe27507713687a6beeb000` | 2026-10-02 | P2 — infrastructure candidate only if a controlled Kubernetes runner environment is available |
-| https://github.com/inversify/InversifyJS | master | `fdd9186891e777884012984c64c271e576155f08` | 2025-11-19 | P3 — TypeScript IoC candidate; README points future development/releases to inversify/monorepo |
+| https://github.com/xirong/my-git | master | `5fc8f5baf97b7c5efd7f9eb3da98ed75303a2438` | 2026-09-09 | P1 — governance/change-control reference; root LICENSE is MIT; documentation inspection only |
+| https://github.com/GitAlias/gitalias | main | `7653169af41a9fa93d6f5c5e2aedb4c7ce801840` | 2026-08-06 | P3 — optional local developer aliases; root LICENSE file not found at checked paths, so license remains unresolved; no runtime integration |
+| https://github.com/actions/actions-runner-controller | master | `5aed393af8a412f6b0fe27507713687a6beeb000` | 2026-10-02 | P2 — Apache-2.0; infrastructure candidate only if a controlled Kubernetes runner environment is available |
+| https://github.com/inversify/InversifyJS | master | `fdd9186891e777884012984c64c271e576155f08` | 2025-11-19 | P3 — MIT; TypeScript IoC candidate; README points future development/releases to inversify/monorepo |
 
 These are immutable source identity pins, not security, build, test or integration approvals. The metadata and README reads were performed through the connected GitHub tool; no upstream code was executed.
+
+
+### Supplemental license and source notes
+
+- `xirong/my-git`: README describes a Git and AI-native engineering governance handbook; the checked root `LICENSE` is MIT. Suitable as a process reference, not executable runtime code.
+- `GitAlias/gitalias`: README describes shell/Git command aliases; a root license file was not found at the checked `LICENSE`, `LICENSE.md`, or `LICENSE.txt` paths. Treat the license as unresolved until the repository's authoritative licensing terms are located; do not copy/distribute its contents as a dependency yet.
+- `actions/actions-runner-controller`: README describes a Kubernetes operator that provisions/scales self-hosted GitHub Actions runners; the checked root license is Apache-2.0. This is infrastructure, not an agent or an automatically available runner; deployment requires cluster administration, identity/permissions, patching, isolation, and operational ownership. GitHub's current documentation describes ARC as a Kubernetes-based way to host self-hosted runners: https://docs.github.com/en/actions/concepts/runners/actions-runner-controller.
+- `inversify/InversifyJS`: README describes a TypeScript/JavaScript inversion-of-control container; the checked root license is MIT. Its README directs future development and releases to `inversify/monorepo`; inspect that destination before adopting a new dependency.
