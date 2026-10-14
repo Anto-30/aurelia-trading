@@ -77,6 +77,11 @@ class EventDrivenBacktestTests(unittest.TestCase):
                 TradeSignal(0, "LONG", 1, 1, 0.60), TradeSignal(0, "SHORT", 1, 1, 0.60),
             ])
 
+    def test_numeric_strings_are_rejected_instead_of_coerced(self):
+        candles = (Candle(0, "100", 101, 99, 100), Candle(1, 100, 101, 99, 100))
+        with self.assertRaisesRegex(BacktestInputError, "OPEN_INVALID"):
+            run_backtest(candles, [])
+
     def test_signal_without_following_bar_is_rejected(self):
         candles = bars([(100, 101, 99, 100), (100, 101, 99, 100)])
         with self.assertRaisesRegex(BacktestInputError, "SIGNAL_REQUIRES_A_FOLLOWING_CANDLE"):
