@@ -185,3 +185,17 @@ These are immutable source identity pins, not security, build, test or integrati
 - `GitAlias/gitalias`: README describes shell/Git command aliases; a root license file was not found at the checked `LICENSE`, `LICENSE.md`, or `LICENSE.txt` paths. Treat the license as unresolved until the repository's authoritative licensing terms are located; do not copy/distribute its contents as a dependency yet.
 - `actions/actions-runner-controller`: README describes a Kubernetes operator that provisions/scales self-hosted GitHub Actions runners; the checked root license is Apache-2.0. This is infrastructure, not an agent or an automatically available runner; deployment requires cluster administration, identity/permissions, patching, isolation, and operational ownership. GitHub's current documentation describes ARC as a Kubernetes-based way to host self-hosted runners: https://docs.github.com/en/actions/concepts/runners/actions-runner-controller.
 - `inversify/InversifyJS`: README describes a TypeScript/JavaScript inversion-of-control container; the checked root license is MIT. Its README directs future development and releases to `inversify/monorepo`; inspect that destination before adopting a new dependency.
+
+
+## 11. Additional repositories supplied on 2026-10-14
+
+These repositories were checked for public metadata and their default-branch snapshots were resolved. Snapshot pins identify source only; no claim of build, security, license, or integration qualification is implied.
+
+| Repository | Default branch | Snapshot commit | Proposed use / disposition |
+|---|---|---|---|
+| https://github.com/xirong/my-git | master | `5fc8f5baf97b7c5efd7f9eb3da98ed75303a2438` | **P1 governance reference.** README focuses on AI-native Git change control, evidence-backed reviews, collaboration, branch protection and multi-agent work. Adapt process concepts; do not import blindly. |
+| https://github.com/GitAlias/gitalias | main | `7653169af41a9fa93d6f5c5e2aedb4c7ce801840` | **P2 developer ergonomics.** Git aliases only; optional local developer setup, not a runtime dependency or security control. Review aliases before adopting. |
+| https://github.com/actions/actions-runner-controller | master | `5aed393af8a412f6b0fe27507713687a6beeb000` | **P2 infrastructure research / high operational cost.** Kubernetes operator for self-hosted GitHub Actions runner scale sets. Do not deploy solely for this intake; requires Kubernetes administration, runner isolation, patching and least-privilege controls. A GitHub-hosted runner is simpler for non-sensitive repository checks. Never expose Deriv secrets to untrusted repository builds. |
+| https://github.com/inversify/InversifyJS | master | `fdd9186891e777884012984c64c271e576155f08` | **P3 conditional.** TypeScript/JavaScript inversion-of-control container. README notes development moving to the Inversify monorepo. No AURELIA integration identified; defer unless a concrete TypeScript service requires it. |
+
+Metadata and README checks are not source audits. These four upstreams are read-only to the connected GitHub account; no changes were made upstream.
