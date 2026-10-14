@@ -295,7 +295,8 @@ jobs:
       - name: Generate commit-bound evidence manifest
         if: always()
         env:
-          AURELIA_SOURCE_SHA: ${{ github.sha }}
+          AURELIA_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          AURELIA_WORKFLOW_SHA: ${{ github.sha }}
           AURELIA_GITHUB_REF: ${{ github.ref }}
           AURELIA_EVENT_NAME: ${{ github.event_name }}
           AURELIA_RUN_ID: ${{ github.run_id }}
@@ -318,6 +319,7 @@ jobs:
           manifest = {
               "schema": "aurelia.ci-evidence-manifest.v1",
               "source_sha": os.environ["AURELIA_SOURCE_SHA"],
+              "workflow_sha": os.environ["AURELIA_WORKFLOW_SHA"],
               "github_ref": os.environ["AURELIA_GITHUB_REF"],
               "event_name": os.environ["AURELIA_EVENT_NAME"],
               "run_id": os.environ["AURELIA_RUN_ID"],
@@ -329,7 +331,7 @@ jobs:
               "evidence_scope": "CI_READINESS_AND_REPOSITORY_CERTIFICATION_ONLY",
               "broker_authentication_claimed": False,
               "production_runtime_claimed": False,
-              "note": "Commit binding proves which source revision produced these reports; it does not prove broker authentication, production runtime, strategy qualification, or live authorization."
+              "note": "source_sha identifies the PR head when the event is a pull request; workflow_sha identifies the exact GitHub checkout (the merge ref for pull requests). This manifest does not prove broker authentication, production runtime, strategy qualification, or live authorization."
           }
           (root / "evidence_manifest.json").write_text(json.dumps(manifest, sort_keys=True, indent=2) + "\n", encoding="utf-8")
           PY
