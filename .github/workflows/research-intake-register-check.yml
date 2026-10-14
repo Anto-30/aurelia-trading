@@ -48,7 +48,7 @@ jobs:
               sys.exit("FAIL: explicit capital-safety boundary missing")
           if "production qualification" not in text.lower():
               sys.exit("FAIL: production qualification boundary missing")
-          print("PASS: 27 unique repository URLs recorded")
+          print("PASS: 27 unique repository URLs recorded across both intake sections")
           print("PASS: capital-safety and production-qualification boundaries documented")
           print("INFO: no upstream repository code, dependencies, scripts, or credentials were executed or accessed")
           PY
