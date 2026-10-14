@@ -12,6 +12,7 @@ This is the browsable map of the current AURELIA implementation on `main`.
 - Readiness orchestrator: `runtime/ops/readiness_orchestrator.py`
 - Source-of-truth metadata: `AURELIA_SOURCE_OF_TRUTH.json`
 - Operational handoff: `docs/AURELIA_OPERATIONAL_HANDOFF_2026-10-03.md`
+- External repository capability review: `docs/EXTERNAL_REPOSITORY_CAPABILITY_REVIEW_2026-10-14.md` (initial README-level triage; pending review, not approval to integrate)
 
 ## Capital and execution
 
@@ -76,6 +77,7 @@ Historical archives and old branches are not the current source of truth.
 - Active deployment: provider-neutral self-hosted Linux/Docker runtime.
 - Active deployment policy: `config/deployment_policy.json`
 - Active deployment workflow: `.github/workflows/self-hosted-runtime-deploy.yml`
+- Host deployment script: `scripts/deploy/bootstrap_and_deploy.sh`
 - External access state: `data/runtime/AURELIA_EXTERNAL_ACCESS_STATE.json`
 - Historical Railway/OCI deployment records are audit artifacts, not active runtime dependencies.
 - Current source-of-truth repository state is directly readable from the remote `main` branch.
