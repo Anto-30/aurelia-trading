@@ -1,7 +1,7 @@
 name: AURELIA Assurance
 on:
   push:
-    branches: ["main"]
+    branches: ["**"]
   workflow_dispatch:
 permissions:
   contents: read
