@@ -76,12 +76,11 @@ class BacktestResult:
 
 
 def _finite(value: float, name: str) -> float:
-    if isinstance(value, bool):
+    # Do not coerce numeric-looking strings: later arithmetic must use the same
+    # validated numeric values, not values that merely passed float conversion.
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise BacktestInputError(f"{name.upper()}_INVALID")
-    try:
-        result = float(value)
-    except (TypeError, ValueError) as exc:
-        raise BacktestInputError(f"{name.upper()}_INVALID") from exc
+    result = float(value)
     if not isfinite(result):
         raise BacktestInputError(f"{name.upper()}_NONFINITE")
     return result
