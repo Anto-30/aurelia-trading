@@ -5,6 +5,7 @@ on:
     branches: ["main"]
     paths:
       - "config/external_repo_federation.json"
+      - "config/agent_skill_federation.json"
       - "skills/external-repo-federation/**"
       - ".github/workflows/external-repo-sync.yml"
   schedule:
@@ -20,24 +21,49 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
-      - name: Validate federation policy and source count
+      - name: Validate federation policies and immutable pin integrity
         run: |
           python - <<'PY'
-          import json
+          import json, re
           from pathlib import Path
-          p=json.loads(Path("config/external_repo_federation.json").read_text())
-          assert p["global_controls"]["capital_authority"] is False
-          assert p["global_controls"]["live_order_submission"] is False
-          assert p["global_controls"]["secret_reading"] is False
-          assert p["global_controls"]["external_code_execution"] == "DENY_BY_DEFAULT"
-          repos=p["repositories"]
-          assert isinstance(repos, list) and len(repos) > 0
-          assert all(isinstance(x.get("repo"), str) and "/" in x["repo"] for x in repos)
-          assert all(x.get("mode") in {"RESEARCH_ONLY","SANDBOX_ONLY","TOOLCHAIN_ONLY","REFERENCE_ONLY"} for x in repos)
-          assert all(x.get("source_url", "").startswith("https://github.com/") for x in repos)
-          assert all(x.get("capital_authority", False) is False for x in repos)
+
+          repo_manifest = json.loads(Path("config/external_repo_federation.json").read_text())
+          skill_manifest = json.loads(Path("config/agent_skill_federation.json").read_text())
+          controls = repo_manifest["global_controls"]
+          assert controls["capital_authority"] is False
+          assert controls["live_order_submission"] is False
+          assert controls["secret_reading"] is False
+          assert controls["external_code_execution"] == "DENY_BY_DEFAULT"
+
+          repositories = repo_manifest["repositories"]
+          sources = skill_manifest["sources"]
+          assert repositories and sources
+          assert all(isinstance(x.get("repo"), str) and "/" in x["repo"] for x in repositories)
+          assert all(x.get("mode") in {"RESEARCH_ONLY","SANDBOX_ONLY","TOOLCHAIN_ONLY","REFERENCE_ONLY"} for x in repositories)
+          assert all(x.get("source_url", "").startswith("https://github.com/") for x in repositories)
+          assert all(x.get("capital_authority", False) is False for x in repositories)
+          sha_pattern = re.compile(r"^[0-9a-f]{40}$")
+
+          bad_repositories = [(x["repo"], x.get("head_commit")) for x in repositories
+                              if x.get("head_commit") != "SYNC_REQUIRED" and not sha_pattern.fullmatch(str(x.get("head_commit", "")))]
+          bad_skills = [(x.get("repo", x.get("name", "<unknown>")), x.get("pinned_commit"))
+                        for x in sources if x.get("pinned_commit") != "SYNC_REQUIRED"
+                        and not sha_pattern.fullmatch(str(x.get("pinned_commit", "")))]
+          assert not bad_repositories, f"Malformed external repository pins: {bad_repositories}"
+          assert not bad_skills, f"Malformed skill pins: {bad_skills}"
+
+          repo_pins = {x["repo"].lower(): x.get("head_commit") for x in repositories}
+          mismatches = [(x["repo"], repo_pins[x["repo"].lower()], x["pinned_commit"])
+                        for x in sources if x.get("repo", "").lower() in repo_pins
+                        and x.get("pinned_commit") not in (None, "SYNC_REQUIRED")
+                        and repo_pins[x["repo"].lower()] != x["pinned_commit"]]
+          assert not mismatches, f"Cross-manifest pin mismatch: {mismatches}"
+
           print("EXTERNAL_REPO_POLICY=PASS")
-          print("EXTERNAL_REPO_COUNT=%d" % len(repos))
+          print("EXTERNAL_REPO_COUNT=%d" % len(repositories))
+          print("SKILL_SOURCE_COUNT=%d" % len(sources))
+          print("PIN_FORMAT_VALIDATION=PASS")
+          print("CROSS_MANIFEST_PIN_ALIGNMENT=PASS")
           PY
       - name: Sync public repository heads
         run: |
@@ -58,15 +84,21 @@ jobs:
           print(json.dumps({"schema":"aurelia.external_repo_sync.v1","repositories":out},indent=2))
           PY
           python - <<'PY'
-          import json
+          import json, re
           from pathlib import Path
           p=json.loads(Path("config/external_repo_federation.json").read_text())
           x=json.load(open("/tmp/external-repo-sync.json"))
           bad=[r for r in x["repositories"] if not r.get("reachable")]
+          pins={r["repo"]:r.get("head_commit") for r in p["repositories"]}
+          drift=[{"repo":r["repo"],"pinned":pins.get(r["repo"]),"upstream_head":r.get("head_commit")}
+                 for r in x["repositories"] if r.get("reachable") and pins.get(r["repo"]) not in (None,"SYNC_REQUIRED",r.get("head_commit"))]
           unresolved=[r["repo"] for r in p["repositories"] if r.get("head_commit") == "SYNC_REQUIRED"]
+          valid_pins=[r for r in p["repositories"] if re.fullmatch(r"[0-9a-f]{40}",str(r.get("head_commit","")))]
           print("EXTERNAL_REPO_REACHABLE=%d/%d"%(len(x["repositories"])-len(bad),len(x["repositories"])))
-          print("EXTERNAL_REPO_PINNED=%d/%d"%(len(p["repositories"])-len(unresolved),len(p["repositories"])))
+          print("EXTERNAL_REPO_PIN_FORMAT_VALID=%d/%d"%(len(valid_pins),len(p["repositories"])))
+          print("EXTERNAL_REPO_PIN_DRIFT_COUNT=%d"%len(drift))
           print("EXTERNAL_REPO_UNRESOLVED_PIN_COUNT=%d"%len(unresolved))
+          Path("/tmp/external-repo-pin-drift.json").write_text(json.dumps(drift,indent=2))
           if bad:
               print("UNREACHABLE=", [r["repo"] for r in bad])
               raise SystemExit(1)
