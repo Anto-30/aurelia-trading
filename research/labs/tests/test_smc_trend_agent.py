@@ -179,5 +179,79 @@ class SMCTrendAgentTests(unittest.TestCase):
         self.assertEqual(status.reason, "PRICE_INTERSECTED_REFERENCE_LEVEL_ONLY")
 
 
+    def test_future_higher_timeframe_bar_cannot_change_existing_candidate(self) -> None:
+        config = SMCConfig(
+            atr_period=5,
+            displacement_atr_multiple=0.5,
+            min_fvg_atr_multiple=0.1,
+            order_block_lookback_bars=8,
+            tick_size=0.1,
+        )
+        baseline = detect_smc_setup(
+            _fixture_15m(), _fixture_1h(), symbol="TEST_SYNTHETIC", config=config
+        )
+        self.assertIsNotNone(baseline)
+        start = datetime(2025, 1, 1, 3, 0, tzinfo=timezone.utc)
+        # This hostile bar closes after the signal timestamp; it must not leak
+        # into the 1h bias used for this already-closed 15m signal.
+        future = _bar(start, 26, 3600, (100.0, 140.0, 60.0, 65.0))
+        with_future = detect_smc_setup(
+            _fixture_15m(), [*_fixture_1h(), future],
+            symbol="TEST_SYNTHETIC", config=config
+        )
+        self.assertEqual(with_future, baseline)
+
+    def test_confirmed_swings_are_prefix_stable(self) -> None:
+        bars = _fixture_15m()
+        cut = 90
+        earlier = confirmed_swings(bars[:cut], left_bars=2, right_bars=2)
+        full = confirmed_swings(bars, left_bars=2, right_bars=2)
+        # Pivots confirmed by the prefix end must not change when later data
+        # arrives. Pivots that need right-side confirmation are not observable.
+        prefix_observable = [p for p in earlier if p.confirmed_at_index < cut]
+        full_observable = [p for p in full if p.confirmed_at_index < cut]
+        self.assertEqual(prefix_observable, full_observable)
+
+    def test_pending_setup_expires_at_configured_bar_count(self) -> None:
+        config = SMCConfig(
+            atr_period=5,
+            displacement_atr_multiple=0.5,
+            min_fvg_atr_multiple=0.1,
+            tick_size=0.1,
+            max_pending_bars=3,
+        )
+        setup = detect_smc_setup(
+            _fixture_15m(), _fixture_1h(), symbol="TEST_SYNTHETIC", config=config
+        )
+        self.assertIsNotNone(setup)
+        assert setup is not None
+        start = datetime.fromisoformat(setup.signal_timestamp_utc.replace("Z", "+00:00"))
+        safe_bars = [
+            _bar(start, index, 900, (102.0, 102.5, 101.8, 102.0))
+            for index in range(1, 4)
+        ]
+        status = assess_pending_setup(setup, safe_bars)
+        self.assertEqual(status.status, "EXPIRED")
+        self.assertEqual(status.elapsed_bars, 3)
+        self.assertEqual(status.reason, "PENDING_SETUP_TIME_TO_LIVE_EXCEEDED")
+
+    def test_follow_up_bar_at_or_before_signal_is_rejected(self) -> None:
+        config = SMCConfig(
+            atr_period=5,
+            displacement_atr_multiple=0.5,
+            min_fvg_atr_multiple=0.1,
+            tick_size=0.1,
+        )
+        setup = detect_smc_setup(
+            _fixture_15m(), _fixture_1h(), symbol="TEST_SYNTHETIC", config=config
+        )
+        self.assertIsNotNone(setup)
+        assert setup is not None
+        signal = datetime.fromisoformat(setup.signal_timestamp_utc.replace("Z", "+00:00"))
+        not_after = _bar(signal, 0, 900, (102.0, 102.5, 101.8, 102.0))
+        with self.assertRaisesRegex(ValueError, "FOLLOW_UP_BAR_NOT_AFTER_SIGNAL"):
+            assess_pending_setup(setup, [not_after])
+
+
 if __name__ == "__main__":
     unittest.main()
