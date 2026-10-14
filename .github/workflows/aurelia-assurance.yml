@@ -60,9 +60,9 @@ jobs:
           if-no-files-found: error
 
   assurance:
-    # Production secrets are available only to an explicit manual run or main-branch push.
-    # Pull requests and non-main branch pushes use the non-secret CI environment.
-    environment: ${{ (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && 'production' || 'ci' }}
+    # Production secrets are available only to manual runs on main or pushes to main.
+    # Pull requests and every non-main ref use the non-secret CI environment.
+    environment: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || github.event_name == 'push') && 'production' || 'ci' }}
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
