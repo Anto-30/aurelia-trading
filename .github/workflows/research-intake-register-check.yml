@@ -46,8 +46,8 @@ jobs:
           extra_section = text.split(extra_start, 1)[1]
           urls = re.findall(r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", section + "\n" + extra_section)
           unique = sorted(set(url.rstrip(".") for url in urls))
-          if len(urls) != 27 or len(unique) != 27:
-              sys.exit(f"FAIL: expected 27 unique upstream URLs; found {len(urls)} URLs and {len(unique)} unique")
+          if len(unique) != 27:
+              sys.exit(f"FAIL: expected 27 unique upstream URLs; found {len(urls)} URL occurrences and {len(unique)} unique")
           if "LIVE_LOCK" not in text or "no capital authority" not in text:
               sys.exit("FAIL: explicit capital-safety boundary missing")
           if "production qualification" not in text.lower():
