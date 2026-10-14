@@ -11,6 +11,8 @@ import os
 from pathlib import Path
 from typing import Mapping
 
+from runtime.core.secrets import get_optional_secret
+
 SUPPORTED_AUTH_MODES = frozenset({"pat", "oauth"})
 SUPPORTED_CURRENCIES = frozenset({"USD"})
 DEFAULT_OUTPUT = Path("artifacts/deriv_auth_prerequisites.json")
@@ -19,7 +21,14 @@ DEFAULT_OUTPUT = Path("artifacts/deriv_auth_prerequisites.json")
 def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object]:
     env = os.environ if environ is None else environ
 
-    token_present = bool(env.get("DERIV_AUTH_TOKEN", "").strip())
+    if environ is None:
+        token_present = bool(
+            get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")
+        )
+    else:
+        token_present = bool(
+            env.get("DERIV_AUTH_TOKEN", "").strip() or env.get("DERIV_PAT", "").strip()
+        )
     loginid_present = bool(
         env.get("DERIV_EXPECTED_LOGINID", "").strip()
         or env.get("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()
@@ -27,7 +36,11 @@ def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object
     raw_mode = env.get("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
     mode_valid = raw_mode in SUPPORTED_AUTH_MODES
     safe_mode = raw_mode if mode_valid else "invalid"
-    app_id_present = bool(env.get("DERIV_APP_ID", "").strip())
+    app_id_present = bool(
+        get_optional_secret("DERIV_APP_ID")
+        if environ is None
+        else env.get("DERIV_APP_ID", "").strip()
+    )
 
     raw_currency = env.get("DERIV_EXPECTED_CURRENCY", "").strip().upper()
     currency_valid = raw_currency in SUPPORTED_CURRENCIES
