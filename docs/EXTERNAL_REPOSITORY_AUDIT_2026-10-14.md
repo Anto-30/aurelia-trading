@@ -1,7 +1,7 @@
 # External Repository Intake — Immutable Snapshot & Initial Static Review
 Date: 2026-10-14
 Parent PR: https://github.com/Anto-30/aurelia-trading/pull/136
-Scope: read-only public-source verification for the 13 candidates in the batch-2 intake.
+Scope: read-only public-source verification for 18 candidates across batches 2 and 3.
 
 ## Evidence standard and limits
 
@@ -45,3 +45,23 @@ This is an **initial static metadata / license / manifest review**, not a comple
 6. Preserve the live lock. Genuine broker-account evidence, broker-derived minimum-stake affordability, strategy-specific OOS and calibration/cost qualification, persistent-runtime verification, and the 3,600-second soak are separate gates and remain unproved by this document.
 
 Status: immutable source refs recorded; preliminary README/LICENSE/manifest review completed; vulnerability scans and full code-level audits incomplete; no adoption approval; PR remains draft; live trading remains blocked.
+
+
+## Batch 3 addendum — five additional catalog / observability sources
+
+The following default-branch refs were resolved on 2026-10-14 and used as immutable pins for the README/license/manifest reads shown here. These are mostly curated lists, not cohesive dependencies. No repository was cloned, installed or executed. Catalog entries may have their own licenses, security properties and maintenance state; a root LICENSE does not re-license the third-party projects linked from a list.
+
+| Candidate (default branch) | Immutable commit pin | README blob SHA | LICENSE blob SHA | Root manifest / lock status | Static assessment / disposition |
+|---|---|---|---|---|---|
+| [Shubhamsaboo/awesome-llm-apps](https://github.com/Shubhamsaboo/awesome-llm-apps/commit/4bf51ab704fb2c5b3803cd5191b30d7dcdb51dc2) | `4bf51ab704fb2c5b3803cd5191b30d7dcdb51dc2` | `e8b91511659f82c52ef8d5c1ce5cd6aabea03c19` | `261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64` | No root package/requirements manifest or root lockfile surfaced; many child app directories, each with separate code/dependencies | Root README describes 100+ agent, skill and RAG examples and claims Apache-2.0 for this repository. Each embedded app still requires its own license, manifest, lockfile, setup-script and API-key/data-flow review. `REFERENCE_ONLY`; choose one app only after review; never bulk-install examples into AURELIA. |
+| [Arindam200/awesome-ai-apps](https://github.com/Arindam200/awesome-ai-apps/commit/e5065fd86b79fd48f52c0b3261b5256ae71f6eb6) | `e5065fd86b79fd48f52c0b3261b5256ae71f6eb6` | `0148de487e3b1cd67e494d5f291c1b872c949f9d` | `c1bcb65f6f0736abe6efad76f78b844a18644fba` | No root dependency manifest or lockfile surfaced; `AGENTS.md` says each example is self-contained and often requires provider API keys / an individual `requirements.txt` or `pyproject.toml` | Root license MIT applies to this curated repository, not automatically to all linked/demo projects or model/provider SDKs. Example categories include MCP integrations, finance tracking, web automation and data/RAG tools; all need per-example permission and credential review. `REFERENCE_ONLY`. |
+| [ContextJet-ai/awesome-llm-observability](https://github.com/ContextJet-ai/awesome-llm-observability/commit/4b8383014ddd54c10d17e170a066beb3a23bdc7a) | `4b8383014ddd54c10d17e170a066beb3a23bdc7a` | `0bef6c5d3cd3d82b6d15c141504e087e29eaa945` | `9373cd5d544afbafd2156b98bb95d19225965ac0` | No root dependency manifest/lockfile surfaced; `tools/refresh_stars.py`, `tools/genai_trace.py`, `skills/` and CI skill validation are present | Root license CC0. The list's `genai_trace.py` helper captures prompt content by default when OpenTelemetry is available, and its default redactor is identity; `mask_common_pii` is explicitly a conservative example, not a complete privacy control. Do not trace broker messages, account identifiers or trading signals until capture is disabled or a tested redactor/export boundary is enforced. Its install instructions use a plugin marketplace or `npx degit`; review skill files and transitive tools before installing. `REFERENCE_ONLY`; specific source may be evaluated in sandbox after a privacy/code audit. |
+| [hasitpbhatt/awesome-ai-apps](https://github.com/hasitpbhatt/awesome-ai-apps/commit/8c2744a62ae0f036d7c1fe179c0683246e25e3ee) | `8c2744a62ae0f036d7c1fe179c0683246e25e3ee` | `ef504b6333bcb79493f0061d48f05151990427cf` | `79a61cd49383094563414b21380b2399c7282fc1` | No root runtime manifest or root lockfile surfaced; repository is a curated Markdown catalog | Root license MIT; README lists chatbot, coding, research, media, automation and other app links. This is a discovery index, not an audited or dependency-pinned implementation. Each destination needs independent license, provenance, active-maintenance, data-egress and secret-handling checks. `REFERENCE_ONLY`. |
+| [vonzosten/awesome-LangGraph](https://github.com/vonzosten/awesome-LangGraph/commit/68509d7485a280eea0e638ef86428dd9a61fbea1) | `68509d7485a280eea0e638ef86428dd9a61fbea1` | `bda0c396e4f3bc0ea7a71ff2d3f738472fb11417` | `1625c1793607996fcfc46420e8aa2f3d2b7efd1e` | Root `package.json` blob `b85f54ad5d24dfaeecf6928249c74f0f979d1d62`; no root lockfile surfaced | Root license CC0; root package identifies private lightweight maintenance tooling and has scripts invoking `npx awesome-lint` / `npx markdownlint-cli` without a root lockfile. `scripts/repo-checks.mjs` makes GitHub API calls to every listed project and consumes `GITHUB_TOKEN`/ `GH_TOKEN` if present. Review package scripts and rate-limit/egress behavior before execution; do not pass AURELIA's privileged token. Curated entries have individual licenses. `TOOLCHAIN_ONLY` for isolated catalog linting; linked apps remain unapproved. |
+
+### Cross-cutting decision for these five sources
+
+- These catalogs improve research discovery; they do not by themselves improve execution correctness or establish any AURELIA live-trading prerequisite.
+- No catalog, skill, MCP server, linked example, or observability SDK receives broker secrets, authenticated browser sessions, shell/SSH access, write access to the execution ledger, or capital/release authority.
+- A repository-level license only covers content to the extent its authors can license it; review embedded projects and assets separately. No global adoption approval is implied.
+- Full dependency CVE/SBOM scans, per-example subtree audit and isolated execution remain incomplete; no "zero vulnerabilities" finding is made.
