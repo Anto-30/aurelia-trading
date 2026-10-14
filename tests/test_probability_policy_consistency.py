@@ -13,9 +13,9 @@ ROOT = Path(__file__).resolve().parents[1]
 class ProbabilityPolicyConsistencyTests(unittest.TestCase):
     def test_runtime_config_matches_deterministic_authority(self):
         runtime = (ROOT / "config" / "runtime.yaml").read_text(encoding="utf-8")
-        minimum = re.search(r"(?m)^  min_trade_probability: ([0-9.]+)\\s*$", runtime)
-        maximum = re.search(r"(?m)^  max_trade_probability: ([0-9.]+)\\s*$", runtime)
-        clipping = re.search(r"(?m)^  clipping: (true|false)\\s*$", runtime)
+        minimum = re.search(r"(?m)^  min_trade_probability: ([0-9.]+)\s*$", runtime)
+        maximum = re.search(r"(?m)^  max_trade_probability: ([0-9.]+)\s*$", runtime)
+        clipping = re.search(r"(?m)^  clipping: (true|false)\s*$", runtime)
         self.assertIsNotNone(minimum)
         self.assertIsNotNone(maximum)
         self.assertIsNotNone(clipping)
