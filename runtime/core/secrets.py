@@ -5,6 +5,17 @@ import os
 from functools import lru_cache
 
 
+# These values must never silently fall back to environment variables when the
+# Google Secret Manager provider is explicitly selected.
+GSM_PROTECTED_NAMES = frozenset({
+    "DERIV_AUTH_TOKEN",
+    "DERIV_PAT",
+    "DERIV_APP_ID",
+    "AURELIA_OPERATOR_RESET_SIGNING_KEY",
+})
+
+
+
 class SecretsError(RuntimeError):
     """Raised when required runtime secrets are unavailable."""
 
@@ -17,7 +28,44 @@ def get_required_secret(name: str) -> str:
     return value
 
 
+@lru_cache(maxsize=32)
+def _read_google_secret(project_id: str, secret_id: str, version_id: str) -> str:
+    """Read one explicitly pinned Secret Manager version via Application Default Credentials."""
+    if not project_id or not secret_id:
+        raise SecretsError("GOOGLE_SECRET_MANAGER_CONFIGURATION_MISSING")
+    if not version_id.isdigit() or version_id == "0":
+        raise SecretsError("GOOGLE_SECRET_MANAGER_VERSION_MUST_BE_NUMERIC")
+    try:
+        from google.cloud import secretmanager
+        client = secretmanager.SecretManagerServiceClient()
+        resource = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+        response = client.access_secret_version(request={"name": resource})
+        value = response.payload.data.decode("utf-8").strip()
+    except SecretsError:
+        raise
+    except Exception:
+        # Do not expose SDK exception details, request metadata, or secret values.
+        raise SecretsError("GOOGLE_SECRET_MANAGER_ACCESS_FAILED") from None
+    if not value:
+        raise SecretsError("GOOGLE_SECRET_MANAGER_SECRET_EMPTY")
+    return value
+
+
 def get_optional_secret(name: str, default: str = "") -> str:
+    """Read ordinary config from the environment and protected credentials from the configured provider.
+
+    With AURELIA_SECRET_PROVIDER=google_secret_manager, protected credential
+    names are read only from Secret Manager; missing configuration/access does
+    not fall back to environment variables.
+    """
+    provider = os.getenv("AURELIA_SECRET_PROVIDER", "").strip().lower()
+    if provider == "google_secret_manager" and name in GSM_PROTECTED_NAMES:
+        project_id = os.getenv("AURELIA_GCP_PROJECT_ID", "").strip()
+        secret_id = os.getenv(f"AURELIA_GSM_SECRET_ID_{name}", name.lower().replace("_", "-")).strip()
+        version_id = os.getenv(f"AURELIA_GSM_SECRET_VERSION_{name}", "1").strip()
+        return _read_google_secret(project_id, secret_id, version_id)
+    if provider and provider != "google_secret_manager":
+        raise SecretsError("UNSUPPORTED_AURELIA_SECRET_PROVIDER")
     return os.getenv(name, default).strip()
 
 
