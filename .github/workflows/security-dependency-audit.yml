@@ -47,16 +47,35 @@ jobs:
             exit "$status"
           fi
 
-      - name: Run Bandit high-severity static analysis
+      - name: Run Bandit static analysis and fail on high-severity findings
         run: |
           set +e
           bandit -r runtime research scripts -ll -f json -o bandit-report.json
           status=$?
           set -e
-          if [ "$status" -ne 0 ]; then
-            echo "Bandit reported high-severity findings or could not complete; inspect the uploaded report."
-            exit "$status"
+          if [ "$status" -gt 1 ] || [ ! -s bandit-report.json ]; then
+            echo "Bandit could not complete or did not produce a report."
+            exit 2
           fi
+          python - <<'PY'
+          import json
+          import sys
+
+          with open("bandit-report.json", encoding="utf-8") as handle:
+              report = json.load(handle)
+
+          results = report.get("results", [])
+          counts = {
+              severity: sum(item.get("issue_severity") == severity for item in results)
+              for severity in ("HIGH", "MEDIUM", "LOW")
+          }
+          print("Bandit findings: " + ", ".join(f"{key}={value}" for key, value in counts.items()))
+          if counts["HIGH"]:
+              print("High-severity findings block this audit.")
+              sys.exit(1)
+          if counts["MEDIUM"]:
+              print("Medium-severity findings require triage; see issue #134.")
+          PY
 
       - name: Upload audit reports
         if: always()
