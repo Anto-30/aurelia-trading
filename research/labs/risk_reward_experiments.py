@@ -80,6 +80,8 @@ class CostComponent:
     source_kind: CostSource
     source_ref: str
     observed_at_utc: str
+    confidence: Literal["LOW", "MEDIUM", "HIGH"]
+    limitations: str
     embedded_in_fill: bool = False
 
     def validate(self, account_currency: str) -> None:
@@ -93,6 +95,12 @@ class CostComponent:
             raise ValueError("COST_SOURCE_KIND_INVALID")
         if not self.source_ref.strip():
             raise ValueError("COST_SOURCE_REFERENCE_MISSING")
+        if self.confidence not in {"LOW", "MEDIUM", "HIGH"}:
+            raise ValueError("COST_CONFIDENCE_INVALID")
+        if not self.limitations.strip():
+            raise ValueError("COST_LIMITATIONS_MISSING")
+        if not isinstance(self.embedded_in_fill, bool):
+            raise ValueError("COST_EMBEDDED_FLAG_INVALID")
         _aware_utc(self.observed_at_utc, "cost_observed_at_utc")
 
 
@@ -112,6 +120,7 @@ class TradePath:
     data_hash: str
     bars: tuple[NormalizedBar, ...]
     cost_components: tuple[CostComponent, ...]
+    required_cost_components: tuple[str, ...]
     costs_complete: bool
     unknown_cost_components: tuple[str, ...] = ()
 
@@ -139,6 +148,14 @@ class TradePath:
             if component.component_id in ids:
                 raise ValueError("DUPLICATE_COST_COMPONENT_ID")
             ids.add(component.component_id)
+        required = {str(item).strip().lower() for item in self.required_cost_components if str(item).strip()}
+        if not required:
+            raise ValueError("REQUIRED_COST_COMPONENTS_MISSING")
+        declared = {component.name.strip().lower() for component in self.cost_components}
+        if self.costs_complete and not required.issubset(declared):
+            raise ValueError("REQUIRED_COST_COMPONENTS_UNACCOUNTED")
+        if not isinstance(self.costs_complete, bool):
+            raise ValueError("COST_COMPLETENESS_FLAG_INVALID")
         if self.costs_complete and (not self.cost_components or self.unknown_cost_components):
             raise ValueError("COSTS_CLAIMED_COMPLETE_WITHOUT_FULL_EVIDENCE")
         if any(not str(item).strip() for item in self.unknown_cost_components):

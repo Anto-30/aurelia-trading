@@ -9,7 +9,7 @@ Status: research-only; not merged; no live authority.
 
 Adds a pure research-plane comparison harness for identical entry-path replay. It evaluates 1:1, 1:1.25, 1:1.5, 1:1.75, 1:2, 1:2.5 and 1:3 fixed targets, a 2R target with break-even movement, a trailing-stop candidate, and a time stop. Initial planned risk remains the denominator for every R-multiple. The path contract requires a verified instrument-spec reference, data hash, exact entry ID, timestamps, account currency and an explicitly declared linear R-path payoff model.
 
-The harness uses conservative stop-first handling when OHLC data cannot resolve a same-bar collision; adverse stop gaps fill at the bar open; a target gap gets no favourable improvement. Stop changes observed at a bar close affect the next bar. Costs have source type, reference, timestamp, currency and cash amount; explicitly embedded costs are not deducted twice. Unknown required costs cause COST_INCOMPLETE, and net expectancy / net profit factor / net confidence interval are withheld.
+The harness uses conservative stop-first handling when OHLC data cannot resolve a same-bar collision; adverse stop gaps fill at the bar open; a target gap gets no favourable improvement. Stop changes observed at a bar close affect the next bar. Costs record source type, reference, timestamp, currency, confidence, limitations and cash amount. Required cost-component names are declared per instrument/profile; a result cannot be marked cost-complete if a required component is absent. Explicitly embedded costs are not deducted twice. Freshness/effective-period approval of external cost profiles remains a separate qualification gate. Unknown required costs cause COST_INCOMPLETE, and net expectancy / net profit factor / net confidence interval are withheld.
 
 The evaluator has no signal-generation, stake-sizing, capital authority, live-order or broker-submission behavior. It intentionally rejects fixed-payout payoff models. Partial exits, native contract lifecycle simulation, instrument adapters, and data ingestion are not implemented in this first slice.
 
@@ -26,7 +26,7 @@ The R100 strategy remains ECONOMICS_FAILED and not live eligible. The report lab
 Locally executed in a scratch test workspace, without network access or broker submission:
 
 - PYTHONPATH=/tmp/aurelia_rr python -m unittest research.labs.tests.test_risk_reward_experiments tests.test_trade_economics_master_example -v
-- 15 tests passed: exit ratio grid, gross/net arithmetic, conservative collisions, stop-gap fill, next-bar trailing/BE semantics, incomplete-cost blocking, embedded-cost de-duplication, fixed-payout rejection, malformed timestamps, duplicate signal IDs, non-finite values, deterministic block bootstrap, time exit, and the specified -$0.05 expectancy example.
+- 16 tests passed after the required-cost coverage test: exit ratio grid, gross/net arithmetic, conservative collisions, stop-gap fill, next-bar trailing/BE semantics, incomplete-cost blocking, embedded-cost de-duplication, fixed-payout rejection, malformed timestamps, duplicate signal IDs, non-finite values, deterministic block bootstrap, time exit, and the specified -$0.05 expectancy example.
 - This run tests the new research harness and a scratch copy of the currently inspected runtime/core/economics.py; it is not a full repository suite or production test. The pull-request CI is required to test the committed revision.
 
 ## Remaining requirements

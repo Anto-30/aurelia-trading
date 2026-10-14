@@ -14,16 +14,17 @@ def stamp(offset: int) -> str:
     return (NOW + timedelta(minutes=offset)).isoformat().replace("+00:00", "Z")
 
 def cost(component_id="spread", amount=0.02):
-    return CostComponent(component_id, component_id, amount, "USD", "OBSERVED",
-                         "fixture:cost-observation", stamp(0))
+    return CostComponent(component_id, component_id, amount, "USD", "STRESS_ASSUMPTION",
+                         "fixture:cost-observation", stamp(0), "LOW",
+                         "Synthetic unit-test fixture; not actual execution-cost evidence.")
 
-def path(signal="s1", bars=None, costs_complete=True, cost_components=None, payoff="LINEAR_R_PATH"):
+def path(signal="s1", bars=None, costs_complete=True, cost_components=None, payoff="LINEAR_R_PATH", required_cost_components=("spread",)):
     return TradePath(
         signal_id=signal, strategy_id="TEST_STRATEGY", instrument_id="TEST_LINEAR",
         timeframe="1m", regime="TEST", entry_timestamp_utc=stamp(-1),
         initial_risk_cash=1.0, account_currency="USD", payoff_model=payoff,
         instrument_spec_ref="fixture:instrument-spec-v1", data_hash="sha256:fixture-data",
-        bars=tuple(bars or [NormalizedBar(stamp(1), 0.0, 0.8, -0.4, 0.5),
+        required_cost_components=tuple(required_cost_components), bars=tuple(bars or [NormalizedBar(stamp(1), 0.0, 0.8, -0.4, 0.5),
                             NormalizedBar(stamp(2), 0.5, 1.4, 0.2, 1.2)]),
         cost_components=tuple(cost_components if cost_components is not None else [cost()]),
         costs_complete=costs_complete, unknown_cost_components=() if costs_complete else ("latency_slippage",),
@@ -76,12 +77,18 @@ class RiskRewardExperimentTests(unittest.TestCase):
         self.assertIsNone(result["net_profit_factor"])
 
     def test_embedded_cost_is_not_counted_twice(self):
-        embedded = CostComponent("embedded", "spread in fill", .04, "USD", "OBSERVED",
-                                 "fixture:embedded", stamp(0), True)
-        result = simulate_exit(path(cost_components=[embedded, cost("commission", .01)]),
+        embedded = CostComponent("embedded", "spread", .04, "USD", "STRESS_ASSUMPTION",
+                                 "fixture:embedded", stamp(0), "LOW", "Synthetic test fixture.", True)
+        result = simulate_exit(path(cost_components=[embedded, cost("commission", .01)],
+                                    required_cost_components=("spread", "commission")),
                                ExitPolicy("fixed", target_r=1.0))
         self.assertAlmostEqual(result.known_cost_cash, 0.01)
         self.assertAlmostEqual(result.net_r, 0.99)
+
+    def test_cost_completeness_requires_all_instrument_declared_components(self):
+        with self.assertRaisesRegex(ValueError, "REQUIRED_COST_COMPONENTS_UNACCOUNTED"):
+            path(cost_components=[cost("commission")],
+                 required_cost_components=("spread", "commission")).validate()
 
     def test_fixed_payout_contract_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "PAYOFF_MODEL_NOT_SUPPORTED"):
