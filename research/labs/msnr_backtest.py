@@ -164,6 +164,10 @@ def run_backtest(
         position = None
 
     for i, bar in enumerate(bars):
+        # If a position was open at this bar's open, a signal from the previous
+        # candle was formed while that position was still open. It remains
+        # ineligible even if this bar subsequently exits the existing position.
+        position_was_open_at_open = position is not None
         if position is not None:
             long_side = position["side"] == "LONG"
             stop_hit = bar.low <= position["stop"] if long_side else bar.high >= position["stop"]
@@ -180,7 +184,7 @@ def run_backtest(
         if signal.probability < config.min_probability or signal.probability > config.max_probability:
             skipped.append((signal.signal_index, "PROBABILITY_OUT_OF_POLICY"))
             continue
-        if position is not None:
+        if position_was_open_at_open or position is not None:
             skipped.append((signal.signal_index, "POSITION_ALREADY_OPEN"))
             continue
         entry = bar.open + half_spread + slip if signal.side == "LONG" else bar.open - half_spread - slip
