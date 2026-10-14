@@ -331,7 +331,7 @@ jobs:
               "production_runtime_claimed": False,
               "note": "Commit binding proves which source revision produced these reports; it does not prove broker authentication, production runtime, strategy qualification, or live authorization."
           }
-          (root / "evidence_manifest.json").write_text(json.dumps(manifest, sort_keys=True, indent=2) + "\\n", encoding="utf-8")
+          (root / "evidence_manifest.json").write_text(json.dumps(manifest, sort_keys=True, indent=2) + "\n", encoding="utf-8")
           PY
 
       - name: Upload current readiness and certification bundle
