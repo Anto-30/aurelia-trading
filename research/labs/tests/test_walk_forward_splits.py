@@ -62,6 +62,12 @@ class MonthlyWalkForwardSplitTests(unittest.TestCase):
         ):
             validate_split(invalid)
 
+    def test_overlapping_oos_windows_are_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "OUT_OF_SAMPLE_WINDOWS_MUST_NOT_OVERLAP"):
+            monthly_walk_forward_splits(
+                "2026-01", "2026-08", out_of_sample_months=2, step_months=1
+            )
+
     def test_non_default_step_rolls_by_two_months(self) -> None:
         splits = monthly_walk_forward_splits(
             "2026-01", "2026-08", step_months=2
