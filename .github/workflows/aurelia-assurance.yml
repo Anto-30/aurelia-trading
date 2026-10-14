@@ -2,6 +2,8 @@ name: AURELIA Assurance
 on:
   push:
     branches: ["**"]
+  pull_request:
+    branches: ["main"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -11,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   assurance:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     # Production-scoped secrets are restricted to the protected main-branch assurance workflow.
     environment: production
     runs-on: ubuntu-latest
