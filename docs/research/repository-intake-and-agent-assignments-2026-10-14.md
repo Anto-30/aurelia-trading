@@ -107,3 +107,22 @@ An intake item may be marked **Accepted for prototype** only when commit SHA, li
 - Passing workflow runs for this documentation commit; the GitHub workflow-run query returned no runs for the commit.
 
 Therefore, this run establishes a reviewed plan and draft PR, but does not claim to have provisioned external agents, installed local toolchains, cloned repositories, or run source-level tests. To equip the execution environment, the responsible developer/agent must install the toolchain in an isolated runner and attach logs/artifacts to the PR. No credentials should be shared in chat or committed to the repository.
+
+
+## 8. Additional source inspection and CI check
+
+Read-only source inspection performed after the initial draft:
+- `tradytics/eiten`: README describes a Python equity-portfolio toolkit with eigen, minimum-variance and maximum-Sharpe portfolios, genetic-algorithm portfolios, Yahoo Finance data loading, and a historical-return simulator. Treat as equity portfolio research; not direct evidence of a validated Deriv synthetic-index strategy. Upstream default branch reported as `master`.
+- `superlinked/sie`: README describes the Superlinked Inference Engine, a self-hosted inference server with OpenAI-compatible endpoints and support for multiple model/task types. Treat as optional infrastructure only after a measured latency/cost/security comparison; upstream default branch reported as `main`.
+- `avhz/RustQuant`: `Cargo.toml` declares a Rust quantitative-finance workspace, version 0.4.0, edition 2021, dual-licensed `MIT OR Apache-2.0`, with crates under `crates/*`, examples, and bindings. This is manifest evidence only, not build/test evidence. Upstream default branch reported as `main`.
+- AURELIA GitHub combined commit status query for the latest manifest update returned no status entries. No passing CI run was established for this documentation commit.
+
+## 9. Completion boundary and blockers
+
+Completed in this session: a dedicated branch and draft PR; documented role/tool/skill mapping; read-back verification of the intake file; targeted read-only inspection of three candidate repositories; and a GitHub commit-status check.
+
+Not completed or not verifiable in this session: immutable SHA pinning for all 23 repositories; full README/license/source review of all 23; cloning or installation; dependency/security scans; builds and tests; quant backtests; actual assignment/execution by external agents; environment/toolchain provisioning; CI execution; independent human review; merge; or production qualification.
+
+Reason: the available connected GitHub tool provides remote source-control operations and read-only file access, but no confirmed local shell/worktree or authenticated execution sessions for Claude Code, Grok, JEV, or Dev AI. Do not mark these items complete without a connected runner/agent and its verifiable logs.
+
+Next authorized work should start with a controlled GitHub Actions or dedicated isolated runner that checks out pinned commits, installs only audited dependencies, runs repository-specific tests, uploads logs/SBOM/license reports, and opens follow-up PRs. Do not place Deriv credentials in runner environments for repository research. Keep `LIVE_LOCK` unchanged.
