@@ -214,6 +214,16 @@ def standard_exit_policies() -> tuple[ExitPolicy, ...]:
 class TradeResult:
     signal_id: str
     policy_id: str
+    strategy_id: str
+    instrument_id: str
+    timeframe: str
+    regime: str
+    instrument_spec_ref: str
+    data_hash: str
+    cost_component_refs: tuple[str, ...]
+    cost_source_kinds: tuple[str, ...]
+    cost_confidences: tuple[str, ...]
+    cost_limitations: tuple[str, ...]
     exit_timestamp_utc: str
     exit_reason: str
     exit_r: float
@@ -275,6 +285,13 @@ def simulate_exit(path: TradePath, policy: ExitPolicy) -> TradeResult:
     net_cash = gross_cash - cost_cash if path.costs_complete else None
     return TradeResult(
         signal_id=path.signal_id, policy_id=policy.policy_id,
+        strategy_id=path.strategy_id, instrument_id=path.instrument_id,
+        timeframe=path.timeframe, regime=path.regime,
+        instrument_spec_ref=path.instrument_spec_ref, data_hash=path.data_hash,
+        cost_component_refs=tuple(c.source_ref for c in path.cost_components),
+        cost_source_kinds=tuple(c.source_kind for c in path.cost_components),
+        cost_confidences=tuple(c.confidence for c in path.cost_components),
+        cost_limitations=tuple(c.limitations for c in path.cost_components),
         exit_timestamp_utc=path.bars[exit_idx].timestamp_utc, exit_reason=exit_reason,
         exit_r=exit_r, gross_cash=gross_cash, duration_bars=exit_idx + 1,
         max_adverse_excursion_r=max_adverse, max_favourable_excursion_r=max_favourable,
@@ -346,6 +363,10 @@ def compare_exit_policies(
         raise ValueError("DUPLICATE_EXIT_POLICY_ID")
     for path in paths:
         path.validate()
+    dimensions = {(p.strategy_id, p.instrument_id, p.timeframe, p.regime,
+                   p.account_currency, p.instrument_spec_ref) for p in paths}
+    if len(dimensions) != 1:
+        raise ValueError("MIXED_EXPERIMENT_DIMENSIONS")
     output: dict[str, dict[str, object]] = {}
     for policy in policies:
         policy.validate()
@@ -363,6 +384,13 @@ def compare_exit_policies(
             "policy_id": policy.policy_id,
             "trade_count": len(trades),
             "entry_signal_ids": signal_ids,
+            "strategy_id": paths[0].strategy_id,
+            "instrument_id": paths[0].instrument_id,
+            "timeframe": paths[0].timeframe,
+            "regime": paths[0].regime,
+            "instrument_spec_ref": paths[0].instrument_spec_ref,
+            "data_hashes": sorted({p.data_hash for p in paths}),
+            "required_cost_components_by_trade": {p.signal_id: list(p.required_cost_components) for p in paths},
             "gross_expectancy_r": mean(gross),
             "gross_expectancy_cash": mean(t.gross_cash for t in trades),
             "gross_win_rate": sum(x > 0 for x in gross) / len(gross),
@@ -376,9 +404,12 @@ def compare_exit_policies(
             "mean_known_cost_r": mean(t.known_cost_r for t in trades),
             "cost_complete_trade_count": sum(t.costs_complete for t in trades),
             "cost_coverage": sum(t.costs_complete for t in trades) / len(trades),
+            "cost_source_kinds": sorted({c.source_kind for p in paths for c in p.cost_components}),
+            "contains_stress_assumptions": any(c.source_kind == "STRESS_ASSUMPTION" for p in paths for c in p.cost_components),
+            "production_cost_qualification": False,
             "known_cost_only_expectancy_r_not_fully_net": mean(known_net),
             "net_expectancy_block_bootstrap_ci95_r": list(ci) if ci is not None else None,
-            "status": "COST_COMPLETE_RESEARCH_METRICS" if complete else "COST_INCOMPLETE",
+            "status": "COST_COMPONENTS_COVERED_RESEARCH_ONLY_NOT_QUALIFICATION" if complete else "COST_INCOMPLETE",
             "trades": [t.__dict__ for t in trades],
         }
     return output

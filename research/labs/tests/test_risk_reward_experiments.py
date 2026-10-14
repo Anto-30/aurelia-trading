@@ -18,9 +18,9 @@ def cost(component_id="spread", amount=0.02):
                          "fixture:cost-observation", stamp(0), "LOW",
                          "Synthetic unit-test fixture; not actual execution-cost evidence.")
 
-def path(signal="s1", bars=None, costs_complete=True, cost_components=None, payoff="LINEAR_R_PATH", required_cost_components=("spread",)):
+def path(signal="s1", bars=None, costs_complete=True, cost_components=None, payoff="LINEAR_R_PATH", required_cost_components=("spread",), strategy="TEST_STRATEGY", instrument="TEST_LINEAR"):
     return TradePath(
-        signal_id=signal, strategy_id="TEST_STRATEGY", instrument_id="TEST_LINEAR",
+        signal_id=signal, strategy_id=strategy, instrument_id=instrument,
         timeframe="1m", regime="TEST", entry_timestamp_utc=stamp(-1),
         initial_risk_cash=1.0, account_currency="USD", payoff_model=payoff,
         instrument_spec_ref="fixture:instrument-spec-v1", data_hash="sha256:fixture-data",
@@ -84,6 +84,21 @@ class RiskRewardExperimentTests(unittest.TestCase):
                                ExitPolicy("fixed", target_r=1.0))
         self.assertAlmostEqual(result.known_cost_cash, 0.01)
         self.assertAlmostEqual(result.net_r, 0.99)
+
+    def test_cost_provenance_is_returned_and_never_claims_production_qualification(self):
+        result = compare_exit_policies([path()], [ExitPolicy("fixed", target_r=1.0)], bootstrap_replicates=100)["fixed"]
+        self.assertEqual(result["cost_source_kinds"], ["STRESS_ASSUMPTION"])
+        self.assertTrue(result["contains_stress_assumptions"])
+        self.assertIs(result["production_cost_qualification"], False)
+        trade = result["trades"][0]
+        self.assertEqual(trade["instrument_spec_ref"], "fixture:instrument-spec-v1")
+        self.assertEqual(trade["cost_component_refs"], ("fixture:cost-observation",))
+        self.assertIn("Synthetic unit-test fixture", trade["cost_limitations"][0])
+
+    def test_mixed_strategy_or_instrument_paths_cannot_be_aggregated(self):
+        paths = [path("s1"), path("s2", strategy="OTHER_STRATEGY")]
+        with self.assertRaisesRegex(ValueError, "MIXED_EXPERIMENT_DIMENSIONS"):
+            compare_exit_policies(paths, [ExitPolicy("fixed", target_r=1.0)], bootstrap_replicates=100)
 
     def test_cost_completeness_requires_all_instrument_declared_components(self):
         with self.assertRaisesRegex(ValueError, "REQUIRED_COST_COMPONENTS_UNACCOUNTED"):
