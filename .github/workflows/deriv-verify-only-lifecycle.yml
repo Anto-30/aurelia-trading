@@ -45,10 +45,10 @@ permissions:
 
 jobs:
   verify-only:
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' }}
     environment: production
     # Verify-only is intentionally branch-independent so the current canonical main can be verified.
     # Capital-moving execution remains independently blocked by LIVE_LOCK and FINAL_EXECUTION_AUTHORIZATION.
-    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
