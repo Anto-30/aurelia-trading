@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from runtime.adapters.deriv_adapter import DerivAdapter, DerivProtocolError
+from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_ws_url
 from runtime.adapters.deriv_ws import DerivWebSocketTransport
 
 
@@ -71,6 +72,19 @@ class DerivAdapterHardeningTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(proposal_id, "proposal-demo")
         payload = adapter.request.await_args.args[0]
         self.assertEqual(payload["proposal"], 1)
+
+
+class DerivSessionInputTests(unittest.TestCase):
+    def test_account_id_path_delimiters_are_rejected_before_http_request(self):
+        invalid_ids = ("../real", "DOT12345?otp=evil", "DOT12345#fragment", "DOT/12345")
+        with patch("runtime.adapters.deriv_session.urlopen") as http:
+            for account_id in invalid_ids:
+                with self.subTest(account_id=account_id):
+                    with self.assertRaisesRegex(DerivSessionError, "ACCOUNT_ID_INVALID"):
+                        get_authenticated_ws_url(
+                            account_id, bearer_token="test-token", app_id="12345"
+                        )
+            http.assert_not_called()
 
 
 class DerivTransportShutdownTests(unittest.IsolatedAsyncioTestCase):
