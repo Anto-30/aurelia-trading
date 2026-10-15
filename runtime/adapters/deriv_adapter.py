@@ -43,7 +43,11 @@ class DerivAdapter:
         self.auth_token = (
             auth_token if auth_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
         )
-        configured_loginid = expected_loginid or get_optional_secret("DERIV_EXPECTED_LOGINID")
+        configured_loginid = (
+            expected_loginid
+            or get_optional_secret("DERIV_EXPECTED_LOGINID")
+            or get_optional_secret("DERIV_AUTHORIZED_ACCOUNT_ID")
+        )
         self.expected_loginid = str(configured_loginid).strip() if configured_loginid else ""
         configured_currency = expected_currency if expected_currency is not None else os.getenv("DERIV_EXPECTED_CURRENCY", "")
         self.expected_currency = str(configured_currency).strip().upper()
