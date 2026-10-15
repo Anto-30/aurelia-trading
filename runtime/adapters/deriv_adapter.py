@@ -43,9 +43,8 @@ class DerivAdapter:
         self.auth_token = (
             auth_token if auth_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
         )
-        self.expected_loginid = (
-            expected_loginid or get_optional_secret("DERIV_EXPECTED_LOGINID")
-        )
+        configured_loginid = expected_loginid or get_optional_secret("DERIV_EXPECTED_LOGINID")
+        self.expected_loginid = str(configured_loginid).strip() if configured_loginid else ""
         configured_currency = expected_currency if expected_currency is not None else os.getenv("DERIV_EXPECTED_CURRENCY", "")
         self.expected_currency = str(configured_currency).strip().upper()
         self.environment = environment
@@ -74,6 +73,8 @@ class DerivAdapter:
         if not self.ws_url:
             raise DerivProtocolError("DERIV_AUTHENTICATED_WS_URL_MISSING")
         self._validate_environment_url(self.ws_url)
+        if not self.expected_loginid:
+            raise DerivProtocolError("EXPECTED_ACCOUNT_LOGINID_REQUIRED")
         if not self.expected_currency:
             raise DerivProtocolError("EXPECTED_ACCOUNT_CURRENCY_REQUIRED")
         try:
@@ -128,6 +129,14 @@ class DerivAdapter:
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> AccountIdentity:
+        account_id = str(account_id or "").strip()
+        if not account_id:
+            raise DerivProtocolError("ACCOUNT_ID_REQUIRED")
+        if self.expected_loginid and self.expected_loginid != account_id:
+            raise DerivProtocolError("ACCOUNT_IDENTITY_MISMATCH")
+        # The requested OTP account becomes the expected account identity when
+        # the caller has not already configured an explicit login-ID binding.
+        self.expected_loginid = account_id
         try:
             session = get_authenticated_ws_url(
                 account_id,
@@ -308,8 +317,10 @@ class DerivAdapter:
             raise DerivProtocolError(
                 "PROPOSAL_PARAMETERS_MISSING:" + ",".join(missing)
             )
+        # The API action is fixed by this method. Caller-provided parameters
+        # must not be able to override the request opcode.
         proposal = (
-            await self.request({"proposal": 1, **parameters})
+            await self.request({**parameters, "proposal": 1})
         ).get("proposal") or {}
         proposal_id = str(proposal.get("id") or "")
         if not proposal_id:
