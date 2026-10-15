@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 from runtime.adapters.deriv_adapter import DerivAdapter, DerivProtocolError
 from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_ws_url
-from runtime.adapters.deriv_ws import DerivWebSocketTransport
+from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
 
 
 class DerivAdapterHardeningTests(unittest.IsolatedAsyncioTestCase):
@@ -74,6 +74,25 @@ class DerivAdapterHardeningTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(payload["proposal"], 1)
 
 
+    async def test_unexpected_connect_failure_closes_transport_and_fails_closed(self):
+        transport = SimpleNamespace(
+            connect=AsyncMock(),
+            request=AsyncMock(side_effect=ValueError("malformed reply")),
+            close=AsyncMock(),
+        )
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+            auth_token="test-token",
+            expected_loginid="CRREAL",
+            expected_currency="USD",
+        )
+        with patch("runtime.adapters.deriv_adapter.DerivWebSocketTransport", return_value=transport):
+            with self.assertRaisesRegex(ValueError, "malformed reply"):
+                await adapter.connect()
+        transport.close.assert_awaited_once()
+        self.assertFalse(adapter.authorized)
+        self.assertIsNone(adapter.account)
+
 class DerivSessionInputTests(unittest.TestCase):
     def test_account_id_path_delimiters_are_rejected_before_http_request(self):
         invalid_ids = ("../real", "DOT12345?otp=evil", "DOT12345#fragment", "DOT/12345")
@@ -114,6 +133,100 @@ class DerivTransportShutdownTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(transport.ws)
         self.assertIsNone(transport._reader_task)
         self.assertEqual(transport._subscription_by_request_id, {})
+
+
+    async def test_close_wakes_blocked_subscription_and_clears_registry(self):
+        reader_started = asyncio.Event()
+        subscribe_sent = asyncio.Event()
+        wait_forever = asyncio.Event()
+
+        async def blocking_recv():
+            reader_started.set()
+            await wait_forever.wait()
+            return "{}"
+
+        async def send(message):
+            if '"subscribe": 1' in message:
+                subscribe_sent.set()
+
+        socket = SimpleNamespace(
+            recv=AsyncMock(side_effect=blocking_recv),
+            send=AsyncMock(side_effect=send),
+            close=AsyncMock(),
+        )
+        transport = DerivWebSocketTransport(
+            "wss://api.derivws.com/trading/v1/options/ws/real"
+        )
+        transport.ws = socket
+        transport._reader_task = asyncio.create_task(transport._reader_loop())
+        await asyncio.wait_for(reader_started.wait(), timeout=1.0)
+
+        stream = transport.subscribe("ticks:R_100", {"ticks": "R_100"})
+        consumer = asyncio.create_task(stream.__anext__())
+        await asyncio.wait_for(subscribe_sent.wait(), timeout=1.0)
+        self.assertIn("ticks:R_100", transport._subscriptions)
+
+        await transport.close()
+        with self.assertRaisesRegex(DerivTransportError, "BROKER_SESSION_CLOSED"):
+            await asyncio.wait_for(consumer, timeout=1.0)
+
+        self.assertEqual(transport._subscriptions, {})
+        self.assertEqual(transport._subscription_by_request_id, {})
+        socket.close.assert_awaited_once()
+
+    async def test_reconnect_preserves_and_rebinds_active_subscription(self):
+        first_reader_started = asyncio.Event()
+        second_reader_started = asyncio.Event()
+        first_send = asyncio.Event()
+        second_send = asyncio.Event()
+        wait_forever = asyncio.Event()
+
+        def make_socket(reader_started, subscribe_sent):
+            async def blocking_recv():
+                reader_started.set()
+                await wait_forever.wait()
+                return "{}"
+
+            async def send(message):
+                if '"subscribe": 1' in message:
+                    subscribe_sent.set()
+
+            return SimpleNamespace(
+                recv=AsyncMock(side_effect=blocking_recv),
+                send=AsyncMock(side_effect=send),
+                close=AsyncMock(),
+            )
+
+        first_socket = make_socket(first_reader_started, first_send)
+        second_socket = make_socket(second_reader_started, second_send)
+        transport = DerivWebSocketTransport(
+            "wss://api.derivws.com/trading/v1/options/ws/real"
+        )
+        with patch("runtime.adapters.deriv_ws.connect", side_effect=[first_socket, second_socket]):
+            await transport.connect()
+            await asyncio.wait_for(first_reader_started.wait(), timeout=1.0)
+            stream = transport.subscribe("ticks:R_100", {"ticks": "R_100"})
+            consumer = asyncio.create_task(stream.__anext__())
+            await asyncio.wait_for(first_send.wait(), timeout=1.0)
+            old_id = transport._subscriptions["ticks:R_100"].request_id
+
+            await transport.reconnect(
+                "wss://api.derivws.com/trading/v1/options/ws/real?otp=fresh"
+            )
+
+            await asyncio.wait_for(second_reader_started.wait(), timeout=1.0)
+            await asyncio.wait_for(second_send.wait(), timeout=1.0)
+            new_subscription = transport._subscriptions["ticks:R_100"]
+            self.assertNotEqual(new_subscription.request_id, old_id)
+            self.assertEqual(
+                transport._subscription_by_request_id[new_subscription.request_id],
+                "ticks:R_100",
+            )
+            self.assertEqual(new_subscription.payload["ticks"], "R_100")
+
+            await transport.close()
+            with self.assertRaisesRegex(DerivTransportError, "BROKER_SESSION_CLOSED"):
+                await asyncio.wait_for(consumer, timeout=1.0)
 
 
 if __name__ == "__main__":
