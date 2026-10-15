@@ -23,6 +23,33 @@ class DerivAdapterHardeningTests(unittest.IsolatedAsyncioTestCase):
                 await adapter.connect()
             factory.assert_not_called()
 
+    async def test_authorized_account_id_alias_binds_direct_connection(self):
+        transport = SimpleNamespace(
+            connect=AsyncMock(),
+            request=AsyncMock(return_value={
+                "req_id": 1,
+                "authorize": {"loginid": "CRALIAS", "currency": "USD"},
+            }),
+            close=AsyncMock(),
+        )
+        with patch.dict(
+            "os.environ",
+            {"DERIV_EXPECTED_LOGINID": "", "DERIV_AUTHORIZED_ACCOUNT_ID": "CRALIAS"},
+        ):
+            adapter = DerivAdapter(
+                ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+                auth_token="test-token",
+                expected_currency="USD",
+            )
+            with patch(
+                "runtime.adapters.deriv_adapter.DerivWebSocketTransport",
+                return_value=transport,
+            ):
+                account = await adapter.connect()
+        self.assertEqual(adapter.expected_loginid, "CRALIAS")
+        self.assertEqual(account.loginid, "CRALIAS")
+        self.assertTrue(adapter.authorized)
+
     async def test_otp_account_id_becomes_explicit_account_binding(self):
         url = "wss://api.derivws.com/trading/v1/options/ws/real?otp=test-only"
         transport = SimpleNamespace(
