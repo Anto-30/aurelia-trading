@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
+import shlex
+import sys
 
 import pytest
 
@@ -10,7 +13,7 @@ from runtime.agent_workers import AgentWorkerSupervisor
 
 
 @pytest.mark.asyncio
-async def test_worker_heartbeat_requires_real_configured_command(tmp_path):
+async def test_unconfigured_provider_does_not_emit_agent_liveness(tmp_path):
     federation = PersistentAgentFederation(
         journal_path=tmp_path / "journal.ndjson",
         lease_path=tmp_path / "leases.json",
@@ -23,9 +26,13 @@ async def test_worker_heartbeat_requires_real_configured_command(tmp_path):
         federation, agents=("ClaudeCode",), interval_seconds=0.05
     )
     supervisor.start()
-    await asyncio.sleep(0.15)
-    assert "ClaudeCode" in federation.active_agents()
-    await supervisor.stop()
+    try:
+        await asyncio.sleep(0.15)
+        assert "ClaudeCode" not in federation.active_agents()
+        messages = federation.messages_for("ClaudeCode")
+        assert any(x["message_type"] == "CONNECTOR_REQUIRED" for x in messages)
+    finally:
+        await supervisor.stop()
 
 
 @pytest.mark.asyncio
@@ -46,3 +53,48 @@ async def test_configured_worker_emits_live_worker_lease(tmp_path, monkeypatch):
     await asyncio.sleep(0.15)
     assert "ClaudeCode" in federation.active_agents()
     await supervisor.stop()
+
+
+@pytest.mark.asyncio
+async def test_provider_jsonl_protocol_records_attributable_task_result(tmp_path, monkeypatch):
+    task_path = tmp_path / "tasks.json"
+    federation = PersistentAgentFederation(
+        journal_path=tmp_path / "journal.ndjson",
+        lease_path=tmp_path / "leases.json",
+        task_path=task_path,
+        config_hash="cfg",
+        source_hash="src",
+        lease_seconds=2,
+    )
+    task = await federation.enqueue_task(
+        task_type="TEST_TASK",
+        payload={"instruction": "return a test result"},
+        correlation_id="test-correlation",
+        assigned_agent="ClaudeCode",
+    )
+    provider_code = (
+        "import json,sys\n"
+        "for line in sys.stdin:\n"
+        " request=json.loads(line)\n"
+        " print(json.dumps({'schema':'aurelia.agent_task_result.v1','task_id':request['task_id'],'status':'COMPLETED','evidence_ref':'test://provider-result','result':{'verified':True}}),flush=True)\n"
+    )
+    monkeypatch.setenv(
+        "AURELIA_AGENT_CLAUDECODE_COMMAND",
+        shlex.join([sys.executable, "-u", "-c", provider_code]),
+    )
+    supervisor = AgentWorkerSupervisor(
+        federation, agents=("ClaudeCode",), interval_seconds=0.05, task_timeout_seconds=1
+    )
+    supervisor.start()
+    try:
+        for _ in range(40):
+            await asyncio.sleep(0.05)
+            saved = json.loads(task_path.read_text(encoding="utf-8"))
+            record = next(x for x in saved["tasks"] if x["task_id"] == task.task_id)
+            if record["status"] != "PENDING" and record["status"] != "CLAIMED":
+                break
+        assert record["status"] == "COMPLETED"
+        assert record["evidence_ref"] == "test://provider-result"
+        assert record["result"] == {"verified": True}
+    finally:
+        await supervisor.stop()
