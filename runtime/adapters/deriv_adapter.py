@@ -118,7 +118,9 @@ class DerivAdapter:
             self.authorized = True
             self.circuit.record_success()
             return self.account
-        except (DerivTransportError, DerivProtocolError):
+        except Exception:
+            # Any unexpected protocol/type/decoder failure must tear down the
+            # just-opened socket and leave the adapter un-authorized.
             await self.close()
             raise
 
