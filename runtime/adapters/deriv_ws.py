@@ -178,40 +178,49 @@ class DerivWebSocketTransport:
                 except Exception:
                     pass
             self._subscription_by_request_id.pop(subscription.request_id, None)
-            self._subscriptions.pop(key, None)
+            # An old generator may unwind after a replacement subscription has
+            # reused the same key. Remove only the exact subscription it owns.
+            if self._subscriptions.get(key) is subscription:
+                self._subscriptions.pop(key, None)
 
     def _next_request_id(self) -> int:
         self._request_id += 1
         return self._request_id
 
     async def reconnect(self, fresh_url: str | None = None) -> None:
-        '''Reconnect using a fresh authenticated URL when the caller supplies one.
+        """Reconnect with a fresh authenticated URL and preserve active subscribers.
 
-        Reusing an expired/one-use OTP is intentionally not attempted.
-        Existing subscriptions are re-established on the new transport with
-        new request IDs.
-        '''
+        Reusing an expired or one-use OTP is intentionally not attempted. Existing
+        async subscription iterators retain their queues while broker-side
+        subscriptions are recreated with new request IDs. If reconnect fails,
+        normal close wakes those iterators instead of leaving them blocked forever.
+        """
         subscription_payloads = {
             key: subscription.payload.copy()
             for key, subscription in self._subscriptions.items()
         }
-        await self.close()
+        await self.close(preserve_subscriptions=True)
         if fresh_url:
             self.url = fresh_url
-        await self.connect()
+        try:
+            await self.connect()
+            if self.ws is None:
+                raise DerivTransportError("BROKER_SESSION_NOT_CONNECTED")
+            for key, payload in subscription_payloads.items():
+                subscription = self._subscriptions.get(key)
+                if subscription is None:
+                    continue
+                self._request_id += 1
+                subscription.request_id = self._request_id
+                self._subscription_by_request_id[subscription.request_id] = key
+                await self.ws.send(
+                    json.dumps({**payload, "req_id": subscription.request_id})
+                )
+        except Exception:
+            await self.close()
+            raise
 
-        for key, payload in subscription_payloads.items():
-            subscription = self._subscriptions.get(key)
-            if subscription is None:
-                continue
-            self._request_id += 1
-            subscription.request_id = self._request_id
-            self._subscription_by_request_id[subscription.request_id] = key
-            await self.ws.send(
-                json.dumps({**payload, "req_id": subscription.request_id})
-            )
-
-    async def close(self) -> None:
+    async def close(self, *, preserve_subscriptions: bool = False) -> None:
         # Keep a local reference: cancelling the reader triggers its finally
         # block, which sets self.ws = None before close() can reach ws.close().
         # Without this reference, shutdown can leak an open network socket.
@@ -233,3 +242,12 @@ class DerivWebSocketTransport:
                 self.ws = None
                 self._fail_pending(DerivTransportError("BROKER_SESSION_CLOSED"))
                 self._subscription_by_request_id.clear()
+                if not preserve_subscriptions:
+                    # Wake generators blocked on queue.get(); clear the registry
+                    # now, with identity-aware cleanup in subscribe() to protect
+                    # any new subscription created after this one unwinds.
+                    for subscription in tuple(self._subscriptions.values()):
+                        subscription.queue.put_nowait({
+                            "error": {"code": "BROKER_SESSION_CLOSED"}
+                        })
+                    self._subscriptions.clear()
