@@ -61,10 +61,12 @@ class DerivWebSocketTransport:
         self._reader_task = asyncio.create_task(self._reader_loop())
 
     async def _reader_loop(self) -> None:
-        assert self.ws is not None
+        ws = self.ws
+        assert ws is not None
+        reader_failed = False
         try:
             while True:
-                raw = await self.ws.recv()
+                raw = await ws.recv()
                 message = json.loads(raw)
                 request_id = message.get("req_id")
                 if isinstance(request_id, int) and request_id in self._pending:
@@ -81,17 +83,30 @@ class DerivWebSocketTransport:
                 if isinstance(request_id, int):
                     key = self._subscription_by_request_id.get(request_id)
                     if key is not None:
-                        self._subscriptions[key].queue.put_nowait(message)
+                        subscription = self._subscriptions.get(key)
+                        if subscription is not None:
+                            subscription.queue.put_nowait(message)
         except asyncio.CancelledError:
             raise
         except Exception as exc:
+            reader_failed = True
             self._fail_pending(exc)
-            for subscription in self._subscriptions.values():
+            for subscription in tuple(self._subscriptions.values()):
                 subscription.queue.put_nowait(
                     {"error": {"code": "TRANSPORT_READER_FAILED"}}
                 )
         finally:
-            self.ws = None
+            # A reader-side socket/JSON failure may be the only indication that
+            # the network stream is unusable. Close the captured socket before
+            # discarding the reference. Cancellation by close() is handled by
+            # close() itself so it remains responsible for exactly one close.
+            if reader_failed:
+                try:
+                    await ws.close()
+                except Exception:
+                    pass
+            if self.ws is ws:
+                self.ws = None
 
     def _fail_pending(self, exc: Exception) -> None:
         for future in self._pending.values():
@@ -178,52 +193,76 @@ class DerivWebSocketTransport:
                 except Exception:
                     pass
             self._subscription_by_request_id.pop(subscription.request_id, None)
-            self._subscriptions.pop(key, None)
+            # An old generator may unwind after a replacement subscription has
+            # reused the same key. Remove only the exact subscription it owns.
+            if self._subscriptions.get(key) is subscription:
+                self._subscriptions.pop(key, None)
 
     def _next_request_id(self) -> int:
         self._request_id += 1
         return self._request_id
 
     async def reconnect(self, fresh_url: str | None = None) -> None:
-        '''Reconnect using a fresh authenticated URL when the caller supplies one.
+        """Reconnect with a fresh authenticated URL and preserve active subscribers.
 
-        Reusing an expired/one-use OTP is intentionally not attempted.
-        Existing subscriptions are re-established on the new transport with
-        new request IDs.
-        '''
+        Reusing an expired or one-use OTP is intentionally not attempted. Existing
+        async subscription iterators retain their queues while broker-side
+        subscriptions are recreated with new request IDs. If reconnect fails,
+        normal close wakes those iterators instead of leaving them blocked forever.
+        """
         subscription_payloads = {
             key: subscription.payload.copy()
             for key, subscription in self._subscriptions.items()
         }
-        await self.close()
+        await self.close(preserve_subscriptions=True)
         if fresh_url:
             self.url = fresh_url
-        await self.connect()
+        try:
+            await self.connect()
+            if self.ws is None:
+                raise DerivTransportError("BROKER_SESSION_NOT_CONNECTED")
+            for key, payload in subscription_payloads.items():
+                subscription = self._subscriptions.get(key)
+                if subscription is None:
+                    continue
+                self._request_id += 1
+                subscription.request_id = self._request_id
+                self._subscription_by_request_id[subscription.request_id] = key
+                await self.ws.send(
+                    json.dumps({**payload, "req_id": subscription.request_id})
+                )
+        except Exception:
+            await self.close()
+            raise
 
-        for key, payload in subscription_payloads.items():
-            subscription = self._subscriptions.get(key)
-            if subscription is None:
-                continue
-            self._request_id += 1
-            subscription.request_id = self._request_id
-            self._subscription_by_request_id[subscription.request_id] = key
-            await self.ws.send(
-                json.dumps({**payload, "req_id": subscription.request_id})
-            )
-
-    async def close(self) -> None:
+    async def close(self, *, preserve_subscriptions: bool = False) -> None:
+        # Keep a local reference: cancelling the reader triggers its finally
+        # block, which sets self.ws = None before close() can reach ws.close().
+        # Without this reference, shutdown can leak an open network socket.
+        ws = self.ws
         reader = self._reader_task
         self._reader_task = None
-        if reader is not None:
-            reader.cancel()
+        try:
+            if reader is not None:
+                reader.cancel()
+                try:
+                    await reader
+                except asyncio.CancelledError:
+                    pass
+        finally:
             try:
-                await reader
-            except asyncio.CancelledError:
-                pass
-
-        if self.ws is not None:
-            await self.ws.close()
-        self.ws = None
-        self._fail_pending(DerivTransportError("BROKER_SESSION_CLOSED"))
-
-        self._subscription_by_request_id.clear()
+                if ws is not None:
+                    await ws.close()
+            finally:
+                self.ws = None
+                self._fail_pending(DerivTransportError("BROKER_SESSION_CLOSED"))
+                self._subscription_by_request_id.clear()
+                if not preserve_subscriptions:
+                    # Wake generators blocked on queue.get(); clear the registry
+                    # now, with identity-aware cleanup in subscribe() to protect
+                    # any new subscription created after this one unwinds.
+                    for subscription in tuple(self._subscriptions.values()):
+                        subscription.queue.put_nowait({
+                            "error": {"code": "BROKER_SESSION_CLOSED"}
+                        })
+                    self._subscriptions.clear()
