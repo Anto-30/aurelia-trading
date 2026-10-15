@@ -12,6 +12,10 @@ CAPITAL_AUTHORITY = False
 LIVE_EXECUTION = False
 
 STRATEGY_MANIFEST = (
+    {"strategy_id": "SMC_TREND_15M", "version": "0.1.0",
+     "qualification_status": "RESEARCH_ONLY_UNQUALIFIED",
+     "data_requirements": ("completed_15m_ohlc_bars", "completed_1h_ohlc_bars",
+                           "verified_instrument_specification")},
     {"strategy_id": "MSNR_LIQUIDITY_SWEEP", "version": "1.0.0",
      "qualification_status": "RESEARCH_ONLY_UNQUALIFIED",
      "data_requirements": ("closed_ohlc_bars", "instrument_tick_size")},
