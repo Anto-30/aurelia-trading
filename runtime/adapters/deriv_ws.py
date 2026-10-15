@@ -212,18 +212,24 @@ class DerivWebSocketTransport:
             )
 
     async def close(self) -> None:
+        # Keep a local reference: cancelling the reader triggers its finally
+        # block, which sets self.ws = None before close() can reach ws.close().
+        # Without this reference, shutdown can leak an open network socket.
+        ws = self.ws
         reader = self._reader_task
         self._reader_task = None
-        if reader is not None:
-            reader.cancel()
+        try:
+            if reader is not None:
+                reader.cancel()
+                try:
+                    await reader
+                except asyncio.CancelledError:
+                    pass
+        finally:
             try:
-                await reader
-            except asyncio.CancelledError:
-                pass
-
-        if self.ws is not None:
-            await self.ws.close()
-        self.ws = None
-        self._fail_pending(DerivTransportError("BROKER_SESSION_CLOSED"))
-
-        self._subscription_by_request_id.clear()
+                if ws is not None:
+                    await ws.close()
+            finally:
+                self.ws = None
+                self._fail_pending(DerivTransportError("BROKER_SESSION_CLOSED"))
+                self._subscription_by_request_id.clear()
