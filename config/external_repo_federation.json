@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-10-15",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -930,8 +930,12 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
-      "head_commit": "f08dbe152502d66e75fa07fb2588dc0feb42bc20",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09"
+      "head_commit": "c87d190b2e26de0514a31b5af399ecd66337a44e",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-15",
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Official Chrome DevTools MCP. Toolchain candidate only; isolate browser profile and prohibit access to authenticated Deriv sessions, cookies, and production secrets."
     },
     {
       "repo": "hackingthemarkets/binance-tutorials",
@@ -6321,6 +6325,151 @@
         "developer-experience-reference"
       ],
       "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "anthropics/claude-plugins-official",
+      "category": "claude-code-plugins",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/anthropics/claude-plugins-official",
+      "head_commit": "8f814f49002ff824e8a9ba43cf96112dc7f5948d",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-15",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "capabilities": [
+        "developer-workflow-plugins",
+        "agent-tooling-reference"
+      ],
+      "trust": "COMMUNITY_PLUGIN_SOURCE_ONLY",
+      "integration_note": "Review individual plugin manifests, hooks, commands, permissions, dependencies, and license notices before any plugin is enabled. No plugin receives broker credentials or capital-plane authority."
+    },
+    {
+      "repo": "xFFFFF/Gekko-Strategies",
+      "category": "historical-trading-strategies",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/xFFFFF/Gekko-Strategies",
+      "head_commit": "f53854f8555a7c962f4013c53c464cfb377f83f6",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-15",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "capabilities": [
+        "strategy-hypothesis-mining",
+        "historical-code-reference"
+      ],
+      "trust": "UNVERIFIED_RESEARCH_SOURCE",
+      "integration_note": "Repository head is dated 2018-05-24. Treat all strategies as hypotheses only; porting, instrument semantics, look-ahead review, costs, walk-forward/OOS, and prospective qualification are mandatory. Never execute upstream strategy code in production."
+    },
+    {
+      "repo": "browserbase/mcp-server-browserbase",
+      "category": "browser-automation-reference",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/browserbase/mcp-server-browserbase",
+      "head_commit": "3e6f53461949037d5e65dd425da3ceb1263f11d6",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-15",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "capabilities": [
+        "browser-automation-reference"
+      ],
+      "trust": "ARCHIVED_REFERENCE_ONLY",
+      "integration_note": "Upstream repository is archived and marked unmaintained as of 2026-07-20. Do not select as a new production dependency; evaluate a maintained alternative separately."
+    },
+    {
+      "repo": "QwenLM/Qwen-Agent",
+      "category": "llm-agent-framework",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/QwenLM/Qwen-Agent",
+      "head_commit": "31a4d36d123688581a9e9744427272b33ce940e0",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-15",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "capabilities": [
+        "agent-orchestration-research",
+        "tool-calling-reference",
+        "mcp-integration-reference"
+      ],
+      "trust": "COMMUNITY_AGENT_FRAMEWORK_ONLY",
+      "integration_note": "No runtime adoption. Review tool execution isolation, dependency advisories, prompt/tool boundaries, license, and data egress before a synthetic-data sandbox POC. No capital or execution authorization."
+    },
+    {
+      "repo": "zhizhuodemao/js-reverse-mcp",
+      "category": "javascript-reverse-engineering-tool",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/zhizhuodemao/js-reverse-mcp",
+      "head_commit": "bf7dc506e8743ba1ec5bd3325c91818b9192e40e",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-15",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "capabilities": [
+        "javascript-runtime-analysis",
+        "browser-debugging-reference"
+      ],
+      "trust": "COMMUNITY_DEBUG_TOOL_ONLY",
+      "integration_note": "Powerful browser and local-file access requires isolated workspace, explicit allowed roots, no authenticated trading browser, no Deriv secrets, and outbound network restrictions."
+    },
+    {
+      "repo": "vibheksoni/stealth-browser-mcp",
+      "category": "browser-automation-tool",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/vibheksoni/stealth-browser-mcp",
+      "head_commit": "ba95cca933c8e90bfeaa515c1d05dad2927794e6",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-15",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "capabilities": [
+        "browser-automation",
+        "cdp-debugging",
+        "network-inspection-reference"
+      ],
+      "trust": "COMMUNITY_BROWSER_TOOL_ONLY",
+      "integration_note": "Exposes page script execution, cookie/storage access, request interception, header mutation and file uploads. Keep disabled pending threat model and sandbox validation; do not use with sensitive sessions."
     }
   ],
   "pin_policy": {
