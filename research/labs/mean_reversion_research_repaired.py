@@ -1,11 +1,9 @@
 """Research-only, bar-based mean-reversion backtest primitives.
 
-This module is deliberately not a Deriv execution adapter and does not qualify a
-strategy. Signals are computed using completed bars and executed no earlier than
-the next bar's open. Costs are charged on position changes, not on every bar.
+Not a Deriv adapter and not strategy qualification. Signals use completed bars;
+execution is no earlier than the next bar open. Costs are charged on trade sides.
 """
 from __future__ import annotations
-
 from dataclasses import dataclass
 from math import isfinite
 from typing import Iterable, Optional
@@ -33,32 +31,16 @@ class BacktestResult:
     total_return: float
 
 
-class RiskHalt(Exception):
-    """Raised when inputs are invalid or a risk circuit breaker is active."""
-
-
 class Layer6RiskEngine:
-    """Fail-closed research risk guard; it never submits or manages broker orders."""
-
-    def __init__(
-        self,
-        max_daily_drawdown_pct: float,
-        max_position_size: float,
-        account_equity: float,
-        max_weekly_drawdown_pct: float = 0.05,
-    ) -> None:
-        values = (
-            max_daily_drawdown_pct,
-            max_weekly_drawdown_pct,
-            max_position_size,
-            account_equity,
-        )
-        if not all(isfinite(x) for x in values):
+    """Fail-closed research guard; does not submit or manage broker orders."""
+    def __init__(self, max_daily_drawdown_pct: float, max_position_size: float,
+                 account_equity: float, max_weekly_drawdown_pct: float = 0.05):
+        vals = (max_daily_drawdown_pct, max_weekly_drawdown_pct,
+                max_position_size, account_equity)
+        if not all(isfinite(x) for x in vals):
             raise ValueError("Risk parameters must be finite")
-        if not (0 < max_daily_drawdown_pct < 1):
-            raise ValueError("Daily drawdown threshold must be in (0, 1)")
-        if not (0 < max_weekly_drawdown_pct < 1):
-            raise ValueError("Weekly drawdown threshold must be in (0, 1)")
+        if not 0 < max_daily_drawdown_pct < 1 or not 0 < max_weekly_drawdown_pct < 1:
+            raise ValueError("Drawdown thresholds must be in (0, 1)")
         if max_position_size <= 0 or account_equity <= 0:
             raise ValueError("Position limit and equity must be positive")
         self.max_daily_drawdown_pct = max_daily_drawdown_pct
@@ -72,118 +54,92 @@ class Layer6RiskEngine:
         if not isfinite(current_equity) or current_equity <= 0:
             self.halted = True
             return True
-        daily_dd = (self.start_of_day_equity - current_equity) / self.start_of_day_equity
-        weekly_dd = (self.start_of_week_equity - current_equity) / self.start_of_week_equity
-        if daily_dd >= self.max_daily_drawdown_pct or weekly_dd >= self.max_weekly_drawdown_pct:
+        daily = (self.start_of_day_equity - current_equity) / self.start_of_day_equity
+        weekly = (self.start_of_week_equity - current_equity) / self.start_of_week_equity
+        if daily >= self.max_daily_drawdown_pct or weekly >= self.max_weekly_drawdown_pct:
             self.halted = True
         return self.halted
 
     def validate_net_position(self, current_position: float, proposed_delta: float) -> bool:
-        if self.halted:
+        if self.halted or not isfinite(current_position) or not isfinite(proposed_delta):
             return False
-        if not isfinite(current_position) or not isfinite(proposed_delta):
-            return False
-        resulting = current_position + proposed_delta
-        return abs(resulting) <= self.max_position_size
+        return abs(current_position + proposed_delta) <= self.max_position_size
 
 
-def _validate_prices(prices: Iterable[float]) -> list[float]:
-    result = list(prices)
-    if len(result) < 2:
-        raise ValueError("At least two prices are required")
-    if any(not isfinite(p) or p <= 0 for p in result):
-        raise ValueError("Prices must be finite and positive")
+def _prices(values: Iterable[float], label: str) -> list[float]:
+    result = list(values)
+    if len(result) < 2 or any(not isfinite(x) or x <= 0 for x in result):
+        raise ValueError(f"{label} must contain at least two finite positive prices")
     return result
 
 
-def run_mean_reversion_backtest(
-    closes: Iterable[float],
-    *,
-    opens: Optional[Iterable[float]] = None,
-    window: int = 20,
-    z_threshold: float = 2.0,
-    per_side_cost_bps: float = 2.0,
-) -> BacktestResult:
-    """Run a conservative single-position research replay on price bars.
+def run_mean_reversion_backtest(closes: Iterable[float], *,
+        opens: Optional[Iterable[float]] = None, window: int = 20,
+        z_threshold: float = 2.0, per_side_cost_bps: float = 2.0) -> BacktestResult:
+    """One-position Z-score mean reversion, entering next open and exiting at mean.
 
-    A signal from close[t] is acted on at open[t+1] (or close[t+1] when opens
-    are omitted). Position exits occur on a zero-crossing signal, with final
-    liquidation at the final available price. Costs are charged for each
-    entry/exit/reversal side. The caller must supply trustworthy, point-in-time
-    bars and instrument-appropriate cost assumptions.
+    Uses a sample standard deviation. Reversal signals close an existing position;
+    a new opposite position is not opened on the same bar. The last position is
+    liquidated at the last close. This simplified close/open model does not model
+    intrabar stops, spread dynamics, rejects, latency, or contract payout mechanics.
     """
-    prices = _validate_prices(closes)
-    if window < 2 or not isfinite(z_threshold) or z_threshold <= 0:
-        raise ValueError("window must be >= 2 and z_threshold must be positive")
+    close = _prices(closes, "closes")
+    op = _prices(opens, "opens") if opens is not None else close[:]
+    if len(op) != len(close):
+        raise ValueError("opens and closes must have equal length")
+    if not isinstance(window, int) or window < 2:
+        raise ValueError("window must be an integer >= 2")
+    if not isfinite(z_threshold) or z_threshold <= 0:
+        raise ValueError("z_threshold must be finite and positive")
     if not isfinite(per_side_cost_bps) or per_side_cost_bps < 0:
         raise ValueError("per_side_cost_bps must be finite and non-negative")
-    open_prices = list(opens) if opens is not None else prices
-    if len(open_prices) != len(prices) or any(
-        not isfinite(p) or p <= 0 for p in open_prices
-    ):
-        raise ValueError("opens must match closes and contain finite positive prices")
 
-    signals = [0] * len(prices)
-    for i in range(window - 1, len(prices)):
-        sample = prices[i - window + 1 : i + 1]
+    zscores: list[Optional[float]] = [None] * len(close)
+    for i in range(window - 1, len(close)):
+        sample = close[i-window+1:i+1]
         mean = sum(sample) / window
-        variance = sum((x - mean) ** 2 for x in sample) / (window - 1)
-        sd = variance ** 0.5
-        if sd == 0:
-            continue
-        z = (prices[i] - mean) / sd
-        if z >= z_threshold:
-            signals[i] = -1
-        elif z <= -z_threshold:
-            signals[i] = 1
+        sd = (sum((x-mean)**2 for x in sample) / (window-1))**0.5
+        if sd > 0:
+            zscores[i] = (close[i]-mean)/sd
 
     trades: list[Trade] = []
-    direction = 0
-    entry = 0.0
-    entry_index = 0
-    cost = per_side_cost_bps / 10000.0
+    direction, entry, entry_i = 0, 0.0, 0
+    side_cost = per_side_cost_bps / 10000.0
 
-    def close_trade(exit_price: float, idx: int) -> None:
-        nonlocal direction, entry, entry_index
+    def finish(price: float, i: int) -> None:
+        nonlocal direction, entry, entry_i
         if direction == 0:
             return
-        gross = direction * (exit_price - entry) / entry
-        total_cost = 2 * cost
-        net = gross - total_cost
-        trades.append(Trade(direction, entry, exit_price, gross, total_cost, net, idx-entry_index))
-        direction, entry, entry_index = 0, 0.0, 0
+        gross = direction * (price-entry) / entry
+        costs = 2 * side_cost
+        trades.append(Trade(direction, entry, price, gross, costs, gross-costs, max(0, i-entry_i)))
+        direction, entry, entry_i = 0, 0.0, 0
 
-    for i in range(1, len(prices)):
-        target = signals[i - 1]  # completed prior candle only
-        execution_price = open_prices[i]
-        if direction and (target == 0 or target != direction):
-            close_trade(execution_price, i)
-        if direction == 0 and target != 0 and i < len(prices) - 0:
-            direction, entry, entry_index = target, execution_price, i
+    for i in range(1, len(close)):
+        z = zscores[i-1]  # only information available at prior completed close
+        if z is None:
+            continue
+        if direction == -1 and z <= 0 or direction == 1 and z >= 0:
+            finish(op[i], i)
+            continue
+        if direction == 0:
+            if z >= z_threshold:
+                direction, entry, entry_i = -1, op[i], i
+            elif z <= -z_threshold:
+                direction, entry, entry_i = 1, op[i], i
+    finish(close[-1], len(close)-1)
 
-    close_trade(prices[-1], len(prices) - 1)
     if not trades:
         return BacktestResult((), 0.0, None, 0.0, 0.0, 0.0, 0.0)
-
-    returns = [t.net_return for t in trades]
-    wins = [r for r in returns if r > 0]
-    losses = [r for r in returns if r < 0]
-    gross_profit = sum(wins)
-    gross_loss = abs(sum(losses))
-    pf = gross_profit / gross_loss if gross_loss > 0 else (float("inf") if gross_profit > 0 else None)
-    equity, peak, drawdowns = 1.0, 1.0, []
-    for r in returns:
-        equity *= max(0.0, 1.0 + r)
+    rs = [t.net_return for t in trades]
+    wins, losses = [r for r in rs if r > 0], [r for r in rs if r < 0]
+    gp, gl = sum(wins), abs(sum(losses))
+    pf = gp/gl if gl else (float("inf") if gp else None)
+    equity, peak, dd = 1.0, 1.0, []
+    for r in rs:
+        equity *= max(0.0, 1+r)
         peak = max(peak, equity)
-        drawdowns.append((equity / peak - 1.0) * 100.0)
-    mdd = min(drawdowns, default=0.0) / 100.0
-    ulcer = (sum(d * d for d in drawdowns) / len(drawdowns)) ** 0.5 / 100.0
-    return BacktestResult(
-        tuple(trades),
-        sum(returns) / len(returns),
-        pf,
-        len(wins) / len(returns),
-        mdd,
-        ulcer,
-        equity - 1.0,
-    )
+        dd.append((equity/peak - 1)*100)
+    return BacktestResult(tuple(trades), sum(rs)/len(rs), pf,
+        len(wins)/len(rs), min(dd, default=0)/100,
+        (sum(x*x for x in dd)/len(dd))**0.5/100, equity-1)
