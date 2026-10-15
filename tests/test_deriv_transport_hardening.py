@@ -224,7 +224,7 @@ class DerivTransportShutdownTests(unittest.IsolatedAsyncioTestCase):
         transport = DerivWebSocketTransport(
             "wss://api.derivws.com/trading/v1/options/ws/real"
         )
-        with patch("runtime.adapters.deriv_ws.connect", side_effect=[first_socket, second_socket]):
+        with patch("runtime.adapters.deriv_ws.connect", new=AsyncMock(side_effect=[first_socket, second_socket])):
             await transport.connect()
             await asyncio.wait_for(first_reader_started.wait(), timeout=1.0)
             stream = transport.subscribe("ticks:R_100", {"ticks": "R_100"})
