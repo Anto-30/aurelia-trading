@@ -90,7 +90,7 @@ def dec(probability: float = 0.60, stake: float = 2.0) -> Decision:
 
 class TestControls(unittest.TestCase):
     def test_probability_no_clipping(self):
-        self.assertTrue(probability_is_valid(0.50))
+        self.assertFalse(probability_is_valid(0.50))
         self.assertTrue(probability_is_valid(0.55))
         self.assertTrue(probability_is_valid(0.75))
         self.assertFalse(probability_is_valid(0.49))
@@ -253,13 +253,12 @@ class TestControls(unittest.TestCase):
         self.assertFalse(gate.allowed)
         self.assertIn("RECONCILIATION_UNHEALTHY", gate.reason_codes)
 
-    def test_full_gate_can_pass_only_with_all_validation_inputs(self):
+    def test_live_gate_blocks_even_when_arbitrary_numeric_minimum_is_supplied(self):
         gate, ctx = authorization_gate(
             decision=dec(),
             account=ident(),
-            # A $2 stake at a 1% maximum-loss cap requires at least $200
-            # of verified available USD balance; the prior $10 fixture is
-            # correctly rejected by the new deterministic sizing policy.
+            # Even a nominally affordable stake cannot pass LIVE authorization
+            # while the broker-minimum evidence contract is unimplemented.
             capital=cap(200.0),
             config_hash="h",
             runtime_config_hash="h",
@@ -274,10 +273,11 @@ class TestControls(unittest.TestCase):
             probability_drift_ok=True,
             market_data_validated=True,
             exposure_approved=True,
+            broker_minimum_stake=1.00,
         )
-        self.assertTrue(gate.allowed, gate.reason_codes)
-        self.assertIsNotNone(ctx)
-        self.assertEqual(ctx.decision.risk_requested_stake, 2.00)
+        self.assertFalse(gate.allowed)
+        self.assertIsNone(ctx)
+        self.assertIn("BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED", gate.reason_codes)
 
     def test_locked_baseline(self):
         gate, ctx = authorization_gate(

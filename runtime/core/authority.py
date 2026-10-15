@@ -15,7 +15,7 @@ from .models import (
 )
 from .stake_sizing import size_stake_for_balance
 
-MIN_PROBABILITY = 0.50
+MIN_PROBABILITY = 0.55
 MAX_PROBABILITY = 0.75
 STARTING_STAKE = 1.00
 EXECUTION_MINIMUM_STAKE = 1.00
@@ -141,6 +141,7 @@ def authorization_gate(
     exposure_approved: bool = False,
     authorization_ttl_seconds: float = 30.0,
     execution_mode: str = "LIVE",
+    broker_minimum_stake: float | None = None,
 ) -> tuple[GateResult, AuthorizationContext | None]:
     reasons: list[str] = []
 
@@ -189,22 +190,20 @@ def authorization_gate(
     # the final capital amount. LIVE sizing is recalculated deterministically
     # from the exact fresh available-balance snapshot and then travels in the
     # authorization context to intent creation.
-    if not requested_stake_is_permitted(decision.risk_requested_stake, capital):
-        reasons.append("STAKE_NOT_AFFORDABLE_OR_BELOW_BROKER_MINIMUM")
     if execution_mode == "LIVE":
-        sizing = size_stake_for_balance(capital.available_balance)
-        if not sizing.allowed:
-            reasons.append(sizing.reason)
-        else:
-            try:
-                proposed_stake = float(decision.risk_requested_stake)
-            except (TypeError, ValueError, OverflowError):
-                proposed_stake = float("nan")
-            # Risk/exposure controls must evaluate the exact stake that will be
-            # submitted. Do not silently resize after those approvals were
-            # computed against a strategy/agent-proposed amount.
-            if not isfinite(proposed_stake) or abs(proposed_stake - float(sizing.stake)) > 1e-9:
-                reasons.append("LIVE_STAKE_NOT_POLICY_SIZED")
+        # A live order must carry a fresh, verified minimum stake from the
+        # broker for this exact contract. The local default is not broker proof.
+        # A numeric value is not evidence of broker provenance, freshness, account
+        # binding, currency binding, or exact-contract binding. The production
+        # Deriv adapter does not yet issue a source-bound minimum-stake evidence
+        # object, so no caller-supplied scalar can satisfy this LIVE gate.
+        # Keep the scalar parameter temporarily for compatibility, but never
+        # treat it as verified broker evidence. This is an intentional fail-closed
+        # release blocker until a verified adapter-to-authority evidence contract
+        # and adversarial tests are implemented.
+        reasons.append("BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED")
+    elif not requested_stake_is_permitted(decision.risk_requested_stake, capital):
+        reasons.append("STAKE_NOT_AFFORDABLE_OR_BELOW_BROKER_MINIMUM")
 
     if not risk_approved:
         reasons.append("RISK_WARDEN_REJECTED")

@@ -23,6 +23,7 @@ from runtime.core.models import (
     utc_now,
 )
 from runtime.core.release_gate import read_live_release
+from runtime.core.paths import state_path
 from runtime.ops.readiness_attestation import config_hash as readiness_config_hash
 from runtime.core.stake_sizing import size_stake_for_balance
 from runtime.strategy.registry import StrategyQualificationRegistry
@@ -1104,12 +1105,7 @@ class FederatedDecisionProvider:
             "probability_calibrated", "probability_fresh", "probability_drift_ok",
             "market_data_validated", "exposure_approved",
         )}
-        path = Path(
-            __import__("os").getenv(
-                "AURELIA_READINESS_PATH",
-                "/tmp/aurelia/AURELIA_READINESS.json",
-            )
-        )
+        path = state_path("AURELIA_READINESS_PATH", "AURELIA_READINESS.json")
         try:
             report = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError, json.JSONDecodeError):

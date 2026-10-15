@@ -12,7 +12,7 @@
   "health_endpoint": "http://127.0.0.1:8080/health",
   "persistent_state_root": "/var/lib/aurelia",
   "secret_store": "/etc/aurelia/aurelia.env",
-  "capital_authority": "LIVE_LOCK_only",
+  "capital_authority": "LIVE_LOCK_plus_source_bound_release_gate",
   "auto_live_enable": false,
   "default_deployment_mode": "VERIFY_ONLY",
   "accepted_deployment_modes": [

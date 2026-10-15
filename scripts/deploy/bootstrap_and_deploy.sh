@@ -11,6 +11,9 @@ ENV_FILE="$ENV_DIR/aurelia.env"
 LIVE_SECRET_FILE="$ENV_DIR/aurelia-live-secrets.env"
 READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"
 DATA_DIR="/var/lib/aurelia"
+ATTESTATION_DIR="/var/lib/aurelia-attestations"
+HOST_EVIDENCE_DIR="/var/lib/aurelia-host"
+OPERATOR_RESET_DIR="/run/aurelia"
 IMAGE="aurelia-runtime:$SHA"
 CONTAINER="aurelia-runtime"
 DEPLOYMENT_MODE="${AURELIA_DEPLOYMENT_MODE:-VERIFY_ONLY}"
@@ -71,6 +74,16 @@ fi
 sudo systemctl enable --now docker
 sudo install -d -m 700 "$ENV_DIR"
 sudo install -d -m 700 "$DATA_DIR"
+sudo install -d -o 10001 -g 10001 -m 700 "$DATA_DIR/evidence"
+# Move legacy host-owned deployment metadata out of the runtime-writable state volume.
+sudo rm -f "$DATA_DIR/DEPLOYMENT_LINEAGE.json" "$DATA_DIR/DEPLOYED_SOURCE_SHA" "$DATA_DIR/LAST_HEALTH.json"
+sudo rm -rf "$DATA_DIR/attestations"
+sudo install -d -o 10001 -g 10001 -m 700 "$DATA_DIR/attestations"
+sudo chown -R 10001:10001 "$DATA_DIR"
+sudo chmod 700 "$DATA_DIR"
+sudo install -d -o root -g 10001 -m 750 "$ATTESTATION_DIR"
+sudo install -d -m 700 "$HOST_EVIDENCE_DIR"
+sudo install -d -o root -g 10001 -m 750 "$OPERATOR_RESET_DIR"
 sudo install -d -m 755 "$RELEASE_ROOT"
 
 if [ -f "$ENV_FILE" ]; then
@@ -82,6 +95,7 @@ elif [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   fi
   sudo tee "$ENV_FILE" >/dev/null <<'EOF'
 PORT=8080
+AURELIA_STATE_DIR=/var/lib/aurelia
 AURELIA_CONTINUOUS_RUNTIME=true
 AURELIA_AUTONOMOUS_LOOP=false
 AURELIA_VERIFY_DERIV_PUBLIC=true
@@ -89,18 +103,18 @@ AURELIA_VERIFY_DERIV_AUTH=true
 AURELIA_RUN_ONCE=false
 AURELIA_DEPLOYMENT_MODE=LIVE
 AURELIA_PERSISTENT_WORKER_HEALTHY=true
-AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json
-AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json
+AURELIA_READINESS_PATH=/var/lib/aurelia/AURELIA_READINESS.json
+AURELIA_DERIV_EVIDENCE_PATH=/var/lib/aurelia/deriv_authenticated_session.json
 AURELIA_RUNTIME_ID=aurelia-production-worker
-AURELIA_ATTESTATION_DIR=/tmp/aurelia/attestations
-AURELIA_JOURNAL_PATH=/tmp/aurelia/aurelia-events.ndjson
-AURELIA_FEDERATION_JOURNAL_PATH=/tmp/aurelia/federation-events.ndjson
-AURELIA_FEDERATION_LEASE_PATH=/tmp/aurelia/federation-leases.json
-AURELIA_LEDGER_PATH=/tmp/aurelia/ledger.json
-AURELIA_IDEMPOTENCY_PATH=/tmp/aurelia/idempotency.json
-AURELIA_FENCE_PATH=/tmp/aurelia/executor-fence.txt
-AURELIA_EXECUTION_JOURNAL_PATH=/tmp/aurelia/execution-events.ndjson
-AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json
+AURELIA_ATTESTATION_DIR=/var/lib/aurelia/attestations
+AURELIA_JOURNAL_PATH=/var/lib/aurelia/aurelia-events.ndjson
+AURELIA_FEDERATION_JOURNAL_PATH=/var/lib/aurelia/federation-events.ndjson
+AURELIA_FEDERATION_LEASE_PATH=/var/lib/aurelia/federation-leases.json
+AURELIA_LEDGER_PATH=/var/lib/aurelia/ledger.json
+AURELIA_IDEMPOTENCY_PATH=/var/lib/aurelia/idempotency.json
+AURELIA_FENCE_PATH=/var/lib/aurelia/executor-fence.txt
+AURELIA_EXECUTION_JOURNAL_PATH=/var/lib/aurelia/execution-events.ndjson
+AURELIA_KILL_SWITCH_STATE_PATH=/var/lib/aurelia/kill-switch-state.json
 EOF
   sudo chmod 600 "$ENV_FILE"
 else
@@ -113,18 +127,18 @@ AURELIA_VERIFY_DERIV_AUTH=false
 AURELIA_RUN_ONCE=false
 AURELIA_DEPLOYMENT_MODE=VERIFY_ONLY
 AURELIA_PERSISTENT_WORKER_HEALTHY=true
-AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json
-AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json
+AURELIA_READINESS_PATH=/var/lib/aurelia/AURELIA_READINESS.json
+AURELIA_DERIV_EVIDENCE_PATH=/var/lib/aurelia/deriv_authenticated_session.json
 AURELIA_RUNTIME_ID=aurelia-production-worker
-AURELIA_ATTESTATION_DIR=/tmp/aurelia/attestations
-AURELIA_JOURNAL_PATH=/tmp/aurelia/aurelia-events.ndjson
-AURELIA_FEDERATION_JOURNAL_PATH=/tmp/aurelia/federation-events.ndjson
-AURELIA_FEDERATION_LEASE_PATH=/tmp/aurelia/federation-leases.json
-AURELIA_LEDGER_PATH=/tmp/aurelia/ledger.json
-AURELIA_IDEMPOTENCY_PATH=/tmp/aurelia/idempotency.json
-AURELIA_FENCE_PATH=/tmp/aurelia/executor-fence.txt
-AURELIA_EXECUTION_JOURNAL_PATH=/tmp/aurelia/execution-events.ndjson
-AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json
+AURELIA_ATTESTATION_DIR=/var/lib/aurelia/attestations
+AURELIA_JOURNAL_PATH=/var/lib/aurelia/aurelia-events.ndjson
+AURELIA_FEDERATION_JOURNAL_PATH=/var/lib/aurelia/federation-events.ndjson
+AURELIA_FEDERATION_LEASE_PATH=/var/lib/aurelia/federation-leases.json
+AURELIA_LEDGER_PATH=/var/lib/aurelia/ledger.json
+AURELIA_IDEMPOTENCY_PATH=/var/lib/aurelia/idempotency.json
+AURELIA_FENCE_PATH=/var/lib/aurelia/executor-fence.txt
+AURELIA_EXECUTION_JOURNAL_PATH=/var/lib/aurelia/execution-events.ndjson
+AURELIA_KILL_SWITCH_STATE_PATH=/var/lib/aurelia/kill-switch-state.json
 EOF
   sudo chmod 600 "$ENV_FILE"
 fi
@@ -133,7 +147,7 @@ fi
 # mounted persistent data directory and must never silently fall back to
 # an ephemeral container filesystem.
 sudo sed -i '/^AURELIA_KILL_SWITCH_STATE_PATH=/d' "$ENV_FILE"
-printf '%s\n' 'AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json' | sudo tee -a "$ENV_FILE" >/dev/null
+printf '%s\n' 'AURELIA_KILL_SWITCH_STATE_PATH=/var/lib/aurelia/kill-switch-state.json' | sudo tee -a "$ENV_FILE" >/dev/null
 sudo chmod 600 "$ENV_FILE"
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
@@ -198,7 +212,7 @@ if [ "$DEPLOYMENT_MODE" = "LIVE" ] && [ "$AUTH_CONFIGURED" != "true" ]; then
 fi
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
-  grep -Fxq 'AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json' "$ENV_FILE" || {
+  grep -Fxq 'AURELIA_KILL_SWITCH_STATE_PATH=/var/lib/aurelia/kill-switch-state.json' "$ENV_FILE" || {
     echo "AURELIA_HOST_BLOCKED=KILL_SWITCH_STATE_NOT_PERSISTENT"
     exit 2
   }
@@ -242,6 +256,41 @@ elif [ -f "$READONLY_SECRET_FILE" ]; then
 fi
 
 sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"
+
+# A LIVE deployment must pass the exact-candidate release gate before the
+# currently running worker is stopped. This verifier is read-only and never
+# submits an order; it consumes only existing, source-bound evidence.
+if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
+  echo "AURELIA_LIVE_PREFLIGHT=RUNNING"
+  if ! sudo docker run --rm \
+    --env-file "$ENV_FILE" \
+    --env-file "$LIVE_SECRET_FILE" \
+    --env AURELIA_DEPLOYMENT_MODE=LIVE \
+    --env AURELIA_STATE_DIR=/var/lib/aurelia \
+    --env AURELIA_READINESS_PATH=/var/lib/aurelia/AURELIA_READINESS.json \
+    --env AURELIA_DERIV_EVIDENCE_PATH=/var/lib/aurelia/deriv_authenticated_session.json \
+    --env AURELIA_DERIV_LIFECYCLE_EVIDENCE_PATH=/var/lib/aurelia/deriv_transaction_lifecycle.json \
+    --env AURELIA_DERIV_BROKER_EVIDENCE_PATH=/var/lib/aurelia/deriv_broker_account_evidence.json \
+    --env DERIV_PUBLIC_TRANSPORT_EVIDENCE_PATH=/var/lib/aurelia/deriv_public_transport.json \
+    --env AURELIA_ATTESTATION_DIR=/var/lib/aurelia/attestations \
+    --env AURELIA_VERIFY_DERIV_AUTH=true \
+    --env AURELIA_VERIFY_DERIV_PUBLIC=true \
+    --env AURELIA_CONTINUOUS_RUNTIME=true \
+    --env AURELIA_AUTONOMOUS_LOOP=false \
+    --env AURELIA_RUN_ONCE=false \
+    --env FINAL_EXECUTION_AUTHORIZATION=true \
+    --env LIVE_EXECUTION=ENABLED \
+    --env GITHUB_SHA="$SHA" \
+    --mount "type=bind,src=$DATA_DIR,dst=/var/lib/aurelia" \
+    --mount "type=bind,src=$DATA_DIR/evidence,dst=/app/evidence,readonly" \
+    --mount "type=bind,src=$ATTESTATION_DIR,dst=/var/lib/aurelia/attestations,readonly" \
+    "$IMAGE" python scripts/live_release_gate.py; then
+    echo "AURELIA_HOST_BLOCKED=LIVE_RELEASE_GATE_REJECTED"
+    exit 2
+  fi
+  echo "AURELIA_LIVE_PREFLIGHT=PASS"
+fi
+
 sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 
 sudo docker run --detach \
@@ -255,17 +304,19 @@ sudo docker run --detach \
   --env AURELIA_RUN_ONCE=false \
   --env AURELIA_CONTINUOUS_RUNTIME=true \
   --env AURELIA_AGENT_WORKERS=true \
-  --env AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json \
-  --env AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json \
-  --env AURELIA_DERIV_LIFECYCLE_EVIDENCE_PATH=/tmp/aurelia/deriv_transaction_lifecycle.json \
-  --env AURELIA_DERIV_BROKER_EVIDENCE_PATH=/tmp/aurelia/deriv_broker_account_evidence.json \
-  --env DERIV_PUBLIC_TRANSPORT_EVIDENCE_PATH=/tmp/aurelia/deriv_public_transport.json \
-  --env AURELIA_ATTESTATION_DIR=/tmp/aurelia/attestations \
+  --env AURELIA_READINESS_PATH=/var/lib/aurelia/AURELIA_READINESS.json \
+  --env AURELIA_DERIV_EVIDENCE_PATH=/var/lib/aurelia/deriv_authenticated_session.json \
+  --env AURELIA_DERIV_LIFECYCLE_EVIDENCE_PATH=/var/lib/aurelia/deriv_transaction_lifecycle.json \
+  --env AURELIA_DERIV_BROKER_EVIDENCE_PATH=/var/lib/aurelia/deriv_broker_account_evidence.json \
+  --env DERIV_PUBLIC_TRANSPORT_EVIDENCE_PATH=/var/lib/aurelia/deriv_public_transport.json \
+  --env AURELIA_ATTESTATION_DIR=/var/lib/aurelia/attestations \
   --env AURELIA_RUNTIME_ID="$RUNTIME_ID" \
   --env FINAL_EXECUTION_AUTHORIZATION="$FINAL_AUTH" \
   --env LIVE_EXECUTION="$LIVE_EXECUTION" \
   --env GITHUB_SHA="$SHA" \
-  --mount "type=bind,src=$DATA_DIR,dst=/tmp/aurelia" \
+  --mount "type=bind,src=$DATA_DIR,dst=/var/lib/aurelia" \
+  --mount "type=bind,src=$ATTESTATION_DIR,dst=/var/lib/aurelia/attestations,readonly" \
+  --mount "type=bind,src=$OPERATOR_RESET_DIR,dst=/run/aurelia,readonly" \
   --publish 127.0.0.1:8080:8080 \
   "$IMAGE"
 
@@ -293,9 +344,10 @@ from pathlib import Path
 
 mode = sys.argv[1]
 payload = json.loads(Path("/tmp/aurelia-health.json").read_text(encoding="utf-8"))
-assert payload.get("liveness") is True, payload
-if mode == "VERIFY_ONLY":
-    assert payload.get("capital_can_open_new_exposure") is False, payload
+if payload.get("liveness") is not True:
+    raise SystemExit(f"deployment health evidence does not confirm liveness: {payload!r}")
+if mode == "VERIFY_ONLY" and payload.get("capital_can_open_new_exposure") is not False:
+    raise SystemExit(f"VERIFY_ONLY deployment unexpectedly permits new exposure: {payload!r}")
 PY
 sudo docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx "AURELIA_AUTONOMOUS_LOOP=$AUTONOMOUS_LOOP"
 sudo docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx "FINAL_EXECUTION_AUTHORIZATION=$FINAL_AUTH"
@@ -304,7 +356,7 @@ sudo docker inspect "$CONTAINER" --format '{{range .Config.Env}}{{println .}}{{e
 image_id="$(sudo docker inspect "$CONTAINER" --format '{{.Image}}')"
 runtime_source_hash="$(find "$RELEASE_DIR" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}')"
 runtime_health_hash="$(printf '%s' "$health" | sha256sum | awk '{print $1}')"
-cat <<EOF | sudo tee "$DATA_DIR/DEPLOYMENT_LINEAGE.json" >/dev/null
+cat <<EOF | sudo tee "$HOST_EVIDENCE_DIR/DEPLOYMENT_LINEAGE.json" >/dev/null
 {
   "schema": "aurelia.deployment_lineage.v2",
   "source_commit": "$SHA",
@@ -318,12 +370,12 @@ cat <<EOF | sudo tee "$DATA_DIR/DEPLOYMENT_LINEAGE.json" >/dev/null
   "generated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 EOF
-sudo chmod 600 "$DATA_DIR/DEPLOYMENT_LINEAGE.json"
+sudo chmod 600 "$HOST_EVIDENCE_DIR/DEPLOYMENT_LINEAGE.json"
 
 sudo systemctl restart aurelia-runtime-watchdog.service
 sudo ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
-printf '%s\n' "$SHA" | sudo tee "$DATA_DIR/DEPLOYED_SOURCE_SHA" >/dev/null
-printf '%s\n' "$health" | sudo tee "$DATA_DIR/LAST_HEALTH.json" >/dev/null
+printf '%s\n' "$SHA" | sudo tee "$HOST_EVIDENCE_DIR/DEPLOYED_SOURCE_SHA" >/dev/null
+printf '%s\n' "$health" | sudo tee "$HOST_EVIDENCE_DIR/LAST_HEALTH.json" >/dev/null
 
 echo "AURELIA_RUNTIME_DEPLOYMENT=SUCCESS"
 echo "AURELIA_SOURCE_COMMIT=$SHA"

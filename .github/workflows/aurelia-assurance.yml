@@ -3,6 +3,7 @@ on:
   push:
     branches: ["**"]
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 
@@ -10,9 +11,58 @@ concurrency:
   group: aurelia-assurance-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  security_dependency:
+    # This isolated job has no production environment and receives no broker secrets.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install isolated audit tools
+        run: python -m pip install --disable-pip-version-check pip-audit bandit
+      - name: Audit locked runtime requirements
+        run: pip-audit -r requirements.txt
+      - name: Audit project dependency metadata
+        run: pip-audit .
+      - name: Scan runtime and operational scripts and preserve full report
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          set +e
+          bandit -q -r runtime scripts -f json -o artifacts/bandit-report.json
+          bandit_status=$?
+          set -e
+          if [ "$bandit_status" -gt 1 ]; then
+            echo "Bandit execution failed with status $bandit_status"
+            exit "$bandit_status"
+          fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("artifacts/bandit-report.json").read_text(encoding="utf-8"))
+          findings = report.get("results", [])
+          counts = {level: sum(item.get("issue_severity") == level for item in findings)
+                    for level in ("LOW", "MEDIUM", "HIGH")}
+          print("BANDIT_FINDING_COUNTS=" + json.dumps(counts, sort_keys=True))
+          print("BANDIT_MEDIUM_AND_LOW_FINDINGS_RECORDED=true")
+          if counts["HIGH"] or counts["MEDIUM"]:
+              raise SystemExit("Medium- or high-severity Bandit findings block this check; review and remediate before proceeding.")
+          PY
+      - name: Upload static security scan report
+        if: always() && hashFiles('artifacts/bandit-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-static-security-report
+          path: artifacts/bandit-report.json
+          if-no-files-found: error
+
   assurance:
-    # Load production-scoped Actions secrets for authenticated verification.
-    environment: production
+    # Production secrets are available only to manual runs on main or pushes to main.
+    # Pull requests and every non-main ref use the non-secret CI environment.
+    environment: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || github.event_name == 'push') && 'production' || 'ci' }}
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
@@ -34,6 +84,11 @@ jobs:
         run: |
           bash -n scripts/deploy/bootstrap_and_deploy.sh
           bash -n scripts/provision_deriv_github_secrets.sh
+      - name: Verify non-Git governance validators under Python optimization
+        run: |
+          python -O scripts/agent_continuity_check.py
+          python -O scripts/validate_agent_inventory.py
+          python -O scripts/validate_agent_tool_skill_assignments.py
       - name: Run research-plane tests
         run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
       - name: Run assurance tests
@@ -46,6 +101,49 @@ jobs:
         run: python -m unittest assurance.test_hardening_controls -v
       - name: Build clean runtime container
         run: docker build --pull -t aurelia-runtime:ci .
+      - name: Smoke-test the built runtime container without broker credentials
+        env:
+          AURELIA_STATE_DIR: /var/lib/aurelia
+        run: |
+          set -euo pipefail
+          docker rm -f aurelia-health-smoke >/dev/null 2>&1 || true
+          cleanup() { docker logs aurelia-health-smoke 2>&1 || true; docker rm -f aurelia-health-smoke >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          docker run --detach --name aurelia-health-smoke \
+            --publish 127.0.0.1:18080:8080 \
+            --env PORT=8080 \
+            --env AURELIA_STATE_DIR=/var/lib/aurelia \
+            --env AURELIA_NON_PRODUCTION_SOAK=true \
+            --env FINAL_EXECUTION_AUTHORIZATION=false \
+            --env LIVE_EXECUTION=BLOCKED \
+            --env AURELIA_VERIFY_DERIV_PUBLIC=false \
+            --env AURELIA_VERIFY_DERIV_AUTH=false \
+            --env AURELIA_CONTINUOUS_RUNTIME=false \
+            --env AURELIA_RUN_ONCE=false \
+            aurelia-runtime:ci
+          ready=0
+          for attempt in $(seq 1 30); do
+            if curl --silent --show-error http://127.0.0.1:18080/health -o /tmp/aurelia-container-health.json; then
+              if python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path("/tmp/aurelia-container-health.json").read_text(encoding="utf-8"))
+          raise SystemExit(0 if p.get("liveness") is True and p.get("capital_can_open_new_exposure") is False else 1)
+          PY
+              then
+                ready=1
+                break
+              fi
+            fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then
+            cat /tmp/aurelia-container-health.json 2>/dev/null || true
+            docker logs aurelia-health-smoke 2>&1 || true
+            exit 1
+          fi
+          echo "BUILT_CONTAINER_LIVENESS=true"
+          echo "BUILT_CONTAINER_NEW_EXPOSURE=false"
       - name: Verify public Deriv market-data WebSocket
         env:
           DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT: artifacts/deriv_public_transport.json
@@ -167,16 +265,25 @@ jobs:
           AURELIA_VERIFY_DERIV_AUTH: "false"
           AURELIA_CONTINUOUS_RUNTIME: "false"
           AURELIA_RUN_ONCE: "false"
+          AURELIA_STATE_DIR: /tmp/aurelia
         run: |
+          set -euo pipefail
+          mkdir -p /tmp/aurelia
           python -m runtime.main >/tmp/aurelia-worker.log 2>&1 &
           PID=$!
           trap 'kill $PID || true' EXIT
-          sleep 2
-          curl --fail --silent --show-error http://127.0.0.1:8080/health
+          for attempt in $(seq 1 15); do
+            if curl --fail --silent --show-error http://127.0.0.1:8080/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/aurelia-worker.log
+          exit 1
       - name: Run repository certification gate
         id: certification
         continue-on-error: true
-        run: python -m assurance.certification_gate
+        run: python -m assurance.certification_gate --json-out artifacts/certification_report.json
       - name: Preserve fail-closed certification semantics
         if: always()
         run: |
@@ -184,6 +291,61 @@ jobs:
             echo "Certification remains NOT_READY/blocked until genuine evidence exists."
             echo "LIVE_EXECUTION remains BLOCKED and FINAL_EXECUTION_AUTHORIZATION remains FALSE."
           fi
+
+      - name: Generate commit-bound evidence manifest
+        if: always()
+        env:
+          AURELIA_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          AURELIA_WORKFLOW_SHA: ${{ github.sha }}
+          AURELIA_GITHUB_REF: ${{ github.ref }}
+          AURELIA_EVENT_NAME: ${{ github.event_name }}
+          AURELIA_RUN_ID: ${{ github.run_id }}
+          AURELIA_RUN_ATTEMPT: ${{ github.run_attempt }}
+          AURELIA_WORKFLOW_NAME: ${{ github.workflow }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          root = Path("artifacts")
+          names = ("AURELIA_READINESS.current.json", "certification_report.json")
+          files = {}
+          for name in names:
+              path = root / name
+              if not path.is_file():
+                  raise SystemExit(f"Required generated evidence file is missing: {path}")
+              raw = path.read_bytes()
+              files[name] = {"sha256": hashlib.sha256(raw).hexdigest(), "size_bytes": len(raw)}
+          manifest = {
+              "schema": "aurelia.ci-evidence-manifest.v1",
+              "source_sha": os.environ["AURELIA_SOURCE_SHA"],
+              "workflow_sha": os.environ["AURELIA_WORKFLOW_SHA"],
+              "github_ref": os.environ["AURELIA_GITHUB_REF"],
+              "event_name": os.environ["AURELIA_EVENT_NAME"],
+              "run_id": os.environ["AURELIA_RUN_ID"],
+              "run_attempt": os.environ["AURELIA_RUN_ATTEMPT"],
+              "workflow": os.environ["AURELIA_WORKFLOW_NAME"],
+              "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+              "files": files,
+              "live_execution_authorized": False,
+              "evidence_scope": "CI_READINESS_AND_REPOSITORY_CERTIFICATION_ONLY",
+              "broker_authentication_claimed": False,
+              "production_runtime_claimed": False,
+              "note": "source_sha identifies the PR head when the event is a pull request; workflow_sha identifies the exact GitHub checkout (the merge ref for pull requests). This manifest does not prove broker authentication, production runtime, strategy qualification, or live authorization."
+          }
+          (root / "evidence_manifest.json").write_text(json.dumps(manifest, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+          PY
+
+      - name: Upload current readiness and certification bundle
+        if: always() && hashFiles('artifacts/AURELIA_READINESS.current.json', 'artifacts/certification_report.json', 'artifacts/evidence_manifest.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-readiness-certification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/AURELIA_READINESS.current.json
+            artifacts/certification_report.json
+            artifacts/evidence_manifest.json
+          if-no-files-found: warn
 
       - name: Verify live release gate remains fail-closed
         if: always()

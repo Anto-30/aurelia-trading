@@ -3,12 +3,25 @@ from runtime.adapters.deriv_adapter import DerivAdapter
 class TestDerivAdapterContract(unittest.TestCase):
  def test_missing_url_fails_closed(self):self.assertEqual(DerivAdapter(ws_url="").ws_url,"")
  def test_secret_not_in_fingerprint(self):a=DerivAdapter(ws_url="wss://example.invalid",auth_token="SECRET",expected_loginid="CR123");self.assertNotIn("SECRET",a.connection_fingerprint)
+ def test_expected_account_id_alias_is_supported(self):
+  from unittest.mock import patch
+  with patch.dict("os.environ",{"DERIV_EXPECTED_LOGINID":"","DERIV_AUTHORIZED_ACCOUNT_ID":"CR123"}):
+   a=DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/real",expected_loginid=None,expected_currency="USD")
+  self.assertEqual(a.expected_loginid,"CR123")
  def test_proposal_id_required_by_executor_contract(self):self.assertTrue("ORDER_REQUIRES_BROKER_PROPOSAL_ID" in "ORDER_REQUIRES_BROKER_PROPOSAL_ID")
  def test_authenticated_connect_requires_explicit_expected_currency(self):
   import asyncio
   from runtime.adapters.deriv_adapter import DerivProtocolError
   a=DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/real",expected_currency="")
   with self.assertRaisesRegex(DerivProtocolError,"EXPECTED_ACCOUNT_CURRENCY_REQUIRED"):asyncio.run(a.connect())
+ def test_authenticated_connect_requires_explicit_expected_loginid(self):
+  import asyncio
+  from unittest.mock import patch
+  from runtime.adapters.deriv_adapter import DerivProtocolError
+  a=DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/real",expected_loginid="",expected_currency="USD")
+  with patch("runtime.adapters.deriv_adapter.DerivWebSocketTransport") as transport:
+   with self.assertRaisesRegex(DerivProtocolError,"EXPECTED_ACCOUNT_LOGINID_REQUIRED"):asyncio.run(a.connect())
+   transport.assert_not_called()
  def test_missing_broker_currency_fails_closed(self):
   import asyncio
   from types import SimpleNamespace

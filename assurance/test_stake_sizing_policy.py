@@ -6,7 +6,6 @@ from runtime.core.authority import (
     MAX_PROBABILITY,
     MIN_PROBABILITY,
     authorization_gate,
-    build_intent,
     probability_is_valid,
 )
 from runtime.core.models import AccountIdentity, CapitalSnapshot, Decision, utc_now
@@ -33,6 +32,16 @@ class StakeSizingPolicyTests(unittest.TestCase):
                 self.assertIsNone(result.stake)
                 self.assertEqual(result.reason, "STAKE_RISK_BUDGET_BELOW_BROKER_MINIMUM")
 
+    def test_broker_reported_minimum_is_used_for_affordability(self):
+        below_floor = size_stake_for_balance(145.00, minimum_stake=1.50)
+        self.assertFalse(below_floor.allowed)
+        self.assertEqual(below_floor.risk_budget, 1.45)
+        self.assertEqual(below_floor.reason, "STAKE_RISK_BUDGET_BELOW_BROKER_MINIMUM")
+
+        at_floor = size_stake_for_balance(150.00, minimum_stake=1.50)
+        self.assertTrue(at_floor.allowed)
+        self.assertEqual(at_floor.stake, 1.50)
+
     def test_risk_budget_is_rounded_down_to_cents(self):
         result = size_stake_for_balance(234.567)
         self.assertTrue(result.allowed)
@@ -46,18 +55,20 @@ class StakeSizingPolicyTests(unittest.TestCase):
         self.assertFalse(size_stake_for_balance(100, maximum_risk_fraction=10**10000).allowed)
         self.assertFalse(size_stake_for_balance(100, minimum_stake=10**10000).allowed)
 
-    def test_probability_band_is_50_to_75_percent_without_clipping(self):
-        self.assertEqual(MIN_PROBABILITY, 0.50)
+    def test_probability_band_is_55_to_75_percent_without_clipping(self):
+        self.assertEqual(MIN_PROBABILITY, 0.55)
         self.assertEqual(MAX_PROBABILITY, 0.75)
-        self.assertTrue(probability_is_valid(0.50))
+        self.assertFalse(probability_is_valid(0.549999))
+        self.assertTrue(probability_is_valid(0.55))
+        self.assertTrue(probability_is_valid(0.60))
         self.assertTrue(probability_is_valid(0.75))
-        self.assertFalse(probability_is_valid(0.4999))
-        self.assertFalse(probability_is_valid(0.7501))
+        self.assertFalse(probability_is_valid(0.750001))
+        self.assertFalse(probability_is_valid(0.82))
         self.assertFalse(probability_is_valid(float("nan")))
         self.assertFalse(probability_is_valid(float("inf")))
         self.assertFalse(probability_is_valid(10**10000))
 
-    def test_live_authorization_uses_balance_scaled_stake(self):
+    def test_live_authorization_blocks_until_source_bound_broker_evidence_exists(self):
         account = AccountIdentity(
             loginid="CR123456",
             account_type="real",
@@ -104,11 +115,11 @@ class StakeSizingPolicyTests(unittest.TestCase):
             market_data_validated=True,
             exposure_approved=True,
             execution_mode="LIVE",
+            broker_minimum_stake=1.00,
         )
-        self.assertTrue(gate.allowed, gate.reason_codes)
-        self.assertIsNotNone(context)
-        intent = build_intent(context, proposal_id="proposal-test")
-        self.assertEqual(intent.stake, 2.00)
+        self.assertFalse(gate.allowed)
+        self.assertIsNone(context)
+        self.assertIn("BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED", gate.reason_codes)
 
 
     def test_live_authorization_rejects_stake_below_policy_sized_amount(self):
@@ -153,10 +164,11 @@ class StakeSizingPolicyTests(unittest.TestCase):
             market_data_validated=True,
             exposure_approved=True,
             execution_mode="LIVE",
+            broker_minimum_stake=1.00,
         )
         self.assertFalse(gate.allowed)
         self.assertIsNone(context)
-        self.assertIn("LIVE_STAKE_NOT_POLICY_SIZED", gate.reason_codes)
+        self.assertIn("BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED", gate.reason_codes)
 
     def test_live_authorization_requires_verified_usd_account(self):
         account = AccountIdentity("CR123456", "real", "EUR", "real")
@@ -200,6 +212,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
             market_data_validated=True,
             exposure_approved=True,
             execution_mode="LIVE",
+            broker_minimum_stake=1.00,
         )
         self.assertFalse(gate.allowed)
         self.assertIsNone(context)
@@ -208,9 +221,9 @@ class StakeSizingPolicyTests(unittest.TestCase):
     def test_live_authorization_blocks_when_minimum_stake_breaks_one_percent_budget(self):
         account = AccountIdentity("CR123456", "real", "USD", "real")
         capital = CapitalSnapshot(
-            balance=99.99,
+            balance=145.00,
             currency="USD",
-            available_balance=99.99,
+            available_balance=145.00,
             captured_at=utc_now(),
             source="verified-test-snapshot",
             account=account,
@@ -225,7 +238,56 @@ class StakeSizingPolicyTests(unittest.TestCase):
             probability=0.60,
             decision_time=utc_now(),
             market_snapshot_hash="sha256:test-market",
-            risk_requested_stake=1.00,
+            risk_requested_stake=1.50,
+            average_win=2.00,
+            average_loss=1.00,
+        )
+        gate, context = authorization_gate(
+            decision=decision,
+            account=account,
+            capital=capital,
+            config_hash="config-digest",
+            runtime_config_hash="config-digest",
+            kill_switch_off=True,
+            risk_approved=True,
+            firewall_approved=True,
+            reconciliation_healthy=True,
+            final_execution_authorization=True,
+            live_trading_enabled=True,
+            probability_calibrated=True,
+            probability_fresh=True,
+            probability_drift_ok=True,
+            market_data_validated=True,
+            exposure_approved=True,
+            execution_mode="LIVE",
+            broker_minimum_stake=1.50,
+        )
+        self.assertFalse(gate.allowed)
+        self.assertIsNone(context)
+        self.assertIn("BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED", gate.reason_codes)
+
+
+    def test_live_authorization_rejects_missing_broker_minimum(self):
+        account = AccountIdentity("CR123456", "real", "USD", "real")
+        capital = CapitalSnapshot(
+            balance=200.00,
+            currency="USD",
+            available_balance=200.00,
+            captured_at=utc_now(),
+            source="verified-test-snapshot",
+            account=account,
+        )
+        decision = Decision(
+            decision_id="missing-broker-minimum",
+            strategy_id="test-strategy",
+            strategy_version="1",
+            strategy_hash="sha256:test-strategy",
+            symbol="TEST",
+            direction="CALL",
+            probability=0.60,
+            decision_time=utc_now(),
+            market_snapshot_hash="sha256:test-market",
+            risk_requested_stake=2.00,
             average_win=2.00,
             average_loss=1.00,
         )
@@ -250,7 +312,7 @@ class StakeSizingPolicyTests(unittest.TestCase):
         )
         self.assertFalse(gate.allowed)
         self.assertIsNone(context)
-        self.assertIn("STAKE_RISK_BUDGET_BELOW_BROKER_MINIMUM", gate.reason_codes)
+        self.assertIn("BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED", gate.reason_codes)
 
 
 if __name__ == "__main__":

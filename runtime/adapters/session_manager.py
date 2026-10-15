@@ -91,7 +91,10 @@ class DerivSessionManager:
         self.expected_loginid = (
             expected_loginid
             if expected_loginid is not None
-            else os.getenv("DERIV_EXPECTED_LOGINID", "")
+            else (
+                os.getenv("DERIV_EXPECTED_LOGINID", "").strip()
+                or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()
+            )
         )
         self.expected_environment = expected_environment.lower()
         configured_currency = expected_currency if expected_currency is not None else os.getenv("DERIV_EXPECTED_CURRENCY", "")
@@ -116,12 +119,27 @@ class DerivSessionManager:
         bearer_token: str,
         app_id: str | None,
     ) -> dict[str, Any]:
+        # Never send a bearer token to a caller-controlled or non-Deriv URL.
+        try:
+            parts = urlsplit(url)
+            port = parts.port
+        except (TypeError, ValueError):
+            raise DerivSessionManagerError("DERIV_ACCOUNT_ENDPOINT_INVALID") from None
+        if (
+            parts.scheme != "https"
+            or parts.hostname != "api.derivws.com"
+            or parts.username is not None
+            or parts.password is not None
+            or port not in (None, 443)
+        ):
+            raise DerivSessionManagerError("DERIV_ACCOUNT_ENDPOINT_INVALID")
         headers = {"Authorization": f"Bearer {bearer_token}"}
         if app_id:
             headers["Deriv-App-ID"] = app_id
         request = Request(url, method=method, headers=headers)
         try:
-            with urlopen(request, timeout=self.timeout_seconds) as response:
+            # B310: URL scheme/host/port are allowlisted immediately above.
+            with urlopen(request, timeout=self.timeout_seconds) as response:  # nosec B310
                 payload = json.loads(response.read().decode("utf-8"))
         except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
             raise DerivSessionManagerError("DERIV_ACCOUNT_REQUEST_FAILED") from exc
@@ -215,8 +233,19 @@ class DerivSessionManager:
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> DerivSessionBootstrap:
-        token = bearer_token if bearer_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
-        application_id = app_id if app_id is not None else os.getenv("DERIV_APP_ID", "")
+        token = (
+            bearer_token
+            if bearer_token is not None
+            else (
+                get_optional_secret("DERIV_AUTH_TOKEN")
+                or get_optional_secret("DERIV_PAT")
+            )
+        )
+        application_id = (
+            app_id
+            if app_id is not None
+            else get_optional_secret("DERIV_APP_ID")
+        )
         accounts = self.list_accounts(
             bearer_token=token,
             app_id=application_id,

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
@@ -12,6 +13,7 @@ from runtime.core.secrets import get_optional_secret
 OTP_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts/{account_id}/otp"
 MODERN_OPTIONS_WS_HOST = "api.derivws.com"
 MODERN_OPTIONS_WS_PREFIX = "/trading/v1/options/ws/"
+ACCOUNT_ID_RE = re.compile(r"^[A-Za-z0-9]{1,64}$")
 
 
 class DerivSessionError(ValueError):
@@ -80,16 +82,27 @@ def validate_modern_options_ws_url(
     """
     if not isinstance(url, str) or not url:
         raise DerivSessionError("DERIV_WS_URL_MISSING")
-    parts = urlsplit(url)
-    if parts.scheme != "wss" or parts.hostname != MODERN_OPTIONS_WS_HOST:
+    try:
+        parts = urlsplit(url)
+        port = parts.port
+    except (TypeError, ValueError):
+        raise DerivSessionError("DERIV_WS_URL_INVALID") from None
+    if (
+        parts.scheme != "wss"
+        or parts.hostname != MODERN_OPTIONS_WS_HOST
+        or parts.username is not None
+        or parts.password is not None
+        or port not in (None, 443)
+        or parts.fragment
+    ):
         raise DerivSessionError("LEGACY_OR_UNSUPPORTED_DERIV_WS_ENDPOINT")
     path = parts.path.rstrip("/")
-    prefix = MODERN_OPTIONS_WS_PREFIX.rstrip("/")
-    if not path.startswith(prefix + "/"):
+    prefix = MODERN_OPTIONS_WS_PREFIX.rstrip("/") + "/"
+    if not path.startswith(prefix):
         raise DerivSessionError("DERIV_OPTIONS_WS_PATH_INVALID")
-    environment = path.rsplit("/", 1)[-1].lower()
+    environment = path[len(prefix):].lower()
     if environment not in {"real", "demo"}:
-        raise DerivSessionError("UNKNOWN_DERIV_WS_ENVIRONMENT")
+        raise DerivSessionError("DERIV_OPTIONS_WS_PATH_INVALID")
     if expected_environment and environment != expected_environment.lower():
         raise DerivSessionError("AUTHENTICATED_URL_ENVIRONMENT_MISMATCH")
     return True
@@ -119,7 +132,7 @@ def get_authenticated_ws_url(
     token = (
         bearer_token
         if bearer_token is not None
-        else get_optional_secret("DERIV_AUTH_TOKEN")
+        else (get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT"))
     )
     application_id = (
         app_id
@@ -127,8 +140,8 @@ def get_authenticated_ws_url(
         else get_optional_secret("DERIV_APP_ID")
     )
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
-    if not account_id:
-        raise DerivSessionError("ACCOUNT_ID_REQUIRED")
+    if not isinstance(account_id, str) or not ACCOUNT_ID_RE.fullmatch(account_id):
+        raise DerivSessionError("ACCOUNT_ID_INVALID")
     if not token:
         raise DerivSessionError("DERIV_BEARER_TOKEN_MISSING")
     if auth_mode == "pat" and not application_id:
@@ -144,7 +157,8 @@ def get_authenticated_ws_url(
         headers=headers,
     )
     try:
-        with urlopen(request, timeout=timeout_seconds) as response:
+        # B310: OTP_ENDPOINT is a module constant pinned to the Deriv HTTPS API host.
+        with urlopen(request, timeout=timeout_seconds) as response:  # nosec B310
             payload = json.loads(response.read().decode("utf-8"))
     except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
         raise DerivSessionError("OTP_REQUEST_FAILED") from exc

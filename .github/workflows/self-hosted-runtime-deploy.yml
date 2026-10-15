@@ -298,16 +298,23 @@ jobs:
              sudo cp -a /tmp/aurelia-release-$GITHUB_SHA/. /opt/aurelia/releases/$GITHUB_SHA/
              rm -rf /tmp/aurelia-release-$GITHUB_SHA"
 
+          # Every deployment starts with an empty attestation set. VERIFY_ONLY must not inherit old LIVE attestations.
+          ssh -F "$HOME/.ssh/config" aurelia-target \
+            "set -euo pipefail
+             sudo install -d -o root -g 10001 -m 750 /var/lib/aurelia-attestations
+             sudo find /var/lib/aurelia-attestations -type f -name '*.json' -delete"
+
           if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
             scp -F "$HOME/.ssh/config" "$AURELIA_ATTESTATION_ARCHIVE" "aurelia-target:/tmp/aurelia-attestations-$GITHUB_SHA.tar.gz"
             ssh -F "$HOME/.ssh/config" aurelia-target \
               "set -euo pipefail
-               sudo install -d -m 700 /var/lib/aurelia/attestations
-               sudo rm -f /var/lib/aurelia/attestations/*.json
-               sudo tar -xzf /tmp/aurelia-attestations-$GITHUB_SHA.tar.gz -C /var/lib/aurelia/attestations
+               sudo install -d -o root -g 10001 -m 750 /var/lib/aurelia-attestations
+               sudo rm -f /var/lib/aurelia-attestations/*.json
+               sudo tar -xzf /tmp/aurelia-attestations-$GITHUB_SHA.tar.gz -C /var/lib/aurelia-attestations
                sudo rm -f /tmp/aurelia-attestations-$GITHUB_SHA.tar.gz
-               sudo chown -R root:root /var/lib/aurelia/attestations
-               sudo find /var/lib/aurelia/attestations -type f -name '*.json' -exec chmod 600 {} +"
+               sudo chown -R root:10001 /var/lib/aurelia-attestations
+               sudo find /var/lib/aurelia-attestations -type d -exec chmod 750 {} +
+               sudo find /var/lib/aurelia-attestations -type f -name '*.json' -exec chmod 640 {} +"
           fi
 
       - name: Provision LIVE runtime secrets to root-only host store
@@ -389,11 +396,11 @@ jobs:
           set -euo pipefail
           ssh -F "$HOME/.ssh/config" aurelia-target \
             "set -euo pipefail
-             test -f /var/lib/aurelia/DEPLOYED_SOURCE_SHA
-             test \"$(cat /var/lib/aurelia/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
+             sudo test -f /var/lib/aurelia-host/DEPLOYED_SOURCE_SHA
+             test \"\$(sudo cat /var/lib/aurelia-host/DEPLOYED_SOURCE_SHA)\" = '$GITHUB_SHA'
              sudo docker inspect aurelia-runtime --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -qx 'AURELIA_DEPLOYMENT_MODE=$DEPLOYMENT_MODE'
              curl --fail --silent --show-error http://127.0.0.1:8080/health
-             test \"$(sudo docker inspect aurelia-runtime --format '{{.HostConfig.RestartPolicy.Name}}')\" = 'unless-stopped'"
+             test \"\$(sudo docker inspect aurelia-runtime --format '{{.HostConfig.RestartPolicy.Name}}')\" = 'unless-stopped'"
 
           if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
             ssh -F "$HOME/.ssh/config" aurelia-target \
@@ -419,7 +426,7 @@ jobs:
             echo "DEPLOYMENT_MODE=$DEPLOYMENT_MODE"
             echo "PERSISTENT_RUNTIME=true"
             echo "TRIAL_DEPENDENCY=false"
-            echo "CAPITAL_AUTHORITY=LIVE_LOCK_only"
+            echo "CAPITAL_AUTHORITY=LIVE_LOCK_plus_source_bound_release_gate"
             echo "FINAL_EXECUTION_AUTHORIZATION=$([ "$DEPLOYMENT_MODE" = "LIVE" ] && echo true || echo false)"
             echo "LIVE_EXECUTION=$([ "$DEPLOYMENT_MODE" = "LIVE" ] && echo ENABLED || echo BLOCKED)"
           } >> "$GITHUB_STEP_SUMMARY"

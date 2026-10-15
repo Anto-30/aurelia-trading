@@ -63,11 +63,17 @@ The live lock is currently non-live by design. Passing tests or authenticated-se
 
 ## Probability and stake policy
 
-The hard probability band is **50%–75%**, inclusive, with no clipping. A probability inside the band is insufficient unless calibration, freshness, drift, instrument qualification, and positive net expected value after costs all pass.
+The hard probability band is **55%–75%**, inclusive, with no clipping. A probability inside the band is insufficient unless calibration, freshness, drift, instrument qualification, and positive net expected value after costs all pass.
 
-The starting stake and contract minimum are USD `1.00`. For live purchased contracts, AURELIA requires a verified USD account and computes the stake as 1% of fresh, verified available USD balance, rounded down to cents. The strategy/agent proposal cannot override the deterministic sizing rule. Since the minimum stake is USD `1.00`, a 1% budget cannot fund even the starting stake until verified available balance is at least USD `100.00`. Non-USD accounts and lower balances must remain blocked rather than force a currency or risk-budget exception.
+For live purchased contracts, AURELIA requires a verified USD account, fresh available balance, and a fresh broker-reported minimum stake for the exact contract. It computes the risk budget as 1% of verified available USD balance, rounded down to cents; the broker minimum is never hardcoded as a universal contract floor. The risk budget must be at least the broker-reported minimum, and the proposed stake must equal the deterministic policy-sized amount. For example, a $1.00 minimum requires at least $100.00 verified available balance at a 1% budget; a $1.50 minimum requires at least $150.00. Missing, stale, malformed, or unaffordable minimums block the order. The executor now requires and forwards this broker-minimum input, but the current Deriv adapter does not yet expose source-bound minimum-stake evidence. The runtime rejects LIVE authorization with `BROKER_MINIMUM_STAKE_EVIDENCE_NOT_IMPLEMENTED`, even when a caller supplies a positive number; LIVE remains blocked until source, freshness, account/currency, and exact-contract binding are implemented and adversarially tested. Non-USD accounts and lower balances remain blocked rather than forcing a currency or risk-budget exception.
 
 Full policy: `docs/AURELIA_STAKE_POLICY_2026-10-10.md`.
+
+## Runtime state and container hardening
+
+The runtime container runs as the unprivileged `aurelia` user (UID 10001). Durable journals, readiness reports, idempotency state, execution ledger, fencing state, agent leases, and performance state default to `/var/lib/aurelia`, configurable with `AURELIA_STATE_DIR`. Individual file paths remain explicitly overridable with their existing `AURELIA_*_PATH` environment variables.
+
+For a self-hosted Docker deployment, mount a durable host volume at `/var/lib/aurelia` and grant UID/GID 10001 write access to that directory before starting the container. The approved deployment script mounts `/var/lib/aurelia-attestations` read-only at `/var/lib/aurelia/attestations`; the runtime user can read but cannot modify these root-managed attestations. Host deployment lineage is stored separately in root-only `/var/lib/aurelia-host`, outside the runtime-writable volume. Signed operator-reset inputs are mounted read-only from `/run/aurelia`; reset files must be owned by root and readable by group 10001. Without a durable volume, container replacement can still lose local state; the runtime must not be considered production-qualified until persistence and recovery have been tested. Do not mount source code or secrets as writable state. The health listener binds to `0.0.0.0` for container/platform probes; set `AURELIA_HEALTH_HOST` only when the deployment network is configured to reach the selected interface. Network policy and TLS termination must be provided by the hosting layer.
 
 ## Verification
 

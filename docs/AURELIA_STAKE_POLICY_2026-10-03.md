@@ -1,3 +1,5 @@
+> **SUPERSEDED on 2026-10-13:** This historical note's fixed USD 1.00 minimum and older affordability examples are not the current execution policy. Use `docs/AURELIA_STAKE_POLICY_2026-10-10.md` for the current 55%–75% probability band and broker-reported contract minimum requirement. Do not use this document to authorize live trading.
+
 # AURELIA Stake Policy
 
 The affordability layer is explicitly separated from system readiness and from final execution authorization.

@@ -8,6 +8,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+
+def require(condition, message=None, *, location=""):
+    """Enforce a runtime invariant even when Python optimization is enabled."""
+    if not condition:
+        detail = message if message is not None else "validation condition failed"
+        prefix = f"{location}: " if location else ""
+        raise AssertionError(f"{prefix}{detail}")
+
 def load_json(path: str) -> dict:
     with (ROOT / path).open("r", encoding="utf-8") as fh:
         value = json.load(fh)
@@ -42,20 +50,50 @@ def main() -> None:
     sot = load_json("AURELIA_SOURCE_OF_TRUTH.json")
     lock_text = (ROOT / "config/LIVE_LOCK.yaml").read_text(encoding="utf-8")
 
-    assert federation["schema"] == "aurelia.agent_skill_federation.v1"
-    assert federation["default_policy"]["capital_authority"] is False
-    assert federation["default_policy"]["live_order_authority"] is False
-    assert federation["default_policy"]["secret_reading"] == "DENY"
+    require(
+        federation["schema"] == "aurelia.agent_skill_federation.v1",
+        location="scripts/validate_agent_federation.py:45",
+    )
+    require(
+        federation["default_policy"]["capital_authority"] is False,
+        location="scripts/validate_agent_federation.py:46",
+    )
+    require(
+        federation["default_policy"]["live_order_authority"] is False,
+        location="scripts/validate_agent_federation.py:47",
+    )
+    require(
+        federation["default_policy"]["secret_reading"] == "DENY",
+        location="scripts/validate_agent_federation.py:48",
+    )
 
     # Every user-requested external source must be pinned and assigned, while
     # remaining outside capital/execution authority.
-    assert external_repos["schema"] == "aurelia.external_repo_federation.v1"
+    require(
+        external_repos["schema"] == "aurelia.external_repo_federation.v1",
+        location="scripts/validate_agent_federation.py:52",
+    )
     controls = external_repos["global_controls"]
-    assert controls["capital_authority"] is False
-    assert controls["live_order_submission"] is False
-    assert controls["live_lock_mutation"] is False
-    assert controls["secret_reading"] is False
-    assert controls["broker_transaction_write"] is False
+    require(
+        controls["capital_authority"] is False,
+        location="scripts/validate_agent_federation.py:54",
+    )
+    require(
+        controls["live_order_submission"] is False,
+        location="scripts/validate_agent_federation.py:55",
+    )
+    require(
+        controls["live_lock_mutation"] is False,
+        location="scripts/validate_agent_federation.py:56",
+    )
+    require(
+        controls["secret_reading"] is False,
+        location="scripts/validate_agent_federation.py:57",
+    )
+    require(
+        controls["broker_transaction_write"] is False,
+        location="scripts/validate_agent_federation.py:58",
+    )
     known_agents = set(routing["agents"])
     expected_external = {
         "CryptoSignal/Crypto-Signal": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
@@ -122,23 +160,61 @@ def main() -> None:
         "6yte96/freebuffet": "ClaudeCode",
     }
     all_external = external_repos["repositories"]
-    assert len({item["repo"] for item in all_external}) == len(all_external)
-    assert all(item.get("head_commit") and item["head_commit"] != "SYNC_REQUIRED" for item in all_external)
+    require(
+        len({item["repo"] for item in all_external}) == len(all_external),
+        location="scripts/validate_agent_federation.py:125",
+    )
+    require(
+        all(item.get("head_commit") and item["head_commit"] != "SYNC_REQUIRED" for item in all_external),
+        location="scripts/validate_agent_federation.py:126",
+    )
     registered = {item["repo"]: item for item in all_external}
     for repo, expected_commit in expected_external.items():
         item = registered[repo]
-        assert item["head_commit"] == expected_commit, repo
-        assert item["assigned_agents"], repo
-        assert set(item["assigned_agents"]).issubset(known_agents), repo
-        assert item["mode"] in {"RESEARCH_ONLY", "SANDBOX_ONLY", "TOOLCHAIN_ONLY", "REFERENCE_ONLY"}, repo
+        require(
+            item["head_commit"] == expected_commit,
+            repo,
+            location="scripts/validate_agent_federation.py:130",
+        )
+        require(
+            item["assigned_agents"],
+            repo,
+            location="scripts/validate_agent_federation.py:131",
+        )
+        require(
+            set(item["assigned_agents"]).issubset(known_agents),
+            repo,
+            location="scripts/validate_agent_federation.py:132",
+        )
+        require(
+            item["mode"] in {"RESEARCH_ONLY", "SANDBOX_ONLY", "TOOLCHAIN_ONLY", "REFERENCE_ONLY"},
+            repo,
+            location="scripts/validate_agent_federation.py:133",
+        )
 
     registered_skills = {item["repo"]: item for item in federation["sources"]}
-    assert len({item["name"] for item in federation["sources"]}) == len(federation["sources"]), "duplicate external skill names"
+    require(
+        len({item["name"] for item in federation["sources"]}) == len(federation["sources"]),
+        "duplicate external skill names",
+        location="scripts/validate_agent_federation.py:136",
+    )
     for repo, expected_commit in expected_external.items():
         item = registered_skills[repo]
-        assert item["pinned_commit"] == expected_commit, repo
-        assert item["capital_authority"] is False, repo
-        assert set(item.get("assigned_agents", [])).issubset(known_agents), repo
+        require(
+            item["pinned_commit"] == expected_commit,
+            repo,
+            location="scripts/validate_agent_federation.py:139",
+        )
+        require(
+            item["capital_authority"] is False,
+            repo,
+            location="scripts/validate_agent_federation.py:140",
+        )
+        require(
+            set(item.get("assigned_agents", [])).issubset(known_agents),
+            repo,
+            location="scripts/validate_agent_federation.py:141",
+        )
 
     matrix_assignments = capability_matrix.get("external_source_assignments", {})
     matrix_federation = capability_matrix.get("federated_repositories", {})
@@ -146,61 +222,154 @@ def main() -> None:
         repo_item = registered[repo]
         skill_item = registered_skills[repo]
         matrix_item = matrix_assignments[repo]
-        assert repo_item["assigned_agents"][0] == expected_agent, (
-            repo, "repo primary routing mismatch", repo_item["assigned_agents"]
+        require(
+            repo_item["assigned_agents"][0] == expected_agent,
+            (
+                        repo, "repo primary routing mismatch", repo_item["assigned_agents"]
+                    ),
+            location="scripts/validate_agent_federation.py:149",
         )
-        assert skill_item["assigned_agents"][0] == expected_agent, (
-            repo, "skill primary routing mismatch", skill_item["assigned_agents"]
+        require(
+            skill_item["assigned_agents"][0] == expected_agent,
+            (
+                        repo, "skill primary routing mismatch", skill_item["assigned_agents"]
+                    ),
+            location="scripts/validate_agent_federation.py:152",
         )
-        assert matrix_item["primary"] == expected_agent, (
-            repo, "capability-matrix primary routing mismatch", matrix_item.get("primary")
+        require(
+            matrix_item["primary"] == expected_agent,
+            (
+                        repo, "capability-matrix primary routing mismatch", matrix_item.get("primary")
+                    ),
+            location="scripts/validate_agent_federation.py:155",
         )
-        assert matrix_item["mode"] == repo_item["mode"], (
-            repo, "capability-matrix mode mismatch", matrix_item.get("mode"), repo_item["mode"]
+        require(
+            matrix_item["mode"] == repo_item["mode"],
+            (
+                        repo, "capability-matrix mode mismatch", matrix_item.get("mode"), repo_item["mode"]
+                    ),
+            location="scripts/validate_agent_federation.py:158",
         )
-        assert set(matrix_item.get("supporting", [])).issubset(
-            set(repo_item["assigned_agents"])
-        ), (repo, "capability-matrix has unknown supporting agents")
-        assert matrix_federation[repo] == repo_item["assigned_agents"], (
-            repo, "capability-matrix assigned agents mismatch"
+        require(
+            set(matrix_item.get("supporting", [])).issubset(
+                        set(repo_item["assigned_agents"])
+                    ),
+            (repo, "capability-matrix has unknown supporting agents"),
+            location="scripts/validate_agent_federation.py:161",
         )
-        assert repo_item.get("capital_authority", False) is False
-        assert skill_item.get("capital_authority", False) is False
+        require(
+            matrix_federation[repo] == repo_item["assigned_agents"],
+            (
+                        repo, "capability-matrix assigned agents mismatch"
+                    ),
+            location="scripts/validate_agent_federation.py:164",
+        )
+        require(
+            repo_item.get("capital_authority", False) is False,
+            location="scripts/validate_agent_federation.py:167",
+        )
+        require(
+            skill_item.get("capital_authority", False) is False,
+            location="scripts/validate_agent_federation.py:168",
+        )
 
     sources = federation.get("sources", [])
-    assert len(sources) >= 7
+    require(
+        len(sources) >= 7,
+        location="scripts/validate_agent_federation.py:171",
+    )
     for source in sources:
-        assert source["pinned_commit"], source["name"]
-        assert source["capital_authority"] is False, source["name"]
+        require(
+            source["pinned_commit"],
+            source["name"],
+            location="scripts/validate_agent_federation.py:173",
+        )
+        require(
+            source["capital_authority"] is False,
+            source["name"],
+            location="scripts/validate_agent_federation.py:174",
+        )
 
-    assert boundary["capital_authority"] is False
+    require(
+        boundary["capital_authority"] is False,
+        location="scripts/validate_agent_federation.py:176",
+    )
     for actor_name, actor in boundary["actors"].items():
-        assert actor["capital_authority"] is False if actor_name != "AURELIA" else True
+        require(
+            actor["capital_authority"] is False if actor_name != "AURELIA" else True,
+            location="scripts/validate_agent_federation.py:178",
+        )
 
-    assert "live_trading_enabled: false" in lock_text
-    assert "FINAL_EXECUTION_AUTHORIZATION: false" in lock_text
-    assert "LIVE_EXECUTION: BLOCKED" in lock_text
+    require(
+        "live_trading_enabled: false" in lock_text,
+        location="scripts/validate_agent_federation.py:180",
+    )
+    require(
+        "FINAL_EXECUTION_AUTHORIZATION: false" in lock_text,
+        location="scripts/validate_agent_federation.py:181",
+    )
+    require(
+        "LIVE_EXECUTION: BLOCKED" in lock_text,
+        location="scripts/validate_agent_federation.py:182",
+    )
 
     evidence = load_json(
         "reports/certification/SIMULATION_VERIFIED_NONPROD_3600S_2026-10-04.json"
     )
-    assert evidence["evidence_class"] == "SIMULATION_VERIFIED"
-    assert evidence["duration_seconds"] >= evidence["target_seconds"] >= 3600
-    assert evidence["health_check_failures"] == 0
-    assert evidence["authenticated_deriv_session"] is False
-    assert evidence["real_broker_transaction"] is False
-    assert evidence["real_capital_movement"] is False
-    assert evidence["final_execution_authorization"] is False
-    assert evidence["live_execution"] == "BLOCKED"
+    require(
+        evidence["evidence_class"] == "SIMULATION_VERIFIED",
+        location="scripts/validate_agent_federation.py:187",
+    )
+    require(
+        evidence["duration_seconds"] >= evidence["target_seconds"] >= 3600,
+        location="scripts/validate_agent_federation.py:188",
+    )
+    require(
+        evidence["health_check_failures"] == 0,
+        location="scripts/validate_agent_federation.py:189",
+    )
+    require(
+        evidence["authenticated_deriv_session"] is False,
+        location="scripts/validate_agent_federation.py:190",
+    )
+    require(
+        evidence["real_broker_transaction"] is False,
+        location="scripts/validate_agent_federation.py:191",
+    )
+    require(
+        evidence["real_capital_movement"] is False,
+        location="scripts/validate_agent_federation.py:192",
+    )
+    require(
+        evidence["final_execution_authorization"] is False,
+        location="scripts/validate_agent_federation.py:193",
+    )
+    require(
+        evidence["live_execution"] == "BLOCKED",
+        location="scripts/validate_agent_federation.py:194",
+    )
 
     head = git_head()
-    assert is_ancestor(evidence["source_commit"], head), (
-        evidence["source_commit"],
-        head,
+    require(
+        is_ancestor(evidence["source_commit"], head),
+        (
+                evidence["source_commit"],
+                head,
+            ),
+        location="scripts/validate_agent_federation.py:197",
     )
-    assert sot["live_lock_active"] is True
-    assert sot["final_execution_authorization_current"] is False
-    assert sot["live_execution_current"] == "BLOCKED"
+    require(
+        sot["live_lock_active"] is True,
+        location="scripts/validate_agent_federation.py:201",
+    )
+    require(
+        sot["final_execution_authorization_current"] is False,
+        location="scripts/validate_agent_federation.py:202",
+    )
+    require(
+        sot["live_execution_current"] == "BLOCKED",
+        location="scripts/validate_agent_federation.py:203",
+    )
 
     print("AGENT_FEDERATION_AUDIT=PASS")
     print(f"CURRENT_HEAD={head}")
