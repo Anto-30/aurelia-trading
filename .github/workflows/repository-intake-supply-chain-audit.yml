@@ -493,6 +493,7 @@ jobs:
               if len(repos)!=64: problems.append(f"inventory includes {len(repos)} of 64 pinned repositories")
               for r in repos:
                   if r.get("errors") or not r.get("archive_sha256"): problems.append(r.get("repo","unknown")+" archive inventory incomplete: "+str(r.get("errors",[])))
+                  if r.get("large_files_skipped"): problems.append(r.get("repo","unknown")+" has skipped dependency/license evidence files: "+str(r.get("large_files_skipped",[])[:10]))
           sx=root/"scancode.exit"; sr=root/"scancode-report.json"
           if not sx.exists() or sx.read_text().strip()!="0": problems.append("ScanCode did not complete cleanly (exit "+(sx.read_text().strip() if sx.exists() else "missing")+"); inspect scancode.log")
           if not sr.exists(): problems.append("ScanCode JSON report missing")
