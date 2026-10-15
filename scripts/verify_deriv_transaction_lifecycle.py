@@ -43,6 +43,13 @@ def fail(message: str) -> int:
     return 2
 
 
+def verify_only_direction_matches_contract(contract_type: str, direction: str) -> bool:
+    """Keep the quote contract and synthetic verify-only intent semantically aligned."""
+    expected = {"CALL": "CALL", "PUT": "PUT"}.get(str(contract_type).strip().upper())
+    actual = CapitalPlaneExecutor._expected_contract_type(direction)
+    return expected is not None and actual == expected
+
+
 async def run() -> int:
     mode = os.getenv("DERIV_LIFECYCLE_MODE", "LIVE").strip().upper()
     if mode not in {"LIVE", "VERIFY_ONLY"}:
@@ -174,6 +181,11 @@ async def run() -> int:
                 .strip()
                 .upper()
             )
+            direction = os.getenv("DERIV_VERIFY_DIRECTION", "BUY").strip().upper() or "BUY"
+            if contract_type not in {"CALL", "PUT"}:
+                return fail("VERIFY_ONLY_CONTRACT_TYPE_INVALID")
+            if not verify_only_direction_matches_contract(contract_type, direction):
+                return fail("VERIFY_ONLY_CONTRACT_DIRECTION_MISMATCH")
             duration_unit = (
                 os.getenv("DERIV_VERIFY_DURATION_UNIT", "s")
                 .strip()
@@ -200,10 +212,7 @@ async def run() -> int:
                 strategy_version="1",
                 strategy_hash="VERIFY_ONLY_BROKER_PLUMBING_V1",
                 symbol=symbol,
-                direction=(
-                    os.getenv("DERIV_VERIFY_DIRECTION", "BUY").strip().upper()
-                    or "BUY"
-                ),
+                direction=direction,
                 probability=verify_probability,
                 decision_time=now,
                 market_snapshot_hash=snapshot_hash,
@@ -264,9 +273,16 @@ async def run() -> int:
                 "proposal_id": proposal_id,
                 "intent_id": verify_intent.intent_id,
                 "execution_mode": verify_intent.execution_mode,
-                "risk_approved": verify_ctx.risk_approved,
-                "firewall_approved": verify_ctx.firewall_approved,
-                "reconciliation_healthy": verify_ctx.reconciliation_healthy,
+                # These are synthetic gate inputs used only to exercise intent construction.
+                # They are not live risk/firewall/reconciliation approvals.
+                "verify_only_control_inputs_synthetic": True,
+                "synthetic_risk_gate_input": verify_ctx.risk_approved,
+                "synthetic_firewall_gate_input": verify_ctx.firewall_approved,
+                "synthetic_reconciliation_gate_input": verify_ctx.reconciliation_healthy,
+                "production_risk_approval_proven": False,
+                "production_firewall_approval_proven": False,
+                "strategy_eligibility_proven": False,
+                "probability_calibration_proven": False,
                 "fence_valid": fence.valid(fence_token),
                 "broker_submission_performed": False,
                 "capital_movement": False,
@@ -309,12 +325,15 @@ async def run() -> int:
                     "fresh_pre_trade_balance",
                     "market_data_inventory",
                     "broker_proposal",
-                    "risk_control_path",
-                    "firewall_control_path",
+                    "verify_only_synthetic_control_chain_exercised",
                     "intent_construction",
                     "idempotency_registration",
                     "execution_fence",
                     "no_capital_submission",
+                    "production_risk_approval_not_proven",
+                    "production_firewall_approval_not_proven",
+                    "strategy_eligibility_not_proven",
+                    "probability_calibration_not_proven",
                 ],
                 invariants_failed=[],
             )

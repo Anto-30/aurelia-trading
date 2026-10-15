@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-10-12",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -6321,6 +6321,63 @@
         "developer-experience-reference"
       ],
       "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "anmolkapil/plexo",
+      "category": "desktop-download-utility",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot",
+        "JEV",
+        "ChatGPT",
+        "AURELIA"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/anmolkapil/plexo",
+      "head_commit": "469405b0b40798f9b534d163f1289b80ae8cf93b",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-12",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "desktop-networking-reference",
+        "bandwidth-aggregation",
+        "parallel-downloads",
+        "desktop-ui-reference"
+      ],
+      "integration_note": "Reference only for desktop/network troubleshooting and download throughput. It is not a remote-desktop transport, trading component, or remedy for a missing authorized device connection. Review unsigned release/build supply chain before any installation; do not connect to AURELIA capital or execution paths."
+    },
+    {
+      "repo": "intel/auto-round",
+      "category": "llm-inference-quantization",
+      "domain": "agent-intelligence",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "GrokBot",
+        "ChatGPT",
+        "AURELIA"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/intel/auto-round",
+      "head_commit": "4663212ac4fd18be2b4ec4fa7c79c6e2e6fa9ce1",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-12",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "UPSTREAM_RESEARCH_ONLY",
+      "capabilities": [
+        "llm-post-training-quantization",
+        "low-bit-inference",
+        "model-memory-optimization",
+        "inference-backend-compatibility",
+        "quantized-model-benchmarking"
+      ],
+      "integration_note": "Evaluate only as an isolated LLM inference optimization candidate. Benchmark accuracy, latency, memory, hardware compatibility, reproducibility and model-specific regression before adoption. No effect on strategy logic, probability gates, capital authority, broker execution, or release authorization."
     }
   ],
   "pin_policy": {
@@ -6648,7 +6705,7 @@
         "physical_runtime_install": "NOT_CLAIMED"
       }
     ],
-    "physical_runtime_install": "NOT_CLAIMED",
+    "physical_runtime_install": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
     "note": "Pinned registry sync only; no external source copied into execution paths.",
     "latest_batch": [
       {
@@ -6728,8 +6785,8 @@
     },
     "repository_count": 154,
     "all_repository_heads_pinned": true,
-    "date": "2026-10-09",
-    "summary": "Added 19 Freebuff-related sources as pinned reference/sandbox entries; all external capital authority remains false.",
+    "date": "2026-10-12",
+    "summary": "Registered two user-supplied repositories as pinned, non-authoritative references; no source code copied or runtime installation claimed.",
     "intake_2026_10_11": {
       "provided_repository_urls_count": 84,
       "unique_supplied_repositories_count": 84,
@@ -6745,6 +6802,44 @@
       "physical_runtime_install": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
       "security_review_status": "PENDING",
       "date": "2026-10-11"
+    },
+    "intake_2026_10_12": {
+      "provided_repository_urls_count": 2,
+      "unique_repositories_added_or_refreshed": [
+        {
+          "repo": "anmolkapil/plexo",
+          "head_commit": "469405b0b40798f9b534d163f1289b80ae8cf93b",
+          "mode": "REFERENCE_ONLY",
+          "assigned_agents": [
+            "ClaudeCode",
+            "PlaywrightCLI",
+            "GrokBot",
+            "JEV",
+            "ChatGPT",
+            "AURELIA"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "intel/auto-round",
+          "head_commit": "4663212ac4fd18be2b4ec4fa7c79c6e2e6fa9ce1",
+          "mode": "RESEARCH_ONLY",
+          "assigned_agents": [
+            "ClaudeCode",
+            "KimiK3",
+            "JEV",
+            "GrokBot",
+            "ChatGPT",
+            "AURELIA"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        }
+      ],
+      "pin_source": "GitHub API default-branch HEAD queried 2026-10-12",
+      "security_review_status": "PENDING",
+      "runtime_installation": "NOT_CLAIMED",
+      "agent_skill_federation_update": "NOT_APPLICABLE: neither repository is being admitted as an agent/skill/plugin source",
+      "capital_authority": false
     }
   }
 }
