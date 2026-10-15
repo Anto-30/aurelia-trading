@@ -28,7 +28,7 @@ class MeanReversionResearchTests(unittest.TestCase):
 
     def test_metrics_are_finite_for_oscillating_series(self):
         prices = [100 + math.sin(i / 2) * 3 for i in range(200)]
-        result = run_mean_reversion_backtest(prices, window=15, z_threshold=1.2)
+        result = run_mean_reversion_backtest(prices, window=15, z_threshold=0.9)
         self.assertTrue(result.trades)
         self.assertTrue(all(math.isfinite(t.net_return) for t in result.trades))
         self.assertTrue(math.isfinite(result.expectancy))
@@ -38,10 +38,10 @@ class MeanReversionResearchTests(unittest.TestCase):
     def test_cost_sensitivity_charges_two_sides_per_completed_trade(self):
         prices = [100 + math.sin(i / 2) * 3 for i in range(200)]
         zero_cost = run_mean_reversion_backtest(
-            prices, window=15, z_threshold=1.2, per_side_cost_bps=0.0
+            prices, window=15, z_threshold=0.9, per_side_cost_bps=0.0
         )
         paid_cost = run_mean_reversion_backtest(
-            prices, window=15, z_threshold=1.2, per_side_cost_bps=5.0
+            prices, window=15, z_threshold=0.9, per_side_cost_bps=5.0
         )
         self.assertEqual(len(zero_cost.trades), len(paid_cost.trades))
         self.assertTrue(zero_cost.trades)
