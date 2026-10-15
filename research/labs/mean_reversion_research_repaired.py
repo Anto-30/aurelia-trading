@@ -6,8 +6,10 @@ than the next supplied open. The caller is responsible for data provenance,
 chronology, gaps, corporate/action adjustments where applicable, and realistic
 instrument-specific execution costs.
 
-The drawdown and Ulcer metrics are measured on completed-trade equity, not
-intrabar mark-to-market equity. A close-only simulator cannot estimate the latter.
+If no `opens` are supplied, close prices are used as execution-price proxies; this
+is not a true next-open simulation. The drawdown and Ulcer metrics are measured on
+completed-trade equity, not intrabar mark-to-market equity. A close-only simulator
+cannot estimate the latter.
 """
 from __future__ import annotations
 
@@ -148,17 +150,20 @@ def run_mean_reversion_backtest(
     """One-position mean reversion; enter next open, exit when z-score crosses mean.
 
     A prior completed close outside +/- z_threshold creates the next-bar entry
-    intent. A position exits at the next open after the prior completed close's
-    z-score crosses zero. On an opposite threshold, the current position closes;
-    the opposite position cannot open until a later bar. Any still-open position
-    is liquidated at the final close. This simple model omits intrabar stops,
+    intent. A position exits at the next supplied open after the prior completed
+    close's z-score crosses zero. If `opens` is omitted, `closes` are used as
+    execution-price proxies, not true opening quotes. On an opposite threshold,
+    the current position closes; the opposite position cannot open until a later
+    bar. Any still-open position is liquidated at the final close. This simple
+    model omits intrabar stops,
     spread dynamics, rejects, requotes, measured latency, financing, leverage,
     payout schedules, and broker-confirmed fills.
 
     Costs are deducted as two fixed notional bps charges per completed trade.
     This is an explicit placeholder, not a claim about actual costs. Profit factor
     is None if there are no gross losses (rather than Infinity, which is not JSON
-    interoperable). Returns and drawdowns are fractions (0.01 == 1%).
+    interoperable). Expectancy is the arithmetic mean net return per completed
+    trade, not R-multiple expectancy. Returns and drawdowns are fractions (0.01 == 1%).
     """
     close = _prices(closes, "closes")
     op = _prices(opens, "opens") if opens is not None else close[:]
