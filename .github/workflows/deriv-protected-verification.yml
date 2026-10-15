@@ -1,0 +1,152 @@
+name: AURELIA Protected Deriv Verification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-protected-deriv-verification
+  cancel-in-progress: false
+
+jobs:
+  verify-only:
+    # The workflow is manually dispatched and must run from protected main only.
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+      DERIV_ENVIRONMENT: real
+      DERIV_LIFECYCLE_MODE: VERIFY_ONLY
+      DERIV_VERIFY_STAKE: "1.0"
+      DERIV_VERIFY_PROBABILITY: "0.60"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install pinned runtime dependencies
+        run: pip install -r requirements.txt
+      - name: Prepare evidence directory
+        run: mkdir -p artifacts
+      - name: Verify protected Deriv configuration exists
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+        run: |
+          if ! python scripts/deriv_auth_prerequisites.py >/tmp/deriv-prerequisites.log 2>&1; then
+            echo "Protected configuration verification failed; raw output withheld from Actions logs."
+            exit 1
+          fi
+          echo "Protected configuration presence verified; sensitive output suppressed."
+      - name: Verify authenticated Deriv real-account session
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
+        run: |
+          if ! python scripts/verify_deriv_session.py >/tmp/deriv-session.log 2>&1; then
+            echo "Authenticated session verification failed; raw output withheld from Actions logs."
+            exit 1
+          fi
+          echo "Authenticated session verification completed; sensitive output suppressed."
+      - name: Verify authenticated broker account evidence (read-only)
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_BROKER_EVIDENCE_OUT: artifacts/deriv_broker_account_evidence.json
+        run: |
+          if ! python scripts/verify_deriv_broker_evidence.py >/tmp/deriv-broker.log 2>&1; then
+            echo "Read-only broker evidence verification failed; raw output withheld from Actions logs."
+            exit 1
+          fi
+          echo "Read-only broker evidence verification completed; sensitive output suppressed."
+      - name: Verify authenticated transaction lifecycle (VERIFY_ONLY)
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
+        run: |
+          if ! python scripts/verify_deriv_transaction_lifecycle.py >/tmp/deriv-lifecycle.log 2>&1; then
+            echo "VERIFY_ONLY lifecycle verification failed; raw output withheld from Actions logs."
+            exit 1
+          fi
+          echo "VERIFY_ONLY lifecycle completed; sensitive output suppressed."
+      - name: Assert no order submission or capital movement
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for name in ("deriv_authenticated_session.json", "deriv_broker_account_evidence.json", "deriv_transaction_lifecycle.json"):
+              p = Path("artifacts") / name
+              if not p.is_file():
+                  raise SystemExit(f"missing required evidence: {name}")
+          lifecycle = json.loads(Path("artifacts/deriv_transaction_lifecycle.json").read_text())
+          observed = lifecycle.get("observed") or {}
+          if observed.get("mode") != "VERIFY_ONLY":
+              raise SystemExit("lifecycle evidence is not VERIFY_ONLY")
+          if lifecycle.get("orders_submitted") != 0:
+              raise SystemExit("lifecycle evidence does not prove zero orders")
+          if lifecycle.get("capital_authority_granted") is not False:
+              raise SystemExit("lifecycle evidence unexpectedly grants capital authority")
+          if lifecycle.get("order_submission_permitted") is not False:
+              raise SystemExit("lifecycle evidence unexpectedly permits order submission")
+          if observed.get("broker_submission_performed") is not False or observed.get("capital_movement") is not False:
+              raise SystemExit("lifecycle evidence does not prove no submission/capital movement")
+          print("VERIFY_ONLY evidence present; no order submission is authorized by this workflow.")
+          PY
+      - name: Create redacted evidence summaries
+        if: always()
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          source = Path("artifacts")
+          target = source / "sanitized"
+          target.mkdir(parents=True, exist_ok=True)
+          allowed = (
+              "evidence_id", "source_hash", "config_hash", "artifact_hash",
+              "data_hash", "environment", "started_at_utc", "ended_at_utc",
+              "valid_until_utc", "status", "result", "invariants_checked",
+              "invariants_failed", "orders_submitted", "capital_authority_granted",
+              "verification_scope", "order_submission_permitted", "record_hash",
+          )
+          for name in (
+              "deriv_authenticated_session.json",
+              "deriv_broker_account_evidence.json",
+              "deriv_transaction_lifecycle.json",
+          ):
+              path = source / name
+              if not path.is_file():
+                  continue
+              raw = path.read_bytes()
+              try:
+                  data = json.loads(raw)
+              except Exception:
+                  continue
+              summary = {
+                  "schema": "aurelia.redacted_broker_evidence_summary.v1",
+                  "source_artifact_name": name,
+                  "source_artifact_sha256": hashlib.sha256(raw).hexdigest(),
+                  "redaction": "account identifiers, balances, proposals, intents, transaction IDs, contract IDs, and raw observed payload omitted",
+                  "evidence": {key: data[key] for key in allowed if key in data},
+              }
+              (target / name).write_text(json.dumps(summary, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+          print("Sanitized evidence summaries prepared; raw broker evidence will not be uploaded.")
+          PY
+      - name: Upload sanitized read-only verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deriv-protected-verify-only-evidence
+          path: artifacts/sanitized/*.json
+          if-no-files-found: warn
+          retention-days: 7
