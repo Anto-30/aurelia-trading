@@ -40,9 +40,12 @@ class DerivAdapter:
         timeout_seconds: float = 10.0,
     ):
         self.ws_url = ws_url or os.getenv("DERIV_WS_URL", "")
-        self.auth_token = (
-            auth_token if auth_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
+        configured_token = (
+            auth_token
+            if auth_token is not None
+            else get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")
         )
+        self.auth_token = str(configured_token).strip() if configured_token else ""
         configured_loginid = (
             expected_loginid
             or get_optional_secret("DERIV_EXPECTED_LOGINID")
