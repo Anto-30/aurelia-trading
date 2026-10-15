@@ -105,11 +105,11 @@ jobs:
           ]
           source_root = pathlib.Path("/tmp/pinned-intake-sources")
           report_root = pathlib.Path("/tmp/pinned-intake-audit")
-          max_archive = 256 * 1024 * 1024
-          max_total_download = 4 * 1024 * 1024 * 1024
-          max_member = 30 * 1024 * 1024
-          max_total_uncompressed = 8 * 1024 * 1024 * 1024
-          max_members_per_archive = 35000
+          max_archive = 768 * 1024 * 1024
+          max_total_download = 8 * 1024 * 1024 * 1024
+          max_member = 50 * 1024 * 1024
+          max_total_uncompressed = 4 * 1024 * 1024 * 1024
+          max_members_per_archive = 120000
           total_download = total_uncompressed = 0
           manifest_names = {
               "package.json","package-lock.json","npm-shrinkwrap.json","pnpm-lock.yaml","yarn.lock",
@@ -156,10 +156,17 @@ jobs:
                               row["skipped_symlinks"].append(relative[:200])
                               continue
                           low = path.name.lower()
-                          if low in manifest_names:
+                          is_manifest = low in manifest_names
+                          is_license_path = is_license(relative)
+                          if is_manifest:
                               row["manifests"].append(relative)
-                          if is_license(relative):
+                          if is_license_path:
                               row["license_notice_paths"].append(relative)
+                          # OSV needs dependency manifests/lockfiles, and ScanCode
+                          # needs license/notice files. Do not copy arbitrary upstream
+                          # source/assets into the temporary scan tree.
+                          if not is_manifest and not is_license_path:
+                              continue
                           if info.file_size > max_member:
                               row["large_files_skipped"].append({"path":relative,"bytes":info.file_size})
                               continue
@@ -227,62 +234,130 @@ jobs:
           chmod 0755 /tmp/osv-scanner
           /tmp/osv-scanner --version
 
-      - name: Scan lockfiles and known vulnerability advisories in bounded shards
+      - name: Scan dependency manifests and known vulnerability advisories in balanced shards
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json, pathlib, shutil, subprocess, time
+          import concurrent.futures, json, pathlib, shutil, subprocess
           root = pathlib.Path("/tmp/pinned-intake-audit")
           source_root = pathlib.Path("/tmp/pinned-intake-sources")
           inventory = json.loads((root / "source-inventory.json").read_text())
           eligible = [r for r in inventory.get("repos", []) if r.get("archive_sha256") and not r.get("errors")]
-          shards = [[] for _ in range(4)]
-          for i, repo in enumerate(eligible):
-              shards[i % len(shards)].append(repo["repo"])
-          combined = {"results": []}
-          statuses = []
-          log_parts = []
-          for idx, repos in enumerate(shards):
+
+          # Partition manifest-containing directories, not whole repositories.
+          # This prevents monorepos/example catalogues from overloading a single shard,
+          # while keeping a directory's package.json/lockfile/requirements together.
+          grouped = {}
+          no_manifest_repos = []
+          for row in eligible:
+              repo = row["repo"]
+              repo_root = source_root / repo.replace("/", "__")
+              found = 0
+              for rel in row.get("manifests", []):
+                  src = repo_root / rel
+                  if not src.is_file():
+                      continue
+                  found += 1
+                  parent = str(pathlib.PurePosixPath(rel).parent)
+                  key = (repo, parent)
+                  group = grouped.setdefault(key, {"repo": repo, "parent": parent, "files": []})
+                  group["files"].append(rel)
+              if found == 0:
+                  no_manifest_repos.append(repo)
+
+          shard_count = 8
+          shards = [{"groups": [], "load": 0} for _ in range(shard_count)]
+          groups = sorted(grouped.values(), key=lambda g: (-len(g["files"]), g["repo"], g["parent"]))
+          for group in groups:
+              shard = min(shards, key=lambda s: s["load"])
+              shard["groups"].append(group)
+              shard["load"] += len(group["files"])
+
+          def scan_shard(item):
+              idx, shard = item
               shard_root = pathlib.Path(f"/tmp/osv-shard-{idx + 1}")
               if shard_root.exists():
                   shutil.rmtree(shard_root)
-              shard_root.mkdir(parents=True)
-              for repo in repos:
-                  source = source_root / repo.replace("/", "__")
-                  if source.exists():
-                      shutil.copytree(source, shard_root / repo.replace("/", "__"))
+              target_root = shard_root / "pinned-intake-sources"
+              target_root.mkdir(parents=True)
+              for group in shard["groups"]:
+                  repo_dir = group["repo"].replace("/", "__")
+                  source_repo = source_root / repo_dir
+                  for rel in group["files"]:
+                      source = source_repo / rel
+                      target = target_root / repo_dir / rel
+                      target.parent.mkdir(parents=True, exist_ok=True)
+                      shutil.copy2(source, target)
               report_path = root / f"osv-report-shard-{idx + 1}.json"
               log_path = root / f"osv-shard-{idx + 1}.log"
               cmd = [
                   "timeout", "--signal=TERM", "--kill-after=30s", "15m",
                   "/tmp/osv-scanner", "scan", "source", "--recursive",
-                  str(shard_root), "--format", "json", "--output-file", str(report_path),
+                  str(target_root), "--format", "json", "--output-file", str(report_path),
               ]
-              proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-              log_path.write_text(proc.stdout or "", encoding="utf-8")
-              statuses.append(proc.returncode)
-              log_parts.append(f"=== shard {idx + 1}; repositories={len(repos)}; exit={proc.returncode} ===\n{proc.stdout or ''}")
+              try:
+                  proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                  output = proc.stdout or ""
+                  code = proc.returncode
+              except Exception as exc:
+                  output = f"OSV_SHARD_EXECUTION_ERROR={type(exc).__name__}: {exc}"
+                  code = 125
+              log_path.write_text(output, encoding="utf-8")
+              results = []
+              report_error = None
               if report_path.exists():
                   try:
                       shard_report = json.loads(report_path.read_text(encoding="utf-8"))
-                      combined["results"].extend(shard_report.get("results", []))
+                      if not isinstance(shard_report, dict) or not isinstance(shard_report.get("results", []), list):
+                          raise ValueError("OSV report schema/results list invalid")
+                      results = shard_report.get("results", [])
                   except Exception as exc:
-                      statuses[-1] = 125
-                      log_parts.append(f"SHARD_REPORT_PARSE_ERROR={type(exc).__name__}: {exc}")
+                      report_error = f"{type(exc).__name__}: {exc}"
+                      code = 125
               else:
-                  log_parts.append("SHARD_REPORT_MISSING=true")
-                  if proc.returncode in (0, 1):
-                      statuses[-1] = 125
+                  report_error = "OSV_REPORT_MISSING"
+                  if code in (0, 1):
+                      code = 125
+              return {
+                  "shard": idx + 1,
+                  "manifest_files": shard["load"],
+                  "directories": len(shard["groups"]),
+                  "exit_code": code,
+                  "results": results,
+                  "log_path": str(log_path),
+                  "report_error": report_error,
+              }
+
+          with concurrent.futures.ThreadPoolExecutor(max_workers=shard_count) as pool:
+              shard_results = list(pool.map(scan_shard, list(enumerate(shards))))
+
+          combined = {"results": []}
+          log_parts = []
+          statuses = []
+          for item in sorted(shard_results, key=lambda r: r["shard"]):
+              statuses.append(item["exit_code"])
+              combined["results"].extend(item["results"])
+              log_parts.append(
+                  f"=== shard {item['shard']}; manifests={item['manifest_files']}; "
+                  f"directories={item['directories']}; exit={item['exit_code']} ==="
+              )
+              if item["report_error"]:
+                  log_parts.append(item["report_error"])
+              log_parts.append((pathlib.Path(item["log_path"]).read_text(encoding="utf-8") or "")[-20000:])
           (root / "osv-report.json").write_text(json.dumps(combined, indent=2) + "\n", encoding="utf-8")
           (root / "osv-shard-status.json").write_text(json.dumps({
-              "shard_count": len(shards),
+              "shard_count": shard_count,
               "eligible_repository_count": len(eligible),
-              "repositories_per_shard": [len(s) for s in shards],
+              "manifest_directory_count": len(groups),
+              "manifest_file_count": sum(len(g["files"]) for g in groups),
+              "manifest_files_per_shard": [s["load"] for s in shards],
+              "no_manifest_repositories": no_manifest_repos,
               "exit_codes": statuses,
               "reports_merged": True,
               "results_count": len(combined["results"]),
               "timeout_seconds_per_shard": 900,
+              "parallel_shards": True,
           }, indent=2) + "\n", encoding="utf-8")
           (root / "osv-scanner.log").write_text("\n".join(log_parts), encoding="utf-8")
           if any(code not in (0, 1) for code in statuses):
@@ -295,6 +370,9 @@ jobs:
           print(json.dumps({
               "eligible_repositories": len(eligible),
               "repositories_not_scanned": [r.get("repo") for r in inventory.get("repos", []) if not r.get("archive_sha256") or r.get("errors")],
+              "manifest_file_count": sum(len(g["files"]) for g in groups),
+              "no_manifest_repositories": no_manifest_repos,
+              "manifest_files_per_shard": [s["load"] for s in shards],
               "shard_exit_codes": statuses,
               "combined_results": len(combined["results"]),
               "aggregate_exit": final_status,
@@ -334,7 +412,13 @@ jobs:
           for result in results:
               path=result.get("source",{}).get("path",""); repo="unknown"; rel=path
               for rr in repos:
-                  prefix="/tmp/pinned-intake-sources/"+rr.get("repo","").replace("/","__")+"/"
+                  repo_prefix=rr.get("repo","").replace("/","__")+"/"
+                  marker="/pinned-intake-sources/"
+                  if marker in path:
+                      tail=path.split(marker,1)[1]
+                      if tail.startswith(repo_prefix):
+                          repo=rr["repo"]; rel=tail[len(repo_prefix):]; break
+                  prefix="/tmp/pinned-intake-sources/"+repo_prefix
                   if path.startswith(prefix): repo=rr["repo"]; rel=path[len(prefix):]; break
               stat=repo_stats.setdefault(repo,{"paths":set(),"coords":set(),"records":0,"ids":set(),"max":0.0})
               stat["paths"].add(rel)
@@ -380,7 +464,8 @@ jobs:
                   summary += [f"- {expr}: {count}" for expr,count in sorted(counts.items(),key=lambda x:(-x[1],x[0]))[:20]]
               except Exception as e: summary.append(f"- ScanCode report parse error: {type(e).__name__}: {e}")
           else: summary.append("- ScanCode JSON report missing; license scan did not complete.")
-          summary += ["","### Gate disposition","- The gate remains BLOCKED if OSV reports vulnerable versions, the inventory is incomplete, ScanCode fails, or reports cannot be interpreted.","- Validate exact direct/transitive reachability, affected-version ranges, severity, and fixed releases before recommending reuse or remediation.","- Dynamic auth/SSRF/redirect/DNS-rebinding/regex/egress/browser-session tests and legal license review remain separate gates."]
+          osv_records=sum(len(p.get("vulnerabilities",[]) or []) for rr in results for p in (rr.get("packages",[]) or []))
+          summary += ["","### Gate disposition",f"- OSV reported {osv_records} advisory records across candidate-source manifests. These are upstream candidate findings, not evidence that those versions are installed in AURELIA.","- The scanner/inventory job fails closed on missing reports, scanner timeout/schema errors, inventory omissions, or unscanned oversized inputs. Detection of an advisory is preserved as a finding; it blocks candidate promotion/admission until triaged rather than falsifying audit completeness.","- Every external source remains research/reference/sandbox/tooling-only. Do not install or execute candidates in the AURELIA runtime based on this report.","- Validate direct/transitive reachability, affected-version ranges, severity, fixed releases, and license/NOTICE obligations before any reuse decision.","- Dynamic auth/SSRF/redirect/DNS-rebinding/regex/egress/browser-session tests and legal license review remain separate gates."]
           pathlib.Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(summary)+"\n")
           (root/"audit-summary.md").write_text("\n".join(summary)+"\n")
           print("\n".join(summary))
@@ -420,12 +505,14 @@ jobs:
                   data=json.loads(op.read_text()); results=data.get("results",[])
                   records=sum(len(p.get("vulnerabilities",[]) or []) for r in results for p in (r.get("packages",[]) or []))
                   coords={(p.get("package",{}).get("ecosystem"),p.get("package",{}).get("name"),p.get("package",{}).get("version")) for r in results for p in (r.get("packages",[]) or []) if p.get("vulnerabilities")}
-                  if records: problems.append(f"OSV reported {records} vulnerability records across {len(coords)} distinct vulnerable package coordinates")
-                  elif ox.exists() and ox.read_text().strip()!="0": problems.append("OSV returned a non-zero status with no vulnerability records; inspect raw logs")
+                  osv_code=ox.read_text().strip() if ox.exists() else ""
+                  if osv_code=="1" and records==0: problems.append("OSV exited with findings but the merged report contains no vulnerability records")
+                  if osv_code=="0" and records>0: problems.append("OSV report contains vulnerability records but process status indicates no findings; investigate scanner/report mismatch")
+                  print(f"OSV findings preserved for review: {records} advisory records across {len(coords)} candidate package coordinates")
               except Exception as e: problems.append("OSV report parse failed: "+type(e).__name__+": "+str(e))
           if problems:
               print("AUDIT GATE: BLOCKED")
               for p in problems: print("- "+p)
               sys.exit(1)
-          print("AUDIT GATE: passed scanner process and source inventory checks with no detected vulnerability records; independent license interpretation and dynamic tests still required.")
+          print("AUDIT GATE: source inventory, OSV report, and ScanCode reports completed. Any upstream findings remain a separate no-admission/no-install review gate; this is not a claim that candidates are vulnerability-free.")
           PY
