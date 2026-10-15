@@ -37,12 +37,14 @@ class MeanReversionResearchTests(unittest.TestCase):
         self.assertIsNone(result.profit_factor)
 
     def test_hand_calculated_trade_parity(self):
-        # window=2 yields z=+/-1/sqrt(2) on non-flat pairs.
-        # Signal at close[1] opens a short at open[2]=100; prior z turns
-        # non-positive at close[2], so it exits at open[3]=90.
-        # A long opens at open[4]=100 and is liquidated at final close=100.
+        # Signals use closes, but fills use the explicit next-bar opens:
+        # enter short at open[2]=101, cover at open[3]=90, then enter long
+        # at open[4]=100 and liquidate at final close=100.
+        closes = [100.0, 110.0, 100.0, 90.0, 100.0]
+        opens = [100.0, 110.0, 101.0, 90.0, 100.0]
         result = run_mean_reversion_backtest(
-            [100.0, 110.0, 100.0, 90.0, 100.0],
+            closes,
+            opens=opens,
             window=2,
             z_threshold=0.5,
             per_side_cost_bps=10.0,
@@ -50,18 +52,28 @@ class MeanReversionResearchTests(unittest.TestCase):
         self.assertEqual(len(result.trades), 2)
         first, second = result.trades
         self.assertEqual(first.direction, -1)
-        self.assertAlmostEqual(first.entry_price, 100.0)
+        self.assertAlmostEqual(first.entry_price, 101.0)
         self.assertAlmostEqual(first.exit_price, 90.0)
-        self.assertAlmostEqual(first.gross_return, 0.10)
+        self.assertAlmostEqual(first.gross_return, 11.0 / 101.0)
         self.assertAlmostEqual(first.cost_return, 0.002)
-        self.assertAlmostEqual(first.net_return, 0.098)
+        self.assertAlmostEqual(first.net_return, 11.0 / 101.0 - 0.002)
         self.assertEqual(second.direction, 1)
         self.assertAlmostEqual(second.entry_price, 100.0)
         self.assertAlmostEqual(second.exit_price, 100.0)
         self.assertAlmostEqual(second.net_return, -0.002)
-        self.assertAlmostEqual(result.expectancy, 0.048)
-        self.assertAlmostEqual(result.profit_factor, 49.0)
+        self.assertAlmostEqual(result.expectancy, (11.0 / 101.0 - 0.004) / 2)
+        self.assertAlmostEqual(result.profit_factor, (11.0 / 101.0 - 0.002) / 0.002)
         self.assertAlmostEqual(result.win_rate, 0.5)
+
+    def test_omitted_opens_are_explicitly_close_price_proxy(self):
+        prices = [100.0, 110.0, 100.0, 90.0, 100.0]
+        proxy = run_mean_reversion_backtest(
+            prices, window=2, z_threshold=0.5, per_side_cost_bps=10.0
+        )
+        explicit_close_proxy = run_mean_reversion_backtest(
+            prices, opens=prices, window=2, z_threshold=0.5, per_side_cost_bps=10.0
+        )
+        self.assertEqual(proxy.trades, explicit_close_proxy.trades)
 
     def test_rolling_zscores_are_prefix_stable(self):
         prices = [100, 110, 100, 90, 100, 110, 120, 110, 100]
