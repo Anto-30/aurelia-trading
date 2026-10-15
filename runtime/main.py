@@ -37,6 +37,20 @@ from runtime.intelligence.crucix_adapter import collect_crucix_advisory
 
 ROOT = Path(__file__).resolve().parents[1]
 
+AGENT_FEDERATION_ROLES = (
+    "ClaudeCode",
+    "KimiK3",
+    "GrokBot",
+    "GoogleAgentSkills",
+    "GLM",
+    "PlaywrightCLI",
+    "JEV",
+    "AURELIA",
+    "ChatGPT",
+    "Dev",
+)
+
+
 FEDERATION_TRIGGER_EVENTS = {
     "MARKET_ANOMALY_DETECTED",
     "STRATEGY_SIGNAL_GENERATED",
@@ -463,15 +477,9 @@ async def main() -> None:
     )
     federation_supervisor = AgentFederationSupervisor(
         federation,
-        agents=(
-            "ClaudeCode",
-            "KimiK3",
-            "GrokBot",
-            "GoogleAgentSkills",
-            "GLM",
-            "PlaywrightCLI",
-            "AURELIA",
-        ),
+        # Registry membership permits advisory routing only; it does not
+        # prove provider authentication, worker liveness, or task execution.
+        agents=AGENT_FEDERATION_ROLES,
         event_queue=federation_queue,
     )
     federation_supervisor.start()
