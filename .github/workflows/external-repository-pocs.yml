@@ -1,0 +1,75 @@
+name: External Repository Research Proofs of Concept
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: external-repository-poc-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  synthetic-cvxpy-and-clickhouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      clickhouse:
+        image: clickhouse/clickhouse-server:26.8.21.10
+        env:
+          CLICKHOUSE_USER: default
+          CLICKHOUSE_PASSWORD: ci-test-password
+          CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+        ports:
+          - 8123:8123
+        options: >-
+          --health-cmd "wget --no-verbose --tries=1 --spider http://127.0.0.1:8123/ping || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 20s
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install pinned isolated proof-of-concept dependencies and audit tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "cvxpy==1.9.3" "clickhouse-connect==1.4.0" pip-audit "pip-licenses==5.0.0"
+
+      - name: Audit isolated proof-of-concept dependency set
+        run: |
+          pip-audit --format json --output external-poc-pip-audit-report.json
+
+      - name: Inventory isolated proof-of-concept licenses
+        run: |
+          pip-licenses --format=json --output-file external-poc-license-report.json
+
+      - name: Validate synthetic CVXPY allocation constraints and failure cases
+        run: python research/external_pocs/cvxpy_allocation_poc.py
+
+      - name: Validate ClickHouse read-only reporting permissions and duplicate handling
+        env:
+          CLICKHOUSE_HOST: 127.0.0.1
+          CLICKHOUSE_PORT: "8123"
+          CLICKHOUSE_ADMIN_USER: default
+          CLICKHOUSE_ADMIN_PASSWORD: ci-test-password
+        run: python research/external_pocs/clickhouse_readonly_poc.py
+
+      - name: Upload isolated POC dependency and license reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-poc-dependency-audit
+          path: |
+            external-poc-pip-audit-report.json
+            external-poc-license-report.json
+          if-no-files-found: warn
+          retention-days: 14
