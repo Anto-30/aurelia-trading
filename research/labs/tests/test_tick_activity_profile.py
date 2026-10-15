@@ -1,6 +1,6 @@
 import unittest
 
-from tick_activity_profile import (
+from research.labs.tick_activity_profile import (
     PriceObservation,
     calculate_tick_activity_profile,
 )
