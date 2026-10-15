@@ -1,0 +1,435 @@
+{
+  "schema": "aurelia.agent_remediation_backlog.v1",
+  "generated": "2026-10-12",
+  "canonical_repository": "https://github.com/Anto-30/aurelia-trading",
+  "authority_model": {
+    "scope": "maximum practical engineering, research, testing, repository, and deployment-preparation permissions subject to connected-tool and platform permissions",
+    "allowed": [
+      "inspect source, configs, workflow runs, logs, and test results",
+      "create isolated branches and draft pull requests",
+      "modify or replace defective components when justified and testable",
+      "repair CI and regression failures",
+      "research provider integrations and deployment designs",
+      "triage new defects and add them to this shared backlog",
+      "run isolated tests and generate attributable evidence"
+    ],
+    "constraints": [
+      "external agents have no capital authority",
+      "do not grant agents unrestricted production-secret access; use approved secret stores and least privilege",
+      "do not bypass authorization, account isolation, risk limits, execution firewall, idempotency, reconciliation, or kill switch",
+      "do not change LIVE_LOCK to force release",
+      "do not report unconfigured agents, simulations, or scheduled CI checks as persistent live agent execution",
+      "no merge/deploy/promotion claim without observed platform result and required review"
+    ],
+    "continuous_operation_claim": "NOT_VERIFIED until an authorized persistent host, authenticated provider integrations, recovery, and real task lifecycle evidence are demonstrated"
+  },
+  "status_legend": {
+    "open": "identified; requires investigation or implementation",
+    "blocked": "cannot complete until a named external prerequisite exists",
+    "verification_required": "implementation claim requires independent tests/evidence"
+  },
+  "common_rules": [
+    "All agents must inspect the whole shared backlog and report additional issues found, not only their assigned item.",
+    "Every change must state exact source revision, test command/run ID, observed result, evidence path, residual risk, and rollback/recovery behavior.",
+    "Prefer small isolated changes with regression tests. Replace components only when the defect, replacement plan, migration, and rollback are documented.",
+    "A workflow passing is not proof of live readiness; simulations are not production runtime evidence.",
+    "The user has authorized broad engineering autonomy, but this does not override connected-tool permissions, provider terms, security boundaries, or AURELIA capital safeguards."
+  ],
+  "workstreams": [
+    {
+      "id": "HOST-001",
+      "priority": "P0",
+      "status": "blocked",
+      "title": "Enroll and verify a persistent desktop or worker host",
+      "finding": "Desktop Commander reports no connected devices; local runtime inspection/execution is unavailable through that connector.",
+      "owner": "Dev",
+      "collaborators": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "dependencies": [
+        "explicit user-authorized device enrollment"
+      ],
+      "acceptance_criteria": [
+        "authorized device identity and online state are actually observed",
+        "always-on host/service manager, startup behavior, restart-on-failure, health checks, log rotation, alerting, and revocation are documented",
+        "reboot, provider disconnect, network loss, and reconnect recovery are tested",
+        "host uptime and worker health are recorded as evidence rather than inferred"
+      ],
+      "evidence_path": "artifacts/agent-delegation/dev-runtime.json"
+    },
+    {
+      "id": "PROVIDER-002",
+      "priority": "P0",
+      "status": "blocked",
+      "title": "Provision authenticated provider connections for assigned agents",
+      "finding": "Registered agent roles are not proof of provider connectivity; worker command configuration and authenticated provider sessions must be verified.",
+      "owner": "ClaudeCode",
+      "collaborators": [
+        "Dev",
+        "GoogleAgentSkills",
+        "KimiK3"
+      ],
+      "dependencies": [
+        "HOST-001",
+        "supported integration and authorized credentials"
+      ],
+      "acceptance_criteria": [
+        "each agent is explicitly reported as authenticated/connected or blocked with a concrete reason",
+        "host connectivity, provider authentication, running process, heartbeat, and completed task are separate status dimensions",
+        "secret material is held in an approved secret store, scoped, masked in logs, and revocable",
+        "unconfigured provider reports CONNECTOR_REQUIRED and does not create a false live lease"
+      ],
+      "evidence_path": "artifacts/agent-delegation/claudecode.json"
+    },
+    {
+      "id": "TASK-003",
+      "priority": "P0",
+      "status": "verification_required",
+      "title": "Implement a real provider task request/result protocol",
+      "finding": "A bounded JSON Lines request/result protocol was implemented on PR #116 head 5f04fbc41da8cb9c130a0876c6160ff507def58f. Each request carries a versioned schema, task/correlation IDs, payload, deadline, advisory-only scope, and capital_authority=false. Results must echo the task ID and use an allowed terminal status; malformed, mismatched, or timed-out responses fail the task. CI watchdog and federation audit passed for this commit; assurance run 38258872303 was pending at last check, and the provider integration itself is not yet connected or authenticated.",
+      "owner": "ClaudeCode",
+      "collaborators": [
+        "GrokBot",
+        "KimiK3",
+        "JEV"
+      ],
+      "dependencies": [
+        "PROVIDER-002"
+      ],
+      "acceptance_criteria": [
+        "versioned request/result schema includes task ID, correlation ID, payload, deadline, and authorized tool scope",
+        "provider receives tasks through documented JSON Lines request/result protocol and returns COMPLETED, FAILED, or BLOCKED with an evidence reference",
+        "timeout, process crash, malformed result, duplicate result, and unknown outcome paths are bounded and tested",
+        "only attributable lifecycle events establish execution proof",
+        "automated protocol regression test and full assurance workflow pass on the proposed commit",
+        "actual provider integration remains separately marked blocked until authenticated provider execution is evidenced"
+      ],
+      "evidence_path": "artifacts/agent-delegation/claudecode.json",
+      "references": [
+        "https://github.com/Anto-30/aurelia-trading/pull/116",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38258872303",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38258872335",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38258872316"
+      ]
+    },
+    {
+      "id": "CI-004",
+      "priority": "P0",
+      "status": "verification_required",
+      "title": "Reconcile PR #115/#116 agent continuity watchdog regression",
+      "finding": "The initial PR #116 watchdog run 38256742518 failed because the probe expected unconfigured workers to heartbeat. The probe now explicitly configures disposable local child processes for simulation, labels output EPHEMERAL_SIMULATION, and states persistent runtime proof is NOT_VERIFIED. Latest watchdog runs 38258302724 (PR #116 head) and 38258277908 (PR #115 head) succeeded; the latest PR #116 assurance run 38258302744 was still pending at last check.",
+      "owner": "ClaudeCode",
+      "collaborators": [
+        "JEV",
+        "KimiK3",
+        "GLM"
+      ],
+      "dependencies": [
+        "PROVIDER-002"
+      ],
+      "references": [
+        "https://github.com/Anto-30/aurelia-trading/pull/115",
+        "https://github.com/Anto-30/aurelia-trading/pull/116",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38256742518",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38258302724",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38258277908",
+        "https://github.com/Anto-30/aurelia-trading/actions/runs/38258302744"
+      ],
+      "acceptance_criteria": [
+        "simulation probe explicitly tests simulation-only mechanics or verifies inactive/unconfigured behavior without claiming production liveness",
+        "test configuration cannot be mistaken for real provider configuration",
+        "combined watchdog, federation audit, and assurance checks pass on the proposed commit",
+        "exact logs and run IDs are linked and the PRs' combined behavior is independently reviewed"
+      ],
+      "evidence_path": "artifacts/agent-delegation/claudecode.json"
+    },
+    {
+      "id": "STORAGE-005",
+      "priority": "P1",
+      "status": "open",
+      "title": "Harden federation persistence, corruption handling, and concurrent writes",
+      "finding": "Lease, task, and seen-message loaders catch I/O/JSON errors and return empty state, potentially hiding corrupted persisted state; fixed temporary filenames and file-based multi-writer behavior need review.",
+      "owner": "ClaudeCode",
+      "collaborators": [
+        "KimiK3",
+        "JEV",
+        "GoogleAgentSkills"
+      ],
+      "acceptance_criteria": [
+        "corrupt, truncated, unreadable, or schema-invalid journal/lease/task/deduplication state causes explicit unhealthy/fail-closed status rather than silent healthy-empty state",
+        "atomic writes, concurrent writer policy, locking, and durability expectations are documented and tested",
+        "crash recovery and stale claim/lease behavior are exercised using fault-injection tests",
+        "replay, duplicate enqueue, completion, and event-ID collisions are tested"
+      ],
+      "evidence_path": "artifacts/agent-delegation/claudecode.json"
+    },
+    {
+      "id": "SECRETS-006",
+      "priority": "P0",
+      "status": "verification_required",
+      "title": "Audit secret storage and exposure paths",
+      "finding": "Prior project intake indicated possible secret storage in source, ordinary files, or chat. Treat this as an audit lead, not proof of exposure.",
+      "owner": "GoogleAgentSkills",
+      "collaborators": [
+        "ClaudeCode",
+        "KimiK3",
+        "Dev"
+      ],
+      "acceptance_criteria": [
+        "scan source, CI configuration, logs, artifact paths, local env references, and repository history using approved secret-scanning tools",
+        "record findings without copying secret values into logs/issues",
+        "rotate and revoke any confirmed exposed credentials through the authorized provider control plane",
+        "move secrets to the approved secret store with least-privilege access and masked output",
+        "verify credential absence from generated artifacts and pull-request diffs"
+      ],
+      "evidence_path": "artifacts/agent-delegation/google-agent-skills.json"
+    },
+    {
+      "id": "RELEASE-007",
+      "priority": "P0",
+      "status": "blocked",
+      "title": "Produce the genuine certification evidence bundle",
+      "finding": "Latest known certification gate reported missing broker_lifecycle.json, recovery_matrix.json, soak_3600s.json, prospective_oos.json, calibration.json, execution_economics.json, security_audit.json, deployment.json, and strategy_eligibility.json.",
+      "owner": "GLM",
+      "collaborators": [
+        "AURELIA",
+        "ClaudeCode",
+        "JEV",
+        "GoogleAgentSkills"
+      ],
+      "acceptance_criteria": [
+        "each required artifact is generated by its real verifier/run with schema validation, source/config binding, timestamps, issuer, provenance, and expiry as applicable",
+        "simulation evidence is clearly labeled and never substituted for broker or production runtime evidence",
+        "missing artifacts remain explicitly blocked until acquired",
+        "the release gate and independent certification agree on readiness"
+      ],
+      "evidence_path": "artifacts/agent-delegation/glm.json"
+    },
+    {
+      "id": "DERIV-008",
+      "priority": "P0",
+      "status": "blocked",
+      "title": "Verify Deriv identity, balance, account isolation, and read-only lifecycle",
+      "finding": "Known readiness state reported DERIV_AUTH_CONFIGURED=false, no verified account/session/balance, and broker connectivity UNKNOWN.",
+      "owner": "AURELIA",
+      "collaborators": [
+        "ClaudeCode",
+        "Dev",
+        "GLM",
+        "JEV"
+      ],
+      "acceptance_criteria": [
+        "authenticated session is bound to the explicitly authorized login ID, real/demo environment, and currency",
+        "fresh balance/account response is sourced from Deriv as truth and stale/unknown balance fails closed",
+        "read-only account and verify-only transaction lifecycle checks complete with zero submitted orders",
+        "stake affordability is evaluated against current broker minimums and fresh available balance",
+        "account isolation, idempotency, transaction status, ledger, and reconciliation are independently tested"
+      ],
+      "evidence_path": "artifacts/agent-delegation/aurelia.json"
+    },
+    {
+      "id": "QUAL-009",
+      "priority": "P0",
+      "status": "blocked",
+      "title": "Complete strategy qualification and execution-economics evidence",
+      "finding": "Known qualification evidence booleans were false for market data, prospective OOS, calibration, economics, and the 3600-second soak. An earlier sub-hour R_100 diagnostic was not qualification evidence.",
+      "owner": "AURELIA",
+      "collaborators": [
+        "ClaudeCode",
+        "GLM",
+        "JEV",
+        "KimiK3"
+      ],
+      "acceptance_criteria": [
+        "each strategy and symbol has source-bound, multi-period prospective OOS evidence across regimes",
+        "probability calibration and drift checks pass with invalid, stale, out-of-policy, or uncalibrated probabilities rejected",
+        "spread/payout/commission/slippage/latency and other applicable execution costs are modeled and net expectancy is positive with uncertainty disclosed",
+        "market data freshness, timestamp ordering, and session continuity are tested",
+        "3600-second runtime soak has zero unhandled critical failures and is explicitly classified as test or production environment"
+      ],
+      "evidence_path": "artifacts/agent-delegation/aurelia.json"
+    },
+    {
+      "id": "CONTROL-010",
+      "priority": "P0",
+      "status": "verification_required",
+      "title": "Verify execution firewall and deterministic risk controls end-to-end",
+      "finding": "Known readiness state showed execution firewall, exposure, risk warden, idempotency, reconciliation, and watchdog controls unverified/false.",
+      "owner": "AURELIA",
+      "collaborators": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV"
+      ],
+      "acceptance_criteria": [
+        "risk sizing, daily loss/exposure caps, stake minimum/maximum, probability policy, and concurrent order limits have deterministic tests",
+        "kill switch independently blocks new exposure and remains effective if advisory agents/providers fail",
+        "timeouts and ambiguous broker outcomes block blind resubmission",
+        "reconciliation mismatch, account mismatch, balance staleness, market-data staleness, and control failure all transition to protective state",
+        "no external agent can enable orders or grant capital authority"
+      ],
+      "evidence_path": "artifacts/agent-delegation/aurelia.json"
+    },
+    {
+      "id": "DEPLOY-011",
+      "priority": "P0",
+      "status": "blocked",
+      "title": "Deploy and prove a persistent production worker runtime",
+      "finding": "Known worker status reported persistent NOT_DEPLOYED, legacy Railway NOT_CONFIGURED, and continuous runtime unavailable. Scheduled GitHub Actions runs are ephemeral checks, not a 24/7 provider host.",
+      "owner": "Dev",
+      "collaborators": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "GLM"
+      ],
+      "dependencies": [
+        "HOST-001",
+        "PROVIDER-002",
+        "STORAGE-005"
+      ],
+      "acceptance_criteria": [
+        "actual target environment, host identity, deployment revision, runtime identity, and service manager are recorded",
+        "worker survives process failure, host restart, transient network outage, and provider session expiry with bounded recovery",
+        "durable queue/journal survive restarts and do not silently downgrade to empty state",
+        "logs, heartbeats, alerts, and task outcome evidence are available to the command center",
+        "production status is not inferred from a CI simulation or local-only probe"
+      ],
+      "evidence_path": "artifacts/agent-delegation/dev-runtime.json"
+    },
+    {
+      "id": "OBS-012",
+      "priority": "P1",
+      "status": "open",
+      "title": "Add operational observability and honest command-center state",
+      "finding": "The system needs distinct indicators for host connection, provider auth, worker process, heartbeat freshness, current lease/task, last result, and evidence-backed release state.",
+      "owner": "PlaywrightCLI",
+      "collaborators": [
+        "ClaudeCode",
+        "GLM",
+        "GrokBot"
+      ],
+      "acceptance_criteria": [
+        "each status is attributable to an observed event and includes freshness timestamp",
+        "stale/disconnected/blocked/failed agents are never shown as active",
+        "task ID, owner, current state, last completion/failure, and evidence link are visible where a real UI exists",
+        "if target UI or deployment is absent, status is explicitly blocked instead of simulated"
+      ],
+      "evidence_path": "artifacts/agent-delegation/playwright-cli.json"
+    },
+    {
+      "id": "TEST-013",
+      "priority": "P1",
+      "status": "open",
+      "title": "Build full regression and failure-injection coverage",
+      "finding": "Source changes around liveness, task claims, persistence, and recovery require combined tests rather than isolated CI-green claims.",
+      "owner": "JEV",
+      "collaborators": [
+        "ClaudeCode",
+        "KimiK3",
+        "GLM"
+      ],
+      "acceptance_criteria": [
+        "unit, integration, and failure-injection tests cover worker startup/shutdown, auth unavailable, malformed provider messages, stale leases, duplicate deliveries, corrupted storage, and recovery",
+        "tests demonstrate false liveness and false readiness cannot occur",
+        "CI runs are pinned to actual commit SHAs and results are captured with logs",
+        "independent review records residual risk and any unavailable test dependencies"
+      ],
+      "evidence_path": "artifacts/agent-delegation/jev.json"
+    },
+    {
+      "id": "SUPPLY-014",
+      "priority": "P2",
+      "status": "open",
+      "title": "Audit external repository pins, dependency provenance, and licensing",
+      "finding": "AURELIA consumes external intelligence/agent repositories; source pins and tool/provider assumptions require reproducible review before production use.",
+      "owner": "GoogleAgentSkills",
+      "collaborators": [
+        "ClaudeCode",
+        "KimiK3",
+        "GLM"
+      ],
+      "acceptance_criteria": [
+        "external source pins are valid and reproducible; documented upstream identifier anomalies remain visible",
+        "dependencies, licenses, scripts, and supply-chain risks are classified before operational use",
+        "external repositories remain research-only and cannot grant capital authority",
+        "no unreviewed external code is promoted to the capital plane"
+      ],
+      "evidence_path": "artifacts/agent-delegation/google-agent-skills.json"
+    },
+    {
+      "id": "SCHED-015",
+      "priority": "P1",
+      "status": "open",
+      "title": "Make continuous task dispatch distinct from periodic monitoring",
+      "finding": "The continuity watchdog runs every 15 minutes and the worker probe is an ephemeral simulation; these do not prove that real external agents are executing work continuously.",
+      "owner": "GrokBot",
+      "collaborators": [
+        "ClaudeCode",
+        "Dev",
+        "GLM",
+        "ChatGPT"
+      ],
+      "acceptance_criteria": [
+        "monitoring scheduler and task dispatcher have separately documented responsibilities",
+        "continuous or event-driven dispatch requires a persistent runtime or explicitly documented managed service",
+        "worker/provider unavailability produces a visible alert and queued/reassigned task without fabricated completion",
+        "SLOs define heartbeat freshness, queue age, retry/backoff, alerting, and recovery evidence"
+      ],
+      "evidence_path": "artifacts/agent-delegation/grokbot.json"
+    }
+  ],
+  "agent_operating_model": [
+    {
+      "agent": "ClaudeCode",
+      "scope": "primary engineering implementation; provider protocol; CI repair; persistence; bounded code changes and PRs"
+    },
+    {
+      "agent": "KimiK3",
+      "scope": "adversarial design/code review; fail-open, replay, idempotency, race, storage corruption, and authority testing"
+    },
+    {
+      "agent": "GrokBot",
+      "scope": "shared backlog coordination; dependency ordering; task routing; blocked-task visibility; no fabricated completion"
+    },
+    {
+      "agent": "GoogleAgentSkills",
+      "scope": "security architecture; secrets and access review; cloud/host design; supply-chain and least-privilege validation"
+    },
+    {
+      "agent": "GLM",
+      "scope": "evidence lineage, freshness, consistency, certification artifact quality, contradiction detection"
+    },
+    {
+      "agent": "PlaywrightCLI",
+      "scope": "real deployed UI/E2E/observability checks; report target unavailable if not deployed"
+    },
+    {
+      "agent": "JEV",
+      "scope": "independent regression, integration and release-gate verification"
+    },
+    {
+      "agent": "AURELIA",
+      "scope": "deterministic capital-plane safeguards, broker-state reconciliation, risk controls; no release bypass"
+    },
+    {
+      "agent": "ChatGPT",
+      "scope": "supervision, tooling, independent cross-checks, new-defect triage, evidence-grounded status reporting"
+    },
+    {
+      "agent": "Dev",
+      "scope": "authorized local host setup, deployment, local execution evidence; blocked until desktop device is enrolled"
+    }
+  ],
+  "global_exit_criteria": [
+    "no P0 workstream is missing an owner, evidence path, or explicit blocker",
+    "PR #115 and #116 behavior is resolved, reviewed, and validated on combined commits",
+    "persistent host and real provider task lifecycle are independently evidenced before claiming continuous operation",
+    "required certification evidence is authentic and current",
+    "all release gates are satisfied independently before any authorized change to capital-plane state",
+    "unknowns and residual risks are reported; green CI alone is not release approval"
+  ]
+}

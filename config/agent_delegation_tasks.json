@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_delegation_tasks.v1",
-  "generated": "2026-10-11",
+  "generated": "2026-10-12",
   "orchestrator": "ClaudeCode",
   "purpose": "One explicit delegated engineering/verification task per registered agent role. Unconnected or non-persistent roles may be assigned or blocked, while runtime execution proof remains false until attributable lifecycle evidence exists.",
   "execution_proof_policy": {
@@ -20,13 +20,22 @@
       "acceptance_criteria": [
         "inventory validator passes",
         "all ten agents have exactly one task",
-        "delegation evidence is attributable"
+        "delegation evidence is attributable",
+        "inspect the shared remediation backlog and add any newly discovered defect/blocker with evidence, owner, acceptance criteria, and dependency links",
+        "record exact source revision and test/run IDs; distinguish code changes, CI simulation, real provider execution, deployment, and release readiness",
+        "stay within authorized tool and platform permissions and preserve AURELIA capital-plane safeguards"
       ],
       "evidence_path": "artifacts/agent-delegation/claudecode.json",
       "runtime_proof": {
         "required_event": "subagent.started",
         "execution_proof": false
-      }
+      },
+      "workstream_ids": [
+        "PROVIDER-002",
+        "TASK-003",
+        "CI-004",
+        "STORAGE-005"
+      ]
     },
     {
       "task_id": "AGT-KIMI-001",
@@ -36,13 +45,22 @@
       "acceptance_criteria": [
         "no unowned agent",
         "no duplicate ownership",
-        "no configuration-as-execution false positive"
+        "no configuration-as-execution false positive",
+        "inspect the shared remediation backlog and add any newly discovered defect/blocker with evidence, owner, acceptance criteria, and dependency links",
+        "record exact source revision and test/run IDs; distinguish code changes, CI simulation, real provider execution, deployment, and release readiness",
+        "stay within authorized tool and platform permissions and preserve AURELIA capital-plane safeguards"
       ],
       "evidence_path": "artifacts/agent-delegation/kimi-k3.json",
       "runtime_proof": {
         "required_event": "subagent.started",
         "execution_proof": false
-      }
+      },
+      "workstream_ids": [
+        "STORAGE-005",
+        "SECRETS-006",
+        "CONTROL-010",
+        "TEST-013"
+      ]
     },
     {
       "task_id": "AGT-GROK-001",
@@ -52,13 +70,21 @@
       "acceptance_criteria": [
         "all ten tasks visible",
         "blocked work explicitly reported",
-        "results routed back to ClaudeCode"
+        "results routed back to ClaudeCode",
+        "inspect the shared remediation backlog and add any newly discovered defect/blocker with evidence, owner, acceptance criteria, and dependency links",
+        "record exact source revision and test/run IDs; distinguish code changes, CI simulation, real provider execution, deployment, and release readiness",
+        "stay within authorized tool and platform permissions and preserve AURELIA capital-plane safeguards"
       ],
       "evidence_path": "artifacts/agent-delegation/grokbot.json",
       "runtime_proof": {
         "required_event": "subagent.started",
         "execution_proof": false
-      }
+      },
+      "workstream_ids": [
+        "SCHED-015",
+        "TASK-003",
+        "DEPLOY-011"
+      ]
     },
     {
       "task_id": "AGT-GAS-001",
@@ -68,13 +94,22 @@
       "acceptance_criteria": [
         "least privilege preserved",
         "no secret exposure",
-        "no capital authority leakage"
+        "no capital authority leakage",
+        "inspect the shared remediation backlog and add any newly discovered defect/blocker with evidence, owner, acceptance criteria, and dependency links",
+        "record exact source revision and test/run IDs; distinguish code changes, CI simulation, real provider execution, deployment, and release readiness",
+        "stay within authorized tool and platform permissions and preserve AURELIA capital-plane safeguards"
       ],
       "evidence_path": "artifacts/agent-delegation/google-agent-skills.json",
       "runtime_proof": {
         "required_event": "subagent.started",
         "execution_proof": false
-      }
+      },
+      "workstream_ids": [
+        "HOST-001",
+        "SECRETS-006",
+        "SUPPLY-014",
+        "DEPLOY-011"
+      ]
     },
     {
       "task_id": "AGT-GLM-001",
@@ -84,13 +119,21 @@
       "acceptance_criteria": [
         "artifact lineage is attributable",
         "claims match observed evidence",
-        "contradictions are surfaced"
+        "contradictions are surfaced",
+        "inspect the shared remediation backlog and add any newly discovered defect/blocker with evidence, owner, acceptance criteria, and dependency links",
+        "record exact source revision and test/run IDs; distinguish code changes, CI simulation, real provider execution, deployment, and release readiness",
+        "stay within authorized tool and platform permissions and preserve AURELIA capital-plane safeguards"
       ],
       "evidence_path": "artifacts/agent-delegation/glm.json",
       "runtime_proof": {
         "required_event": "subagent.started",
         "execution_proof": false
-      }
+      },
+      "workstream_ids": [
+        "RELEASE-007",
+        "QUAL-009",
+        "OBS-012"
+      ]
     },
     {
       "task_id": "AGT-PW-001",
@@ -100,13 +143,20 @@
       "acceptance_criteria": [
         "agent status surface is reachable",
         "task identity is visible",
-        "runtime state is not confused with configuration"
+        "runtime state is not confused with configuration",
+        "inspect the shared remediation backlog and add any newly discovered defect/blocker with evidence, owner, acceptance criteria, and dependency links",
+        "record exact source revision and test/run IDs; distinguish code changes, CI simulation, real provider execution, deployment, and release readiness",
+        "stay within authorized tool and platform permissions and preserve AURELIA capital-plane safeguards"
       ],
       "evidence_path": "artifacts/agent-delegation/playwright-cli.json",
       "runtime_proof": {
         "required_event": "subagent.started",
         "execution_proof": false
-      }
+      },
+      "workstream_ids": [
+        "OBS-012",
+        "TEST-013"
+      ]
     },
     {
       "task_id": "AGT-JEV-001",
@@ -116,13 +166,22 @@
       "acceptance_criteria": [
         "validator passes",
         "regression checks pass",
-        "runtime proof remains fail-closed when events are absent"
+        "runtime proof remains fail-closed when events are absent",
+        "inspect the shared remediation backlog and add any newly discovered defect/blocker with evidence, owner, acceptance criteria, and dependency links",
+        "record exact source revision and test/run IDs; distinguish code changes, CI simulation, real provider execution, deployment, and release readiness",
+        "stay within authorized tool and platform permissions and preserve AURELIA capital-plane safeguards"
       ],
       "evidence_path": "artifacts/agent-delegation/jev.json",
       "runtime_proof": {
         "required_event": "subagent.started",
         "execution_proof": false
-      }
+      },
+      "workstream_ids": [
+        "CI-004",
+        "TEST-013",
+        "RELEASE-007",
+        "CONTROL-010"
+      ]
     },
     {
       "task_id": "AGT-AURELIA-001",
@@ -132,13 +191,22 @@
       "acceptance_criteria": [
         "LIVE_LOCK remains protected",
         "FINAL_EXECUTION_AUTHORIZATION remains false",
-        "UNKNOWN evidence cannot promote execution"
+        "UNKNOWN evidence cannot promote execution",
+        "inspect the shared remediation backlog and add any newly discovered defect/blocker with evidence, owner, acceptance criteria, and dependency links",
+        "record exact source revision and test/run IDs; distinguish code changes, CI simulation, real provider execution, deployment, and release readiness",
+        "stay within authorized tool and platform permissions and preserve AURELIA capital-plane safeguards"
       ],
       "evidence_path": "artifacts/agent-delegation/aurelia.json",
       "runtime_proof": {
         "required_event": "subagent.started",
         "execution_proof": false
-      }
+      },
+      "workstream_ids": [
+        "DERIV-008",
+        "QUAL-009",
+        "CONTROL-010",
+        "RELEASE-007"
+      ]
     },
     {
       "task_id": "AGT-CHATGPT-001",
@@ -148,13 +216,22 @@
       "acceptance_criteria": [
         "role-scoped tool and skill policy is internally consistent",
         "evidence claims distinguish registry configuration from actual runtime installation",
-        "no secret or capital authority is assigned"
+        "no secret or capital authority is assigned",
+        "inspect the shared remediation backlog and add any newly discovered defect/blocker with evidence, owner, acceptance criteria, and dependency links",
+        "record exact source revision and test/run IDs; distinguish code changes, CI simulation, real provider execution, deployment, and release readiness",
+        "stay within authorized tool and platform permissions and preserve AURELIA capital-plane safeguards"
       ],
       "evidence_path": "artifacts/agent-delegation/chatgpt.json",
       "runtime_proof": {
         "required_event": "subagent.started",
         "execution_proof": false
-      }
+      },
+      "workstream_ids": [
+        "HOST-001",
+        "CI-004",
+        "RELEASE-007",
+        "SCHED-015"
+      ]
     },
     {
       "task_id": "AGT-DEV-001",
@@ -165,14 +242,43 @@
         "authorized Desktop Commander device is connected and identity verified",
         "canonical repository path and branch are confirmed",
         "tests run in an isolated workspace and outputs are attributable",
-        "no production secrets or live order authority is exposed"
+        "no production secrets or live order authority is exposed",
+        "inspect the shared remediation backlog and add any newly discovered defect/blocker with evidence, owner, acceptance criteria, and dependency links",
+        "record exact source revision and test/run IDs; distinguish code changes, CI simulation, real provider execution, deployment, and release readiness",
+        "stay within authorized tool and platform permissions and preserve AURELIA capital-plane safeguards"
       ],
       "evidence_path": "artifacts/agent-delegation/dev-runtime.json",
       "runtime_proof": {
         "required_event": "subagent.started",
         "execution_proof": false
-      }
+      },
+      "workstream_ids": [
+        "HOST-001",
+        "PROVIDER-002",
+        "DEPLOY-011"
+      ]
     }
   ],
-  "revision": 3
+  "revision": 4,
+  "shared_backlog": "config/agent_remediation_backlog.json",
+  "operating_authority": {
+    "user_authorized_scope": "maximum practical engineering, research, testing, repository remediation, and deployment preparation within actual connected-tool/provider permissions",
+    "permitted_without_per_task_confirmation": [
+      "inspect relevant source and CI evidence",
+      "create isolated branches and draft pull requests",
+      "fix or replace defective components with justified, testable changes",
+      "run isolated tests and regression suites where an execution environment is available",
+      "research deployment/provider integrations and prepare configuration",
+      "add newly discovered defects to the shared backlog and route them to an owner"
+    ],
+    "boundaries": [
+      "external agents do not receive capital authority or permission to change LIVE_LOCK to force release",
+      "production secrets must remain in an approved secret store with least privilege; do not print secrets or place them in source, issues, task payloads, or chat",
+      "platform-level production deployment, secret access, device enrollment, and provider authentication require actual authorized credentials and platform capability",
+      "do not claim persistent runtime or completed work without attributable evidence",
+      "merge, deployment, or release completion must be reported only after the actual platform action and verification"
+    ],
+    "shared_backlog_rule": "Every agent must inspect config/agent_remediation_backlog.json, execute its owned workstreams, and add any newly discovered blocker/defect to the same backlog through an attributable change.",
+    "source_of_truth": "one canonical AURELIA system, one capital plane, one release authority, one evidence lineage"
+  }
 }
