@@ -50,6 +50,36 @@ class DerivAdapterHardeningTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(account.loginid, "CRALIAS")
         self.assertTrue(adapter.authorized)
 
+    async def test_deriv_pat_alias_is_used_for_direct_authorize(self):
+        transport = SimpleNamespace(
+            connect=AsyncMock(),
+            request=AsyncMock(return_value={
+                "req_id": 1,
+                "authorize": {"loginid": "CRPAT", "currency": "USD"},
+            }),
+            close=AsyncMock(),
+        )
+        with patch.dict(
+            "os.environ",
+            {
+                "DERIV_AUTH_TOKEN": "",
+                "DERIV_PAT": "synthetic-test-token-not-a-credential",
+                "DERIV_EXPECTED_LOGINID": "CRPAT",
+            },
+        ):
+            adapter = DerivAdapter(
+                ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+                expected_currency="USD",
+            )
+            with patch(
+                "runtime.adapters.deriv_adapter.DerivWebSocketTransport",
+                return_value=transport,
+            ):
+                account = await adapter.connect()
+        self.assertEqual(account.loginid, "CRPAT")
+        request = transport.request.await_args.args[0]
+        self.assertEqual(request["authorize"], "synthetic-test-token-not-a-credential")
+
     async def test_otp_account_id_becomes_explicit_account_binding(self):
         url = "wss://api.derivws.com/trading/v1/options/ws/real?otp=test-only"
         transport = SimpleNamespace(
