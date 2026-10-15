@@ -135,6 +135,28 @@ class DerivTransportShutdownTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(transport._subscription_by_request_id, {})
 
 
+    async def test_reader_failure_closes_socket_before_dropping_reference(self):
+        reader_started = asyncio.Event()
+
+        async def failing_recv():
+            reader_started.set()
+            raise RuntimeError("synthetic socket read failure")
+
+        socket = SimpleNamespace(
+            recv=AsyncMock(side_effect=failing_recv),
+            close=AsyncMock(),
+        )
+        transport = DerivWebSocketTransport(
+            "wss://api.derivws.com/trading/v1/options/ws/real"
+        )
+        transport.ws = socket
+        transport._reader_task = asyncio.create_task(transport._reader_loop())
+        await asyncio.wait_for(reader_started.wait(), timeout=1.0)
+        await asyncio.wait_for(transport._reader_task, timeout=1.0)
+
+        socket.close.assert_awaited_once()
+        self.assertIsNone(transport.ws)
+
     async def test_close_wakes_blocked_subscription_and_clears_registry(self):
         reader_started = asyncio.Event()
         subscribe_sent = asyncio.Event()
