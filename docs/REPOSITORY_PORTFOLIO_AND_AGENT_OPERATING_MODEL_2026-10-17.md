@@ -106,7 +106,7 @@ Required before any production authorization:
 
 ## 7. What has and has not been completed
 
-**Verified in this review:** four account-visible repositories returned by GitHub search; canonical repository and current README; ten registered agent roles and their task evidence paths; 366 external federation entries and mode counts; current PR backlog metadata and descriptions for the high-priority items; prior 12-source audit documents.
+**Verified in this review:** four account-visible repositories returned by GitHub search; canonical repository and current README; ten registered agent roles and their task evidence paths; 367 external federation entries and mode counts; current PR backlog metadata and descriptions for the high-priority items; prior 12-source audit documents.
 
 **Not verified and must not be represented as done:** clones or local execution of all repositories; completed SBOM/secret/license/CVE scans for all 367 sources; active provider connections or real agent heartbeats; persistent production host; protected GitHub rules and environment configuration after changes; authenticated Deriv lifecycle; prospective strategy qualification; 3,600-second soak; live production readiness.
 
@@ -120,7 +120,7 @@ A workstream is complete only when its acceptance criteria are met on a pinned c
 
 ## 2026-10-17 external repository intake update
 
-The new intake batch added 67 unique repositories from 69 URLs to the external-source registry (two duplicate URLs were de-duplicated). The registry now contains 366 entries: 173 `SANDBOX_ONLY`, 58 `TOOLCHAIN_ONLY`, 64 `RESEARCH_ONLY`, and 72 `REFERENCE_ONLY`. The batch report `docs/EXTERNAL_REPOSITORY_BATCH_REVIEW_2026-10-17.md` records pinned revisions, license metadata, selected source risks, sampled CI evidence and agent assignments. The registry does not mean all entries have been cloned, built, or fully security-scanned.
+The new intake batch added 67 unique repositories from 69 URLs to the external-source registry (two duplicate URLs were de-duplicated). The registry now contains 367 entries: 173 `SANDBOX_ONLY`, 58 `TOOLCHAIN_ONLY`, 64 `RESEARCH_ONLY`, and 72 `REFERENCE_ONLY`. The batch report `docs/EXTERNAL_REPOSITORY_PORTFOLIO_TRIAGE_2026-10-17.md` records pinned revisions, license metadata, initial risk notes and proposed review ownership. The separate `docs/ODYSSEUS_EXTERNAL_REPOSITORY_ASSESSMENT_2026-10-17.md` records the Odysseus source triage. These reports do not claim isolated build or security scan evidence. The registry does not mean all entries have been cloned, built, or fully security-scanned.
 
 
 ## Additional source triage — Odysseus (2026-10-17)
