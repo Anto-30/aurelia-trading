@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-E164 = re.compile(r"^\\+[1-9]\\d{7,14}$")
+E164 = re.compile(r"^\+[1-9]\d{7,14}$")
 ALLOWED = frozenset({"RUNTIME_STARTUP","PUBLIC_MARKET_DATA_UNKNOWN","AUTHENTICATED_DERIV_SESSION_VERIFIED","AUTHENTICATED_DERIV_SESSION_UNKNOWN","WATCHDOG_PROTECT","CONTINUOUS_RUNTIME_UNKNOWN","AUTONOMOUS_RUNTIME_STARTED","KILL_SWITCH_ACTIVATED","KILL_SWITCH_CLEAR_BLOCKED","BROKER_SUBMISSION_EXCEPTION","BROKER_OUTCOME_UNKNOWN","BROKER_ACCEPTED","BROKER_REJECTED","CONTRACT_SETTLED","RECONCILIATION"})
 
 @dataclass(frozen=True)
@@ -37,11 +37,11 @@ class MetaWhatsAppConfig:
         errors=[]
         if enabled:
             if not token: errors.append("META_WHATSAPP_ACCESS_TOKEN_MISSING")
-            if not re.fullmatch(r"\\d{5,30}",phone_id): errors.append("META_WHATSAPP_PHONE_NUMBER_ID_MISSING_OR_INVALID")
+            if not re.fullmatch(r"\d{5,30}",phone_id): errors.append("META_WHATSAPP_PHONE_NUMBER_ID_MISSING_OR_INVALID")
             if not E164.fullmatch(recipient): errors.append("META_WHATSAPP_TO_MISSING_OR_INVALID")
             if not re.fullmatch(r"[a-z0-9_]{1,512}",template): errors.append("META_WHATSAPP_TEMPLATE_NAME_MISSING_OR_INVALID")
             if not re.fullmatch(r"[A-Za-z0-9_]{2,20}",language): errors.append("META_WHATSAPP_TEMPLATE_LANGUAGE_MISSING_OR_INVALID")
-            if not re.fullmatch(r"v\\d+\\.\\d+",version): errors.append("META_WHATSAPP_API_VERSION_MISSING_OR_INVALID")
+            if not re.fullmatch(r"v\d+\.\d+",version): errors.append("META_WHATSAPP_API_VERSION_MISSING_OR_INVALID")
         return cls(enabled,token,phone_id,recipient,template,language,version,timeout,dedupe,tuple(errors))
 
 class MetaWhatsAppAlertSink:
@@ -92,5 +92,5 @@ def _safe(payload):
     return {str(k):v for k,v in payload.items() if not any(s in str(k).lower() for s in sensitive) and (isinstance(v,(str,int,float,bool)) or v is None)}
 def _summary(event_type,payload):
     p=_safe(payload)
-    keys={"BROKER_ACCEPTED":("symbol","direction","stake","contract_id","decision_id"),"CONTRACT_SETTLED":("symbol","direction","stake","net_delta","post_balance","contract_id"),"RECONCILIATION":("healthy","difference","reason"),"RUNTIME_STARTUP":("runtime_version","live_execution","LIVE_EXECUTION","capital_plane_mode"),"KILL_SWITCH_ACTIVATED":("reason",),"KILL_SWITCH_CLEAR_BLOCKED":("reason",),"WATCHDOG_PROTECT":("reason",),"BROKER_REJECTED":("intent_id",),"BROKER_OUTCOME_UNKNOWN":("intent_id",),"BROKER_SUBMISSION_EXCEPTION":("intent_id","error_class")}.get(event_type,tuple(p))
+    keys={"BROKER_ACCEPTED":("symbol","direction","stake","contract_id","decision_id"),"CONTRACT_SETTLED":("symbol","direction","stake","net_delta","post_balance","contract_id"),"RECONCILIATION":("healthy","difference","reason"),"RUNTIME_STARTUP":("runtime_version","live_execution","LIVE_EXECUTION","capital_plane_mode"),"KILL_SWITCH_ACTIVATED":("reason",),"KILL_SWITCH_CLEAR_BLOCKED":("reason",),"WATCHDOG_PROTECT":("reason",),"BROKER_REJECTED":("intent_id",),"BROKER_OUTCOME_UNKNOWN":("intent_id",),"BROKER_SUBMISSION_EXCEPTION":("intent_id","error_class"),"PUBLIC_MARKET_DATA_UNKNOWN":("error_class",),"AUTHENTICATED_DERIV_SESSION_UNKNOWN":("error_class",),"CONTINUOUS_RUNTIME_UNKNOWN":("error_class",),"AUTHENTICATED_DERIV_SESSION_VERIFIED":("environment","currency"),"AUTONOMOUS_RUNTIME_STARTED":("environment","currency","symbol_count")}.get(event_type,())
     return ("; ".join(f"{k}={p[k]}" for k in keys if k in p) or "No additional details.")[:900]
