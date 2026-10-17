@@ -7,7 +7,7 @@ AURELIA exposes operational WhatsApp alerts through Twilio's Programmable Messag
 Set these as protected Railway variables/secrets:
 
 - AURELIA_WHATSAPP_ALERTS=true
-- AURELIA_WHATSAPP_TO=+254714697623
+- AURELIA_WHATSAPP_TO=+2547XXXXXXXX
 - TWILIO_ACCOUNT_SID=AC...
 - Either TWILIO_API_KEY=SK... + TWILIO_API_SECRET=..., or TWILIO_AUTH_TOKEN=...
 - TWILIO_WHATSAPP_FROM=whatsapp:+<approved-sender>
@@ -20,7 +20,7 @@ Optional:
 - TWILIO_HTTP_TIMEOUT_SECONDS=8
 - AURELIA_WHATSAPP_DEDUPE_SECONDS=300
 
-Never commit Twilio credentials or secrets.
+Never commit Twilio credentials or secrets, and never put the actual recipient phone number in repository files.
 
 ## WhatsApp template
 
@@ -34,17 +34,21 @@ Twilio currently requires an approved template for business-initiated WhatsApp m
 
 ## Sandbox testing
 
-For first testing, use the WhatsApp test environment shown in Twilio Console and enroll +254714697623 in that specific sandbox/testing environment. Sandbox enrollment is required before messages can be delivered, and the Sandbox is for testing/discovery rather than production.
+For first testing, use the WhatsApp test environment shown in Twilio Console and enroll your own recipient number in that specific sandbox/testing environment. Sandbox enrollment is required before messages can be delivered, and the Sandbox is for testing/discovery rather than production.
 
 ## Smoke test
 
-After Twilio and Railway are configured:
+After Twilio and the runtime environment are configured:
 
+```sh
 python scripts/test_whatsapp_alert.py
+```
 
 Expected structure:
 
+```json
 {"component":"AURELIA","whatsapp_test":{"message_sid":"...","message_status":"queued","status":"SENT"}}
+```
 
 A real WhatsApp delivery is the final external acceptance signal.
 
