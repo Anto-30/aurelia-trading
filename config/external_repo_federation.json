@@ -6321,6 +6321,34 @@
         "developer-experience-reference"
       ],
       "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "lyogavin/airllm",
+      "category": "local-llm-inference",
+      "domain": "agent-infrastructure",
+      "mode": "RESEARCH_ONLY",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "KimiK3",
+        "JEV",
+        "GLM",
+        "GrokBot",
+        "ChatGPT",
+        "Dev"
+      ],
+      "source_url": "https://github.com/lyogavin/airllm",
+      "head_commit": "fd3bd7ef404f55961555f3f63651b5f9e33cf8bc",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_REVIEW_ONLY",
+      "capabilities": [
+        "local-llm-inference-research",
+        "agent-provider-benchmark",
+        "disk-streamed-model-loading"
+      ],
+      "trust": "COMMUNITY_RESEARCH_ONLY"
     }
   ],
   "pin_policy": {
