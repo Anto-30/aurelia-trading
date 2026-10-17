@@ -63,6 +63,11 @@ class TickProxyFeatureTests(unittest.TestCase):
         self.assertEqual(rows[4].signed_tick_count_900s, 1)
         self.assertEqual(rows[4].tick_count_900s, 4)
 
+    def test_tick_features_are_prefix_stable_when_future_ticks_are_appended(self):
+        prefix = [Tick(0, 100.0), Tick(1, 100.1), Tick(2, 100.0)]
+        future = prefix + [Tick(900, 100.5), Tick(901, 100.6)]
+        self.assertEqual(compute_tick_features(prefix), compute_tick_features(future)[:len(prefix)])
+
     def test_out_of_order_ticks_are_rejected(self):
         with self.assertRaisesRegex(OrderFlowDataError, "NONDECREASING"):
             compute_tick_features([Tick(2, 1.0), Tick(1, 1.1)])
