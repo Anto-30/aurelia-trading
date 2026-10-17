@@ -1,8 +1,9 @@
 name: AURELIA Assurance
 on:
   push:
-    branches: ["**"]
+    branches: ["main"]
   pull_request:
+    branches: ["main"]
 permissions:
   contents: read
 
@@ -11,14 +12,9 @@ concurrency:
   cancel-in-progress: true
 jobs:
   assurance:
-    # Load production-scoped Actions secrets for authenticated verification.
-    environment: production
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
-      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') == 'USD' && ((vars.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
-      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -58,6 +54,79 @@ jobs:
           name: deriv-public-transport-evidence
           path: artifacts/deriv_public_transport.json
           if-no-files-found: error
+      - name: Generate current readiness report
+        if: always()
+        env:
+          AURELIA_READINESS_OUT: artifacts/AURELIA_READINESS.current.json
+        run: |
+          set +e
+          python -m runtime.ops.readiness_orchestrator
+          status=$?
+          set -e
+          test "$status" -eq 2
+          echo "READINESS_EXPECTED_BLOCKED=true"
+
+      - name: Verify clean worker health endpoint
+        env:
+          PYTHONPATH: "."
+          AURELIA_NON_PRODUCTION_SOAK: "true"
+          FINAL_EXECUTION_AUTHORIZATION: "false"
+          LIVE_EXECUTION: "BLOCKED"
+          AURELIA_VERIFY_DERIV_PUBLIC: "false"
+          AURELIA_VERIFY_DERIV_AUTH: "false"
+          AURELIA_CONTINUOUS_RUNTIME: "false"
+          AURELIA_RUN_ONCE: "false"
+        run: |
+          python -m runtime.main >/tmp/aurelia-worker.log 2>&1 &
+          PID=$!
+          trap 'kill $PID || true' EXIT
+          sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:8080/health
+      - name: Run repository certification gate
+        id: certification
+        continue-on-error: true
+        run: python -m assurance.certification_gate
+      - name: Preserve fail-closed certification semantics
+        if: always()
+        run: |
+          if [ "${{ steps.certification.outcome }}" = "failure" ]; then
+            echo "Certification remains NOT_READY/blocked until genuine evidence exists."
+            echo "LIVE_EXECUTION remains BLOCKED and FINAL_EXECUTION_AUTHORIZATION remains FALSE."
+          fi
+
+      - name: Verify live release gate remains fail-closed
+        if: always()
+        run: |
+          set +e
+          output="$(python scripts/live_release_gate.py 2>&1)"
+          status=$?
+          set -e
+          echo "$output"
+          test "$status" -eq 2
+          echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
+          echo "$output" | grep -q "REASON="
+
+  # This job is intentionally restricted to trusted pushes to canonical main.
+  # Pull-request and feature-branch code must never execute with production environment secrets.
+  protected-deriv-evidence:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
+    needs: assurance
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') == 'USD' && ((vars.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
+      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install verification dependencies
+        run: pip install -r requirements.txt
       - name: Verify protected Deriv authentication prerequisites
         if: always()
         env:
@@ -144,55 +213,3 @@ jobs:
           name: deriv-authenticated-session
           path: artifacts/deriv_authenticated_session.json
           if-no-files-found: error
-
-      - name: Generate current readiness report
-        if: always()
-        env:
-          AURELIA_READINESS_OUT: artifacts/AURELIA_READINESS.current.json
-        run: |
-          set +e
-          python -m runtime.ops.readiness_orchestrator
-          status=$?
-          set -e
-          test "$status" -eq 2
-          echo "READINESS_EXPECTED_BLOCKED=true"
-
-      - name: Verify clean worker health endpoint
-        env:
-          PYTHONPATH: "."
-          AURELIA_NON_PRODUCTION_SOAK: "true"
-          FINAL_EXECUTION_AUTHORIZATION: "false"
-          LIVE_EXECUTION: "BLOCKED"
-          AURELIA_VERIFY_DERIV_PUBLIC: "false"
-          AURELIA_VERIFY_DERIV_AUTH: "false"
-          AURELIA_CONTINUOUS_RUNTIME: "false"
-          AURELIA_RUN_ONCE: "false"
-        run: |
-          python -m runtime.main >/tmp/aurelia-worker.log 2>&1 &
-          PID=$!
-          trap 'kill $PID || true' EXIT
-          sleep 2
-          curl --fail --silent --show-error http://127.0.0.1:8080/health
-      - name: Run repository certification gate
-        id: certification
-        continue-on-error: true
-        run: python -m assurance.certification_gate
-      - name: Preserve fail-closed certification semantics
-        if: always()
-        run: |
-          if [ "${{ steps.certification.outcome }}" = "failure" ]; then
-            echo "Certification remains NOT_READY/blocked until genuine evidence exists."
-            echo "LIVE_EXECUTION remains BLOCKED and FINAL_EXECUTION_AUTHORIZATION remains FALSE."
-          fi
-
-      - name: Verify live release gate remains fail-closed
-        if: always()
-        run: |
-          set +e
-          output="$(python scripts/live_release_gate.py 2>&1)"
-          status=$?
-          set -e
-          echo "$output"
-          test "$status" -eq 2
-          echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
-          echo "$output" | grep -q "REASON="
