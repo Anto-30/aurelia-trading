@@ -7989,6 +7989,35 @@
       ],
       "trust": "COMMUNITY_REFERENCE_ONLY",
       "license_metadata": "NOASSERTION"
+    },
+    {
+      "repo": "odysseus-dev/odysseus",
+      "category": "self-hosted-ai-workspace",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/odysseus-dev/odysseus",
+      "head_commit": "9712a5400175f8beacb215cefed1dad6935627df",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "local-and-api-models",
+        "agents",
+        "MCP",
+        "files-shell-skills-memory",
+        "self-hosted-workspace"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "AGPL-3.0-or-later",
+      "assessment": "Self-hosted AI workspace with powerful local tools, MCP, shell, files and memory; README explicitly requires AUTH_ENABLED=true and LOCALHOST_BYPASS=false outside local development. Do not expose publicly before config, auth, network, tool and secrets audit. AGPL obligations require legal review."
     }
   ],
   "pin_policy": {
