@@ -10,15 +10,7 @@ import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKFLOWS = (
-    ".github/workflows/aurelia-assurance.yml",
-    ".github/workflows/aurelia-free-runtime.yml",
-    ".github/workflows/deriv-auth-evidence.yml",
-    ".github/workflows/deriv-session-verification.yml",
-    ".github/workflows/deriv-verify-only-lifecycle.yml",
-    ".github/workflows/secret-presence-report.yml",
-    ".github/workflows/self-hosted-runtime-deploy.yml",
-)
+WORKFLOW_DIR = ROOT / ".github" / "workflows"
 REQUIRED_GATES = (
     "AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED",
     "AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED",
@@ -78,9 +70,10 @@ class ProtectedWorkflowGateTests(unittest.TestCase):
         self.assertFalse(any("${{ secrets." in line for line in block))
 
     def test_every_credential_bearing_job_is_fail_closed_to_verified_main(self):
-        for relative_path in WORKFLOWS:
-            path = ROOT / relative_path
-            self.assertTrue(path.is_file(), f"missing workflow: {relative_path}")
+        workflow_paths = sorted(WORKFLOW_DIR.glob("*.yml")) + sorted(WORKFLOW_DIR.glob("*.yaml"))
+        self.assertTrue(workflow_paths, "no GitHub Actions workflow files found")
+        for path in workflow_paths:
+            relative_path = path.relative_to(ROOT).as_posix()
             text = path.read_text(encoding="utf-8")
             for job_id, block in iter_jobs(text):
                 if not is_credential_bearing(block):
