@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-10-17",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -6349,6 +6349,1646 @@
         "disk-streamed-model-loading"
       ],
       "trust": "COMMUNITY_RESEARCH_ONLY"
+    },
+    {
+      "repo": "evolution-foundation/evolution-api",
+      "category": "whatsapp-api",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/evolution-foundation/evolution-api",
+      "head_commit": "fa09d37892cdbb1d65a250155d293d92230c5b30",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "whatsapp-api",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "NOASSERTION"
+    },
+    {
+      "repo": "PublicAffairs/openai-gemini",
+      "category": "llm-proxy",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/PublicAffairs/openai-gemini",
+      "head_commit": "61a83bd9d0def59811624b6ae7d8213a231185d0",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "llm-proxy",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "openai/openai-python",
+      "category": "official-openai-sdk",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/openai/openai-python",
+      "head_commit": "bfada5040b0171cd0ae61aefae8c78fcf83c804a",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "official-openai-sdk",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "nirholas/modelcontextprotocol.name",
+      "category": "crypto-payment-mcp",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/nirholas/modelcontextprotocol.name",
+      "head_commit": "f945ce4d75c6de834071c18e11e0a38a44f5862b",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "crypto-payment-mcp",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "NOASSERTION"
+    },
+    {
+      "repo": "navaneeshnagarajan/FlintTrade",
+      "category": "trading-platform",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT",
+        "GLM"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/navaneeshnagarajan/FlintTrade",
+      "head_commit": "a1f4adfc99e62d1f1a8ef6cb04e2dfef16993d9d",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "trading-platform",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "license_metadata": "AGPL-3.0"
+    },
+    {
+      "repo": "euriska/opentrader",
+      "category": "multi-broker-trading",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT",
+        "GLM"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/euriska/opentrader",
+      "head_commit": "d430a4448ebd7002e77d3996e678cf752edecfdd",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "multi-broker-trading",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "QBT-Labs/openmm-mcp",
+      "category": "crypto-trading-mcp",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/QBT-Labs/openmm-mcp",
+      "head_commit": "7f1036837d3100625f750e6bd7801534641c2295",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "crypto-trading-mcp",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "Synter-Media-AI/mcp-server",
+      "category": "ads-write-mcp",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Synter-Media-AI/mcp-server",
+      "head_commit": "000d446f465687a5a1249a268e9bfa3f6a3e597d",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "ads-write-mcp",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "Blave-TW/blave-agent",
+      "category": "quant-agent-desktop",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT",
+        "GLM"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/Blave-TW/blave-agent",
+      "head_commit": "effbc4bffbece9da445bdc70bbff590f8c91cf38",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "quant-agent-desktop",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "kerryjiang/OpenEtradeMcp",
+      "category": "etrade-trading-mcp",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/kerryjiang/OpenEtradeMcp",
+      "head_commit": "a53a007c1dba329e79669adbc58a3552a2f4f74e",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "etrade-trading-mcp",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "YoungCan-Wang/WyckoffTradingAgent",
+      "category": "wyckoff-stock-agent",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT",
+        "GLM"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/YoungCan-Wang/WyckoffTradingAgent",
+      "head_commit": "9e848396975062ba22eb76185405728c85a50022",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "wyckoff-stock-agent",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "license_metadata": "AGPL-3.0"
+    },
+    {
+      "repo": "pineforge-4pass/pineforge-engine",
+      "category": "backtest-engine",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT",
+        "GLM"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/pineforge-4pass/pineforge-engine",
+      "head_commit": "3fc010a8bb6cb460302c9ac6c34e7bba2e548f89",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "backtest-engine",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "LuxAlgo/edge-stats",
+      "category": "trading-statistics",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT",
+        "GLM"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/LuxAlgo/edge-stats",
+      "head_commit": "a48259887962d0f67a27d2b0815e2df9a52efca5",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "trading-statistics",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "mirror29/openfinclaw-cli",
+      "category": "quant-agent-cli",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/mirror29/openfinclaw-cli",
+      "head_commit": "f48e8117eb0364a60b4f780361063befc97e5b33",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "quant-agent-cli",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "NOASSERTION"
+    },
+    {
+      "repo": "masdevid/mt5-quant",
+      "category": "mt5-backtest-mcp",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/masdevid/mt5-quant",
+      "head_commit": "2a6cd8015a246032a286864d131309a0094c2d17",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "mt5-backtest-mcp",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "YichengYang-Ethan/oracle3-prediction-market-agent",
+      "category": "prediction-market-engine",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT",
+        "GLM"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/YichengYang-Ethan/oracle3-prediction-market-agent",
+      "head_commit": "267fb7c48dae7c4ff8922c02a3a223443e51bf0b",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "prediction-market-engine",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "Bitget-AI/agent_hub",
+      "category": "exchange-agent-sdk",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Bitget-AI/agent_hub",
+      "head_commit": "2551419578abff99baad19b018cab1a963c62306",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "exchange-agent-sdk",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "Superior-Trade/superior-skills",
+      "category": "trading-agent-skills",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Superior-Trade/superior-skills",
+      "head_commit": "9d41db54b231f77e35610a73230eaeffcb456215",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "trading-agent-skills",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "G-OTW/OpenTraderWorld",
+      "category": "trading-workspace",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT",
+        "GLM"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/G-OTW/OpenTraderWorld",
+      "head_commit": "8df74511c2d1c86909188363c302b83814915793",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "trading-workspace",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "license_metadata": "NOASSERTION"
+    },
+    {
+      "repo": "TokenRhythm/opensquilla",
+      "category": "agent-framework",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/TokenRhythm/opensquilla",
+      "head_commit": "d3f926c17e361b27f0410e6ea52526c9a2bcbb3d",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "agent-framework",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "mogons/noraz-agent",
+      "category": "crypto-trading-agent",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/mogons/noraz-agent",
+      "head_commit": "8f53497b2b47641de67692606053d4c5343bcfa6",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "crypto-trading-agent",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "Open-Agent-Tools/open-stocks-mcp",
+      "category": "stock-data-mcp",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Open-Agent-Tools/open-stocks-mcp",
+      "head_commit": "b50f61e275a412dd71ec5642cccca9206462724a",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "stock-data-mcp",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "maghdam/chatgpt-trading-strategy-assistant",
+      "category": "ctrader-execution-assistant",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/maghdam/chatgpt-trading-strategy-assistant",
+      "head_commit": "809c30e92bb1b8e835a0c45ca673c80379b0b9a5",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "ctrader-execution-assistant",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "6551Team/opennews-mcp",
+      "category": "news-signals",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT",
+        "GLM"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/6551Team/opennews-mcp",
+      "head_commit": "e329f36187e4a51a0878823e4fdd4d8f42134e80",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "news-signals",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "aaif-goose/goose",
+      "category": "general-agent",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/aaif-goose/goose",
+      "head_commit": "bfcc6ee6f1ee18d0c4c852a65c49b25f87ee40dc",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "general-agent",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "BlockRunAI/awesome-OpenClaw-Money-Maker",
+      "category": "curated-list",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/BlockRunAI/awesome-OpenClaw-Money-Maker",
+      "head_commit": "f74384660d7d78f3d077ead7b40eec9948e6c71c",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "curated-list",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "license_metadata": "NOASSERTION"
+    },
+    {
+      "repo": "openclaw-trade/openclaw-trading-assistant",
+      "category": "hyperliquid-trading-agent",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/openclaw-trade/openclaw-trading-assistant",
+      "head_commit": "32030bdd268315bb70d07c7755f28d07de8e8552",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "hyperliquid-trading-agent",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "ccxt-rest/ccxt-rest",
+      "category": "exchange-rest-wrapper",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/ccxt-rest/ccxt-rest",
+      "head_commit": "6c1ae031bdfbf490e69ea0498eac97a4f6218ff0",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "exchange-rest-wrapper",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "ErTasselli/OpenTerminal",
+      "category": "market-dashboard",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/ErTasselli/OpenTerminal",
+      "head_commit": "aed097c680cd8ec1c391ae06966babe7d6d91fc6",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "market-dashboard",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "OpenCoworkAI/open-cowork",
+      "category": "desktop-agent",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/OpenCoworkAI/open-cowork",
+      "head_commit": "e2a29fca4a6c7f3b6f48412b892d94d2ac9dd20b",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "desktop-agent",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "arabold/docs-mcp-server",
+      "category": "documentation-mcp",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/arabold/docs-mcp-server",
+      "head_commit": "c180d7c2679d7886d14d42eed36a827d9befe5d3",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "documentation-mcp",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "aipoch/open-science",
+      "category": "research-workbench",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/aipoch/open-science",
+      "head_commit": "dd8d5a19b3b67f3c01ee3af1edc1411bb34de1f0",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "research-workbench",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "doobidoo/mcp-memory-service",
+      "category": "agent-memory",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/doobidoo/mcp-memory-service",
+      "head_commit": "3b2b0cbf16cdb313aae460d83480313936a7ce55",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "agent-memory",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "LING71671/open-reverselab",
+      "category": "reverse-engineering-agent",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/LING71671/open-reverselab",
+      "head_commit": "49abe85e73bfc29d9286204405570af6a5f8bb1d",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "reverse-engineering-agent",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "license_metadata": "GPL-3.0"
+    },
+    {
+      "repo": "OpenOSINT/OpenOSINT",
+      "category": "osint-agent",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/OpenOSINT/OpenOSINT",
+      "head_commit": "c59f196f163e927f38e63ea716f5b5fe918524b3",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "osint-agent",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "FireRedTeam/FireRed-OpenStoryline",
+      "category": "video-agent",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/FireRedTeam/FireRed-OpenStoryline",
+      "head_commit": "c9e945215586f45c12a61c1951ee9a8e9c43a027",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "video-agent",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "microsoft/mcp-for-beginners",
+      "category": "mcp-education",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/microsoft/mcp-for-beginners",
+      "head_commit": "ca9e0b559f90d59327bb4964946e538f1f613788",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "mcp-education",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "idosal/git-mcp",
+      "category": "remote-git-mcp",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/idosal/git-mcp",
+      "head_commit": "c487a29895dcfcb5b672247e646426a56e2051c1",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "remote-git-mcp",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "oomol-lab/open-connector",
+      "category": "saas-auth-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/oomol-lab/open-connector",
+      "head_commit": "f9edd964568cf51e1669587d006d0c84163a517e",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "saas-auth-gateway",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "open-metadata/OpenMetadata",
+      "category": "metadata-platform",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/open-metadata/OpenMetadata",
+      "head_commit": "38286a8af62e39573727bf879248f413ddca1b10",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "metadata-platform",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "MemPalace/mempalace",
+      "category": "agent-memory",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/MemPalace/mempalace",
+      "head_commit": "9b7805c58de50676786470fb59c0b74ab36b7526",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "agent-memory",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "sashabaranov/go-openai",
+      "category": "openai-go-sdk",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/sashabaranov/go-openai",
+      "head_commit": "dd54fd29688ae9934688a2928be0abbd8647a812",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "openai-go-sdk",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "RightNow-AI/openfang",
+      "category": "agent-os",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/RightNow-AI/openfang",
+      "head_commit": "acf2587e46be174c10200489c9a2d23a39a98aeb",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "agent-os",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "CopilotKit/OpenBot",
+      "category": "computer-use-agent",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/CopilotKit/OpenBot",
+      "head_commit": "12c3a69406b2ca32bcb117c0329c9c6d9359565d",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "computer-use-agent",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "tinyhumansai/openhuman",
+      "category": "agent-harness",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/tinyhumansai/openhuman",
+      "head_commit": "3f958ed2090ae142fcb31e918406bc265426a2bb",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "agent-harness",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "GPL-3.0"
+    },
+    {
+      "repo": "every-app/open-seo",
+      "category": "seo-tool",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/every-app/open-seo",
+      "head_commit": "d7ea7852480601af9bc8870942af8311a410e567",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "seo-tool",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "googleapis/mcp-toolbox",
+      "category": "database-mcp",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/googleapis/mcp-toolbox",
+      "head_commit": "6d46c5f39df8088cd275d7efd5104149eb7c751d",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "database-mcp",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "awslabs/mcp",
+      "category": "aws-mcp-servers",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/awslabs/mcp",
+      "head_commit": "d534d0fa3c06838336ac1ed64e7114db0ba85e6f",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "aws-mcp-servers",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "Ryze-AI-Adgent/open-seo-mcp-skills",
+      "category": "seo-mcp-skills",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Ryze-AI-Adgent/open-seo-mcp-skills",
+      "head_commit": "cf7d8041a142f11c5abfffcdf2b423255cd18ca2",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "seo-mcp-skills",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "PawanOsman/OpenCursor",
+      "category": "coding-agent",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/PawanOsman/OpenCursor",
+      "head_commit": "b4528f95ca5ab4cddf22bef3e19431fad00feb01",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "coding-agent",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "CopilotKit/open-mcp-client",
+      "category": "mcp-client",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/CopilotKit/open-mcp-client",
+      "head_commit": "c8ea97b205ac860f08a4017dc36acba4d255b126",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "mcp-client",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "NOASSERTION"
+    },
+    {
+      "repo": "rmyndharis/OpenWA",
+      "category": "whatsapp-gateway",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/rmyndharis/OpenWA",
+      "head_commit": "001fb1366620b791b9181ac2888b9a8c99976889",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "whatsapp-gateway",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "bentoml/OpenLLM",
+      "category": "llm-serving",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/bentoml/OpenLLM",
+      "head_commit": "ec2355ce1a75176164c451cbb7592b3046531540",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "llm-serving",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "koreainvestment/open-trading-api",
+      "category": "broker-api-samples",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/koreainvestment/open-trading-api",
+      "head_commit": "2077773a69a428daf63e148182511f068cc45de3",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "broker-api-samples",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "NOASSERTION"
+    },
+    {
+      "repo": "microsoft/OpenAPI.NET",
+      "category": "openapi-dotnet",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/microsoft/OpenAPI.NET",
+      "head_commit": "00b56754355ded8221b97e067beb6ef2915b9346",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "openapi-dotnet",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "open-telemetry/opentelemetry-js",
+      "category": "observability-js",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/open-telemetry/opentelemetry-js",
+      "head_commit": "7d2455e76ff2dd9d1ffae008d0682a49af4c55f3",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "observability-js",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "APIs-guru/openapi-directory",
+      "category": "api-spec-directory",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/APIs-guru/openapi-directory",
+      "head_commit": "f04b8d0bcd39c52e1cf3ad7a5fe744709832ae49",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "api-spec-directory",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "license_metadata": "CC0-1.0"
+    },
+    {
+      "repo": "OpenAPITools/openapi-generator",
+      "category": "openapi-generator",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/OpenAPITools/openapi-generator",
+      "head_commit": "30f13393e78e9bc2ccbfafcd9398f1b0e8d415a2",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "openapi-generator",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "openai/openai-openapi",
+      "category": "official-openai-openapi",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/openai/openai-openapi",
+      "head_commit": "d156763a484eb247e116e0ea345e16344b0049ba",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "official-openai-openapi",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "open-telemetry/opentelemetry-python",
+      "category": "observability-python",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/open-telemetry/opentelemetry-python",
+      "head_commit": "2fa016b27d9b817aee88ea58be1bd0bc10fd2a40",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "observability-python",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "MacPaw/OpenAI",
+      "category": "openai-swift-sdk",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/MacPaw/OpenAI",
+      "head_commit": "75b91848dbd326313a2bf60f9833da2ebc9c0287",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "openai-swift-sdk",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "openai/openai-cookbook",
+      "category": "openai-examples",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/openai/openai-cookbook",
+      "head_commit": "5bd6cb40b6b84b69b2032d810610aa85064102df",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "openai-examples",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "license_metadata": "MIT"
+    },
+    {
+      "repo": "open-webui/open-webui",
+      "category": "llm-web-ui",
+      "domain": "agent-infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/open-webui/open-webui",
+      "head_commit": "91ea4e3421d1d8069f13d4a463fcb5986d94ea60",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "llm-web-ui",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "license_metadata": "NOASSERTION"
+    },
+    {
+      "repo": "OAI/OpenAPI-Specification",
+      "category": "openapi-standard",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/OAI/OpenAPI-Specification",
+      "head_commit": "8273770d983c99bb07b389d1706a9f8312ced503",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "openapi-standard",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "open-telemetry/opentelemetry-go",
+      "category": "observability-go",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/open-telemetry/opentelemetry-go",
+      "head_commit": "567abee176cb8ccc57a62b2b877a9b75e8abc3a7",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "observability-go",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "openai/openai-node",
+      "category": "official-openai-node-sdk",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GLM",
+        "GoogleAgentSkills"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/openai/openai-node",
+      "head_commit": "bb024d41522d0b5a6b6c64055471111068811ccd",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "official-openai-node-sdk",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "repo": "openmrs/openmrs-core",
+      "category": "healthcare-platform",
+      "domain": "reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/openmrs/openmrs-core",
+      "head_commit": "d4348493a00571bd9e3adea68e8ede99428ddad8",
+      "pin_source": "github_api_commits_HEAD_checked_2026-10-17",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "SOURCE_TRIAGE_ONLY",
+      "capabilities": [
+        "healthcare-platform",
+        "external-source-review"
+      ],
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "license_metadata": "NOASSERTION"
     }
   ],
   "pin_policy": {
