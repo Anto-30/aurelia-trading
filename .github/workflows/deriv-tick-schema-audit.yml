@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: deriv-tick-schema-\${{ github.ref }}
+  group: deriv-tick-schema-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   public_tick_schema:
