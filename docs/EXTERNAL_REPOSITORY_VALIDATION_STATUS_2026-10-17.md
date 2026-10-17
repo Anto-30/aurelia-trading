@@ -2,7 +2,7 @@
 
 ## Executive status
 
-**Outcome: triage completed; third-party integration not approved.** The 12 unique repositories have not been cloned or executed in an isolated sandbox. This status report distinguishes completed checks from items still requiring an isolated source/dependency audit. No third-party code or dependency was added to AURELIA.
+**Outcome: source/API review expanded; third-party integration not approved.** The companion [pinned source review](EXTERNAL_REPOSITORY_SOURCE_REVIEW_2026-10-17.md) now records exact default-branch HEAD SHAs and GitHub license metadata for all 12 unique repositories, plus direct inspection notes for selected manifests, security policies, installer code, and tool implementations. The repositories have not been cloned or executed in an isolated sandbox. This report distinguishes completed source/API inspection from the isolated source/dependency audit still required. No third-party code or dependency was added to AURELIA.
 
 ## AURELIA CI runs on the documentation PR
 
@@ -34,6 +34,12 @@ Inspected root `package.json` on the default branch. It is a private npm monorep
 
 The README describes local indexing/search and MCP integration. It explicitly states that `--insecure` disables TLS and API-key authentication, granting any reachable caller broad read/delete access to indexed content and memory. The documented safe use is local development bound to loopback; do not expose insecure mode to a network. No binary was downloaded or executed.
 
+## Latest PR branch activity
+
+- Source review document commit: `8e1abbf95e8c03ac4d49009805600c7a47b31c42`.
+- The previous documentation commit `6ec79ddba25802c9f2dd7d00015ea79bd884f1e8` had successful Continuity Watchdog and Federation Audit runs. Assurance runs 39036828586 and 39036822738 were still in progress when last checked; these results are not assumed to cover the subsequent source-review commit.
+- The new source-review commit triggers another set of PR checks. Recheck the latest runs for the final branch head before treating CI status as settled.
+
 ## What remains incomplete
 
 1. Exact commit SHA and per-file license review for every candidate repository.
@@ -57,6 +63,7 @@ These steps have not been represented as completed. The connected GitHub tool pr
 ## Evidence links
 
 - [PR #155](https://github.com/Anto-30/aurelia-trading/pull/155)
+- [Pinned external repository source review](EXTERNAL_REPOSITORY_SOURCE_REVIEW_2026-10-17.md)
 - [AURELIA Assurance run on current PR head](https://github.com/Anto-30/aurelia-trading/actions/runs/39036673314)
 - [Push-triggered assurance run (status must be rechecked)](https://github.com/Anto-30/aurelia-trading/actions/runs/39036669874)
 - [Agent Continuity Watchdog run on current PR head](https://github.com/Anto-30/aurelia-trading/actions/runs/39036673310)
