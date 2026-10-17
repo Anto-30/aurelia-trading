@@ -6,7 +6,7 @@
 
 Maintain one authoritative trading system: `Anto-30/aurelia-trading`, default branch `main`. Do not create or merge a second trading engine. Keep research agents advisory and all capital-moving authority in AURELIA's deterministic capital plane. External repositories remain untrusted source material until individually accepted.
 
-This document reconciles the GitHub repositories visible to the connected account, the existing 366-entry external federation registry, the 80-repository source-level triage completed across the original 12, AirLLM, and 67 newly supplied repositories, and the existing ten-role delegation registry. A registry assignment means ownership is defined; it does not prove provider connection, task execution, heartbeat, or delivery.
+This document reconciles the GitHub repositories visible to the connected account, the existing 367-entry external federation registry, the 80-repository source-level triage completed across the original 12, AirLLM, and 67 newly supplied repositories, and the existing ten-role delegation registry. A registry assignment means ownership is defined; it does not prove provider connection, task execution, heartbeat, or delivery.
 
 ## 1. Account-visible repository inventory
 
@@ -19,11 +19,11 @@ A GitHub search for `user:Anto-30` returned four repositories. Only the canonica
 | [Anto-30/Tales-and-trails-safaris-](https://github.com/Anto-30/Tales-and-trails-safaris-) | Empty repository; no README or commits returned | **Safaris project placeholder.** Keep separate from AURELIA. Initialize only when the user explicitly wants work on the safaris project; no code can be audited in an empty repo. |
 | [Anto-30/Anto30](https://github.com/Anto-30/Anto30) | One initial commit; no README found | **Profile/placeholder repository.** No product/runtime dependency identified. |
 
-This inventory is limited to repositories visible through the current GitHub connection and public search. It is not proof that no additional repositories exist in other accounts or organizations. The canonical repo's 366-entry external federation is a source registry, not 366 owned projects.
+This inventory is limited to repositories visible through the current GitHub connection and public search. It is not proof that no additional repositories exist in other accounts or organizations. The canonical repo's 367-entry external federation is a source registry, not 367 owned projects.
 
 ## 2. Existing external repository federation
 
-The canonical `config/external_repo_federation.json` contains **366 registered external repositories** at this review: 172 `SANDBOX_ONLY`, 58 `TOOLCHAIN_ONLY`, 64 `RESEARCH_ONLY`, and 72 `REFERENCE_ONLY`. The exact source pins and per-repository agent lists remain in that file. This count is not a claim that 366 repositories have been cloned, scanned, installed, tested, or approved.
+The canonical `config/external_repo_federation.json` contains **367 registered external repositories** at this review: 173 `SANDBOX_ONLY`, 58 `TOOLCHAIN_ONLY`, 64 `RESEARCH_ONLY`, and 72 `REFERENCE_ONLY`. The exact source pins and per-repository agent lists remain in that file. This count is not a claim that 367 repositories have been cloned, scanned, installed, tested, or approved.
 
 Global policy for every external source:
 - No capital authority, live order submission, production secret access/logging, `LIVE_LOCK` mutation, broker transaction write, or production deployment authority.
@@ -68,7 +68,7 @@ Use the existing ten registered roles in `config/agent_delegation_tasks.json`. D
 |---|---|---|---|
 | Governance, branch rules, protected environments | GoogleAgentSkills | JEV + owner/admin | **BLOCKED:** `main` and both rulesets were observed unprotected/disabled in the latest review; no independent PR review is recorded. |
 | Agent dispatch, leases, runtime proof, queue | ClaudeCode | GLM + JEV | **BLOCKED:** provider configuration and persistent runtime evidence cannot be inferred from task registry. |
-| Repository supply chain (all 366 registered sources) | ClaudeCode | GoogleAgentSkills + GLM | **PARTIAL:** registry exists; every pin still needs completed artifact-backed source/license/SBOM/CVE/secret review before any candidate is admitted. |
+| Repository supply chain (all 367 registered sources) | ClaudeCode | GoogleAgentSkills + GLM | **PARTIAL:** registry exists; every pin still needs completed artifact-backed source/license/SBOM/CVE/secret review before any candidate is admitted. |
 | Quant research and strategy qualification | KimiK3 | JEV + ChatGPT | **RESEARCH ONLY:** require reproducible, cost-adjusted, no-lookahead and prospective OOS evidence by Strategy × Symbol × Regime. |
 | Deriv adapter/session/account binding | ClaudeCode | JEV + GoogleAgentSkills | **BLOCKED:** authenticated verify-only lifecycle and fresh broker-derived evidence absent. |
 | Capital plane, probability, stake, kill switch | AURELIA | JEV + owner | **FAIL CLOSED:** probability band is inclusive 0.55–0.75, no clipping; stake cap remains 1% of fresh verified balance; broker minimum must be source-bound. |
@@ -108,7 +108,7 @@ Required before any production authorization:
 
 **Verified in this review:** four account-visible repositories returned by GitHub search; canonical repository and current README; ten registered agent roles and their task evidence paths; 366 external federation entries and mode counts; current PR backlog metadata and descriptions for the high-priority items; prior 12-source audit documents.
 
-**Not verified and must not be represented as done:** clones or local execution of all repositories; completed SBOM/secret/license/CVE scans for all 366 sources; active provider connections or real agent heartbeats; persistent production host; protected GitHub rules and environment configuration after changes; authenticated Deriv lifecycle; prospective strategy qualification; 3,600-second soak; live production readiness.
+**Not verified and must not be represented as done:** clones or local execution of all repositories; completed SBOM/secret/license/CVE scans for all 367 sources; active provider connections or real agent heartbeats; persistent production host; protected GitHub rules and environment configuration after changes; authenticated Deriv lifecycle; prospective strategy qualification; 3,600-second soak; live production readiness.
 
 The current environment does not provide an authorized connected development machine or verified persistent runtime. Do not fabricate execution evidence or attempt to bypass this limitation. Continue documentation and GitHub-hosted checks that are available, and leave host-dependent tasks explicitly blocked until a real authorized runner is connected.
 
@@ -120,4 +120,9 @@ A workstream is complete only when its acceptance criteria are met on a pinned c
 
 ## 2026-10-17 external repository intake update
 
-The new intake batch added 67 unique repositories from 69 URLs to the external-source registry (two duplicate URLs were de-duplicated). The registry now contains 366 entries: 172 `SANDBOX_ONLY`, 58 `TOOLCHAIN_ONLY`, 64 `RESEARCH_ONLY`, and 72 `REFERENCE_ONLY`. The batch report `docs/EXTERNAL_REPOSITORY_BATCH_REVIEW_2026-10-17.md` records pinned revisions, license metadata, selected source risks, sampled CI evidence and agent assignments. The registry does not mean all entries have been cloned, built, or fully security-scanned.
+The new intake batch added 67 unique repositories from 69 URLs to the external-source registry (two duplicate URLs were de-duplicated). The registry now contains 366 entries: 173 `SANDBOX_ONLY`, 58 `TOOLCHAIN_ONLY`, 64 `RESEARCH_ONLY`, and 72 `REFERENCE_ONLY`. The batch report `docs/EXTERNAL_REPOSITORY_BATCH_REVIEW_2026-10-17.md` records pinned revisions, license metadata, selected source risks, sampled CI evidence and agent assignments. The registry does not mean all entries have been cloned, built, or fully security-scanned.
+
+
+## Additional source triage — Odysseus (2026-10-17)
+
+The separately submitted `odysseus-dev/odysseus` workspace is registered as `SANDBOX_ONLY` at commit `9712a5400175f8beacb215cefed1dad6935627df`. It is a general self-hosted agent workspace with shell, files, MCP and memory capabilities, not a trading engine. README calls out `AUTH_ENABLED=true` and `LOCALHOST_BYPASS=false` outside local development; these must be independently tested. Repository reports AGPL-3.0-or-later. No install or deployment was performed. See [Odysseus source triage](ODYSSEUS_EXTERNAL_REPOSITORY_ASSESSMENT_2026-10-17.md).
