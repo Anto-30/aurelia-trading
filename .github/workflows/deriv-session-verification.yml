@@ -18,6 +18,7 @@ permissions:
 jobs:
   verify:
     # Credentials may be stored as production environment-scoped Actions secrets.
+    if: github.ref == 'refs/heads/main'
     environment: production
     runs-on: ubuntu-latest
     env:
