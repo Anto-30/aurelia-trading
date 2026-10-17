@@ -17,6 +17,7 @@ jobs:
     # This workflow must opt into the same protected environment as the other
     # Deriv verification workflows; environment-scoped secrets are unavailable
     # to jobs that omit this declaration.
+    if: github.ref == 'refs/heads/main'
     environment: production
     runs-on: ubuntu-latest
     env:
