@@ -4,11 +4,13 @@
 
 **Outcome: triage completed; third-party integration not approved.** The 12 unique repositories have not been cloned or executed in an isolated sandbox. This status report distinguishes completed checks from items still requiring an isolated source/dependency audit. No third-party code or dependency was added to AURELIA.
 
-## AURELIA CI run on the documentation PR
+## AURELIA CI runs on the documentation PR
 
-PR #155 head commit: `80f3b34478b4c8bf374c67aa2e3403f9721721d7`
+Current PR #155 head commit: `dd926db17372b4846f1f9fc98214a3e054753871`.
 
-- AURELIA Assurance workflow run 39036491498 completed with workflow conclusion `success`.
+- AURELIA Assurance workflow run 39036673314 completed with workflow conclusion `success` at the current PR head. Its job-level checks passed, but the certification gate deliberately emitted `CERTIFICATION_RESULT=NOT_READY`, `FINAL_EXECUTION_AUTHORIZATION=FALSE`, and `LIVE_EXECUTION=BLOCKED` because required production evidence is absent. Authentication-dependent Deriv session/account/lifecycle steps were skipped because `DERIV_AUTH_CONFIGURED=false`.
+- The push-triggered assurance run 39036669874 on the same commit was still in progress at the time of this update; do not treat it as a second completed pass.
+- Earlier AURELIA Assurance run 39036491498 completed with workflow conclusion `success` on prior PR head `80f3b34478b4c8bf374c67aa2e3403f9721721d7`.
 - Compile, static production acceptance audit, shell syntax checks, research tests, assurance tests, runtime tests, secret-presence tests, hardening tests, container build, public Deriv market-data transport check, readiness report, worker health check, and fail-closed live release gate all completed successfully.
 - The repository certification step returned its expected blocked result: `CERTIFICATION_RESULT=NOT_READY`, `FINAL_EXECUTION_AUTHORIZATION=FALSE`, `LIVE_EXECUTION=BLOCKED`.
 - Authenticated Deriv real-account session, read-only broker evidence, and verify-only lifecycle steps were **skipped** because `DERIV_AUTH_CONFIGURED=false`. They were not passed.
@@ -55,8 +57,11 @@ These steps have not been represented as completed. The connected GitHub tool pr
 ## Evidence links
 
 - [PR #155](https://github.com/Anto-30/aurelia-trading/pull/155)
-- [AURELIA Assurance run](https://github.com/Anto-30/aurelia-trading/actions/runs/39036491498)
-- [Agent Continuity Watchdog run](https://github.com/Anto-30/aurelia-trading/actions/runs/39036491428)
+- [AURELIA Assurance run on current PR head](https://github.com/Anto-30/aurelia-trading/actions/runs/39036673314)
+- [Push-triggered assurance run (status must be rechecked)](https://github.com/Anto-30/aurelia-trading/actions/runs/39036669874)
+- [Agent Continuity Watchdog run on current PR head](https://github.com/Anto-30/aurelia-trading/actions/runs/39036673310)
+- [Agent Federation Audit run on current PR head](https://github.com/Anto-30/aurelia-trading/actions/runs/39036673340)
+- [Earlier AURELIA Assurance run](https://github.com/Anto-30/aurelia-trading/actions/runs/39036491498)
 - [technicalindicators package manifest](https://github.com/anandanand84/technicalindicators/blob/master/package.json)
 - [pi package manifest](https://github.com/earendil-works/pi/blob/main/package.json)
 - [XERJ README/security note](https://github.com/xerj-org/xerj)
