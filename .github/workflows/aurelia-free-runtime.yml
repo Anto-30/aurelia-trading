@@ -64,6 +64,7 @@ jobs:
 
   authenticated-deriv-evidence:
     # Load production-scoped Actions secrets for authenticated verification only.
+    if: github.ref == 'refs/heads/main'
     environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -116,6 +117,7 @@ jobs:
   deriv-lifecycle-verify-only:
     # Authenticated broker lifecycle verification: proposal + control-chain only.
     # This job must never submit a buy transaction or grant capital authority.
+    if: github.ref == 'refs/heads/main'
     environment:
       name: production
       deployment: false
