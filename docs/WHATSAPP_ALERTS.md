@@ -8,14 +8,14 @@ Set `AURELIA_WHATSAPP_PROVIDER=meta` to select Meta Cloud API, or `twilio` to ke
 
 ## Required Meta configuration
 
-Add these to a protected GitHub Actions Environment or production-host secret manager. Never put token values in Git, repository variables, issue comments, chat, or logs.
+Add the access token, sender ID, recipient, template name and language as protected GitHub Actions Environment secrets or production-host secrets. Never put secret values in Git, ordinary repository variables, issue comments, chat, or logs.
 
-- `META_WHATSAPP_ACCESS_TOKEN`: System User access token with `whatsapp_business_messaging` permission.
-- `META_WHATSAPP_PHONE_NUMBER_ID`: numeric sender phone-number ID from WhatsApp API Setup.
-- `META_WHATSAPP_TO`: recipient in E.164 format, e.g. `+2547XXXXXXXX`.
-- `META_WHATSAPP_TEMPLATE_NAME`: exact name of an approved template with two body text placeholders.
-- `META_WHATSAPP_TEMPLATE_LANGUAGE`: exact approved language, e.g. `en_US`.
-- `META_WHATSAPP_API_VERSION`: currently supported Graph API version in `vNN.N` form; verify current support in Meta documentation.
+- `META_WHATSAPP_ACCESS_TOKEN` (secret): System User access token with `whatsapp_business_messaging` permission.
+- `META_WHATSAPP_PHONE_NUMBER_ID` (secret): numeric sender phone-number ID from WhatsApp API Setup.
+- `META_WHATSAPP_TO` (secret): recipient in E.164 format, e.g. `+2547XXXXXXXX`.
+- `META_WHATSAPP_TEMPLATE_NAME` (secret): exact name of an approved template with two body text placeholders.
+- `META_WHATSAPP_TEMPLATE_LANGUAGE` (secret): exact approved language, e.g. `en_US`.
+- `META_WHATSAPP_API_VERSION` (GitHub Environment variable `META_WHATSAPP_API_VERSION`, not a secret): currently supported Graph API version in `vNN.N` form; verify current support in Meta documentation.
 
 Optional: `META_WHATSAPP_HTTP_TIMEOUT_SECONDS=8`, `AURELIA_WHATSAPP_DEDUPE_SECONDS=300`. Enable `AURELIA_WHATSAPP_ALERTS=true` only after the smoke test. Parser checks value shape, not token validity/scopes, recipient eligibility, sender ownership or template approval.
 
