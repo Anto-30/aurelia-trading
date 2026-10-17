@@ -78,7 +78,7 @@ This review adds no second trading engine and does not modify the canonical runt
 
 A review of AURELIA GitHub Actions exposed a separate but relevant supply-chain control gap. Before this PR's workflow change, `.github/workflows/aurelia-assurance.yml` attached its primary job to the `production` environment while that job ran for `pull_request` events and pushes to any branch. The workflow checked out the event's code and passed protected Deriv credentials to scripts in later steps. If a same-repository PR or branch could run those steps with production environment secrets, modified scripts could potentially disclose them. This structural exposure does not prove that credentials were accessed or exfiltrated.
 
-This PR separates assurance CI (no production environment and no secret expressions) from `protected-deriv-evidence`, which requires a successful assurance job and runs only on a push to `refs/heads/main` in the `production` environment. It also adds a main-ref guard to credential-bearing jobs in:
+This PR separates assurance CI (no production environment and no secret expressions) from `protected-deriv-evidence`, which requires a successful assurance job and runs only on a push to `refs/heads/main` in the `production` environment when repository variable `AURELIA_PROTECTED_DERIV_EVIDENCE_APPROVED` is explicitly set to `true`. The variable is fail-closed when unset and must not be enabled until main-branch enforcement and production-environment approval settings are verified. It also adds a main-ref guard to credential-bearing jobs in:
 - `.github/workflows/aurelia-free-runtime.yml`
 - `.github/workflows/deriv-auth-evidence.yml`
 - `.github/workflows/deriv-session-verification.yml`
