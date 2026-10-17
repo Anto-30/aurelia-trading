@@ -87,8 +87,8 @@ def evaluate_contract(
         return DebateDecision("REJECT", "PROBABILITY_INTERVAL_INVALID")
     if isinstance(proposal.consecutive_losses, bool) or not isinstance(proposal.consecutive_losses, int) or proposal.consecutive_losses < 0:
         return DebateDecision("REJECT", "CONSECUTIVE_LOSS_COUNT_INVALID")
-    if proposal.equity <= 0:
-        return DebateDecision("REJECT", "EQUITY_NOT_VERIFIED_OR_NONPOSITIVE")
+    if proposal.equity <= policy.minimum_equity:
+        return DebateDecision("REJECT", "EQUITY_NOT_VERIFIED_OR_BELOW_MINIMUM")
     if not proposal.calibration_valid:
         return DebateDecision("REJECT", "PROBABILITY_CALIBRATION_UNVERIFIED")
     if not proposal.out_of_sample_qualified:
