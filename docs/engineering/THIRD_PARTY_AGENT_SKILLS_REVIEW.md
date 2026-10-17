@@ -74,6 +74,22 @@ Before enabling the Skills CLI in any AURELIA development workflow:
 
 This review adds no second trading engine and does not modify the canonical runtime, broker credentials, execution settings, or live-trading authorization. Layer 6 remains the deterministic risk authority. Research must pass data-quality, transaction-cost, out-of-sample, calibration, and strategy-qualification gates before any strategy can be considered for deployment. None of these repositories qualifies a strategy or authorizes live orders.
 
+## Additional CI credential-boundary finding (2026-10-17)
+
+A review of AURELIA GitHub Actions exposed a separate but relevant supply-chain control gap. Before this PR's workflow change, `.github/workflows/aurelia-assurance.yml` attached its primary job to the `production` environment while that job ran for `pull_request` events and pushes to any branch. The workflow checked out the event's code and passed protected Deriv credentials to scripts in later steps. If a same-repository PR or branch could run those steps with production environment secrets, modified scripts could potentially disclose them. This structural exposure does not prove that credentials were accessed or exfiltrated.
+
+This PR separates assurance CI (no production environment and no secret expressions) from `protected-deriv-evidence`, which requires a successful assurance job and runs only on a push to `refs/heads/main` in the `production` environment. It also adds a main-ref guard to credential-bearing jobs in:
+- `.github/workflows/aurelia-free-runtime.yml`
+- `.github/workflows/deriv-auth-evidence.yml`
+- `.github/workflows/deriv-session-verification.yml`
+- `.github/workflows/deriv-verify-only-lifecycle.yml`
+- `.github/workflows/secret-presence-report.yml`
+- `.github/workflows/self-hosted-runtime-deploy.yml`
+
+These job-level guards are defense in depth, not a substitute for repository-enforced branch protection. A GitHub API read showed both visible repository rulesets are disabled: `All access` (ID `25165036`) contains no rules; `Execution` (ID `24423833`) is disabled and has an empty required-status-check list and empty required-deployment list. The connected API returned 403 for the classic branch-protection endpoint, so classic protection could not be verified. Do not assume `main` is protected based on these observations.
+
+**Remaining repository-owner control:** enable and verify a main-branch ruleset or branch protection; require pull requests, at least one independent approval, and the relevant successful checks; disallow force-push and deletion; and configure the GitHub `production` environment to require an authorized reviewer before releasing protected environment secrets. The current connected GitHub actions expose ruleset reads but not ruleset/protection mutations, so this review could not safely apply those repository settings. No third-party skill or trading-bot code is approved for production runtime.
+
 ## Source links
 
 - [Crypto trading bot, pinned commit](https://github.com/Haehnchen/crypto-trading-bot/tree/cb9563344a20ea7ac89ff214d350f141d1521219)
