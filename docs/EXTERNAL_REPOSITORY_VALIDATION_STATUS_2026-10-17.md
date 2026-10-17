@@ -72,3 +72,20 @@ These steps have not been represented as completed. The connected GitHub tool pr
 - [technicalindicators package manifest](https://github.com/anandanand84/technicalindicators/blob/master/package.json)
 - [pi package manifest](https://github.com/earendil-works/pi/blob/main/package.json)
 - [XERJ README/security note](https://github.com/xerj-org/xerj)
+
+
+## Second full recheck — 2026-10-17
+
+The refreshed report is [`EXTERNAL_REPOSITORY_RECHECK_2026-10-17.md`](EXTERNAL_REPOSITORY_RECHECK_2026-10-17.md). All 12 current default-branch HEADs, repository license metadata, selected security/manifests/source files, and recent workflow runs were rechecked.
+
+Material findings:
+- XERJ's current `engine/Cargo.lock` has the same blob SHA as the lockfile at upstream CI commit `6982638c336b6104121049879d6916b64c4aff15`, whose `cargo audit` job failed with six vulnerability findings. This includes `zip 8.6.0` / RUSTSEC-2026-0369 (critical 9.1) and `zip 7.2.0` / RUSTSEC-2026-0367 (high 7.3) plus RUSTSEC-2026-0368. Treat XERJ as blocked for deployment/integration until the dependency set is remediated and the audit passes.
+- SIE's current security policy says its default single-server mode binds `0.0.0.0:8080` without authentication. Do not expose it with defaults; any trial needs loopback binding and token auth.
+- CopilotKit/OpenBot's current desktop CI failed at `cargo fmt --check`; the log shows a formatting-only diff in `desktop/src-tauri/src/harness.rs`. Its publish and `zizmor` workflows succeeded on the current HEAD.
+- Pi's security policy explicitly states it is not sandboxed. Its latest successful CI result queried was on a PR commit, not the current default-branch HEAD.
+- Nightly OpenBot remains a development preview with `danger-full-access` / `approvalPolicy: never` and a non-commercial license. Its recent CI result with `action_required` was on a PR commit, not current main.
+- The Claude plugin catalog's scheduled SHA-bump job succeeded on current HEAD, while plugin validation/scan failures observed were on external PR commits, not current main.
+- AURELIA Assurance push run [39037173027](https://github.com/Anto-30/aurelia-trading/actions/runs/39037173027) completed successfully at prior branch head `aa38764213700211689b8135d8d6bb75a357cc88`. This means the workflow's checks passed; its certification gate still explicitly returned `CERTIFICATION_RESULT=NOT_READY`, `FINAL_EXECUTION_AUTHORIZATION=FALSE`, and `LIVE_EXECUTION=BLOCKED`. Deriv authentication remained unconfigured, and the broker lifecycle, recovery, soak, prospective OOS, calibration, execution economics, security, deployment, and strategy eligibility artifacts remained missing.
+- New recheck report commit: `b3ba5b8431686d388072f003d588805a5a653748`. Current PR-head Assurance and other checks must be rechecked after this commit; results from earlier heads are not evidence for the new head.
+
+The second recheck does not change the disposition: no third-party integration is approved, no source was executed in this session, and AURELIA's live release remains blocked until genuine evidence and independent human approval exist.
