@@ -116,3 +116,8 @@ The current environment does not provide an authorized connected development mac
 
 A workstream is complete only when its acceptance criteria are met on a pinned commit, machine-readable evidence is retained, an independent reviewer signs off, unresolved findings are closed or explicitly accepted by the owner, and the result is reflected in the shared task ledger. A PR merge, CI green badge, repository registration, model response, or agent heartbeat alone is insufficient.
 
+
+
+## 2026-10-17 external repository intake update
+
+The new intake batch added 67 unique repositories from 69 URLs to the external-source registry (two duplicate URLs were de-duplicated). The registry now contains 366 entries: 172 `SANDBOX_ONLY`, 58 `TOOLCHAIN_ONLY`, 64 `RESEARCH_ONLY`, and 72 `REFERENCE_ONLY`. The batch report `docs/EXTERNAL_REPOSITORY_BATCH_REVIEW_2026-10-17.md` records pinned revisions, license metadata, selected source risks, sampled CI evidence and agent assignments. The registry does not mean all entries have been cloned, built, or fully security-scanned.
