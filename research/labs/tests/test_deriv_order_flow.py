@@ -97,7 +97,7 @@ def bars(rows):
 
 class TripleBarrierTests(unittest.TestCase):
     def test_signal_uses_next_bar_open_and_profit_first_touch(self):
-        data = bars([(100, 101, 99, 100), (110, 120, 109, 118), (118, 119, 117, 118)])
+        data = bars([(100, 101, 99, 100), (110, 120, 110, 118), (118, 119, 117, 118)])
         labels = label_triple_barrier(data, [LabelEvent(0, "LONG")], [1.0, 1.0, 1.0],
                                       pt_sl=(1.5, 1.0), max_horizon=2)
         self.assertEqual(labels[0].entry_index, 1)
