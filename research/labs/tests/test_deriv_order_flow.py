@@ -7,6 +7,7 @@ from research.labs.deriv_order_flow import (
     Tick,
     compute_tick_features,
     detect_price_delta_divergence,
+    evaluate_msnr_order_flow_confluence,
     label_triple_barrier,
     parse_live_tick_response,
     parse_ticks_history_response,
@@ -94,6 +95,38 @@ class TickProxyFeatureTests(unittest.TestCase):
         bullish = detect_price_delta_divergence([100, 99, 99.5, 98], [0, -3, -2, -1], lookback=3)
         self.assertEqual(bearish, "BEARISH_PRICE_DELTA_DIVERGENCE_PROXY")
         self.assertEqual(bullish, "BULLISH_PRICE_DELTA_DIVERGENCE_PROXY")
+
+    def test_order_flow_proxy_cannot_create_msnr_event_without_context(self):
+        decision = evaluate_msnr_order_flow_confluence(
+            "SHORT", "BEARISH_PRICE_DELTA_DIVERGENCE_PROXY",
+            market_structure_aligned=False,
+        )
+        self.assertFalse(decision.research_eligible)
+        self.assertEqual(decision.reason, "MSNR_CONTEXT_NOT_ALIGNED")
+
+    def test_only_matching_msnr_and_proxy_directions_are_research_eligible(self):
+        short = evaluate_msnr_order_flow_confluence(
+            "SHORT", "BEARISH_PRICE_DELTA_DIVERGENCE_PROXY",
+            market_structure_aligned=True,
+        )
+        long = evaluate_msnr_order_flow_confluence(
+            "LONG", "BULLISH_PRICE_DELTA_DIVERGENCE_PROXY",
+            market_structure_aligned=True,
+        )
+        mismatch = evaluate_msnr_order_flow_confluence(
+            "LONG", "BEARISH_PRICE_DELTA_DIVERGENCE_PROXY",
+            market_structure_aligned=True,
+        )
+        missing = evaluate_msnr_order_flow_confluence(
+            "LONG", None, market_structure_aligned=True,
+        )
+        self.assertTrue(short.research_eligible)
+        self.assertEqual(short.side, "SHORT")
+        self.assertTrue(long.research_eligible)
+        self.assertEqual(long.side, "LONG")
+        self.assertFalse(mismatch.research_eligible)
+        self.assertFalse(missing.research_eligible)
+
 
 
 def bars(rows):

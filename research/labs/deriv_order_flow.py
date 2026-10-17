@@ -326,6 +326,47 @@ def detect_price_delta_divergence(
     return None
 
 
+
+@dataclass(frozen=True)
+class ConfluenceAssessment:
+    """Research proposal only; it cannot authorize or submit an order."""
+
+    research_eligible: bool
+    side: Side | None
+    reason: str
+
+
+def evaluate_msnr_order_flow_confluence(
+    msnr_side: str | None,
+    divergence: str | None,
+    *,
+    market_structure_aligned: bool,
+) -> ConfluenceAssessment:
+    """Require independently detected MSNR context plus matching proxy trigger.
+
+    This function is intentionally not an MSNR detector: the caller must pass a
+    separately detected, point-in-time MSNR direction and a valid key-level/context
+    decision. Tick-direction divergence is only a noisy proxy, not true order flow.
+    research_eligible is a research filter, not runtime or capital authorization.
+    """
+    if not market_structure_aligned:
+        return ConfluenceAssessment(False, None, "MSNR_CONTEXT_NOT_ALIGNED")
+    if msnr_side not in ("LONG", "SHORT"):
+        return ConfluenceAssessment(False, None, "MSNR_EVENT_MISSING_OR_INVALID")
+    expected = {
+        "LONG": "BULLISH_PRICE_DELTA_DIVERGENCE_PROXY",
+        "SHORT": "BEARISH_PRICE_DELTA_DIVERGENCE_PROXY",
+    }[msnr_side]
+    if divergence is None:
+        return ConfluenceAssessment(False, None, "ORDER_FLOW_PROXY_TRIGGER_MISSING")
+    if divergence != expected:
+        return ConfluenceAssessment(False, None, "ORDER_FLOW_PROXY_DIRECTION_MISMATCH")
+    return ConfluenceAssessment(
+        True,
+        msnr_side,  # type: ignore[arg-type]
+        "MSNR_CONTEXT_AND_TICK_DIRECTION_DIVERGENCE_PROXY_ALIGNED",
+    )
+
 def _validated_bars(bars: Iterable[PriceBar]) -> tuple[PriceBar, ...]:
     rows = tuple(bars)
     if len(rows) < 2:
