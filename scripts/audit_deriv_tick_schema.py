@@ -116,7 +116,7 @@ async def main() -> int:
     try:
         response = await request_history(args.symbol, args.count)
         report = build_report(args.symbol, response)
-    except (OSError, TimeoutError, RuntimeError, ValueError, OrderFlowDataError):
+    except Exception:
         print(json.dumps({"status": "BLOCKED", "reason": "DATA_AUDIT_FAILED",
                           "capital_authority_granted": False}))
         return 2

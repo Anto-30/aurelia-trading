@@ -114,7 +114,7 @@ class TripleBarrierTests(unittest.TestCase):
         self.assertEqual(labels[0].label, -1)
 
     def test_stop_gap_is_filled_at_worse_open(self):
-        data = bars([(100, 101, 99, 100), (100, 101, 96, 100), (88, 89, 87, 88)])
+        data = bars([(100, 101, 99, 100), (100, 101, 100, 100), (88, 89, 87, 88)])
         labels = label_triple_barrier(data, [LabelEvent(0, "LONG")], [1.0, 1.0, 1.0],
                                       pt_sl=(3.0, 1.0), max_horizon=2)
         self.assertEqual(labels[0].touch, "STOP_LOSS")
