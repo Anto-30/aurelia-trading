@@ -167,6 +167,16 @@ A follow-up GitHub API verification checked every commit SHA used in the source 
 4. **License metadata is incomplete for some repositories.** GitHub returned `NOASSERTION` or no SPDX license for some entries; treat this as unresolved, not as permission to copy or redistribute.
 5. **No AURELIA production approval is granted.** Nothing in this intake changes the canonical runtime, Layer 6 risk authority, broker authentication, execution firewall, live-order permissions, or release authorization. Use the pinned sources only for the specific research or development purpose described above.
 
+
+## Additional tooling intake: yq and Yamagi Quake II (2026-10-17)
+
+| Repository pinned to commit | Purpose | Disposition and review notes |
+| --- | --- | --- |
+| [mikefarah/yq](https://github.com/mikefarah/yq/tree/a814ff5166040ec745a96bddd79ee31c3a548e83) — `a814ff5166040ec745a96bddd79ee31c3a548e83` | Go CLI for YAML, JSON, XML, CSV, TOML, HCL and properties | **Potential development/CI utility, not yet adopted.** GitHub metadata reports MIT. Review the exact release artifact/checksum and pin a version before use. Its expression language has a `system(command; args)` operator introduced with execution disabled by default in the v4.52.1 release notes; never enable command execution for untrusted expressions or files. Test against fixture copies and do not edit protected workflow or production configuration in place without review. See [upstream releases](https://github.com/mikefarah/yq/releases). |
+| [yquake2/yquake2](https://github.com/yquake2/yquake2/tree/9dbf699273e2546f3ad14cff3dee6a51a518cd2a) — `9dbf699273e2546f3ad14cff3dee6a51a518cd2a` | Yamagi Quake II open-source game client | **Unrelated to AURELIA; learning/recreational use only.** README states GPL-2.0; GitHub API metadata returned `NOASSERTION`, so confirm the checked-in LICENSE before redistribution. No reason to include it in the trading system or its dependencies. |
+| [kislyuk/yq](https://github.com/kislyuk/yq) | Python wrapper for jq-style YAML processing | **Unverified source identity; not approved for adoption.** GitHub API returned HTTP 404 for the supplied repository path during this pass, so no canonical head commit or current source was established. Do not substitute another similarly named yq project. Reassess only if the repository becomes accessible and its exact source/release can be pinned. |
+
+These three additions are a targeted repository triage, not a full security or dependency audit. No binaries were downloaded, no packages installed, and no configuration files changed by running these projects.
 ## Source links
 
 - [Crypto trading bot, pinned commit](https://github.com/Haehnchen/crypto-trading-bot/tree/cb9563344a20ea7ac89ff214d350f141d1521219)
