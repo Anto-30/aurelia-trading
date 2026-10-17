@@ -86,7 +86,7 @@ This PR separates assurance CI (no production environment and no secret expressi
 - `.github/workflows/secret-presence-report.yml`
 - `.github/workflows/self-hosted-runtime-deploy.yml`
 
-A regression test, `tests/test_protected_workflow_gates.py`, was added to the existing unittest suite. It asserts the pull-request assurance job has no production environment or secret expressions and that every listed credential-bearing/production-environment job has the main-ref check and all three explicit owner-verification flags. The existing assurance workflow discovers it through `python -m unittest discover -s tests -p 'test_*.py' -v`.
+A regression test, `tests/test_protected_workflow_gates.py`, was added to the existing unittest suite. It scans every `.yml` and `.yaml` workflow under `.github/workflows/`, asserts the pull-request assurance job has no production environment or secret expressions, and verifies that each credential-bearing/production-environment job has the main-ref check and all three explicit owner-verification flags. The existing assurance workflow discovers it through `python -m unittest discover -s tests -p 'test_*.py' -v`.
 
 These main-ref and explicit variable gates are defense in depth, not a substitute for repository-enforced branch protection. A GitHub API read showed both visible repository rulesets are disabled: `All access` (ID `25165036`) contains no rules; `Execution` (ID `24423833`) is disabled and has an empty required-status-check list and empty required-deployment list. The connected API returned 403 for the classic branch-protection endpoint, so classic protection could not be verified. Do not assume `main` is protected based on these observations.
 
