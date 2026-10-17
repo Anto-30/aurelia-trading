@@ -19,11 +19,11 @@ A GitHub search for `user:Anto-30` returned four repositories. Only the canonica
 | [Anto-30/Tales-and-trails-safaris-](https://github.com/Anto-30/Tales-and-trails-safaris-) | Empty repository; no README or commits returned | **Safaris project placeholder.** Keep separate from AURELIA. Initialize only when the user explicitly wants work on the safaris project; no code can be audited in an empty repo. |
 | [Anto-30/Anto30](https://github.com/Anto-30/Anto30) | One initial commit; no README found | **Profile/placeholder repository.** No product/runtime dependency identified. |
 
-This inventory is limited to repositories visible through the current GitHub connection and public search. It is not proof that no additional repositories exist in other accounts or organizations. The canonical repo's 366-entry external federation is a source registry, not 298 owned projects.
+This inventory is limited to repositories visible through the current GitHub connection and public search. It is not proof that no additional repositories exist in other accounts or organizations. The canonical repo's 366-entry external federation is a source registry, not 366 owned projects.
 
 ## 2. Existing external repository federation
 
-The canonical `config/external_repo_federation.json` contains **366 registered external repositories** at this review: 172 `SANDBOX_ONLY`, 58 `TOOLCHAIN_ONLY`, 64 `RESEARCH_ONLY`, and 72 `REFERENCE_ONLY`. The exact source pins and per-repository agent lists remain in that file. This count is not a claim that 298 repositories have been cloned, scanned, installed, tested, or approved.
+The canonical `config/external_repo_federation.json` contains **366 registered external repositories** at this review: 172 `SANDBOX_ONLY`, 58 `TOOLCHAIN_ONLY`, 64 `RESEARCH_ONLY`, and 72 `REFERENCE_ONLY`. The exact source pins and per-repository agent lists remain in that file. This count is not a claim that 366 repositories have been cloned, scanned, installed, tested, or approved.
 
 Global policy for every external source:
 - No capital authority, live order submission, production secret access/logging, `LIVE_LOCK` mutation, broker transaction write, or production deployment authority.
