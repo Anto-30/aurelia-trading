@@ -16,6 +16,10 @@ class Tests(unittest.TestCase):
         with patch.dict(os.environ,{"AURELIA_WHATSAPP_ALERTS":"true"},clear=True): sink=MetaWhatsAppAlertSink.from_env()
         self.assertFalse(sink.status()["ready"])
         self.assertIn("META_WHATSAPP_ACCESS_TOKEN_MISSING",sink.status()["configuration_errors"])
+    def test_valid_configuration_shape_is_accepted(self):
+        env={"AURELIA_WHATSAPP_ALERTS":"true","META_WHATSAPP_ACCESS_TOKEN":"TEST_TOKEN","META_WHATSAPP_PHONE_NUMBER_ID":"123456789012345","META_WHATSAPP_TO":"+254700000000","META_WHATSAPP_TEMPLATE_NAME":"aurelia_alert","META_WHATSAPP_TEMPLATE_LANGUAGE":"en_US","META_WHATSAPP_API_VERSION":"v25.0"}
+        with patch.dict(os.environ,env,clear=True): sink=MetaWhatsAppAlertSink.from_env()
+        self.assertTrue(sink.status()["ready"],sink.status()["configuration_errors"])
     def test_template_payload_and_meta_acceptance(self):
         got={}
         class Response:
