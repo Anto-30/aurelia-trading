@@ -83,8 +83,7 @@ class ProtectedWorkflowGateTests(unittest.TestCase):
                     self.assertTrue(condition, "credential-bearing job has no job-level if gate")
                     self.assertIn("refs/heads/main", condition)
                     for gate in REQUIRED_GATES:
-                        self.assertIn(gate, condition)
-                    self.assertIn("== 'true'", condition)
+                        self.assertIn(f"{gate} == 'true'", condition)
 
     def test_protected_deriv_evidence_requires_main_push_and_all_gates(self):
         path = ROOT / ".github/workflows/aurelia-assurance.yml"
@@ -94,7 +93,7 @@ class ProtectedWorkflowGateTests(unittest.TestCase):
         self.assertIn("github.event_name == 'push'", condition)
         self.assertIn("refs/heads/main", condition)
         for gate in REQUIRED_GATES:
-            self.assertIn(gate, condition)
+            self.assertIn(f"{gate} == 'true'", condition)
 
 
 if __name__ == "__main__":
