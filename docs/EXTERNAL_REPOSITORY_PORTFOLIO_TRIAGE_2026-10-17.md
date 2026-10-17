@@ -6,7 +6,7 @@ Processed 67 distinct repository URLs (the supplied list had two duplicates). Re
 
 **No repository is approved for direct integration into AURELIA's capital/execution plane.** All entries are `SOURCE_TRIAGE_ONLY`: metadata and selected README/source material, not completed isolated clone/build, full source review, SBOM, dependency/secret/malware scan, legal review, or runtime test.
 
-Registry after update: 366 entries. Mode counts: `SANDBOX_ONLY` 172, `TOOLCHAIN_ONLY` 58, `RESEARCH_ONLY` 64, `REFERENCE_ONLY` 72. The new entries all set `capital_authority=false` and `physical_runtime_install=NOT_CLAIMED`.
+Registry after the 67-source batch and the separately assessed Odysseus intake: 367 entries. Mode counts: `SANDBOX_ONLY` 173, `TOOLCHAIN_ONLY` 58, `RESEARCH_ONLY` 64, `REFERENCE_ONLY` 72. The 67 rows in this report cover the user's submitted batch; Odysseus has its own assessment. AirLLM was already recorded before this batch. The new entries all set `capital_authority=false` and `physical_runtime_install=NOT_CLAIMED`.
 
 ## Safety and evidence boundaries
 

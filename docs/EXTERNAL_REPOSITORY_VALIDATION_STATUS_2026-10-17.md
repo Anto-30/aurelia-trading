@@ -2,13 +2,15 @@
 
 ## Executive status
 
+**Snapshot note (2026-10-17):** this document began as a 12-repository audit snapshot and its older CI section below is historical, not the current PR state. The later batch of 67 unique repositories plus the separate Odysseus assessment is recorded in [the batch review](EXTERNAL_REPOSITORY_BATCH_REVIEW_2026-10-17.md), [the portfolio triage](EXTERNAL_REPOSITORY_PORTFOLIO_TRIAGE_2026-10-17.md), and [the Odysseus assessment](ODYSSEUS_EXTERNAL_REPOSITORY_ASSESSMENT_2026-10-17.md). Current registry count is 367 (173 sandbox-only, 58 toolchain-only, 64 research-only, 72 reference-only). All remain intake classifications, not security approvals.
+
 **Outcome: source/API review expanded; third-party integration not approved.** The companion [pinned source review](EXTERNAL_REPOSITORY_SOURCE_REVIEW_2026-10-17.md) now records exact default-branch HEAD SHAs and GitHub license metadata for all 12 unique repositories, plus direct inspection notes for selected manifests, security policies, installer code, and tool implementations. The repositories have not been cloned or executed in an isolated sandbox. This report distinguishes completed source/API inspection from the isolated source/dependency audit still required. No third-party code or dependency was added to AURELIA.
 
-## AURELIA CI runs on the documentation PR
+## Historical AURELIA CI snapshot from the earlier 12-repository review
 
-Current PR #155 head commit: `dd926db17372b4846f1f9fc98214a3e054753871`.
+At that historical snapshot, PR #155 head commit was `dd926db17372b4846f1f9fc98214a3e054753871`.
 
-- AURELIA Assurance workflow run 39036673314 completed with workflow conclusion `success` at the current PR head. Its job-level checks passed, but the certification gate deliberately emitted `CERTIFICATION_RESULT=NOT_READY`, `FINAL_EXECUTION_AUTHORIZATION=FALSE`, and `LIVE_EXECUTION=BLOCKED` because required production evidence is absent. Authentication-dependent Deriv session/account/lifecycle steps were skipped because `DERIV_AUTH_CONFIGURED=false`.
+- AURELIA Assurance workflow run 39036673314 completed with workflow conclusion `success` at that historical PR head. Its job-level checks passed, but the certification gate deliberately emitted `CERTIFICATION_RESULT=NOT_READY`, `FINAL_EXECUTION_AUTHORIZATION=FALSE`, and `LIVE_EXECUTION=BLOCKED` because required production evidence is absent. Authentication-dependent Deriv session/account/lifecycle steps were skipped because `DERIV_AUTH_CONFIGURED=false`.
 - The push-triggered assurance run 39036669874 on the same commit was still in progress at the time of this update; do not treat it as a second completed pass.
 - Earlier AURELIA Assurance run 39036491498 completed with workflow conclusion `success` on prior PR head `80f3b34478b4c8bf374c67aa2e3403f9721721d7`.
 - Compile, static production acceptance audit, shell syntax checks, research tests, assurance tests, runtime tests, secret-presence tests, hardening tests, container build, public Deriv market-data transport check, readiness report, worker health check, and fail-closed live release gate all completed successfully.
