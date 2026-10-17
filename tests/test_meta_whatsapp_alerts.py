@@ -2,6 +2,9 @@ from __future__ import annotations
 import json, os, unittest
 from unittest.mock import patch
 import runtime.notifications.meta_whatsapp as meta
+from runtime.core.journal import AppendOnlyJournal
+import tempfile
+from pathlib import Path
 from runtime.notifications.meta_whatsapp import MetaWhatsAppAlertSink, MetaWhatsAppConfig
 
 def cfg(**kw):
@@ -16,6 +19,11 @@ class Tests(unittest.TestCase):
         with patch.dict(os.environ,{"AURELIA_WHATSAPP_ALERTS":"true"},clear=True): sink=MetaWhatsAppAlertSink.from_env()
         self.assertFalse(sink.status()["ready"])
         self.assertIn("META_WHATSAPP_ACCESS_TOKEN_MISSING",sink.status()["configuration_errors"])
+    def test_journal_can_select_meta_provider_without_enabling_alerts(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.dict(os.environ,{"AURELIA_WHATSAPP_PROVIDER":"meta","AURELIA_WHATSAPP_ALERTS":"false"},clear=False):
+            journal=AppendOnlyJournal(Path(tmp)/"events.ndjson")
+        self.assertEqual(journal.alert_sink.status()["provider"],"meta")
+        self.assertFalse(journal.alert_sink.status()["enabled"])
     def test_valid_configuration_shape_is_accepted(self):
         env={"AURELIA_WHATSAPP_ALERTS":"true","META_WHATSAPP_ACCESS_TOKEN":"TEST_TOKEN","META_WHATSAPP_PHONE_NUMBER_ID":"123456789012345","META_WHATSAPP_TO":"+254700000000","META_WHATSAPP_TEMPLATE_NAME":"aurelia_alert","META_WHATSAPP_TEMPLATE_LANGUAGE":"en_US","META_WHATSAPP_API_VERSION":"v25.0"}
         with patch.dict(os.environ,env,clear=True): sink=MetaWhatsAppAlertSink.from_env()
