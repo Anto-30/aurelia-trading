@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 
 from research.labs.deriv_binary_contract_debate import (
-    ContractProposal, DebatePolicy, evaluate_contract,
+    ContractProposal, evaluate_contract,
 )
 
 
@@ -59,7 +59,8 @@ class DerivBinaryContractDebateTests(unittest.TestCase):
                          "CONTRACT_PAYOUT_INVALID")
 
     def test_stake_must_fit_both_kelly_and_equity_cap(self):
-        result = evaluate_contract(proposal(stake=5.0))
+        # Preserve valid contract economics while proposing a stake above the cap.
+        result = evaluate_contract(proposal(stake=5.0, total_return_if_won=9.25))
         self.assertEqual(result.action, "REJECT")
         self.assertEqual(result.reason, "PROPOSED_STAKE_EXCEEDS_RISK_CAP")
 
