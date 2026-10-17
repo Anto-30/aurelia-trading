@@ -6,7 +6,7 @@
 
 Maintain one authoritative trading system: `Anto-30/aurelia-trading`, default branch `main`. Do not create or merge a second trading engine. Keep research agents advisory and all capital-moving authority in AURELIA's deterministic capital plane. External repositories remain untrusted source material until individually accepted.
 
-This document reconciles the GitHub repositories visible to the connected account, the existing 367-entry external federation registry, the 80-repository source-level triage completed across the original 12, AirLLM, and 67 newly supplied repositories, and the existing ten-role delegation registry. A registry assignment means ownership is defined; it does not prove provider connection, task execution, heartbeat, or delivery.
+This document reconciles the GitHub repositories visible to the connected account, the existing 367-entry external federation registry, the 81-repository source-level triage completed across the original 12, AirLLM, 67 newly supplied repositories, and Odysseus, and the existing ten-role delegation registry. A registry assignment means ownership is defined; it does not prove provider connection, task execution, heartbeat, or delivery.
 
 ## 1. Account-visible repository inventory
 
