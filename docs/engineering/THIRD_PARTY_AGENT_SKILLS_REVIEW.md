@@ -1,7 +1,8 @@
-# Third-Party Trading and Agent-Skills Review
+# Third-Party Repository Intake and Security Review
 
 **Status:** Research assessment only; no third-party code is approved for production use.  
 **Reviewed:** 2026-10-17  
+**Intake scope:** 37 additional unique repositories triaged; pinned source inventory is development/research only.  
 **Target:** AURELIA, canonical repository `Anto-30/aurelia-trading`
 
 ## Decision
