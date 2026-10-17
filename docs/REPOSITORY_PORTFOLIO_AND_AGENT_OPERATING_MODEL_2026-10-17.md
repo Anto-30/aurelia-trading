@@ -6,7 +6,7 @@
 
 Maintain one authoritative trading system: `Anto-30/aurelia-trading`, default branch `main`. Do not create or merge a second trading engine. Keep research agents advisory and all capital-moving authority in AURELIA's deterministic capital plane. External repositories remain untrusted source material until individually accepted.
 
-This document reconciles the GitHub repositories visible to the connected account, the existing 298-entry external federation registry, the 12-repository source review completed for this cycle, and the existing ten-role delegation registry. A registry assignment means ownership is defined; it does not prove provider connection, task execution, heartbeat, or delivery.
+This document reconciles the GitHub repositories visible to the connected account, the existing 299-entry external federation registry, the 12-repository source review completed for this cycle, and the existing ten-role delegation registry. A registry assignment means ownership is defined; it does not prove provider connection, task execution, heartbeat, or delivery.
 
 ## 1. Account-visible repository inventory
 
@@ -19,11 +19,11 @@ A GitHub search for `user:Anto-30` returned four repositories. Only the canonica
 | [Anto-30/Tales-and-trails-safaris-](https://github.com/Anto-30/Tales-and-trails-safaris-) | Empty repository; no README or commits returned | **Safaris project placeholder.** Keep separate from AURELIA. Initialize only when the user explicitly wants work on the safaris project; no code can be audited in an empty repo. |
 | [Anto-30/Anto30](https://github.com/Anto-30/Anto30) | One initial commit; no README found | **Profile/placeholder repository.** No product/runtime dependency identified. |
 
-This inventory is limited to repositories visible through the current GitHub connection and public search. It is not proof that no additional repositories exist in other accounts or organizations. The canonical repo's 298-entry external federation is a source registry, not 298 owned projects.
+This inventory is limited to repositories visible through the current GitHub connection and public search. It is not proof that no additional repositories exist in other accounts or organizations. The canonical repo's 299-entry external federation is a source registry, not 298 owned projects.
 
 ## 2. Existing external repository federation
 
-The canonical `config/external_repo_federation.json` contains **298 registered external repositories** at this review: 138 `SANDBOX_ONLY`, 45 `TOOLCHAIN_ONLY`, 54 `RESEARCH_ONLY`, and 61 `REFERENCE_ONLY`. The exact source pins and per-repository agent lists remain in that file. This count is not a claim that 298 repositories have been cloned, scanned, installed, tested, or approved.
+The canonical `config/external_repo_federation.json` contains **299 registered external repositories** at this review: 138 `SANDBOX_ONLY`, 45 `TOOLCHAIN_ONLY`, 55 `RESEARCH_ONLY`, and 61 `REFERENCE_ONLY`. The exact source pins and per-repository agent lists remain in that file. This count is not a claim that 298 repositories have been cloned, scanned, installed, tested, or approved.
 
 Global policy for every external source:
 - No capital authority, live order submission, production secret access/logging, `LIVE_LOCK` mutation, broker transaction write, or production deployment authority.
