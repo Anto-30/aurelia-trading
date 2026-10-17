@@ -155,6 +155,10 @@ The following **37 unique repositories** were supplied in the follow-up intake (
 | [docker/compose](https://github.com/docker/compose/tree/289d8a037874a5197c54cfa055d28cc5d980593f) — `289d8a037874a5197c54cfa055d28cc5d980593f` | Docker Compose tooling | **Existing platform/tooling reference.** No need to vendor the implementation; pin installed versions and validate deployment files independently. |
 | [trycompai/comp](https://github.com/trycompai/comp/tree/0117612ce37331e03a45e4b38054d54ed694a57d) — `0117612ce37331e03a45e4b38054d54ed694a57d` | AI-native compliance platform | **Separate product/reference only.** GitHub reports AGPL-3.0; do not copy or link code into proprietary components without license review. Compliance dashboards do not substitute for AURELIA's evidence gates. |
 
+## Pin verification evidence (2026-10-17)
+
+A follow-up GitHub API verification checked every commit SHA used in the source inventory: **42 of 42 pinned commit references resolved to the exact requested SHA** (the five original repositories plus 37 unique additional repositories). This validates that the source links resolve to the stated commit objects at the time of checking; it does not validate source safety, licensing, build reproducibility, or suitability for production.
+
 ## Cross-cutting findings and disposition
 
 1. **No wholesale imports.** These repositories span unrelated products, education, UI libraries, agent frameworks and messaging gateways. Their star counts or recent activity do not establish security, suitability or production readiness.
