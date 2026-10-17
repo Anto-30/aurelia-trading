@@ -1,0 +1,53 @@
+name: Manual Meta WhatsApp Smoke Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_send:
+        description: "Type yes to send one real WhatsApp test alert to the configured recipient"
+        required: true
+        type: choice
+        options:
+          - no
+          - yes
+        default: no
+
+permissions:
+  contents: read
+
+concurrency:
+  group: meta-whatsapp-smoke-test
+  cancel-in-progress: false
+
+jobs:
+  send-one-test-message:
+    if: inputs.confirm_send == 'yes'
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    env:
+      AURELIA_WHATSAPP_ALERTS: "true"
+      META_WHATSAPP_ACCESS_TOKEN: ${{ secrets.META_WHATSAPP_ACCESS_TOKEN }}
+      META_WHATSAPP_PHONE_NUMBER_ID: ${{ secrets.META_WHATSAPP_PHONE_NUMBER_ID }}
+      META_WHATSAPP_TO: ${{ secrets.META_WHATSAPP_TO }}
+      META_WHATSAPP_TEMPLATE_NAME: ${{ secrets.META_WHATSAPP_TEMPLATE_NAME }}
+      META_WHATSAPP_TEMPLATE_LANGUAGE: ${{ secrets.META_WHATSAPP_TEMPLATE_LANGUAGE }}
+      META_WHATSAPP_API_VERSION: ${{ vars.META_WHATSAPP_API_VERSION }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Validate Meta configuration without displaying secrets
+        run: |
+          python - <<'PY'
+          from runtime.notifications.meta_whatsapp import MetaWhatsAppAlertSink
+          status = MetaWhatsAppAlertSink.from_env().status()
+          print(status)
+          if not status["ready"]:
+              raise SystemExit("Meta WhatsApp configuration is incomplete; inspect configuration_errors.")
+          PY
+      - name: Send one explicitly authorized test alert
+        run: python scripts/test_meta_whatsapp_alert.py
