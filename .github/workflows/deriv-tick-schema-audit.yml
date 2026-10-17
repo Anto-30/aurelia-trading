@@ -1,0 +1,35 @@
+name: AURELIA Deriv Public Tick Schema Audit
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "research/labs/deriv_order_flow.py"
+      - "scripts/audit_deriv_tick_schema.py"
+      - ".github/workflows/deriv-tick-schema-audit.yml"
+permissions:
+  contents: read
+concurrency:
+  group: deriv-tick-schema-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  public_tick_schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install public-data audit dependency
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Query public Deriv historical tick schema only
+        run: python scripts/audit_deriv_tick_schema.py --symbol R_100 --count 500 --output artifacts/deriv_tick_schema_audit.json
+      - name: Upload schema audit report
+        if: always() && hashFiles('artifacts/deriv_tick_schema_audit.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-deriv-tick-schema-audit
+          path: artifacts/deriv_tick_schema_audit.json
+          if-no-files-found: error
