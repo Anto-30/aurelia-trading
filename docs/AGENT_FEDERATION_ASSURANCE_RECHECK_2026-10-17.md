@@ -83,3 +83,26 @@ Keep these boundaries:
 ## Safety conclusion
 
 **No release authorization.** This report does not change `LIVE_LOCK`, does not enable live execution, and does not authorize broker orders.
+
+## Latest exact-head assurance and governance update — 2026-10-17 18:46 EAT
+
+This addendum supersedes the older head-specific result summary above for the current PR head `7e9731bc040580999831d9a1a9c12a628da10297`.
+
+| Workflow | Run | Result |
+|---|---:|---|
+| AURELIA Agent Federation Audit | [39046246832](https://github.com/Anto-30/aurelia-trading/actions/runs/39046246832) | Completed / success |
+| gstack Workflow Federation Assurance | [39046246835](https://github.com/Anto-30/aurelia-trading/actions/runs/39046246835) | Completed / success |
+| AURELIA Agent Continuity Watchdog | [39046246858](https://github.com/Anto-30/aurelia-trading/actions/runs/39046246858) | Completed / success |
+| AURELIA Assurance | [39046246837](https://github.com/Anto-30/aurelia-trading/actions/runs/39046246837) | Completed / success at workflow level |
+| AURELIA Assurance (second instance) | [39046244402](https://github.com/Anto-30/aurelia-trading/actions/runs/39046244402) | Completed / success at workflow level |
+
+Both assurance job records confirm the authenticated real-account session, read-only broker-account evidence, authenticated verify-only transaction lifecycle, and their evidence-upload steps were **skipped**. The certification gate and fail-closed gate steps completed successfully; that means the safety gate operated as designed, not that production certification passed. No claim of authenticated broker readiness is made.
+
+The repository rulesets were inspected through the GitHub API:
+- `Execution` ruleset ID `24423833`: enforcement `disabled`; required-status-check list empty; seven integration bypass actors configured with `always`.
+- `All access` ruleset ID `25165036`: enforcement `disabled`.
+- The branch-protection endpoint returned HTTP 403 to this integration, so effective branch protection could not be independently verified or changed.
+
+Current release state remains `CERTIFICATION_RESULT=NOT_READY`, `FINAL_EXECUTION_AUTHORIZATION=false`, `LIVE_EXECUTION=BLOCKED`, and `capital_plane_mode=VERIFY_ONLY`. `config/LIVE_LOCK.yaml` on `main` explicitly disables live trading. The nine production evidence classes listed above remain release prerequisites. PR #155 is still draft/unmerged and has zero submitted reviews as of this check.
+
+**Disposition:** repository/documentation CI is green, but production certification is not. Do not merge this PR, enable live execution, or treat skipped authentication-dependent steps as passed until governance, independent review, and commit-bound production evidence are supplied and verified.
