@@ -32,7 +32,7 @@ Global policy for every external source:
 - A scanner timeout, missing artifact, unknown license, or inaccessible source is `NOT_VERIFIED`, never a clean result.
 - Strategy source code is not strategy evidence. Require no-lookahead tests, realistic instrument/contract modelling, spread/slippage/fees/latency/reject modelling, walk-forward and prospective OOS, calibration/drift, and positive net expectancy before qualification.
 
-The separately reviewed 12 repositories and their exact dispositions are in [the source review](EXTERNAL_REPOSITORY_SOURCE_REVIEW_2026-10-17.md) and [the recheck](EXTERNAL_REPOSITORY_RECHECK_2026-10-17.md). In particular, XERJ is blocked pending a clean dependency audit; Nightly OpenBot is blocked pending licensing and security redesign; desktop/browser/shell agents are sandbox-only; old strategy libraries are research-only. None is approved for direct capital-plane integration.
+The separately reviewed 12 repositories and their exact dispositions are in [the source review](EXTERNAL_REPOSITORY_SOURCE_REVIEW_2026-10-17.md) and [the recheck](EXTERNAL_REPOSITORY_RECHECK_2026-10-17.md). The [focused priority trading-source review](PRIORITY_TRADING_REPOSITORY_SOURCE_REVIEW_2026-10-17.md) adds pinned source inspection for eight order-capable/tooling candidates; it is not a full clone/build/dependency audit. In particular, XERJ is blocked pending a clean dependency audit; Nightly OpenBot is blocked pending licensing and security redesign; desktop/browser/shell agents are sandbox-only; old strategy libraries are research-only. None is approved for direct capital-plane integration.
 
 ## 3. Agent ownership and hand-off contract
 
