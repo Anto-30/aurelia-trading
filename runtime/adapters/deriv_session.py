@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
@@ -127,8 +128,11 @@ def get_authenticated_ws_url(
         else get_optional_secret("DERIV_APP_ID")
     )
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
-    if not account_id:
-        raise DerivSessionError("ACCOUNT_ID_REQUIRED")
+    # Account IDs are interpolated into a REST path. Accept the documented
+    # alphanumeric account-ID shape only; do not allow path/query/fragment
+    # delimiters to alter the fixed OTP endpoint.
+    if not isinstance(account_id, str) or not re.fullmatch(r"[A-Za-z0-9]+", account_id):
+        raise DerivSessionError("ACCOUNT_ID_INVALID")
     if not token:
         raise DerivSessionError("DERIV_BEARER_TOKEN_MISSING")
     if auth_mode == "pat" and not application_id:

@@ -7,7 +7,7 @@ class TestDerivAdapterContract(unittest.TestCase):
  def test_authenticated_connect_requires_explicit_expected_currency(self):
   import asyncio
   from runtime.adapters.deriv_adapter import DerivProtocolError
-  a=DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/real",expected_currency="")
+  a=DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/real",expected_loginid="CRREAL",expected_currency="")
   with self.assertRaisesRegex(DerivProtocolError,"EXPECTED_ACCOUNT_CURRENCY_REQUIRED"):asyncio.run(a.connect())
  def test_missing_broker_currency_fails_closed(self):
   import asyncio

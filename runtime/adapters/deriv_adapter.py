@@ -40,12 +40,18 @@ class DerivAdapter:
         timeout_seconds: float = 10.0,
     ):
         self.ws_url = ws_url or os.getenv("DERIV_WS_URL", "")
-        self.auth_token = (
-            auth_token if auth_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
+        configured_token = (
+            auth_token
+            if auth_token is not None
+            else get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")
         )
-        self.expected_loginid = (
-            expected_loginid or get_optional_secret("DERIV_EXPECTED_LOGINID")
+        self.auth_token = str(configured_token).strip() if configured_token else ""
+        configured_loginid = (
+            expected_loginid
+            or get_optional_secret("DERIV_EXPECTED_LOGINID")
+            or get_optional_secret("DERIV_AUTHORIZED_ACCOUNT_ID")
         )
+        self.expected_loginid = str(configured_loginid).strip() if configured_loginid else ""
         configured_currency = expected_currency if expected_currency is not None else os.getenv("DERIV_EXPECTED_CURRENCY", "")
         self.expected_currency = str(configured_currency).strip().upper()
         self.environment = environment
@@ -74,6 +80,8 @@ class DerivAdapter:
         if not self.ws_url:
             raise DerivProtocolError("DERIV_AUTHENTICATED_WS_URL_MISSING")
         self._validate_environment_url(self.ws_url)
+        if not self.expected_loginid:
+            raise DerivProtocolError("EXPECTED_ACCOUNT_LOGINID_REQUIRED")
         if not self.expected_currency:
             raise DerivProtocolError("EXPECTED_ACCOUNT_CURRENCY_REQUIRED")
         try:
@@ -117,7 +125,9 @@ class DerivAdapter:
             self.authorized = True
             self.circuit.record_success()
             return self.account
-        except (DerivTransportError, DerivProtocolError):
+        except Exception:
+            # Any unexpected protocol/type/decoder failure must tear down the
+            # just-opened socket and leave the adapter un-authorized.
             await self.close()
             raise
 
@@ -128,6 +138,14 @@ class DerivAdapter:
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> AccountIdentity:
+        account_id = str(account_id or "").strip()
+        if not account_id:
+            raise DerivProtocolError("ACCOUNT_ID_REQUIRED")
+        if self.expected_loginid and self.expected_loginid != account_id:
+            raise DerivProtocolError("ACCOUNT_IDENTITY_MISMATCH")
+        # The requested OTP account becomes the expected account identity when
+        # the caller has not already configured an explicit login-ID binding.
+        self.expected_loginid = account_id
         try:
             session = get_authenticated_ws_url(
                 account_id,
@@ -308,8 +326,10 @@ class DerivAdapter:
             raise DerivProtocolError(
                 "PROPOSAL_PARAMETERS_MISSING:" + ",".join(missing)
             )
+        # The API action is fixed by this method. Caller-provided parameters
+        # must not be able to override the request opcode.
         proposal = (
-            await self.request({"proposal": 1, **parameters})
+            await self.request({**parameters, "proposal": 1})
         ).get("proposal") or {}
         proposal_id = str(proposal.get("id") or "")
         if not proposal_id:
