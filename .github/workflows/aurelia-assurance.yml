@@ -3,7 +3,7 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    branches: ["main", "research/third-party-agent-skills-review"]
+    branches: ["main", "research/third-party-agent-skills-review", "fix/probability-policy-055-075-stacked"]
 permissions:
   contents: read
 
