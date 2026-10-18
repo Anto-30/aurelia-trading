@@ -85,7 +85,7 @@ class DerivPayoutRiskTests(unittest.TestCase):
         self.assertIn("PROBABILITY_DISAGREEMENT_TOO_WIDE", decision.reasons)
 
     def test_no_clipping_out_of_policy_probability_is_rejected(self):
-        for prob in (.499, .751, .82, float("nan"), float("inf")):
+        for prob in (.549999, .750001, .82, float("nan"), float("inf")):
             with self.subTest(prob=prob):
                 p, a = fixture(proposer=prob, critic=.60, lower=.55)
                 self.assertEqual(evaluate_debate(p, a).action, DebateAction.REJECT)
@@ -143,6 +143,7 @@ class DerivPayoutRiskTests(unittest.TestCase):
     def test_policy_configuration_cannot_weaken_hard_caps(self):
         for cfg, expected in [
             (CriticConfig(max_trade_risk_fraction=.02), "CONFIG_MAX_TRADE_RISK_FRACTION_INVALID"),
+            (CriticConfig(min_probability=.50), "CONFIG_MIN_PROBABILITY_INVALID"),
             (CriticConfig(min_ev_per_risk_dollar=0.0), "CONFIG_MIN_EV_INVALID"),
             (CriticConfig(max_quote_age_ms=51), "CONFIG_QUOTE_AGE_INVALID"),
             (CriticConfig(max_debate_elapsed_ms=51), "CONFIG_DEBATE_LATENCY_INVALID"),
