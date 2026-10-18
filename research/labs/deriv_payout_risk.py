@@ -76,7 +76,7 @@ class CriticConfig:
     # Match AURELIA's existing 1% per-trade risk ceiling; do not use full Kelly.
     max_trade_risk_fraction: float = 0.01
     min_ev_per_risk_dollar: float = 0.02
-    min_probability: float = 0.50
+    min_probability: float = 0.55
     max_probability: float = 0.75
     max_probability_disagreement: float = 0.10
     max_daily_drawdown_fraction: float = 0.03
@@ -177,7 +177,7 @@ def evaluate_debate(
         reasons.append("CONFIG_MAX_TRADE_RISK_FRACTION_INVALID")
     if not (_number(config.min_ev_per_risk_dollar) and config.min_ev_per_risk_dollar >= 0.02):
         reasons.append("CONFIG_MIN_EV_INVALID")
-    if not (_number(config.min_probability) and config.min_probability >= 0.50):
+    if not (_number(config.min_probability) and config.min_probability >= 0.55):
         reasons.append("CONFIG_MIN_PROBABILITY_INVALID")
     if not (_number(config.max_probability) and config.max_probability <= 0.75):
         reasons.append("CONFIG_MAX_PROBABILITY_INVALID")
