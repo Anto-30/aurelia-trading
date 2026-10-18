@@ -12,6 +12,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   assurance:
+    timeout-minutes: 45
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
@@ -33,9 +34,11 @@ jobs:
       - name: Run research-plane tests
         run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
       - name: Run assurance tests
-        run: python -m unittest discover -s assurance -p 'test_*.py' -v
+        timeout-minutes: 10
+        run: timeout --signal=TERM --kill-after=30s 570s python -m unittest discover -s assurance -p 'test_*.py' -v
       - name: Run runtime tests
-        run: python -m unittest discover -s tests -p 'test_*.py' -v
+        timeout-minutes: 10
+        run: timeout --signal=TERM --kill-after=30s 570s python -m unittest discover -s tests -p 'test_*.py' -v
       - name: Run secret presence report tests
         run: python -m pytest -q tests/test_secret_presence_report.py
       - name: Run hardening tests
