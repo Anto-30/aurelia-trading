@@ -97,9 +97,9 @@ def main() -> int:
             )
         except (TypeError, ValueError):
             policy_values = (None, None, None, None)
-        if policy_values != (0.50, 0.75, 0.50, 0.75):
-            failures.append("PROBABILITY_POLICY_RANGE_MISMATCH_EXPECTED_0.50_TO_0.75")
-        if "hard probability band is **50%–75%**" not in readme:
+        if policy_values != (0.55, 0.75, 0.55, 0.75):
+            failures.append("PROBABILITY_POLICY_RANGE_MISMATCH_EXPECTED_0.55_TO_0.75")
+        if "hard probability band is **55%–75%**" not in readme:
             failures.append("README_PROBABILITY_POLICY_RANGE_MISMATCH")
 
     # Scan text files for obvious credential material. This is deliberately
@@ -125,7 +125,7 @@ def main() -> int:
         return 1
 
     print("AURELIA_PRODUCTION_ACCEPTANCE=AUDIT_PASS")
-    print("PROBABILITY_POLICY_RANGE=0.50..0.75")
+    print("PROBABILITY_POLICY_RANGE=0.55..0.75")
     print("CAPITAL_MOVEMENT_PERMITTED=false")
     print("FINAL_EXECUTION_AUTHORIZATION=false")
     print("LIVE_EXECUTION=BLOCKED")
