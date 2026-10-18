@@ -26,6 +26,7 @@ from runtime.core.health import (
 )
 from runtime.core.journal import AppendOnlyJournal
 from runtime.core.models import RuntimeState
+from runtime.core.paths import state_path
 from runtime.core.release_gate import read_live_release
 from runtime.core.runtime_config import load_config_hash
 from runtime.core.secrets import get_optional_secret, validate_secrets_at_startup
@@ -129,8 +130,9 @@ def _write_runtime_deriv_evidence(snapshot, config_hash: str) -> None:
     enriched["record_hash"] = payload_sha256(
         {key: value for key, value in enriched.items() if key != "record_hash"}
     )
-    default_path = str(ROOT / "artifacts" / "deriv_authenticated_session.json")
-    output = Path(os.getenv("AURELIA_DERIV_EVIDENCE_PATH", default_path))
+    output = state_path(
+        "AURELIA_DERIV_EVIDENCE_PATH", "deriv_authenticated_session.json"
+    )
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_name(output.name + ".tmp")
     temporary.write_text(
@@ -152,7 +154,7 @@ def _write_readiness_report(output: Path, report: dict) -> None:
 
 async def _readiness_publisher(health: "HealthSnapshot", journal: AppendOnlyJournal, config_hash: str) -> None:
     """Continuously publish local readiness; an evaluation error becomes a blocked report."""
-    output = Path(os.getenv("AURELIA_READINESS_PATH", "/tmp/aurelia/AURELIA_READINESS.json"))
+    output = state_path("AURELIA_READINESS_PATH", "AURELIA_READINESS.json")
     interval = max(2.0, float(os.getenv("AURELIA_READINESS_REFRESH_SECONDS", "5")))
     while True:
         try:
@@ -408,7 +410,8 @@ class HealthHandler(BaseHTTPRequestHandler):
 
 
 def start_server(port: int) -> ThreadingHTTPServer:
-    server = ThreadingHTTPServer(("0.0.0.0", port), HealthHandler)
+    # Bind locally by default; container deployments explicitly opt into bridge-interface probes.
+    server = ThreadingHTTPServer((os.getenv("AURELIA_HEALTH_HOST", "127.0.0.1"), port), HealthHandler)
     Thread(target=server.serve_forever, name="aurelia-health", daemon=True).start()
     return server
 
@@ -417,7 +420,7 @@ async def main() -> None:
     validate_secrets_at_startup()
     server = start_server(int(os.getenv("PORT", "8080")))
     journal = AppendOnlyJournal(
-        os.getenv("AURELIA_JOURNAL_PATH", "/tmp/aurelia/aurelia-events.ndjson")
+        str(state_path("AURELIA_JOURNAL_PATH", "aurelia-events.ndjson"))
     )
     config_hash = load_config_hash(ROOT)
     release = read_live_release(ROOT / "config" / "LIVE_LOCK.yaml")
@@ -435,7 +438,7 @@ async def main() -> None:
     )
     HealthHandler.health = health
     HealthHandler.state = machine.state
-    performance_path = os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/tmp/aurelia/agent-performance.json")
+    performance_path = str(state_path("AURELIA_AGENT_PERFORMANCE_PATH", "agent-performance.json"))
     HealthHandler.performance = PersistentAgentPerformance(performance_path)
     public_probe_failed = False
     authenticated_probe_failed = False
@@ -444,18 +447,9 @@ async def main() -> None:
     federation_queue: asyncio.Queue[dict[str, object]] = asyncio.Queue()
 
     federation = PersistentAgentFederation(
-        journal_path=os.getenv(
-            "AURELIA_FEDERATION_JOURNAL_PATH",
-            "/tmp/aurelia/agent-federation.ndjson",
-        ),
-        lease_path=os.getenv(
-            "AURELIA_FEDERATION_LEASE_PATH",
-            "/tmp/aurelia/agent-federation-leases.json",
-        ),
-        task_path=os.getenv(
-            "AURELIA_FEDERATION_TASK_PATH",
-            "/tmp/aurelia/agent-federation-tasks.json",
-        ),
+        journal_path=str(state_path("AURELIA_FEDERATION_JOURNAL_PATH", "agent-federation.ndjson")),
+        lease_path=str(state_path("AURELIA_FEDERATION_LEASE_PATH", "agent-federation-leases.json")),
+        task_path=str(state_path("AURELIA_FEDERATION_TASK_PATH", "agent-federation-tasks.json")),
         config_hash=config_hash,
         source_hash="runtime-baseline",
         lease_seconds=float(os.getenv("AURELIA_AGENT_LEASE_SECONDS", "45")),
@@ -553,8 +547,14 @@ async def main() -> None:
 
     async def authenticated_probe() -> None:
         nonlocal readonly_adapter
+        expected_loginid = (
+            os.getenv("DERIV_EXPECTED_LOGINID", "").strip()
+            or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()
+        )
+        if not expected_loginid:
+            raise RuntimeError("DERIV_RUNTIME_EXPECTED_ACCOUNT_LOGINID_MISSING")
         manager = DerivSessionManager(
-            expected_loginid=os.getenv("DERIV_EXPECTED_LOGINID") or None,
+            expected_loginid=expected_loginid,
             expected_environment=os.getenv("DERIV_ENVIRONMENT", "real"),
             expected_currency=os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper(),
         )

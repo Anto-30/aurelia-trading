@@ -43,9 +43,15 @@ class DerivAdapter:
         self.auth_token = (
             auth_token if auth_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
         )
-        self.expected_loginid = (
-            expected_loginid or get_optional_secret("DERIV_EXPECTED_LOGINID")
+        configured_loginid = (
+            expected_loginid
+            if expected_loginid is not None
+            else (
+                get_optional_secret("DERIV_EXPECTED_LOGINID")
+                or get_optional_secret("DERIV_AUTHORIZED_ACCOUNT_ID")
+            )
         )
+        self.expected_loginid = str(configured_loginid or "").strip()
         configured_currency = expected_currency if expected_currency is not None else os.getenv("DERIV_EXPECTED_CURRENCY", "")
         self.expected_currency = str(configured_currency).strip().upper()
         self.environment = environment
@@ -76,6 +82,8 @@ class DerivAdapter:
         self._validate_environment_url(self.ws_url)
         if not self.expected_currency:
             raise DerivProtocolError("EXPECTED_ACCOUNT_CURRENCY_REQUIRED")
+        if not self.expected_loginid:
+            raise DerivProtocolError("EXPECTED_ACCOUNT_LOGINID_REQUIRED")
         try:
             self.transport = DerivWebSocketTransport(
                 self.ws_url,
@@ -98,7 +106,7 @@ class DerivAdapter:
             currency = str(identity_payload.get("currency") or "").strip().upper()
             if not loginid:
                 raise DerivProtocolError("ACCOUNT_IDENTITY_UNVERIFIED")
-            if self.expected_loginid and loginid != self.expected_loginid:
+            if loginid != self.expected_loginid:
                 raise DerivProtocolError("ACCOUNT_IDENTITY_MISMATCH")
             if not currency:
                 raise DerivProtocolError("ACCOUNT_CURRENCY_UNVERIFIED")

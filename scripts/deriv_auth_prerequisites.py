@@ -19,7 +19,10 @@ DEFAULT_OUTPUT = Path("artifacts/deriv_auth_prerequisites.json")
 def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object]:
     env = os.environ if environ is None else environ
 
-    token_present = bool(env.get("DERIV_AUTH_TOKEN", "").strip())
+    token_present = bool(
+        env.get("DERIV_AUTH_TOKEN", "").strip()
+        or env.get("DERIV_PAT", "").strip()
+    )
     loginid_present = bool(
         env.get("DERIV_EXPECTED_LOGINID", "").strip()
         or env.get("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()

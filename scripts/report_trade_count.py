@@ -6,13 +6,14 @@ import os
 from pathlib import Path
 
 from runtime.core.trade_counter import read_journal, trade_count
+from runtime.core.paths import state_path
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Report accepted AURELIA broker trade count.")
     parser.add_argument(
         "--journal",
-        default=os.getenv("AURELIA_JOURNAL_PATH", "/tmp/aurelia/journal.ndjson"),
+        default=str(state_path("AURELIA_JOURNAL_PATH", "journal.ndjson")),
     )
     args = parser.parse_args()
 

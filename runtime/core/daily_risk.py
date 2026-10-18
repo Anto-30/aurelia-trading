@@ -325,7 +325,8 @@ class PersistentDailyRiskGuard:
             return self._decision(True, None)
 
     def _drawdown(self, balance: float) -> float:
-        assert self._state is not None
+        if self._state is None:
+            raise RuntimeError("DAILY_RISK_STATE_UNINITIALIZED")
         reference = float(self._state["reference_balance"])
         pnl = float(self._state["daily_realized_pnl"])
         balance_loss = max(0.0, reference - balance)

@@ -39,6 +39,19 @@ class SessionManagerContractTests(unittest.TestCase):
         manager = DerivSessionManager(expected_loginid="CRREAL", expected_environment="real")
         self.assertTrue(manager.validate_binding(loginid="CRREAL", environment="real"))
 
+    def test_manager_reads_authorized_account_id_alias(self):
+        from unittest.mock import patch
+        with patch.dict("os.environ", {
+            "DERIV_EXPECTED_LOGINID": "",
+            "DERIV_AUTHORIZED_ACCOUNT_ID": "CRREAL",
+        }):
+            manager = DerivSessionManager(
+                expected_loginid=None,
+                expected_environment="real",
+                expected_currency="USD",
+            )
+        self.assertEqual(manager.expected_loginid, "CRREAL")
+
     def test_account_selection_requires_explicit_expected_currency(self):
         manager = DerivSessionManager(expected_loginid="CRREAL", expected_environment="real", expected_currency="")
         with self.assertRaisesRegex(DerivSessionManagerError, "EXPECTED_CURRENCY_REQUIRED"):
