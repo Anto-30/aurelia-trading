@@ -3,7 +3,7 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "research/third-party-agent-skills-review"]
 permissions:
   contents: read
 
