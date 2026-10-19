@@ -5,6 +5,7 @@ import json
 import sqlite3
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from research.paper_agent import (
@@ -102,6 +103,13 @@ class ReflexRiskTests(unittest.TestCase):
         self.assertFalse(result.allowed)
         self.assertTrue(result.kill_switch_tripped)
         self.assertIn("CRISIS_REGIME", result.reasons)
+
+    def test_stale_risk_snapshot_trips_kill_switch(self):
+        stale = healthy(observed_at_utc=datetime.now(timezone.utc) - timedelta(seconds=60))
+        result = PaperReflexGate().evaluate(JevDecision.from_mapping(GOOD), stale)
+        self.assertFalse(result.allowed)
+        self.assertTrue(result.kill_switch_tripped)
+        self.assertIn("RISK_SNAPSHOT_STALE_OR_INVALID", result.reasons)
 
     def test_api_failure_trips_kill_switch(self):
         result = PaperReflexGate().evaluate(
