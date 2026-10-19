@@ -10,7 +10,7 @@ from .decision import JevDecision
 # Preserve AURELIA policy: 1% planned risk by default, 2% absolute ceiling.
 DEFAULT_MAX_POSITION_PCT = 1.0
 ABSOLUTE_MAX_POSITION_PCT = 2.0
-DAILY_LOSS_LIMIT_PCT = 5.0
+DAILY_LOSS_LIMIT_PCT = 3.0
 MAX_DRAWDOWN_PCT = 15.0
 MIN_CONFIDENCE = 0.70
 MAX_ACCEPTED_PROBABILITY = 0.75
@@ -34,6 +34,7 @@ class PortfolioRiskSnapshot:
     peak_equity: float
     daily_pnl: float
     api_healthy: bool = True
+    consecutive_losses: int = 0
     observed_at_utc: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
@@ -47,6 +48,12 @@ class PortfolioRiskSnapshot:
             raise RiskSnapshotError("EQUITY_VALUES_MUST_BE_POSITIVE")
         if not isinstance(self.api_healthy, bool):
             raise RiskSnapshotError("API_HEALTHY_MUST_BE_BOOLEAN")
+        if (
+            isinstance(self.consecutive_losses, bool)
+            or not isinstance(self.consecutive_losses, int)
+            or self.consecutive_losses < 0
+        ):
+            raise RiskSnapshotError("CONSECUTIVE_LOSSES_INVALID")
         if not isinstance(self.observed_at_utc, datetime) or self.observed_at_utc.tzinfo is None:
             raise RiskSnapshotError("RISK_SNAPSHOT_TIMESTAMP_MUST_BE_TIMEZONE_AWARE")
 
@@ -103,6 +110,8 @@ class PaperReflexGate:
             self.trip("RISK_SNAPSHOT_STALE_OR_INVALID")
         if not snapshot.api_healthy:
             self.on_api_error()
+        if snapshot.consecutive_losses >= 3:
+            self.trip("CONSECUTIVE_LOSS_LIMIT_REACHED")
         if decision.confidence < KILL_CONFIDENCE_FLOOR:
             self.trip("CONFIDENCE_BELOW_0_50")
         if decision.regime == "crisis":
@@ -167,6 +176,8 @@ class PaperReflexGate:
         drawdown_pct = max(0.0, effective_peak - float(snapshot.equity)) / effective_peak * 100.0
         if daily_loss_pct >= DAILY_LOSS_LIMIT_PCT:
             raise ValueError("DAILY_LOSS_HARD_STOP_CANNOT_BE_OVERRIDDEN")
+        if snapshot.consecutive_losses >= 3:
+            raise ValueError("CONSECUTIVE_LOSS_HARD_STOP_CANNOT_BE_OVERRIDDEN")
         if drawdown_pct >= MAX_DRAWDOWN_PCT:
             raise ValueError("MAX_DRAWDOWN_HARD_STOP_REQUIRES_NEW_RISK_STATE")
         self.tripped = False
