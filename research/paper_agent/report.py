@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sqlite3
 import tempfile
 from collections import Counter
@@ -145,10 +146,9 @@ def write_report_atomic(output_path: str | Path, report: Mapping[str, Any]) -> P
     payload = json.dumps(dict(report), sort_keys=True, indent=2, allow_nan=False) + "\n"
     fd, name = tempfile.mkstemp(prefix=f".{target.name}.", suffix=".tmp", dir=str(target.parent))
     try:
-        with open(fd, "w", encoding="utf-8", closefd=True) as handle:
+        with os.fdopen(fd, "w", encoding="utf-8", closefd=True) as handle:
             handle.write(payload)
             handle.flush()
-            import os
             os.fsync(handle.fileno())
         Path(name).replace(target)
     except Exception:
