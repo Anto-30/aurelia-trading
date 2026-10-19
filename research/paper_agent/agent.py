@@ -6,7 +6,7 @@ from typing import Any, Mapping
 
 from .decision import DecisionSchemaError, JevDecision
 from .ledger import PaperEventLedger
-from .risk import PaperReflexGate, PortfolioRiskSnapshot
+from .risk import PaperReflexGate, PortfolioRiskSnapshot, StrategyEvidence
 
 
 @dataclass(frozen=True)
@@ -51,6 +51,8 @@ class PaperAgent:
     def evaluate(
         self, *, event_id: str, candidate: Mapping[str, Any],
         snapshot: PortfolioRiskSnapshot,
+        strategy_evidence: StrategyEvidence | None = None,
+        strategy_hash: str | None = None,
     ) -> PaperEvaluation:
         try:
             decision = JevDecision.from_mapping(candidate)
@@ -68,7 +70,10 @@ class PaperAgent:
                 row["event_id"], "BLOCKED", (reason,), self.gate.tripped
             )
 
-        result = self.gate.evaluate(decision, snapshot)
+        result = self.gate.evaluate(
+            decision, snapshot, evidence=strategy_evidence,
+            expected_strategy_hash=strategy_hash,
+        )
         if result.allowed:
             event_type = "PAPER_INTENT"
         elif decision.direction != "neutral":
@@ -81,6 +86,8 @@ class PaperAgent:
             event_type=event_type,
             payload={
                 "decision": decision.as_dict(),
+                "strategy_hash": strategy_hash,
+                "strategy_evidence": strategy_evidence.as_dict() if strategy_evidence is not None else None,
                 "status": result.status,
                 "allowed_by_risk_gate": result.allowed,
                 "reasons": list(result.reasons),
