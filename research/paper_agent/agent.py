@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
+from hashlib import sha256
 from typing import Any, Mapping
 
 from .decision import DecisionSchemaError, JevDecision
@@ -32,6 +34,33 @@ class PaperAgent:
     def __init__(self, gate: PaperReflexGate, ledger: PaperEventLedger) -> None:
         self.gate = gate
         self.ledger = ledger
+        # The durable event ledger is the source of truth for kill-switch state.
+        # Never continue if its hash chain is invalid.
+        if not self.ledger.verify_chain():
+            self.gate.trip("PAPER_LEDGER_INTEGRITY_FAILURE")
+            raise RuntimeError("PAPER_LEDGER_INTEGRITY_INVALID")
+        for event in self.ledger.read_all():
+            kind = event.get("event_type")
+            if kind not in {"KILL_SWITCH_TRIPPED", "KILL_SWITCH_RESET"}:
+                continue
+            try:
+                payload = json.loads(event.get("payload_json", "{}"))
+            except (ValueError, TypeError, json.JSONDecodeError) as exc:
+                self.gate.trip("PAPER_LEDGER_CONTROL_EVENT_INVALID")
+                raise RuntimeError("PAPER_LEDGER_CONTROL_EVENT_INVALID") from exc
+            if not isinstance(payload, dict):
+                self.gate.trip("PAPER_LEDGER_CONTROL_EVENT_INVALID")
+                raise RuntimeError("PAPER_LEDGER_CONTROL_EVENT_INVALID")
+            if kind == "KILL_SWITCH_RESET":
+                self.gate.tripped = False
+                self.gate.trip_reasons.clear()
+            else:
+                reasons = payload.get("reasons")
+                if isinstance(reasons, list) and reasons:
+                    for reason in reasons:
+                        self.gate.trip(str(reason))
+                else:
+                    self.gate.trip(str(payload.get("reason") or "PERSISTED_KILL_SWITCH_TRIP"))
 
     def on_api_error(self, *, event_id: str) -> PaperEvaluation:
         self.gate.on_api_error()
@@ -70,6 +99,7 @@ class PaperAgent:
                 row["event_id"], "BLOCKED", (reason,), self.gate.tripped
             )
 
+        was_tripped = self.gate.tripped
         result = self.gate.evaluate(
             decision, snapshot, evidence=strategy_evidence,
             expected_strategy_hash=strategy_hash,
@@ -98,6 +128,19 @@ class PaperAgent:
                 "simulated_pnl": None,
             },
         )
+        if result.kill_switch_tripped and not was_tripped:
+            kill_id = "kill:" + sha256(event_id.encode("utf-8")).hexdigest()[:48]
+            self.ledger.append(
+                event_id=kill_id,
+                event_type="KILL_SWITCH_TRIPPED",
+                payload={
+                    "reason": "RISK_GATE_TRIGGER",
+                    "reasons": list(self.gate.trip_reasons),
+                    "triggering_event_id": event_id,
+                    "capital_authority": False,
+                    "order_submission_permitted": False,
+                },
+            )
         return PaperEvaluation(
             event_id=row["event_id"], status=result.status,
             reasons=result.reasons, kill_switch_tripped=result.kill_switch_tripped,
@@ -108,6 +151,7 @@ class PaperAgent:
         snapshot: PortfolioRiskSnapshot, crisis_cleared: bool,
         confidence_recovered: bool,
     ) -> None:
+        cleared_reasons = list(self.gate.trip_reasons)
         self.gate.reset_after_operator_review(
             operator_approval_id=operator_approval_id,
             snapshot=snapshot, crisis_cleared=crisis_cleared,
@@ -118,6 +162,7 @@ class PaperAgent:
             payload={
                 "operator_approval_id": operator_approval_id,
                 "reason": "OPERATOR_REVIEWED",
+                "cleared_reasons": cleared_reasons,
                 "capital_authority": False, "order_submission_permitted": False,
             },
         )
