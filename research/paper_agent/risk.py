@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from math import isfinite
+import re
 
 from .decision import JevDecision
 
@@ -69,6 +70,69 @@ class PortfolioRiskSnapshot:
 
 
 @dataclass(frozen=True)
+class StrategyEvidence:
+    """Qualification assertions bound to the exact strategy hash.
+
+    This object is data, not a trust boundary. A caller must obtain its values
+    from the canonical registry/calibration/cost/OOS evidence verifier; an LLM
+    response must never be used as evidence.
+    """
+    probability_calibrated: bool = False
+    probability_fresh: bool = False
+    drift_ok: bool = False
+    instrument_qualified: bool = False
+    costs_verified: bool = False
+    net_economics_positive: bool = False
+    out_of_sample_qualified: bool = False
+    strategy_hash: str = ""
+    evidence_ids: tuple[str, ...] = ()
+
+    def rejection_reasons(self, *, expected_strategy_hash: str | None) -> tuple[str, ...]:
+        reasons: list[str] = []
+        checks = (
+            ("probability_calibrated", "PROBABILITY_UNCALIBRATED"),
+            ("probability_fresh", "PROBABILITY_STALE"),
+            ("drift_ok", "MODEL_OR_STRATEGY_DRIFT"),
+            ("instrument_qualified", "INSTRUMENT_NOT_QUALIFIED"),
+            ("costs_verified", "COST_PROFILE_UNVERIFIED"),
+            ("net_economics_positive", "NET_EXPECTED_VALUE_NOT_POSITIVE"),
+            ("out_of_sample_qualified", "OUT_OF_SAMPLE_NOT_QUALIFIED"),
+        )
+        for field_name, reason in checks:
+            value = getattr(self, field_name)
+            if not isinstance(value, bool):
+                reasons.append(f"{field_name.upper()}_EVIDENCE_INVALID")
+            elif not value:
+                reasons.append(reason)
+        if not isinstance(self.strategy_hash, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", self.strategy_hash):
+            reasons.append("STRATEGY_HASH_INVALID")
+        if not isinstance(expected_strategy_hash, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", expected_strategy_hash):
+            reasons.append("EXPECTED_STRATEGY_HASH_MISSING_OR_INVALID")
+        elif isinstance(self.strategy_hash, str) and self.strategy_hash.lower() != expected_strategy_hash.lower():
+            reasons.append("STRATEGY_EVIDENCE_HASH_MISMATCH")
+        if (
+            not isinstance(self.evidence_ids, tuple)
+            or not self.evidence_ids
+            or any(not isinstance(item, str) or not item.strip() for item in self.evidence_ids)
+        ):
+            reasons.append("QUALIFICATION_EVIDENCE_IDS_MISSING_OR_INVALID")
+        return tuple(reasons)
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "probability_calibrated": self.probability_calibrated,
+            "probability_fresh": self.probability_fresh,
+            "drift_ok": self.drift_ok,
+            "instrument_qualified": self.instrument_qualified,
+            "costs_verified": self.costs_verified,
+            "net_economics_positive": self.net_economics_positive,
+            "out_of_sample_qualified": self.out_of_sample_qualified,
+            "strategy_hash": self.strategy_hash,
+            "evidence_ids": list(self.evidence_ids),
+        }
+
+
+@dataclass(frozen=True)
 class GateResult:
     allowed: bool
     status: str
@@ -104,7 +168,11 @@ class PaperReflexGate:
     def on_api_error(self) -> None:
         self.trip("API_ERROR")
 
-    def evaluate(self, decision: JevDecision, snapshot: PortfolioRiskSnapshot) -> GateResult:
+    def evaluate(
+        self, decision: JevDecision, snapshot: PortfolioRiskSnapshot, *,
+        evidence: StrategyEvidence | None = None,
+        expected_strategy_hash: str | None = None,
+    ) -> GateResult:
         reasons: list[str] = []
         if not snapshot.is_valid():
             self.trip("RISK_SNAPSHOT_STALE_OR_INVALID")
@@ -144,6 +212,10 @@ class PaperReflexGate:
             reasons.append("PROBABILITY_ABOVE_AURELIA_MAX_0_75")
         if decision.risk_state != "safe":
             reasons.append("RISK_STATE_NOT_SAFE")
+        if evidence is None:
+            reasons.append("STRATEGY_EVIDENCE_MISSING")
+        else:
+            reasons.extend(evidence.rejection_reasons(expected_strategy_hash=expected_strategy_hash))
         if decision.position_size_pct > self.max_position_pct:
             reasons.append("POSITION_SIZE_ABOVE_DEFAULT_1_PERCENT_POLICY")
         if decision.position_size_pct > ABSOLUTE_MAX_POSITION_PCT:
