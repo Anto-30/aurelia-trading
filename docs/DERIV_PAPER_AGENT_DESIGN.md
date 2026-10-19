@@ -32,10 +32,17 @@ The evidence-only report reads the SQLite ledger in read-only mode and writes an
 
 The output is an operations/research report, not a performance claim. It does not rewrite schemas, prune strategies, tune parameters, or promote a strategy.
 
+## Local read-only dashboard
+
+    python -m research.paper_agent.dashboard --db /var/lib/aurelia/paper-events.sqlite3 --host 127.0.0.1 --port 8765
+
+Open `http://127.0.0.1:8765` on the machine running the process. The dashboard refreshes every five seconds and shows paper intents, missed signals, recent dispositions, ledger integrity and kill-switch state. PnL and win rate intentionally display as unavailable until a verified paper contract lifecycle has labelled outcomes. The server accepts no writes and refuses non-loopback binds.
+
 ## Verification commands
 
     python -m unittest assurance.test_deriv_paper_agent -v
     python -m unittest assurance.test_paper_agent_report -v
+    python -m unittest assurance.test_paper_agent_dashboard -v
     python -m unittest discover -s assurance -p 'test_*.py' -v
 
 ## Acceptance before further integration
