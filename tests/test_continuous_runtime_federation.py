@@ -17,6 +17,7 @@ class ContinuousRuntimeFederationTests(unittest.IsolatedAsyncioTestCase):
                 os.environ["AURELIA_AUTONOMOUS_LOOP"] = "false"
                 os.environ["AURELIA_FEDERATION_JOURNAL_PATH"] = f"{td}/events.ndjson"
                 os.environ["AURELIA_FEDERATION_LEASE_PATH"] = f"{td}/leases.json"
+                os.environ["AURELIA_AGENT_PERFORMANCE_PATH"] = f"{td}/agent-performance.json"
                 federation = PersistentAgentFederation(
                     journal_path=f"{td}/events.ndjson",
                     lease_path=f"{td}/leases.json",
