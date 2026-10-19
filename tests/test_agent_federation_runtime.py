@@ -1,11 +1,24 @@
 import asyncio
+import json
 import tempfile
 import unittest
+from pathlib import Path
+
+from runtime.main import AGENT_FEDERATION_ROLES
 
 from runtime.agent_federation import PersistentAgentFederation
 
 
 class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
+
+    def test_runtime_federation_roles_match_delegation_registry(self):
+        root = Path(__file__).resolve().parents[1]
+        registry = json.loads((root / "config" / "agent_delegation_tasks.json").read_text(encoding="utf-8"))
+        registered = [item["agent"] for item in registry["tasks"]]
+        self.assertEqual(len(registered), 10)
+        self.assertEqual(len(set(registered)), len(registered))
+        self.assertEqual(set(AGENT_FEDERATION_ROLES), set(registered))
+
     async def test_persistent_lease_and_message_roundtrip(self):
         with tempfile.TemporaryDirectory() as td:
             federation = PersistentAgentFederation(
@@ -49,8 +62,12 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
             )
             await federation.register_agents(["ClaudeCode", "KimiK3"])
             await federation.broadcast_roundtable()
-            rows = federation.messages_for("ClaudeCode")
-            self.assertTrue(any(x["message_type"] == "ROUND_TABLE" for x in rows))
+            for agent in ("ClaudeCode", "KimiK3", "GrokBot", "GoogleAgentSkills", "GLM", "PlaywrightCLI", "JEV", "ChatGPT", "Dev"):
+                rows = federation.messages_for(agent)
+                self.assertTrue(
+                    any(x["message_type"] == "ROUND_TABLE" for x in rows),
+                    f"default roundtable omitted registered role {agent}",
+                )
 
 
     async def test_task_queue_is_durable_priority_ordered_and_idempotent(self):
