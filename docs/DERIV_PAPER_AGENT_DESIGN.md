@@ -16,7 +16,7 @@ The canonical Deriv adapter remains in runtime/adapters/deriv_adapter.py; the ex
 
 The proposed position_size_pct is in percentage points (for example 1.0 means 1%), not a fraction such as 0.01. AURELIA currently uses 1% planned risk as the default and 2% as an absolute ceiling. The new research gate blocks any candidate above 1.0 percentage point by default and does not introduce a configuration override. Confidence values are valid probabilities in [0, 1], and AURELIA's existing strategy policy rejects values above 0.75 rather than clipping them. The proposed 0.70 minimum is applied before a candidate can be considered.
 
-The daily loss limit is 5% of day-start equity and the maximum drawdown limit is 15% from the high-water mark. Either limit latches the kill switch; a human approval cannot override the same breached hard limit. API errors, crisis regime, or confidence below 0.50 also latch the switch. Ordinary confidence below 0.70 blocks a signal but does not automatically latch the switch.
+The requested brief specifies a 5% daily loss cap, but AURELIA's existing canonical daily-risk policy is stricter. This gate follows the stricter 3% day-start-equity hard stop and halts after three consecutive losses; both latch the switch and cannot be overridden while breached. The 15% high-water drawdown is an additional whole-account hard stop. API errors, crisis regime, stale risk snapshots, or confidence below 0.50 also latch the switch. Ordinary confidence below 0.70 blocks a signal but does not automatically latch the switch.
 
 ## What is deliberately not claimed
 
