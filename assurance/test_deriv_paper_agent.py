@@ -32,6 +32,7 @@ def healthy(**overrides):
         "peak_equity": 100.0,
         "daily_pnl": 0.0,
         "api_healthy": True,
+        "consecutive_losses": 0,
     }
     data.update(overrides)
     return PortfolioRiskSnapshot(**data)
@@ -120,10 +121,18 @@ class ReflexRiskTests(unittest.TestCase):
 
     def test_daily_loss_is_hard_stop(self):
         result = PaperReflexGate().evaluate(
-            JevDecision.from_mapping(GOOD), healthy(daily_pnl=-5.0)
+            JevDecision.from_mapping(GOOD), healthy(daily_pnl=-3.0)
         )
         self.assertTrue(result.kill_switch_tripped)
         self.assertIn("DAILY_LOSS_LIMIT_REACHED", result.reasons)
+
+    def test_three_consecutive_losses_are_a_hard_stop(self):
+        result = PaperReflexGate().evaluate(
+            JevDecision.from_mapping(GOOD), healthy(consecutive_losses=3)
+        )
+        self.assertFalse(result.allowed)
+        self.assertTrue(result.kill_switch_tripped)
+        self.assertIn("CONSECUTIVE_LOSS_LIMIT_REACHED", result.reasons)
 
     def test_drawdown_is_hard_stop(self):
         result = PaperReflexGate().evaluate(
@@ -139,6 +148,16 @@ class ReflexRiskTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "CANNOT_BE_OVERRIDDEN"):
             gate.reset_after_operator_review(
                 operator_approval_id="review-001", snapshot=healthy(daily_pnl=-5.0),
+                crisis_cleared=True, confidence_recovered=True,
+            )
+
+    def test_operator_reset_cannot_override_three_loss_streak(self):
+        gate = PaperReflexGate()
+        gate.trip("CONSECUTIVE_LOSS_LIMIT_REACHED")
+        with self.assertRaisesRegex(ValueError, "CANNOT_BE_OVERRIDDEN"):
+            gate.reset_after_operator_review(
+                operator_approval_id="review-streak",
+                snapshot=healthy(consecutive_losses=3),
                 crisis_cleared=True, confidence_recovered=True,
             )
 
