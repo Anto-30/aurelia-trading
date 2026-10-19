@@ -10,7 +10,20 @@ from pathlib import Path
 
 from research.paper_agent import (
     JevDecision, DecisionSchemaError, PaperAgent, PaperEventLedger,
-    PaperReflexGate, PortfolioRiskSnapshot,
+    PaperReflexGate, PortfolioRiskSnapshot, StrategyEvidence,
+)
+
+GOOD_HASH = "a" * 64
+GOOD_EVIDENCE = StrategyEvidence(
+    probability_calibrated=True,
+    probability_fresh=True,
+    drift_ok=True,
+    instrument_qualified=True,
+    costs_verified=True,
+    net_economics_positive=True,
+    out_of_sample_qualified=True,
+    strategy_hash=GOOD_HASH,
+    evidence_ids=("calibration:sample-set-001", "oos:walk-forward-001", "cost-profile:deriv-001"),
 )
 
 GOOD = {
@@ -67,21 +80,41 @@ class JevSchemaTests(unittest.TestCase):
 
 class ReflexRiskTests(unittest.TestCase):
     def test_valid_candidate_is_only_a_paper_intent(self):
-        result = PaperReflexGate().evaluate(JevDecision.from_mapping(GOOD), healthy())
+        result = PaperReflexGate().evaluate(
+            JevDecision.from_mapping(GOOD), healthy(),
+            evidence=GOOD_EVIDENCE, expected_strategy_hash=GOOD_HASH,
+        )
         self.assertTrue(result.allowed)
         self.assertEqual(result.status, "WOULD_TRADE")
         self.assertFalse(result.kill_switch_tripped)
 
+    def test_missing_independent_evidence_fails_closed(self):
+        result = PaperReflexGate().evaluate(
+            JevDecision.from_mapping(GOOD), healthy()
+        )
+        self.assertFalse(result.allowed)
+        self.assertIn("STRATEGY_EVIDENCE_MISSING", result.reasons)
+
+    def test_evidence_hash_must_match_strategy_version(self):
+        result = PaperReflexGate().evaluate(
+            JevDecision.from_mapping(GOOD), healthy(),
+            evidence=GOOD_EVIDENCE, expected_strategy_hash="b" * 64,
+        )
+        self.assertFalse(result.allowed)
+        self.assertIn("STRATEGY_EVIDENCE_HASH_MISMATCH", result.reasons)
+
     def test_confidence_above_canonical_max_is_rejected_not_clipped(self):
         result = PaperReflexGate().evaluate(
-            JevDecision.from_mapping({**GOOD, "confidence": 0.80}), healthy()
+            JevDecision.from_mapping({**GOOD, "confidence": 0.80}), healthy(),
+            evidence=GOOD_EVIDENCE, expected_strategy_hash=GOOD_HASH,
         )
         self.assertFalse(result.allowed)
         self.assertIn("PROBABILITY_ABOVE_AURELIA_MAX_0_75", result.reasons)
 
     def test_1_5_percent_is_blocked_by_default_1_percent_policy(self):
         result = PaperReflexGate().evaluate(
-            JevDecision.from_mapping({**GOOD, "position_size_pct": 1.5}), healthy()
+            JevDecision.from_mapping({**GOOD, "position_size_pct": 1.5}), healthy(),
+            evidence=GOOD_EVIDENCE, expected_strategy_hash=GOOD_HASH,
         )
         self.assertFalse(result.allowed)
         self.assertIn("POSITION_SIZE_ABOVE_DEFAULT_1_PERCENT_POLICY", result.reasons)
@@ -212,7 +245,7 @@ class PaperLedgerAndAgentTests(unittest.TestCase):
             agent = PaperAgent(PaperReflexGate(), ledger)
             result = agent.evaluate(
                 event_id="decision-1", candidate={**GOOD, "confidence": 0.60},
-                snapshot=healthy(),
+                snapshot=healthy(), strategy_evidence=GOOD_EVIDENCE, strategy_hash=GOOD_HASH,
             )
             self.assertEqual(result.status, "HOLD")
             events = ledger.read_all()
