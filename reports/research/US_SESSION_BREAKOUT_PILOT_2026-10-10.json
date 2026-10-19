@@ -1,0 +1,331 @@
+{
+  "schema": "aurelia.session-breakout-pilot.v1",
+  "as_of_utc": "2026-10-10",
+  "status": "PRELIMINARY_DIAGNOSTIC_NOT_QUALIFIED",
+  "research_only": true,
+  "capital_authority": false,
+  "live_execution": false,
+  "canonical_repository": "Anto-30/aurelia-trading",
+  "canonical_base_commit": "cd858bec8fb5eb05dfc32733a6062bf2e9c95ae9",
+  "research_branch": "research/us-open-session-candidates-2026-10-10",
+  "data": {
+    "provider": "Massive futures aggregate API",
+    "endpoint": "/futures/v1/aggs/{ticker}",
+    "timeframe": "5min",
+    "contracts": [
+      "MNQH5",
+      "MNQM5",
+      "MNQU5",
+      "MNQZ5",
+      "MNQH6",
+      "MNQU6",
+      "MNQZ6"
+    ],
+    "unique_ticker_window_start_rows": 121835,
+    "raw_data_persisted": false,
+    "raw_data_sha256": null,
+    "exact_query_persisted": false,
+    "checked_in_harness_reproduction": false,
+    "data_entitlement_verified": false,
+    "missing_window": "2026-04 through 2026-07",
+    "continuity": "incomplete; two disconnected windows in 2026",
+    "timezone": "America/New_York converted from UTC using DST boundaries",
+    "roll_policy": "highest prior-available-session volume among queried contracts"
+  },
+  "sample": [
+    {
+      "period": "2025",
+      "eligible_sessions": 242,
+      "trades": 220,
+      "partial_after_range": 13,
+      "partial_range": 3,
+      "no_data_or_closed_dates": 54
+    },
+    {
+      "period": "2026-Q1",
+      "eligible_sessions": 52,
+      "trades_A": 49,
+      "trades_B": 46,
+      "seal_status": "not_preregistered"
+    },
+    {
+      "period": "2026-Aug-Sep-disconnected",
+      "eligible_sessions": 38,
+      "trades_A": 30,
+      "trades_B": 28,
+      "seal_status": "not_preregistered"
+    }
+  ],
+  "cost_model": {
+    "displayed_sensitivity": "one tick of slippage per side",
+    "tick_size_points": 0.25,
+    "spread_included": false,
+    "commissions_included": false,
+    "real_bid_ask_or_fill_data": false,
+    "net_expectancy_status": "UNDETERMINED"
+  },
+  "variants": {
+    "A_breakout_candle_stop_2R": [
+      {
+        "period": "2025",
+        "trades": 220,
+        "no_trade_sessions": 22,
+        "win_rate": 0.314,
+        "avg_win_R": 1.96,
+        "avg_loss_R": -0.98,
+        "expectancy_R": -0.0604,
+        "profit_factor": 0.911,
+        "slippage_only_expectancy_R": -0.0734,
+        "slippage_only_profit_factor": 0.893,
+        "max_drawdown_R": 27.18,
+        "longest_losing_session_streak": 10,
+        "ambiguous_bars": 3,
+        "longest_consecutive_losing_trades": null
+      },
+      {
+        "period": "2026-Q1-diagnostic",
+        "trades": 49,
+        "no_trade_sessions": 3,
+        "win_rate": 0.429,
+        "expectancy_R": 0.218,
+        "profit_factor": 1.392,
+        "slippage_only_expectancy_R": 0.2101,
+        "slippage_only_profit_factor": 1.375,
+        "max_drawdown_R": 6.17,
+        "longest_losing_session_streak": 5,
+        "longest_consecutive_losing_trades": null
+      },
+      {
+        "period": "2026-Aug-Sep-disconnected",
+        "trades": 30,
+        "no_trade_sessions": 8,
+        "win_rate": 0.3,
+        "expectancy_R": -0.1914,
+        "profit_factor": 0.727,
+        "slippage_only_expectancy_R": -0.2002,
+        "slippage_only_profit_factor": 0.717,
+        "max_drawdown_R": 10.91,
+        "longest_losing_session_streak": 6,
+        "longest_consecutive_losing_trades": null
+      }
+    ],
+    "A_opposite_range_stop_2R": [
+      {
+        "period": "2025",
+        "trades": 220,
+        "no_trade_sessions": 22,
+        "win_rate": 0.477,
+        "avg_win_R": 1.03,
+        "avg_loss_R": -0.83,
+        "expectancy_R": 0.0576,
+        "profit_factor": 1.132,
+        "slippage_only_expectancy_R": 0.0536,
+        "slippage_only_profit_factor": 1.123,
+        "max_drawdown_R": 20.11,
+        "longest_losing_session_streak": 6,
+        "longest_consecutive_losing_trades": null
+      },
+      {
+        "period": "2026-Q1-diagnostic",
+        "trades": 49,
+        "no_trade_sessions": 3,
+        "win_rate": 0.531,
+        "expectancy_R": 0.1811,
+        "profit_factor": 1.533,
+        "slippage_only_expectancy_R": 0.1782,
+        "slippage_only_profit_factor": 1.522,
+        "max_drawdown_R": 3.96,
+        "longest_losing_session_streak": 3,
+        "longest_consecutive_losing_trades": null
+      },
+      {
+        "period": "2026-Aug-Sep-disconnected",
+        "trades": 30,
+        "no_trade_sessions": 8,
+        "win_rate": 0.5,
+        "expectancy_R": 0.1006,
+        "profit_factor": 1.371,
+        "slippage_only_expectancy_R": 0.0979,
+        "slippage_only_profit_factor": 1.359,
+        "max_drawdown_R": 3.31,
+        "longest_losing_session_streak": 3,
+        "longest_consecutive_losing_trades": null
+      }
+    ],
+    "B_opposite_range_stop_2R": [
+      {
+        "period": "2025",
+        "trades": 186,
+        "no_trade_sessions": 56,
+        "win_rate": 0.522,
+        "avg_win_R": 0.8,
+        "avg_loss_R": -0.8,
+        "expectancy_R": 0.0355,
+        "profit_factor": 1.093,
+        "slippage_only_expectancy_R": 0.0316,
+        "slippage_only_profit_factor": 1.082,
+        "max_drawdown_R": 9.8,
+        "longest_losing_session_streak": 4,
+        "longest_consecutive_losing_trades": null
+      },
+      {
+        "period": "2026-Q1-diagnostic",
+        "trades": 46,
+        "no_trade_sessions": 6,
+        "win_rate": 0.587,
+        "expectancy_R": 0.0799,
+        "profit_factor": 1.287,
+        "slippage_only_expectancy_R": 0.0771,
+        "slippage_only_profit_factor": 1.276,
+        "max_drawdown_R": 2.54,
+        "longest_losing_session_streak": 4,
+        "longest_consecutive_losing_trades": null
+      },
+      {
+        "period": "2026-Aug-Sep-disconnected",
+        "trades": 28,
+        "no_trade_sessions": 10,
+        "win_rate": 0.429,
+        "expectancy_R": -0.0513,
+        "profit_factor": 0.852,
+        "slippage_only_expectancy_R": -0.0542,
+        "slippage_only_profit_factor": 0.845,
+        "max_drawdown_R": 6.52,
+        "longest_losing_session_streak": 4,
+        "longest_consecutive_losing_trades": null
+      }
+    ],
+    "B_opposite_range_stop_fixed_10": [
+      {
+        "period": "2025",
+        "trades": 186,
+        "no_trade_sessions": 56,
+        "win_rate": 0.941,
+        "avg_win_R": 0.077,
+        "avg_loss_R": -0.934,
+        "expectancy_R": 0.0175,
+        "profit_factor": 1.316,
+        "slippage_only_expectancy_R": 0.0136,
+        "slippage_only_profit_factor": 1.245,
+        "max_drawdown_R": 2.63,
+        "longest_losing_session_streak": 2,
+        "longest_consecutive_losing_trades": null
+      },
+      {
+        "period": "2026-Q1-diagnostic",
+        "trades": 46,
+        "no_trade_sessions": 6,
+        "win_rate": 0.913,
+        "expectancy_R": -0.0372,
+        "profit_factor": 0.572,
+        "slippage_only_expectancy_R": -0.04,
+        "slippage_only_profit_factor": 0.542,
+        "max_drawdown_R": 2.25,
+        "longest_losing_session_streak": 1,
+        "longest_consecutive_losing_trades": null
+      },
+      {
+        "period": "2026-Aug-Sep-disconnected",
+        "trades": 28,
+        "no_trade_sessions": 10,
+        "win_rate": 0.929,
+        "expectancy_R": 0.0048,
+        "profit_factor": 1.097,
+        "slippage_only_expectancy_R": 0.0019,
+        "slippage_only_profit_factor": 1.039,
+        "max_drawdown_R": 1.22,
+        "longest_losing_session_streak": 1,
+        "longest_consecutive_losing_trades": null
+      }
+    ]
+  },
+  "caveats": {
+    "confidence_intervals": null,
+    "serial_dependence_adjustment": false,
+    "multiple_testing_adjusted": false,
+    "sealed_oos": false,
+    "real_execution_simulation": false,
+    "costs_complete": false,
+    "candidate_A_intrabar": "NOT_TESTED",
+    "candidate_C": "SPECIFIED_AND_PRIMITIVES_IMPLEMENTED_NO_EVENT_STUDY",
+    "candidate_D": "CAUSAL_PIVOT_PRIMITIVES_IMPLEMENTED_NO_ABLATION_OR_OOS",
+    "candidate_promotion": false
+  },
+  "decisions": {
+    "A_breakout_candle_stop_2R": "DO_NOT_ADVANCE; expectancy unstable and negative in 2025/Aug-Sep",
+    "A_opposite_range_stop_2R": "FURTHER_RESEARCH_ONLY; descriptive positive sample not qualification",
+    "B_2R": "FURTHER_RESEARCH_ONLY; sign changes in later disconnected slice",
+    "B_fixed_10": "DO_NOT_ADVANCE; high win rate conceals tiny mean win and negative Q1 expectation"
+  },
+  "release_gate": {
+    "live_trading_enabled": false,
+    "final_execution_authorization": false,
+    "live_execution": "BLOCKED"
+  },
+  "candidate_c_event_study": {
+    "status": "EXPLORATORY_DESCRIPTIVE_ONLY_NOT_QUALIFIED",
+    "query_file": "research/labs/sql/session_reversal_expansion_pilot.sql",
+    "input_contract": "MNQH5",
+    "input_table": "temporary Massive workspace table mnqh5_q1_2025",
+    "source_window_utc": "2024-12-01 through 2025-03-21",
+    "output_session_year": "2025",
+    "signal_definition": "First completed 5-minute candle in a session that sweeps at least one MNQ tick beyond the prior complete session high/low and closes back inside; both-boundary same-candle event is ambiguous.",
+    "outcome_definition": "Following defined session range divided by the median of the preceding 20 complete sessions of the following session type.",
+    "tests_directional_trade_pnl": false,
+    "costs_or_execution_model": false,
+    "oos_sealed": false,
+    "raw_data_persisted": false,
+    "raw_data_sha256": null,
+    "results": [
+      {
+        "current_signal_session": "EUROPE",
+        "next_session_type": "US_DAY",
+        "eligible_transitions": 42,
+        "signal_sessions": 33,
+        "long_signals": 16,
+        "short_signals": 16,
+        "ambiguous_signals": 1,
+        "baseline_next_session_expansion_rate": 0.5,
+        "expansion_rate_after_directional_signal": 0.46875,
+        "mean_expansion_ratio_after_directional_signal": 1.1361
+      },
+      {
+        "current_signal_session": "OVERNIGHT",
+        "next_session_type": "EUROPE",
+        "eligible_transitions": 33,
+        "signal_sessions": 10,
+        "long_signals": 3,
+        "short_signals": 7,
+        "ambiguous_signals": 0,
+        "baseline_next_session_expansion_rate": 0.54545,
+        "expansion_rate_after_directional_signal": 0.5,
+        "mean_expansion_ratio_after_directional_signal": 0.9451
+      },
+      {
+        "current_signal_session": "US_DAY",
+        "next_session_type": "OVERNIGHT",
+        "eligible_transitions": 33,
+        "signal_sessions": 26,
+        "long_signals": 14,
+        "short_signals": 12,
+        "ambiguous_signals": 0,
+        "baseline_next_session_expansion_rate": 0.51515,
+        "expansion_rate_after_directional_signal": 0.57692,
+        "mean_expansion_ratio_after_directional_signal": 1.2257
+      }
+    ],
+    "interpretation": "The observed expansion rate was below baseline for EUROPE and OVERNIGHT signals and modestly above baseline for US_DAY signals. Counts are small, single-contract/single-quarter, serial dependence is not adjusted, and no directional trade P&L is measured. This does not qualify Candidate C."
+  },
+  "candidates_c_and_d": {
+    "candidate_c_session_reversal_expansion": "EXPLORATORY_EXPANSION_EVENT_STUDY_COMPLETE; TRADE_PNL_AND_OOS_NOT_TESTED",
+    "candidate_d_multi_timeframe_structure": "CAUSAL_PIVOT_PRIMITIVES_IMPLEMENTED; ABLATION_AND_OOS_NOT_TESTED"
+  },
+  "metric_semantics": {
+    "historical_pilot_longest_streak": "consecutive losing sessions; no-trade sessions reset the streak",
+    "historical_pilot_consecutive_losing_trade_streak": "NOT_CALCULATED",
+    "reusable_harness_streaks": [
+      "longest_consecutive_losing_trades",
+      "longest_consecutive_losing_sessions"
+    ]
+  }
+}
