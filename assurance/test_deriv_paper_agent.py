@@ -258,6 +258,61 @@ class PaperLedgerAndAgentTests(unittest.TestCase):
             self.assertTrue(ledger.verify_chain())
             ledger.close()
 
+    def test_kill_switch_latch_survives_restart_and_operator_reset(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "events.sqlite3"
+            ledger = PaperEventLedger(path)
+            agent = PaperAgent(PaperReflexGate(), ledger)
+            result = agent.evaluate(
+                event_id="crisis-1",
+                candidate={**GOOD, "regime": "crisis"},
+                snapshot=healthy(),
+                strategy_evidence=GOOD_EVIDENCE,
+                strategy_hash=GOOD_HASH,
+            )
+            self.assertTrue(result.kill_switch_tripped)
+            self.assertTrue(ledger.verify_chain())
+            ledger.close()
+
+            ledger = PaperEventLedger(path)
+            restarted = PaperAgent(PaperReflexGate(), ledger)
+            blocked = restarted.evaluate(
+                event_id="safe-while-latched",
+                candidate=GOOD,
+                snapshot=healthy(),
+                strategy_evidence=GOOD_EVIDENCE,
+                strategy_hash=GOOD_HASH,
+            )
+            self.assertFalse(blocked.status == "WOULD_TRADE")
+            self.assertTrue(blocked.kill_switch_tripped)
+            restarted.reset_after_operator_review(
+                event_id="reset-1",
+                operator_approval_id="operator-review-123",
+                snapshot=healthy(),
+                crisis_cleared=True,
+                confidence_recovered=True,
+            )
+            ledger.close()
+
+            ledger = PaperEventLedger(path)
+            restarted_again = PaperAgent(PaperReflexGate(), ledger)
+            self.assertFalse(restarted_again.gate.tripped)
+            self.assertTrue(ledger.verify_chain())
+            ledger.close()
+
+    def test_invalid_hash_chain_blocks_agent_startup(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "events.sqlite3"
+            with PaperEventLedger(path) as ledger:
+                ledger.append(event_id="evt-1", event_type="SYSTEM_ALERT", payload={"ok": True})
+            with sqlite3.connect(path) as db:
+                db.execute("DROP TRIGGER paper_events_no_update")
+                db.execute("UPDATE paper_events SET payload_json='{}' WHERE event_id='evt-1'")
+            ledger = PaperEventLedger(path)
+            with self.assertRaisesRegex(RuntimeError, "LEDGER_INTEGRITY_INVALID"):
+                PaperAgent(PaperReflexGate(), ledger)
+            ledger.close()
+
     def test_invalid_candidate_logged_without_echoing_payload(self):
         with tempfile.TemporaryDirectory() as tmp:
             ledger = PaperEventLedger(Path(tmp) / "events.sqlite3")
