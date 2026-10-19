@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import html
 import json
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -152,7 +153,7 @@ class _DashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
-        self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'")
+        self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -179,50 +180,74 @@ class _DashboardHandler(BaseHTTPRequestHandler):
                 self._send(503, "application/json; charset=utf-8", body)
             return
         if route == "/":
-            page = b"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AURELIA Paper Decision Dashboard</title>
-<style>
-:root{color-scheme:dark;background:#111827;color:#f3f4f6;font:16px system-ui,sans-serif}
-body{max-width:1100px;margin:0 auto;padding:18px}
-h1{font-size:1.45rem;margin-bottom:6px}.sub{color:#cbd5e1;margin-top:0}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
-.card{padding:14px;border:1px solid #475569;border-radius:10px;background:#1f2937}
-.label{font-size:.82rem;color:#cbd5e1}.value{font-size:1.2rem;font-weight:650;margin-top:8px;overflow-wrap:anywhere}
-.warning{padding:12px;border-left:4px solid #f59e0b;background:#292524;margin:14px 0}
-table{border-collapse:collapse;width:100%;font-size:.88rem}th,td{text-align:left;padding:8px;border-bottom:1px solid #475569;vertical-align:top}
-.wrap{overflow-x:auto}code{overflow-wrap:anywhere}#err{color:#fca5a5}
-</style></head>
-<body><h1>AURELIA · Paper Decision Dashboard</h1>
-<p class="sub">Read-only local monitor · refreshes every 5 seconds</p>
-<div class="warning">Research mode only. This surface cannot submit orders. Paper intents are not fills; PnL, win rate and open positions remain unavailable until a verified paper contract lifecycle exists.</div>
-<div id="err"></div><div class="grid" id="cards"></div>
-<h2>Recent dispositions</h2><div class="wrap"><table><thead><tr><th>Time (UTC)</th><th>Event</th><th>Decision</th><th>Disposition / reason</th></tr></thead><tbody id="events"></tbody></table></div>
-<p class="sub" id="updated">Waiting for ledger…</p>
-<script>
-const displayText = v => v === null || v === undefined ? "UNAVAILABLE" : String(v);
-function card(label,value){const box=document.createElement("div");box.className="card";const l=document.createElement("div");l.className="label";l.textContent=label;const v=document.createElement("div");v.className="value";v.textContent=displayText(value);box.append(l,v);return box;}
-async function refresh(){
- try{
-  const response=await fetch("/api/status",{cache:"no-store"});
-  const data=await response.json();
-  document.getElementById("err").textContent=response.ok?"":"BLOCKED: ledger unavailable or integrity check failed.";
-  const cards=document.getElementById("cards");cards.replaceChildren();
-  [["System",data.system_status],["Ledger integrity",data.ledger_integrity],["Kill switch",data.kill_switch_state],["Total events",data.event_count_total],["Paper intents (24h)",data.paper_intents_24h],["Missed signals (24h)",data.missed_signals_24h],["PnL",data.pnl],["Win rate",data.win_rate],["Open positions",data.open_positions?.length],["Trading authorization",data.live_execution_authorized]].forEach(x=>cards.append(card(x[0],x[1])));
-  const body=document.getElementById("events");body.replaceChildren();
-  for(const item of (data.recent_events||[])){
-   const tr=document.createElement("tr");
-   const decision=item.decision?(String(item.decision.direction||"")+" / "+String(item.decision.regime||"")+" / conf "+displayText(item.decision.confidence)):"—";
-   const why=item.reason||((item.reasons||[]).join(", "))||displayText(item.status);
-   [item.occurred_at_utc,item.event_type,decision,why].forEach(value=>{const td=document.createElement("td");td.textContent=displayText(value);tr.append(td);});
-   body.append(tr);
-  }
-  document.getElementById("updated").textContent="Updated "+displayText(data.generated_at_utc)+" · metrics: "+displayText(data.performance_metrics_status);
- }catch(e){document.getElementById("err").textContent="Unable to read paper ledger. No trading action is available.";}
-}
-refresh();setInterval(refresh,5000);
-</script></body></html>"""
-            self._send(200, "text/html; charset=utf-8", page)
+            try:
+                events = read_events_readonly(database_path)
+                snapshot = build_dashboard_snapshot(events)
+                cards = [
+                    ("System", snapshot["system_status"]),
+                    ("Ledger integrity", snapshot["ledger_integrity"]),
+                    ("Kill switch", snapshot["kill_switch_state"]),
+                    ("Total events", snapshot["event_count_total"]),
+                    ("Paper intents (24h)", snapshot["paper_intents_24h"]),
+                    ("Missed signals (24h)", snapshot["missed_signals_24h"]),
+                    ("PnL", "UNAVAILABLE" if snapshot["pnl"] is None else snapshot["pnl"]),
+                    ("Win rate", "UNAVAILABLE" if snapshot["win_rate"] is None else snapshot["win_rate"]),
+                    ("Open paper positions", len(snapshot["open_positions"])),
+                    ("Live execution authorized", snapshot["live_execution_authorized"]),
+                ]
+                card_markup = "".join(
+                    '<section class="card"><div class="label">' + html.escape(str(label))
+                    + '</div><div class="value">' + html.escape(str(value)) + '</div></section>'
+                    for label, value in cards
+                )
+                rows = []
+                for item in snapshot["recent_events"]:
+                    decision = item.get("decision") or {}
+                    decision_text = (
+                        str(decision.get("direction", "")) + " / "
+                        + str(decision.get("regime", "")) + " / confidence "
+                        + str(decision.get("confidence", "UNAVAILABLE"))
+                    ) if decision else "—"
+                    reason_text = item.get("reason") or ", ".join(item.get("reasons", [])) or item.get("status", "—")
+                    values = (
+                        item.get("occurred_at_utc", ""),
+                        item.get("event_type", ""),
+                        decision_text,
+                        reason_text,
+                    )
+                    rows.append("<tr>" + "".join("<td>" + html.escape(str(v)) + "</td>" for v in values) + "</tr>")
+                row_markup = "".join(rows) or '<tr><td colspan="4">No paper events have been recorded.</td></tr>'
+                page = (
+                    '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+                    '<meta name="viewport" content="width=device-width,initial-scale=1">'
+                    '<meta http-equiv="refresh" content="5">'
+                    '<title>AURELIA Paper Decision Dashboard</title>'
+                    '<style>'
+                    ':root{color-scheme:dark;background:#111827;color:#f3f4f6;font:16px system-ui,sans-serif}'
+                    'body{max-width:1100px;margin:0 auto;padding:18px}'
+                    'h1{font-size:1.45rem;margin-bottom:6px}.sub{color:#cbd5e1;margin-top:0}'
+                    '.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}'
+                    '.card{padding:14px;border:1px solid #475569;border-radius:10px;background:#1f2937}'
+                    '.label{font-size:.82rem;color:#cbd5e1}.value{font-size:1.2rem;font-weight:650;margin-top:8px;overflow-wrap:anywhere}'
+                    '.warning{padding:12px;border-left:4px solid #f59e0b;background:#292524;margin:14px 0}'
+                    'table{border-collapse:collapse;width:100%;font-size:.88rem}th,td{text-align:left;padding:8px;border-bottom:1px solid #475569;vertical-align:top}'
+                    '.wrap{overflow-x:auto}'
+                    '</style></head><body>'
+                    '<h1>AURELIA — Paper Decision Dashboard</h1>'
+                    '<p class="sub">Read-only local monitor · refreshes every 5 seconds</p>'
+                    '<div class="warning">Research mode only. This dashboard cannot submit orders. Paper intents are not fills. PnL and win rate remain unavailable until a verified paper contract lifecycle exists.</div>'
+                    '<div class="grid">' + card_markup + '</div>'
+                    '<h2>Recent dispositions</h2><div class="wrap"><table><thead><tr>'
+                    '<th>Time (UTC)</th><th>Event</th><th>Decision</th><th>Disposition / reason</th>'
+                    '</tr></thead><tbody>' + row_markup + '</tbody></table></div>'
+                    '<p class="sub">Updated ' + html.escape(str(snapshot["generated_at_utc"]))
+                    + ' · metrics: ' + html.escape(str(snapshot["performance_metrics_status"]))
+                    + '</p></body></html>'
+                ).encode("utf-8")
+                self._send(200, "text/html; charset=utf-8", page)
+            except (OSError, ValueError, RuntimeError) as exc:
+                body = html.escape("Dashboard blocked: " + type(exc).__name__).encode("utf-8")
+                self._send(503, "text/plain; charset=utf-8", body)
             return
         self._send(404, "text/plain; charset=utf-8", b"not found")
 
