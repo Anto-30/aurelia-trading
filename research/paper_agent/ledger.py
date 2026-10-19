@@ -81,13 +81,17 @@ class PaperEventLedger:
         if parsed.tzinfo is None:
             raise ValueError("PAPER_EVENT_TIMESTAMP_MUST_BE_TIMEZONE_AWARE")
 
-        with self._db:
+        # Serialize the read/allocate/hash/insert sequence so simultaneous
+        # writers cannot create duplicate sequence numbers or forks.
+        self._db.execute("BEGIN IMMEDIATE")
+        try:
             existing = self._db.execute(
                 "SELECT * FROM paper_events WHERE event_id = ?", (event_id,)
             ).fetchone()
             if existing is not None:
                 if existing["event_type"] != event_type or existing["payload_json"] != payload_json:
                     raise ValueError("PAPER_EVENT_ID_CONFLICT")
+                self._db.execute("COMMIT")
                 return dict(existing)
 
             prior = self._db.execute(
@@ -114,7 +118,12 @@ class PaperEventLedger:
             row = self._db.execute(
                 "SELECT * FROM paper_events WHERE event_id = ?", (event_id,)
             ).fetchone()
+            self._db.execute("COMMIT")
             return dict(row)
+        except Exception:
+            if self._db.in_transaction:
+                self._db.execute("ROLLBACK")
+            raise
 
     def read_all(self) -> list[dict[str, Any]]:
         rows = self._db.execute(
