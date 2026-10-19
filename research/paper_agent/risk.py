@@ -1,7 +1,8 @@
 """Deterministic, fail-closed REFLEX risk gate for paper evaluation only."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from math import isfinite
 
 from .decision import JevDecision
@@ -33,6 +34,7 @@ class PortfolioRiskSnapshot:
     peak_equity: float
     daily_pnl: float
     api_healthy: bool = True
+    observed_at_utc: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
         for name in ("equity", "day_start_equity", "peak_equity", "daily_pnl"):
@@ -45,6 +47,18 @@ class PortfolioRiskSnapshot:
             raise RiskSnapshotError("EQUITY_VALUES_MUST_BE_POSITIVE")
         if not isinstance(self.api_healthy, bool):
             raise RiskSnapshotError("API_HEALTHY_MUST_BE_BOOLEAN")
+        if not isinstance(self.observed_at_utc, datetime) or self.observed_at_utc.tzinfo is None:
+            raise RiskSnapshotError("RISK_SNAPSHOT_TIMESTAMP_MUST_BE_TIMEZONE_AWARE")
+
+    def is_valid(self, max_age_seconds: float = 15.0) -> bool:
+        if isinstance(max_age_seconds, bool) or not isinstance(max_age_seconds, (int, float)):
+            return False
+        try:
+            age = (datetime.now(timezone.utc) - self.observed_at_utc).total_seconds()
+            limit = float(max_age_seconds)
+        except (TypeError, ValueError, OverflowError):
+            return False
+        return isfinite(age) and isfinite(limit) and limit > 0 and 0 <= age <= limit
 
 
 @dataclass(frozen=True)
@@ -85,6 +99,8 @@ class PaperReflexGate:
 
     def evaluate(self, decision: JevDecision, snapshot: PortfolioRiskSnapshot) -> GateResult:
         reasons: list[str] = []
+        if not snapshot.is_valid():
+            self.trip("RISK_SNAPSHOT_STALE_OR_INVALID")
         if not snapshot.api_healthy:
             self.on_api_error()
         if decision.confidence < KILL_CONFIDENCE_FLOOR:
@@ -142,6 +158,8 @@ class PaperReflexGate:
             raise ValueError("CRISIS_CLEARANCE_REQUIRED")
         if not isinstance(confidence_recovered, bool) or not confidence_recovered:
             raise ValueError("CONFIDENCE_RECOVERY_REQUIRED")
+        if not snapshot.is_valid():
+            raise ValueError("CURRENT_RISK_SNAPSHOT_REQUIRED")
         if not snapshot.api_healthy:
             raise ValueError("API_HEALTH_MUST_BE_RESTORED")
         daily_loss_pct = max(0.0, -float(snapshot.daily_pnl)) / float(snapshot.day_start_equity) * 100.0
