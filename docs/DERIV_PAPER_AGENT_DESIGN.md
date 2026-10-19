@@ -24,9 +24,18 @@ This commit does not claim to identify a profitable strategy, make up bid/ask da
 
 No market-data stream has been connected and no 30-day paper trial has been started from this branch. Tests in assurance/test_deriv_paper_agent.py are deterministic unit tests, not market evidence.
 
+## Nightly evidence report
+
+The evidence-only report reads the SQLite ledger in read-only mode and writes an atomic JSON artifact. It counts paper intents and missed signals, reports a top-level schema diff, and deliberately reports `simulated_pnl=null` and `brier_score=null` because this package does not simulate settled outcomes.
+
+    python -m research.paper_agent.report --db /var/lib/aurelia/paper-events.sqlite3 --output results/nightly-review.json
+
+The output is an operations/research report, not a performance claim. It does not rewrite schemas, prune strategies, tune parameters, or promote a strategy.
+
 ## Verification commands
 
     python -m unittest assurance.test_deriv_paper_agent -v
+    python -m unittest assurance.test_paper_agent_report -v
     python -m unittest discover -s assurance -p 'test_*.py' -v
 
 ## Acceptance before further integration
