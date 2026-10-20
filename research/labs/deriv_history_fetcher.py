@@ -18,7 +18,7 @@ from typing import Any
 import pandas as pd
 import websockets
 
-PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
+PUBLIC_WS_URL = "wss://ws.derivws.com/websockets/v3"
 MAX_CANDLES_PER_REQUEST = 5000
 
 
@@ -65,7 +65,7 @@ async def collect_history(
         raise ValueError("pause_seconds must be non-negative and max_pages positive")
 
     active_response = await _request(
-        ws, {"active_symbols": "brief"}, req_id=1
+        ws, {"active_symbols": "brief", "product_type": "basic"}, req_id=1
     )
     active = active_response.get("active_symbols")
     if not isinstance(active, list):
