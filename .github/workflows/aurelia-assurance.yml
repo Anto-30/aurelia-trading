@@ -11,8 +11,10 @@ concurrency:
   cancel-in-progress: true
 jobs:
   assurance:
-    # Load production-scoped Actions secrets for authenticated verification.
-    environment: production
+    # Expose production-scoped secrets only to trusted pushes on main.
+    # Pull requests and research branches run in an untrusted environment with no production secrets.
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'production' || 'ci-untrusted' }}
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
