@@ -120,3 +120,30 @@ AURELIA maintains a pinned cross-agent engineering capability registry at `confi
 ## Agent tool, skill, and plugin assignment
 
 Task-aware role routing is defined in `config/agent_tool_skill_assignment.json`. It assigns each canonical agent its primary tools, skill bundle, eligible plugins, independent reviewer, and security boundary. The audit is enforced by `scripts/validate_agent_tool_skill_assignments.py` in CI. A plugin or source appearing in a registry does not prove it is connected or installed in a runtime. `Dev` remains inactive until an authorized device is connected and verified. The external-repository intake manifest is `config/external_repo_intake_2026-10-11.json`; entries are pinned references pending review, not production dependencies.
+
+
+## Deriv tick-momentum absorption lab (research only)
+
+This isolated lab tests an OHLCV proxy hypothesis. It is not a production strategy, does not have capital authority, and must not be used to authorize live orders. Historical OHLCV volume is not true order-flow delta; contract costs and payout assumptions must be verified independently.
+
+Install the research dependencies in addition to the repository's runtime dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+python -m pip install -r requirements-research.txt
+python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
+```
+
+Fetch public history only where outbound WebSocket access is available. This fetcher is isolated for offline research and is not a production API fallback:
+
+```bash
+python -m research.labs.deriv_history_fetcher --symbol R_75 --days 180 --granularity 60 --out R75_6months_1min.csv
+```
+
+Run the walk-forward screens:
+
+```bash
+python run_wfo.py --csv R75_6months_1min.csv --out wf_deriv_absorption --contract-type all --tick-size 0.01
+```
+
+The default IS/OOS windows require more than six months of one-minute bars for a full fold. If the report has zero folds or insufficient out-of-sample trades, it must fail closed; do not lower thresholds solely to force a pass. Outputs summary.json, folds.csv, oos_trades.csv, and comparison.json are research evidence only. A PASS means forward paper validation only. No actual-data performance claim is valid until the CSV coverage, instrument specifications, transaction costs, and all out-of-sample reports are reviewed.
