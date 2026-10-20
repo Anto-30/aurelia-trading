@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-10-20",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -6320,6 +6320,33 @@
         "ui-patterns",
         "developer-experience-reference"
       ],
+      "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "0xsline/awesome-deepseek-harness",
+      "category": "deepseek-harness-ecosystem-catalogue",
+      "domain": "agent-intelligence",
+      "mode": "REFERENCE_ONLY",
+      "assigned_agents": [
+        "DeepSeekHarness",
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "source_url": "https://github.com/0xsline/awesome-deepseek-harness",
+      "head_commit": "cd4faf97da814f06fab4a5e307e5ba0f62c638af",
+      "pin_source": "github_api_commit_checked_2026-10-20",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "capabilities": [
+        "deepseek-harness-plugin-catalogue",
+        "tooling-discovery",
+        "agent-workflow-reference"
+      ],
+      "integration_note": "Catalogue/reference only. This is not the DeepSeek Harness runtime and does not activate an agent by itself. Review each plugin individually, pin exact versions, and test in an isolated sandbox before use.",
       "trust": "COMMUNITY_REFERENCE_ONLY"
     }
   ],
