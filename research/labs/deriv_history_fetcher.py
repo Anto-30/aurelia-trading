@@ -18,7 +18,7 @@ from typing import Any
 import pandas as pd
 import websockets
 
-PUBLIC_WS_URL = "wss://ws.binaryws.com/websockets/v3"
+PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
 MAX_CANDLES_PER_REQUEST = 5000
 
 
