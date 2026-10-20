@@ -3,7 +3,13 @@ name: Deriv Absorption Research (Public Data Only)
 on:
   push:
     branches:
+      - main
       - research/deriv-tick-momentum-absorption-20261020
+    paths:
+      - 'research/labs/**'
+      - 'run_wfo.py'
+      - 'requirements-research.txt'
+      - '.github/workflows/deriv-absorption-research.yml'
   pull_request:
     branches: [main]
     paths:
