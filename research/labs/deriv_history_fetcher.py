@@ -158,14 +158,43 @@ async def collect_history(
 
 
 async def fetch_history(symbol: str, days: int, granularity: int, pause_seconds: float):
+    """Fetch public history with bounded retries for transient connection failures.
+
+    Retries never fabricate or reuse market data. Once connected, protocol,
+    symbol, pagination, and data-validation failures still fail immediately.
+    """
     if days < 1:
         raise ValueError("days must be >=1")
     start_epoch = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp())
-    async with websockets.connect(PUBLIC_WS_URL, ping_interval=20, close_timeout=5) as ws:
-        return await collect_history(
-            ws, symbol, start_epoch, granularity=granularity,
-            count=MAX_CANDLES_PER_REQUEST, pause_seconds=pause_seconds,
+    attempts = 5
+    for attempt in range(attempts):
+        try:
+            async with websockets.connect(
+                PUBLIC_WS_URL, ping_interval=20, close_timeout=5, open_timeout=20
+            ) as ws:
+                return await collect_history(
+                    ws, symbol, start_epoch, granularity=granularity,
+                    count=MAX_CANDLES_PER_REQUEST, pause_seconds=pause_seconds,
+                )
+        except websockets.exceptions.InvalidStatus as exc:
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            if status is None or status < 500 or attempt == attempts - 1:
+                raise
+        except (OSError, asyncio.TimeoutError, websockets.exceptions.ConnectionClosedError):
+            if attempt == attempts - 1:
+                raise
+        delay = min(2 ** attempt, 16)
+        print(
+            json.dumps({
+                "event": "transient_public_history_connection_failure",
+                "attempt": attempt + 1,
+                "max_attempts": attempts,
+                "retry_delay_seconds": delay,
+            }),
+            flush=True,
         )
+        await asyncio.sleep(delay)
+    raise RuntimeError("Public history connection retries exhausted")
 
 
 def main() -> None:
