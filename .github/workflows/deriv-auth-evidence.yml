@@ -83,9 +83,14 @@ jobs:
             echo "DERIV_AUTH_MODE_EFFECTIVE=INVALID"
             missing=1
           fi
-          if [[ "$auth_mode" == "pat" && -z "$DERIV_APP_ID" ]]; then
+          if [[ "$auth_mode" == "pat" ]]; then
             echo "DERIV_APP_ID_REQUIRED_FOR_PAT=true"
-            missing=1
+            if [[ -n "$DERIV_APP_ID" ]]; then
+              echo "DERIV_APP_ID_PRESENT_FOR_PAT=true"
+            else
+              echo "DERIV_APP_ID_PRESENT_FOR_PAT=false"
+              missing=1
+            fi
           else
             echo "DERIV_APP_ID_REQUIRED_FOR_PAT=false"
           fi
