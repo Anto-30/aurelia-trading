@@ -15,6 +15,6 @@ def test_production_acceptance_audit_passes():
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert "AURELIA_PRODUCTION_ACCEPTANCE=AUDIT_PASS" in result.stdout
-    assert "PROBABILITY_POLICY_RANGE=0.50..0.75" in result.stdout
+    assert "PROBABILITY_POLICY_RANGE=0.55..0.75" in result.stdout
     assert "CAPITAL_MOVEMENT_PERMITTED=false" in result.stdout
     assert "LIVE_EXECUTION=BLOCKED" in result.stdout
