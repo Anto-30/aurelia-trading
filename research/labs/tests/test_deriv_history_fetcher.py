@@ -61,6 +61,15 @@ class DerivHistoryFetcherTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(RuntimeError, "no backward progress"):
             await collect_history(ws, "R_75", 100, count=2, pause_seconds=0)
 
+    async def test_invalid_ohlc_response_fails_closed(self):
+        bad = {"epoch": 180, "open": 103, "high": 102, "low": 101, "close": 103, "volume": 7}
+        ws = FakeWebSocket([
+            {"req_id": 1, "active_symbols": [{"symbol": "R_75"}]},
+            {"req_id": 2, "candles": [bad]},
+        ])
+        with self.assertRaisesRegex(RuntimeError, "invalid OHLCV"):
+            await collect_history(ws, "R_75", 180, pause_seconds=0)
+
     async def test_missing_volume_is_flagged_as_unit_proxy(self):
         no_volume = {"epoch": 180, "open": 103, "high": 104, "low": 102, "close": 103}
         ws = FakeWebSocket([
