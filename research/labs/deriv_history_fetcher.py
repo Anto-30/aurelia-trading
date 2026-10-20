@@ -18,7 +18,8 @@ from typing import Any
 import pandas as pd
 import websockets
 
-PUBLIC_WS_URL = "wss://ws.derivws.com/websockets/v3"
+# Match Deriv's documented public market-data workflow endpoint.
+PUBLIC_WS_URL = "wss://ws.binaryws.com/websockets/v3"
 MAX_CANDLES_PER_REQUEST = 5000
 
 
