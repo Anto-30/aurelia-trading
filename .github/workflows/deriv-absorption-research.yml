@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - research/deriv-tick-momentum-absorption-20261020
+  pull_request:
+    branches: [main]
+    paths:
+      - 'research/labs/**'
+      - 'run_wfo.py'
+      - 'requirements-research.txt'
+      - '.github/workflows/deriv-absorption-research.yml'
   workflow_dispatch:
 
 permissions:
