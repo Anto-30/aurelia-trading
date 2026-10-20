@@ -11,8 +11,10 @@ concurrency:
   cancel-in-progress: true
 jobs:
   assurance:
-    # Load production-scoped Actions secrets for authenticated verification.
-    environment: production
+    # Expose production-scoped secrets only to trusted pushes on main.
+    # Pull requests and research branches run in an untrusted environment with no production secrets.
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'production' || 'ci-untrusted' }}
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
@@ -25,7 +27,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Install runtime dependencies
-        run: pip install -r requirements.txt pytest
+        run: pip install -r requirements.txt -r requirements-research.txt pytest
       - name: Compile runtime and tests
         run: python -m compileall -q runtime research tests assurance
       - name: Run static production acceptance audit
