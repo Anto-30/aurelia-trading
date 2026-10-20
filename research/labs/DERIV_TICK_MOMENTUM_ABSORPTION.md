@@ -25,3 +25,16 @@ Each contract proxy receives its own directory with folds.csv, oos_trades.csv an
 - CFD and Multiplier cash P&L calculations are approximations. Actual quote commissions, payout, contract mechanics, entry/exit prices and slippage must replace placeholders before interpreting performance economically.
 - Run with actual historical input, verify coverage and gaps, inspect every OOS fold, then conduct a pre-committed demo/paper forward test. An OOS gate PASS means paper validation only.
 - Never wire this research module directly to the capital plane. No research result can authorize execution or alter release controls.
+
+
+## Public historical-data acquisition
+
+The research-only downloader fetches public candles and writes an offline CSV. It never authenticates or submits orders:
+
+```bash
+python -m pip install -r requirements-research.txt
+python -m research.labs.deriv_history_fetcher --symbol R_75 --days 180 --granularity 60 --out R75_6months_1min.csv
+python -m research.labs.deriv_tick_momentum_absorption --csv R75_6months_1min.csv --out wf_deriv_absorption --contract-type all --tick-size 0.01
+```
+
+Verify the symbol in the current `active_symbols` response and inspect the downloader's actual coverage report. Missing source volume is explicitly replaced by a unit-count proxy and counted in the report. The older public-history transport is for research data acquisition only; it must not be wired into AURELIA's production Deriv transport. It cannot authorize or place an order.
