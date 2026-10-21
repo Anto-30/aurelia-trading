@@ -1,0 +1,13 @@
+# Research staging configuration. This is NOT the canonical live authorization lock.
+# Audit commit is resolved by the PR head SHA; do not hard-code a mutable placeholder.
+status: STAGING_PAPER
+live_trading_enabled: false
+LIVE_EXECUTION: PAPER_ONLY
+capital_plane_mode: VERIFY_ONLY
+FINAL_EXECUTION_AUTHORIZATION: false
+execution_environment: "staging"
+data_source: "deriv_api_realtime"
+slippage_tolerance_bps: 5
+max_daily_drawdown_percent: 2.0
+circuit_breaker_enabled: true
+# This file cannot authorize live execution; canonical config/LIVE_LOCK.yaml remains authoritative.
