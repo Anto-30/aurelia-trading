@@ -4,6 +4,8 @@ import hashlib
 import json
 import tempfile
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 from pathlib import Path
 
 import numpy as np
@@ -13,7 +15,7 @@ from research.atos_validation.audited_ledger import verify_ledger
 from research.atos_validation.deriv_data import persist_history
 from scripts.run_frozen_simulator import (
     calculate_signal, load_data, load_simulation_config, prepare_entry, resolve_exit,
-    run_simulation, ActiveTrade,
+    run_simulation, ActiveTrade, CausalHMMRegimeTracker,
 )
 from research.labs.deterministic_intraday_strategies import StrategyCandidate
 
@@ -102,6 +104,37 @@ class FrozenSimulatorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             with self.assertRaisesRegex(FileNotFoundError, "will not guess"):
                 load_simulation_config(Path(td) / "missing.json", allow_unverified_scenario=True)
+
+    def test_hmm_feature_work_is_bounded_to_rolling_window(self):
+        config = config_doc()["hmm"]
+        tracker = CausalHMMRegimeTracker(config)
+
+        class FakeDetector:
+            def update(self, row):
+                return SimpleNamespace(regime="TREND", valid=True)
+
+        tracker.detector = FakeDetector()
+        # This tracker call should materialize only the rolling prefix needed for
+        # the current feature, not all historical closes at every step.
+        count = 10_000
+        history = pd.DataFrame({"close": 100.0 + np.sin(np.arange(count) / 5.0)})
+        tracker.last_fit_signal_index = count - 1
+        tracker.last_fit_attempt_index = count - 1
+
+        from research.atos_validation import regime_validation
+        original = regime_validation.RegimeDetector.features
+        seen_lengths = []
+
+        def recording_features(closes, window=14):
+            seen_lengths.append(len(closes))
+            return original(closes, window=window)
+
+        with patch("research.atos_validation.regime_validation.RegimeDetector.features",
+                   side_effect=recording_features):
+            state = tracker.state_for_closed_history(history)
+        self.assertEqual(state, "TREND")
+        self.assertEqual(seen_lengths, [config["training_bars"] + config["feature_window"] + 1])
+        self.assertLess(seen_lengths[0], len(history))
 
     def test_signal_api_cannot_receive_current_candle(self):
         import inspect
