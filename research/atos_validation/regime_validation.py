@@ -38,6 +38,8 @@ class RegimeDetector:
 
     @staticmethod
     def features(close: Sequence[float], window: int = 14) -> np.ndarray:
+        if isinstance(window, bool) or not isinstance(window, (int, np.integer)) or window < 2:
+            raise ValueError("window must be an integer >= 2")
         p = np.asarray(close, dtype=float)
         if p.ndim != 1 or len(p) < window + 2 or not np.isfinite(p).all() or (p <= 0).any():
             raise ValueError("close must be finite, positive, 1-D, and long enough")
@@ -229,6 +231,10 @@ def atr_position_size(account_equity: float, risk_fraction: float, atr: float,
 def chronological_partition(timestamps: Sequence, final_oos_months: int=3):
     """Return index slices; final OOS is time-based and must stay sealed."""
     import pandas as pd
+    if (isinstance(final_oos_months, bool)
+            or not isinstance(final_oos_months, (int, np.integer))
+            or not 1 <= final_oos_months <= 12):
+        raise ValueError("final_oos_months must be an integer in 1..12")
     ts=pd.to_datetime(timestamps,utc=True,errors="raise")
     if len(ts)==0 or not ts.is_monotonic_increasing or ts.has_duplicates:
         raise ValueError("timestamps must be sorted and unique")
