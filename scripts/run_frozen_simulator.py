@@ -555,7 +555,7 @@ def run_simulation(
                     writer.record_decision(
                         signal_bar_epoch=signal_epoch, strategy=STRATEGY_ID,
                         model_config_sha256=config_hash, fold_id=config["fold_id"],
-                        action="NO_TRADE", reason_codes=["NO_MSN R_SETUP".replace(" ", "")],
+                        action="NO_TRADE", reason_codes=["NO_MSNR_SETUP"],
                         hmm_regime_state=regime_state, accepted=False,
                     )
                     decision_count += 1
@@ -569,26 +569,26 @@ def run_simulation(
                     )
                     decision_count += 1
                 else:
+                    # The signal decision is committed at candle N-1 using no candle-N
+                    # price. The scheduled entry is then evaluated at candle N open.
+                    # If the open invalidates stop/target geometry, write a separate
+                    # cancellation event at N rather than rewriting the old decision.
+                    event_id = writer.record_decision(
+                        signal_bar_epoch=signal_epoch, strategy=STRATEGY_ID,
+                        model_config_sha256=config_hash, fold_id=config["fold_id"],
+                        action="ENTER_LONG" if candidate.direction == "LONG" else "ENTER_SHORT",
+                        reason_codes=list(candidate.evidence_codes),
+                        hmm_regime_state=regime_state, accepted=True,
+                    )
+                    decision_count += 1
                     prepared = prepare_entry(candidate, frame.iloc[i], execution=execution)
                     if prepared is None:
-                        writer.record_decision(
-                            signal_bar_epoch=signal_epoch, strategy=STRATEGY_ID,
-                            model_config_sha256=config_hash, fold_id=config["fold_id"],
-                            action="ENTER_LONG" if candidate.direction == "LONG" else "ENTER_SHORT",
-                            reason_codes=["ENTRY_GAP_INVALIDATES_STOP_TARGET_GEOMETRY", *candidate.evidence_codes],
-                            hmm_regime_state=regime_state, accepted=False,
+                        writer.cancel_decision(
+                            decision_event_id=event_id,
+                            cancellation_epoch=int(frame.iloc[i]["epoch"]),
+                            reason_codes=["ENTRY_GAP_INVALIDATES_STOP_TARGET_GEOMETRY"],
                         )
-                        decision_count += 1
                     else:
-                        event_id = writer.record_decision(
-                            signal_bar_epoch=signal_epoch, strategy=STRATEGY_ID,
-                            model_config_sha256=config_hash, fold_id=config["fold_id"],
-                            action="ENTER_LONG" if candidate.direction == "LONG" else "ENTER_SHORT",
-                            reason_codes=list(candidate.evidence_codes),
-                            hmm_regime_state=regime_state, accepted=True,
-                        )
-                        decision_count += 1
-                        decision = {"event_id": event_id, "candidate": candidate, "prepared": prepared}
                         active = ActiveTrade(
                             decision_event_id=event_id, direction=candidate.direction, entry_index=i,
                             entry_epoch=int(frame.iloc[i]["epoch"]), raw_entry_price=prepared["raw_entry_price"],
