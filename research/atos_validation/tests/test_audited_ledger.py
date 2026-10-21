@@ -60,6 +60,31 @@ class AuditedLedgerTests(unittest.TestCase):
             self.assertEqual(records[1]["record_sha256"], records[2]["previous_record_sha256"])
 
 
+    def test_strategy_code_hash_is_bound_to_decision_and_closed_trade(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "code-bound.jsonl"
+            code_hash = hashlib.sha256(b"strategy-code").hexdigest()
+            writer = AuditedLedgerWriter(
+                path, symbol="R_100", data_sha256=DATA_HASH,
+                granularity_seconds=60, strategy_code_sha256=code_hash,
+            )
+            decision_id = writer.record_decision(
+                signal_bar_epoch=60, strategy="alpha_beta_hmm", model_config_sha256=CONFIG_HASH,
+                fold_id="fold_1", action="ENTER_LONG", reason_codes=["qualified"],
+                hmm_regime_state="TREND", accepted=True,
+            )
+            writer.record_trade(
+                decision_event_id=decision_id, entry_epoch=120,
+                exit_timestamp="1970-01-01T00:03:00Z", entry_price=100, exit_price=101,
+                initial_risk_cash=10, gross_pnl_cash=10, spread_cost_cash=1,
+                slippage_cost_cash=0.5,
+            )
+            writer.close()
+            records = [json.loads(line) for line in path.read_text().splitlines()]
+            self.assertEqual(records[0]["strategy_code_sha256"], code_hash)
+            self.assertEqual(records[1]["strategy_code_sha256"], code_hash)
+            self.assertEqual(verify_ledger(path)["strategy_code_sha256"], code_hash)
+
     def test_execution_time_cancellation_resolves_accepted_decision_without_fake_trade(self):
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "cancel.jsonl"
