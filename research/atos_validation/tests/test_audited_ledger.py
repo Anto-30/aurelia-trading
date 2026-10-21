@@ -46,6 +46,10 @@ class AuditedLedgerTests(unittest.TestCase):
             self.assertTrue(verified["manifest_verified"])
             records = [json.loads(line) for line in path.read_text().splitlines()]
             trade = next(row for row in records if row["record_type"] == "trade_closed")
+            signal_record = next(row for row in records if row.get("event_id") == decision)
+            self.assertEqual(signal_record["timestamp_utc"], "1970-01-01T00:05:00Z")
+            self.assertEqual(signal_record["signal_timestamp_utc"], "1970-01-01T00:05:00Z")
+            self.assertEqual(signal_record["expected_entry_timestamp_utc"], "1970-01-01T00:05:00Z")
             self.assertEqual(trade["entry_bar_epoch"], 300)
             self.assertEqual(trade["hmm_regime_state"], "TREND")
             self.assertAlmostEqual(trade["cost_r"], 0.2)
