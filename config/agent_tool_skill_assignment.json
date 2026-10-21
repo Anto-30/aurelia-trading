@@ -602,7 +602,7 @@
       "capital_authority": false
     },
     "Dev": {
-      "status": "INACTIVE_RUNTIME_NOT_CONNECTED",
+      "status": "NOT_CONNECTED",
       "role": "future development-host/runtime operator",
       "tools": [
         "Git",
@@ -648,9 +648,9 @@
         "ML-calibration"
       ],
       "plugins": [
-        "data-analytics when analyzing evidence",
-        "mcp-precheck for MCP/provider configuration review",
-        "Hugging Face only for relevant model/dataset research"
+        "data-analytics (conditional for evidence analysis)",
+        "mcp-precheck (conditional for provider configuration review)",
+        "hugging-face (conditional for model/dataset research)"
       ],
       "can_mutate_live_lock": false,
       "capital_authority": false,
