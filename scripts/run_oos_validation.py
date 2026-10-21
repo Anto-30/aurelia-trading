@@ -37,8 +37,29 @@ from research.atos_validation.four_model_backtest import (
 )
 from scripts.verify_deriv_history_manifest import verify_history
 
-FINAL_OOS_MIN_DAYS = 90
 COST_SCHEMA = "aurelia.execution_economics_evidence.v1"
+
+
+def resolve_oos_start(end_epoch: int, granularity: int, *, oos_days: int | None = None,
+                     oos_months: int = 3) -> tuple[int, int | None, bool]:
+    """Return an aligned start, calendar-month count, and final-OOS eligibility.
+
+    Explicit day windows are exploratory. Final OOS uses calendar months rather
+    than approximating three calendar months as a fixed 90-day duration.
+    """
+    if granularity not in (60, 900):
+        raise ValueError("granularity must be 60 or 900 seconds")
+    if oos_days is not None:
+        if not 1 <= oos_days <= 365:
+            raise ValueError("oos_days must be in 1..365")
+        return end_epoch - oos_days * 86400, None, False
+    if not 1 <= oos_months <= 12:
+        raise ValueError("oos_months must be in 1..12")
+    end_stamp = pd.Timestamp(end_epoch, unit="s", tz="UTC")
+    start_stamp = end_stamp - pd.DateOffset(months=oos_months)
+    start = int(start_stamp.timestamp())
+    start -= start % granularity
+    return start, oos_months, oos_months >= 3
 
 
 def _sha256(path: Path) -> str:
@@ -151,8 +172,11 @@ def main() -> int:
     parser.add_argument("--app-id", default=os.getenv("DERIV_APP_ID"),
                         help="numeric Deriv app ID; market-data-only, no account token")
     parser.add_argument("--symbol", default="R_100")
-    parser.add_argument("--oos-days", type=int, default=90,
-                        help="90 days is the minimum final-OOS protocol; shorter windows are exploratory")
+    window = parser.add_mutually_exclusive_group()
+    window.add_argument("--oos-days", type=int, default=None,
+                        help="fixed-day exploratory window; does not satisfy the calendar-month final-OOS protocol")
+    window.add_argument("--oos-months", type=int, default=3,
+                        help="calendar-month window; final OOS requires at least 3 calendar months")
     parser.add_argument("--granularity", type=int, choices=(60, 900), default=60)
     parser.add_argument("--out-dir", type=Path, default=Path("artifacts/oos"))
     parser.add_argument("--trades-csv", type=Path,
@@ -165,9 +189,13 @@ def main() -> int:
         print("OOS_CAPTURE=FAILED")
         print("REASON=Set DERIV_APP_ID or pass --app-id; do not provide an account token.")
         return 2
-    if not 1 <= args.oos_days <= 365:
+    if args.oos_days is not None and not 1 <= args.oos_days <= 365:
         print("OOS_CAPTURE=FAILED")
         print("REASON=--oos-days must be in 1..365")
+        return 2
+    if args.oos_days is None and not 1 <= args.oos_months <= 12:
+        print("OOS_CAPTURE=FAILED")
+        print("REASON=--oos-months must be in 1..12")
         return 2
     if not args.symbol or len(args.symbol) > 30 or not args.symbol.replace("_", "").isalnum():
         print("OOS_CAPTURE=FAILED")
@@ -183,17 +211,24 @@ def main() -> int:
     now = int(time.time())
     # Stop at the most recent fully closed candle boundary.
     end_epoch = (now // args.granularity) * args.granularity - args.granularity
-    start_epoch = end_epoch - args.oos_days * 86400
-    start_epoch -= start_epoch % args.granularity
+    start_epoch, calendar_months, final_oos_protocol_satisfied = resolve_oos_start(
+        end_epoch, args.granularity, oos_days=args.oos_days, oos_months=args.oos_months,
+    )
+    oos_days_actual = (end_epoch - start_epoch) / 86400.0
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    csv_path = args.out_dir / f"{args.symbol}_{args.granularity}s_oos_{args.oos_days}d.csv"
+    window_label = f"{calendar_months}months" if calendar_months is not None else f"{args.oos_days}days"
+    csv_path = args.out_dir / f"{args.symbol}_{args.granularity}s_oos_{window_label}.csv"
     manifest_path = csv_path.with_suffix(csv_path.suffix + ".manifest.json")
     run_path = args.out_dir / "oos_validation_report.json"
 
     print("DERIV_OOS_CAPTURE=STARTED")
     print(f"SYMBOL={args.symbol}")
     print(f"GRANULARITY_SECONDS={args.granularity}")
-    print(f"OOS_DAYS={args.oos_days}")
+    print(f"OOS_DAYS_ACTUAL={oos_days_actual:.3f}")
+    if calendar_months is not None:
+        print(f"OOS_CALENDAR_MONTHS={calendar_months}")
+    else:
+        print("OOS_WINDOW_TYPE=EXPLORATORY_FIXED_DAYS")
     print(f"START_UTC={datetime.fromtimestamp(start_epoch, timezone.utc).isoformat()}")
     print(f"END_UTC={datetime.fromtimestamp(end_epoch, timezone.utc).isoformat()}")
     print(f"CODE_COMMIT={commit}")
@@ -229,7 +264,8 @@ def main() -> int:
         "status": "DATA_CAPTURE_VERIFIED_METRICS_NOT_COMPUTED",
         "symbol": args.symbol,
         "granularity_seconds": args.granularity,
-        "oos_days": args.oos_days,
+        "oos_days_actual": oos_days_actual,
+        "oos_calendar_months": calendar_months,
         "oos_start_epoch": start_epoch,
         "oos_end_epoch": end_epoch,
         "oos_start_utc": datetime.fromtimestamp(start_epoch, timezone.utc).isoformat(),
@@ -242,7 +278,7 @@ def main() -> int:
         "history_manifest": str(manifest_path),
         "strategy_metrics": None,
         "fold_metrics": None,
-        "final_three_month_oos_protocol_satisfied": args.oos_days >= FINAL_OOS_MIN_DAYS,
+        "final_three_month_oos_protocol_satisfied": final_oos_protocol_satisfied,
         "cost_source_authenticity_independently_verified": False,
         "final_execution_authorization": False,
         "live_execution": "BLOCKED",
@@ -255,10 +291,10 @@ def main() -> int:
     print(f"MANIFEST_SHA256={verified['manifest_sha256']}")
     print(f"DATA_PATH={csv_path}")
     print(f"MANIFEST_PATH={manifest_path}")
-    if args.oos_days < FINAL_OOS_MIN_DAYS:
-        print("FINAL_OOS_PROTOCOL=NOT_SATISFIED_WINDOW_SHORTER_THAN_90_DAYS")
+    if not final_oos_protocol_satisfied:
+        print("FINAL_OOS_PROTOCOL=NOT_SATISFIED_EXPLORATORY_DAY_WINDOW_OR_SHORTER_THAN_3_CALENDAR_MONTHS")
     else:
-        print("FINAL_OOS_PROTOCOL=WINDOW_LENGTH_ELIGIBLE_PENDING_PROOF_OF_PRECOMMITMENT")
+        print("FINAL_OOS_PROTOCOL=CALENDAR_MONTH_WINDOW_ELIGIBLE_PENDING_PROOF_OF_PRECOMMITMENT")
 
     if args.trades_csv is None or args.cost_evidence is None:
         report["reason"] = (
@@ -310,7 +346,7 @@ def main() -> int:
         },
         "strategy_metrics": model_metrics,
         "fold_metrics": fold_metrics,
-        "final_three_month_oos_protocol_satisfied": args.oos_days >= FINAL_OOS_MIN_DAYS,
+        "final_three_month_oos_protocol_satisfied": final_oos_protocol_satisfied,
         "oos_status": "PENDING_INDEPENDENT_REVIEW",
         "final_execution_authorization": False,
         "live_execution": "BLOCKED",
