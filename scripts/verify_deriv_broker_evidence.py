@@ -196,7 +196,7 @@ async def run() -> int:
         write_evidence(OUTPUT, enriched)
 
         print("DERIV_BROKER_EVIDENCE=PROVEN")
-        print(f"DERIV_ACCOUNT={account.loginid}")
+        print("DERIV_ACCOUNT_BINDING_MATCH=true")
         print(f"BROKER_BUY_TRANSACTION_COUNT={len(buy_ids)}")
         print(f"OPEN_CONTRACT_COUNT={len(open_contract_ids)}")
         print("ORDERS_SUBMITTED=0")
