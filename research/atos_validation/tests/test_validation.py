@@ -21,6 +21,41 @@ class ValidationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             RegimeDetector(filter_kind="alpha_beta", alpha=.34)
 
+    def test_hmm_emissions_are_causal_and_normalize_posterior(self):
+        from types import SimpleNamespace
+        from research.atos_validation.regime_validation import RegimeDetector
+        detector = RegimeDetector(min_confidence=0.01, max_entropy=1.0)
+        detector.mean = np.array([0.0, 0.0])
+        detector.scale = np.array([1.0, 1.0])
+        detector.state_names = {0: "RANGE", 1: "TREND", 2: "HIGH_VOL_CHOP"}
+        detector.model = SimpleNamespace(
+            means_=np.array([[0.0, 0.0], [1.0, 1.0], [-1.0, -1.0]]),
+            covars_=np.array([np.eye(2), np.eye(2), np.eye(2)]),
+            startprob_=np.array([1.0 / 3.0] * 3),
+            transmat_=np.eye(3),
+        )
+        prediction = detector.update([0.0, 0.0])
+        self.assertEqual(len(prediction.probabilities), 3)
+        self.assertTrue(prediction.valid)
+        self.assertAlmostEqual(sum(prediction.probabilities), 1.0, places=12)
+
+    def test_hmm_invalid_covariance_returns_undefined_not_a_signal(self):
+        from types import SimpleNamespace
+        from research.atos_validation.regime_validation import RegimeDetector
+        detector = RegimeDetector(min_confidence=0.01, max_entropy=1.0)
+        detector.mean = np.array([0.0, 0.0])
+        detector.scale = np.array([1.0, 1.0])
+        detector.state_names = {0: "RANGE", 1: "TREND", 2: "HIGH_VOL_CHOP"}
+        detector.model = SimpleNamespace(
+            means_=np.zeros((3, 2)),
+            covars_=np.array([np.eye(2), np.diag([1.0, -1.0]), np.eye(2)]),
+            startprob_=np.array([1.0 / 3.0] * 3),
+            transmat_=np.eye(3),
+        )
+        prediction = detector.update([0.0, 0.0])
+        self.assertFalse(prediction.valid)
+        self.assertEqual(prediction.regime, "UNDEFINED")
+
     def test_bad_risk_inputs_rejected(self):
         with self.assertRaises(ValueError): atr_position_size(1000,.5,1,2,1,100)
     def test_wfa_chronological(self):
