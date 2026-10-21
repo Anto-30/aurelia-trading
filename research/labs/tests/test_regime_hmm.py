@@ -5,7 +5,7 @@ import unittest
 from research.labs.regime_hmm import (
     AlphaBetaHMMFilter,
     CausalHMMFilter, FeatureScaler, REGIME_HIGH_VOL, REGIME_RANGE, REGIME_TREND_UP,
-    REGIME_UNDEFINED, causal_belief_update, features_from_closes,
+    REGIME_UNDEFINED, alpha_beta_belief_update, causal_belief_update, features_from_closes,
     gaussian_log_likelihood, map_model_states, walk_forward_folds,
 )
 
