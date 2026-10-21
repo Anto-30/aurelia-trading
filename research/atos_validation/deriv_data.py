@@ -168,15 +168,20 @@ class DerivHistoryClient:
     def backfill(
         self, symbol: str, start_epoch: int, end_epoch: int,
         granularity: int = 60, bars_per_request: int = 4500,
+        request_delay_seconds: float = 1.0,
     ) -> pd.DataFrame:
-        """Chunk a long history interval without overlap and verify exact coverage."""
+        """Chunk a long history interval without overlap, pausing between requests."""
         start, end = self._validate_range(start_epoch, end_epoch, granularity)
         if not 100 <= bars_per_request <= 5000:
             raise ValueError("bars_per_request must be in 100..5000")
+        if isinstance(request_delay_seconds, bool) or not math.isfinite(float(request_delay_seconds)) or request_delay_seconds < 0.5:
+            raise ValueError("request_delay_seconds must be finite and at least 0.5 seconds")
         chunk_seconds = (bars_per_request - 1) * granularity
         frames: list[pd.DataFrame] = []
         cursor = start
         while cursor <= end:
+            if frames:
+                time.sleep(float(request_delay_seconds))
             stop = min(cursor + chunk_seconds, end)
             frames.append(self.candles(
                 symbol, cursor, stop,
