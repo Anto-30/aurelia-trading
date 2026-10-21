@@ -4,7 +4,19 @@
 Research only. This package has no order-submission method and must not be wired directly to Layer 6 or the execution adapter. The canonical `config/LIVE_LOCK.yaml` is intentionally unchanged. `config/STAGING_PAPER.yaml` is a separate paper-mode profile and cannot override the canonical lock.
 
 ## Data
-Deriv WebSocket API endpoint pattern: `wss://ws.derivws.com/websockets/v3?app_id=YOUR_APP_ID`; history requests use `ticks_history` with `style=candles` and `granularity`. See https://developers.deriv.com/docs/data/ticks-history/. API App ID is configuration, not a secret. Keep access tokens out of source and logs. Deriv synthetic-index candles do not provide exchange-traded volume; the adapter preserves volume as missing rather than fabricating it. Fetch in bounded windows and persist the raw responses with timestamps, request metadata, symbol, granularity, and content hashes. Current adapter requests one bounded response; production 12–24 month backfills must paginate/chunk by time and verify expected bar counts, UTC boundaries, duplicates, and gaps. It fails on detected gaps instead of filling them silently.
+The research history client uses Deriv's documented `ticks_history` candle response on `wss://ws.derivws.com/websockets/v3?app_id=YOUR_APP_ID`. See https://developers.deriv.com/docs/data/ticks-history/. The API App ID is configuration, not an access token. The history client requires `DERIV_APP_ID` in its environment and never accepts an account token. It validates exact UTC candle boundaries, complete coverage, OHLC ordering, finite prices, and duplicate timestamps; it rejects truncation/gaps rather than silently deduplicating or filling. Deriv synthetic-index candles do not provide exchange-traded volume, so volume remains missing.
+
+Fetch a complete historical interval and write a normalized CSV plus a SHA-256 manifest with:
+```bash
+export DERIV_APP_ID="<your numeric Deriv application ID>"
+python scripts/fetch_deriv_history.py \
+  --symbol R_100 \
+  --start 2025-10-21T00:00:00Z \
+  --end 2026-10-21T00:00:00Z \
+  --granularity 60 \
+  --out data/deriv/R_100_1m.csv
+```
+For a 24-month study, move `--start` back to the corresponding UTC boundary. The endpoints must align to the selected granularity. The CLI prints bar count and hashes, not account information. Store the generated CSV and manifest as a versioned research artifact; do not invent missing volume, execution costs, or trade outputs. Network/history limits and symbol availability can still block a requested interval, in which case there is no qualified dataset.
 
 ## Validation protocol
 1. Sort and deduplicate source data, preserve missingness, and verify symbol availability/contract semantics.
