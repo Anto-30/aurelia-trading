@@ -69,11 +69,12 @@ class ValidationTests(unittest.TestCase):
         self.assertTrue((dates[sealed[0]]>=cutoff).item() if hasattr(dates[sealed[0]]>=cutoff,"item") else dates[sealed[0]]>=cutoff)
     def test_degradation_triggers_fallback_not_overfit_proof(self):
         ins=[.3]*200; oos=[.1]*100
-        r=validate_expectancy(ins,oos,[[.1,.2],[.0,.1]],degradation_limit=.2,min_oos_trades=50)
+        r=validate_expectancy(ins,oos,[oos[:50],oos[50:]],degradation_limit=.2,min_oos_trades=50)
         self.assertTrue(r.overfit_flag)
         self.assertEqual(r.decision,"REJECT_OR_FALLBACK")
     def test_nonpositive_insample_does_not_use_degradation_ratio(self):
-        r=validate_expectancy([-.1,.1]*100,[.1,.2]*50,[[.1,.2],[.2,.3]],min_oos_trades=50)
+        oos=[.1,.2]*50
+        r=validate_expectancy([-.1,.1]*100,oos,[oos[:50],oos[50:]],min_oos_trades=50)
         self.assertIsNone(r.degradation_pct)
     def test_four_model_comparison_outputs_fold_level_metrics(self):
         models=["alpha_beta_hmm","gaussian_hmm","ma_control","unfiltered_msnr"]
@@ -157,10 +158,19 @@ class ValidationTests(unittest.TestCase):
         result = validate_expectancy(
             [.1, .2] * 100,
             [.1, .2] * 60,
-            [[.1, .2]],
+            [[.1, .2] * 60],
             min_oos_trades=50,
         )
         self.assertTrue(result.overfit_flag)
         self.assertEqual(result.decision, "REJECT_OR_FALLBACK")
+    
+    def test_expectancy_rejects_fold_returns_not_matching_oos(self):
+        with self.assertRaisesRegex(ValueError, "exactly partition OOS returns"):
+            validate_expectancy(
+                [.1, .2] * 100,
+                [.1, .2] * 50,
+                [[.1, .2] * 25, [.3, .4]],
+                min_oos_trades=50,
+            )
 
 if __name__=="__main__": unittest.main()
