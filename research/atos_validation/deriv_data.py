@@ -94,13 +94,18 @@ class DerivHistoryClient:
         self.timeout = float(timeout_seconds)
         self.max_attempts = max_attempts
         self.retry_base_seconds = float(retry_base_seconds)
+        self.last_connected_url: str | None = None
+        self.connected_urls: list[str] = []
 
     def _connect(self):
         """Connect to documented public v3 endpoints in order, failing with bounded diagnostics."""
         failures: list[str] = []
         for url in self.urls:
             try:
-                return websocket.create_connection(url, timeout=self.timeout)
+                ws = websocket.create_connection(url, timeout=self.timeout)
+                self.last_connected_url = url
+                self.connected_urls.append(url)
+                return ws
             except Exception as exc:
                 failures.append(f"{url.split('?')[0]}: {type(exc).__name__}")
         raise ConnectionError("all public Deriv WebSocket endpoints failed: " + "; ".join(failures))
