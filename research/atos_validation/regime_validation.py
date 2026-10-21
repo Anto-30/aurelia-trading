@@ -173,7 +173,7 @@ class ExpectancyReport:
     decision: str
 
 def _metrics(r: np.ndarray) -> tuple[float, float, float, float, float, float]:
-    if len(r)==0: return (float("nan"),float("nan"),float("nan"),float("nan"),float("nan"))
+    if len(r)==0: return (float("nan"),float("nan"),float("nan"),float("nan"),float("nan"),float("nan"))
     exp=float(np.mean(r)); se=float(np.std(r,ddof=1)/math.sqrt(len(r))) if len(r)>1 else float("nan")
     gains=float(r[r>0].sum()); losses=float(-r[r<0].sum())
     pf=gains/losses if losses>0 else (float("inf") if gains>0 else 0.0)
