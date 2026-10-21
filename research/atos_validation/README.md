@@ -50,3 +50,18 @@ The repository also has a manual GitHub Actions workflow, `Deriv historical rese
 - The four-model script consumes an audited trade ledger. It does not generate authentic MSNR trades from candles or invent model outputs. Strategy-specific trade generation and Deriv contract payoff/cost adapters remain required.
 - ATR sizing requires the actual contract's monetary value per price unit and stop semantics. For fixed-payout contracts without a conventional stop, use stake/payout loss bounds rather than treating ATR sizing as a stop-loss guarantee.
 - No live trading, real orders, or capital authorization is implemented.
+
+
+## Hash-chained trade decisions and nine-file evidence output
+
+Use `research/atos_validation/audited_ledger.py` to instrument the frozen strategy replay. It records every accepted, rejected, or no-trade decision and each completed trade, binds each record to the exact data and per-model configuration hashes, and enforces signal-candle N-1 to entry-candle N timing. The strategy replay must still supply the real signals, entry/exit values, P&L, and observed cost inputs; this helper is not a strategy simulator.
+
+Verify the JSONL and its companion manifest before analysis:
+
+```bash
+python -m research.atos_validation.audited_ledger artifacts/trades/audited_trades.jsonl
+```
+
+The nine-file evidence builder is `scripts/build_release_evidence.py`. It verifies the history CSV against its manifest and the trade ledger against its manifest, derives only those metrics supported by its source files, emits null for unknown metrics, and explains missing fields in `evidence/evidence_notes.md`. It refuses to overwrite existing evidence unless `--overwrite` is explicitly supplied. `strategy_eligibility.eligible_for_live_unlock` always remains false.
+
+See `docs/AUDITED_LEDGER_AND_EVIDENCE.md` for the 1m/15m backfill, pacing, required source reports, freeze protocol, and Issue #185 hash anchoring. The resulting evidence is incomplete until the real dataset, simulator-generated ledger, protected broker lifecycle, recovery, 3,600-second soak, calibration, costs, deployment review and independent approval have been recorded.
