@@ -28,6 +28,11 @@ def _load(path: Path, label: str) -> dict[str, Any]:
         raise ValueError(f"{label}: order submission permission must remain false")
     if not value.get("record_hash") or not value.get("data_hash"):
         raise ValueError(f"{label}: evidence hashes are missing")
+    unsigned = {key: item for key, item in value.items() if key != "record_hash"}
+    canonical = json.dumps(unsigned, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    actual_hash = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    if actual_hash != value.get("record_hash"):
+        raise ValueError(f"{label}: evidence record hash does not verify")
     if not isinstance(value.get("observed"), dict):
         raise ValueError(f"{label}: observed section is missing")
     return value
