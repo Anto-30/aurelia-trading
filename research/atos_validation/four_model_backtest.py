@@ -27,7 +27,7 @@ def evaluate(path: str) -> pd.DataFrame:
     required={"timestamp","strategy","r_gross","cost_r","fold"}
     if not required.issubset(df.columns): raise ValueError(f"missing columns: {sorted(required-set(df.columns))}")
     df=df.sort_values("timestamp")
-    if df.timestamp.isna().any() or df.timestamp.duplicated().any(): raise ValueError("timestamps must be non-null and unique per input trade row")
+    if df.timestamp.isna().any() or df.duplicated(["strategy","timestamp"]).any(): raise ValueError("timestamps must be non-null and unique within each strategy")
     if not np.isfinite(df[["r_gross","cost_r"]].to_numpy(dtype=float)).all(): raise ValueError("invalid R/costs")
     df["net_r"]=df.r_gross-df.cost_r
     absent=set(MODEL_ORDER)-set(df.strategy.unique())
