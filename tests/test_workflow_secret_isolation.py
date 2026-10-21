@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
 import unittest
@@ -35,12 +36,11 @@ class WorkflowSecretIsolationTests(unittest.TestCase):
 
     def test_sanitizer_excludes_account_balance_and_transaction_identifiers(self):
         def evidence(scope, observed, verification_scope):
-            return {
+            value = {
                 "evidence_id": "evidence-2026-10-21T12:00:00Z",
                 "source_hash": "commit-abc",
                 "config_hash": "config-def",
                 "data_hash": "data-hash",
-                "record_hash": "record-hash",
                 "started_at_utc": "2026-10-21T12:00:00+00:00",
                 "ended_at_utc": "2026-10-21T12:01:00+00:00",
                 "valid_until_utc": "2026-10-21T12:06:00+00:00",
@@ -52,6 +52,9 @@ class WorkflowSecretIsolationTests(unittest.TestCase):
                 "order_submission_permitted": False,
                 "observed": observed,
             }
+            canonical = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+            value["record_hash"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            return value
 
         session = evidence("session", {
             "account_loginid": "PRIVATE_LOGIN_1234",
