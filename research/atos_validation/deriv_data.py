@@ -21,6 +21,9 @@ import pandas as pd
 import websocket
 
 DERIV_WS_BASE = "wss://ws.derivws.com/websockets/v3"
+# Both hosts are published for the legacy v3 market-data API; try the alternate host
+# when a transient Cloudflare/origin handshake error affects one endpoint.
+DERIV_WS_BASES = (DERIV_WS_BASE, "wss://ws.binaryws.com/websockets/v3")
 OHLC_COLUMNS = ("open", "high", "low", "close")
 DATA_COLUMNS = ["timestamp", "epoch", "open", "high", "low", "close", "volume"]
 
@@ -70,8 +73,19 @@ class DerivHistoryClient:
             raise ValueError("Set DERIV_APP_ID to a numeric application ID")
         if not math.isfinite(float(timeout_seconds)) or timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be finite and positive")
-        self.url = f"{DERIV_WS_BASE}?app_id={self.app_id}"
+        self.urls = tuple(f"{base}?app_id={self.app_id}" for base in DERIV_WS_BASES)
+        self.url = self.urls[0]  # compatibility alias for diagnostics/tests
         self.timeout = float(timeout_seconds)
+
+    def _connect(self):
+        """Connect to documented public v3 endpoints in order, failing with bounded diagnostics."""
+        failures: list[str] = []
+        for url in self.urls:
+            try:
+                return websocket.create_connection(url, timeout=self.timeout)
+            except Exception as exc:
+                failures.append(f"{url.split('?')[0]}: {type(exc).__name__}")
+        raise ConnectionError("all public Deriv WebSocket endpoints failed: " + "; ".join(failures))
 
     @staticmethod
     def _validate_range(start_epoch: int, end_epoch: int, granularity: int) -> tuple[int, int]:
@@ -133,7 +147,7 @@ class DerivHistoryClient:
         if expected_count > count:
             raise ValueError("requested range exceeds count; use backfill() to fetch bounded chunks")
 
-        ws = websocket.create_connection(self.url, timeout=self.timeout)
+        ws = self._connect()
         try:
             request = {
                 "ticks_history": symbol,
