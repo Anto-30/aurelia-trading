@@ -42,6 +42,9 @@ This is the browsable map of the current AURELIA implementation on `main`.
 ## Research and validation
 
 - Walk-forward/OOS: `runtime/validation/walk_forward.py`
+- Research-only causal regime HMM: `research/labs/regime_hmm.py`
+- Regime HMM regression tests: `research/labs/tests/test_regime_hmm.py`
+- Regime HMM validation plan: `docs/AURELIA_REGIME_HMM_RESEARCH_2026-10-21.md`
 - Probability/calibration: `runtime/validation/probability.py`
 - Decision replay: `runtime/validation/decision_replay.py`
 - Strategy governance: `runtime/strategy/governance.py`
