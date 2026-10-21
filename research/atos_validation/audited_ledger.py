@@ -403,6 +403,7 @@ class AuditedLedgerWriter:
             "r_multiple": net_r,
             "data_sha256": self.data_sha256,
             "model_config_sha256": decision["model_config_sha256"],
+            "strategy_code_sha256": decision.get("strategy_code_sha256"),
         }
         self._append(record)
         self._trade_count += 1
@@ -542,6 +543,8 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
                     raise ValueError(f"line {line_no}: regime state mismatch with decision")
                 if record.get("strategy") != decision.get("strategy") or record.get("fold_id") != decision.get("fold_id"):
                     raise ValueError(f"line {line_no}: strategy/fold mismatch with decision")
+                if record.get("strategy_code_sha256") != decision.get("strategy_code_sha256"):
+                    raise ValueError(f"line {line_no}: strategy-code hash mismatch with decision")
                 numeric = ("entry_price", "exit_price", "initial_risk_cash", "gross_pnl_cash", "spread_cost_cash",
                            "slippage_cost_cash", "commission_cost_cash", "total_cost_cash", "net_pnl_cash",
                            "r_gross", "cost_r", "r_multiple")
