@@ -9,13 +9,13 @@ Use a numeric Deriv application ID, not an account token. Public market-history 
 Run separately for 1-minute and 15-minute candles, using UTC boundaries aligned to the timeframe:
 
     export DERIV_APP_ID='<numeric application ID>'
-    python scripts/fetch_deriv_history.py --symbol R_100 --start 2024-10-21T00:00:00Z --end 2026-10-21T00:00:00Z --granularity 60 --bars-per-request 4500 --out data/deriv/R_100_1m.csv
+    python scripts/fetch_deriv_history.py --symbol R_100 --start 2022-10-21T00:00:00Z --end 2024-10-21T00:00:00Z --granularity 60 --bars-per-request 4500 --out data/deriv/R_100_1m.csv
     python scripts/verify_deriv_history_manifest.py data/deriv/R_100_1m.csv
 
-    python scripts/fetch_deriv_history.py --symbol R_100 --start 2024-10-21T00:00:00Z --end 2026-10-21T00:00:00Z --granularity 900 --bars-per-request 4500 --out data/deriv/R_100_15m.csv
+    python scripts/fetch_deriv_history.py --symbol R_100 --start 2022-10-21T00:00:00Z --end 2024-10-21T00:00:00Z --granularity 900 --bars-per-request 4500 --out data/deriv/R_100_15m.csv
     python scripts/verify_deriv_history_manifest.py data/deriv/R_100_15m.csv
 
-These dates illustrate a 24-month request ending on 21 October 2026; confirm the real returned coverage. Each CSV has its own JSON manifest, row count, exact UTC interval, CSV SHA-256, and manifest SHA-256. Keep the CSV and manifest together and read-only after capture. Independently anchor each resulting digest in the release issue. A hash proves consistency after the digest is anchored; it does not prove that the dataset was complete or honest before hashing.
+These are the specifically requested historical bounds, 21 October 2022 through 21 October 2024 UTC; confirm the real returned coverage. This period is for historical development/WFA and cannot serve as a prospective OOS window in October 2026. Each CSV has its own JSON manifest, row count, exact UTC interval, CSV SHA-256, and manifest SHA-256. Keep the CSV and manifest together and read-only after capture. Independently anchor each resulting digest in the release issue. A hash proves consistency after the digest is anchored; it does not prove that the dataset was complete or honest before hashing.
 
 The 15-minute file is a separate artifact. Preserve its hash and timestamps. Any 15-minute feature used for a 1-minute decision must be aligned causally so a later 15-minute close cannot leak into an earlier 1-minute signal.
 
