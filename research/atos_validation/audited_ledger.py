@@ -494,8 +494,14 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
                     raise ValueError(f"line {line_no}: cancellation is not at the scheduled next-bar execution epoch")
                 if record.get("signal_bar_epoch") != decision.get("signal_bar_epoch"):
                     raise ValueError(f"line {line_no}: cancellation signal timestamp mismatch")
+                if record.get("timestamp_utc") != _epoch_iso(int(record["cancellation_epoch"])):
+                    raise ValueError(f"line {line_no}: cancellation timestamp does not match cancellation epoch")
                 if record.get("hmm_regime_state") != decision.get("hmm_regime_state"):
                     raise ValueError(f"line {line_no}: cancellation regime state mismatch")
+                if record.get("symbol") != decision.get("symbol") or record.get("strategy") != decision.get("strategy") or record.get("fold_id") != decision.get("fold_id"):
+                    raise ValueError(f"line {line_no}: cancellation instrument/strategy/fold mismatch")
+                if record.get("model_config_sha256") != decision.get("model_config_sha256"):
+                    raise ValueError(f"line {line_no}: cancellation model/config hash mismatch")
                 reasons = record.get("reason_codes")
                 if not isinstance(reasons, list) or not reasons or any(not isinstance(reason, str) or not reason.strip() for reason in reasons):
                     raise ValueError(f"line {line_no}: cancellation reasons are missing")
@@ -533,6 +539,10 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
                     value = record.get(key)
                     if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value))):
                         raise ValueError(f"line {line_no}: invalid optional numeric {key}")
+                    if value is not None and key.endswith("_cost_cash") and float(value) < 0:
+                        raise ValueError(f"line {line_no}: optional cost cannot be negative: {key}")
+                    if value is not None and key.endswith("_price") and float(value) <= 0:
+                        raise ValueError(f"line {line_no}: optional reference price must be positive: {key}")
                 for digest_key in ("cost_source_sha256", "instrument_source_sha256"):
                     value = record.get(digest_key)
                     if value is not None and not SHA256_RE.fullmatch(str(value)):
