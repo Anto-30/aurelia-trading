@@ -4,11 +4,11 @@
 
 **Status: research prototype only.** This work does not qualify a strategy, change risk limits, authorize trades, connect to a Deriv account, or alter config/LIVE_LOCK.yaml. LIVE_EXECUTION remains BLOCKED, capital-plane mode remains VERIFY_ONLY, and FINAL_EXECUTION_AUTHORIZATION remains false.
 
-This is a conventional Gaussian HMM with a causal forward filter. It is **not** the specific alpha/beta-HMM in Sui et al., “Alpha-Beta HMM: Hidden Markov Model Filtering with Equal Exit Probabilities and a Step-Size Parameter” (arXiv:2504.01759). The paper's constrained equal-exit model and step-size update must be implemented and independently compared before this implementation can carry that name.
+The module now includes (1) a conventional Gaussian-HMM forward filter and (2) a paper-style alpha-beta belief recursion. The latter implements the equal-exit prediction and tempered-likelihood update from Sui et al. (arXiv:2504.01759). Its emission means/covariances are still estimated by a GaussianHMM EM fit, so this is a hybrid research implementation—not a complete replication of every training/experimental detail in the paper—and must be benchmarked against a full-transition HMM baseline.
 
 ## Corrections to the initial skeleton
 
-- GaussianHMM.predict() performs sequence decoding, not an independent online update for the most recent candle. Re-running it on the last 20 samples also resets inference context on every call. This prototype persists the filtered belief and updates once per completed bar using the transition prior and current emission likelihood only.
+- GaussianHMM.predict() returns a decoded state sequence; it is not the persistent online filter required here. Re-running it on the last 20 samples resets the sequence context. Both filter adapters in this module instead persist belief and update once per completed bar. The alpha-beta variant uses the paper-style scalar exit parameter `alpha` and evidence step-size `beta`, not the model transition matrix.
 - State IDs are arbitrary and permutation-invariant. Mapping is recalculated from each fit's parameters, never by assuming state 0/1/2 have fixed meanings.
 - The original covars_[:, 1, 1] test examines the covariance of the volatility feature, not the mean volatility level. This prototype maps the state with the highest training-standardized mean rolling volatility only when it clears an explicit threshold. Labels are heuristics and require fold-by-fold diagnostics.
 - Scaling is fitted on each training window only. Test observations are transformed with those frozen statistics. Fitting or scaling on train+test data leaks future distribution information.
@@ -41,12 +41,12 @@ Example outline:
     train_rows = features[:500]
     test_rows = features[500:550]
     fit = train_gaussian_hmm(train_rows, n_states=3)
-    filter_ = fit.new_filter()
+    filter_ = fit.new_alpha_beta_filter(alpha=0.05, beta=1.0)  # placeholder values; tune only on training/validation
     for row in test_rows:
         signal = filter_.update(row)  # one call per completed candle, in order
         print(signal.regime, signal.confidence, signal.normalized_entropy)
 
-This is only a mechanics demo. It does not estimate strategy P&L, include contract-specific payout mechanics, establish net edge, or demonstrate live readiness.
+This is only a mechanics demo. Alpha and beta shown are placeholders, not tuned values. It does not estimate strategy P&L, include contract-specific payout mechanics, establish net edge, or demonstrate live readiness.
 
 ## Promotion gates — not yet satisfied
 
