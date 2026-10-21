@@ -5,7 +5,8 @@ on:
     inputs:
       app_id:
         description: "Numeric Deriv application ID (public identifier, not an account token)"
-        required: true
+        required: false
+        default: ""
         type: string
       symbol:
         description: "Deriv market symbol"
@@ -57,12 +58,18 @@ jobs:
       - name: Fetch and validate exact historical coverage
         run: |
           mkdir -p artifacts/deriv
+          extra=()
+          if [ -n "$DERIV_APP_ID" ]; then extra+=(--app-id "$DERIV_APP_ID"); fi
           python scripts/fetch_deriv_history.py \
             --symbol "$DERIV_SYMBOL" \
             --start "$DERIV_START" \
             --end "$DERIV_END" \
             --granularity "$DERIV_GRANULARITY" \
             --bars-per-request 4500 \
+            --request-delay-seconds 1.5 \
+            --max-attempts 4 \
+            --retry-base-seconds 1.5 \
+            "${extra[@]}" \
             --out artifacts/deriv/history.csv
       - name: Upload normalized bars and checksummed manifest
         uses: actions/upload-artifact@v4
