@@ -2,7 +2,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from math import exp, isfinite, log, pi, sqrt
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 RESEARCH_ONLY = True
 CAPITAL_AUTHORITY = False
@@ -372,4 +372,67 @@ def walk_forward_folds(n: int, *, train_size=500, test_size=50, step_size=None) 
         test_end = min(test_start + test_size, n)
         out.append(WalkForwardFold(test_start - train_size, test_start, test_start, test_end))
         test_start += step
+    return tuple(out)
+
+
+@dataclass(frozen=True)
+class WalkForwardPrediction:
+    fold_index: int
+    observation_index: int
+    signal: RegimeSignal
+    training_observations: int
+    training_log_likelihood: float | None
+    training_converged: bool | None
+
+
+def walk_forward_predict(
+    features: Sequence[Sequence[float]], *, train_size: int = 500, test_size: int = 50,
+    step_size: int | None = None, n_states: int = 3, n_iter: int = 200,
+    filter_kind: str = "alpha_beta", alpha: float = 0.05, beta: float = 1.0,
+    min_confidence: float = 0.60, max_entropy: float = 0.85,
+    fit_fn: Callable[[Sequence[Sequence[float]]], Any] | None = None,
+) -> tuple[WalkForwardPrediction, ...]:
+    """Refit on past-only training windows, then filter held-out rows in order.
+
+    fit_fn is a test seam. The default fits Gaussian emissions on each training
+    window; each fold gets a fresh filter and a training-only feature scaler. This
+    returns regime evidence only; it does not infer trade P&L or profitability.
+    """
+    rows = tuple(_vec(row, "feature row") for row in features)
+    if len(rows) < train_size + 1 or any(len(row) != 2 for row in rows):
+        raise ValueError("need train_size plus held-out rows of [log_return, rolling_volatility]")
+    if filter_kind not in {"alpha_beta", "gaussian"}:
+        raise ValueError("filter_kind must be 'alpha_beta' or 'gaussian'")
+    folds = walk_forward_folds(len(rows), train_size=train_size, test_size=test_size, step_size=step_size)
+    if not folds:
+        raise ValueError("not enough rows for a held-out fold")
+    if fit_fn is None:
+        fit_fn = lambda train_rows: train_gaussian_hmm(train_rows, n_states=n_states, n_iter=n_iter)
+    out = []
+    for fold_index, fold in enumerate(folds):
+        train_rows = rows[fold.train_start:fold.train_end]
+        test_rows = rows[fold.test_start:fold.test_end]
+        if len(train_rows) != train_size or not test_rows:
+            raise ValueError("invalid empty or undersized walk-forward fold")
+        fitted = fit_fn(train_rows)
+        if filter_kind == "alpha_beta":
+            regime_filter = fitted.new_alpha_beta_filter(alpha=alpha, beta=beta,
+                min_confidence=min_confidence, max_entropy=max_entropy)
+        else:
+            regime_filter = fitted.new_filter(min_confidence=min_confidence, max_entropy=max_entropy)
+        log_likelihood = getattr(fitted, "log_likelihood", None)
+        if log_likelihood is not None:
+            log_likelihood = float(log_likelihood)
+            if not isfinite(log_likelihood):
+                log_likelihood = None
+        converged = getattr(fitted, "training_converged", None)
+        for offset, row in enumerate(test_rows):
+            out.append(WalkForwardPrediction(
+                fold_index=fold_index,
+                observation_index=fold.test_start + offset,
+                signal=regime_filter.update(row),
+                training_observations=len(train_rows),
+                training_log_likelihood=log_likelihood,
+                training_converged=converged if isinstance(converged, bool) else None,
+            ))
     return tuple(out)
