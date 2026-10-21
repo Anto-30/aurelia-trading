@@ -48,6 +48,17 @@ class FakeWebSocket:
 
 
 class DerivHistoryTests(unittest.TestCase):
+    def test_retries_documented_alternate_host_after_transient_handshake_failure(self):
+        ws = FakeWebSocket({"msg_type": "candles", "candles": candle_rows(60, 180)})
+        with patch("research.atos_validation.deriv_data.websocket.create_connection",
+                   side_effect=[OSError("simulated handshake 520"), ws]) as connect:
+            frame = DerivHistoryClient("12345").candles("R_100", 60, 180, 60, 3)
+        self.assertEqual(frame["epoch"].tolist(), [60, 120, 180])
+        self.assertEqual(connect.call_count, 2)
+        self.assertIn("ws.derivws.com", connect.call_args_list[0].args[0])
+        self.assertIn("ws.binaryws.com", connect.call_args_list[1].args[0])
+        self.assertTrue(ws.closed)
+
     def test_candles_request_validates_exact_coverage_and_does_not_fabricate_volume(self):
         ws = FakeWebSocket({"msg_type": "candles", "candles": candle_rows(60, 180)})
         with patch("research.atos_validation.deriv_data.websocket.create_connection", return_value=ws):
