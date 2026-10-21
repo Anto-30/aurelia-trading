@@ -141,7 +141,8 @@ class DerivHistoryClient:
                 "end": end,
                 "style": "candles",
                 "granularity": int(granularity),
-                "count": int(count),
+                # The exact start/end range defines this bounded chunk. Keep count
+                # as a client-side limit only; avoid combining it with start/end.
                 "adjust_start_time": 0,
                 "subscribe": 0,
                 "req_id": 1,
