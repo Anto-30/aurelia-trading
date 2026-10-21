@@ -65,3 +65,27 @@ python -m research.atos_validation.audited_ledger artifacts/trades/audited_trade
 The nine-file evidence builder is `scripts/build_release_evidence.py`. It verifies the history CSV against its manifest and the trade ledger against its manifest, derives only those metrics supported by its source files, emits null for unknown metrics, and explains missing fields in `evidence/evidence_notes.md`. It refuses to overwrite existing evidence unless `--overwrite` is explicitly supplied. `strategy_eligibility.eligible_for_live_unlock` always remains false.
 
 See `docs/AUDITED_LEDGER_AND_EVIDENCE.md` for the 1m/15m backfill, pacing, required source reports, freeze protocol, and Issue #185 hash anchoring. The resulting evidence is incomplete until the real dataset, simulator-generated ledger, protected broker lifecycle, recovery, 3,600-second soak, calibration, costs, deployment review and independent approval have been recorded.
+
+
+## Frozen MSNR candle replay
+
+The registered MSNR liquidity-sweep replay is implemented in `scripts/run_frozen_simulator.py`. It uses the canonical research detector in `research/labs/deterministic_intraday_strategies.py`, the causal HMM regime tracker, and the hash-chained JSONL ledger. See `docs/MSNR_SIMULATOR_AND_COST_CONFIG.md` and `config/msnr_simulation.schema.json` for the required configuration and entry/exit/cost semantics.
+
+Execution requires an explicit `--config` with a verified R_100 tick size, cash-per-price-unit/size conversion, spread, incremental slippage, commission and provenance. The current strategy registry still marks instrument compatibility and the cost profile unknown, so no populated verified configuration is shipped. Do not guess these fields. A scenario can run only with explicit scenario numbers and `--allow-unverified-scenario`; such output is exploratory and not verified execution economics.
+
+```bash
+python scripts/run_frozen_simulator.py \
+  --data-path data/deriv/R_100_1m.csv \
+  --ledger evidence/trade_ledger.jsonl \
+  --config config/msnr_simulation.json
+
+python -m research.atos_validation.audited_ledger evidence/trade_ledger.jsonl
+
+python scripts/build_release_evidence.py \
+  --history-manifest data/deriv/R_100_1m.csv.manifest.json \
+  --data-path data/deriv/R_100_1m.csv \
+  --ledger evidence/trade_ledger.jsonl \
+  --evidence-dir evidence/
+```
+
+The simulator refuses to overwrite an existing ledger. It uses stop-first when stop and target cross within one candle, uses a worse opening price for adverse stop gaps, and exits unresolved positions at a configured maximum holding period or end-of-data close. Bar OHLC cannot establish exact intrabar order or tick-level fills. Every result remains research-only with live authorization false. History verification requires complete continuous timestamp coverage, which is stricter than 99%.
