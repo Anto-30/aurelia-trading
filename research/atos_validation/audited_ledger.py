@@ -469,6 +469,7 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
     trade_count = 0
     cancellation_count = 0
     observed_code_hashes: set[str] = set()
+    observed_data_hashes: set[str] = set()
     with ledger_path.open("r", encoding="utf-8") as stream:
         for line_no, line in enumerate(stream, 1):
             if not line.endswith("\n") or not line.strip():
@@ -518,6 +519,10 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
                     raise ValueError(f"line {line_no}: cancellation instrument/strategy/fold mismatch")
                 if record.get("model_config_sha256") != decision.get("model_config_sha256"):
                     raise ValueError(f"line {line_no}: cancellation model/config hash mismatch")
+                if record.get("data_sha256") != decision.get("data_sha256"):
+                    raise ValueError(f"line {line_no}: cancellation data hash mismatch")
+                if record.get("strategy_code_sha256") != decision.get("strategy_code_sha256"):
+                    raise ValueError(f"line {line_no}: cancellation strategy-code hash mismatch")
                 reasons = record.get("reason_codes")
                 if not isinstance(reasons, list) or not reasons or any(not isinstance(reason, str) or not reason.strip() for reason in reasons):
                     raise ValueError(f"line {line_no}: cancellation reasons are missing")
@@ -545,6 +550,10 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
                     raise ValueError(f"line {line_no}: strategy/fold mismatch with decision")
                 if record.get("strategy_code_sha256") != decision.get("strategy_code_sha256"):
                     raise ValueError(f"line {line_no}: strategy-code hash mismatch with decision")
+                if record.get("data_sha256") != decision.get("data_sha256"):
+                    raise ValueError(f"line {line_no}: data hash mismatch with decision")
+                if record.get("model_config_sha256") != decision.get("model_config_sha256"):
+                    raise ValueError(f"line {line_no}: model/config hash mismatch with decision")
                 numeric = ("entry_price", "exit_price", "initial_risk_cash", "gross_pnl_cash", "spread_cost_cash",
                            "slippage_cost_cash", "commission_cost_cash", "total_cost_cash", "net_pnl_cash",
                            "r_gross", "cost_r", "r_multiple")
@@ -595,6 +604,7 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
             for key in ("data_sha256", "model_config_sha256"):
                 if not SHA256_RE.fullmatch(str(record.get(key, ""))):
                     raise ValueError(f"line {line_no}: invalid {key}")
+            observed_data_hashes.add(str(record["data_sha256"]))
             code_hash = record.get("strategy_code_sha256")
             if code_hash is not None:
                 if not SHA256_RE.fullmatch(str(code_hash)):
@@ -603,6 +613,8 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
             previous = observed_hash
     if len(observed_code_hashes) > 1:
         raise ValueError("ledger mixes different strategy-code bundle hashes")
+    if len(observed_data_hashes) > 1:
+        raise ValueError("ledger mixes different historical-data hashes")
     if decision_count == 0:
         raise ValueError("ledger has no decision records")
     if decisions:
@@ -615,6 +627,7 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
         "closed_trade_record_count": trade_count,
         "cancelled_entry_count": cancellation_count,
         "strategy_code_sha256": next(iter(observed_code_hashes), None),
+        "data_sha256": next(iter(observed_data_hashes), None),
         "integrity_verified": True,
     }
     resolved_manifest = Path(manifest_path) if manifest_path else ledger_path.with_suffix(ledger_path.suffix + ".manifest.json")
@@ -627,6 +640,7 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
             ("closed_trade_record_count", trade_count),
             ("cancelled_entry_count", cancellation_count),
             ("strategy_code_sha256", next(iter(observed_code_hashes), None)),
+            ("data_sha256", next(iter(observed_data_hashes), None)),
         ):
             if manifest.get(key) != observed:
                 raise ValueError(f"manifest {key} mismatch")
