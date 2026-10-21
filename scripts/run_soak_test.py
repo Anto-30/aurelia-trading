@@ -68,7 +68,7 @@ def run_soak(app_id: str, duration_seconds: int, out_dir: Path) -> dict[str, Any
     deadline = start + duration_seconds
     ws = None
     next_ping_at = start
-    next_req_id = 700000
+    next_req_id = 710000
     pending_pings: dict[int, float] = {}
     ping_rtt: list[float] = []
     processing_ms: list[float] = []
@@ -151,6 +151,8 @@ def run_soak(app_id: str, duration_seconds: int, out_dir: Path) -> dict[str, Any
                 raw = ws.recv()
                 received_at = time.monotonic()
                 message = json.loads(raw)
+                if not isinstance(message, dict):
+                    raise ValueError("unexpected non-object WebSocket response")
             except WebSocketTimeoutException:
                 continue
             except (WebSocketConnectionClosedException, OSError, ValueError, json.JSONDecodeError) as exc:
