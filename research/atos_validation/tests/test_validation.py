@@ -5,7 +5,7 @@ import pandas as pd
 from research.atos_validation.regime_validation import (
     atr_position_size, chronological_partition, rolling_wfa, validate_expectancy
 )
-from research.atos_validation.four_model_backtest import evaluate
+from research.atos_validation.four_model_backtest import evaluate, evaluate_fold_metrics
 import tempfile, os
 
 class ValidationTests(unittest.TestCase):
@@ -40,6 +40,60 @@ class ValidationTests(unittest.TestCase):
     def test_nonpositive_insample_does_not_use_degradation_ratio(self):
         r=validate_expectancy([-.1,.1]*100,[.1,.2]*50,[[.1,.2],[.2,.3]],min_oos_trades=50)
         self.assertIsNone(r.degradation_pct)
+    def test_four_model_comparison_outputs_fold_level_metrics(self):
+        models=["alpha_beta_hmm","gaussian_hmm","ma_control","unfiltered_msnr"]
+        rows=[]
+        for model in models:
+            for i in range(4):
+                rows.append({"timestamp":f"2024-01-0{i+1}T00:00:00Z","strategy":model,
+                             "r_gross":.2 if i % 2 == 0 else -.1,"cost_r":.01,"fold":i // 2})
+        with tempfile.NamedTemporaryFile(mode="w",suffix=".csv",delete=False) as f:
+            pd.DataFrame(rows).to_csv(f.name,index=False); name=f.name
+        try:
+            result=evaluate_fold_metrics(name)
+            self.assertEqual(len(result),8)
+            self.assertEqual(result.groupby("model").size().tolist(),[2,2,2,2])
+        finally:
+            os.unlink(name)
+
+    def test_four_model_ledger_rejects_negative_costs(self):
+        models=["alpha_beta_hmm","gaussian_hmm","ma_control","unfiltered_msnr"]
+        rows=[{"timestamp":"2024-01-01T00:00:00Z","strategy":model,
+               "r_gross":.2,"cost_r":-.01,"fold":0} for model in models]
+        with tempfile.NamedTemporaryFile(mode="w",suffix=".csv",delete=False) as f:
+            pd.DataFrame(rows).to_csv(f.name,index=False); name=f.name
+        try:
+            with self.assertRaisesRegex(ValueError,"nonnegative"):
+                evaluate(name)
+        finally:
+            os.unlink(name)
+
+    def test_four_model_ledger_rejects_naive_timestamps(self):
+        models=["alpha_beta_hmm","gaussian_hmm","ma_control","unfiltered_msnr"]
+        rows=[{"timestamp":"2024-01-01T00:00:00","strategy":model,
+               "r_gross":.2,"cost_r":.01,"fold":0} for model in models]
+        with tempfile.NamedTemporaryFile(mode="w",suffix=".csv",delete=False) as f:
+            pd.DataFrame(rows).to_csv(f.name,index=False); name=f.name
+        try:
+            with self.assertRaisesRegex(ValueError,"explicit timezone"):
+                evaluate(name)
+        finally:
+            os.unlink(name)
+
+    def test_four_model_ledger_rejects_mismatched_fold_sets(self):
+        models=["alpha_beta_hmm","gaussian_hmm","ma_control","unfiltered_msnr"]
+        rows=[{"timestamp":"2024-01-01T00:00:00Z","strategy":model,
+               "r_gross":.2,"cost_r":.01,"fold":0} for model in models]
+        rows.append({"timestamp":"2024-01-02T00:00:00Z","strategy":"alpha_beta_hmm",
+                     "r_gross":.2,"cost_r":.01,"fold":1})
+        with tempfile.NamedTemporaryFile(mode="w",suffix=".csv",delete=False) as f:
+            pd.DataFrame(rows).to_csv(f.name,index=False); name=f.name
+        try:
+            with self.assertRaisesRegex(ValueError,"same WFA folds"):
+                evaluate(name)
+        finally:
+            os.unlink(name)
+
     def test_four_model_comparison_needs_all_models(self):
         models=["alpha_beta_hmm","gaussian_hmm","ma_control","unfiltered_msnr"]
         rows=[]
