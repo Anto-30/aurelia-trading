@@ -50,6 +50,23 @@ def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def code_bundle_sha256() -> str:
+    """Digest the exact simulator and critical signal/HMM/audit source files."""
+    paths = (
+        ROOT / "scripts/run_frozen_simulator.py",
+        ROOT / "research/labs/deterministic_intraday_strategies.py",
+        ROOT / "research/atos_validation/regime_validation.py",
+        ROOT / "research/atos_validation/audited_ledger.py",
+        ROOT / "scripts/verify_deriv_history_manifest.py",
+    )
+    manifest = {
+        path.relative_to(ROOT).as_posix(): sha256_file(path)
+        for path in paths
+    }
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
 def finite_number(value: Any, name: str, *, minimum: float | None = None, strict: bool = False) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{name} must be numeric")
@@ -497,6 +514,7 @@ def run_simulation(
         expected_granularity=config["granularity_seconds"],
     )
     status = config["provenance"]["status"]
+    code_hash = code_bundle_sha256()
     strategy_cfg = config["strategy"]
     regime_cfg = config["regime_filter"]
     hmm_cfg = config["hmm"]
@@ -531,6 +549,7 @@ def run_simulation(
     with AuditedLedgerWriter(
         output_path, symbol=config["symbol"], data_sha256=data_hash,
         granularity_seconds=config["granularity_seconds"],
+        strategy_code_sha256=code_hash,
     ) as writer:
         for i in range(1, len(frame)):
             # Decision at close of candle i-1; current candle i is not passed to
@@ -632,7 +651,8 @@ def run_simulation(
     return {
         "symbol": config["symbol"], "granularity_seconds": config["granularity_seconds"],
         "data_sha256": data_hash, "history_manifest_sha256": manifest["manifest_sha256"],
-        "config_sha256": config_hash, "ledger_sha256": audit["ledger_sha256"],
+        "config_sha256": config_hash, "strategy_code_sha256": code_hash,
+        "ledger_sha256": audit["ledger_sha256"],
         "ledger_manifest_sha256": sha256_file(output_path.with_suffix(output_path.suffix + ".manifest.json")),
         "decision_count": decision_count, "trade_count": trade_count,
         "coverage_complete": manifest["coverage_complete"], "bars": len(frame),
