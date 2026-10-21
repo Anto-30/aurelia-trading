@@ -185,11 +185,14 @@ def validate_expectancy(in_sample_r: Sequence[float], oos_r: Sequence[float],
     """Degradation threshold is a warning gate, not a statistical proof of overfit."""
     ins=np.asarray(in_sample_r,dtype=float); oos=np.asarray(oos_r,dtype=float)
     if not 0 < degradation_limit < 1: raise ValueError("degradation_limit must be between 0 and 1")
+    if isinstance(min_oos_trades, bool) or not isinstance(min_oos_trades, (int, np.integer)) or min_oos_trades < 2:
+        raise ValueError("min_oos_trades must be an integer >= 2")
     if not np.isfinite(ins).all() or not np.isfinite(oos).all(): raise ValueError("R returns must be finite")
     if len(ins)<2 or len(oos)<2: raise ValueError("need >=2 trades in IS and OOS")
     ie,_,_,_,_,_= _metrics(ins); oe,se,lo,hi,pf,dd=_metrics(oos)
     degradation=((ie-oe)/abs(ie)*100) if ie>0 else None
     fold_means_list: list[float] = []
+    flattened_fold_returns: list[float] = []
     for fold in fold_returns:
         values = np.asarray(fold, dtype=float)
         if values.ndim != 1:
@@ -199,6 +202,11 @@ def validate_expectancy(in_sample_r: Sequence[float], oos_r: Sequence[float],
         if not np.isfinite(values).all():
             raise ValueError("WFA fold returns must be finite")
         fold_means_list.append(float(np.mean(values)))
+        flattened_fold_returns.extend(float(value) for value in values)
+    if len(flattened_fold_returns) != len(oos) or not np.allclose(
+        np.asarray(flattened_fold_returns, dtype=float), oos, rtol=0.0, atol=1e-12
+    ):
+        raise ValueError("WFA fold returns must exactly partition OOS returns in chronological order")
     fold_means = np.asarray(fold_means_list, dtype=float)
     fv=float(np.var(fold_means,ddof=1)) if len(fold_means)>1 else float("nan")
     # Fewer than two valid held-out folds is insufficient for a WFA stability gate.
