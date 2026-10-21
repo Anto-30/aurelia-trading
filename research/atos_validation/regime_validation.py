@@ -30,7 +30,7 @@ class RegimeDetector:
         if not 0 < min_confidence <= 1 or not 0 < max_entropy <= 1:
             raise ValueError("invalid confidence/entropy thresholds")
         if filter_kind not in {"gaussian", "alpha_beta"}: raise ValueError("invalid filter_kind")
-        if not 0 < alpha < 1 or not 0 < beta <= 2: raise ValueError("alpha must be in (0,1), beta in (0,2]")
+        if not 0 < alpha <= 1/n_states or not 0 < beta <= 2: raise ValueError("alpha must be in (0,1/n_states], beta in (0,2]")
         self.n_states, self.min_confidence, self.max_entropy = n_states, min_confidence, max_entropy
         self.random_state, self.filter_kind, self.alpha, self.beta = random_state, filter_kind, alpha, beta
         self.model = None; self.mean = None; self.scale = None
