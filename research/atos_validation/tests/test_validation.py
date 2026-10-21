@@ -20,7 +20,7 @@ class ValidationTests(unittest.TestCase):
     def test_wfa_chronological(self):
         folds=rolling_wfa(1000,train_fraction=.7,min_train=100,test_size=50)
         self.assertEqual(folds[0],(0,700,700,750))
-        self.assertTrue(all(a<=b<c<d for a,b,c,d in folds))
+        self.assertTrue(all(a<=b and b==c and c<d for a,b,c,d in folds))
     def test_sealed_three_month_partition(self):
         dates=pd.date_range("2024-01-01",periods=500,freq="D",tz="UTC")
         dev,sealed,cutoff=chronological_partition(dates,3)
