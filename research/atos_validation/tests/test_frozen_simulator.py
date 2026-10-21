@@ -131,7 +131,7 @@ class FrozenSimulatorTests(unittest.TestCase):
             decision_event_id="abc", direction="LONG", entry_index=3,
             entry_epoch=1666310580, raw_entry_price=100.0, entry_fill_price=100.15,
             stop_reference_price=99.0, target_reference_price=101.0,
-            hmm_regime_state="TREND", size_units=1.0,
+            hmm_regime_state="TREND", size_units=1.0, initial_risk_cash=10.0,
         )
         candle = pd.Series({"open": 100.0, "high": 102.0, "low": 98.0, "close": 100.2})
         result = resolve_exit(trade, candle, candle_index=3, execution=config_doc()["execution"])
