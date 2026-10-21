@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.repo_agent_routing.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-10-21",
   "purpose": "Deterministically route every federated external repository to the agents best suited to consume its engineering, research, security, multimodal, browser, deployment, or orchestration capabilities. Includes security-first routing for LLM gateway and Freebuff-related reference sources.",
   "admission_policy": {
     "assignment_required": true,
@@ -124,6 +124,19 @@
       ],
       "runtime_status": "NOT_CONNECTED",
       "activation_gate": "Authorized host must be connected and runtime identity verified before tool execution."
+    },
+    "DeepSeekHarness": {
+      "role": "independent_harness_review_and_adversarial_research",
+      "capabilities": [
+        "github-read",
+        "web-research",
+        "offline-research",
+        "ci-log-review",
+        "security-review",
+        "cross-agent-review"
+      ],
+      "runtime_status": "EXTERNAL_RUNTIME_UNVERIFIED",
+      "activation_gate": "Only use providers actually connected to the active session. No secrets, production writes, live-lock mutation, or capital authority."
     }
   },
   "routing_rules": [
