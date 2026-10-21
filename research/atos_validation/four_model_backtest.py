@@ -17,7 +17,7 @@ def summarize(r: pd.Series, folds: pd.Series) -> dict:
     if not np.isfinite(a).all(): raise ValueError("non-finite net R values")
     wins=a[a>0].sum(); losses=-a[a<0].sum()
     pf=float(wins/losses) if losses>0 else (float("inf") if wins>0 else 0.0)
-    eq=np.cumsum(a); dd=float(np.min(eq-np.maximum.accumulate(np.r_[0.0,eq])))
+    eq=np.cumsum(a); peak=np.maximum.accumulate(np.r_[0.0,eq])[1:]; dd=float(np.min(eq-peak))
     fold_means=pd.DataFrame({"r":a,"fold":folds.to_numpy()}).groupby("fold").r.mean()
     return dict(expectancy_r=float(a.mean()),profit_factor=pf,max_drawdown_r=dd,
                 sample_size=len(a),fold_stability=float(fold_means.var(ddof=1)) if len(fold_means)>1 else np.nan)
