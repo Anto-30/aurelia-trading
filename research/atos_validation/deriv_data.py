@@ -77,6 +77,32 @@ class DerivHistoryClient:
         finally:
             ws.close()
 
+    def backfill(self, symbol: str, start_epoch: int, end_epoch: int,
+                 granularity: int=60, bars_per_request: int=4500) -> pd.DataFrame:
+        """Chunk a long historical request and validate the joined timeline.
+
+        This is a bounded sequential backfill, not a guarantee of 12–24 months:
+        callers must verify that the symbol existed for the requested interval.
+        """
+        if granularity not in (60,900) or not 100 <= bars_per_request <= 5000:
+            raise ValueError("granularity must be 60/900 seconds and bars_per_request 100..5000")
+        if start_epoch >= end_epoch: raise ValueError("start_epoch must precede end_epoch")
+        chunk_seconds=(bars_per_request-1)*granularity
+        frames=[]; cursor=int(start_epoch)
+        while cursor < end_epoch:
+            stop=min(cursor+chunk_seconds,int(end_epoch))
+            frames.append(self.candles(symbol,cursor,stop,granularity=granularity,count=bars_per_request))
+            cursor=stop
+        if not frames: raise ValueError("empty requested interval")
+        out=pd.concat(frames,ignore_index=True).sort_values("epoch")
+        out=out.drop_duplicates("epoch",keep="last").reset_index(drop=True)
+        expected=list(range(int(out.epoch.iloc[0]),int(out.epoch.iloc[-1])+1,granularity))
+        if out.epoch.astype(int).tolist()!=expected:
+            raise ValueError("joined history is not gap-free; reject dataset")
+        if int(out.epoch.iloc[0])>start_epoch+granularity or int(out.epoch.iloc[-1])<end_epoch-granularity:
+            raise ValueError("returned history does not cover the requested interval")
+        return out
+
 def time_call(fn: Callable, *args, **kwargs):
     """Measure local monotonic elapsed time; this does not prove broker receipt/execution."""
     t0=time.monotonic(); result=fn(*args,**kwargs); t1=time.monotonic()
