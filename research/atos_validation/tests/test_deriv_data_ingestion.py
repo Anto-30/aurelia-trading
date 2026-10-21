@@ -56,6 +56,8 @@ class DerivHistoryTests(unittest.TestCase):
         self.assertTrue(frame["volume"].isna().all())
         self.assertEqual(ws.request["subscribe"], 0)
         self.assertEqual(ws.request["adjust_start_time"], 0)
+        self.assertNotIn("count", ws.request)
+        self.assertEqual((ws.request["start"], ws.request["end"]), (60, 180))
         self.assertTrue(ws.closed)
 
     def test_gap_duplicate_and_nonfinite_prices_are_rejected(self):
