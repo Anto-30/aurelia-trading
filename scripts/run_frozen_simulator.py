@@ -297,10 +297,14 @@ class CausalHMMRegimeTracker:
         self.last_fit_attempt_index: int | None = None
 
     def state_for_closed_history(self, history: pd.DataFrame) -> str:
-        closes = history["close"].to_numpy(dtype=float)
-        if len(closes) < self.config["training_bars"] + self.config["feature_window"] + 1:
+        # Retain the absolute position for refit cadence, but only materialize the
+        # rolling training window. Converting every prior close on every bar makes
+        # a 24-month 1m replay O(N^2) and operationally unusable.
+        signal_index = len(history) - 1
+        required_closes = self.config["training_bars"] + self.config["feature_window"] + 1
+        closes = history["close"].iloc[-required_closes:].to_numpy(dtype=float)
+        if len(closes) < required_closes:
             return "UNDEFINED"
-        signal_index = len(closes) - 1
         should_refit = (
             self.detector is None
             or self.last_fit_signal_index is None
