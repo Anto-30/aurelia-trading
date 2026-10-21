@@ -67,6 +67,16 @@ class ValidationTests(unittest.TestCase):
         dev,sealed,cutoff=chronological_partition(dates,3)
         self.assertTrue((dates[dev[-1]]<cutoff).item() if hasattr(dates[dev[-1]]<cutoff,"item") else dates[dev[-1]]<cutoff)
         self.assertTrue((dates[sealed[0]]>=cutoff).item() if hasattr(dates[sealed[0]]>=cutoff,"item") else dates[sealed[0]]>=cutoff)
+
+    def test_invalid_sealed_oos_month_count_rejected(self):
+        dates = pd.date_range("2024-01-01", periods=500, freq="D", tz="UTC")
+        with self.assertRaisesRegex(ValueError, "final_oos_months must be an integer"):
+            chronological_partition(dates, 0)
+
+    def test_invalid_hmm_feature_window_rejected(self):
+        from research.atos_validation.regime_validation import RegimeDetector
+        with self.assertRaisesRegex(ValueError, "window must be an integer"):
+            RegimeDetector.features(np.linspace(100.0, 150.0, 50), window=1)
     def test_degradation_triggers_fallback_not_overfit_proof(self):
         ins=[.3]*200; oos=[.1]*100
         r=validate_expectancy(ins,oos,[oos[:50],oos[50:]],degradation_limit=.2,min_oos_trades=50)
