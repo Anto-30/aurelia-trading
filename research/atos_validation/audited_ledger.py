@@ -177,7 +177,7 @@ class AuditedLedgerWriter:
             "schema": SCHEMA,
             "record_type": "decision",
             "event_id": event_id,
-            "timestamp_utc": _epoch_iso(signal_bar_epoch),
+            "timestamp_utc": _epoch_iso(execution_epoch),
             "symbol": self.symbol,
             "strategy": strategy.strip(),
             "fold_id": fold_id.strip(),
@@ -187,7 +187,7 @@ class AuditedLedgerWriter:
             "reason_codes": reasons,
             "signal_bar_epoch": signal_bar_epoch,
             "execution_bar_epoch": execution_epoch,
-            "signal_timestamp_utc": _epoch_iso(signal_bar_epoch),
+            "signal_timestamp_utc": _epoch_iso(execution_epoch),
             "expected_entry_timestamp_utc": _epoch_iso(execution_epoch),
             "hmm_regime_state": hmm_regime_state,
             "probability": probability,
@@ -369,7 +369,7 @@ class AuditedLedgerWriter:
             "fold_id": decision["fold_id"],
             "granularity_seconds": self.granularity_seconds,
             "direction": "LONG" if decision["action"] == "ENTER_LONG" else "SHORT",
-            "signal_timestamp_utc": _epoch_iso(decision["signal_bar_epoch"]),
+            "signal_timestamp_utc": _epoch_iso(decision["execution_bar_epoch"]),
             "entry_timestamp_utc": _iso(entry_dt),
             "exit_timestamp_utc": _iso(exit_dt),
             "signal_bar_epoch": decision["signal_bar_epoch"],
@@ -492,6 +492,11 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
                 granularity = record.get("granularity_seconds")
                 if granularity not in (60, 900) or record.get("execution_bar_epoch") != record.get("signal_bar_epoch") + granularity:
                     raise ValueError(f"line {line_no}: decision does not respect next-bar execution timing")
+                expected_decision_utc = _epoch_iso(int(record["execution_bar_epoch"]))
+                if record.get("timestamp_utc") != expected_decision_utc or record.get("signal_timestamp_utc") != expected_decision_utc:
+                    raise ValueError(f"line {line_no}: signal timestamp must be the signal candle close / next-bar open boundary")
+                if record.get("expected_entry_timestamp_utc") != expected_decision_utc:
+                    raise ValueError(f"line {line_no}: expected entry timestamp must match the next-bar open boundary")
                 if record.get("decision_status") == "ACCEPTED":
                     decisions[record["event_id"]] = record
             elif record.get("record_type") == "decision_cancelled":
@@ -529,6 +534,10 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
                     raise ValueError(f"line {line_no}: invalid or inconsistent candle granularity")
                 if record.get("entry_bar_epoch") != record.get("signal_bar_epoch") + granularity:
                     raise ValueError(f"line {line_no}: entry is not the next candle after the signal candle")
+                if record.get("signal_timestamp_utc") != _epoch_iso(int(record["entry_bar_epoch"])):
+                    raise ValueError(f"line {line_no}: signal timestamp is not the signal-close/next-bar-open boundary")
+                if record.get("entry_timestamp_utc") != _epoch_iso(int(record["entry_bar_epoch"])):
+                    raise ValueError(f"line {line_no}: entry timestamp does not match entry candle open")
                 if record.get("hmm_regime_state") != decision.get("hmm_regime_state"):
                     raise ValueError(f"line {line_no}: regime state mismatch with decision")
                 if record.get("strategy") != decision.get("strategy") or record.get("fold_id") != decision.get("fold_id"):
