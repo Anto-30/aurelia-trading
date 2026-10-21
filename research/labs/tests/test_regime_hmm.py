@@ -4,9 +4,9 @@ import unittest
 
 from research.labs.regime_hmm import (
     AlphaBetaHMMFilter,
-    CausalHMMFilter, FeatureScaler, REGIME_HIGH_VOL, REGIME_RANGE, REGIME_TREND_UP,
+    CausalHMMFilter, RegimeSignal, FeatureScaler, REGIME_HIGH_VOL, REGIME_RANGE, REGIME_TREND_UP,
     REGIME_UNDEFINED, alpha_beta_belief_update, causal_belief_update, features_from_closes,
-    gaussian_log_likelihood, map_model_states, walk_forward_folds,
+    gaussian_log_likelihood, map_model_states, walk_forward_folds, walk_forward_predict,
 )
 
 
@@ -123,6 +123,41 @@ class TestFeaturesAndWalkForward(unittest.TestCase):
     def test_invalid_walk_forward_parameters_fail(self):
         with self.assertRaises(ValueError):
             walk_forward_folds(100, train_size=50, test_size=20, step_size=10)
+
+    def test_walk_forward_retrains_each_fold_and_predicts_only_held_out_rows(self):
+        class FakeFilter:
+            def update(self, row):
+                return RegimeSignal(0, REGIME_RANGE, (1.0, 0.0, 0.0), 1.0, 0.0, True, "OK")
+
+        class FakeFit:
+            log_likelihood = -123.0
+            training_converged = True
+            def new_alpha_beta_filter(self, **kwargs):
+                return FakeFilter()
+
+        rows = tuple((float(i) / 10000.0, 0.01 + (i % 3) * 0.001) for i in range(620))
+        observed_training_windows = []
+        def fit_fn(train_rows):
+            observed_training_windows.append(tuple(train_rows))
+            return FakeFit()
+
+        predictions = walk_forward_predict(rows, train_size=500, test_size=50, fit_fn=fit_fn)
+        self.assertEqual(len(observed_training_windows), 3)
+        self.assertEqual([len(x) for x in observed_training_windows], [500, 500, 500])
+        self.assertEqual(len(predictions), 120)
+        self.assertEqual(predictions[0].observation_index, 500)
+        self.assertEqual(predictions[49].observation_index, 549)
+        self.assertEqual(predictions[50].observation_index, 550)
+        self.assertEqual(predictions[-1].observation_index, 619)
+        self.assertEqual(predictions[1].training_log_likelihood, -123.0)
+        self.assertTrue(predictions[1].training_converged)
+        self.assertEqual(observed_training_windows[0][-1], rows[499])
+        self.assertEqual(observed_training_windows[1][-1], rows[549])
+
+    def test_walk_forward_predict_rejects_invalid_filter_kind(self):
+        rows = tuple((0.001, 0.01) for _ in range(510))
+        with self.assertRaises(ValueError):
+            walk_forward_predict(rows, train_size=500, test_size=50, filter_kind="viterbi")
 
     def test_scaler_is_deterministic_and_reuses_train_statistics(self):
         scaler = FeatureScaler.fit([(1.0, 10.0), (3.0, 14.0)])
