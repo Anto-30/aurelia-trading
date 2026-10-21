@@ -506,6 +506,12 @@ def run_simulation(
     *,
     allow_unverified_scenario: bool = False,
 ) -> dict[str, Any]:
+    # Refuse an existing ledger before parsing config or touching input data.
+    # This preserves immutable-output semantics even when later inputs are invalid.
+    output_path = Path(ledger_path)
+    if output_path.exists() or output_path.with_suffix(output_path.suffix + ".manifest.json").exists():
+        raise FileExistsError("refusing to overwrite an existing JSONL ledger or manifest")
+
     config, config_hash, source_hashes = load_simulation_config(
         config_path, allow_unverified_scenario=allow_unverified_scenario
     )
@@ -537,9 +543,6 @@ def run_simulation(
         version=str(regime_cfg["version"]),
     )
     hmm = CausalHMMRegimeTracker(hmm_cfg)
-    output_path = Path(ledger_path)
-    if output_path.exists() or output_path.with_suffix(output_path.suffix + ".manifest.json").exists():
-        raise FileExistsError("refusing to overwrite an existing JSONL ledger or manifest")
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     active: ActiveTrade | None = None
