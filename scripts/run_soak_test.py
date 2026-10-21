@@ -48,6 +48,25 @@ def percentile(values: list[float], p: float) -> float | None:
     return float(ordered[index])
 
 
+def technical_soak_pass(
+    *,
+    duration_seconds: int,
+    actual_elapsed: float,
+    tick_count: int,
+    ping_rtt: list[float],
+    processing_ms: list[float],
+    errors: list[str],
+) -> bool:
+    """Return true only when the full-duration technical acceptance criteria pass."""
+    if duration_seconds != REQUIRED_DURATION_SECONDS or actual_elapsed < REQUIRED_DURATION_SECONDS:
+        return False
+    if tick_count <= 0 or not ping_rtt or not processing_ms or errors:
+        return False
+    if not all(math.isfinite(value) and value >= 0 for value in ping_rtt + processing_ms):
+        return False
+    return max(ping_rtt) <= LATENCY_THRESHOLD_MS and max(processing_ms) <= LATENCY_THRESHOLD_MS
+
+
 def write_event(stream, event: dict[str, Any]) -> None:
     stream.write(json.dumps({"timestamp_utc": utc_now(), **event}, allow_nan=False) + "\n")
     stream.flush()
@@ -259,11 +278,13 @@ def run_soak(app_id: str, duration_seconds: int, out_dir: Path) -> dict[str, Any
     max_ping = max(ping_rtt) if ping_rtt else None
     max_processing = max(processing_ms) if processing_ms else None
     full_duration = duration_seconds == REQUIRED_DURATION_SECONDS and actual_elapsed >= REQUIRED_DURATION_SECONDS
-    technical_pass = bool(
-        full_duration and tick_count > 0 and ping_rtt and processing_ms
-        and max_ping is not None and max_ping <= LATENCY_THRESHOLD_MS
-        and max_processing is not None and max_processing <= LATENCY_THRESHOLD_MS
-        and not errors
+    technical_pass = technical_soak_pass(
+        duration_seconds=duration_seconds,
+        actual_elapsed=actual_elapsed,
+        tick_count=tick_count,
+        ping_rtt=ping_rtt,
+        processing_ms=processing_ms,
+        errors=errors,
     )
     summary = {
         "schema": "aurelia.deriv_public_soak.v1",
@@ -320,7 +341,7 @@ def run_soak(app_id: str, duration_seconds: int, out_dir: Path) -> dict[str, Any
     print("FINAL_EXECUTION_AUTHORIZATION=false")
     print(f"RAW_LOG_PATH={log_path}")
     print(f"SUMMARY_PATH={summary_path}")
-    return 0 if actual_elapsed >= duration_seconds and tick_count > 0 else 3
+    return 0 if technical_pass else 3
 
 
 def main() -> int:
