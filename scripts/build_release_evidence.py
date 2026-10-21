@@ -252,9 +252,24 @@ def calculate_oos(
             daily_pnl[day] = daily_pnl.get(day, 0.0) + float(row["net_pnl_cash"])
         result["max_drawdown_percent"] = max_dd
         if len(daily_pnl) >= 2:
-            daily_returns = [value / starting_equity for value in daily_pnl.values()]
-            sd = statistics.stdev(daily_returns)
-            result["sharpe_ratio"] = statistics.mean(daily_returns) / sd * math.sqrt(365.0) if sd > 0 else None
+            daily_returns: list[float] = []
+            running_equity = starting_equity
+            for day, daily_cash_pnl in daily_pnl.items():
+                if running_equity <= 0:
+                    notes.append(f"prospective_oos.sharpe_ratio: non-positive equity before {day}; emitted null.")
+                    daily_returns = []
+                    break
+                daily_returns.append(daily_cash_pnl / running_equity)
+                running_equity += daily_cash_pnl
+            if len(daily_returns) >= 2:
+                sd = statistics.stdev(daily_returns)
+                result["sharpe_ratio"] = statistics.mean(daily_returns) / sd * math.sqrt(365.0) if sd > 0 else None
+                if sd == 0:
+                    notes.append("prospective_oos.sharpe_ratio: zero variance in observed daily returns; emitted null.")
+            elif not daily_returns:
+                notes.append("prospective_oos.sharpe_ratio: no valid daily return series; emitted null.")
+            else:
+                notes.append("prospective_oos.sharpe_ratio: fewer than two valid daily returns; emitted null.")
         else:
             notes.append("prospective_oos.sharpe_ratio: fewer than two UTC trading days; emitted null.")
     else:
