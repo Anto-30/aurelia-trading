@@ -122,7 +122,7 @@ class ExpectancyReport:
     overfit_flag: bool
     decision: str
 
-def _metrics(r: np.ndarray) -> tuple[float,float,float,float,float]:
+def _metrics(r: np.ndarray) -> tuple[float, float, float, float, float, float]:
     if len(r)==0: return (float("nan"),float("nan"),float("nan"),float("nan"),float("nan"))
     exp=float(np.mean(r)); se=float(np.std(r,ddof=1)/math.sqrt(len(r))) if len(r)>1 else float("nan")
     gains=float(r[r>0].sum()); losses=float(-r[r<0].sum())
@@ -141,9 +141,21 @@ def validate_expectancy(in_sample_r: Sequence[float], oos_r: Sequence[float],
     if len(ins)<2 or len(oos)<2: raise ValueError("need >=2 trades in IS and OOS")
     ie,_,_,_,_,_= _metrics(ins); oe,se,lo,hi,pf,dd=_metrics(oos)
     degradation=((ie-oe)/abs(ie)*100) if ie>0 else None
-    fold_means=np.asarray([np.mean(f) for f in fold_returns if len(f)],dtype=float)
+    fold_means_list: list[float] = []
+    for fold in fold_returns:
+        values = np.asarray(fold, dtype=float)
+        if values.ndim != 1:
+            raise ValueError("each WFA fold must be a one-dimensional sequence")
+        if values.size == 0:
+            continue
+        if not np.isfinite(values).all():
+            raise ValueError("WFA fold returns must be finite")
+        fold_means_list.append(float(np.mean(values)))
+    fold_means = np.asarray(fold_means_list, dtype=float)
     fv=float(np.var(fold_means,ddof=1)) if len(fold_means)>1 else float("nan")
-    flag=(len(oos)<min_oos_trades or (degradation is not None and degradation>degradation_limit*100) or hi<=0)
+    # Fewer than two valid held-out folds is insufficient for a WFA stability gate.
+    flag=(len(oos)<min_oos_trades or len(fold_means)<2 or
+          (degradation is not None and degradation>degradation_limit*100) or hi<=0)
     decision="REJECT_OR_FALLBACK" if flag else "RESEARCH_PASS_PENDING_OTHER_GATES"
     return ExpectancyReport(len(oos),oe,se,lo,hi,pf,dd,fv,degradation,flag,decision)
 
