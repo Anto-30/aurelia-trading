@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.run_oos_validation import COST_SCHEMA, _load_cost_evidence
+from scripts.run_oos_validation import COST_SCHEMA, _load_cost_evidence, resolve_oos_start
 from scripts.run_soak_test import percentile
 
 
@@ -64,6 +64,18 @@ class OperationalRunnerGuardTests(unittest.TestCase):
                     evidence, symbol="R_100", start_epoch=100, end_epoch=200,
                     data_sha256="a" * 64, ledger_sha256="b" * 64,
                 )
+
+    def test_final_oos_window_uses_calendar_months_not_fixed_90_days(self):
+        import pandas as pd
+        end = int(pd.Timestamp("2026-05-31T00:00:00Z").timestamp())
+        start, months, eligible = resolve_oos_start(end, 60)
+        self.assertEqual(pd.Timestamp(start, unit="s", tz="UTC").strftime("%Y-%m-%d"), "2026-02-28")
+        self.assertEqual(months, 3)
+        self.assertTrue(eligible)
+        short_start, short_months, short_eligible = resolve_oos_start(end, 60, oos_days=30)
+        self.assertEqual(end - short_start, 30 * 86400)
+        self.assertIsNone(short_months)
+        self.assertFalse(short_eligible)
 
     def test_soak_percentile_handles_empty_and_populated_samples(self):
         self.assertIsNone(percentile([], .95))
