@@ -127,7 +127,7 @@ def _metrics(r: np.ndarray) -> tuple[float,float,float,float,float]:
     exp=float(np.mean(r)); se=float(np.std(r,ddof=1)/math.sqrt(len(r))) if len(r)>1 else float("nan")
     gains=float(r[r>0].sum()); losses=float(-r[r<0].sum())
     pf=gains/losses if losses>0 else (float("inf") if gains>0 else 0.0)
-    equity=np.cumsum(r); peak=np.maximum.accumulate(np.r_[0.0,equity])
+    equity=np.cumsum(r); peak=np.maximum.accumulate(np.r_[0.0,equity])[1:]
     dd=float(np.min(equity-peak))
     return exp,se,exp-1.96*se,exp+1.96*se,pf,dd
 
