@@ -109,4 +109,23 @@ class ValidationTests(unittest.TestCase):
             self.assertAlmostEqual(result.expectancy_r.iloc[0],.04)
         finally: os.unlink(name)
 
+    def test_expectancy_rejects_nonfinite_walk_forward_fold(self):
+        with self.assertRaisesRegex(ValueError, "WFA fold returns must be finite"):
+            validate_expectancy(
+                [.1, .2] * 100,
+                [.1, .2] * 60,
+                [[.1, .2], [.1, float("nan")]],
+                min_oos_trades=50,
+            )
+
+    def test_expectancy_requires_two_valid_walk_forward_folds(self):
+        result = validate_expectancy(
+            [.1, .2] * 100,
+            [.1, .2] * 60,
+            [[.1, .2]],
+            min_oos_trades=50,
+        )
+        self.assertTrue(result.overfit_flag)
+        self.assertEqual(result.decision, "REJECT_OR_FALLBACK")
+
 if __name__=="__main__": unittest.main()
