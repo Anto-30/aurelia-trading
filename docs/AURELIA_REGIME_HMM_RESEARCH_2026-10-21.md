@@ -20,7 +20,7 @@ The module now includes (1) a conventional Gaussian-HMM forward filter and (2) a
 1. Retrieve historical candles for a confirmed symbol and granularity using Deriv's supported market-data WebSocket API. Store the raw response unchanged with retrieval time, requested interval, symbol, and payload hash. This prototype makes no API request itself.
 2. Sort and de-duplicate by candle epoch. Reject malformed or missing OHLC bars; do not interpolate missing candles without a separately justified policy.
 3. Generate [log_return, rolling_sample_volatility] after each completed candle. Preserve feature-to-candle timestamp alignment.
-4. Build fixed, chronological train/test folds; for example, train on the prior 500 eligible observations and evaluate the next 50, rolling forward without overlapping test windows. Fit scaler and HMM inside each fold's training segment only.
+4. Run walk_forward_predict(features, train_size=500, test_size=50, filter_kind='alpha_beta', alpha=..., beta=...). It refits for every fold, creates a fresh filter for that fold, and emits one posterior per held-out row in timestamp order. The helper returns regime evidence only; strategy replay, costs, trade metrics, and uncertainty intervals remain separate research steps.
 5. For each held-out bar, call the causal filter once, in timestamp order, and record posterior, confidence, normalized entropy, label, and decision timestamp. Do not use smoothed/Viterbi historical labels as live features.
 6. Replay unchanged strategy rules on the same entries/exits and compare filtered versus unfiltered results after the same verified payout, fees, slippage, and latency assumptions. Report net expectancy in R, profit factor, max drawdown, trade count, regime-cell sample size, and uncertainty intervals. Also report how many entries the filter blocks.
 7. Keep the full, untouched prospective OOS set sealed. Do not change thresholds or models after inspecting that set; each changed model begins a new evaluation version and needs new prospective evidence.
@@ -35,16 +35,14 @@ The posterior update, feature engineering, state mapping, and tests use the Pyth
 
 Example outline:
 
-    from research.labs.regime_hmm import features_from_closes, train_gaussian_hmm
+    from research.labs.regime_hmm import features_from_closes, walk_forward_predict
     features = features_from_closes(closes, window=14)
-    # Slice chronologically BEFORE training. Never fit on the full dataset.
-    train_rows = features[:500]
-    test_rows = features[500:550]
-    fit = train_gaussian_hmm(train_rows, n_states=3)
-    filter_ = fit.new_alpha_beta_filter(alpha=0.05, beta=1.0)  # placeholder values; tune only on training/validation
-    for row in test_rows:
-        signal = filter_.update(row)  # one call per completed candle, in order
-        print(signal.regime, signal.confidence, signal.normalized_entropy)
+    predictions = walk_forward_predict(
+        features, train_size=500, test_size=50, filter_kind="alpha_beta",
+        alpha=0.05, beta=1.0,  # placeholder values; tune only on training/validation windows
+    )
+    for item in predictions:
+        print(item.observation_index, item.signal.regime, item.signal.confidence)
 
 This is only a mechanics demo. Alpha and beta shown are placeholders, not tuned values. It does not estimate strategy P&L, include contract-specific payout mechanics, establish net edge, or demonstrate live readiness.
 
