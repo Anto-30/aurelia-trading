@@ -3,12 +3,17 @@ import unittest
 import numpy as np
 import pandas as pd
 from research.atos_validation.regime_validation import (
-    atr_position_size, chronological_partition, rolling_wfa, validate_expectancy
+    _metrics, atr_position_size, chronological_partition, rolling_wfa, validate_expectancy
 )
 from research.atos_validation.four_model_backtest import evaluate, evaluate_fold_metrics
 import tempfile, os
 
 class ValidationTests(unittest.TestCase):
+    def test_empty_return_metrics_have_six_fields(self):
+        metrics = _metrics(np.asarray([], dtype=float))
+        self.assertEqual(len(metrics), 6)
+        self.assertTrue(all(math.isnan(value) for value in metrics))
+
     def test_atr_size_keeps_risk_budget_and_caps_units(self):
         a=atr_position_size(10000,.01,2,2,1,1000)
         b=atr_position_size(10000,.01,4,2,1,1000)
