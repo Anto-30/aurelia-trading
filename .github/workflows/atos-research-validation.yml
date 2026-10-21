@@ -11,6 +11,8 @@ on:
     branches: [main]
     paths:
       - 'research/atos_validation/**'
+      - 'scripts/run_oos_validation.py'
+      - 'scripts/run_soak_test.py'
       - 'config/STAGING_PAPER.yaml'
       - '.github/workflows/atos-research-validation.yml'
 permissions:
