@@ -366,6 +366,7 @@ class ActiveTrade:
     target_reference_price: float
     hmm_regime_state: str
     size_units: float
+    initial_risk_cash: float
 
 
 def _fill_price(reference_price: float, direction: str, *, is_entry: bool, spread_half: float, slippage: float) -> float:
@@ -478,12 +479,7 @@ def close_active_trade(
         exit_timestamp=exit_timestamp.to_pydatetime(),
         entry_price=trade.entry_fill_price,
         exit_price=exit_fill,
-        initial_risk_cash=max(
-            abs(trade.entry_fill_price - _fill_price(trade.stop_reference_price, trade.direction,
-                                                     is_entry=False, spread_half=half_spread, slippage=slip))
-            * unit_cash * size + commission_cost,
-            1e-12,
-        ),
+        initial_risk_cash=trade.initial_risk_cash,
         gross_pnl_cash=gross_pnl,
         spread_cost_cash=spread_cost,
         slippage_cost_cash=slippage_cost,
@@ -623,6 +619,7 @@ def run_simulation(
                             target_reference_price=float(candidate.target_reference_price),
                             hmm_regime_state=regime_state,
                             size_units=float(execution["position_size_units"]),
+                            initial_risk_cash=float(prepared["initial_risk_cash"]),
                         )
 
             # Exits are evaluated against the current candle's range only after the
