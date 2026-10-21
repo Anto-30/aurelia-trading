@@ -15,6 +15,12 @@ class ValidationTests(unittest.TestCase):
         self.assertAlmostEqual(a,25)
         self.assertAlmostEqual(b,12.5)
         self.assertEqual(atr_position_size(10000,.01,2,2,1,10),10)
+    def test_alpha_beta_smoothing_stays_in_probability_simplex(self):
+        from research.atos_validation.regime_validation import RegimeDetector
+        self.assertEqual(RegimeDetector(filter_kind="alpha_beta", alpha=1/3).alpha, 1/3)
+        with self.assertRaises(ValueError):
+            RegimeDetector(filter_kind="alpha_beta", alpha=.34)
+
     def test_bad_risk_inputs_rejected(self):
         with self.assertRaises(ValueError): atr_position_size(1000,.5,1,2,1,100)
     def test_wfa_chronological(self):
