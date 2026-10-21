@@ -21,9 +21,9 @@ import pandas as pd
 import websocket
 
 DERIV_WS_BASE = "wss://ws.derivws.com/websockets/v3"
-# Both hosts are published for the legacy v3 market-data API; try the alternate host
-# when a transient Cloudflare/origin handshake error affects one endpoint.
-DERIV_WS_BASES = (DERIV_WS_BASE, "wss://ws.binaryws.com/websockets/v3")
+# Current Deriv docs publish ws.derivws.com with app_id; the public market-data
+# example also documents ws.binaryws.com without a query-string App ID.
+DERIV_WS_FALLBACK_BASE = "wss://ws.binaryws.com/websockets/v3"
 OHLC_COLUMNS = ("open", "high", "low", "close")
 DATA_COLUMNS = ["timestamp", "epoch", "open", "high", "low", "close", "volume"]
 
@@ -73,7 +73,7 @@ class DerivHistoryClient:
             raise ValueError("Set DERIV_APP_ID to a numeric application ID")
         if not math.isfinite(float(timeout_seconds)) or timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be finite and positive")
-        self.urls = tuple(f"{base}?app_id={self.app_id}" for base in DERIV_WS_BASES)
+        self.urls = (f"{DERIV_WS_BASE}?app_id={self.app_id}", DERIV_WS_FALLBACK_BASE)
         self.url = self.urls[0]  # compatibility alias for diagnostics/tests
         self.timeout = float(timeout_seconds)
 
