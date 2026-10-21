@@ -81,13 +81,44 @@ class RegimeDetector:
         self.posterior=None
         return self
 
+    def _gaussian_log_emissions(self, standardized_row: np.ndarray) -> np.ndarray:
+        """Compute one-step log emissions from fitted Gaussian parameters.
+
+        This keeps inference causal and avoids hmmlearn's private likelihood API.
+        The fit uses covariance_type="full", so covars_ is state x feature x feature.
+        """
+        means=np.asarray(self.model.means_,dtype=float)
+        covars=np.asarray(self.model.covars_,dtype=float)
+        row=np.asarray(standardized_row,dtype=float)
+        if (means.shape!=(self.n_states,2) or covars.shape!=(self.n_states,2,2)
+                or row.shape!=(2,) or not np.isfinite(means).all()
+                or not np.isfinite(covars).all() or not np.isfinite(row).all()):
+            raise ValueError("invalid fitted Gaussian emission parameters")
+        out=np.empty(self.n_states,dtype=float)
+        log_2pi=math.log(2.0*math.pi)
+        for state in range(self.n_states):
+            covariance=(covars[state]+covars[state].T)*0.5
+            sign, logdet=np.linalg.slogdet(covariance)
+            if sign<=0 or not math.isfinite(float(logdet)):
+                raise ValueError("Gaussian covariance is not positive definite")
+            delta=row-means[state]
+            solved=np.linalg.solve(covariance,delta)
+            value=-0.5*(2.0*log_2pi+float(logdet)+float(delta@solved))
+            if not math.isfinite(value):
+                raise ValueError("non-finite Gaussian log likelihood")
+            out[state]=value
+        return out
+
     def update(self, row: Sequence[float]) -> RegimePrediction:
         if self.model is None: raise RuntimeError("fit model before inference")
         x=np.asarray(row,dtype=float)
         if x.shape!=(2,) or not np.isfinite(x).all():
             return RegimePrediction("UNDEFINED",(),0.0,1.0,False,"invalid feature row")
         z=(x-self.mean)/self.scale
-        log_emit=self.model._compute_log_likelihood(np.asarray([z]))[0]
+        try:
+            log_emit=self._gaussian_log_emissions(z)
+        except (ValueError, np.linalg.LinAlgError, FloatingPointError):
+            return RegimePrediction("UNDEFINED",(),0.0,1.0,False,"invalid emission likelihood")
         emit=np.exp(log_emit-np.max(log_emit))
         if self.posterior is None:
             prior=self.model.startprob_.copy()
