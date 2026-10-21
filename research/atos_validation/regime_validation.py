@@ -24,12 +24,15 @@ class RegimePrediction:
 class RegimeDetector:
     """Gaussian HMM with causal forward filtering and dynamically mapped states."""
     def __init__(self, n_states: int = 3, min_confidence: float = 0.60,
-                 max_entropy: float = 0.85, random_state: int = 17):
+                 max_entropy: float = 0.85, random_state: int = 17,
+                 filter_kind: str = "gaussian", alpha: float = 0.05, beta: float = 1.0):
         if n_states != 3: raise ValueError("this mapper requires exactly 3 states")
         if not 0 < min_confidence <= 1 or not 0 < max_entropy <= 1:
             raise ValueError("invalid confidence/entropy thresholds")
+        if filter_kind not in {"gaussian", "alpha_beta"}: raise ValueError("invalid filter_kind")
+        if not 0 < alpha < 1 or not 0 < beta <= 2: raise ValueError("alpha must be in (0,1), beta in (0,2]")
         self.n_states, self.min_confidence, self.max_entropy = n_states, min_confidence, max_entropy
-        self.random_state = random_state
+        self.random_state, self.filter_kind, self.alpha, self.beta = random_state, filter_kind, alpha, beta
         self.model = None; self.mean = None; self.scale = None
         self.state_names = None; self.posterior = None
 
@@ -86,8 +89,15 @@ class RegimeDetector:
         z=(x-self.mean)/self.scale
         log_emit=self.model._compute_log_likelihood(np.asarray([z]))[0]
         emit=np.exp(log_emit-np.max(log_emit))
-        prior=self.model.startprob_.copy() if self.posterior is None else self.posterior @ self.model.transmat_
-        post=prior*emit
+        if self.posterior is None:
+            prior=self.model.startprob_.copy()
+        elif self.filter_kind == "alpha_beta":
+            # Equal-exit Alpha-Beta prediction: alpha + (1-M*alpha)*previous belief.
+            prior=(self.alpha + (1.0-self.n_states*self.alpha)*self.posterior)
+        else:
+            prior=self.posterior @ self.model.transmat_
+        likelihood=np.power(np.maximum(emit,1e-300), self.beta if self.filter_kind=="alpha_beta" else 1.0)
+        post=prior*likelihood
         total=post.sum()
         if not math.isfinite(float(total)) or total<=0:
             return RegimePrediction("UNDEFINED",(),0.0,1.0,False,"invalid posterior")
