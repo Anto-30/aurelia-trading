@@ -15,6 +15,7 @@ from research.atos_validation.deriv_data import (
     LatencyTelemetry,
     persist_history,
 )
+from scripts.fetch_deriv_history import parse_epoch
 
 
 def candle_rows(start: int, end: int, granularity: int = 60) -> list[dict]:
@@ -113,6 +114,12 @@ class DerivHistoryTests(unittest.TestCase):
             self.assertEqual(manifest["data_sha256"], hashlib.sha256(raw).hexdigest())
             saved = json.loads(path.with_suffix(path.suffix + ".manifest.json").read_text())
             self.assertEqual(saved["manifest_sha256"], manifest["manifest_sha256"])
+
+    def test_cli_time_parser_requires_timezone_and_accepts_epoch(self):
+        self.assertEqual(parse_epoch("60", "--start"), 60)
+        self.assertEqual(parse_epoch("1970-01-01T00:01:00Z", "--start"), 60)
+        with self.assertRaises(Exception):
+            parse_epoch("1970-01-01T00:01:00", "--start")
 
     def test_latency_telemetry_rejects_unordered_clock_values(self):
         telemetry = LatencyTelemetry()
