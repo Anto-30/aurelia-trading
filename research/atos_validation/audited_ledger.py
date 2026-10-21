@@ -103,6 +103,7 @@ class AuditedLedgerWriter:
         self._accepted_decisions: dict[str, dict[str, Any]] = {}
         self._decision_count = 0
         self._trade_count = 0
+        self._cancel_count = 0
         self._stream = self.path.open("x", encoding="utf-8", newline="\n")
         self._closed = False
         self._created_at_utc = datetime.now(timezone.utc)
@@ -205,6 +206,52 @@ class AuditedLedgerWriter:
                 "model_config_sha256": config_hash,
             }
         return event_id
+
+    def cancel_decision(
+        self,
+        *,
+        decision_event_id: str,
+        cancellation_epoch: int,
+        reason_codes: Iterable[str],
+    ) -> str:
+        """Record an execution-time cancellation separately from the earlier signal decision.
+
+        The model decision remains timestamped at candle N-1. This cancellation event
+        may inspect candle N's open/entry geometry and must be timestamped at N; it
+        cannot rewrite the earlier decision as though the open were already known.
+        """
+        decision = self._accepted_decisions.get(decision_event_id)
+        if decision is None:
+            raise ValueError("cancellation must reference a preceding accepted decision")
+        if isinstance(cancellation_epoch, bool) or not isinstance(cancellation_epoch, int):
+            raise ValueError("cancellation_epoch must be an integer UTC epoch")
+        if cancellation_epoch != decision["execution_bar_epoch"]:
+            raise ValueError("cancellation must occur at the scheduled next-bar execution epoch")
+        reasons = list(reason_codes)
+        if not reasons or any(not isinstance(item, str) or not item.strip() for item in reasons):
+            raise ValueError("cancellation requires non-empty reason_codes")
+        record = {
+            "schema": SCHEMA,
+            "record_type": "decision_cancelled",
+            "event_id": str(uuid.uuid4()),
+            "decision_event_id": decision_event_id,
+            "timestamp_utc": _epoch_iso(cancellation_epoch),
+            "cancellation_epoch": cancellation_epoch,
+            "symbol": decision["symbol"],
+            "strategy": decision["strategy"],
+            "fold_id": decision["fold_id"],
+            "granularity_seconds": self.granularity_seconds,
+            "reason_codes": reasons,
+            "signal_bar_epoch": decision["signal_bar_epoch"],
+            "execution_bar_epoch": decision["execution_bar_epoch"],
+            "hmm_regime_state": decision["hmm_regime_state"],
+            "data_sha256": self.data_sha256,
+            "model_config_sha256": decision["model_config_sha256"],
+        }
+        self._append(record)
+        self._cancel_count += 1
+        del self._accepted_decisions[decision_event_id]
+        return record["event_id"]
 
     def record_trade(
         self,
@@ -371,6 +418,7 @@ class AuditedLedgerWriter:
             "head_record_sha256": self._head_hash,
             "decision_record_count": self._decision_count,
             "closed_trade_record_count": self._trade_count,
+            "cancelled_entry_count": self._cancel_count,
             "symbol": self.symbol,
             "strategy_names": sorted(self._strategies),
             "fold_ids": sorted(self._fold_ids),
@@ -409,6 +457,7 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
     decisions: dict[str, dict[str, Any]] = {}
     decision_count = 0
     trade_count = 0
+    cancellation_count = 0
     with ledger_path.open("r", encoding="utf-8") as stream:
         for line_no, line in enumerate(stream, 1):
             if not line.endswith("\n") or not line.strip():
@@ -435,6 +484,22 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
                     raise ValueError(f"line {line_no}: decision does not respect next-bar execution timing")
                 if record.get("decision_status") == "ACCEPTED":
                     decisions[record["event_id"]] = record
+            elif record.get("record_type") == "decision_cancelled":
+                cancellation_count += 1
+                decision_id = record.get("decision_event_id")
+                decision = decisions.get(decision_id)
+                if decision is None:
+                    raise ValueError(f"line {line_no}: cancellation has no preceding accepted decision")
+                if record.get("cancellation_epoch") != decision.get("execution_bar_epoch"):
+                    raise ValueError(f"line {line_no}: cancellation is not at the scheduled next-bar execution epoch")
+                if record.get("signal_bar_epoch") != decision.get("signal_bar_epoch"):
+                    raise ValueError(f"line {line_no}: cancellation signal timestamp mismatch")
+                if record.get("hmm_regime_state") != decision.get("hmm_regime_state"):
+                    raise ValueError(f"line {line_no}: cancellation regime state mismatch")
+                reasons = record.get("reason_codes")
+                if not isinstance(reasons, list) or not reasons or any(not isinstance(reason, str) or not reason.strip() for reason in reasons):
+                    raise ValueError(f"line {line_no}: cancellation reasons are missing")
+                decisions.pop(decision_id, None)
             elif record.get("record_type") == "trade_closed":
                 trade_count += 1
                 decision_id = record.get("decision_event_id")
@@ -459,6 +524,27 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
                     value = record.get(key)
                     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)):
                         raise ValueError(f"line {line_no}: invalid numeric {key}")
+                optional_numeric = (
+                    "entry_reference_price", "exit_reference_price", "stop_reference_price",
+                    "target_reference_price", "entry_spread_cost_cash", "exit_spread_cost_cash",
+                    "entry_slippage_cost_cash", "exit_slippage_cost_cash",
+                )
+                for key in optional_numeric:
+                    value = record.get(key)
+                    if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value))):
+                        raise ValueError(f"line {line_no}: invalid optional numeric {key}")
+                for digest_key in ("cost_source_sha256", "instrument_source_sha256"):
+                    value = record.get(digest_key)
+                    if value is not None and not SHA256_RE.fullmatch(str(value)):
+                        raise ValueError(f"line {line_no}: invalid {digest_key}")
+                if record.get("exit_reason") is not None and (not isinstance(record["exit_reason"], str) or not record["exit_reason"].strip()):
+                    raise ValueError(f"line {line_no}: invalid exit_reason")
+                if all(record.get(key) is not None for key in ("entry_spread_cost_cash", "exit_spread_cost_cash")):
+                    if abs(float(record["entry_spread_cost_cash"]) + float(record["exit_spread_cost_cash"]) - float(record["spread_cost_cash"])) > 1e-9:
+                        raise ValueError(f"line {line_no}: entry/exit spread costs do not reconcile")
+                if all(record.get(key) is not None for key in ("entry_slippage_cost_cash", "exit_slippage_cost_cash")):
+                    if abs(float(record["entry_slippage_cost_cash"]) + float(record["exit_slippage_cost_cash"]) - float(record["slippage_cost_cash"])) > 1e-9:
+                        raise ValueError(f"line {line_no}: entry/exit slippage costs do not reconcile")
                 risk = float(record["initial_risk_cash"])
                 total_cost = float(record["spread_cost_cash"]) + float(record["slippage_cost_cash"]) + float(record["commission_cost_cash"])
                 if risk <= 0 or abs(float(record["total_cost_cash"]) - total_cost) > 1e-9:
@@ -488,6 +574,7 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
         "head_record_sha256": previous,
         "decision_record_count": decision_count,
         "closed_trade_record_count": trade_count,
+        "cancelled_entry_count": cancellation_count,
         "integrity_verified": True,
     }
     resolved_manifest = Path(manifest_path) if manifest_path else ledger_path.with_suffix(ledger_path.suffix + ".manifest.json")
@@ -498,6 +585,7 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
             ("head_record_sha256", previous),
             ("decision_record_count", decision_count),
             ("closed_trade_record_count", trade_count),
+            ("cancelled_entry_count", cancellation_count),
         ):
             if manifest.get(key) != observed:
                 raise ValueError(f"manifest {key} mismatch")
