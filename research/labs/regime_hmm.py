@@ -261,9 +261,8 @@ class AlphaBetaHMMFilter:
         if self._scaler is not None:
             x = self._scaler.transform_one(x)
         ll = tuple(gaussian_log_likelihood(x, self._means[i], self._covars[i]) for i in range(len(self._means)))
-        self._posterior = (_posterior(self._start, tuple(self._beta * value for value in ll))
-                           if self._posterior is None
-                           else alpha_beta_belief_update(self._posterior, ll, alpha=self._alpha, beta=self._beta))
+        prior = self._start if self._posterior is None else self._posterior
+        self._posterior = alpha_beta_belief_update(prior, ll, alpha=self._alpha, beta=self._beta)
         return _signal(self._posterior, self._labels, self._min_confidence, self._max_entropy)
 
 
