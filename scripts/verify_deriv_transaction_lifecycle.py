@@ -337,11 +337,11 @@ async def run() -> int:
 
             print("DERIV_TRANSACTION_LIFECYCLE=VERIFY_ONLY_PROVEN")
             print(f"DERIV_EVIDENCE_PATH={OUTPUT}")
-            print(f"DERIV_ACCOUNT={account.loginid}")
-            print(f"FRESH_BALANCE={prior.available_balance}")
+            print("DERIV_ACCOUNT_BINDING_MATCH=true")
+            print("FRESH_BALANCE_VERIFIED=true")
             print(f"ACTIVE_SYMBOLS={len(active_symbols)}")
-            print(f"PROPOSAL_ID={proposal_id}")
-            print(f"INTENT_ID={verify_intent.intent_id}")
+            print("BROKER_PROPOSAL_PREPARED=true")
+            print("VERIFY_ONLY_INTENT_PREPARED=true")
             print("ORDERS_SUBMITTED=0")
             print("CAPITAL_MOVEMENT=false")
             return 0
