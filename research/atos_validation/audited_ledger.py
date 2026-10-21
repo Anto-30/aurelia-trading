@@ -84,6 +84,7 @@ class AuditedLedgerWriter:
         symbol: str,
         data_sha256: str,
         granularity_seconds: int = 60,
+        strategy_code_sha256: str | None = None,
     ) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -95,6 +96,10 @@ class AuditedLedgerWriter:
             raise ValueError("granularity_seconds must be 60 or 900")
         self.symbol = symbol.strip()
         self.data_sha256 = _validate_digest(data_sha256, "data_sha256")
+        self.strategy_code_sha256 = (
+            _validate_digest(strategy_code_sha256, "strategy_code_sha256")
+            if strategy_code_sha256 is not None else None
+        )
         self.granularity_seconds = granularity_seconds
         self._head_hash: str | None = None
         self._strategies: set[str] = set()
@@ -188,6 +193,7 @@ class AuditedLedgerWriter:
             "probability": probability,
             "data_sha256": self.data_sha256,
             "model_config_sha256": config_hash,
+            "strategy_code_sha256": self.strategy_code_sha256,
         }
         self._append(record)
         self._decision_count += 1
@@ -204,6 +210,7 @@ class AuditedLedgerWriter:
                 "strategy": strategy.strip(),
                 "fold_id": fold_id.strip(),
                 "model_config_sha256": config_hash,
+                "strategy_code_sha256": self.strategy_code_sha256,
             }
         return event_id
 
@@ -247,6 +254,7 @@ class AuditedLedgerWriter:
             "hmm_regime_state": decision["hmm_regime_state"],
             "data_sha256": self.data_sha256,
             "model_config_sha256": decision["model_config_sha256"],
+            "strategy_code_sha256": decision.get("strategy_code_sha256"),
         }
         self._append(record)
         self._cancel_count += 1
@@ -423,6 +431,7 @@ class AuditedLedgerWriter:
             "strategy_names": sorted(self._strategies),
             "fold_ids": sorted(self._fold_ids),
             "model_config_sha256s": sorted(self._config_hashes),
+            "strategy_code_sha256": self.strategy_code_sha256,
             "granularity_seconds": self.granularity_seconds,
             "data_sha256": self.data_sha256,
             "created_at_utc": _iso(self._created_at_utc),
@@ -458,6 +467,7 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
     decision_count = 0
     trade_count = 0
     cancellation_count = 0
+    observed_code_hashes: set[str] = set()
     with ledger_path.open("r", encoding="utf-8") as stream:
         for line_no, line in enumerate(stream, 1):
             if not line.endswith("\n") or not line.strip():
@@ -573,7 +583,14 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
             for key in ("data_sha256", "model_config_sha256"):
                 if not SHA256_RE.fullmatch(str(record.get(key, ""))):
                     raise ValueError(f"line {line_no}: invalid {key}")
+            code_hash = record.get("strategy_code_sha256")
+            if code_hash is not None:
+                if not SHA256_RE.fullmatch(str(code_hash)):
+                    raise ValueError(f"line {line_no}: invalid strategy_code_sha256")
+                observed_code_hashes.add(str(code_hash))
             previous = observed_hash
+    if len(observed_code_hashes) > 1:
+        raise ValueError("ledger mixes different strategy-code bundle hashes")
     if decision_count == 0:
         raise ValueError("ledger has no decision records")
     if decisions:
@@ -585,6 +602,7 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
         "decision_record_count": decision_count,
         "closed_trade_record_count": trade_count,
         "cancelled_entry_count": cancellation_count,
+        "strategy_code_sha256": next(iter(observed_code_hashes), None),
         "integrity_verified": True,
     }
     resolved_manifest = Path(manifest_path) if manifest_path else ledger_path.with_suffix(ledger_path.suffix + ".manifest.json")
@@ -596,6 +614,7 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
             ("decision_record_count", decision_count),
             ("closed_trade_record_count", trade_count),
             ("cancelled_entry_count", cancellation_count),
+            ("strategy_code_sha256", next(iter(observed_code_hashes), None)),
         ):
             if manifest.get(key) != observed:
                 raise ValueError(f"manifest {key} mismatch")
