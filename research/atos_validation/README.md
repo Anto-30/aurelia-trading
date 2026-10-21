@@ -18,6 +18,21 @@ python scripts/fetch_deriv_history.py \
 ```
 For a 24-month study, move `--start` back to the corresponding UTC boundary. The endpoints must align to the selected granularity. The CLI prints bar count and hashes, not account information. Store the generated CSV and manifest as a versioned research artifact; do not invent missing volume, execution costs, or trade outputs. Network/history limits and symbol availability can still block a requested interval, in which case there is no qualified dataset.
 
+After downloading, verify that the CSV has not changed and that its coverage matches the manifest:
+```bash
+python scripts/verify_deriv_history_manifest.py data/deriv/R_100_1m.csv
+```
+The verifier checks the manifest hash, CSV hash, exact timestamp sequence, row count, OHLC invariants, and missing-volume policy. Keep the CSV and manifest together.
+
+## Four-model trade ledger
+The four-model evaluator accepts only a caller-produced ledger with timezone-aware timestamps, nonnegative realized costs in R, all four required strategy IDs, and the same fold IDs for every model. Provide explicit zero-trade fold records rather than omitting a fold. After a strategy-specific replay has generated verified net-cost inputs, run:
+```bash
+python -m research.atos_validation.four_model_backtest path/to/audited_trades.csv \
+  --out artifacts/four_model_metrics.csv \
+  --fold-out artifacts/four_model_fold_metrics.csv
+```
+The aggregate and fold-level files are labelled from the exact ledger SHA-256. This is a metric calculator, not a strategy simulator: it must not be run on example or fabricated data and then presented as evidence of edge.
+
 The repository also has a manual GitHub Actions workflow, `Deriv historical research data ingestion`, which collects the same public history and uploads the CSV plus manifest as a 90-day artifact. After the workflow has been reviewed and merged to `main`, open **Actions → Deriv historical research data ingestion → Run workflow** and supply a numeric Deriv App ID, symbol, UTC start/end, and granularity. An App ID is not an account token; do not enter an account token in workflow inputs. The default interval is a 12-month R_100 sample window ending 2026-10-21. For reproducibility, preserve the downloaded manifest alongside the data and record the exact artifact/run identifier before analysis.
 
 ## Validation protocol
