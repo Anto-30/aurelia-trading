@@ -67,15 +67,33 @@ class LatencyTelemetry:
 
 
 class DerivHistoryClient:
-    def __init__(self, app_id: str | None = None, timeout_seconds: float = 20):
-        self.app_id = app_id or os.getenv("DERIV_APP_ID")
-        if not self.app_id or not self.app_id.isdigit():
-            raise ValueError("Set DERIV_APP_ID to a numeric application ID")
+    def __init__(
+        self,
+        app_id: str | None = None,
+        timeout_seconds: float = 20,
+        max_attempts: int = 4,
+        retry_base_seconds: float = 1.5,
+    ):
+        # Public market-data calls do not require authorization or an App ID. If an
+        # optional legacy App ID is supplied, try that documented endpoint first;
+        # otherwise prefer Deriv's currently documented public no-query-string URL.
+        self.app_id = app_id or os.getenv("DERIV_APP_ID") or None
+        if self.app_id is not None and (not self.app_id.isdigit()):
+            raise ValueError("app_id must be numeric when supplied")
         if not math.isfinite(float(timeout_seconds)) or timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be finite and positive")
-        self.urls = (f"{DERIV_WS_BASE}?app_id={self.app_id}", DERIV_WS_FALLBACK_BASE)
+        if isinstance(max_attempts, bool) or not isinstance(max_attempts, int) or not 1 <= max_attempts <= 8:
+            raise ValueError("max_attempts must be an integer in 1..8")
+        if not math.isfinite(float(retry_base_seconds)) or retry_base_seconds < 1.0:
+            raise ValueError("retry_base_seconds must be finite and >= 1 second")
+        if self.app_id:
+            self.urls = (f"{DERIV_WS_BASE}?app_id={self.app_id}", DERIV_WS_FALLBACK_BASE)
+        else:
+            self.urls = (DERIV_WS_FALLBACK_BASE, DERIV_WS_BASE)
         self.url = self.urls[0]  # compatibility alias for diagnostics/tests
         self.timeout = float(timeout_seconds)
+        self.max_attempts = max_attempts
+        self.retry_base_seconds = float(retry_base_seconds)
 
     def _connect(self):
         """Connect to documented public v3 endpoints in order, failing with bounded diagnostics."""
@@ -86,6 +104,60 @@ class DerivHistoryClient:
             except Exception as exc:
                 failures.append(f"{url.split('?')[0]}: {type(exc).__name__}")
         raise ConnectionError("all public Deriv WebSocket endpoints failed: " + "; ".join(failures))
+
+    @staticmethod
+    def _is_retryable(exc: Exception) -> bool:
+        if isinstance(exc, (ConnectionError, TimeoutError, OSError, websocket.WebSocketException)):
+            return True
+        if isinstance(exc, RuntimeError):
+            # Only retry explicit transient throttling/server codes. Other API errors
+            # (unknown symbol, invalid range, permissions) should fail immediately.
+            message = str(exc).lower()
+            return any(token in message for token in (
+                "ratelimit", "rate limit", "toomanyrequests", "too many requests",
+                "servererror", "server error", "temporarily unavailable",
+            ))
+        return False
+
+    def request_message(self, request: dict, *, expected_msg_type: str) -> dict:
+        """Send one public market-data request with bounded retries and exponential backoff."""
+        if not isinstance(request, dict) or not request:
+            raise ValueError("request must be a non-empty dictionary")
+        if not isinstance(expected_msg_type, str) or not expected_msg_type:
+            raise ValueError("expected_msg_type must be a non-empty string")
+        last_error: Exception | None = None
+        for attempt in range(self.max_attempts):
+            ws = None
+            try:
+                ws = self._connect()
+                ws.send(json.dumps(request, separators=(",", ":")))
+                deadline = time.monotonic() + self.timeout
+                while time.monotonic() < deadline:
+                    message = json.loads(ws.recv())
+                    if message.get("error"):
+                        error = message["error"]
+                        raise RuntimeError(
+                            f"Deriv API error: {error.get('code', 'unknown')}: {error.get('message', '')}"
+                        )
+                    if message.get("msg_type") == expected_msg_type:
+                        return message
+                raise TimeoutError(f"timed out waiting for Deriv {expected_msg_type} response")
+            except Exception as exc:
+                last_error = exc
+                if not self._is_retryable(exc) or attempt + 1 >= self.max_attempts:
+                    raise
+                delay = min(self.retry_base_seconds * (2 ** attempt), 30.0)
+                # The same bounded delay applies to transport failures and explicit
+                # transient provider throttling. Never spin/retry immediately.
+                time.sleep(delay)
+            finally:
+                if ws is not None:
+                    try:
+                        ws.close()
+                    except Exception:
+                        pass
+        assert last_error is not None
+        raise last_error
 
     @staticmethod
     def _validate_range(start_epoch: int, end_epoch: int, granularity: int) -> tuple[int, int]:
@@ -147,49 +219,35 @@ class DerivHistoryClient:
         if expected_count > count:
             raise ValueError("requested range exceeds count; use backfill() to fetch bounded chunks")
 
-        ws = self._connect()
-        try:
-            request = {
-                "ticks_history": symbol,
-                "start": start,
-                "end": end,
-                "style": "candles",
-                "granularity": int(granularity),
-                # The exact start/end range defines this bounded chunk. Keep count
-                # as a client-side limit only; avoid combining it with start/end.
-                "adjust_start_time": 0,
-                "subscribe": 0,
-                "req_id": 1,
-            }
-            ws.send(json.dumps(request))
-            deadline = time.monotonic() + self.timeout
-            while time.monotonic() < deadline:
-                message = json.loads(ws.recv())
-                if message.get("error"):
-                    error = message["error"]
-                    raise RuntimeError(
-                        f"Deriv API error: {error.get('code', 'unknown')}: {error.get('message', '')}"
-                    )
-                if message.get("msg_type") == "candles":
-                    frame = pd.DataFrame(message.get("candles", []))
-                    if frame.empty:
-                        raise ValueError("Deriv returned no candles")
-                    return self._validate_frame(frame, start, end, granularity)
-            raise TimeoutError("timed out waiting for Deriv candles")
-        finally:
-            ws.close()
+        request = {
+            "ticks_history": symbol,
+            "start": start,
+            "end": end,
+            "style": "candles",
+            "granularity": int(granularity),
+            # Exact start/end bounds define this paginated chunk. subscribe=0 makes
+            # the request one-shot; no live stream is opened.
+            "adjust_start_time": 0,
+            "subscribe": 0,
+            "req_id": 1,
+        }
+        message = self.request_message(request, expected_msg_type="candles")
+        frame = pd.DataFrame(message.get("candles", []))
+        if frame.empty:
+            raise ValueError("Deriv returned no candles")
+        return self._validate_frame(frame, start, end, granularity)
 
     def backfill(
         self, symbol: str, start_epoch: int, end_epoch: int,
         granularity: int = 60, bars_per_request: int = 4500,
-        request_delay_seconds: float = 1.0,
+        request_delay_seconds: float = 1.5,
     ) -> pd.DataFrame:
         """Chunk a long history interval without overlap, pausing between requests."""
         start, end = self._validate_range(start_epoch, end_epoch, granularity)
         if not 100 <= bars_per_request <= 5000:
             raise ValueError("bars_per_request must be in 100..5000")
-        if isinstance(request_delay_seconds, bool) or not math.isfinite(float(request_delay_seconds)) or request_delay_seconds < 0.5:
-            raise ValueError("request_delay_seconds must be finite and at least 0.5 seconds")
+        if isinstance(request_delay_seconds, bool) or not math.isfinite(float(request_delay_seconds)) or request_delay_seconds < 1.5:
+            raise ValueError("request_delay_seconds must be finite and at least 1.5 seconds")
         chunk_seconds = (bars_per_request - 1) * granularity
         frames: list[pd.DataFrame] = []
         cursor = start
