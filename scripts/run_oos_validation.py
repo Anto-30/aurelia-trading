@@ -126,6 +126,8 @@ def _load_cost_evidence(path: Path, *, symbol: str, start_epoch: int, end_epoch:
         raise ValueError("cost_method must explain how per-trade cost_r was derived")
     if doc["independent_review_status"] not in {"PENDING", "APPROVED", "REJECTED"}:
         raise ValueError("independent_review_status must be PENDING, APPROVED, or REJECTED")
+    if doc["independent_review_status"] == "REJECTED":
+        raise ValueError("cost evidence was rejected by independent review")
     source_ref = Path(str(doc["cost_source_file"]))
     if not source_ref.is_absolute():
         source_ref = path.parent / source_ref
@@ -211,7 +213,7 @@ def main() -> int:
     now = int(time.time())
     # Stop at the most recent fully closed candle boundary.
     end_epoch = (now // args.granularity) * args.granularity - args.granularity
-    start_epoch, calendar_months, final_oos_protocol_satisfied = resolve_oos_start(
+    start_epoch, calendar_months, calendar_window_eligible = resolve_oos_start(
         end_epoch, args.granularity, oos_days=args.oos_days, oos_months=args.oos_months,
     )
     oos_days_actual = (end_epoch - start_epoch) / 86400.0
@@ -278,7 +280,9 @@ def main() -> int:
         "history_manifest": str(manifest_path),
         "strategy_metrics": None,
         "fold_metrics": None,
-        "final_three_month_oos_protocol_satisfied": final_oos_protocol_satisfied,
+        "final_three_month_oos_window_length_eligible": calendar_window_eligible,
+        "final_three_month_oos_protocol_satisfied": False,
+        "precommitment_verified": False,
         "cost_source_authenticity_independently_verified": False,
         "final_execution_authorization": False,
         "live_execution": "BLOCKED",
@@ -291,7 +295,7 @@ def main() -> int:
     print(f"MANIFEST_SHA256={verified['manifest_sha256']}")
     print(f"DATA_PATH={csv_path}")
     print(f"MANIFEST_PATH={manifest_path}")
-    if not final_oos_protocol_satisfied:
+    if not calendar_window_eligible:
         print("FINAL_OOS_PROTOCOL=NOT_SATISFIED_EXPLORATORY_DAY_WINDOW_OR_SHORTER_THAN_3_CALENDAR_MONTHS")
     else:
         print("FINAL_OOS_PROTOCOL=CALENDAR_MONTH_WINDOW_ELIGIBLE_PENDING_PROOF_OF_PRECOMMITMENT")
@@ -346,7 +350,9 @@ def main() -> int:
         },
         "strategy_metrics": model_metrics,
         "fold_metrics": fold_metrics,
-        "final_three_month_oos_protocol_satisfied": final_oos_protocol_satisfied,
+        "final_three_month_oos_window_length_eligible": calendar_window_eligible,
+        "final_three_month_oos_protocol_satisfied": False,
+        "precommitment_verified": False,
         "oos_status": "PENDING_INDEPENDENT_REVIEW",
         "final_execution_authorization": False,
         "live_execution": "BLOCKED",
