@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_tool_skill_assignment.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-10-21",
   "purpose": "Task-aware, least-privilege tool, skill, plugin, and repository routing across AURELIA's canonical agents and ChatGPT supervisory workflow.",
   "authority_model": {
     "canonical_repository": "Anto-30/aurelia-trading",
@@ -86,7 +86,8 @@
       "reviewers": [
         "JEV",
         "ChatGPT",
-        "GrokBot"
+        "GrokBot",
+        "DeepSeekHarness"
       ],
       "tools": [
         "GitHub",
@@ -125,7 +126,8 @@
         "ClaudeCode",
         "GoogleAgentSkills",
         "JEV",
-        "ChatGPT"
+        "ChatGPT",
+        "DeepSeekHarness"
       ],
       "tools": [
         "GitHub",
@@ -157,7 +159,8 @@
       "reviewers": [
         "ClaudeCode",
         "JEV",
-        "ChatGPT"
+        "ChatGPT",
+        "DeepSeekHarness"
       ],
       "tools": [
         "GitHub",
@@ -306,7 +309,8 @@
       "reviewers": [
         "ClaudeCode",
         "JEV",
-        "GrokBot"
+        "GrokBot",
+        "DeepSeekHarness"
       ],
       "tools": [
         "GitHub",
@@ -421,7 +425,8 @@
         "vercel (conditional)"
       ],
       "can_mutate_live_lock": false,
-      "capital_authority": false
+      "capital_authority": false,
+      "display_name": "Claude"
     },
     "GrokBot": {
       "status": "CANONICAL_ORCHESTRATION_PROFILE",
@@ -447,7 +452,8 @@
         "hugging-face (conditional)"
       ],
       "can_mutate_live_lock": false,
-      "capital_authority": false
+      "capital_authority": false,
+      "display_name": "Grok"
     },
     "KimiK3": {
       "status": "CANONICAL_QUANT_RESEARCH_PROFILE",
@@ -596,7 +602,7 @@
       "capital_authority": false
     },
     "Dev": {
-      "status": "NOT_CONNECTED",
+      "status": "INACTIVE_RUNTIME_NOT_CONNECTED",
       "role": "future development-host/runtime operator",
       "tools": [
         "Git",
@@ -622,6 +628,40 @@
       "can_mutate_live_lock": false,
       "capital_authority": false,
       "activation_gate": "Connect an authorized device and validate its identity before use."
+    },
+    "DeepSeekHarness": {
+      "status": "REGISTERED_PROFILE_RUNTIME_UNVERIFIED",
+      "display_name": "DeepSeek",
+      "role": "independent harness/code reasoning, adversarial review, implementation-plan critique, and offline research support",
+      "tools": [
+        "GitHub read",
+        "web research",
+        "Python/sandbox when explicitly available",
+        "CI logs and artifacts read-only"
+      ],
+      "skills": [
+        "external-repo-federation",
+        "security-review",
+        "ci-diagnostics",
+        "evidence-reconciliation",
+        "lookahead-bias-audit",
+        "ML-calibration"
+      ],
+      "plugins": [
+        "data-analytics when analyzing evidence",
+        "mcp-precheck for MCP/provider configuration review",
+        "Hugging Face only for relevant model/dataset research"
+      ],
+      "can_mutate_live_lock": false,
+      "capital_authority": false,
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock",
+        "read_or_print_production_secrets",
+        "claim_runtime_connection_without_evidence"
+      ],
+      "guard": "Independent advisory role only. Any proposed code change must be committed through a reviewed PR and independently tested; no direct production writes or execution authority."
     }
   },
   "plugin_policy": {
@@ -657,5 +697,39 @@
     "Tool access is role-scoped; agent names in a registry do not grant connector authentication.",
     "The Dev role is registered logically but cannot run until a user-controlled device is connected.",
     "Only the existing AURELIA deterministic capital plane owns live trading authorization; all agent profiles have capital_authority=false except the AURELIA policy-owner label, which still cannot bypass gates."
-  ]
+  ],
+  "federation_sync": {
+    "schema": "aurelia.agent_federation_sync.v1",
+    "canonical_source": "Anto-30/aurelia-trading",
+    "canonical_branch": "main",
+    "sync_branch": "federation/six-agent-tool-skill-sync-2026-10-21",
+    "principle": "Synchronize role contracts, approved catalog references, task assignments, and evidence expectations. Do not claim cross-provider runtime synchronization unless each external provider independently confirms it.",
+    "shared_catalogs": {
+      "tools": "config/agent_tool_inventory.json",
+      "skills": "config/agent_skill_inventory.json",
+      "plugins": "config/agent_plugin_inventory.json",
+      "skill_source_registry": "config/agent_skill_federation.json",
+      "repository_registry": "config/external_repo_federation.json",
+      "capability_matrix": "config/agent_capability_matrix.json"
+    },
+    "access_policy": {
+      "catalog_visibility": "shared_read_reference",
+      "tool_activation": "task_scoped_and_connection_checked",
+      "skill_activation": "role_scoped_and_reviewed",
+      "plugin_activation": "conditional_least_privilege",
+      "untrusted_repository_execution": "sandbox_only_after_review",
+      "production_secrets": "never_route_to_external_agents_or_gateways",
+      "capital_authority": "AURELIA_ONLY",
+      "live_lock_mutation_by_agents": false,
+      "external_live_order_authority": false
+    },
+    "provider_sync_status": {
+      "AURELIA": "CANONICAL_REPOSITORY_POLICY",
+      "ChatGPT": "CURRENT_SESSION_TOOLS_ONLY_NO_PERSISTENT_WORKER",
+      "Claude": "ROLE_CONTRACT_DEFINED_EXTERNAL_RUNTIME_SYNC_UNVERIFIED",
+      "Grok": "ROLE_CONTRACT_DEFINED_EXTERNAL_RUNTIME_SYNC_UNVERIFIED",
+      "DeepSeek": "ROLE_CONTRACT_DEFINED_EXTERNAL_RUNTIME_SYNC_UNVERIFIED",
+      "Dev": "INACTIVE_UNTIL_AUTHORIZED_DEVICE_AND_RUNTIME_IDENTITY_VERIFIED"
+    }
+  }
 }
