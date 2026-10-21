@@ -60,6 +60,26 @@ class DerivHistoryTests(unittest.TestCase):
         self.assertNotIn("app_id=", connect.call_args_list[1].args[0])
         self.assertTrue(ws.closed)
 
+    def test_defaults_to_public_endpoint_without_app_id(self):
+        client = DerivHistoryClient()
+        self.assertIn("ws.binaryws.com", client.urls[0])
+        self.assertNotIn("app_id=", client.urls[0])
+
+    def test_retries_rate_limit_with_exponential_backoff(self):
+        throttled = FakeWebSocket({"error": {"code": "RateLimit", "message": "Too many requests"}})
+        success = FakeWebSocket({"msg_type": "candles", "candles": candle_rows(60, 180)})
+        with patch("research.atos_validation.deriv_data.websocket.create_connection",
+                   side_effect=[throttled, success]) as connect, \
+             patch("research.atos_validation.deriv_data.time.sleep") as sleep:
+            frame = DerivHistoryClient("12345", max_attempts=2, retry_base_seconds=1.5).candles(
+                "R_100", 60, 180, 60, 3
+            )
+        self.assertEqual(frame["epoch"].tolist(), [60, 120, 180])
+        self.assertEqual(connect.call_count, 2)
+        sleep.assert_called_once_with(1.5)
+        self.assertTrue(throttled.closed)
+        self.assertTrue(success.closed)
+
     def test_candles_request_validates_exact_coverage_and_does_not_fabricate_volume(self):
         ws = FakeWebSocket({"msg_type": "candles", "candles": candle_rows(60, 180)})
         with patch("research.atos_validation.deriv_data.websocket.create_connection", return_value=ws):
@@ -106,7 +126,9 @@ class DerivHistoryTests(unittest.TestCase):
 
         client.candles = Mock(side_effect=stub)
         end = 60 + 104 * 60
-        frame = client.backfill("R_100", 60, end, 60, bars_per_request=100)
+        with patch("research.atos_validation.deriv_data.time.sleep") as sleep:
+            frame = client.backfill("R_100", 60, end, 60, bars_per_request=100)
+        sleep.assert_called_once_with(1.5)
         self.assertEqual(len(frame), 105)
         self.assertEqual(frame["epoch"].tolist(), list(range(60, end + 1, 60)))
         self.assertEqual(calls[0], (60, 60 + 99 * 60, 100))
