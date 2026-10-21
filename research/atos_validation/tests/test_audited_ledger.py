@@ -32,7 +32,12 @@ class AuditedLedgerTests(unittest.TestCase):
                                 exit_timestamp="1970-01-01T00:06:00Z", entry_price=100, exit_price=102,
                                 initial_risk_cash=10, gross_pnl_cash=20, spread_cost_cash=1,
                                 slippage_cost_cash=0.5, commission_cost_cash=0.5,
-                                spread_pips=0.2, slippage_bps=1.5)
+                                spread_pips=0.2, slippage_bps=1.5,
+                                entry_reference_price=100.0, exit_reference_price=102.0,
+                                entry_spread_cost_cash=0.5, exit_spread_cost_cash=0.5,
+                                entry_slippage_cost_cash=0.25, exit_slippage_cost_cash=0.25,
+                                stop_reference_price=99.0, target_reference_price=103.0,
+                                exit_reason="TARGET_HIT", cost_profile_status="EXPLORATORY_UNVERIFIED")
             manifest = writer.close()
             self.assertEqual(manifest["decision_record_count"], 2)
             self.assertEqual(manifest["closed_trade_record_count"], 1)
@@ -45,7 +50,31 @@ class AuditedLedgerTests(unittest.TestCase):
             self.assertEqual(trade["hmm_regime_state"], "TREND")
             self.assertAlmostEqual(trade["cost_r"], 0.2)
             self.assertAlmostEqual(trade["r_multiple"], 1.8)
+            self.assertAlmostEqual(trade["entry_spread_cost_cash"] + trade["exit_spread_cost_cash"], trade["spread_cost_cash"])
+            self.assertAlmostEqual(trade["entry_slippage_cost_cash"] + trade["exit_slippage_cost_cash"], trade["slippage_cost_cash"])
+            self.assertEqual(trade["exit_reason"], "TARGET_HIT")
             self.assertEqual(records[1]["record_sha256"], records[2]["previous_record_sha256"])
+
+
+    def test_execution_time_cancellation_resolves_accepted_decision_without_fake_trade(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "cancel.jsonl"
+            writer = AuditedLedgerWriter(path, symbol="R_100", data_sha256=DATA_HASH, granularity_seconds=60)
+            decision_id = writer.record_decision(
+                signal_bar_epoch=60, strategy="alpha_beta_hmm", model_config_sha256=CONFIG_HASH,
+                fold_id="fold_1", action="ENTER_LONG", reason_codes=["valid_signal"],
+                hmm_regime_state="TREND", accepted=True, probability=0.7,
+            )
+            writer.cancel_decision(
+                decision_event_id=decision_id, cancellation_epoch=120,
+                reason_codes=["ENTRY_GAP_INVALIDATES_STOP_TARGET_GEOMETRY"],
+            )
+            manifest = writer.close()
+            verified = verify_ledger(path)
+            self.assertEqual(manifest["cancelled_entry_count"], 1)
+            self.assertEqual(verified["cancelled_entry_count"], 1)
+            self.assertEqual(verified["closed_trade_record_count"], 0)
+            self.assertTrue(verified["manifest_verified"])
 
     def test_rejects_misaligned_signal_and_overwrite(self):
         with tempfile.TemporaryDirectory() as td:
