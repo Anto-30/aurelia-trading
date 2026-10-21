@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from scripts.run_oos_validation import COST_SCHEMA, _load_cost_evidence, resolve_oos_start
-from scripts.run_soak_test import percentile
+from scripts.run_soak_test import percentile, technical_soak_pass
 
 
 class OperationalRunnerGuardTests(unittest.TestCase):
@@ -106,6 +106,29 @@ class OperationalRunnerGuardTests(unittest.TestCase):
     def test_soak_percentile_handles_empty_and_populated_samples(self):
         self.assertIsNone(percentile([], .95))
         self.assertEqual(percentile([1.0, 2.0, 3.0, 4.0], .95), 4.0)
+
+    def test_soak_acceptance_rejects_full_duration_with_latency_violation(self):
+        self.assertFalse(technical_soak_pass(
+            duration_seconds=3600, actual_elapsed=3600.1, tick_count=100,
+            ping_rtt=[10.0, 201.0], processing_ms=[1.0, 2.0], errors=[],
+        ))
+
+    def test_soak_acceptance_rejects_errors_even_if_samples_are_fast(self):
+        self.assertFalse(technical_soak_pass(
+            duration_seconds=3600, actual_elapsed=3601.0, tick_count=100,
+            ping_rtt=[10.0, 20.0], processing_ms=[1.0, 2.0],
+            errors=["WebSocketTimeoutException: timed out"],
+        ))
+
+    def test_soak_acceptance_requires_full_3600_seconds(self):
+        self.assertFalse(technical_soak_pass(
+            duration_seconds=60, actual_elapsed=60.1, tick_count=100,
+            ping_rtt=[10.0, 20.0], processing_ms=[1.0, 2.0], errors=[],
+        ))
+        self.assertTrue(technical_soak_pass(
+            duration_seconds=3600, actual_elapsed=3600.1, tick_count=100,
+            ping_rtt=[10.0, 20.0], processing_ms=[1.0, 2.0], errors=[],
+        ))
 
 
 if __name__ == "__main__":
