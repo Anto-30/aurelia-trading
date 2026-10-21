@@ -52,3 +52,53 @@ jobs:
           assert 'capital_plane_mode: VERIFY_ONLY' in p
           assert 'FINAL_EXECUTION_AUTHORIZATION: false' in p
           PY
+
+  capture-corrected-deriv-history:
+    # A one-off, public-market-data capture for the explicitly requested date interval.
+    # No account token or order capability is used. It runs only on this research PR.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'research/atos-wfa-final-hardening-2026-10-21'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    env:
+      DERIV_APP_ID: "1089" # Deriv's documented testing App ID; public data only.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install history client
+        run: python -m pip install --upgrade pip && python -m pip install numpy pandas websocket-client
+      - name: Fetch corrected 24-month R_100 one-minute candles (UTC)
+        run: |
+          mkdir -p artifacts/deriv
+          python scripts/fetch_deriv_history.py \
+            --symbol R_100 \
+            --start 2022-10-21T00:00:00Z \
+            --end 2024-10-21T00:00:00Z \
+            --granularity 60 \
+            --bars-per-request 4500 \
+            --out artifacts/deriv/R_100_1m.csv
+          python scripts/verify_deriv_history_manifest.py artifacts/deriv/R_100_1m.csv
+      - name: Fetch corrected 24-month R_100 fifteen-minute candles (UTC)
+        run: |
+          python scripts/fetch_deriv_history.py \
+            --symbol R_100 \
+            --start 2022-10-21T00:00:00Z \
+            --end 2024-10-21T00:00:00Z \
+            --granularity 900 \
+            --bars-per-request 4500 \
+            --out artifacts/deriv/R_100_15m.csv
+          python scripts/verify_deriv_history_manifest.py artifacts/deriv/R_100_15m.csv
+      - name: Upload verified CSVs and manifests
+        uses: actions/upload-artifact@v4
+        with:
+          name: deriv-history-20221021-20241021-${{ github.sha }}
+          path: |
+            artifacts/deriv/R_100_1m.csv
+            artifacts/deriv/R_100_1m.csv.manifest.json
+            artifacts/deriv/R_100_15m.csv
+            artifacts/deriv/R_100_15m.csv.manifest.json
+          if-no-files-found: error
+          retention-days: 90
