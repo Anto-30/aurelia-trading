@@ -18,6 +18,8 @@ python scripts/fetch_deriv_history.py \
 ```
 For a 24-month study, move `--start` back to the corresponding UTC boundary. The endpoints must align to the selected granularity. The CLI prints bar count and hashes, not account information. Store the generated CSV and manifest as a versioned research artifact; do not invent missing volume, execution costs, or trade outputs. Network/history limits and symbol availability can still block a requested interval, in which case there is no qualified dataset.
 
+The repository also has a manual GitHub Actions workflow, `Deriv historical research data ingestion`, which collects the same public history and uploads the CSV plus manifest as a 90-day artifact. After the workflow has been reviewed and merged to `main`, open **Actions → Deriv historical research data ingestion → Run workflow** and supply a numeric Deriv App ID, symbol, UTC start/end, and granularity. An App ID is not an account token; do not enter an account token in workflow inputs. The default interval is a 12-month R_100 sample window ending 2026-10-21. For reproducibility, preserve the downloaded manifest alongside the data and record the exact artifact/run identifier before analysis.
+
 ## Validation protocol
 1. Sort and deduplicate source data, preserve missingness, and verify symbol availability/contract semantics.
 2. Reserve the newest three calendar months by timestamp before any fitting or feature/parameter selection. Store its boundaries and hash in an immutable manifest.
