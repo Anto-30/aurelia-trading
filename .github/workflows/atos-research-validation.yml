@@ -1,0 +1,42 @@
+name: ATOS research validation
+on:
+  pull_request:
+    paths:
+      - 'research/atos_validation/**'
+      - 'config/STAGING_PAPER.yaml'
+      - '.github/workflows/atos-research-validation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'research/atos_validation/**'
+      - 'config/STAGING_PAPER.yaml'
+      - '.github/workflows/atos-research-validation.yml'
+permissions:
+  contents: read
+jobs:
+  research-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: research/atos_validation/requirements.txt
+      - name: Install research dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r research/atos_validation/requirements.txt
+      - name: Compile research modules
+        run: python -m compileall -q research/atos_validation
+      - name: Run research tests
+        run: python -m unittest discover -s research/atos_validation/tests -v
+      - name: Assert canonical live lock is still fail-closed
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('config/LIVE_LOCK.yaml').read_text()
+          assert 'live_trading_enabled: false' in p
+          assert 'LIVE_EXECUTION: BLOCKED' in p
+          assert 'capital_plane_mode: VERIFY_ONLY' in p
+          assert 'FINAL_EXECUTION_AUTHORIZATION: false' in p
+          PY
