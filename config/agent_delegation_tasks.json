@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_delegation_tasks.v1",
-  "generated": "2026-10-11",
+  "generated": "2026-10-21",
   "orchestrator": "ClaudeCode",
   "purpose": "One explicit delegated engineering/verification task per registered agent role. Unconnected or non-persistent roles may be assigned or blocked, while runtime execution proof remains false until attributable lifecycle evidence exists.",
   "execution_proof_policy": {
@@ -172,7 +172,24 @@
         "required_event": "subagent.started",
         "execution_proof": false
       }
+    },
+    {
+      "task_id": "AGT-DEEPSEEK-001",
+      "agent": "DeepSeekHarness",
+      "status": "assigned",
+      "objective": "Independently adversarial-review agent federation configuration, external repository intake, and CI evidence without accessing secrets or production controls.",
+      "acceptance_criteria": [
+        "Review the six-agent assignment contract and identify privilege mismatches",
+        "Verify CI evidence is tied to the exact commit and distinguish workflow success from release readiness",
+        "Record findings in a review artifact or pull-request comment",
+        "Do not mutate production controls or claim external runtime execution"
+      ],
+      "evidence_path": "artifacts/agent-delegation/deepseek-harness.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
     }
   ],
-  "revision": 3
+  "revision": 4
 }
