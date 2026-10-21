@@ -1,4 +1,4 @@
-"""Research-only causal Gaussian-HMM regime filtering. Not the alpha/beta-HMM paper implementation."""
+"""Research-only causal Gaussian-HMM and alpha/beta-HMM filtering primitives."""
 from __future__ import annotations
 from dataclasses import dataclass
 from math import exp, isfinite, log, pi, sqrt
@@ -61,6 +61,29 @@ def causal_belief_update(previous: Sequence[float], transition: Sequence[Sequenc
     t = tuple(_dist(row, f"transition row {i}") for i, row in enumerate(t))
     prior = tuple(sum(p[i] * t[i][j] for i in range(n)) for j in range(n))
     return _posterior(_dist(prior, "predictive prior"), log_likelihoods)
+
+
+def alpha_beta_belief_update(previous: Sequence[float], log_likelihoods: Sequence[float], *,
+                            alpha: float, beta: float) -> tuple[float, ...]:
+    """Paper-style equal-exit prediction plus tempered likelihood update.
+
+    predicted[m] = ((1 - M*alpha) * previous[m] + alpha),
+    followed by posterior proportional to predicted[m] * L(x|m)**beta.
+    """
+    p = _dist(previous, "previous belief")
+    n = len(p)
+    ll = tuple(float(v) for v in log_likelihoods)
+    if len(ll) != n or any((not isfinite(v)) and v != float("-inf") for v in ll):
+        raise ValueError("invalid emission log-likelihood vector")
+    if not isfinite(alpha) or not 0 <= alpha <= 1.0 / (n - 1):
+        raise ValueError("alpha must be in [0, 1/(n_states-1)]")
+    if not isfinite(beta) or beta <= 0:
+        raise ValueError("beta must be finite and > 0")
+    predicted = [alpha + (1.0 - n * alpha) * value for value in p]
+    if any(value < -1e-12 for value in predicted):
+        raise ValueError("alpha produced an invalid predictive belief")
+    prior = _dist([max(0.0, value) for value in predicted], "alpha-beta predictive prior")
+    return _posterior(prior, tuple(beta * value for value in ll))
 
 
 def gaussian_log_likelihood(x: Sequence[float], mean: Sequence[float], cov: Sequence[Sequence[float]]) -> float:
@@ -198,6 +221,52 @@ class CausalHMMFilter:
         return _signal(self._posterior, self._labels, self._min_confidence, self._max_entropy)
 
 
+class AlphaBetaHMMFilter:
+    """Causal alpha-beta filter using GaussianHMM-fitted emission likelihoods.
+
+    Emissions are estimated by GaussianHMM EM, while this filter uses alpha/beta
+    equal-exit recursion and ignores the fitted transition matrix. It is therefore
+    a hybrid research adapter, not a full replication of the paper's experiments.
+    """
+    def __init__(self, model: Any, *, alpha: float, beta: float = 1.0,
+                 labels: Sequence[str] | None = None, scaler=None,
+                 min_confidence: float = 0.60, max_entropy: float = 0.85):
+        start, means, covars, _ = _params(model)
+        if not isfinite(alpha) or not 0 <= alpha <= 1.0 / (len(start) - 1):
+            raise ValueError("alpha must be in [0, 1/(n_states-1)]")
+        if not isfinite(beta) or beta <= 0:
+            raise ValueError("beta must be finite and > 0")
+        self._start, self._means, self._covars = start, means, covars
+        self._labels = tuple(labels) if labels is not None else map_model_states(model)
+        if len(self._labels) != len(start):
+            raise ValueError("label count does not match model state count")
+        _signal(start, self._labels, min_confidence, max_entropy)
+        self._alpha, self._beta = alpha, beta
+        self._scaler, self._min_confidence, self._max_entropy = scaler, min_confidence, max_entropy
+        self._posterior = None
+        self._feature_count = len(means[0])
+
+    @property
+    def last_posterior(self):
+        return self._posterior
+
+    def reset(self):
+        """Start a new sequence; call once at sequence boundaries only."""
+        self._posterior = None
+
+    def update(self, observation: Sequence[float]) -> RegimeSignal:
+        x = _vec(observation, "observation")
+        if len(x) != self._feature_count:
+            raise ValueError("observation dimensions do not match model")
+        if self._scaler is not None:
+            x = self._scaler.transform_one(x)
+        ll = tuple(gaussian_log_likelihood(x, self._means[i], self._covars[i]) for i in range(len(self._means)))
+        self._posterior = (_posterior(self._start, tuple(self._beta * value for value in ll))
+                           if self._posterior is None
+                           else alpha_beta_belief_update(self._posterior, ll, alpha=self._alpha, beta=self._beta))
+        return _signal(self._posterior, self._labels, self._min_confidence, self._max_entropy)
+
+
 @dataclass(frozen=True)
 class FeatureScaler:
     mean: tuple[float, ...]
@@ -237,6 +306,12 @@ class FittedRegimeModel:
     def new_filter(self, *, min_confidence=0.60, max_entropy=0.85) -> CausalHMMFilter:
         return CausalHMMFilter(self.model, self.state_labels, scaler=self.scaler,
                                min_confidence=min_confidence, max_entropy=max_entropy)
+
+    def new_alpha_beta_filter(self, *, alpha: float, beta: float = 1.0,
+                              min_confidence=0.60, max_entropy=0.85) -> AlphaBetaHMMFilter:
+        return AlphaBetaHMMFilter(self.model, alpha=alpha, beta=beta, labels=self.state_labels,
+                                  scaler=self.scaler, min_confidence=min_confidence,
+                                  max_entropy=max_entropy)
 
 
 def train_gaussian_hmm(training_features: Sequence[Sequence[float]], *, n_states=3, n_iter=200, random_state=42) -> FittedRegimeModel:
