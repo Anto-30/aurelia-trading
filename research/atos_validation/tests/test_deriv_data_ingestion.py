@@ -57,6 +57,7 @@ class DerivHistoryTests(unittest.TestCase):
         self.assertEqual(connect.call_count, 2)
         self.assertIn("ws.derivws.com", connect.call_args_list[0].args[0])
         self.assertIn("ws.binaryws.com", connect.call_args_list[1].args[0])
+        self.assertNotIn("app_id=", connect.call_args_list[1].args[0])
         self.assertTrue(ws.closed)
 
     def test_candles_request_validates_exact_coverage_and_does_not_fabricate_volume(self):
