@@ -1,7 +1,8 @@
 name: AURELIA Assurance
 on:
+  # Validate every PR and direct mainline change without duplicating each PR-head push.
   push:
-    branches: ["**"]
+    branches: ["main"]
   pull_request:
 permissions:
   contents: read
