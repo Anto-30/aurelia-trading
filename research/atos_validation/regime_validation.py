@@ -63,8 +63,25 @@ class RegimeDetector:
                             tol=1e-4, random_state=self.random_state,
                             min_covar=1e-6, implementation="log")
         model.fit(z)
-        if not np.isfinite(model.transmat_).all() or not np.isfinite(model.means_).all():
+        startprob=np.asarray(model.startprob_,dtype=float)
+        transmat=np.asarray(model.transmat_,dtype=float)
+        means=np.asarray(model.means_,dtype=float)
+        covars=np.asarray(model.covars_,dtype=float)
+        if (not np.isfinite(startprob).all() or not np.isfinite(transmat).all()
+                or not np.isfinite(means).all() or not np.isfinite(covars).all()):
             raise ValueError("HMM produced non-finite parameters")
+        if (startprob.shape!=(self.n_states,) or (startprob<0).any()
+                or not np.isclose(startprob.sum(),1.0,atol=1e-6)):
+            raise ValueError("HMM start probabilities are not a valid simplex")
+        if (transmat.shape!=(self.n_states,self.n_states) or (transmat<0).any()
+                or not np.allclose(transmat.sum(axis=1),1.0,atol=1e-6)):
+            raise ValueError("HMM transition matrix is not row-stochastic")
+        if covars.shape!=(self.n_states,2,2):
+            raise ValueError("HMM covariance shape does not match full 2-feature model")
+        for covariance in covars:
+            symmetric=(covariance+covariance.T)*0.5
+            if np.linalg.eigvalsh(symmetric).min()<=0:
+                raise ValueError("HMM covariance is not positive definite")
         # State identity is remapped from fitted characteristics every fit.
         stats=[]
         for s in range(3):
