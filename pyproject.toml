@@ -10,6 +10,7 @@ dependencies = ["websockets>=17.1,<18"]
 
 [project.optional-dependencies]
 ml = ["torch>=2.6,<3"]
+research-hmm = ["numpy>=1.26,<3", "hmmlearn>=0.3.3,<0.4"]
 
 [tool.setuptools.packages.find]
 include = ["runtime*", "research*"]
