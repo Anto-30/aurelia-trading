@@ -221,6 +221,18 @@ class AuditedLedgerWriter:
         commission_cost_cash: float = 0.0,
         spread_pips: float | None = None,
         slippage_bps: float | None = None,
+        entry_reference_price: float | None = None,
+        exit_reference_price: float | None = None,
+        entry_spread_cost_cash: float | None = None,
+        exit_spread_cost_cash: float | None = None,
+        entry_slippage_cost_cash: float | None = None,
+        exit_slippage_cost_cash: float | None = None,
+        stop_reference_price: float | None = None,
+        target_reference_price: float | None = None,
+        exit_reason: str | None = None,
+        cost_profile_status: str | None = None,
+        cost_source_sha256: str | None = None,
+        instrument_source_sha256: str | None = None,
     ) -> str:
         """Append a closed simulated trade using realized simulator outputs.
 
@@ -252,6 +264,37 @@ class AuditedLedgerWriter:
             spread_pips = _finite_number(spread_pips, "spread_pips", minimum=0.0)
         if slippage_bps is not None:
             slippage_bps = _finite_number(slippage_bps, "slippage_bps", minimum=0.0)
+        optional_prices = {}
+        for name, value in (
+            ("entry_reference_price", entry_reference_price),
+            ("exit_reference_price", exit_reference_price),
+            ("stop_reference_price", stop_reference_price),
+            ("target_reference_price", target_reference_price),
+        ):
+            optional_prices[name] = (
+                _finite_number(value, name, minimum=0.0, strict=True) if value is not None else None
+            )
+        optional_costs = {}
+        for name, value in (
+            ("entry_spread_cost_cash", entry_spread_cost_cash),
+            ("exit_spread_cost_cash", exit_spread_cost_cash),
+            ("entry_slippage_cost_cash", entry_slippage_cost_cash),
+            ("exit_slippage_cost_cash", exit_slippage_cost_cash),
+        ):
+            optional_costs[name] = _finite_number(value, name, minimum=0.0) if value is not None else None
+        if all(optional_costs[name] is not None for name in ("entry_spread_cost_cash", "exit_spread_cost_cash")):
+            if abs(float(optional_costs["entry_spread_cost_cash"]) + float(optional_costs["exit_spread_cost_cash"]) - spread) > 1e-9:
+                raise ValueError("entry/exit spread costs must reconcile to spread_cost_cash")
+        if all(optional_costs[name] is not None for name in ("entry_slippage_cost_cash", "exit_slippage_cost_cash")):
+            if abs(float(optional_costs["entry_slippage_cost_cash"]) + float(optional_costs["exit_slippage_cost_cash"]) - slippage) > 1e-9:
+                raise ValueError("entry/exit slippage costs must reconcile to slippage_cost_cash")
+        if exit_reason is not None and (not isinstance(exit_reason, str) or not exit_reason.strip()):
+            raise ValueError("exit_reason must be non-empty when supplied")
+        if cost_profile_status is not None and cost_profile_status not in {"VERIFIED", "EXPLORATORY_UNVERIFIED"}:
+            raise ValueError("cost_profile_status is invalid")
+        for digest_name, digest in (("cost_source_sha256", cost_source_sha256), ("instrument_source_sha256", instrument_source_sha256)):
+            if digest is not None:
+                _validate_digest(digest, digest_name)
         total_cost = spread + slippage + commission
         net_pnl = gross - total_cost
         r_gross = gross / risk
@@ -279,11 +322,23 @@ class AuditedLedgerWriter:
             "hmm_regime_state": decision["hmm_regime_state"],
             "entry_price": entry,
             "exit_price": exit_,
+            "entry_reference_price": optional_prices["entry_reference_price"],
+            "exit_reference_price": optional_prices["exit_reference_price"],
+            "stop_reference_price": optional_prices["stop_reference_price"],
+            "target_reference_price": optional_prices["target_reference_price"],
             "spread_pips": spread_pips,
             "slippage_bps": slippage_bps,
             "spread_cost_cash": spread,
             "slippage_cost_cash": slippage,
+            "entry_spread_cost_cash": optional_costs["entry_spread_cost_cash"],
+            "exit_spread_cost_cash": optional_costs["exit_spread_cost_cash"],
+            "entry_slippage_cost_cash": optional_costs["entry_slippage_cost_cash"],
+            "exit_slippage_cost_cash": optional_costs["exit_slippage_cost_cash"],
             "commission_cost_cash": commission,
+            "exit_reason": exit_reason,
+            "cost_profile_status": cost_profile_status,
+            "cost_source_sha256": cost_source_sha256,
+            "instrument_source_sha256": instrument_source_sha256,
             "total_cost_cash": total_cost,
             "initial_risk_cash": risk,
             "gross_pnl_cash": gross,
