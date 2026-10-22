@@ -1,0 +1,12 @@
+{
+  "symbol": "R_100",
+  "contract_type": "linear_cfd",
+  "pip_size": null,
+  "multiplier": null,
+  "spread_pips": 2,
+  "slippage_bps": 5,
+  "account_risk_pct": 0.01,
+  "initial_equity": null,
+  "independently_verified": false,
+  "notes": "Fail-closed template. Do not run until pip_size, multiplier, equity, and linear contract type are independently verified."
+}
