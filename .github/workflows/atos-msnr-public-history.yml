@@ -166,6 +166,15 @@ jobs:
               f.write("recent_bounded_supported=" + str(report["recent_interval_supported"]).lower() + "\n")
           PY
 
+      - name: Require the public API to honor both historical bounds
+        if: steps.history_bounds_probe.outputs.old_bounded_supported != 'true' || steps.history_bounds_probe.outputs.recent_bounded_supported != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "FAILED CLOSED: public history did not return exact candle timestamps for both diagnostic intervals."
+          echo "See history_bounds_probe.json in the uploaded artifact. No market-history CSV or performance metrics were produced."
+          exit 2
+
       - name: Fetch authentic R_100 1m and 15m history from the public API
         id: fetch_history
         if: steps.history_bounds_probe.outputs.old_bounded_supported == 'true' && steps.history_bounds_probe.outputs.recent_bounded_supported == 'true'
