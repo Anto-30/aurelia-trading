@@ -3,7 +3,7 @@
   "repository": "Anto-30/aurelia-trading",
   "base_main_commit": "d04564aca0648201feff0326fe9af0fbcee92e94",
   "research_branch_parent": "52e8ecf07ee6751fe54a2f2cd26dc28c2211c166",
-  "note": "Git blob SHA-1s identify exact remote PR-branch file contents. The local export has a separate SHA-256 inventory; those hashes are not interchangeable. The hashes here verify Git object identity only, not empirical-data authenticity or strategy qualification. No market-data files are included. Latest current-schema correction commit: 791ca4fe2bf9ec90d8c7b4722221cb3da1b389d9. The manifest is being refreshed for the next branch commit; it excludes its own blob hash.",
+  "note": "Git blob SHA-1s identify exact remote PR-branch file contents. The local export has a separate SHA-256 inventory; those hashes are not interchangeable. The hashes here verify Git object identity only, not empirical-data authenticity or strategy qualification. No market-data files are included. Latest current-schema correction commit: 791ca4fe2bf9ec90d8c7b4722221cb3da1b389d9. The manifest is being refreshed for the next branch commit; it excludes its own blob hash. Refreshed for current schema enum compatibility correction; latest changes allow subscribe/adjust_start_time 0 or 1 and positive integer granularity per official current API comparison.",
   "files": [
     {
       "path": "research/msnr_baseline/.gitignore",
@@ -11,7 +11,7 @@
     },
     {
       "path": "research/msnr_baseline/README.md",
-      "git_blob_sha1": "486d2696e5dbe8efff38b0510d073eada42915cb"
+      "git_blob_sha1": "448c6fc7e3e7b2d88e9e47a69c8d583fe86951f0"
     },
     {
       "path": "research/msnr_baseline/requirements.txt",
@@ -39,7 +39,7 @@
     },
     {
       "path": "research/msnr_baseline/scripts/deriv_public_market_data.py",
-      "git_blob_sha1": "6c3553940385ac5a3850987bcc80add252b1c38a"
+      "git_blob_sha1": "0f14cf273e1499add1209e567ba8893e20bebc74"
     },
     {
       "path": "research/msnr_baseline/scripts/performance_ledger.py",
@@ -51,7 +51,7 @@
     },
     {
       "path": "research/msnr_baseline/tests/test_public_client_and_performance_ledger.py",
-      "git_blob_sha1": "21fb2ec07b952943e1772088d7e41b4cc961d2aa"
+      "git_blob_sha1": "c80b62f6b4d441cb5e110f1c480211bbac10e05f"
     },
     {
       "path": "research/msnr_baseline/docs/REPOSITORY_INTAKE.md",

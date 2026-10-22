@@ -6,7 +6,7 @@ This directory holds an isolated, frozen price-action MSNR baseline, public hist
 
 ## Current Deriv public API
 
-The history fetcher uses only the unauthenticated endpoint wss://api.derivws.com/trading/v1/options/ws/public. It captures active-symbol metadata, then requests 1m and 15m OHLC candles in 3-day chunks with at least 1.5-second pacing for inclusive UTC dates 2022-10-21 through 2024-10-21. Every candle requires open, high, low, close and epoch; current history responses require prices and times arrays. The request field for history remains ticks_history with the symbol as its string value. Current active-symbol metadata uses underlying_symbol. No loginid or credential is used.
+The history fetcher uses only the unauthenticated endpoint wss://api.derivws.com/trading/v1/options/ws/public. It captures active-symbol metadata, then requests 1m and 15m OHLC candles in 3-day chunks with at least 1.5-second pacing for inclusive UTC dates 2022-10-21 through 2024-10-21. Every candle requires open, high, low, close and epoch; current history responses require prices and times arrays. The request field for history remains ticks_history with the symbol as its string value; underlying_symbol is used for current active-symbol metadata and where the new API schemas specify that field. The current comparison permits subscribe and adjust_start_time values 0 or 1, and removes the legacy fixed granularity enum; this client omits subscribe for one-shot requests and validates positive integer granularity. No loginid or credential is used.
 
 Commands:
 

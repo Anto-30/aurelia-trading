@@ -75,13 +75,16 @@ def test_new_public_request_schema_and_forbidden_keys():
     validate_public_payload({"active_symbols": "brief"})
     validate_public_payload({"ticks": "R_100", "subscribe": 1})
     validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "count": 5000})
+    # New API comparison: one-shot flag value 0 is valid; positive non-legacy granularity is valid.
+    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 61, "subscribe": 0, "adjust_start_time": 0})
+    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 900, "subscribe": 1})
     bad = [
         {"buy": "proposal-id", "price": 1}, {"sell": 1, "price": 0}, {"proposal": 1},
         {"balance": 1}, {"otp": "secret"}, {"Authorization": "Bearer x"}, {"loginid": "CR123"},
         {"ticks": "R_100", "passthrough": {"loginid": "CR123"}},
-        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "subscribe": 0},
-        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "adjust_start_time": 0},
-        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 61},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "subscribe": 2},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "adjust_start_time": 2},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 0},
         {"ticks": "R_100", "extra": "unknown"},
     ]
     for payload in bad:

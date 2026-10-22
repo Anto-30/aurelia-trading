@@ -84,15 +84,14 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
         if "count" in payload and (not isinstance(payload["count"], int) or not 1 <= payload["count"] <= 5000):
             raise PublicMarketDataError("ticks_history count must be between 1 and 5000.")
         if "granularity" in payload:
-            allowed_granularities = {60, 120, 180, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400}
-            if not isinstance(payload["granularity"], int) or payload["granularity"] not in allowed_granularities:
-                raise PublicMarketDataError("ticks_history granularity must be one of the documented candle intervals.")
-        # The published current schema only allows value 1 for either optional flag.
-        # Omit subscribe entirely for a one-shot request; do not send legacy subscribe=0.
-        if "subscribe" in payload and payload["subscribe"] != 1:
-            raise PublicMarketDataError("ticks_history subscribe, when provided, must equal 1.")
-        if "adjust_start_time" in payload and payload["adjust_start_time"] != 1:
-            raise PublicMarketDataError("ticks_history adjust_start_time, when provided, must equal 1.")
+            # Current API removes the legacy fixed enum. A positive integer candle width is accepted.
+            if isinstance(payload["granularity"], bool) or not isinstance(payload["granularity"], int) or payload["granularity"] <= 0:
+                raise PublicMarketDataError("ticks_history granularity must be a positive integer.")
+        # Current API accepts 0 or 1 for these optional flags; for one-shot requests
+        # this client omits subscribe rather than relying on either value.
+        for key in ("subscribe", "adjust_start_time"):
+            if key in payload and (isinstance(payload[key], bool) or payload[key] not in (0, 1)):
+                raise PublicMarketDataError(f"{key} must be 0 or 1.")
 
 
 def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | int]]:
