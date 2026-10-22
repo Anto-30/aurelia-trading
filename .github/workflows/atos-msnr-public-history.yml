@@ -94,8 +94,13 @@ jobs:
 
           ENDPOINT = "wss://api.derivws.com/trading/v1/options/ws/public"
           GRANULARITY = 60
-          old_start = 1666310400  # 2022-10-21T00:00:00Z
-          old_end_exclusive = old_start + 12 * 3600
+          old_anchors = [
+              ("requested_start_2022-10-21", 1666310400),
+              ("mid_2023-10-21", 1697846400),
+              ("requested_end_2024-10-21", 1729468800),
+              ("mid_2025-10-21", 1761004800),
+              ("recent_2026-04-21", 1776729600),
+          ]
           recent_end_exclusive = (int(time.time()) // 60) * 60
           recent_start = recent_end_exclusive - 12 * 3600
 
@@ -114,7 +119,9 @@ jobs:
                       await ws.send(json.dumps(payload, separators=(",", ":")))
                       raw = await asyncio.wait_for(ws.recv(), timeout=15)
                   response = json.loads(raw)
-                  candles = response.get("candles") if isinstance(response, dict) else None
+                  if not isinstance(response, dict):
+                      raise ValueError("Response was not a JSON object.")
+                  candles = response.get("candles")
                   candles = candles if isinstance(candles, list) else []
                   epochs = []
                   for row in candles:
@@ -123,20 +130,19 @@ jobs:
                               epochs.append(int(row["epoch"]))
                           except (TypeError, ValueError, OverflowError):
                               pass
-                  echo = response.get("echo_req") if isinstance(response, dict) else None
+                  echo = response.get("echo_req")
                   allowed = ("ticks_history", "start", "end", "style", "granularity", "count", "adjust_start_time", "subscribe", "req_id")
                   echo_subset = {k: echo[k] for k in allowed if k in echo} if isinstance(echo, dict) else None
                   exact = sorted(epochs) == expected
                   return {
                       "name": name, "requested_start_epoch": start, "requested_end_exclusive_epoch": end_exclusive,
-                      "expected_rows": len(expected), "response_msg_type": response.get("msg_type") if isinstance(response, dict) else None,
-                      "response_req_id": response.get("req_id") if isinstance(response, dict) else None,
-                      "api_error": response.get("error") if isinstance(response, dict) else "non-object response",
+                      "expected_rows": len(expected), "response_msg_type": response.get("msg_type"),
+                      "response_req_id": response.get("req_id"), "api_error": response.get("error"),
                       "echo_req_subset": echo_subset, "response_candle_count": len(candles),
                       "response_epoch_count": len(epochs), "response_epoch_min": min(epochs) if epochs else None,
                       "response_epoch_max": max(epochs) if epochs else None,
                       "exact_epoch_coverage": exact,
-                      "status": "PASS" if exact else "BOUNDED_RANGE_NOT_HONORED_OR_DATA_UNAVAILABLE"
+                      "status": "PASS" if exact else "NOT_AVAILABLE_OR_RANGE_NOT_HONORED"
                   }
               except Exception as exc:
                   return {
@@ -146,16 +152,30 @@ jobs:
                   }
 
           async def main():
-              old = await one_probe("old_2022_interval", old_start, old_end_exclusive, 7001)
-              await asyncio.sleep(1.5)
-              recent = await one_probe("recent_12h_interval", recent_start, recent_end_exclusive, 7002)
-              return {"schema":"atos.deriv.history_bounds_probe.v1", "endpoint":ENDPOINT,
-                      "authentication":"none", "account_token_used":False, "otp_used":False,
-                      "live_orders_submitted":False, "granularity_seconds":GRANULARITY,
-                      "old_interval":old, "recent_interval":recent,
-                      "old_interval_supported":old["exact_epoch_coverage"],
-                      "recent_interval_supported":recent["exact_epoch_coverage"],
-                      "note":"Metadata probe only. Does not write a market-history CSV or calculate trading metrics."}
+              anchors = []
+              for index, (name, start) in enumerate(old_anchors):
+                  anchors.append(await one_probe(name, start, start + 12 * 3600, 7001 + index))
+                  await asyncio.sleep(1.5)
+              recent = await one_probe("recent_now", recent_start, recent_end_exclusive, 7010)
+              exact_anchors = [item["name"] for item in anchors if item.get("exact_epoch_coverage") is True]
+              return {
+                  "schema": "atos.deriv.history_bounds_probe.v2",
+                  "endpoint": ENDPOINT,
+                  "authentication": "none",
+                  "account_token_used": False,
+                  "otp_used": False,
+                  "live_orders_submitted": False,
+                  "granularity_seconds": GRANULARITY,
+                  "interval_hours": 12,
+                  "anchor_results": anchors,
+                  "recent_interval": recent,
+                  "requested_start_anchor_supported": bool(anchors and anchors[0]["exact_epoch_coverage"]),
+                  "requested_end_anchor_supported": bool(anchors and anchors[2]["exact_epoch_coverage"]),
+                  "old_interval_supported": bool(anchors and anchors[0]["exact_epoch_coverage"]),
+                  "recent_interval_supported": bool(recent["exact_epoch_coverage"]),
+                  "exact_anchor_names": exact_anchors,
+                  "note": "Diagnostic only: the API must return exact requested epochs. This run writes no market-history CSV and computes no trading metrics."
+              }
 
           report = asyncio.run(main())
           out = Path(os.environ["OUT_DIR"]) / "evidence" / "history_bounds_probe.json"
