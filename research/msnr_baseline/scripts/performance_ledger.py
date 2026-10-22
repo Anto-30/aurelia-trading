@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 
 REQUIRED = ("entry_time", "exit_time", "entry_price", "exit_price", "direction", "size", "initial_risk")
-DERIVED = {"gross_pnl", "commission_cost", "spread_cost", "slippage_cost", "transaction_cost", "net_pnl", "r_multiple", "equity_after_trade"}
+DERIVED = {"gross_pnl", "commission_cost", "spread_cost", "slippage_cost", "transaction_cost", "net_pnl", "r_multiple", "equity_after_trade", "equity_peak", "drawdown_abs", "drawdown_fraction"}
 
 class LedgerError(ValueError):
     pass
@@ -52,6 +52,8 @@ class EmpiricalValidationEngine:
         try:
             df["entry_time"]=pd.to_datetime(df["entry_time"],utc=True,errors="raise")
             df["exit_time"]=pd.to_datetime(df["exit_time"],utc=True,errors="raise")
+            if df["entry_time"].isna().any() or df["exit_time"].isna().any():
+                raise LedgerError("entry_time and exit_time cannot be missing or unparseable")
             for c in ("entry_price","exit_price","direction","size","initial_risk"):
                 df[c]=pd.to_numeric(df[c],errors="raise")
         except (ValueError,TypeError,OverflowError) as exc: raise LedgerError(f"Invalid timestamp/numeric field: {exc}") from exc
@@ -95,6 +97,7 @@ class EmpiricalValidationEngine:
             "total_transaction_costs":float(ledger["transaction_cost"].sum()),
             "cost_breakdown":{"commission":float(ledger["commission_cost"].sum()),"spread":float(ledger["spread_cost"].sum()),"slippage":float(ledger["slippage_cost"].sum())},
             "initial_equity":self.initial_equity,"final_equity":float(ledger["equity_after_trade"].iloc[-1]),
+            "drawdown_method":"realized exit-time equity curve; excludes open-trade mark-to-market", "r_multiple_denominator_assumption":"initial_risk must be in same currency/PnL units as gross_pnl",
             "cost_assumptions":{"commission_per_unit_round_trip":self.commission,"spread_pips_round_trip":self.spread_pips,
                 "pip_size_price":self.pip_size,"spread_price_per_unit_round_trip":self.spread_pips*self.pip_size,
                 "slippage_bps_per_fill":self.slippage_bps,"linear_multiplier":self.multiplier,
@@ -102,7 +105,9 @@ class EmpiricalValidationEngine:
                 "linear_contract_multiplier_verified":False,"qualification_status":"NOT_QUALIFIED_UNLESS_ECONOMICS_INDEPENDENTLY_VERIFIED"},
             "notes":["Input is raw pre-cost data; derived columns are rejected to prevent double-charging.",
                      "Profit factor uses post-cost net winning PnL divided by absolute post-cost net losing PnL.",
-                     "Drawdown is measured on equity starting from initial_equity, in exit-time order.",
+                     "Drawdown is measured on realized equity starting from initial_equity, in exit-time order; open-trade mark-to-market drawdown is not included.",
+                     "initial_risk must already be expressed in the same PnL/currency units as gross_pnl; the ledger does not convert risk denominations.",
+                     "Assumed slippage is charged at the specified basis points on both entry and exit notional; this is an assumption, not observed execution.",
                      "This output is not proof that a corresponding Deriv linear instrument exists or that assumptions match realized costs."]}
         return ledger,summary
 
