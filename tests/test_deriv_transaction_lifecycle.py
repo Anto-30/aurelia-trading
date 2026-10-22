@@ -4,7 +4,22 @@ import os
 import unittest
 from unittest.mock import patch
 
-from scripts.verify_deriv_transaction_lifecycle import run
+from scripts.verify_deriv_transaction_lifecycle import run, verify_only_direction_matches_contract
+
+
+class VerifyOnlyContractDirectionTests(unittest.TestCase):
+    def test_call_contract_accepts_buy_direction(self):
+        self.assertTrue(verify_only_direction_matches_contract("CALL", "BUY"))
+
+    def test_put_contract_accepts_sell_direction(self):
+        self.assertTrue(verify_only_direction_matches_contract("PUT", "SELL"))
+
+    def test_mismatched_contract_and_direction_are_rejected(self):
+        self.assertFalse(verify_only_direction_matches_contract("PUT", "BUY"))
+        self.assertFalse(verify_only_direction_matches_contract("CALL", "SELL"))
+
+    def test_unsupported_contract_is_rejected(self):
+        self.assertFalse(verify_only_direction_matches_contract("DIGITOVER", "BUY"))
 
 
 class DerivTransactionLifecycleCurrencyTests(unittest.IsolatedAsyncioTestCase):
