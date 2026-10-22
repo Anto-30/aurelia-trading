@@ -1,35 +1,36 @@
 {
-  "canonical_main_commit_sha": "d04564aca0648201feff0326fe9af0fbcee92e94",
-  "canonical_repository": "Anto-30/aurelia-trading",
-  "cli_help_smoke": {
-    "fetch_history.py": "PASS",
-    "run_msnr_simulator.py": "PASS",
-    "verify_history.py": "PASS"
+  "schema": "atos.msnr.local_test_result.v3",
+  "timestamp_utc": "2026-10-22T18:00:00Z",
+  "scope": "structural/control-flow tests only; no fixtures used as market data",
+  "research_package_pytest": {
+    "command": "pytest -q research/msnr_baseline",
+    "passed": 17,
+    "status": "PASS"
+  },
+  "whole_bundle_pytest": {
+    "command": "python -m pytest -q /mnt/data/msnrwork/atos_v2_validation_bundle",
+    "passed": 27,
+    "status": "PASS"
   },
   "compileall": "PASS",
-  "final_execution_authorization": false,
-  "historical_data_fetch": "FAILED_CLOSED_DNS_RESOLUTION",
-  "holy_trinity_printed": false,
-  "kill_rule_evaluated": false,
-  "latest_failure_record": "evidence/fetch_run.failure.json",
-  "live_execution": "BLOCKED",
-  "market_data_received": false,
-  "net_expectancy_R": null,
-  "no_account_token_otp_or_live_order_used": true,
-  "profit_factor": null,
-  "qualification_status": "NOT_QUALIFIED",
-  "research_package_pytest": {
-    "observed_output": "11 passed in 0.44s",
-    "passed": 11,
-    "status": "PASS"
+  "cli_help": {
+    "fetch_history.py": "PASS",
+    "verify_history.py": "PASS",
+    "run_msnr_simulator.py": "PASS",
+    "performance_ledger.py": "PASS",
+    "deriv_public_market_data.py": "PASS (library import/schema tests)"
   },
-  "schema": "atos.msnr.local_test_result.v1",
-  "scope": "local structure/control-flow tests only; not empirical market-data validation",
-  "simulation_executed_on_verified_market_data": false,
-  "timestamp_utc": "2026-10-22T15:00:00Z",
-  "whole_bundle_pytest": {
-    "observed_output": "21 passed in 0.50s",
-    "passed": 21,
-    "status": "PASS"
-  }
+  "public_history_fetch": "FAILED_CLOSED_DNS_RESOLUTION",
+  "market_data_received": false,
+  "csvs_verified": false,
+  "trade_ledger_produced": false,
+  "profit_factor": null,
+  "net_expectancy_R": null,
+  "kill_rule_evaluated": false,
+  "account_token_used": false,
+  "otp_used": false,
+  "live_orders_submitted": false,
+  "live_execution": "BLOCKED",
+  "final_execution_authorization": false,
+  "qualification_status": "NOT_QUALIFIED"
 }
