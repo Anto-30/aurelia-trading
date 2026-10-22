@@ -37,7 +37,7 @@ def features(df):
 def run(a):
  data=Path(a.data); specs=load_specs(a.specs); data_hash=sha(data)
  s=specs; mult=float(s["multiplier"]); pip=float(s["pip_size"]); spread=float(s["spread_pips"])*pip; slip_bps=float(s["slippage_bps"])/10000
- equity=float(s["initial_equity"]); initial=equity; risk_pct=float(s["account_risk_pct"])
+ equity=float(s["initial_equity"]); initial=equity; risk_pct=float(s["account_risk_pct"]); pos=None
  ledger=Path(a.ledger); ledger.parent.mkdir(parents=True,exist_ok=True); ledger.write_text("")
  gp=gl=sumr=0.; n=wins=losses=0; cursor=pd.Timestamp(a.start,tz="UTC"); end=pd.Timestamp(a.end,tz="UTC")
  while cursor<end:
@@ -52,7 +52,7 @@ def run(a):
   if df[list(REQ)].isna().any().any(): raise ValueError("Null OHLC values; ffill forbidden")
   if (df.epoch.diff().dropna()>120).any(): raise ValueError("Gap >120 seconds; inspect data before simulation")
   df["time"]=pd.to_datetime(df.epoch,unit="s",utc=True); x=features(df).reset_index(drop=True)
-  lo_i=int(x.time.searchsorted(cursor)); hi_i=int(x.time.searchsorted(nxt)); pos=None
+  lo_i=int(x.time.searchsorted(cursor)); hi_i=int(x.time.searchsorted(nxt))
   for i in range(max(1,lo_i),hi_i):
    bar=x.iloc[i]; prev=x.iloc[i-1]
    if pos:
