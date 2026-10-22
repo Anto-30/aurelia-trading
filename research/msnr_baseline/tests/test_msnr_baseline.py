@@ -25,7 +25,8 @@ def test_public_history_payload_uses_current_bounded_request_shape():
     assert req["ticks_history"] == "R_100"
     assert req["start"] == start
     assert req["end"] == str(end_exclusive - 60)
-    assert req["count"] == 5000
+    assert "count" not in req  # bounded start/end mode; count selects latest-N history on the gateway
+    assert (end_exclusive - start) // 60 <= 5000
     assert req["style"] == "candles"
     assert req["granularity"] == 60
     assert "symbol" not in req
