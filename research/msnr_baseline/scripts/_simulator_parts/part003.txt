@@ -1,0 +1,122 @@
+                    error_code = 2
+                    break
+                equity -= entry_cost
+                # Entry candle's subsequent high/low can hit a stop or target. Stop wins ties.
+                stop_hit = (side == 1 and lo[i] <= stop_price) or (side == -1 and hi[i] >= stop_price)
+                target_hit = (side == 1 and hi[i] >= target_price) or (side == -1 and lo[i] <= target_price)
+                if stop_hit or target_hit:
+                    reason = 1 if stop_hit else 2
+                    if reason == 1:
+                        if side == 1:
+                            exit_mid = op[i] if op[i] < stop_price else stop_price
+                        else:
+                            exit_mid = op[i] if op[i] > stop_price else stop_price
+                    else:
+                        if side == 1:
+                            exit_mid = op[i] if op[i] > target_price else target_price
+                        else:
+                            exit_mid = op[i] if op[i] < target_price else target_price
+                    gross = side * (exit_mid - entry_mid) * qty * multiplier
+                    net = gross - entry_cost
+                    equity += gross
+                    trades[ntrades, 0] = entry_epoch
+                    trades[ntrades, 1] = epoch[i]
+                    trades[ntrades, 2] = side
+                    trades[ntrades, 3] = entry_mid
+                    trades[ntrades, 4] = exit_mid
+                    trades[ntrades, 5] = entry_atr
+                    trades[ntrades, 6] = qty
+                    trades[ntrades, 7] = risk_cash
+                    trades[ntrades, 8] = entry_cost
+                    trades[ntrades, 9] = gross
+                    trades[ntrades, 10] = net
+                    trades[ntrades, 11] = net / risk_cash if risk_cash > 0 else 0.0
+                    trades[ntrades, 12] = 1.0
+                    trades[ntrades, 13] = reason
+                    ntrades += 1
+                    side = 0
+                    entry_epoch = 0
+                    entry_mid = 0.0
+                    entry_atr = 0.0
+                    stop_price = 0.0
+                    target_price = 0.0
+                    qty = 0.0
+                    risk_cash = 0.0
+                    entry_cost = 0.0
+                    entry_index = 0
+    if final_chunk and side != 0 and len(epoch) > process_start:
+        i = len(epoch) - 1
+        exit_mid = cl[i]
+        gross = side * (exit_mid - entry_mid) * qty * multiplier
+        net = gross - entry_cost
+        equity += gross
+        trades[ntrades, 0] = entry_epoch
+        trades[ntrades, 1] = epoch[i]
+        trades[ntrades, 2] = side
+        trades[ntrades, 3] = entry_mid
+        trades[ntrades, 4] = exit_mid
+        trades[ntrades, 5] = entry_atr
+        trades[ntrades, 6] = qty
+        trades[ntrades, 7] = risk_cash
+        trades[ntrades, 8] = entry_cost
+        trades[ntrades, 9] = gross
+        trades[ntrades, 10] = net
+        trades[ntrades, 11] = net / risk_cash if risk_cash > 0 else 0.0
+        end_bar_index = global_offset + len(epoch) - 1 - process_start
+        trades[ntrades, 12] = end_bar_index - entry_index + 1
+        trades[ntrades, 13] = 3
+        ntrades += 1
+        side = 0
+    return (trades, ntrades, side, entry_epoch, entry_mid, entry_atr, stop_price, target_price,
+            qty, risk_cash, entry_cost, entry_index, equity, error_code)
+
+
+def iter_90_day_segments(csv_path: Path, start_epoch: int, end_exclusive: int,
+                         granularity: int, csv_chunk_rows: int) -> Iterator[pd.DataFrame]:
+    """Stream verified candles into non-overlapping 90-day segments."""
+    segment_seconds = 90 * 86400
+    current_end = min(start_epoch + segment_seconds, end_exclusive)
+    pending = pd.DataFrame(columns=list(REQUIRED_FIELDS))
+    for part in pd.read_csv(csv_path, usecols=list(REQUIRED_FIELDS), chunksize=csv_chunk_rows):
+        for col in REQUIRED_FIELDS:
+            part[col] = pd.to_numeric(part[col], errors="raise")
+        part["epoch"] = part["epoch"].astype(np.int64)
+        work = pd.concat([pending, part], ignore_index=True) if not pending.empty else part.reset_index(drop=True)
+        while not work.empty and int(work["epoch"].max()) >= current_end:
+            ready = work.loc[work["epoch"] < current_end].copy().reset_index(drop=True)
+            pending = work.loc[work["epoch"] >= current_end].copy().reset_index(drop=True)
+            if not ready.empty:
+                yield ready
+            current_end = min(current_end + segment_seconds, end_exclusive)
+            work = pending
+            pending = pd.DataFrame(columns=list(REQUIRED_FIELDS))
+            if current_end >= end_exclusive:
+                break
+        if not work.empty:
+            pending = work.reset_index(drop=True)
+    if not pending.empty:
+        pending = pending.loc[pending["epoch"] < end_exclusive].copy().reset_index(drop=True)
+        if not pending.empty:
+            yield pending
+
+
+def resolve_git_commit(args_commit: str | None) -> tuple[str, str]:
+    try:
+        actual = subprocess.run(["git", "rev-parse", "HEAD"], cwd=PROJECT_ROOT,
+                                check=True, capture_output=True, text=True, timeout=5).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        actual = ""
+    if actual:
+        if args_commit and args_commit.lower() != actual.lower():
+            raise SimulationError(f"Provided commit SHA {args_commit} differs from checked-out HEAD {actual}.")
+        commit = actual
+        source = "git working tree HEAD"
+    else:
+        commit = args_commit or ""
+        source = "explicit repository commit SHA (source snapshot; no local .git directory)"
+    if not re.fullmatch(r"[0-9a-fA-F]{40}", commit):
+        raise SimulationError("Exact 40-character repository commit SHA is required; no placeholder hashes allowed.")
+    return commit.lower(), source
+
+
+def write_ledger_records(ledger: Path, matrix: np.ndarray, count: int) -> int:

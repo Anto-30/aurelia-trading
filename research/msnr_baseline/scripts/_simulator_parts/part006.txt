@@ -1,0 +1,73 @@
+                            "end": datetime.fromtimestamp(last_epoch, timezone.utc).isoformat()},
+        "data_rows": processed_rows, "simulation_segments_90_days": segment_count,
+        "data_csv_sha256": csv_hash,
+        "repository_commit_sha": commit, "repository_commit_source": commit_source,
+        "explicit_random_seed": seed, "numpy_seed_set": True,
+        "model_config_sha256": model_hash,
+        "manifest_sha256": sha256_file(args.manifest.resolve()),
+        "verification_report_sha256": sha256_file(args.verification.resolve()),
+        "model_parameters": params,
+        "costs": {"spread_pips_full_round_trip": params["spread_pips_full_round_trip"],
+                  "pip_size_price_from_active_symbols": pip_size_price,
+                  "spread_price_points_full_round_trip": spread_price_points,
+                  "spread_price_conversion_note": "2.0 assumed pips multiplied by captured active_symbols.pip_size price unit; not a measured broker spread",
+                  "slippage_bps_per_fill": slippage_bps,
+                  "slippage_cost_estimate": "5 bps per entry/exit side, both projected using entry price; assumed rather than observed",
+                  "commission": "excluded per explicitly supplied assumptions; this is not a complete execution-cost model"},
+        "linear_contract_status": "UNIT_NORMALIZED_LINEAR_PRICE_PROXY; no real Deriv contract or multiplier verified",
+        "multiplier_used_for_sizing": multiplier,
+        "signal_timing": "signal[i-1] executes at open[i]; ATR from i-1 sizes position",
+        "features_precomputed_vectorized": True, "compiled_stateful_engine": "Numba JIT",
+        "no_forward_fill_used": True, "simulated_volume_features": False,
+        "trade_ledger_path": str(ledger), "trade_ledger_sha256": sha256_file(ledger),
+        "metrics": metrics,
+        "kill_rule": {"threshold_profit_factor": 1.15, "threshold_net_expectancy_R": 0.0,
+                      "evaluated": kill_rule_evaluated,
+                      "profit_factor_comparable": isinstance(pf, (int, float)) or pf == "infinite_no_losses",
+                      "met": kill,
+                      "message": KILL_MESSAGE if kill else None},
+        "safety": {"live_execution": "BLOCKED", "final_execution_authorization": False,
+                   "live_orders_submitted": False, "account_tokens_used": False,
+                   "otp_used": False, "qualification_unlock": False},
+        "limitations": [
+            "This run requires --allow-unverified-linear-proxy and is exploratory; it does not establish an actually available Deriv linear contract.",
+            "Multiplier 1.0 is a unit normalization only, not a Deriv contract multiplier; output PnL is not broker currency.",
+            "Spread/slippage are user assumptions; commission is excluded and may make results optimistic.",
+            "Historical OHLC validation and hashes do not validate out-of-sample performance or live executability.",
+        ],
+    }
+    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    # Holy Trinity: data hash, repository commit, explicit random seed.
+    print("HOLY_TRINITY_SHA256_DATA=" + csv_hash)
+    print("HOLY_TRINITY_GIT_COMMIT_SHA=" + commit)
+    print("HOLY_TRINITY_RANDOM_SEED=" + str(seed))
+    print(json.dumps({"summary": str(summary_path), "trade_ledger": str(ledger), "metrics": metrics,
+                      "kill_rule": summary["kill_rule"], "qualification_status": summary["qualification_status"]},
+                     indent=2, allow_nan=False))
+    if kill:
+        print(KILL_MESSAGE)
+        return 10
+    if not kill_rule_evaluated:
+        print("KILL RULE NOT EVALUATED: no closed trades or non-computable performance metrics; no statistical claim is made.")
+        return 11
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("csv", type=Path)
+    parser.add_argument("--manifest", required=True, type=Path)
+    parser.add_argument("--verification", required=True, type=Path)
+    parser.add_argument("--model", type=Path, default=DEFAULT_MODEL)
+    parser.add_argument("--ledger", type=Path, required=True)
+    parser.add_argument("--summary", type=Path, required=True)
+    parser.add_argument("--git-commit", help="Exact 40-character commit SHA, required when running outside a clone")
+    parser.add_argument("--allow-unverified-linear-proxy", action="store_true",
+                        help="Run R-metric research with multiplier=1 normalization; output remains NOT_QUALIFIED")
+    args = parser.parse_args()
+    try: return run(args)
+    except (SimulationError, OSError, ValueError, KeyError) as exc:
+        print(f"SIMULATION BLOCKED FAILED CLOSED: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 2
+
+if __name__ == "__main__": raise SystemExit(main())

@@ -1,0 +1,56 @@
+{
+  "schema": "atos.msnr.baseline.v1",
+  "model_name": "MSNR price-action reversal baseline",
+  "model_version": "1.0.0-frozen",
+  "underlying_symbol": "R_100",
+  "timeframe": "1m",
+  "input_fields": [
+    "epoch",
+    "open",
+    "high",
+    "low",
+    "close"
+  ],
+  "features_allowed": "OHLC price action and ATR/MA-derived regime only; no volume, order flow, volume profile, oscillators, fitted ML, HMM or LSTM",
+  "parameters": {
+    "sweep_lookback_bars": 20,
+    "microstructure_lookback_bars": 5,
+    "sweep_confirmation_bars": 8,
+    "atr_period": 14,
+    "regime_ma_period": 200,
+    "regime_ma_slope_lookback": 20,
+    "stop_atr_multiple": 1,
+    "target_r_multiple": 2,
+    "risk_fraction_of_equity": 0.01,
+    "initial_normalized_equity": 10000,
+    "spread_pips_full_round_trip": 2,
+    "slippage_bps_per_fill": 5,
+    "commission_model": "excluded; not supplied by user and not observed; results are optimistic with respect to commission",
+    "seed": 42,
+    "feature_execution_lag_bars": 1,
+    "simulation_chunk_days": 90,
+    "data_chunk_csv_rows": 65536
+  },
+  "frozen_signal_definition": {
+    "long_sweep": "low breaches the prior 20-bar low; close reclaims that prior low; close > open",
+    "short_sweep": "high breaches the prior 20-bar high; close loses that prior high; close < open",
+    "confirmation": "within prior 8 completed bars a same-side sweep/reclaim occurred; current close crosses the prior 5-bar micro-structure level in reversal direction; candle direction agrees",
+    "long_regime": "close > 200-bar simple moving average and MA(200) > its value 20 completed bars earlier",
+    "short_regime": "close < 200-bar simple moving average and MA(200) < its value 20 completed bars earlier",
+    "chop": "all other regime states; entries are hard-blocked",
+    "execution": "completed signal from i-1 is executed at open of bar i; ATR from i-1 sizes the position",
+    "stop": "1.0 x ATR(14) from entry mid",
+    "target": "2.0 x ATR(14) from entry mid",
+    "intrabar_conflict": "if stop and target are both touched within a bar, assume stop first",
+    "overlap": "one position at a time; after exit, no new entry on that same bar",
+    "cost_timing": "estimated full round-trip spread and slippage cost is debited to normalized equity at entry"
+  },
+  "safety": {
+    "research_only": true,
+    "live_orders": false,
+    "account_tokens": false,
+    "otp_authentication": false,
+    "live_execution": "BLOCKED",
+    "final_execution_authorization": false
+  }
+}

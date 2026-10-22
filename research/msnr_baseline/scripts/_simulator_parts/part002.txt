@@ -1,0 +1,111 @@
+    recent_long_sweep = sweep_long.astype("int8").shift(1).rolling(confirm_n, min_periods=1).max().fillna(0) > 0
+    recent_short_sweep = sweep_short.astype("int8").shift(1).rolling(confirm_n, min_periods=1).max().fillna(0) > 0
+
+    prior_micro_high = out["high"].rolling(micro_n, min_periods=micro_n).max().shift(1)
+    prior_micro_low = out["low"].rolling(micro_n, min_periods=micro_n).min().shift(1)
+    bull_break = (out["close"] > prior_micro_high) & (out["close"].shift(1) <= prior_micro_high.shift(1)) & (out["close"] > out["open"])
+    bear_break = (out["close"] < prior_micro_low) & (out["close"].shift(1) >= prior_micro_low.shift(1)) & (out["close"] < out["open"])
+
+    out["regime_ma"] = out["close"].rolling(ma_n, min_periods=ma_n).mean()
+    slope = out["regime_ma"] - out["regime_ma"].shift(ma_slope_n)
+    out["regime"] = np.select(
+        [(out["close"] > out["regime_ma"]) & (slope > 0),
+         (out["close"] < out["regime_ma"]) & (slope < 0)],
+        [1, -1], default=0,
+    ).astype("int8")
+
+    long_signal = recent_long_sweep & bull_break & (out["regime"] == 1)
+    short_signal = recent_short_sweep & bear_break & (out["regime"] == -1)
+    # Mutually exclusive signal encoding. Conflicting signals are blocked, not resolved post hoc.
+    out["signal_at_close"] = np.select([long_signal & ~short_signal, short_signal & ~long_signal], [1, -1], default=0).astype("int8")
+    # At row i execution can only read the fully completed signal/ATR at i-1.
+    out["execution_signal"] = out["signal_at_close"].shift(1).fillna(0).astype("int8")
+    out["execution_atr"] = out["atr"].shift(1)
+    out["execution_regime"] = out["regime"].shift(1).fillna(0).astype("int8")
+    return out
+
+
+@njit(cache=True)
+def _simulate_kernel(epoch, op, hi, lo, cl, signal, atr_lagged, process_start, global_offset,
+                    side, entry_epoch, entry_mid, entry_atr, stop_price, target_price,
+                    qty, risk_cash, entry_cost, entry_index, equity,
+                    risk_fraction, multiplier, spread_price_points, slippage_bps, final_chunk):
+    # Numeric trade matrix fields map to TRADE_FIELDS above; reason codes are 1/2/3.
+    trades = np.zeros((len(epoch) + 2, len(TRADE_FIELDS)), dtype=np.float64)
+    ntrades = 0
+    error_code = 0
+    for i in range(process_start, len(epoch)):
+        # Convert the current index in this segment-plus-carry frame to a stable
+        # absolute row index so holding duration remains correct across 90-day chunks.
+        bar_index = global_offset + i - process_start
+        exited = False
+        if side != 0:
+            stop_hit = (side == 1 and lo[i] <= stop_price) or (side == -1 and hi[i] >= stop_price)
+            target_hit = (side == 1 and hi[i] >= target_price) or (side == -1 and lo[i] <= target_price)
+            if stop_hit or target_hit:
+                # If both barriers fall inside one OHLC bar, assume stop first.
+                reason = 1 if stop_hit else 2
+                if reason == 1:
+                    if side == 1:
+                        exit_mid = op[i] if op[i] < stop_price else stop_price
+                    else:
+                        exit_mid = op[i] if op[i] > stop_price else stop_price
+                else:
+                    if side == 1:
+                        exit_mid = op[i] if op[i] > target_price else target_price
+                    else:
+                        exit_mid = op[i] if op[i] < target_price else target_price
+                gross = side * (exit_mid - entry_mid) * qty * multiplier
+                net = gross - entry_cost
+                equity += gross
+                trades[ntrades, 0] = entry_epoch
+                trades[ntrades, 1] = epoch[i]
+                trades[ntrades, 2] = side
+                trades[ntrades, 3] = entry_mid
+                trades[ntrades, 4] = exit_mid
+                trades[ntrades, 5] = entry_atr
+                trades[ntrades, 6] = qty
+                trades[ntrades, 7] = risk_cash
+                trades[ntrades, 8] = entry_cost
+                trades[ntrades, 9] = gross
+                trades[ntrades, 10] = net
+                trades[ntrades, 11] = net / risk_cash if risk_cash > 0 else 0.0
+                trades[ntrades, 12] = bar_index - entry_index + 1
+                trades[ntrades, 13] = reason
+                ntrades += 1
+                side = 0
+                entry_epoch = 0
+                entry_mid = 0.0
+                entry_atr = 0.0
+                stop_price = 0.0
+                target_price = 0.0
+                qty = 0.0
+                risk_cash = 0.0
+                entry_cost = 0.0
+                entry_index = 0
+                exited = True
+            if exited:
+                continue  # no re-entry on the same candle that closed a position
+
+        if side == 0:
+            signal_side = int(signal[i])
+            current_atr = atr_lagged[i]
+            if signal_side != 0 and math.isfinite(current_atr) and current_atr > 0 and equity > 0:
+                # Exact specified sizing formula; multiplier=1 only means normalized linear-price units.
+                risk_cash = risk_fraction * equity
+                qty = risk_cash / (current_atr * multiplier)
+                if not math.isfinite(qty) or qty <= 0:
+                    error_code = 1
+                    break
+                entry_mid = op[i]
+                entry_atr = current_atr
+                side = signal_side
+                entry_epoch = epoch[i]
+                entry_index = bar_index
+                stop_price = entry_mid - side * entry_atr
+                target_price = entry_mid + side * 2.0 * entry_atr
+                # Round-trip cost is estimated and debited at entry, as directed.
+                slip_price_per_fill = entry_mid * slippage_bps / 10000.0
+                cost_price = spread_price_points + 2.0 * slip_price_per_fill
+                entry_cost = cost_price * qty * multiplier
+                if not math.isfinite(entry_cost) or entry_cost < 0 or entry_cost >= equity:

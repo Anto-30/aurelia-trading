@@ -1,0 +1,32 @@
+{
+  "schema": "atos.msnr.instrument_specs.v1",
+  "underlying_symbol": "R_100",
+  "public_market_metadata": {
+    "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
+    "source_method": "active_symbols",
+    "authentication": "none",
+    "pip_size_price": null,
+    "source_response_sha256": null,
+    "captured_utc": null,
+    "independently_verified": false
+  },
+  "linear_pnl_model": {
+    "is_linear_price_proxy": true,
+    "multiplier": 1,
+    "multiplier_basis": "unit-normalized proxy only; not evidence of an available Deriv linear contract or actual contract multiplier",
+    "contract_type_verified": false,
+    "tick_size_price": null
+  },
+  "cost_model": {
+    "spread_pips_full_round_trip": 2,
+    "spread_price_points": null,
+    "slippage_bps_per_fill": 5,
+    "slippage_estimated_using_entry_price_for_both_fills": true,
+    "commission_points_round_trip": null,
+    "commission_included": false,
+    "independently_verified": false
+  },
+  "simulator_ready": false,
+  "qualification_status": "NOT_QUALIFIED",
+  "note": "Current active_symbols.pip_size is a price-unit increment (renamed from legacy pip). Preserve the raw captured response and hash. Do not confuse it with the similarly named display-precision field in ticks_history/tick responses. Multiplying this value by the assumed 2.0 pips converts the cost assumption, but does not establish actual spread, linear contract availability, multiplier, slippage or commission. No live execution is authorized."
+}
