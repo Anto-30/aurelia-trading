@@ -79,7 +79,96 @@ jobs:
               f.write(f"out_dir={out}\n")
           PY
 
+      - name: Probe bounded history request semantics (old and recent intervals)
+        id: history_bounds_probe
+        shell: bash
+        env:
+          OUT_DIR: ${{ steps.initialize.outputs.out_dir }}
+        run: |
+          set -euo pipefail
+          export OUT_DIR
+          python - <<'PY'
+          import asyncio, json, os, time
+          from pathlib import Path
+          import websockets
+
+          ENDPOINT = "wss://api.derivws.com/trading/v1/options/ws/public"
+          GRANULARITY = 60
+          old_start = 1666310400  # 2022-10-21T00:00:00Z
+          old_end_exclusive = old_start + 12 * 3600
+          recent_end_exclusive = (int(time.time()) // 60) * 60
+          recent_start = recent_end_exclusive - 12 * 3600
+
+          async def one_probe(name, start, end_exclusive, req_id):
+              payload = {
+                  "ticks_history": "R_100",
+                  "start": int(start),
+                  "end": str(int(end_exclusive - GRANULARITY)),
+                  "style": "candles",
+                  "granularity": GRANULARITY,
+                  "req_id": req_id
+              }
+              expected = list(range(start, end_exclusive, GRANULARITY))
+              try:
+                  async with websockets.connect(ENDPOINT, open_timeout=10, close_timeout=5, max_size=8*1024*1024) as ws:
+                      await ws.send(json.dumps(payload, separators=(",", ":")))
+                      raw = await asyncio.wait_for(ws.recv(), timeout=15)
+                  response = json.loads(raw)
+                  candles = response.get("candles") if isinstance(response, dict) else None
+                  candles = candles if isinstance(candles, list) else []
+                  epochs = []
+                  for row in candles:
+                      if isinstance(row, dict) and "epoch" in row:
+                          try:
+                              epochs.append(int(row["epoch"]))
+                          except (TypeError, ValueError, OverflowError):
+                              pass
+                  echo = response.get("echo_req") if isinstance(response, dict) else None
+                  allowed = ("ticks_history", "start", "end", "style", "granularity", "count", "adjust_start_time", "subscribe", "req_id")
+                  echo_subset = {k: echo[k] for k in allowed if k in echo} if isinstance(echo, dict) else None
+                  exact = sorted(epochs) == expected
+                  return {
+                      "name": name, "requested_start_epoch": start, "requested_end_exclusive_epoch": end_exclusive,
+                      "expected_rows": len(expected), "response_msg_type": response.get("msg_type") if isinstance(response, dict) else None,
+                      "response_req_id": response.get("req_id") if isinstance(response, dict) else None,
+                      "api_error": response.get("error") if isinstance(response, dict) else "non-object response",
+                      "echo_req_subset": echo_subset, "response_candle_count": len(candles),
+                      "response_epoch_count": len(epochs), "response_epoch_min": min(epochs) if epochs else None,
+                      "response_epoch_max": max(epochs) if epochs else None,
+                      "exact_epoch_coverage": exact,
+                      "status": "PASS" if exact else "BOUNDED_RANGE_NOT_HONORED_OR_DATA_UNAVAILABLE"
+                  }
+              except Exception as exc:
+                  return {
+                      "name": name, "requested_start_epoch": start, "requested_end_exclusive_epoch": end_exclusive,
+                      "expected_rows": len(expected), "status": "PROBE_ERROR",
+                      "error": f"{type(exc).__name__}: {exc}", "exact_epoch_coverage": False
+                  }
+
+          async def main():
+              old = await one_probe("old_2022_interval", old_start, old_end_exclusive, 7001)
+              await asyncio.sleep(1.5)
+              recent = await one_probe("recent_12h_interval", recent_start, recent_end_exclusive, 7002)
+              return {"schema":"atos.deriv.history_bounds_probe.v1", "endpoint":ENDPOINT,
+                      "authentication":"none", "account_token_used":False, "otp_used":False,
+                      "live_orders_submitted":False, "granularity_seconds":GRANULARITY,
+                      "old_interval":old, "recent_interval":recent,
+                      "old_interval_supported":old["exact_epoch_coverage"],
+                      "recent_interval_supported":recent["exact_epoch_coverage"],
+                      "note":"Metadata probe only. Does not write a market-history CSV or calculate trading metrics."}
+
+          report = asyncio.run(main())
+          out = Path(os.environ["OUT_DIR"]) / "evidence" / "history_bounds_probe.json"
+          out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          print(json.dumps(report, indent=2, sort_keys=True))
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write("old_bounded_supported=" + str(report["old_interval_supported"]).lower() + "\n")
+              f.write("recent_bounded_supported=" + str(report["recent_interval_supported"]).lower() + "\n")
+          PY
+
       - name: Fetch authentic R_100 1m and 15m history from the public API
+        id: fetch_history
+        if: steps.history_bounds_probe.outputs.old_bounded_supported == 'true' && steps.history_bounds_probe.outputs.recent_bounded_supported == 'true'
         shell: bash
         env:
           OUT_DIR: ${{ steps.initialize.outputs.out_dir }}
@@ -88,6 +177,8 @@ jobs:
           python research/msnr_baseline/scripts/fetch_history.py --start-date 2022-10-21 --end-date 2024-10-21 --output-dir "$OUT_DIR/data/raw" --chunk-days 3 --timeout 15 --retries 2 --retry-delay 2
 
       - name: Verify complete 1m and 15m datasets
+        id: verify_history
+        if: steps.fetch_history.outcome == 'success'
         shell: bash
         env:
           OUT_DIR: ${{ steps.initialize.outputs.out_dir }}
@@ -98,6 +189,7 @@ jobs:
 
       - name: Run the frozen MSNR baseline on verified 1m history
         id: simulate
+        if: steps.verify_history.outcome == 'success'
         shell: bash
         env:
           OUT_DIR: ${{ steps.initialize.outputs.out_dir }}
@@ -138,7 +230,18 @@ jobs:
               data["status"] = "SIMULATION_SUMMARY_AVAILABLE_NOT_QUALIFIED"
           else:
               data["simulator_exit_code"] = os.environ.get("SIMULATOR_EXIT_CODE") or None
-              data["status"] = "FETCH_VERIFY_OR_SIMULATION_FAILED"
+              probe_path = out / "evidence" / "history_bounds_probe.json"
+              if probe_path.is_file():
+                  probe = json.loads(probe_path.read_text(encoding="utf-8"))
+                  data["history_bounds_probe"] = probe
+                  if not probe.get("recent_interval_supported", False):
+                      data["status"] = "PUBLIC_ENDPOINT_BOUNDED_HISTORY_PROBE_FAILED"
+                  elif not probe.get("old_interval_supported", False):
+                      data["status"] = "2022_HISTORY_UNAVAILABLE_OR_BOUNDS_IGNORED"
+                  else:
+                      data["status"] = "FETCH_VERIFY_OR_SIMULATION_FAILED"
+              else:
+                  data["status"] = "FETCH_VERIFY_OR_SIMULATION_FAILED"
           data["live_execution"] = "BLOCKED"
           data["final_execution_authorization"] = False
           data["account_token_used"] = False
