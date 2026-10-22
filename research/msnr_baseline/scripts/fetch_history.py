@@ -126,14 +126,17 @@ def build_candle_payload(start_epoch: int, end_exclusive: int, granularity: int)
     count = (end_exclusive - start_epoch) // granularity
     if count < 1 or count > 5000:
         raise FetchError(f"Requested chunk has {count} candles; current cap is 5000.")
+    # Deriv's own SmartCharts request builder removes count whenever start is set.
+    # With start+end bounds, count=5000 can make this gateway return the latest
+    # default window rather than the requested interval. The bounded request
+    # therefore omits count and verifies the complete returned epoch sequence.
     return {
         "ticks_history": UNDERLYING_SYMBOL,
         "start": int(start_epoch),
-        # Current schema encodes the end epoch as a string ("latest" or digits).
+        # Use an explicit end epoch so each three-day chunk is strictly bounded.
         "end": str(end_exclusive - granularity),
         "style": "candles",
         "granularity": int(granularity),
-        "count": 5000,
         "req_id": 1,
     }
 
