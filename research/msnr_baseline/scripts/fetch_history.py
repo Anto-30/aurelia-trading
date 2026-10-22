@@ -164,7 +164,25 @@ async def request_chunk(start_epoch: int, end_exclusive: int, granularity: int,
                 # Current API docs do not guarantee echo_req; no logic depends on it.
                 if response.get("msg_type") not in ("candles", "history"):
                     raise FetchError(f"Unexpected response message type: {response.get('msg_type')!r}")
-                rows = normalize_candles(response.get("candles"), start_epoch, end_exclusive, granularity)
+                try:
+                    rows = normalize_candles(response.get("candles"), start_epoch, end_exclusive, granularity)
+                except FetchError as exc:
+                    # Keep diagnostics limited to the public history request shape;
+                    # never dump arbitrary responses, credentials, or unrelated fields.
+                    if "no epochs inside requested interval" in str(exc):
+                        echo = response.get("echo_req")
+                        allowed = ("ticks_history", "start", "end", "style", "granularity", "count",
+                                   "adjust_start_time", "subscribe", "req_id")
+                        echo_summary = (
+                            {key: echo[key] for key in allowed if key in echo}
+                            if isinstance(echo, dict) else None
+                        )
+                        raise FetchError(
+                            f"{exc}; response_msg_type={response.get('msg_type')!r}; "
+                            f"response_req_id={response.get('req_id')!r}; "
+                            f"echo_req_subset={json.dumps(echo_summary, sort_keys=True, separators=(',', ':'))}"
+                        ) from exc
+                    raise
                 return rows, attempt
         except Exception as exc:
             last_error = f"{type(exc).__name__}: {exc}"
