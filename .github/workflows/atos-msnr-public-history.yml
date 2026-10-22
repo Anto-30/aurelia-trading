@@ -186,12 +186,12 @@ jobs:
           out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
           print(json.dumps(report, indent=2, sort_keys=True))
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
-              f.write("old_bounded_supported=" + str(report["old_interval_supported"]).lower() + "\n")
+              f.write("historical_anchors_supported=" + str(report["requested_start_anchor_supported"] and report["requested_end_anchor_supported"]).lower() + "\n")
               f.write("recent_bounded_supported=" + str(report["recent_interval_supported"]).lower() + "\n")
           PY
 
       - name: Require the public API to honor both historical bounds
-        if: steps.history_bounds_probe.outputs.old_bounded_supported != 'true' || steps.history_bounds_probe.outputs.recent_bounded_supported != 'true'
+        if: steps.history_bounds_probe.outputs.historical_anchors_supported != 'true' || steps.history_bounds_probe.outputs.recent_bounded_supported != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -201,7 +201,7 @@ jobs:
 
       - name: Fetch authentic R_100 1m and 15m history from the public API
         id: fetch_history
-        if: steps.history_bounds_probe.outputs.old_bounded_supported == 'true' && steps.history_bounds_probe.outputs.recent_bounded_supported == 'true'
+        if: steps.history_bounds_probe.outputs.historical_anchors_supported == 'true' && steps.history_bounds_probe.outputs.recent_bounded_supported == 'true'
         shell: bash
         env:
           OUT_DIR: ${{ steps.initialize.outputs.out_dir }}
@@ -269,7 +269,7 @@ jobs:
                   data["history_bounds_probe"] = probe
                   if not probe.get("recent_interval_supported", False):
                       data["status"] = "PUBLIC_ENDPOINT_BOUNDED_HISTORY_PROBE_FAILED"
-                  elif not probe.get("old_interval_supported", False):
+                  elif not (probe.get("requested_start_anchor_supported", False) and probe.get("requested_end_anchor_supported", False)):
                       data["status"] = "2022_HISTORY_UNAVAILABLE_OR_BOUNDS_IGNORED"
                   else:
                       data["status"] = "FETCH_VERIFY_OR_SIMULATION_FAILED"
