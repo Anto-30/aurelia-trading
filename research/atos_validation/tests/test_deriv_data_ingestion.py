@@ -60,6 +60,14 @@ class DerivHistoryTests(unittest.TestCase):
         self.assertNotIn("app_id=", connect.call_args_list[1].args[0])
         self.assertTrue(ws.closed)
 
+    def test_candle_count_limit_is_enforced_before_network(self):
+        client = DerivHistoryClient()
+        with patch("research.atos_validation.deriv_data.websocket.create_connection") as connect:
+            for bad in (0, 5001, True, 1.5):
+                with self.subTest(count=bad), self.assertRaises(ValueError):
+                    client.candles("R_100", 60, 120, 60, bad)
+            connect.assert_not_called()
+
     def test_defaults_to_public_endpoint_without_app_id(self):
         client = DerivHistoryClient()
         self.assertIn("ws.binaryws.com", client.urls[0])
