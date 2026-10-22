@@ -37,7 +37,7 @@ def features(df):
 def run(a):
  data=Path(a.data); specs=load_specs(a.specs); data_hash=sha(data)
  s=specs; mult=float(s["multiplier"]); pip=float(s["pip_size"]); spread=float(s["spread_pips"])*pip; slip_bps=float(s["slippage_bps"])/10000
- equity=float(s["initial_equity"]); initial=equity; risk_pct=float(s["account_risk_pct"]); pos=None
+ equity=float(s["initial_equity"]); initial=equity; risk_pct=float(s["account_risk_pct"]); pos=None; last_bar=None; pos=None
  ledger=Path(a.ledger); ledger.parent.mkdir(parents=True,exist_ok=True); ledger.write_text("")
  gp=gl=sumr=0.; n=wins=losses=0; cursor=pd.Timestamp(a.start,tz="UTC"); end=pd.Timestamp(a.end,tz="UTC")
  while cursor<end:
@@ -64,11 +64,11 @@ def run(a):
      if bar.high>=pos["stop"]: exitp=pos["stop"]; reason="stop"
      elif bar.low<=pos["target"]: exitp=pos["target"]; reason="target"
     if exitp is not None:
-     ex_slip=exitp*slip_bps; pnl=(exitp-pos["entry"])*pos["side"]*pos["size"]*mult-((spread/2)+ex_slip)*pos["size"]*mult
-     r=pnl/pos["risk_cash"] if pos["risk_cash"] else 0; equity+=pnl; n+=1; sumr+=r
+     ex_slip=exitp*slip_bps; pnl_exit=(exitp-pos["entry"])*pos["side"]*pos["size"]*mult-((spread/2)+ex_slip)*pos["size"]*mult
+     pnl=pnl_exit-pos["entry_cost"]; r=pnl/pos["risk_cash"] if pos["risk_cash"] else 0; equity+=pnl_exit; n+=1; sumr+=r
      if pnl>0: gp+=pnl; wins+=1
      elif pnl<0: gl+=abs(pnl); losses+=1
-     with ledger.open("a") as f: f.write(json.dumps({"entry_epoch":pos["entry_epoch"],"exit_epoch":int(bar.epoch),"side":"long" if pos["side"]==1 else "short","entry_price":pos["entry"],"exit_price":float(exitp),"size":pos["size"],"pnl_net":pnl,"r_net":r,"exit_reason":reason,"equity_after":equity})+"\n")
+     with ledger.open("a") as f: f.write(json.dumps({"entry_epoch":pos["entry_epoch"],"exit_epoch":int(bar.epoch),"side":"long" if pos["side"]==1 else "short","entry_price":pos["entry"],"exit_price":float(exitp),"size":pos["size"],"pnl_net":pnl,"entry_spread_cost":pos["entry_cost"],"r_net":r,"exit_reason":reason,"equity_after":equity})+"\n")
      pos=None
    if pos is None and prev.regime!="chop" and pd.notna(prev.atr) and prev.atr>0:
     side=1 if bool(prev.long_signal) else -1 if bool(prev.short_signal) else 0
@@ -77,12 +77,20 @@ def run(a):
      if not math.isfinite(size) or size<=0: continue
      entry=raw+side*raw*slip_bps; stop=entry-side*1.5*av; target=entry+side*2*av
      equity-=(spread/2)*size*mult # spread charged at entry, slippage reflected in fill
-     pos={"side":side,"entry":entry,"stop":stop,"target":target,"size":size,"risk_cash":risk_cash,"entry_epoch":int(bar.epoch)}
+     pos={"side":side,"entry":entry,"stop":stop,"target":target,"size":size,"risk_cash":risk_cash,"entry_epoch":int(bar.epoch),"entry_cost":(spread/2)*size*mult}
   del x,df; gc.collect(); cursor=nxt
+ if pos is not None and last_bar is not None:
+  exitp=float(last_bar.close); ex_slip=exitp*slip_bps
+  pnl_exit=(exitp-pos["entry"])*pos["side"]*pos["size"]*mult-((spread/2)+ex_slip)*pos["size"]*mult
+  pnl=pnl_exit-pos["entry_cost"]; r=pnl/pos["risk_cash"] if pos["risk_cash"] else 0; equity+=pnl_exit; n+=1; sumr+=r
+  if pnl>0: gp+=pnl; wins+=1
+  elif pnl<0: gl+=abs(pnl); losses+=1
+  with ledger.open("a") as f: f.write(json.dumps({"entry_epoch":pos["entry_epoch"],"exit_epoch":int(last_bar.epoch),"side":"long" if pos["side"]==1 else "short","entry_price":pos["entry"],"exit_price":exitp,"size":pos["size"],"pnl_net":pnl,"entry_spread_cost":pos["entry_cost"],"r_net":r,"exit_reason":"end_of_test","equity_after":equity})+"\n")
  pf=gp/gl if gl else (float("inf") if gp else 0.)
- metrics={"trades":n,"wins":wins,"losses":losses,"profit_factor":pf,"net_expectancy_R":sumr/n if n else None,"net_pnl":equity-initial,"ending_equity":equity,"seed":SEED,"data_sha256":data_hash,"git_commit_sha":a.commit_sha,"status":"EMPIRICAL_RESULT" if n else "NO_TRADES"}
+ pf_display=pf if math.isfinite(pf) else "Infinity"
+ metrics={"trades":n,"wins":wins,"losses":losses,"profit_factor":pf_display,"net_expectancy_R":sumr/n if n else None,"net_pnl":equity-initial,"ending_equity":equity,"seed":SEED,"data_sha256":data_hash,"git_commit_sha":a.commit_sha,"status":"EMPIRICAL_RESULT" if n else "NO_TRADES"}
  print(json.dumps(metrics,indent=2,allow_nan=False))
- if n and (pf<1.15 or metrics["net_expectancy_R"]<=0): print("KILL CRITERIA MET: Baseline alpha insufficient. Halting HMM integration.")
+ if n and ((math.isfinite(pf) and pf<1.15) or metrics["net_expectancy_R"]<=0): print("KILL CRITERIA MET: Baseline alpha insufficient. Halting HMM integration.")
  return metrics
 
 if __name__=="__main__":
