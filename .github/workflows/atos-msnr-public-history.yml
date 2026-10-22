@@ -94,26 +94,33 @@ jobs:
 
           ENDPOINT = "wss://api.derivws.com/trading/v1/options/ws/public"
           GRANULARITY = 60
-          old_anchors = [
-              ("requested_start_2022-10-21", 1666310400),
-              ("mid_2023-10-21", 1697846400),
-              ("requested_end_2024-10-21", 1729468800),
-              ("mid_2025-10-21", 1761004800),
-              ("recent_2026-04-21", 1776729600),
+          anchors = [
+              ("requested_start_2022", 1666310400),
+              ("requested_end_2024", 1729468800),
           ]
           recent_end_exclusive = (int(time.time()) // 60) * 60
           recent_start = recent_end_exclusive - 12 * 3600
 
-          async def one_probe(name, start, end_exclusive, req_id):
+          async def probe(name, start, end_exclusive, mode, req_id):
+              end_last = end_exclusive - GRANULARITY
+              expected = list(range(start, end_exclusive, GRANULARITY))
               payload = {
                   "ticks_history": "R_100",
-                  "start": int(start),
-                  "end": str(int(end_exclusive - GRANULARITY)),
+                  "end": str(end_last),
                   "style": "candles",
                   "granularity": GRANULARITY,
-                  "req_id": req_id
+                  "count": len(expected),
+                  "req_id": req_id,
               }
-              expected = list(range(start, end_exclusive, GRANULARITY))
+              if mode in ("both_bounds_count", "start_latest_count"):
+                  payload["start"] = int(start)
+              if mode == "start_latest_count":
+                  payload["end"] = "latest"
+              if mode == "end_count_only":
+                  payload.pop("start", None)
+              if mode == "both_bounds_count":
+                  payload["start"] = int(start)
+                  payload["end"] = str(end_last)
               try:
                   async with websockets.connect(ENDPOINT, open_timeout=10, close_timeout=5, max_size=8*1024*1024) as ws:
                       await ws.send(json.dumps(payload, separators=(",", ":")))
@@ -121,60 +128,57 @@ jobs:
                   response = json.loads(raw)
                   if not isinstance(response, dict):
                       raise ValueError("Response was not a JSON object.")
-                  candles = response.get("candles")
-                  candles = candles if isinstance(candles, list) else []
+                  candles = response.get("candles") if isinstance(response.get("candles"), list) else []
                   epochs = []
                   for row in candles:
-                      if isinstance(row, dict) and "epoch" in row:
+                      if isinstance(row, dict) and all(k in row for k in ("open","high","low","close","epoch")):
                           try:
                               epochs.append(int(row["epoch"]))
                           except (TypeError, ValueError, OverflowError):
                               pass
                   echo = response.get("echo_req")
-                  allowed = ("ticks_history", "start", "end", "style", "granularity", "count", "adjust_start_time", "subscribe", "req_id")
-                  echo_subset = {k: echo[k] for k in allowed if k in echo} if isinstance(echo, dict) else None
+                  echo_keys = ("ticks_history","start","end","style","granularity","count","adjust_start_time","subscribe","req_id")
+                  echo_subset = {k:echo[k] for k in echo_keys if k in echo} if isinstance(echo,dict) else None
                   exact = sorted(epochs) == expected
+                  in_range = bool(epochs) and min(epochs) >= start and max(epochs) < end_exclusive
                   return {
-                      "name": name, "requested_start_epoch": start, "requested_end_exclusive_epoch": end_exclusive,
-                      "expected_rows": len(expected), "response_msg_type": response.get("msg_type"),
-                      "response_req_id": response.get("req_id"), "api_error": response.get("error"),
-                      "echo_req_subset": echo_subset, "response_candle_count": len(candles),
-                      "response_epoch_count": len(epochs), "response_epoch_min": min(epochs) if epochs else None,
-                      "response_epoch_max": max(epochs) if epochs else None,
-                      "exact_epoch_coverage": exact,
-                      "status": "PASS" if exact else "NOT_AVAILABLE_OR_RANGE_NOT_HONORED"
+                      "name":name,"mode":mode,"sent_payload":payload,
+                      "requested_start_epoch":start,"requested_end_exclusive_epoch":end_exclusive,
+                      "expected_rows":len(expected),"response_msg_type":response.get("msg_type"),
+                      "response_req_id":response.get("req_id"),"api_error":response.get("error"),
+                      "echo_req_subset":echo_subset,"response_candle_count":len(candles),
+                      "response_epoch_count":len(epochs),"response_epoch_min":min(epochs) if epochs else None,
+                      "response_epoch_max":max(epochs) if epochs else None,
+                      "in_range":in_range,"exact_epoch_coverage":exact,
+                      "status":"PASS_EXACT" if exact else ("PASS_RANGE_PARTIAL" if in_range else "RANGE_IGNORED_OR_DATA_UNAVAILABLE")
                   }
               except Exception as exc:
-                  return {
-                      "name": name, "requested_start_epoch": start, "requested_end_exclusive_epoch": end_exclusive,
-                      "expected_rows": len(expected), "status": "PROBE_ERROR",
-                      "error": f"{type(exc).__name__}: {exc}", "exact_epoch_coverage": False
-                  }
+                  return {"name":name,"mode":mode,"requested_start_epoch":start,
+                      "requested_end_exclusive_epoch":end_exclusive,"expected_rows":len(expected),
+                      "status":"PROBE_ERROR","error":f"{type(exc).__name__}: {exc}",
+                      "in_range":False,"exact_epoch_coverage":False}
 
           async def main():
-              anchors = []
-              for index, (name, start) in enumerate(old_anchors):
-                  anchors.append(await one_probe(name, start, start + 12 * 3600, 7001 + index))
+              diagnostics=[]
+              # Historical endpoint documented behavior: count plus numeric end.
+              # Compare with both boundaries and start+latest to isolate what gateway honors.
+              for name, start in anchors:
+                  diagnostics.append(await probe(name, start, start + 12*3600, "both_bounds_count", 7101+len(diagnostics)))
                   await asyncio.sleep(1.5)
-              recent = await one_probe("recent_now", recent_start, recent_end_exclusive, 7010)
-              exact_anchors = [item["name"] for item in anchors if item.get("exact_epoch_coverage") is True]
+                  diagnostics.append(await probe(name+"_end_only", start, start + 12*3600, "end_count_only", 7101+len(diagnostics)))
+                  await asyncio.sleep(1.5)
+                  diagnostics.append(await probe(name+"_start_latest", start, start + 12*3600, "start_latest_count", 7101+len(diagnostics)))
+                  await asyncio.sleep(1.5)
+              diagnostics.append(await probe("recent_now", recent_start, recent_end_exclusive, "both_bounds_count", 7110))
               return {
-                  "schema": "atos.deriv.history_bounds_probe.v2",
-                  "endpoint": ENDPOINT,
-                  "authentication": "none",
-                  "account_token_used": False,
-                  "otp_used": False,
-                  "live_orders_submitted": False,
-                  "granularity_seconds": GRANULARITY,
-                  "interval_hours": 12,
-                  "anchor_results": anchors,
-                  "recent_interval": recent,
-                  "requested_start_anchor_supported": bool(anchors and anchors[0]["exact_epoch_coverage"]),
-                  "requested_end_anchor_supported": bool(anchors and anchors[2]["exact_epoch_coverage"]),
-                  "old_interval_supported": bool(anchors and anchors[0]["exact_epoch_coverage"]),
-                  "recent_interval_supported": bool(recent["exact_epoch_coverage"]),
-                  "exact_anchor_names": exact_anchors,
-                  "note": "Diagnostic only: the API must return exact requested epochs. This run writes no market-history CSV and computes no trading metrics."
+                  "schema":"atos.deriv.history_bounds_probe.v3","endpoint":ENDPOINT,
+                  "authentication":"none","account_token_used":False,"otp_used":False,"live_orders_submitted":False,
+                  "granularity_seconds":GRANULARITY,"interval_hours":12,"diagnostics":diagnostics,
+                  "requested_start_anchor_supported":any(x.get("name")=="requested_start_2022" and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "requested_end_anchor_supported":any(x.get("name")=="requested_end_2024" and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "recent_interval_supported":any(x.get("name")=="recent_now" and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "any_historical_interval_supported":any("requested_" in x.get("name","") and x.get("in_range") for x in diagnostics),
+                  "note":"Data retrieval probe only. Requires exact/within-range evidence before a full fetch, and computes no trading metrics."
               }
 
           report = asyncio.run(main())
