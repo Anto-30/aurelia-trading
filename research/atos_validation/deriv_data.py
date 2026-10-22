@@ -87,6 +87,8 @@ class DerivHistoryClient:
         if not math.isfinite(float(retry_base_seconds)) or retry_base_seconds < 1.0:
             raise ValueError("retry_base_seconds must be finite and >= 1 second")
         if self.app_id:
+            # Only the canonical Deriv v3 host documents the App-ID query parameter.
+            # Do not carry that parameter to a legacy fallback host.
             self.urls = (f"{DERIV_WS_BASE}?app_id={self.app_id}", DERIV_WS_FALLBACK_BASE)
         else:
             self.urls = (DERIV_WS_FALLBACK_BASE, DERIV_WS_BASE)
