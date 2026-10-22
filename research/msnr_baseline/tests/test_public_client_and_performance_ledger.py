@@ -74,11 +74,14 @@ def test_perf_ledger_rejects_double_charge_bad_direction_bad_risk_and_missing_co
 def test_new_public_request_schema_and_forbidden_keys():
     validate_public_payload({"active_symbols": "brief"})
     validate_public_payload({"ticks": "R_100", "subscribe": 1})
-    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "count": 5000, "subscribe": 0})
+    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "count": 5000})
     bad = [
         {"buy": "proposal-id", "price": 1}, {"sell": 1, "price": 0}, {"proposal": 1},
         {"balance": 1}, {"otp": "secret"}, {"Authorization": "Bearer x"}, {"loginid": "CR123"},
         {"ticks": "R_100", "passthrough": {"loginid": "CR123"}},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "subscribe": 0},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "adjust_start_time": 0},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 61},
         {"ticks": "R_100", "extra": "unknown"},
     ]
     for payload in bad:
@@ -111,6 +114,6 @@ def test_history_builder_keeps_ticks_history_request_key():
     client.request = fake_request
     asyncio.run(client.ticks_history(underlying_symbol="R_100",start_epoch=100,end_epoch=160,granularity_seconds=60))
     assert seen["payload"]["ticks_history"] == "R_100"
-    assert seen["payload"]["subscribe"] == 0
+    assert "subscribe" not in seen["payload"]  # one-shot history request: omit optional flag
     assert "symbol" not in seen["payload"] and "underlying_symbol" not in seen["payload"] and "loginid" not in seen["payload"]
     assert seen["expected"] == "candles"

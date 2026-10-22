@@ -83,11 +83,16 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
             raise PublicMarketDataError("ticks_history end must be 'latest' or a numeric epoch string.")
         if "count" in payload and (not isinstance(payload["count"], int) or not 1 <= payload["count"] <= 5000):
             raise PublicMarketDataError("ticks_history count must be between 1 and 5000.")
-        if "granularity" in payload and (not isinstance(payload["granularity"], int) or payload["granularity"] <= 0):
-            raise PublicMarketDataError("ticks_history granularity must be a positive integer.")
-        for key in ("subscribe", "adjust_start_time"):
-            if key in payload and payload[key] not in (0, 1):
-                raise PublicMarketDataError(f"{key} must be 0 or 1.")
+        if "granularity" in payload:
+            allowed_granularities = {60, 120, 180, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400}
+            if not isinstance(payload["granularity"], int) or payload["granularity"] not in allowed_granularities:
+                raise PublicMarketDataError("ticks_history granularity must be one of the documented candle intervals.")
+        # The published current schema only allows value 1 for either optional flag.
+        # Omit subscribe entirely for a one-shot request; do not send legacy subscribe=0.
+        if "subscribe" in payload and payload["subscribe"] != 1:
+            raise PublicMarketDataError("ticks_history subscribe, when provided, must equal 1.")
+        if "adjust_start_time" in payload and payload["adjust_start_time"] != 1:
+            raise PublicMarketDataError("ticks_history adjust_start_time, when provided, must equal 1.")
 
 
 def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | int]]:
@@ -217,7 +222,7 @@ class DerivPublicMarketDataClient:
             raise PublicMarketDataError("Invalid style/count; count must be between 1 and 5000.")
         payload: dict[str, Any] = {
             "ticks_history": underlying_symbol, "start": int(start_epoch), "end": str(int(end_epoch)),
-            "style": style, "count": int(count), "subscribe": 0,
+            "style": style, "count": int(count),
         }
         if style == "candles":
             if granularity_seconds <= 0:
