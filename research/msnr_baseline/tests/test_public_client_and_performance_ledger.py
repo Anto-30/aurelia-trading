@@ -71,6 +71,27 @@ def test_perf_ledger_rejects_double_charge_bad_direction_bad_risk_and_missing_co
         engine().apply_linear_cost_model(raw_trades().drop(columns=["size"]))
 
 
+def test_perf_ledger_rejects_missing_timestamps_and_all_derived_columns():
+    missing_time = raw_trades().copy()
+    missing_time.loc[0, "entry_time"] = ""
+    with pytest.raises(LedgerError, match="cannot be missing or unparseable"):
+        engine().apply_linear_cost_model(missing_time)
+
+    # Every output-derived field, including equity/drawdown columns, must be
+    # rejected to prevent an already-costed ledger from being charged twice.
+    with pytest.raises(LedgerError, match="already be costed"):
+        engine().apply_linear_cost_model(raw_trades().assign(drawdown_abs=0.0))
+
+
+def test_perf_factor_uses_post_cost_wins_and_losses():
+    ledger, metrics = engine().generate_performance_ledger(raw_trades())
+    wins = ledger.loc[ledger["net_pnl"] > 0, "net_pnl"].sum()
+    losses = abs(ledger.loc[ledger["net_pnl"] < 0, "net_pnl"].sum())
+    assert metrics["profit_factor_net"] == pytest.approx(wins / losses)
+    assert metrics["expectancy_r"] == pytest.approx(ledger["r_multiple"].mean())
+    assert metrics["max_drawdown_abs"] == pytest.approx(ledger["drawdown_abs"].max())
+
+
 def test_new_public_request_schema_and_forbidden_keys():
     validate_public_payload({"active_symbols": "brief"})
     validate_public_payload({"ticks": "R_100", "subscribe": 1})
