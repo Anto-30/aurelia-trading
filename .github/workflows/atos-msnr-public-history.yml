@@ -174,11 +174,11 @@ jobs:
                   diagnostics.append(await probe(name+"_start_latest", start, start + 12*3600, "start_latest_count", 7101+len(diagnostics)))
                   await asyncio.sleep(1.5)
               for name, start in anchors:
-              diagnostics.append(await probe(name + "_no_count", start, start + 12*3600, "both_bounds_no_count", 7120 + len(diagnostics)))
-              await asyncio.sleep(1.5)
-              diagnostics.append(await probe(name + "_adjust_start_time", start, start + 12*3600, "both_bounds_adjusted", 7140 + len(diagnostics)))
-              await asyncio.sleep(1.5)
-          diagnostics.append(await probe("recent_now", recent_start, recent_end_exclusive, "both_bounds_no_count", 7160))
+                  diagnostics.append(await probe(name + "_no_count", start, start + 12*3600, "both_bounds_no_count", 7120 + len(diagnostics)))
+                  await asyncio.sleep(1.5)
+                  diagnostics.append(await probe(name + "_adjust_start_time", start, start + 12*3600, "both_bounds_adjusted", 7140 + len(diagnostics)))
+                  await asyncio.sleep(1.5)
+              diagnostics.append(await probe("recent_now", recent_start, recent_end_exclusive, "both_bounds_no_count", 7160))
               return {
                   "schema":"atos.deriv.history_bounds_probe.v3","endpoint":ENDPOINT,
                   "authentication":"none","account_token_used":False,"otp_used":False,"live_orders_submitted":False,
