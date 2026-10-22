@@ -3,27 +3,87 @@
   "repository": "Anto-30/aurelia-trading",
   "base_main_commit": "d04564aca0648201feff0326fe9af0fbcee92e94",
   "research_branch_parent": "52e8ecf07ee6751fe54a2f2cd26dc28c2211c166",
-  "note": "Git blob SHA-1s identify exact remote PR-branch file contents. The local export has a separate SHA-256 inventory; those hashes are not interchangeable. The hashes here verify Git object identity only, not empirical-data authenticity or strategy qualification. No market-data files are included.",
+  "note": "Git blob SHA-1s identify exact remote PR-branch file contents. The local export has a separate SHA-256 inventory; those hashes are not interchangeable. The hashes here verify Git object identity only, not empirical-data authenticity or strategy qualification. No market-data files are included. Latest current-schema correction commit: 791ca4fe2bf9ec90d8c7b4722221cb3da1b389d9. The manifest is being refreshed for the next branch commit; it excludes its own blob hash.",
   "files": [
-    {"path": "research/msnr_baseline/.gitignore", "git_blob_sha1": "2dc527ee32847f89eca6604b498e0583c2bd9672"},
-    {"path": "research/msnr_baseline/README.md", "git_blob_sha1": "486d2696e5dbe8efff38b0510d073eada42915cb"},
-    {"path": "research/msnr_baseline/requirements.txt", "git_blob_sha1": "f4e9667c06e3f9a86c42f3ba16e2773a55c1429b"},
-    {"path": "research/msnr_baseline/config/instrument_specs.template.json", "git_blob_sha1": "d06ebb759ba197b99425ba23fed169de1fac06ce"},
-    {"path": "research/msnr_baseline/config/model_frozen.json", "git_blob_sha1": "c7376bec8b5208ae3c45df69be2ddd4d6da34d84"},
-    {"path": "research/msnr_baseline/scripts/fetch_history.py", "git_blob_sha1": "c5d8e7ba0d73feb0c38ca7ab72429db27c34e586"},
-    {"path": "research/msnr_baseline/scripts/run_msnr_simulator.py", "git_blob_sha1": "755c98fa4ae1c11281f89d5ceb525626e8db4d69"},
-    {"path": "research/msnr_baseline/scripts/verify_history.py", "git_blob_sha1": "2edb5e886d5dfdf3885c47895600f2fe018f4f71"},
-    {"path": "research/msnr_baseline/scripts/deriv_public_market_data.py", "git_blob_sha1": "46fc2f57b414aac022b595261e75db6d41b5a3b5"},
-    {"path": "research/msnr_baseline/scripts/performance_ledger.py", "git_blob_sha1": "482835baefcfda3e72050fece72f9cbc11cbfbb5"},
-    {"path": "research/msnr_baseline/tests/test_msnr_baseline.py", "git_blob_sha1": "8b5610b82ba489d9c5a7054c3d2e650cdf8d310c"},
-    {"path": "research/msnr_baseline/tests/test_public_client_and_performance_ledger.py", "git_blob_sha1": "0da7dff469c4969898ed246a3cdf29a8069ad996"},
-    {"path": "research/msnr_baseline/docs/REPOSITORY_INTAKE.md", "git_blob_sha1": "e3c4373d94e6fced8a3afcf1bc60a4ce1eead839"},
-    {"path": "research/msnr_baseline/evidence/REMOTE_STAGING_STATUS.md", "git_blob_sha1": "53f95619b89c83df501bc32874720668368f922c"},
-    {"path": "research/msnr_baseline/evidence/VALIDATION_RUNLOG.md", "git_blob_sha1": "fb900f6fbcf9dc9d0a2b588b27b3970fa2384129"},
-    {"path": "research/msnr_baseline/evidence/fetch_run.failure.json", "git_blob_sha1": "d6a5cad6630a3682df3b6cd46721f4efdd982f77"},
-    {"path": "research/msnr_baseline/evidence/fetch_attempt_20261022_repo_intake/fetch_run.failure.json", "git_blob_sha1": "eabb351cbe7284236f110247c36725992a00518d"},
-    {"path": "research/msnr_baseline/evidence/local_test_results.json", "git_blob_sha1": "71c0f860e235ac852413ed92ca194866ecc44a7c"},
-    {"path": "research/msnr_baseline/evidence/CONTINUATION_20261022.md", "git_blob_sha1": "1d45111d5cc3fed1f85edd54141f10bbfecc373f"},
-    {"path": "research/msnr-baseline-r100-20261022/STATUS.md", "git_blob_sha1": "f457ac1a6d579d4e3b6d9d7da1d2d6b7adefce9e"}
+    {
+      "path": "research/msnr_baseline/.gitignore",
+      "git_blob_sha1": "2dc527ee32847f89eca6604b498e0583c2bd9672"
+    },
+    {
+      "path": "research/msnr_baseline/README.md",
+      "git_blob_sha1": "486d2696e5dbe8efff38b0510d073eada42915cb"
+    },
+    {
+      "path": "research/msnr_baseline/requirements.txt",
+      "git_blob_sha1": "f4e9667c06e3f9a86c42f3ba16e2773a55c1429b"
+    },
+    {
+      "path": "research/msnr_baseline/config/instrument_specs.template.json",
+      "git_blob_sha1": "d06ebb759ba197b99425ba23fed169de1fac06ce"
+    },
+    {
+      "path": "research/msnr_baseline/config/model_frozen.json",
+      "git_blob_sha1": "c7376bec8b5208ae3c45df69be2ddd4d6da34d84"
+    },
+    {
+      "path": "research/msnr_baseline/scripts/fetch_history.py",
+      "git_blob_sha1": "c5d8e7ba0d73feb0c38ca7ab72429db27c34e586"
+    },
+    {
+      "path": "research/msnr_baseline/scripts/run_msnr_simulator.py",
+      "git_blob_sha1": "755c98fa4ae1c11281f89d5ceb525626e8db4d69"
+    },
+    {
+      "path": "research/msnr_baseline/scripts/verify_history.py",
+      "git_blob_sha1": "2edb5e886d5dfdf3885c47895600f2fe018f4f71"
+    },
+    {
+      "path": "research/msnr_baseline/scripts/deriv_public_market_data.py",
+      "git_blob_sha1": "6c3553940385ac5a3850987bcc80add252b1c38a"
+    },
+    {
+      "path": "research/msnr_baseline/scripts/performance_ledger.py",
+      "git_blob_sha1": "482835baefcfda3e72050fece72f9cbc11cbfbb5"
+    },
+    {
+      "path": "research/msnr_baseline/tests/test_msnr_baseline.py",
+      "git_blob_sha1": "8b5610b82ba489d9c5a7054c3d2e650cdf8d310c"
+    },
+    {
+      "path": "research/msnr_baseline/tests/test_public_client_and_performance_ledger.py",
+      "git_blob_sha1": "21fb2ec07b952943e1772088d7e41b4cc961d2aa"
+    },
+    {
+      "path": "research/msnr_baseline/docs/REPOSITORY_INTAKE.md",
+      "git_blob_sha1": "e3c4373d94e6fced8a3afcf1bc60a4ce1eead839"
+    },
+    {
+      "path": "research/msnr_baseline/evidence/REMOTE_STAGING_STATUS.md",
+      "git_blob_sha1": "53f95619b89c83df501bc32874720668368f922c"
+    },
+    {
+      "path": "research/msnr_baseline/evidence/VALIDATION_RUNLOG.md",
+      "git_blob_sha1": "fb900f6fbcf9dc9d0a2b588b27b3970fa2384129"
+    },
+    {
+      "path": "research/msnr_baseline/evidence/fetch_run.failure.json",
+      "git_blob_sha1": "d6a5cad6630a3682df3b6cd46721f4efdd982f77"
+    },
+    {
+      "path": "research/msnr_baseline/evidence/fetch_attempt_20261022_repo_intake/fetch_run.failure.json",
+      "git_blob_sha1": "eabb351cbe7284236f110247c36725992a00518d"
+    },
+    {
+      "path": "research/msnr_baseline/evidence/local_test_results.json",
+      "git_blob_sha1": "71c0f860e235ac852413ed92ca194866ecc44a7c"
+    },
+    {
+      "path": "research/msnr_baseline/evidence/CONTINUATION_20261022.md",
+      "git_blob_sha1": "1d45111d5cc3fed1f85edd54141f10bbfecc373f"
+    },
+    {
+      "path": "research/msnr-baseline-r100-20261022/STATUS.md",
+      "git_blob_sha1": "f457ac1a6d579d4e3b6d9d7da1d2d6b7adefce9e"
+    }
   ]
 }
