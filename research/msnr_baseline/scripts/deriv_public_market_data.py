@@ -196,8 +196,16 @@ class DerivPublicMarketDataClient:
                 ping_interval=20, ping_timeout=20, max_size=8 * 1024 * 1024,
             ) as ws:
                 await ws.send(json.dumps(request, separators=(",", ":")))
+                loop = asyncio.get_running_loop()
+                response_deadline = loop.time() + self.response_timeout
                 while True:
-                    raw = await asyncio.wait_for(ws.recv(), timeout=self.response_timeout)
+                    remaining = response_deadline - loop.time()
+                    if remaining <= 0:
+                        raise PublicMarketDataError("Public market-data response deadline exceeded.")
+                    try:
+                        raw = await asyncio.wait_for(ws.recv(), timeout=remaining)
+                    except asyncio.TimeoutError as exc:
+                        raise PublicMarketDataError("Public market-data response deadline exceeded.") from exc
                     try:
                         message = json.loads(raw)
                     except json.JSONDecodeError as exc:
