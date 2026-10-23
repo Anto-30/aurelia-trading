@@ -172,3 +172,14 @@ The AURELIA `config/LIVE_LOCK.yaml` must remain unchanged and VERIFY_ONLY. This 
 - No Cloudflare tunnel, DNS record, firewall list, email service, storage bucket, or infrastructure resource was changed.
 - SBOM, dependency/secret scans, isolated smoke tests, default-branch HEAD verification, independent review and canonical CI: **NOT RUN / PENDING**.
 - `config/LIVE_LOCK.yaml` must remain unchanged; AURELIA remains VERIFY_ONLY and LIVE_EXECUTION BLOCKED.
+
+
+## Cloudflare infrastructure intake — 2026-10-23
+
+- 19 user-supplied repository URLs reviewed; 18 new records added, one cryptocurrency arbitrage record was already present. Registry count: 347.
+- Registry update: `15c105a234fd682d5662e90ec0d4367386f48f2e`. Assignment ledger update: `12c011a981f8e5f3c9e0a2cdb8bc7ddf32d4c1a2`.
+- Immutable commit IDs were recorded from recent commit search. Default-branch HEAD verification and license/source review remain pending; installation is blocked.
+- Infrastructure, DNS, tunnel, email, upload, AI-agent and API-management repositories are classified as toolchain, sandbox, or reference only. No production credentials, write scopes, deployments, internal tunnels, or AURELIA traffic routing are allowed during review.
+- A repository focused on anti-bot challenge handling is reference-only and must not be used for unauthorized third-party access. The proxy/tunnel template remains reference-only.
+- SBOM, dependency/secret scans, isolated smoke tests and independent review are not run. No source was installed, built, executed or connected to a runtime.
+- Global controls remain unchanged: no capital authority, live orders, broker transaction writes, live-lock mutation, production-secret access or production deployment authority. `config/LIVE_LOCK.yaml` remains `VERIFY_ONLY` and `LIVE_EXECUTION: BLOCKED`.
