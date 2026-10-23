@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-20",
+  "generated_date": "2026-10-23",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -6348,6 +6348,101 @@
       ],
       "integration_note": "Catalogue/reference only. This is not the DeepSeek Harness runtime and does not activate an agent by itself. Review each plugin individually, pin exact versions, and test in an isolated sandbox before use.",
       "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "mvschwarz/openrig",
+      "category": "multi-agent-harness",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/mvschwarz/openrig",
+      "head_commit": "48ea010b4c899af35114da0db0d2c9f437b54dbb",
+      "pin_source": "github_default_branch_HEAD_checked_2026-10-23",
+      "license": "Apache-2.0",
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "notes": "Harness can write trust records, hooks, skills/plugins and workspace files. Audit permission model and hooks in a disposable least-privilege sandbox before any use."
+    },
+    {
+      "repo": "1jehuang/jcode",
+      "category": "coding-agent-harness",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/1jehuang/jcode",
+      "head_commit": "7d342c133df9f8dfea05445bb91a5013c3639367",
+      "pin_source": "github_default_branch_HEAD_checked_2026-10-23",
+      "license": "MIT",
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "notes": "Rust coding-agent harness; inspect dependencies, shell/process permissions and filesystem boundaries. Do not run remote shell-pipe installer in a trusted environment; promote beyond reference only after isolated smoke tests and review."
+    },
+    {
+      "repo": "jgravelle/jcodemunch-mcp",
+      "category": "code-indexing-mcp",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/jgravelle/jcodemunch-mcp",
+      "head_commit": "d56f459210cc0ef0c6ee8ec60b45112466a3f7b5",
+      "pin_source": "github_default_branch_HEAD_checked_2026-10-23",
+      "license": "jCodeMunch-MCP Dual-Use License v1.2 (effective 2026-10-21; commercial-use terms require legal review)",
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "notes": "Keep reference-only until license compatibility and commercial-use permission are confirmed. Review path traversal, symlink handling, ignore rules, secret exclusion and MCP data exposure."
+    },
+    {
+      "repo": "trycua/hermes-cua-spaces",
+      "category": "computer-use-agent-sandbox",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/trycua/hermes-cua-spaces",
+      "head_commit": "82bb8d31517d2d1b8f1ef7f64701558dcac8aea9",
+      "pin_source": "github_default_branch_HEAD_checked_2026-10-23",
+      "license": "MIT",
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "notes": "Runs terminal/file/code operations in CUA Spaces and documents skipping risky-command prompts in created Spaces. Isolate from AURELIA runtime, broker sessions, production credentials, home mounts and capital-plane files."
     }
   ],
   "pin_policy": {
@@ -6356,422 +6451,13 @@
     "automatic_upstream_execution": false
   },
   "last_sync": {
-    "completed_at": "2026-10-11",
-    "source": "User-supplied GitHub repository batch; current default HEAD commit pins queried through GitHub API",
-    "unique_repositories_added_or_refreshed": [
-      "ychampion/melete",
-      "yxq953/MuseLite",
-      "leepokai/Codync",
-      "tjiuce/OpenDots",
-      "Shashankss1205/OpenDots",
-      "docmost/docmost",
-      "Anil-matcha/open-dots",
-      "CopilotKit/OpenDots"
+    "checked_date": "2026-10-23",
+    "external_repo_batch": [
+      "mvschwarz/openrig",
+      "1jehuang/jcode",
+      "jgravelle/jcodemunch-mcp",
+      "trycua/hermes-cua-spaces"
     ],
-    "duplicate_input": "none",
-    "physical_grok_jev_install": "NOT_CLAIMED",
-    "canonical_sync_contract": "This file",
-    "assignment_policy": "All canonical AURELIA agent IDs are assigned; the first assignment is the primary specialist selected by repo_agent_routing.json",
-    "assigned_agents": [
-      "ClaudeCode",
-      "GrokBot",
-      "JEV",
-      "AURELIA"
-    ],
-    "oh_my_pstack": {
-      "head_commit": "fc0eabd25f21b194a336b640e75e29c252382866",
-      "targets": [
-        "ClaudeCode",
-        "GrokBot",
-        "JEV",
-        "AURELIA"
-      ],
-      "physical_runtime_install": "NOT_CLAIMED",
-      "mode": "SANDBOX_ONLY"
-    },
-    "pstack_batch": [
-      {
-        "repo": "backnotprop/pstack",
-        "head_commit": "3a604672c46cd8187d2b19980eae0a34f9f91138",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "michael-denyer/pstack-claude",
-        "head_commit": "29eb31cb8e198c62dd9cff4027e6c4f0f2f63d0b",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "ericlitman/open-pstack",
-        "head_commit": "1b03678171f6f400ae2cc9dc4e7a4a6a13e4bb43",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "peadar/pstack",
-        "head_commit": "165dad4c56ea26dce74b42ac86dc9d5bf2c2e51c",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "bloomberg/pystack",
-        "head_commit": "5c594dc24996eab7b589264eb42a9d6e8cdec283",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "ScriptedAlchemy/pstack-codex",
-        "head_commit": "c25afa251f1513b0b28cc089294d468c5e350444",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "Aqua-123/pstack-for-codex",
-        "head_commit": "9fecac589333cbc0b058c8bb47e1720cf87b6061",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      }
-    ],
-    "quantum_flow_batch": [
-      {
-        "repo": "web3spreads/quant-flow",
-        "head_commit": "f0cb60b347611b54d39626c4022c29582d2168a6",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED",
-        "mode": "RESEARCH_ONLY"
-      },
-      {
-        "repo": "mathisgerdes/continuous-flow-lft",
-        "head_commit": "fcc769c3d34647563401b9c33e4b074941b7d298",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED",
-        "mode": "RESEARCH_ONLY"
-      },
-      {
-        "repo": "zimingttkx/QuantumFlow",
-        "head_commit": "2de147bbb32cb178ae842af0879e2957bce9ae3d",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED",
-        "mode": "SANDBOX_ONLY"
-      },
-      {
-        "repo": "dwave-examples/flow-shop-scheduling",
-        "head_commit": "fcddaf799c7426cd683385f2d309e7194825edac",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED",
-        "mode": "RESEARCH_ONLY"
-      }
-    ],
-    "targets": [
-      "GrokBot",
-      "ClaudeCode",
-      "JEV",
-      "AURELIA",
-      "KimiK3",
-      "GLM",
-      "GoogleAgentSkills",
-      "PlaywrightCLI"
-    ],
-    "requested_batch": [
-      {
-        "repo": "yeshrajawat/codync",
-        "head_commit": "37bd30255a8b0f3d95ae51b0e27a2a0216985540",
-        "mode": "SANDBOX_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "itsablabla/codync-web",
-        "head_commit": "9bc8a63ccc9543f811627f69ab91b205ecc87631",
-        "mode": "SANDBOX_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "leepokai/homebrew-codync",
-        "head_commit": "e74aa2deb8bb3e22ce1829572035dc2c28a007c9",
-        "mode": "TOOLCHAIN_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "leepokai/Codync-web",
-        "head_commit": "b34ea5d9a2e0d9fcb15e5d13cbe5428a03025f70",
-        "mode": "REFERENCE_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "QwenLM/qwen-code",
-        "head_commit": "4360b003a087fe9e57f6ffbe7ba48795980b59c3",
-        "mode": "SANDBOX_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "QuantConnect/Tutorials",
-        "head_commit": "4a341890296f7e79e095508f06170c72ccaa629c",
-        "mode": "RESEARCH_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "SockTrader/SockTrader",
-        "head_commit": "565971c5c1be5678d6dfb223663e11881dbcf697",
-        "mode": "RESEARCH_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "openinterpreter/openinterpreter",
-        "head_commit": "cc054cf52fa3585a3de50e0d4e0be6f9ee6677e8",
-        "mode": "SANDBOX_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "anomalyco/opencode",
-        "head_commit": "388406238bd5ca15564a762840a2362c3a45bd9c",
-        "mode": "TOOLCHAIN_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      }
-    ],
-    "refreshed_existing_pins": [
-      {
-        "repo": "leepokai/Codync",
-        "head_commit": "9de648192320eabea121ba8a24e44937cdaa24f7"
-      },
-      {
-        "repo": "stablyai/orca",
-        "head_commit": "049bf808ab24ec7712a2dd0e72e80ce5b65360a0"
-      },
-      {
-        "repo": "cuemacro/finmarketpy",
-        "head_commit": "afeaef28f5c8b78e613e649ecf18a9653dbf41fd"
-      }
-    ],
-    "registry_updated": true,
-    "physical_runtime_clone": "BLOCKED_NO_REMOTE_DEVICE",
-    "deployment": "NOT_PERFORMED",
-    "capital_authority": false,
-    "requested_agent_aliases_unresolved": [
-      "Dev"
-    ],
-    "agent_alias_resolution_note": "The repository's canonical config/repo_agent_routing.json does not define an agent ID named Dev; this batch is routed only to canonical agent IDs. Do not claim Dev runtime sync until its canonical ID is registered and reviewed.",
-    "repositories_added_or_refreshed": [
-      {
-        "repo": "CryptoSignal/Crypto-Signal",
-        "head_commit": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
-        "assigned_agents": [
-          "KimiK3",
-          "GrokBot",
-          "ClaudeCode",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "Kappaemme-git/codex-first-customer-finder-skill",
-        "head_commit": "d3f6964bd989745ac183edbd545c588a68451146",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "Neeeophytee/finding-unknowns-skills",
-        "head_commit": "ca5696a0f08d2de6b2997fff1d6cc05c3ed587cc",
-        "assigned_agents": [
-          "ClaudeCode",
-          "JEV",
-          "GrokBot",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "he-yufeng/FindJobs-Agent",
-        "head_commit": "591fe6b451db98fe0bebb8f92a7b9902b0fd6079",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "davepoon/buildwithclaude",
-        "head_commit": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "workersio/skills",
-        "head_commit": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
-        "assigned_agents": [
-          "ClaudeCode",
-          "JEV",
-          "GrokBot",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      }
-    ],
-    "physical_runtime_install": "NOT_CLAIMED",
-    "note": "Pinned registry sync only; no external source copied into execution paths.",
-    "latest_batch": [
-      {
-        "repo": "CryptoSignal/Crypto-Signal",
-        "head_commit": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
-        "assigned_agents": [
-          "KimiK3",
-          "GrokBot",
-          "ClaudeCode",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "Kappaemme-git/codex-first-customer-finder-skill",
-        "head_commit": "d3f6964bd989745ac183edbd545c588a68451146",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "Neeeophytee/finding-unknowns-skills",
-        "head_commit": "ca5696a0f08d2de6b2997fff1d6cc05c3ed587cc",
-        "assigned_agents": [
-          "ClaudeCode",
-          "JEV",
-          "GrokBot",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "he-yufeng/FindJobs-Agent",
-        "head_commit": "591fe6b451db98fe0bebb8f92a7b9902b0fd6079",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "davepoon/buildwithclaude",
-        "head_commit": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "workersio/skills",
-        "head_commit": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
-        "assigned_agents": [
-          "ClaudeCode",
-          "JEV",
-          "GrokBot",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      }
-    ],
-    "legacy_head_pinning": {
-      "previously_unpinned": 73,
-      "now_pinned": 73,
-      "source": "GitHub default-branch commit API",
-      "completed_at": "2026-10-09",
-      "physical_runtime_install": "NOT_CLAIMED"
-    },
-    "repository_count": 154,
-    "all_repository_heads_pinned": true,
-    "date": "2026-10-09",
-    "summary": "Added 19 Freebuff-related sources as pinned reference/sandbox entries; all external capital authority remains false.",
-    "intake_2026_10_11": {
-      "provided_repository_urls_count": 84,
-      "unique_supplied_repositories_count": 84,
-      "newly_added_to_external_repo_registry": 82,
-      "existing_repositories_refreshed": [
-        "OpenByteInc/QuantDinger",
-        "openinterpreter/openinterpreter"
-      ],
-      "existing_sources_not_reinstalled": true,
-      "skill_source_entries_added": 51,
-      "all_source_heads_pinned": true,
-      "assigned_agents": "Relevant specialist primary + supporting reviewers + ChatGPT supervisory review; Dev excluded from execution until connected.",
-      "physical_runtime_install": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
-      "security_review_status": "PENDING",
-      "date": "2026-10-11"
-    }
+    "status": "PINNED_FOR_REVIEW_NOT_INSTALLED"
   }
 }
