@@ -659,7 +659,7 @@
         {
           "repo": "manu354/cryptocurrency-arbitrage",
           "commit": "853d1d0d026997ace7c380aba350978c064a6519",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -667,7 +667,7 @@
         {
           "repo": "cloudflare/cloudflare-os",
           "commit": "03cf8766ecebd6e6b59b7bdd1902eeefc45643eb",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -675,7 +675,7 @@
         {
           "repo": "caddy-dns/cloudflare",
           "commit": "a8737d095ad5a48ca031cea6ab704057dbc2d250",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -683,7 +683,7 @@
         {
           "repo": "zhuima/awesome-cloudflare",
           "commit": "4d90410f80178f4c41655c1252a7d5b653e8e8bd",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -691,7 +691,7 @@
         {
           "repo": "MarSeventh/CloudFlare-ImgBed",
           "commit": "fbd4785d1a577c85da824eef232b36b11a2180eb",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -699,7 +699,7 @@
         {
           "repo": "cloudflare/cloudflared",
           "commit": "8cc81c7fcc524a2b1ebec51506685180652ea25d",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -707,7 +707,7 @@
         {
           "repo": "dreamhunter2333/cloudflare_temp_email",
           "commit": "8bdd353efcdd65559fb5c0ea6f036a69541595d5",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -715,7 +715,7 @@
         {
           "repo": "yonggekkk/Cloudflare-vless-trojan",
           "commit": "4a61f9c4e2b96b0ee05519570cf92ff29a6d1b22",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -723,7 +723,7 @@
         {
           "repo": "cloudflare/cloudflare-docs",
           "commit": "06eb1cd432068d63617dbaa973682e1ccda46dbc",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -731,7 +731,7 @@
         {
           "repo": "XIU2/CloudflareSpeedTest",
           "commit": "50b42c7f95cfb06413740ce6e1967578ebe63380",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -739,7 +739,7 @@
         {
           "repo": "sarperavci/CloudflareBypassForScraping",
           "commit": "97e4d9777c7d12f9449b9581383858ec06fcbaee",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -747,7 +747,7 @@
         {
           "repo": "gslege/CloudflareIP",
           "commit": "597aea7ae4dfd4e971846a7664b1884f164f3355",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -755,7 +755,7 @@
         {
           "repo": "cloudflare/cloudflare-go",
           "commit": "91580cb481bde15bf5738770243f6b7f5908c8a9",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -763,7 +763,7 @@
         {
           "repo": "maillab/cloud-mail",
           "commit": "c0009ddae326197e22c44986b6537ca7d97e803a",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -771,7 +771,7 @@
         {
           "repo": "timothymiller/cloudflare-ddns",
           "commit": "545f49d016fdd21f9d5e63f29b5756ed40c4ea24",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -779,7 +779,7 @@
         {
           "repo": "cloudflare/mcp-server-cloudflare",
           "commit": "a21972e219289337731a066befb5c66886b9ce7b",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -787,7 +787,7 @@
         {
           "repo": "cloudflare/terraform-provider-cloudflare",
           "commit": "9b51a582458f5c5d46d8547ed2604fcba91fb861",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -795,7 +795,7 @@
         {
           "repo": "Jazee6/cloudflare-ai-web",
           "commit": "50d49147225010eff862053604c453d34910bd5b",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -803,7 +803,7 @@
         {
           "repo": "supermemoryai/cloudflare-saas-stack",
           "commit": "600a5b385e30e8a387dce6d0d782b5a6283db872",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -824,10 +824,18 @@
         "independent_review": "PENDING",
         "canonical_ci": "NOT_VERIFIED",
         "default_branch_head_verification": "PENDING",
-        "exact_commit_pins": "IMMUTABLE_COMMIT_IDS_RECORDED; DEFAULT_BRANCH_HEAD_NOT_VERIFIED"
+        "exact_commit_pins": "19_IMMUTABLE_COMMIT_OBJECTS_VERIFIED; DEFAULT_BRANCH_HEAD_NOT_VERIFIED"
       },
       "high_risk_note": "Cloudflare MCP server and API SDKs can expose privileged account actions; DDNS/Caddy DNS/terraform can mutate DNS/infrastructure; cloudflared can expose network ingress; email and image-bed apps handle sensitive data. VLESS/Trojan and anti-bot bypass repositories are reference-only and must not be wired into production agents. Crypto arbitrage repository is legacy reference only; upstream says active trading-bot code is private.",
-      "note": "Registry references only. Commit IDs are observed immutable revisions, not verified default branch heads. Any unresolved source pin blocks installation. Agent routing metadata does not establish installed software or running agents."
+      "note": "Registry references only. Commit IDs are observed immutable revisions, not verified default branch heads. Any unresolved source pin blocks installation. Agent routing metadata does not establish installed software or running agents.",
+      "immutable_commit_object_verification": {
+        "checked_date": "2026-10-23",
+        "verified_count": 19,
+        "failed_count": 0,
+        "method": "GitHub commit lookup returned the exact requested SHA for each listed repository",
+        "limitation": "This confirms immutable commit objects exist; it does not prove each SHA equals the repository default-branch HEAD.",
+        "default_branch_head_verification": "PENDING"
+      }
     }
   },
   "invariants": [
