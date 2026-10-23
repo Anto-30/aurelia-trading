@@ -191,3 +191,16 @@ The AURELIA `config/LIVE_LOCK.yaml` must remain unchanged and VERIFY_ONLY. This 
 - At the time of this update, the workflow runs associated with that registry commit were still active or queued: Agent Continuity Watchdog run 1598, Agent Federation Audit run 1503, gstack Workflow Federation Assurance run 188 (all in progress), and AURELIA Assurance run 3755 (waiting). Their results must be checked after completion; no pass is inferred from a running or queued state.
 - PR #186 has no submitted reviews and no inline review threads at the time of this check. Keep the PR in draft. SBOM, dependency/secret scans, isolated source tests, license/source audit, and independent review remain pending.
 - `config/LIVE_LOCK.yaml` blob SHA remains `b2cddd1efb0f25f35a6a08354290f805812bf34c` on both the intake branch and `main`; live execution remains blocked and capital-plane mode remains `VERIFY_ONLY`.
+
+
+## Additional user-supplied day-trading skill repositories — 2026-10-23
+
+Status: **REFERENCE ONLY — NOT INSTALLED, EXECUTED, OR CONNECTED**
+
+| Repository | Recorded revision | Classification | Intake notes |
+|---|---|---|---|
+| [Jakeschincariol/day-trader-skill](https://github.com/Jakeschincariol/day-trader-skill) | `3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd` | `REFERENCE_ONLY` | Upstream README states MIT; 11-skill Python toolkit uses unofficial Yahoo Finance data and includes a broker-ticket workflow. Human approvals and paper defaults do not replace AURELIA controls. |
+| [KanishkThakar/day-trader-warroom](https://github.com/KanishkThakar/day-trader-warroom) | `3e46cfaf991694a5be118d3b57bc119f988635f9` | `REFERENCE_ONLY` | Upstream README states MIT; War Room dashboard combines setup scanning, 10,000-replay simulations and risk displays. Replay methodology, data leakage, costs and dashboard security require review. |
+| [yoavfael/day-trading-skill](https://github.com/yoavfael/day-trading-skill) | `b0623ec77c7accbd6bc96a16627840d7f16dd423` | `REFERENCE_ONLY` | OpenClaw educational skill for technical analysis and risk-management explanations; license and source audit pending. |
+
+GitHub resolved all three exact immutable commit objects. The commit IDs were observed through recent-commit search; **default-branch HEAD equivalence remains unverified**. SBOM, dependency/secret scans, isolated smoke tests, source/license audit and independent review are pending. Do not install or run these repositories, grant them broker access, or copy broker execution paths into AURELIA. They cannot change `LIVE_LOCK.yaml`, authorize capital, submit orders, write broker transactions, or access production secrets.
