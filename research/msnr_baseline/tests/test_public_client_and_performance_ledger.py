@@ -111,8 +111,9 @@ def test_new_public_request_schema_and_forbidden_keys():
     with pytest.raises(PublicMarketDataError, match="only applicable"):
         validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "ticks", "granularity": 60})
     for key in ("subscribe", "adjust_start_time"):
-        with pytest.raises(PublicMarketDataError, match=f"{key} must be 1"):
-            validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "ticks", key: 0})
+        for invalid_value in (0, True, False, 1.0, "1"):
+            with pytest.raises(PublicMarketDataError, match=f"{key} must be integer 1"):
+                validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "ticks", key: invalid_value})
     schema_invalid = [
         {"ticks_history": "R_100", "start": True, "end": "200", "style": "ticks"},
         {"ticks_history": "R_100", "start": 10000000000, "end": "200", "style": "ticks"},
