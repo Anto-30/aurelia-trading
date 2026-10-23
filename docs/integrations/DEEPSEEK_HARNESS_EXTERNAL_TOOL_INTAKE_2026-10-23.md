@@ -128,3 +128,47 @@ The AURELIA `config/LIVE_LOCK.yaml` must remain unchanged and VERIFY_ONLY. This 
 - Registry follow-up commit: `bbe0deb9eaf0a866f90f8fc1c0d394988f21b612`.
 - The 11 formerly unpinned records now have immutable revision IDs from recent-commit search results. Some are old; for example, `jobbole/awesome-python-cn` has a 2021 commit and the Git tooling repositories include commits from 2022. This is sufficient to identify a reproducible historical snapshot, but not to certify currentness or compatibility.
 - The source default-branch refs were not independently resolved to those exact SHAs. All 11 therefore remain blocked from installation/build pending default-branch ref verification and source/license review.
+
+
+## Cloudflare and crypto-arbitrage intake — 2026-10-23
+
+### Intake summary
+
+- Repositories submitted: 19.
+- New registry records: 18; `manu354/cryptocurrency-arbitrage` was already registered and has been refreshed with an observed immutable revision.
+- Registry size after update: 347 records.
+- Registry commit: `5c1c124ce14b45339c6c84cd4f76ddd229f5f4bd`.
+- Assignment-ledger commit: `763dec2e54eae930941cbdf6b94b2dae23e70db2`.
+- Every newly observed SHA below comes from GitHub recent-commit search. It is an immutable revision identifier, **not a verified default-branch HEAD**. Installation/build remains blocked pending explicit ref verification, license review and security qualification.
+
+### Per-repository triage
+
+| Repository | Observed revision | Disposition | Main review concern |
+|---|---|---|---|
+| `manu354/cryptocurrency-arbitrage` | `853d1d0d026997ace7c380aba350978c064a6519` | REFERENCE_ONLY | Legacy price-comparison app; upstream README says active trading-bot code is private. No order execution or capital authority. |
+| `cloudflare/cloudflare-os` | `03cf8766ecebd6e6b59b7bdd1902eeefc45643eb` | SANDBOX_ONLY | Application provenance, permissions and dependency review. |
+| `caddy-dns/cloudflare` | `a8737d095ad5a48ca031cea6ab704057dbc2d250` | TOOLCHAIN_ONLY | DNS/ACME provider can mutate records; least-privilege token and dependency review required. |
+| `zhuima/awesome-cloudflare` | `4d90410f80178f4c41655c1252a7d5b653e8e8bd` | REFERENCE_ONLY | Catalogue is not an endorsement; review each linked project separately. |
+| `MarSeventh/CloudFlare-ImgBed` | `fbd4785d1a577c85da824eef232b36b11a2180eb` | SANDBOX_ONLY | Upload validation, access control, storage exposure, XSS, Sentry and secret handling. |
+| `cloudflare/cloudflared` | `8cc81c7fcc524a2b1ebec51506685180652ea25d` | TOOLCHAIN_ONLY | Tunnel client can create network ingress/egress paths; no tunnels into AURELIA, no production service exposure. |
+| `dreamhunter2333/cloudflare_temp_email` | `8bdd353efcdd65559fb5c0ea6f036a69541595d5` | SANDBOX_ONLY | Email/attachment privacy, tenant isolation, SMTP/IMAP exposure, XSS and retention controls. |
+| `yonggekkk/Cloudflare-vless-trojan` | `4a61f9c4e2b96b0ee05519570cf92ff29a6d1b22` | REFERENCE_ONLY | Do not deploy proxy/tunnel configuration or connect it to production agents. |
+| `cloudflare/cloudflare-docs` | `06eb1cd432068d63617dbaa973682e1ccda46dbc` | REFERENCE_ONLY | Documentation reference only; not executable authority. |
+| `XIU2/CloudflareSpeedTest` | `50b42c7f95cfb06413740ce6e1967578ebe63380` | SANDBOX_ONLY | Network probes only against authorized endpoints; no automatic route changes. |
+| `sarperavci/CloudflareBypassForScraping` | `97e4d9777c7d12f9449b9581383858ec06fcbaee` | REFERENCE_ONLY | Do not use to bypass access controls or scrape protected targets; authorized defensive research only. |
+| `gslege/CloudflareIP` | `597aea7ae4dfd4e971846a7664b1884f164f3355` | REFERENCE_ONLY | Auto-updated IP lists are untrusted indicators; verify provenance/freshness before firewall use. Never apply automatically. |
+| `cloudflare/cloudflare-go` | `91580cb481bde15bf5738770243f6b7f5908c8a9` | TOOLCHAIN_ONLY | API SDK permissions depend on token; least-privilege test credentials only, no production writes. |
+| `maillab/cloud-mail` | `c0009ddae326197e22c44986b6537ca7d97e803a` | SANDBOX_ONLY | RBAC, tenant isolation, mail abuse, attachment access and secret handling. |
+| `timothymiller/cloudflare-ddns` | `545f49d016fdd21f9d5e63f29b5756ed40c4ea24` | TOOLCHAIN_ONLY | DNS mutation capability; dry-run only, no production token or DNS writes. |
+| `cloudflare/mcp-server-cloudflare` | `a21972e219289337731a066befb5c66886b9ce7b` | SANDBOX_ONLY | Privileged agent surface; audit tool inventory, OAuth scopes, prompt-injection/exfiltration paths; no production credentials or write scopes. |
+| `cloudflare/terraform-provider-cloudflare` | `9b51a582458f5c5d46d8547ed2604fcba91fb861` | TOOLCHAIN_ONLY | Plan/validate only; no `terraform apply` or destroy without separately approved infrastructure change. |
+| `Jazee6/cloudflare-ai-web` | `50d49147225010eff862053604c453d34910bd5b` | SANDBOX_ONLY | Auth, API routes, model access, prompt injection, rate limiting and secrets. |
+| `supermemoryai/cloudflare-saas-stack` | `600a5b385e30e8a387dce6d0d782b5a6283db872` | SANDBOX_ONLY | Historical revision; current maintenance, dependencies, tenant isolation and secrets need review. |
+
+### Required controls and gates
+
+- External code execution remains deny-by-default. No repository was installed, built, executed, deployed, or connected to an agent runtime in this intake.
+- DNS, Terraform, Cloudflare API SDK and MCP server privileges must remain unavailable to production AURELIA agents. No API token was requested or stored.
+- No Cloudflare tunnel, DNS record, firewall list, email service, storage bucket, or infrastructure resource was changed.
+- SBOM, dependency/secret scans, isolated smoke tests, default-branch HEAD verification, independent review and canonical CI: **NOT RUN / PENDING**.
+- `config/LIVE_LOCK.yaml` must remain unchanged; AURELIA remains VERIFY_ONLY and LIVE_EXECUTION BLOCKED.
