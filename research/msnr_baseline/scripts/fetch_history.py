@@ -34,6 +34,28 @@ class FetchError(RuntimeError):
     pass
 
 
+def validate_fetch_controls(timeout: Any, retries: Any, retry_delay: Any) -> tuple[float, int, float]:
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)):
+        raise FetchError("Timeout must be a finite positive number of seconds.")
+    try:
+        timeout_seconds = float(timeout)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise FetchError("Timeout must be a finite positive number of seconds.") from exc
+    if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
+        raise FetchError("Timeout must be a finite positive number of seconds.")
+    if isinstance(retries, bool) or not isinstance(retries, int) or not 0 <= retries <= 10:
+        raise FetchError("Retries must be an integer from 0 through 10.")
+    if isinstance(retry_delay, bool) or not isinstance(retry_delay, (int, float)):
+        raise FetchError("Retry delay must be a finite non-negative number of seconds.")
+    try:
+        retry_delay_seconds = float(retry_delay)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise FetchError("Retry delay must be a finite non-negative number of seconds.") from exc
+    if not math.isfinite(retry_delay_seconds) or retry_delay_seconds < 0:
+        raise FetchError("Retry delay must be a finite non-negative number of seconds.")
+    return timeout_seconds, retries, retry_delay_seconds
+
+
 def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -64,6 +86,16 @@ def validate_active_symbols_pip_size(pip_size: Any) -> float:
 
 def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
                       granularity: int) -> list[dict[str, int | float]]:
+    if isinstance(granularity, bool) or not isinstance(granularity, int) or granularity not in INTERVALS.values():
+        raise FetchError("Candle granularity must be one of the supported 60s or 900s intervals.")
+    if (
+        isinstance(start_epoch, bool) or not isinstance(start_epoch, int)
+        or isinstance(end_exclusive, bool) or not isinstance(end_exclusive, int)
+        or not 0 <= start_epoch < end_exclusive <= 10000000000
+        or (end_exclusive - start_epoch) % granularity
+        or (end_exclusive - start_epoch) // granularity > 5000
+    ):
+        raise FetchError("Candle normalization range must be bounded, aligned and contain at most 5000 bars.")
     if not isinstance(candles, list) or not candles:
         raise FetchError("Response has no non-empty candles array; dataset cannot be declared complete.")
     out: list[dict[str, int | float]] = []
@@ -74,14 +106,17 @@ def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
         missing = [key for key in REQUIRED_CANDLE_FIELDS if key not in candle]
         if missing:
             raise FetchError(f"Current API candle response is missing required fields: {missing}")
+        epoch_raw = candle["epoch"]
+        if isinstance(epoch_raw, bool) or not isinstance(epoch_raw, int) or not 0 <= epoch_raw <= 9999999999:
+            raise FetchError(f"Candle epoch must be a bounded JSON integer; got {epoch_raw!r}.")
+        raw_prices = tuple(candle[k] for k in ("open", "high", "low", "close"))
+        if any(isinstance(value, bool) or not isinstance(value, (int, float)) for value in raw_prices):
+            raise FetchError(f"Candle OHLC values must be JSON numbers at epoch {epoch_raw}.")
+        epoch = epoch_raw
         try:
-            epoch_float = float(candle["epoch"])
-            epoch = int(epoch_float)
             px = {k: float(candle[k]) for k in ("open", "high", "low", "close")}
         except (TypeError, ValueError, OverflowError) as exc:
-            raise FetchError(f"Invalid candle value: {candle!r}") from exc
-        if not math.isfinite(epoch_float) or epoch_float != epoch or epoch < 0:
-            raise FetchError(f"Invalid candle epoch: {candle.get('epoch')!r}")
+            raise FetchError(f"Invalid candle value at epoch {epoch}: {type(exc).__name__}.") from exc
         if not all(math.isfinite(v) and v > 0 for v in px.values()):
             raise FetchError(f"Non-positive or non-finite R_100 price at epoch {epoch}.")
         if px["high"] < max(px["open"], px["close"]) or px["low"] > min(px["open"], px["close"]) or px["high"] < px["low"]:
@@ -121,7 +156,13 @@ def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
 
 def build_candle_payload(start_epoch: int, end_exclusive: int, granularity: int) -> dict[str, int | str]:
     """Build a current-API, bounded history request without legacy/invalid fields."""
-    if granularity not in (60, 900) or end_exclusive <= start_epoch or (end_exclusive - start_epoch) % granularity:
+    if (
+        isinstance(granularity, bool) or not isinstance(granularity, int) or granularity not in INTERVALS.values()
+        or isinstance(start_epoch, bool) or not isinstance(start_epoch, int)
+        or isinstance(end_exclusive, bool) or not isinstance(end_exclusive, int)
+        or not 0 <= start_epoch < end_exclusive <= 10000000000
+        or (end_exclusive - start_epoch) % granularity
+    ):
         raise FetchError("Invalid candle request interval or granularity.")
     count = (end_exclusive - start_epoch) // granularity
     if count < 1 or count > 5000:
@@ -143,6 +184,7 @@ def build_candle_payload(start_epoch: int, end_exclusive: int, granularity: int)
 
 async def request_chunk(start_epoch: int, end_exclusive: int, granularity: int,
                         timeout: float, retries: int, retry_delay: float) -> tuple[list[dict[str, int | float]], int]:
+    timeout, retries, retry_delay = validate_fetch_controls(timeout, retries, retry_delay)
     last_error = "unknown error"
     for attempt in range(1, retries + 2):
         try:
@@ -163,10 +205,12 @@ async def request_chunk(start_epoch: int, end_exclusive: int, granularity: int,
                     raise FetchError("Response was not a JSON object.")
                 if response.get("error"):
                     err = response["error"]
-                    raise FetchError(f"API error {err.get('code', 'unknown')}: {err.get('message', err)}")
-                # Current API docs do not guarantee echo_req; no logic depends on it.
-                if response.get("msg_type") not in ("candles", "history"):
-                    raise FetchError(f"Unexpected response message type: {response.get('msg_type')!r}")
+                    if not isinstance(err, dict):
+                        raise FetchError("Public history API returned a malformed error object.")
+                    raise FetchError(f"API error {err.get('code', 'unknown')}: {err.get('message', 'unspecified error')}")
+                # This function requests style="candles"; a history/ticks response is not interchangeable.
+                if response.get("msg_type") != "candles":
+                    raise FetchError(f"Expected candles response, got {response.get('msg_type')!r}.")
                 try:
                     rows = normalize_candles(response.get("candles"), start_epoch, end_exclusive, granularity)
                 except FetchError as exc:
@@ -297,6 +341,7 @@ async def fetch_interval(label: str, granularity: int, start_day: date, end_day:
 
 async def fetch_active_symbols_pip_size(timeout: float, retries: int, retry_delay: float) -> tuple[float, str, dict[str, Any]]:
     """Use the current active_symbols field names; never look up a legacy symbol field."""
+    timeout, retries, retry_delay = validate_fetch_controls(timeout, retries, retry_delay)
     last_error = "unknown error"
     for attempt in range(1, retries + 2):
         try:
@@ -311,7 +356,9 @@ async def fetch_active_symbols_pip_size(timeout: float, retries: int, retry_dela
                     raise FetchError("active_symbols response was not a JSON object.")
                 if response.get("error"):
                     err = response["error"]
-                    raise FetchError(f"active_symbols API error {err.get('code', 'unknown')}: {err.get('message', err)}")
+                    if not isinstance(err, dict):
+                        raise FetchError("active_symbols API returned a malformed error object.")
+                    raise FetchError(f"active_symbols API error {err.get('code', 'unknown')}: {err.get('message', 'unspecified error')}")
                 if response.get("msg_type") != "active_symbols":
                     raise FetchError(f"Expected active_symbols response, got {response.get('msg_type')!r}.")
                 rows = response.get("active_symbols")
@@ -334,8 +381,9 @@ async def async_main(args: argparse.Namespace) -> int:
     end_day = date.fromisoformat(args.end_date)
     if end_day < start_day:
         raise FetchError("End date precedes start date.")
-    if args.timeout <= 0 or args.retries < 0 or args.retry_delay < 0 or args.chunk_days != CHUNK_DAYS:
-        raise FetchError("Timeout/retries invalid, or chunk_days differs from frozen three-day policy.")
+    args.timeout, args.retries, args.retry_delay = validate_fetch_controls(args.timeout, args.retries, args.retry_delay)
+    if args.chunk_days != CHUNK_DAYS:
+        raise FetchError("chunk_days differs from the frozen three-day policy.")
     out_dir = Path(args.output_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     active_symbols_path = out_dir / "R_100_active_symbols_response.json"
