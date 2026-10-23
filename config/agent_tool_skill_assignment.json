@@ -662,8 +662,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "cloudflare/cloudflare-os",
@@ -671,8 +670,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "caddy-dns/cloudflare",
@@ -680,8 +678,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "zhuima/awesome-cloudflare",
@@ -689,8 +686,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "MarSeventh/CloudFlare-ImgBed",
@@ -698,8 +694,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "cloudflare/cloudflared",
@@ -707,8 +702,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "dreamhunter2333/cloudflare_temp_email",
@@ -716,8 +710,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "yonggekkk/Cloudflare-vless-trojan",
@@ -725,8 +718,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "cloudflare/cloudflare-docs",
@@ -734,8 +726,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "XIU2/CloudflareSpeedTest",
@@ -743,8 +734,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "sarperavci/CloudflareBypassForScraping",
@@ -752,8 +742,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "gslege/CloudflareIP",
@@ -761,8 +750,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "cloudflare/cloudflare-go",
@@ -770,8 +758,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "maillab/cloud-mail",
@@ -779,8 +766,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "timothymiller/cloudflare-ddns",
@@ -788,8 +774,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "cloudflare/mcp-server-cloudflare",
@@ -797,8 +782,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "cloudflare/terraform-provider-cloudflare",
@@ -806,8 +790,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "Jazee6/cloudflare-ai-web",
@@ -815,8 +798,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "supermemoryai/cloudflare-saas-stack",
@@ -824,8 +806,7 @@
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
-          "license_review": "PENDING_VERIFICATION",
-          "runtime_install": "NOT_PERFORMED"
+          "runtime_install": "NOT_CLAIMED"
         }
       ],
       "controls": {
@@ -843,10 +824,10 @@
         "independent_review": "PENDING",
         "canonical_ci": "NOT_VERIFIED",
         "default_branch_head_verification": "PENDING",
-        "exact_commit_pins": "OBSERVED_COMMIT_IDS_RECORDED; CURRENT_DEFAULT_BRANCH_HEAD_NOT_VERIFIED"
+        "exact_commit_pins": "IMMUTABLE_COMMIT_IDS_RECORDED; DEFAULT_BRANCH_HEAD_NOT_VERIFIED"
       },
-      "high_risk_note": "sarperavci/CloudflareBypassForScraping is reference-only: do not use to evade third-party anti-bot controls. yonggekkk/Cloudflare-vless-trojan is reference-only proxy configuration; no AURELIA traffic routing. cloudflared, DDNS, Caddy DNS and Terraform provider can change network/DNS/infra and must not receive production credentials or write permissions during review. Cloudflare MCP actions require narrow scopes and per-action approval.",
-      "note": "18 new records added; manu354/cryptocurrency-arbitrage was already registered and remains a legacy reference-only arbitrage scanner, not executable trading authority. All repositories remain metadata-only; no install, build, runtime connection, DNS change, deployment or broker/capital interaction was performed."
+      "high_risk_note": "Cloudflare MCP server and API SDKs can expose privileged account actions; DDNS/Caddy DNS/terraform can mutate DNS/infrastructure; cloudflared can expose network ingress; email and image-bed apps handle sensitive data. VLESS/Trojan and anti-bot bypass repositories are reference-only and must not be wired into production agents. Crypto arbitrage repository is legacy reference only; upstream says active trading-bot code is private.",
+      "note": "Registry references only. Commit IDs are observed immutable revisions, not verified default branch heads. Any unresolved source pin blocks installation. Agent routing metadata does not establish installed software or running agents."
     }
   },
   "invariants": [
