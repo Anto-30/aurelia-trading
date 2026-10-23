@@ -666,8 +666,8 @@
         },
         {
           "repo": "jobbole/awesome-python-cn",
-          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-          "commit_pin_status": "UNPINNED_BLOCKED",
+          "commit": "e718fecd821fb94d696713da1259a86f18b400af",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -690,32 +690,32 @@
         },
         {
           "repo": "521xueweihan/HelloGitHub",
-          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-          "commit_pin_status": "UNPINNED_BLOCKED",
+          "commit": "030121514da552ed91e640ef8bde4083c753dd52",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "lukasmasuch/best-of-ml-python",
-          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-          "commit_pin_status": "UNPINNED_BLOCKED",
+          "commit": "47f29706164810be3fe3c3e50f5216fe8e95d2dc",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "DjangoEx/awesome-python-resources",
-          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-          "commit_pin_status": "UNPINNED_BLOCKED",
+          "commit": "fbe8a7d2fb1f685366aa07266ca3dceec4e694e3",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "uhub/awesome-python",
-          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-          "commit_pin_status": "UNPINNED_BLOCKED",
+          "commit": "30ddec3b30bb9dedb1f9284f468313e4ea597595",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -730,8 +730,8 @@
         },
         {
           "repo": "gessen/majutsu-delta",
-          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-          "commit_pin_status": "UNPINNED_BLOCKED",
+          "commit": "699e6275d3be8215bece29431c449443c71888c4",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -746,8 +746,8 @@
         },
         {
           "repo": "duckdb/duckdb-ui",
-          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-          "commit_pin_status": "UNPINNED_BLOCKED",
+          "commit": "b4f0b9bb123f8c61f739ba72eb5511236082c1e7",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -802,8 +802,8 @@
         },
         {
           "repo": "duckdb/pg_duckdb",
-          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-          "commit_pin_status": "UNPINNED_BLOCKED",
+          "commit": "ee38d3b540ecea1d93683ba99bdcec5632a21eaf",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -826,24 +826,24 @@
         },
         {
           "repo": "rustyorg/rustygit",
-          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-          "commit_pin_status": "UNPINNED_BLOCKED",
+          "commit": "0d6063b2fc889be6fa44c913ed29758f3c1f9b93",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "dandavison/magit-delta",
-          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-          "commit_pin_status": "UNPINNED_BLOCKED",
+          "commit": "5fc7dbddcfacfe46d3fd876172ad02a9ab6ac616",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
         },
         {
           "repo": "dandavison/dandavison.github.io",
-          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-          "commit_pin_status": "UNPINNED_BLOCKED",
+          "commit": "f52759b795ae15996b990e14c6349f6a30c733f3",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -886,7 +886,9 @@
         "dependency_and_secret_scans": "NOT_RUN",
         "isolated_smoke_tests": "NOT_RUN",
         "independent_review": "PENDING",
-        "canonical_ci": "NOT_VERIFIED"
+        "canonical_ci": "NOT_VERIFIED",
+        "default_branch_head_verification": "PENDING",
+        "exact_commit_pins": "IMMUTABLE_COMMIT_IDS_RECORDED; DEFAULT_BRANCH_HEAD_NOT_VERIFIED"
       },
       "high_risk_note": "9bie/php2shell-bypass-aslr-exp is exploit/RCE research and must not be executed, deployed, or wired into CI/runtime. openai/php2shell-checker is defensive version-checking only and requires authorization for URL checks.",
       "note": "Registry references only. Any unresolved commit pin blocks installation. Agent routing metadata does not establish installed software or running agents."
