@@ -7742,6 +7742,127 @@
         "production_secret_access": false,
         "external_code_execution": "DENY_BY_DEFAULT"
       }
+    },
+    {
+      "repo": "Jakeschincariol/day-trader-skill",
+      "category": "day-trading-agent-skill-pack",
+      "domain": "quantitative-research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Jakeschincariol/day-trader-skill",
+      "head_commit": "3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd",
+      "pin_source": "github_recent_commit_search_observed_2026-10-23; exact_immutable_commit_object_verified; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "stock_chart_scanning",
+        "news_monitoring",
+        "entry_exit_planning",
+        "historical_setup_replay",
+        "position_sizing",
+        "risk_checks",
+        "paper_trading_workflow"
+      ],
+      "integration_note": "MIT license is stated in upstream README. Eleven-skill Python toolkit uses unofficial Yahoo Finance bars and includes a broker-ticket workflow with explicit human approvals and paper trading default. Reference-only until source, dependencies, tests, data freshness and broker surfaces are independently audited; never adapt its order flow to bypass AURELIA's deterministic risk/ledger/execution firewall.",
+      "security_review_status": "PENDING",
+      "license_status": "MIT_STATED_UPSTREAM_NOT_INDEPENDENTLY_AUDITED",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "KanishkThakar/day-trader-warroom",
+      "category": "day-trading-warroom-toolkit",
+      "domain": "quantitative-research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/KanishkThakar/day-trader-warroom",
+      "head_commit": "3e46cfaf991694a5be118d3b57bc119f988635f9",
+      "pin_source": "github_recent_commit_search_observed_2026-10-23; exact_immutable_commit_object_verified; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "multi-skill_day-trading_workflow",
+        "setup_replay_simulation",
+        "candidate_ranking",
+        "risk_check_visualization",
+        "warroom_dashboard"
+      ],
+      "integration_note": "Upstream README states MIT and describes a Python-based multi-skill toolkit with a War Room dashboard and 10,000-replay simulations. Treat all outputs as research hypotheses, not validated expectancy. Reference-only; audit dependency tree, replay methodology, data survivorship/lookahead, costs, broker ticket paths and dashboard security before considering isolated tests.",
+      "security_review_status": "PENDING",
+      "license_status": "MIT_STATED_UPSTREAM_NOT_INDEPENDENTLY_AUDITED",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "yoavfael/day-trading-skill",
+      "category": "day-trading-education-skill",
+      "domain": "quantitative-research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/yoavfael/day-trading-skill",
+      "head_commit": "b0623ec77c7accbd6bc96a16627840d7f16dd423",
+      "pin_source": "github_recent_commit_search_observed_2026-10-23; exact_immutable_commit_object_verified; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "technical_analysis_explanations",
+        "risk_management_education",
+        "position_sizing_guidance",
+        "strategy_concept_audits"
+      ],
+      "integration_note": "OpenClaw skill for educational analysis, risk management concepts and setup explanations. No runtime integration is implied. Review prompt instructions, license and package metadata before any sandbox import; outputs must not supersede AURELIA's deterministic risk engine or qualify strategies.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     }
   ],
   "pin_policy": {
@@ -7773,7 +7894,7 @@
       "manu354/cryptocurrency-arbitrage"
     ],
     "status": "REGISTERED_FOR_REVIEW_ONLY",
-    "note": "All newly observed commit IDs are immutable revisions from recent-commit search, not verified default-branch HEADs. No installs, execution, deployment, API writes or runtime connections are implied.",
+    "note": "Added three user-supplied day-trading skill repositories as REFERENCE_ONLY; immutable commit objects resolved, default-branch HEAD equivalence and security review remain pending.",
     "pin_resolution_followup": {
       "date": "2026-10-23",
       "method": "GitHub recent commit search results",
@@ -7798,6 +7919,7 @@
       "preexisting_records": 1,
       "commit_pin_status": "IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "install_policy": "BLOCKED_PENDING_HEAD_LICENSE_AND_SECURITY_REVIEW"
-    }
+    },
+    "date": "2026-10-23"
   }
 }
