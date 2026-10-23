@@ -1,6 +1,6 @@
 # DeepSeekHarness external tool intake — 2026-10-23
 
-Status: **PINNED FOR REVIEW — NOT INSTALLED OR CONNECTED**
+Status: **PINNED AND REGISTERED FOR REVIEW — NOT INSTALLED OR CONNECTED**
 
 This intake records four user-supplied repositories for engineering evaluation only. It does not authorize execution, deployment, persistent agent installation, access to production secrets, or changes to the AURELIA capital plane.
 
@@ -47,7 +47,7 @@ This plugin routes Hermes terminal, file and code operations into a Cua Space. I
 | Repository and default branch identified | COMPLETE |
 | Exact HEAD pins recorded | COMPLETE |
 | Initial license/security triage | PARTIAL; detailed review pending |
-| Registry integration | DOCUMENTED IN THIS INTAKE; canonical JSON registry update not confirmed |
+| Registry integration | COMPLETE for metadata only; both canonical JSON registries updated and re-read/JSON-parsed |
 | Dependencies installed | NO |
 | SBOM / vulnerability scan | NOT RUN |
 | Isolated smoke tests | NOT RUN |
@@ -55,4 +55,12 @@ This plugin routes Hermes terminal, file and code operations into a Cua Space. I
 | Independent review | PENDING |
 | Production/capital authority | DENIED |
 
-The existing AURELIA live lock must remain unchanged. This document is not evidence of installation, execution, successful tests, or runtime connectivity.
+## Registry commits and verification
+
+- `config/external_repo_federation.json`: commit `0b1951d05682a43af933702646fad59219aaf5cc`; four pinned entries appended; total registry entries: 303.
+- `config/agent_tool_skill_assignment.json`: commit `731950fbe4ddba059e5662ec35e738a4f66d8157`; records the batch, guardrails and pending validation status.
+- Both files were fetched again and parsed as JSON after the writes. All four repository pins and `capital_authority=false` were confirmed.
+- `config/LIVE_LOCK.yaml` on this branch has the same blob SHA as `main` (`b2cddd1efb0f25f35a6a08354290f805812bf34c`); it remains locked in `VERIFY_ONLY` with live execution blocked.
+- Pull request #174 remains open and draft. CI workflows triggered by the registry commits were still queued/waiting at the last check; no passing result is claimed.
+
+The registries contain metadata only. This is not evidence of installation, source-code execution, completed SBOM/scans, passing tests, independent approval, or runtime connectivity.
