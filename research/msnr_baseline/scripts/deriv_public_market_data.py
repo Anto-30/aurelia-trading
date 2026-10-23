@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import math
+import re
 from typing import Any, AsyncIterator
 
 import websockets
@@ -75,8 +76,11 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
         if "subscribe" in payload and payload["subscribe"] != 1:
             raise PublicMarketDataError("Current ticks subscriptions accept subscribe=1 only.")
     elif operation == "ticks_history":
-        if not isinstance(payload[operation], str) or not payload[operation]:
-            raise PublicMarketDataError("ticks_history requires its short symbol as a string value.")
+        symbol = payload[operation]
+        if not isinstance(symbol, str) or re.fullmatch(r"\w{2,30}", symbol, flags=re.ASCII) is None:
+            raise PublicMarketDataError("ticks_history symbol must match the 2-30 character ASCII word pattern.")
+        if "end" not in payload:
+            raise PublicMarketDataError("ticks_history end is required.")
         if payload.get("style", "ticks") not in ("ticks", "candles"):
             raise PublicMarketDataError("ticks_history style must be 'ticks' or 'candles'.")
         if "start" in payload and (
