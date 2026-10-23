@@ -59,6 +59,18 @@ def _format_api_error(error: Any, source: str) -> str:
     return f"{source} API error {code}: {message}"
 
 
+def _positive_finite_seconds(value: Any, name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise PublicMarketDataError(f"{name} must be a finite positive number of seconds.")
+    try:
+        seconds = float(value)
+    except (OverflowError, TypeError, ValueError) as exc:
+        raise PublicMarketDataError(f"{name} must be a finite positive number of seconds.") from exc
+    if not math.isfinite(seconds) or seconds <= 0:
+        raise PublicMarketDataError(f"{name} must be a finite positive number of seconds.")
+    return seconds
+
+
 def validate_public_payload(payload: dict[str, Any]) -> None:
     if not isinstance(payload, dict) or not payload:
         raise PublicMarketDataError("Request payload must be a non-empty JSON object.")
@@ -250,11 +262,9 @@ class DerivPublicMarketDataClient:
     def __init__(self, *, endpoint: str = PUBLIC_WS, connect_timeout: float = 10.0, response_timeout: float = 15.0):
         if endpoint != PUBLIC_WS:
             raise PublicMarketDataError("Client is pinned to the official public Options API endpoint.")
-        if connect_timeout <= 0 or response_timeout <= 0:
-            raise PublicMarketDataError("Timeouts must be positive.")
+        self.connect_timeout = _positive_finite_seconds(connect_timeout, "connect_timeout")
+        self.response_timeout = _positive_finite_seconds(response_timeout, "response_timeout")
         self.endpoint = endpoint
-        self.connect_timeout = connect_timeout
-        self.response_timeout = response_timeout
         self._req_id = 1000
 
     def _next_id(self) -> int:
