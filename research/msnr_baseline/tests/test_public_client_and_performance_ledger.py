@@ -97,11 +97,26 @@ def test_new_public_request_schema_and_forbidden_keys():
     validate_public_payload({"ticks": "R_100", "subscribe": 1})
     validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "count": 5000})
     # Current schema supports an explicit enum of candle intervals, not arbitrary positive integers.
-    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 120, "subscribe": 0, "adjust_start_time": 1})
+    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 120, "subscribe": 1, "adjust_start_time": 1})
     validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 900, "subscribe": 1})
     for granularity in (1, 59, 61, 899, 901, 86401, True, 1.0):
         with pytest.raises(PublicMarketDataError, match="granularity must be one of"):
             validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": granularity})
+    with pytest.raises(PublicMarketDataError, match="only applicable"):
+        validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "ticks", "granularity": 60})
+    for key in ("subscribe", "adjust_start_time"):
+        with pytest.raises(PublicMarketDataError, match=f"{key} must be 1"):
+            validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "ticks", key: 0})
+    schema_invalid = [
+        {"ticks_history": "R_100", "start": True, "end": "200", "style": "ticks"},
+        {"ticks_history": "R_100", "start": 10000000000, "end": "200", "style": "ticks"},
+        {"ticks_history": "R_100", "start": 100, "end": 200, "style": "ticks"},
+        {"ticks_history": "R_100", "start": 100, "end": "12345678901", "style": "ticks"},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "ticks", "count": True},
+    ]
+    for payload in schema_invalid:
+        with pytest.raises(PublicMarketDataError):
+            validate_public_payload(payload)
     bad = [
         {"buy": "proposal-id", "price": 1}, {"sell": 1, "price": 0}, {"proposal": 1},
         {"balance": 1}, {"otp": "secret"}, {"Authorization": "Bearer x"}, {"loginid": "CR123"},
@@ -135,6 +150,10 @@ def test_history_builder_keeps_ticks_history_request_key():
     client = DerivPublicMarketDataClient()
     with pytest.raises(PublicMarketDataError, match="Candle granularity must be one of"):
         asyncio.run(client.ticks_history(underlying_symbol="R_100", start_epoch=100, end_epoch=160, granularity_seconds=61))
+    with pytest.raises(PublicMarketDataError, match="integer epochs"):
+        asyncio.run(client.ticks_history(underlying_symbol="R_100", start_epoch=True, end_epoch=160, granularity_seconds=60))
+    with pytest.raises(PublicMarketDataError, match="count must be an integer"):
+        asyncio.run(client.ticks_history(underlying_symbol="R_100", start_epoch=100, end_epoch=160, granularity_seconds=60, count=1.5))
     seen = {}
     async def fake_request(payload, expected_msg_type=None):
         seen["payload"] = payload
