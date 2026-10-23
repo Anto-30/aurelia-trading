@@ -344,9 +344,9 @@ class DerivPublicMarketDataClient:
         if not _valid_symbol(underlying_symbol):
             raise PublicMarketDataError("Stream symbol must match the 2-30 character ASCII word pattern.")
         if isinstance(max_reconnects, bool) or not isinstance(max_reconnects, int) or not 0 <= max_reconnects <= 100:
-            raise PublicMarketDataError("Reconnect count must be an integer from 0 to 100 and backoff must be finite and positive.")
+            raise PublicMarketDataError("Reconnect count must be an integer from 0 to 100.")
         if isinstance(initial_backoff_seconds, bool) or not isinstance(initial_backoff_seconds, (int, float)):
-            raise PublicMarketDataError("Reconnect count must be an integer from 0 to 100 and backoff must be finite and positive.")
+            raise PublicMarketDataError("Reconnect backoff must be finite and positive.")
         try:
             backoff_seconds = float(initial_backoff_seconds)
         except (OverflowError, TypeError, ValueError) as exc:
