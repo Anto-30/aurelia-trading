@@ -165,3 +165,28 @@ def test_history_builder_keeps_ticks_history_request_key():
     assert "subscribe" not in seen["payload"]  # one-shot history request: omit optional flag
     assert "symbol" not in seen["payload"] and "underlying_symbol" not in seen["payload"] and "loginid" not in seen["payload"]
     assert seen["expected"] == "candles"
+
+
+def test_request_has_overall_deadline_when_irrelevant_messages_keep_arriving(monkeypatch):
+    class DripSocket:
+        async def send(self, payload):
+            return None
+
+        async def recv(self):
+            await asyncio.sleep(0.005)
+            return '{"req_id": -1, "msg_type": "tick"}'
+
+    class DripConnection:
+        async def __aenter__(self):
+            return DripSocket()
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        "deriv_public_market_data.websockets.connect",
+        lambda *args, **kwargs: DripConnection(),
+    )
+    client = DerivPublicMarketDataClient(response_timeout=0.06)
+    with pytest.raises(PublicMarketDataError, match="response deadline exceeded"):
+        asyncio.run(client.request({"ticks": "R_100"}, expected_msg_type="tick"))
