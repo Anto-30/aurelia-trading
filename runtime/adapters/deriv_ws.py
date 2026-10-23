@@ -87,8 +87,15 @@ class DerivWebSocketTransport:
         except Exception as exc:
             self._fail_pending(exc)
             for subscription in self._subscriptions.values():
+                # Keep diagnostics useful without logging arbitrary exception
+                # messages, which may contain transport details or credentials.
                 subscription.queue.put_nowait(
-                    {"error": {"code": "TRANSPORT_READER_FAILED"}}
+                    {
+                        "error": {
+                            "code": "TRANSPORT_READER_FAILED",
+                            "error_type": type(exc).__name__,
+                        }
+                    }
                 )
         finally:
             self.ws = None
