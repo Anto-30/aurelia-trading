@@ -111,8 +111,10 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
                 raise PublicMarketDataError(f"ticks_history granularity must be one of: {allowed}.")
         # The current API schema allows value 1 only for these optional flags.
         for key in ("subscribe", "adjust_start_time"):
-            if key in payload and (isinstance(payload[key], bool) or payload[key] != 1):
-                raise PublicMarketDataError(f"{key} must be 1.")
+            if key in payload:
+                flag_value = payload[key]
+                if isinstance(flag_value, bool) or not isinstance(flag_value, int) or flag_value != 1:
+                    raise PublicMarketDataError(f"{key} must be integer 1.")
 
 
 def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | int]]:
