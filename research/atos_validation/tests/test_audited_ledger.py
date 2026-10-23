@@ -140,5 +140,65 @@ class AuditedLedgerTests(unittest.TestCase):
                 verify_ledger(path)
 
 
+    def test_verifier_rejects_invalid_decision_semantics_with_consistent_hashes(self):
+        def write_consistent_hash_chain(path: Path, mutation: tuple[str, object]) -> None:
+            writer = AuditedLedgerWriter(path, symbol="R_100", data_sha256=DATA_HASH)
+            writer.record_decision(
+                signal_bar_epoch=60,
+                strategy="alpha_beta_hmm",
+                model_config_sha256=CONFIG_HASH,
+                fold_id="fold_1",
+                action="ENTER_LONG",
+                reason_codes=["not_qualified"],
+                hmm_regime_state="RANGE",
+                accepted=False,
+                probability=0.4,
+            )
+            writer.close()
+            records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            field, bad_value = mutation
+            records[0][field] = bad_value
+            previous = None
+            for record in records:
+                record["previous_record_sha256"] = previous
+                record.pop("record_sha256", None)
+                canonical = json.dumps(
+                    record,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                    allow_nan=False,
+                ).encode("utf-8")
+                record["record_sha256"] = hashlib.sha256(canonical).hexdigest()
+                previous = record["record_sha256"]
+            path.write_text(
+                "".join(
+                    json.dumps(row, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False) + "\\n"
+                    for row in records
+                ),
+                encoding="utf-8",
+            )
+            manifest_path = path.with_suffix(path.suffix + ".manifest.json")
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["ledger_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+            manifest["head_record_sha256"] = previous
+            manifest_path.write_text(
+                json.dumps(manifest, indent=2, sort_keys=True, allow_nan=False) + "\\n",
+                encoding="utf-8",
+            )
+
+        cases = (
+            ("decision_status", "UNRECOGNIZED"),
+            ("action", "AUTHORIZE_CAPITAL"),
+        )
+        for index, mutation in enumerate(cases):
+            with self.subTest(field=mutation[0]):
+                with tempfile.TemporaryDirectory() as td:
+                    path = Path(td) / f"invalid-{index}.jsonl"
+                    write_consistent_hash_chain(path, mutation)
+                    with self.assertRaises(ValueError):
+                        verify_ledger(path)
+
+
 if __name__ == "__main__":
     unittest.main()
