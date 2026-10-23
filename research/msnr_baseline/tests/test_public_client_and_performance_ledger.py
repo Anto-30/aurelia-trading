@@ -132,6 +132,7 @@ def test_new_public_request_schema_and_forbidden_keys():
         {"ticks_history": "R_100", "start": 10000000000, "end": "200", "style": "ticks"},
         {"ticks_history": "R_100", "start": 100, "end": 200, "style": "ticks"},
         {"ticks_history": "R_100", "start": 100, "end": "12345678901", "style": "ticks"},
+        {"ticks_history": "R_100", "start": 201, "end": "200", "style": "ticks"},
         {"ticks_history": "R_100", "start": 100, "end": "200", "style": "ticks", "count": True},
     ]
     for payload in schema_invalid:
@@ -241,6 +242,7 @@ def test_tick_response_validator_rejects_coercion_bad_epochs_and_wrong_symbols()
         {"quote": 101.25, "epoch": 10000000000},
         {"quote": 101.25, "epoch": 1700000000, "symbol": "frxEURUSD"},
         {"quote": 101.25, "epoch": 1700000000, "symbol": "R-100"},
+        {"quote": 101.25, "epoch": 1700000000, "symbol": None},
     )
     for tick in invalid_ticks:
         with pytest.raises(PublicMarketDataError):
@@ -272,9 +274,30 @@ def test_stream_ticks_rejects_invalid_symbol_and_reconnect_parameters_before_con
     for reconnects in (True, -1, 101, 1.0):
         with pytest.raises(PublicMarketDataError, match="Reconnect count"):
             asyncio.run(consume("R_100", max_reconnects=reconnects))
-    for backoff in (True, 0, -1, float("nan"), float("inf"), "1"):
+    for backoff in (True, 0, -1, float("nan"), float("inf"), "1", 10 ** 1000):
         with pytest.raises(PublicMarketDataError, match="Reconnect count"):
             asyncio.run(consume("R_100", initial_backoff_seconds=backoff))
+
+
+def test_malformed_api_error_payloads_fail_with_controlled_public_data_errors(monkeypatch):
+    class FakeSocket:
+        async def send(self, payload):
+            return None
+        async def recv(self):
+            return '{"req_id": 1001, "error": "not-an-object"}'
+
+    class FakeConnection:
+        async def __aenter__(self):
+            return FakeSocket()
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        "deriv_public_market_data.websockets.connect",
+        lambda *args, **kwargs: FakeConnection(),
+    )
+    with pytest.raises(PublicMarketDataError, match="malformed error object"):
+        asyncio.run(DerivPublicMarketDataClient().request({"ticks": "R_100"}))
 
 
 def test_request_has_overall_deadline_when_irrelevant_messages_keep_arriving(monkeypatch):
