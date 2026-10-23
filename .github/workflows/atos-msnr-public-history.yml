@@ -179,14 +179,28 @@ jobs:
                   diagnostics.append(await probe(name + "_adjust_start_time", start, start + 12*3600, "both_bounds_adjusted", 7140 + len(diagnostics)))
                   await asyncio.sleep(1.5)
               diagnostics.append(await probe("recent_now", recent_start, recent_end_exclusive, "both_bounds_no_count", 7160))
+              await asyncio.sleep(1.5)
+              # Reproduce a one-candle boundary check, omitting subscribe=0 because the current API schema only permits subscribe=1.
+              diagnostics.append(await probe(
+                  "requested_start_2022_single_candle_end_only",
+                  1666310400, 1666310460, "end_count_only", 7170
+              ))
+              await asyncio.sleep(1.5)
+              diagnostics.append(await probe(
+                  "requested_end_2024_single_candle_end_only",
+                  1729468800, 1729468860, "end_count_only", 7171
+              ))
               return {
                   "schema":"atos.deriv.history_bounds_probe.v3","endpoint":ENDPOINT,
                   "authentication":"none","account_token_used":False,"otp_used":False,"live_orders_submitted":False,
                   "granularity_seconds":GRANULARITY,"interval_hours":12,"diagnostics":diagnostics,
-                  "requested_start_anchor_supported":any(x.get("name","").startswith("requested_start_2022") and x.get("exact_epoch_coverage") for x in diagnostics),
-                  "requested_end_anchor_supported":any(x.get("name","").startswith("requested_end_2024") and x.get("exact_epoch_coverage") for x in diagnostics),
-                  "recent_interval_supported":any(x.get("name")=="recent_now" and x.get("exact_epoch_coverage") for x in diagnostics),
-                  "any_historical_interval_supported":any("requested_" in x.get("name","") and x.get("in_range") for x in diagnostics),
+                  # One-candle checks are diagnostic only; they must never authorize a two-year download.
+                  "requested_start_anchor_supported":any(x.get("name","").startswith("requested_start_2022") and x.get("expected_rows")==720 and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "requested_end_anchor_supported":any(x.get("name","").startswith("requested_end_2024") and x.get("expected_rows")==720 and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "single_candle_2022_boundary_supported":any(x.get("name")=="requested_start_2022_single_candle_end_only" and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "single_candle_2024_boundary_supported":any(x.get("name")=="requested_end_2024_single_candle_end_only" and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "recent_interval_supported":any(x.get("name")=="recent_now" and x.get("expected_rows")==720 and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "any_historical_interval_supported":any("requested_" in x.get("name","") and x.get("expected_rows")==720 and x.get("in_range") for x in diagnostics),
                   "note":"Data retrieval probe only. Requires exact/within-range evidence before a full fetch, and computes no trading metrics."
               }
 
