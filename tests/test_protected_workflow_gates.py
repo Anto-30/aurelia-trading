@@ -79,6 +79,11 @@ class ProtectedWorkflowGateTests(unittest.TestCase):
                 if not is_credential_bearing(block):
                     continue
                 with self.subTest(workflow=relative_path, job=job_id):
+                    if any("${{ secrets." in line for line in block):
+                        self.assertTrue(
+                            uses_production_environment(block),
+                            "jobs that reference secrets must bind to the protected production environment",
+                        )
                     condition = job_if_condition(block)
                     self.assertTrue(condition, "credential-bearing job has no job-level if gate")
                     self.assertIn("refs/heads/main", condition)
@@ -99,15 +104,21 @@ class ProtectedWorkflowGateTests(unittest.TestCase):
     def test_every_external_github_action_uses_an_immutable_full_sha(self):
         workflow_paths = sorted(WORKFLOW_DIR.glob("*.yml")) + sorted(WORKFLOW_DIR.glob("*.yaml"))
         self.assertTrue(workflow_paths, "no GitHub Actions workflow files found")
+        uses_pattern = re.compile(r"^\s*(?:-\s*)?uses:\s*([^\s#]+)")
+        sample = uses_pattern.match("      - uses: actions/checkout@" + "a" * 40)
+        self.assertIsNotNone(sample, "action scanner must recognize a standard uses line")
+        self.assertEqual(sample.group(1), "actions/checkout@" + "a" * 40)
+        discovered_external_actions = 0
         for path in workflow_paths:
             relative_path = path.relative_to(ROOT).as_posix()
             for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-                match = re.match(r"^\\s*(?:-\\s*)?uses:\\s*([^\\s#]+)", line)
+                match = uses_pattern.match(line)
                 if not match:
                     continue
                 action_ref = match.group(1)
                 if action_ref.startswith("./"):
                     continue
+                discovered_external_actions += 1
                 with self.subTest(workflow=relative_path, line=line_number, action=action_ref):
                     self.assertIn("@", action_ref, "external action must pin a ref")
                     revision = action_ref.rsplit("@", 1)[1]
@@ -116,7 +127,7 @@ class ProtectedWorkflowGateTests(unittest.TestCase):
                         r"^[0-9a-f]{40}$",
                         "external actions must use a full immutable commit SHA, not a branch or release tag",
                     )
-
+        self.assertGreater(discovered_external_actions, 0, "scanner must inspect at least one external action")
 
 if __name__ == "__main__":
     unittest.main()
