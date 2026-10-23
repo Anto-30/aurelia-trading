@@ -654,32 +654,220 @@
     "latest_review_batch": {
       "checked_date": "2026-10-23",
       "registry_path": "config/external_repo_federation.json",
+      "repository_count": 27,
       "repositories": [
         {
-          "repo": "mvschwarz/openrig",
-          "commit": "48ea010b4c899af35114da0db0d2c9f437b54dbb",
-          "mode": "SANDBOX_ONLY",
+          "repo": "vinta/awesome-python",
+          "commit": "8c385dcab9b1a7b6029a6ecb7c5b1f52597fd418",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
         },
         {
-          "repo": "1jehuang/jcode",
-          "commit": "7d342c133df9f8dfea05445bb91a5013c3639367",
+          "repo": "jobbole/awesome-python-cn",
+          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
+          "commit_pin_status": "UNPINNED_BLOCKED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "mahmoud/awesome-python-applications",
+          "commit": "ee6ff705d902d4b59f3203c44015ec8e7c759c8a",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "Shubhamsaboo/awesome-llm-apps",
+          "commit": "6c16b23f1bacd0fdf240bb5141ef45e59e82c306",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "521xueweihan/HelloGitHub",
+          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
+          "commit_pin_status": "UNPINNED_BLOCKED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "lukasmasuch/best-of-ml-python",
+          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
+          "commit_pin_status": "UNPINNED_BLOCKED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "DjangoEx/awesome-python-resources",
+          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
+          "commit_pin_status": "UNPINNED_BLOCKED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "uhub/awesome-python",
+          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
+          "commit_pin_status": "UNPINNED_BLOCKED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "duckdb/duckdb",
+          "commit": "1641475ef1db08ec063631ff6a8f08d9d6736ae7",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
           "mode": "TOOLCHAIN_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
         },
         {
-          "repo": "jgravelle/jcodemunch-mcp",
-          "commit": "d56f459210cc0ef0c6ee8ec60b45112466a3f7b5",
+          "repo": "gessen/majutsu-delta",
+          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
+          "commit_pin_status": "UNPINNED_BLOCKED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
-          "license_review": "REQUIRED_BEFORE_COMMERCIAL_USE",
           "runtime_install": "NOT_CLAIMED"
         },
         {
-          "repo": "trycua/hermes-cua-spaces",
-          "commit": "82bb8d31517d2d1b8f1ef7f64701558dcac8aea9",
+          "repo": "duckdb/duckdb-web",
+          "commit": "5d13ec7734088f793b3547f852a8eb0878fa4ceb",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "duckdb/duckdb-ui",
+          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
+          "commit_pin_status": "UNPINNED_BLOCKED",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "duckdb/duckdb-httpfs",
+          "commit": "77392a72077a85897db2519fae11e2c0da972b8a",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "duckdb/duckdb-java",
+          "commit": "679d526542cf9dfb24322d9d9c75641624f24bc1",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "duckdb/duckdb-rs",
+          "commit": "4acbea84794582c4cd962ee971a3d7a5dcb72e39",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "duckdb/duckdb-python",
+          "commit": "4154efc6aa9114a04ee705e2182e044e13381fff",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "duckdb/dbt-duckdb",
+          "commit": "a993eaee5674de1acc2226279739842012f929e3",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "duckdb/duckdb-postgres",
+          "commit": "487235919b12b66cc6fdbf2ec1511273aac168d0",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "duckdb/pg_duckdb",
+          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
+          "commit_pin_status": "UNPINNED_BLOCKED",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "duckdb/duckdb-wasm",
+          "commit": "1f85a503e0c25f0c0980f205915de328c923f476",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "davidgasquez/awesome-duckdb",
+          "commit": "2fe7c07d3e6f1fdb02f3bba703f0d5f5037f93b0",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "rustyorg/rustygit",
+          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
+          "commit_pin_status": "UNPINNED_BLOCKED",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "dandavison/magit-delta",
+          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
+          "commit_pin_status": "UNPINNED_BLOCKED",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "dandavison/dandavison.github.io",
+          "commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
+          "commit_pin_status": "UNPINNED_BLOCKED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "openai/php2shell-checker",
+          "commit": "ffcd3fc82e5b404f2a04a95b2805ca7639d530fa",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "9bie/php2shell-bypass-aslr-exp",
+          "commit": "80eae705288de858d73f075795dc7e1b0fdb7479",
+          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "omnigent-ai/omnigent",
+          "commit": "54c21ba8ff841aab03f53889498274256e138812",
+          "commit_pin_status": "PREEXISTING_ENTRY_REVIEW_REQUIRED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
           "runtime_install": "NOT_CLAIMED"
@@ -700,7 +888,8 @@
         "independent_review": "PENDING",
         "canonical_ci": "NOT_VERIFIED"
       },
-      "note": "Registry references only; agent names are routing metadata and do not establish installed software, authenticated connectors, or running agents."
+      "high_risk_note": "9bie/php2shell-bypass-aslr-exp is exploit/RCE research and must not be executed, deployed, or wired into CI/runtime. openai/php2shell-checker is defensive version-checking only and requires authorization for URL checks.",
+      "note": "Registry references only. Any unresolved commit pin blocks installation. Agent routing metadata does not establish installed software or running agents."
     }
   },
   "invariants": [
