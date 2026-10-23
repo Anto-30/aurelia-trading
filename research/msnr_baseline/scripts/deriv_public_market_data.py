@@ -51,6 +51,14 @@ def _check_no_forbidden_nested_keys(value: Any, path: str = "payload") -> None:
             _check_no_forbidden_nested_keys(child, f"{path}[{i}]")
 
 
+def _format_api_error(error: Any, source: str) -> str:
+    if not isinstance(error, dict):
+        return f"{source} API returned a malformed error object."
+    code = error.get("code", "unknown")
+    message = error.get("message", "unspecified error")
+    return f"{source} API error {code}: {message}"
+
+
 def validate_public_payload(payload: dict[str, Any]) -> None:
     if not isinstance(payload, dict) or not payload:
         raise PublicMarketDataError("Request payload must be a non-empty JSON object.")
@@ -110,6 +118,8 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
             )
             if not valid_end:
                 raise PublicMarketDataError("ticks_history end must be 'latest' or a 1-10 digit epoch string.")
+            if "start" in payload and end != "latest" and payload["start"] > int(end):
+                raise PublicMarketDataError("ticks_history start epoch must not exceed end epoch.")
         if "count" in payload and (
             isinstance(payload["count"], bool)
             or not isinstance(payload["count"], int)
@@ -222,8 +232,8 @@ def validate_tick_response(message: dict[str, Any], *, requested_symbol: str) ->
         raise PublicMarketDataError("Tick quote must be finite and positive.")
     if not 0 <= epoch_raw <= 9999999999:
         raise PublicMarketDataError("Tick epoch is outside the supported integer range.")
-    response_symbol = tick.get("symbol")
-    if response_symbol is not None:
+    if "symbol" in tick:
+        response_symbol = tick["symbol"]
         if not _valid_symbol(response_symbol):
             raise PublicMarketDataError("Returned tick symbol is malformed.")
         if response_symbol != requested_symbol:
@@ -278,8 +288,7 @@ class DerivPublicMarketDataClient:
                     if not isinstance(message, dict):
                         raise PublicMarketDataError("The public WebSocket must return a JSON object.")
                     if message.get("error"):
-                        error = message["error"]
-                        raise PublicMarketDataError(f"Deriv public API error {error.get('code', 'unknown')}: {error.get('message', error)}")
+                        raise PublicMarketDataError(_format_api_error(message["error"], "Deriv public"))
                     if message.get("req_id") not in (None, req_id):
                         continue
                     if expected_msg_type and message.get("msg_type") != expected_msg_type:
@@ -334,16 +343,16 @@ class DerivPublicMarketDataClient:
                            initial_backoff_seconds: float = 1.0) -> AsyncIterator[dict[str, Any]]:
         if not _valid_symbol(underlying_symbol):
             raise PublicMarketDataError("Stream symbol must match the 2-30 character ASCII word pattern.")
-        if (
-            isinstance(max_reconnects, bool)
-            or not isinstance(max_reconnects, int)
-            or not 0 <= max_reconnects <= 100
-            or isinstance(initial_backoff_seconds, bool)
-            or not isinstance(initial_backoff_seconds, (int, float))
-            or not math.isfinite(float(initial_backoff_seconds))
-            or initial_backoff_seconds <= 0
-        ):
+        if isinstance(max_reconnects, bool) or not isinstance(max_reconnects, int) or not 0 <= max_reconnects <= 100:
             raise PublicMarketDataError("Reconnect count must be an integer from 0 to 100 and backoff must be finite and positive.")
+        if isinstance(initial_backoff_seconds, bool) or not isinstance(initial_backoff_seconds, (int, float)):
+            raise PublicMarketDataError("Reconnect count must be an integer from 0 to 100 and backoff must be finite and positive.")
+        try:
+            backoff_seconds = float(initial_backoff_seconds)
+        except (OverflowError, TypeError, ValueError) as exc:
+            raise PublicMarketDataError("Reconnect backoff must be finite and positive.") from exc
+        if not math.isfinite(backoff_seconds) or backoff_seconds <= 0:
+            raise PublicMarketDataError("Reconnect backoff must be finite and positive.")
         stream_request = {"ticks": underlying_symbol, "subscribe": 1}
         validate_public_payload(stream_request)
         failures = 0
@@ -362,8 +371,7 @@ class DerivPublicMarketDataClient:
                         if not isinstance(message, dict):
                             raise PublicMarketDataError("Tick stream message is not an object.")
                         if message.get("error"):
-                            error = message["error"]
-                            raise PublicMarketDataError(f"Deriv tick stream error {error.get('code', 'unknown')}: {error.get('message', error)}")
+                            raise PublicMarketDataError(_format_api_error(message["error"], "Deriv tick stream"))
                         if message.get("msg_type") != "tick":
                             continue
                         if message.get("msg_type") != "tick":
@@ -378,4 +386,4 @@ class DerivPublicMarketDataClient:
                 failures += 1
             if failures > max_reconnects:
                 raise PublicMarketDataError(f"Tick stream exceeded max reconnect count ({max_reconnects}).")
-            await asyncio.sleep(min(initial_backoff_seconds * (2 ** (failures - 1)), 30.0))
+            await asyncio.sleep(min(backoff_seconds * (2 ** (failures - 1)), 30.0))
