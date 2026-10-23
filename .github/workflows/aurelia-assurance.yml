@@ -17,8 +17,8 @@ jobs:
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: Install runtime dependencies
@@ -52,7 +52,7 @@ jobs:
 
       - name: Upload public Deriv transport evidence
         if: always() && hashFiles('artifacts/deriv_public_transport.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: deriv-public-transport-evidence
           path: artifacts/deriv_public_transport.json
@@ -124,8 +124,8 @@ jobs:
       DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
       DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: Install verification dependencies
@@ -140,7 +140,7 @@ jobs:
 
       - name: Upload Deriv authentication prerequisite evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: deriv-auth-prerequisites
           path: artifacts/deriv_auth_prerequisites.json
@@ -189,7 +189,7 @@ jobs:
 
       - name: Upload authenticated broker account evidence
         if: always() && hashFiles('artifacts/deriv_broker_account_evidence.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: deriv-broker-account-read-only
           path: artifacts/deriv_broker_account_evidence.json
@@ -197,7 +197,7 @@ jobs:
 
       - name: Upload authenticated verify-only lifecycle evidence
         if: always() && hashFiles('artifacts/deriv_transaction_lifecycle.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: deriv-transaction-lifecycle-verify-only
           path: artifacts/deriv_transaction_lifecycle.json
@@ -211,7 +211,7 @@ jobs:
 
       - name: Upload authenticated Deriv evidence
         if: always() && hashFiles('artifacts/deriv_authenticated_session.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: deriv-authenticated-session
           path: artifacts/deriv_authenticated_session.json
