@@ -116,8 +116,15 @@ The following 27 supplied URLs were checked for repository identity and default 
 - Canonical external repository registry update: commit `614ecf4729f853a0522d86327b43b59b08bf6161`.
 - Canonical agent/tool assignment metadata update: commit `ee351d782530978dbfd52d10dd054120db4aa7f4`.
 - Registry JSON parsing succeeded after the writes. Four entries from the prior batch plus this batch remain metadata-only; all new records deny capital authority, live-order submission, broker transaction writes, secret reading and live-lock mutation.
-- Exact default-branch HEAD verification for all observed commits: **PENDING**. Eleven repositories in this batch are explicitly unpinned and blocked.
+- Exact default-branch HEAD verification for all observed commits: **PENDING**. Eleven repositories previously lacking a recorded revision now have immutable commit IDs recorded from GitHub recent-commit search results. These IDs are not verified as default-branch HEADs; build/install remains blocked until the exact intended branch/ref is independently confirmed.
 - SBOM, dependency/secret scans, isolated smoke tests and independent review: **NOT RUN / PENDING**.
 - Installation, code execution and runtime connection: **NOT PERFORMED**.
 
 The AURELIA `config/LIVE_LOCK.yaml` must remain unchanged and VERIFY_ONLY. This intake is not an installation or release approval.
+
+
+### Revision-pin follow-up
+
+- Registry follow-up commit: `bbe0deb9eaf0a866f90f8fc1c0d394988f21b612`.
+- The 11 formerly unpinned records now have immutable revision IDs from recent-commit search results. Some are old; for example, `jobbole/awesome-python-cn` has a 2021 commit and the Git tooling repositories include commits from 2022. This is sufficient to identify a reproducible historical snapshot, but not to certify currentness or compatibility.
+- The source default-branch refs were not independently resolved to those exact SHAs. All 11 therefore remain blocked from installation/build pending default-branch ref verification and source/license review.
