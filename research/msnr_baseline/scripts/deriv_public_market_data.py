@@ -118,8 +118,9 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
 
 
 def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | int]]:
-    if message.get("msg_type") != "candles":
-        raise PublicMarketDataError(f"Expected candles response, got {message.get('msg_type')!r}.")
+    if not isinstance(message, dict) or message.get("msg_type") != "candles":
+        actual = message.get("msg_type") if isinstance(message, dict) else type(message).__name__
+        raise PublicMarketDataError(f"Expected candles response, got {actual!r}.")
     candles = message.get("candles")
     if not isinstance(candles, list) or not candles:
         raise PublicMarketDataError("Candles response must contain a non-empty candles array.")
@@ -127,17 +128,21 @@ def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | 
     for i, candle in enumerate(candles):
         if not isinstance(candle, dict) or any(field not in candle for field in CANDLE_FIELDS):
             raise PublicMarketDataError(f"Candle {i} is missing a required OHLC/epoch field.")
+        epoch_raw = candle["epoch"]
+        raw_ohlc = tuple(candle[key] for key in ("open", "high", "low", "close"))
+        if isinstance(epoch_raw, bool) or not isinstance(epoch_raw, int):
+            raise PublicMarketDataError(f"Candle {i} epoch must be a JSON integer.")
+        if any(isinstance(value, bool) or not isinstance(value, (int, float)) for value in raw_ohlc):
+            raise PublicMarketDataError(f"Candle {i} OHLC values must be JSON numbers.")
         try:
-            epoch_f = float(candle["epoch"])
-            epoch = int(epoch_f)
-            op, hi, lo, cl = (float(candle[k]) for k in ("open", "high", "low", "close"))
+            op, hi, lo, cl = (float(value) for value in raw_ohlc)
         except (ValueError, TypeError, OverflowError) as exc:
             raise PublicMarketDataError(f"Candle {i} has invalid numeric values.") from exc
-        if not math.isfinite(epoch_f) or epoch_f != epoch or not all(math.isfinite(x) and x > 0 for x in (op, hi, lo, cl)):
+        if not all(math.isfinite(value) and value > 0 for value in (op, hi, lo, cl)):
             raise PublicMarketDataError(f"Candle {i} contains a non-finite or non-positive value.")
         if hi < max(op, cl) or lo > min(op, cl) or hi < lo:
             raise PublicMarketDataError(f"Candle {i} violates OHLC invariants.")
-        output.append({"epoch": epoch, "open": op, "high": hi, "low": lo, "close": cl})
+        output.append({"epoch": epoch_raw, "open": op, "high": hi, "low": lo, "close": cl})
     epochs = [int(row["epoch"]) for row in output]
     if any(b <= a for a, b in zip(epochs, epochs[1:])):
         raise PublicMarketDataError("Candle epochs must be strictly increasing with no duplicates.")
@@ -145,8 +150,9 @@ def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | 
 
 
 def validate_history_response(message: dict[str, Any]) -> tuple[list[float], list[int]]:
-    if message.get("msg_type") != "history":
-        raise PublicMarketDataError(f"Expected history response, got {message.get('msg_type')!r}.")
+    if not isinstance(message, dict) or message.get("msg_type") != "history":
+        actual = message.get("msg_type") if isinstance(message, dict) else type(message).__name__
+        raise PublicMarketDataError(f"Expected history response, got {actual!r}.")
     history = message.get("history")
     if not isinstance(history, dict):
         raise PublicMarketDataError("History response is missing the history object.")
@@ -157,16 +163,18 @@ def validate_history_response(message: dict[str, Any]) -> tuple[list[float], lis
         raise PublicMarketDataError("history.prices and history.times lengths differ.")
     clean_prices, clean_times = [], []
     for price, epoch in zip(prices, times):
+        if isinstance(price, bool) or not isinstance(price, (int, float)):
+            raise PublicMarketDataError("History prices must be JSON numbers, not coercible strings or booleans.")
+        if isinstance(epoch, bool) or not isinstance(epoch, int):
+            raise PublicMarketDataError("History times must be JSON integer epochs, not coercible values.")
         try:
             px = float(price)
-            epoch_f = float(epoch)
-            ts = int(epoch_f)
         except (TypeError, ValueError, OverflowError) as exc:
             raise PublicMarketDataError("History price/time value is invalid.") from exc
-        if not math.isfinite(px) or px <= 0 or not math.isfinite(epoch_f) or epoch_f != ts:
-            raise PublicMarketDataError("History price/time must be finite, positive price and integer epoch.")
+        if not math.isfinite(px) or px <= 0:
+            raise PublicMarketDataError("History price must be finite and positive.")
         clean_prices.append(px)
-        clean_times.append(ts)
+        clean_times.append(epoch)
     if any(b <= a for a, b in zip(clean_times, clean_times[1:])):
         raise PublicMarketDataError("History times must be strictly increasing with no duplicates.")
     return clean_prices, clean_times
