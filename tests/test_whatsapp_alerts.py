@@ -29,7 +29,7 @@ class WhatsAppAlertTests(unittest.TestCase):
             "TWILIO_API_KEY": "SK_TEST_API_KEY",
             "TWILIO_API_SECRET": "TEST_AUTH_MATERIAL",
             "TWILIO_WHATSAPP_FROM": "whatsapp:+14155238886",
-            "AURELIA_WHATSAPP_TO": "+254714697623",
+            "AURELIA_WHATSAPP_TO": "+15555550100",
         }
         with patch.dict(os.environ, env, clear=False):
             for key in (
@@ -52,7 +52,7 @@ class WhatsAppAlertTests(unittest.TestCase):
             api_secret="TEST_AUTH_MATERIAL",
             auth_token=None,
             from_address="whatsapp:+14155238886",
-            to_address="whatsapp:+254714697623",
+            to_address="whatsapp:+15555550100",
             content_sid="HX_TEST_CONTENT_SID",
             allow_freeform=False,
             status_callback_url=None,
@@ -102,7 +102,7 @@ class WhatsAppAlertTests(unittest.TestCase):
             api_secret="TEST_AUTH_MATERIAL",
             auth_token=None,
             from_address="whatsapp:+14155238886",
-            to_address="whatsapp:+254714697623",
+            to_address="whatsapp:+15555550100",
             content_sid="HX_TEST_CONTENT_SID",
             allow_freeform=False,
             status_callback_url=None,
@@ -144,6 +144,22 @@ class WhatsAppAlertTests(unittest.TestCase):
                 journal.read_all()[0]["event_type"],
                 "KILL_SWITCH_ACTIVATED",
             )
+
+
+    def test_public_whatsapp_setup_docs_never_embed_a_concrete_kenyan_mobile_number(self):
+        import re
+
+        docs_path = Path(__file__).resolve().parents[1] / "docs" / "WHATSAPP_ALERTS.md"
+        docs_text = docs_path.read_text(encoding="utf-8")
+        concrete_kenyan_mobile = re.compile(r"(?<![0-9])(?:\+?254|0)7[0-9]{8}(?![0-9])")
+        self.assertIsNotNone(
+            concrete_kenyan_mobile.search("+254" + "7" + "1" * 8),
+            "the privacy regression regex must detect a synthetic Kenyan mobile pattern",
+        )
+        self.assertIsNone(
+            concrete_kenyan_mobile.search(docs_text),
+            "public WhatsApp setup docs must use a placeholder, not a recipient's number",
+        )
 
 
 if __name__ == "__main__":
