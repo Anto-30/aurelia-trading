@@ -639,7 +639,7 @@
   "external_repo_batch": {
     "registered_source_registry": "config/external_repo_federation.json",
     "skill_source_registry": "config/agent_skill_federation.json",
-    "pinned_heads_checked": "2026-10-11",
+    "pinned_heads_checked": "2026-10-23",
     "external_repo_entries_added": 82,
     "external_skill_source_entries_added": 51,
     "physical_runtime_install": "NOT_CLAIMED",
@@ -650,7 +650,58 @@
       "TOOLCHAIN_ONLY",
       "REFERENCE_ONLY"
     ],
-    "note": "Sources are pinned references, not copied into the execution or capital plane. Review a source before promoting it to a toolchain or installing code."
+    "note": "Sources are pinned references, not copied into the execution or capital plane. Review a source before promoting it to a toolchain or installing code.",
+    "latest_review_batch": {
+      "checked_date": "2026-10-23",
+      "registry_path": "config/external_repo_federation.json",
+      "repositories": [
+        {
+          "repo": "mvschwarz/openrig",
+          "commit": "48ea010b4c899af35114da0db0d2c9f437b54dbb",
+          "mode": "SANDBOX_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "1jehuang/jcode",
+          "commit": "7d342c133df9f8dfea05445bb91a5013c3639367",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "jgravelle/jcodemunch-mcp",
+          "commit": "d56f459210cc0ef0c6ee8ec60b45112466a3f7b5",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "license_review": "REQUIRED_BEFORE_COMMERCIAL_USE",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "trycua/hermes-cua-spaces",
+          "commit": "82bb8d31517d2d1b8f1ef7f64701558dcac8aea9",
+          "mode": "SANDBOX_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        }
+      ],
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      },
+      "validation_status": {
+        "sbom": "NOT_RUN",
+        "dependency_and_secret_scans": "NOT_RUN",
+        "isolated_smoke_tests": "NOT_RUN",
+        "independent_review": "PENDING",
+        "canonical_ci": "NOT_VERIFIED"
+      },
+      "note": "Registry references only; agent names are routing metadata and do not establish installed software, authenticated connectors, or running agents."
+    }
   },
   "invariants": [
     "External code is untrusted; pinned does not mean safe.",
