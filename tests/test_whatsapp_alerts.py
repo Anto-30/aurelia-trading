@@ -151,7 +151,11 @@ class WhatsAppAlertTests(unittest.TestCase):
 
         docs_path = Path(__file__).resolve().parents[1] / "docs" / "WHATSAPP_ALERTS.md"
         docs_text = docs_path.read_text(encoding="utf-8")
-        concrete_kenyan_mobile = re.compile(r"(?<![0-9])(?:\\+?254|0)7[0-9]{8}(?![0-9])")
+        concrete_kenyan_mobile = re.compile(r"(?<![0-9])(?:\+?254|0)7[0-9]{8}(?![0-9])")
+        self.assertIsNotNone(
+            concrete_kenyan_mobile.search("+254" + "7" + "1" * 8),
+            "the privacy regression regex must detect a synthetic Kenyan mobile pattern",
+        )
         self.assertIsNone(
             concrete_kenyan_mobile.search(docs_text),
             "public WhatsApp setup docs must use a placeholder, not a recipient's number",
