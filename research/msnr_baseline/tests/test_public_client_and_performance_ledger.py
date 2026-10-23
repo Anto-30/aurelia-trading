@@ -275,7 +275,7 @@ def test_stream_ticks_rejects_invalid_symbol_and_reconnect_parameters_before_con
         with pytest.raises(PublicMarketDataError, match="Reconnect count"):
             asyncio.run(consume("R_100", max_reconnects=reconnects))
     for backoff in (True, 0, -1, float("nan"), float("inf"), "1", 10 ** 1000):
-        with pytest.raises(PublicMarketDataError, match="Reconnect count"):
+        with pytest.raises(PublicMarketDataError, match="Reconnect backoff"):
             asyncio.run(consume("R_100", initial_backoff_seconds=backoff))
 
 
