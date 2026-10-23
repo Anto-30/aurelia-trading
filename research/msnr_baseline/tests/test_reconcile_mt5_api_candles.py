@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-SCRIPT = Path(__file__).resolve().parents[1] / "reconcile_mt5_api_candles.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "reconcile_mt5_api_candles.py"
 START = 1729382400  # 2024-10-20 00:00:00 UTC
 END = START + 3 * 60
 
