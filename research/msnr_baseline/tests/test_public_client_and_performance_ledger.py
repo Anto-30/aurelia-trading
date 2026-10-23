@@ -18,6 +18,7 @@ from deriv_public_market_data import (
     validate_candle_response,
     validate_history_response,
     validate_public_payload,
+    validate_tick_response,
 )
 
 
@@ -95,6 +96,18 @@ def test_perf_factor_uses_post_cost_wins_and_losses():
 def test_new_public_request_schema_and_forbidden_keys():
     validate_public_payload({"active_symbols": "brief"})
     validate_public_payload({"ticks": "R_100", "subscribe": 1})
+    validate_public_payload({"ticks": ["R_100", "frxEURUSD"], "subscribe": 1})
+    for invalid_tick_request in (
+        {"ticks": "R_100", "subscribe": True},
+        {"ticks": "R_100", "subscribe": 1.0},
+        {"ticks": "R-100"},
+        {"ticks": "A" * 31},
+        {"ticks": ["R_100", "R-100"]},
+    ):
+        with pytest.raises(PublicMarketDataError):
+            validate_public_payload(invalid_tick_request)
+    with pytest.raises(PublicMarketDataError, match="array of non-empty strings"):
+        validate_public_payload({"active_symbols": "full", "contract_type": [None]})
     validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "count": 5000})
     validate_public_payload({"ticks_history": "frxEURUSD", "end": "latest", "style": "ticks"})
     with pytest.raises(PublicMarketDataError, match="end is required"):
@@ -208,6 +221,60 @@ def test_history_builder_keeps_ticks_history_request_key():
     assert "subscribe" not in seen["payload"]  # one-shot history request: omit optional flag
     assert "symbol" not in seen["payload"] and "underlying_symbol" not in seen["payload"] and "loginid" not in seen["payload"]
     assert seen["expected"] == "candles"
+
+
+def test_tick_response_validator_rejects_coercion_bad_epochs_and_wrong_symbols():
+    valid = {"msg_type": "tick", "tick": {"quote": 101.25, "epoch": 1700000000, "symbol": "R_100", "pip_size": 2}}
+    clean = validate_tick_response(valid, requested_symbol="R_100")
+    assert clean == {"quote": 101.25, "epoch": 1700000000}
+
+    invalid_ticks = (
+        {"quote": "101.25", "epoch": 1700000000},
+        {"quote": True, "epoch": 1700000000},
+        {"quote": float("nan"), "epoch": 1700000000},
+        {"quote": float("inf"), "epoch": 1700000000},
+        {"quote": -1, "epoch": 1700000000},
+        {"quote": 101.25, "epoch": "1700000000"},
+        {"quote": 101.25, "epoch": True},
+        {"quote": 101.25, "epoch": 1700000000.0},
+        {"quote": 101.25, "epoch": -1},
+        {"quote": 101.25, "epoch": 10000000000},
+        {"quote": 101.25, "epoch": 1700000000, "symbol": "frxEURUSD"},
+        {"quote": 101.25, "epoch": 1700000000, "symbol": "R-100"},
+    )
+    for tick in invalid_ticks:
+        with pytest.raises(PublicMarketDataError):
+            validate_tick_response({"msg_type": "tick", "tick": tick}, requested_symbol="R_100")
+
+    with pytest.raises(PublicMarketDataError, match="Expected tick response"):
+        validate_tick_response(None, requested_symbol="R_100")
+    with pytest.raises(PublicMarketDataError, match="Requested tick symbol"):
+        validate_tick_response(valid, requested_symbol="R-100")
+
+
+def test_stream_ticks_rejects_invalid_symbol_and_reconnect_parameters_before_connect(monkeypatch):
+    client = DerivPublicMarketDataClient()
+    def should_not_connect(*args, **kwargs):
+        raise AssertionError("invalid inputs must be rejected before WebSocket connection")
+    monkeypatch.setattr("deriv_public_market_data.websockets.connect", should_not_connect)
+
+    async def consume(symbol, max_reconnects=5, initial_backoff_seconds=1.0):
+        async for _ in client.stream_ticks(
+            underlying_symbol=symbol,
+            max_reconnects=max_reconnects,
+            initial_backoff_seconds=initial_backoff_seconds,
+        ):
+            return
+
+    for symbol in ("R-100", "A" * 31, "éR100", ""):
+        with pytest.raises(PublicMarketDataError, match="Stream symbol"):
+            asyncio.run(consume(symbol))
+    for reconnects in (True, -1, 101, 1.0):
+        with pytest.raises(PublicMarketDataError, match="Reconnect count"):
+            asyncio.run(consume("R_100", max_reconnects=reconnects))
+    for backoff in (True, 0, -1, float("nan"), float("inf"), "1"):
+        with pytest.raises(PublicMarketDataError, match="Reconnect count"):
+            asyncio.run(consume("R_100", initial_backoff_seconds=backoff))
 
 
 def test_request_has_overall_deadline_when_irrelevant_messages_keep_arriving(monkeypatch):
