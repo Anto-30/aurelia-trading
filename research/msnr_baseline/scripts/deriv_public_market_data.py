@@ -79,22 +79,36 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
             raise PublicMarketDataError("ticks_history requires its short symbol as a string value.")
         if payload.get("style", "ticks") not in ("ticks", "candles"):
             raise PublicMarketDataError("ticks_history style must be 'ticks' or 'candles'.")
-        if "start" in payload and (not isinstance(payload["start"], int) or payload["start"] < 0):
-            raise PublicMarketDataError("ticks_history start must be a non-negative integer epoch.")
-        if "end" in payload and not (payload["end"] == "latest" or str(payload["end"]).isdigit()):
-            raise PublicMarketDataError("ticks_history end must be 'latest' or a numeric epoch string.")
-        if "count" in payload and (not isinstance(payload["count"], int) or not 1 <= payload["count"] <= 5000):
-            raise PublicMarketDataError("ticks_history count must be between 1 and 5000.")
+        if "start" in payload and (
+            isinstance(payload["start"], bool)
+            or not isinstance(payload["start"], int)
+            or not 0 <= payload["start"] <= 9999999999
+        ):
+            raise PublicMarketDataError("ticks_history start must be an integer epoch from 0 to 9999999999.")
+        if "end" in payload:
+            end = payload["end"]
+            valid_end = isinstance(end, str) and (
+                end == "latest" or (1 <= len(end) <= 10 and end.isascii() and end.isdigit())
+            )
+            if not valid_end:
+                raise PublicMarketDataError("ticks_history end must be 'latest' or a 1-10 digit epoch string.")
+        if "count" in payload and (
+            isinstance(payload["count"], bool)
+            or not isinstance(payload["count"], int)
+            or not 1 <= payload["count"] <= 5000
+        ):
+            raise PublicMarketDataError("ticks_history count must be an integer between 1 and 5000.")
+        if "granularity" in payload and payload.get("style", "ticks") != "candles":
+            raise PublicMarketDataError("ticks_history granularity is only applicable to style='candles'.")
         if "granularity" in payload:
             granularity = payload["granularity"]
             if isinstance(granularity, bool) or not isinstance(granularity, int) or granularity not in SUPPORTED_CANDLE_GRANULARITIES:
                 allowed = ", ".join(str(value) for value in sorted(SUPPORTED_CANDLE_GRANULARITIES))
                 raise PublicMarketDataError(f"ticks_history granularity must be one of: {allowed}.")
-        # Current API accepts 0 or 1 for these optional flags; for one-shot requests
-        # this client omits subscribe rather than relying on either value.
+        # The current API schema allows value 1 only for these optional flags.
         for key in ("subscribe", "adjust_start_time"):
-            if key in payload and (isinstance(payload[key], bool) or payload[key] not in (0, 1)):
-                raise PublicMarketDataError(f"{key} must be 0 or 1.")
+            if key in payload and (isinstance(payload[key], bool) or payload[key] != 1):
+                raise PublicMarketDataError(f"{key} must be 1.")
 
 
 def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | int]]:
@@ -218,10 +232,20 @@ class DerivPublicMarketDataClient:
 
     async def ticks_history(self, *, underlying_symbol: str, start_epoch: int, end_epoch: int,
                             granularity_seconds: int, style: str = "candles", count: int = 5000) -> dict[str, Any]:
-        if not underlying_symbol or start_epoch < 0 or end_epoch < start_epoch:
-            raise PublicMarketDataError("Invalid history symbol or epoch bounds.")
-        if style not in ("candles", "ticks") or not 1 <= count <= 5000:
-            raise PublicMarketDataError("Invalid style/count; count must be between 1 and 5000.")
+        if (
+            isinstance(start_epoch, bool) or not isinstance(start_epoch, int)
+            or isinstance(end_epoch, bool) or not isinstance(end_epoch, int)
+            or not 0 <= start_epoch <= 9999999999
+            or not 0 <= end_epoch <= 9999999999
+            or end_epoch < start_epoch
+        ):
+            raise PublicMarketDataError("History start/end must be integer epochs from 0 to 9999999999 with end >= start.")
+        if not isinstance(underlying_symbol, str) or not underlying_symbol:
+            raise PublicMarketDataError("History symbol must be a non-empty string.")
+        if style not in ("candles", "ticks"):
+            raise PublicMarketDataError("History style must be 'candles' or 'ticks'.")
+        if isinstance(count, bool) or not isinstance(count, int) or not 1 <= count <= 5000:
+            raise PublicMarketDataError("History count must be an integer between 1 and 5000.")
         payload: dict[str, Any] = {
             "ticks_history": underlying_symbol, "start": int(start_epoch), "end": str(int(end_epoch)),
             "style": style, "count": int(count),
