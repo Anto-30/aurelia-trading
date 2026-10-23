@@ -6479,8 +6479,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/jobbole/awesome-python-cn",
-      "head_commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-      "pin_source": "default_branch_master_identified_2026-10-23_commit_unresolved",
+      "head_commit": "e718fecd821fb94d696713da1259a86f18b400af",
+      "pin_source": "GitHub recent commit search result observed 2021-11-24T09:20:31Z; default branch HEAD not independently verified",
       "default_branch": "master",
       "capital_authority": false,
       "live_order_submission": false,
@@ -6489,7 +6489,7 @@
       "broker_transaction_write": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
-      "commit_pin_status": "UNPINNED_BLOCKED",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "notes": "Chinese-language catalogue; links are not vetted or approved dependencies."
     },
     {
@@ -6551,8 +6551,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/521xueweihan/HelloGitHub",
-      "head_commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-      "pin_source": "default_branch_master_identified_2026-10-23_commit_unresolved",
+      "head_commit": "030121514da552ed91e640ef8bde4083c753dd52",
+      "pin_source": "GitHub recent commit search result observed 2026-09-28T00:05:31Z; default branch HEAD not independently verified",
       "default_branch": "master",
       "capital_authority": false,
       "live_order_submission": false,
@@ -6561,7 +6561,7 @@
       "broker_transaction_write": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
-      "commit_pin_status": "UNPINNED_BLOCKED",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "notes": "Project discovery list; each external project requires its own review."
     },
     {
@@ -6575,8 +6575,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/lukasmasuch/best-of-ml-python",
-      "head_commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-      "pin_source": "default_branch_main_identified_2026-10-23_commit_unresolved",
+      "head_commit": "47f29706164810be3fe3c3e50f5216fe8e95d2dc",
+      "pin_source": "GitHub recent commit search result observed 2026-03-22T08:44:47Z; default branch HEAD not independently verified",
       "default_branch": "main",
       "capital_authority": false,
       "live_order_submission": false,
@@ -6585,7 +6585,7 @@
       "broker_transaction_write": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
-      "commit_pin_status": "UNPINNED_BLOCKED",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "notes": "ML project ranking/catalogue; do not infer package security or production fitness."
     },
     {
@@ -6599,8 +6599,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/DjangoEx/awesome-python-resources",
-      "head_commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-      "pin_source": "default_branch_main_identified_2026-10-23_commit_unresolved",
+      "head_commit": "fbe8a7d2fb1f685366aa07266ca3dceec4e694e3",
+      "pin_source": "GitHub recent commit search result observed 2026-10-16T12:40:39Z; default branch HEAD not independently verified",
       "default_branch": "main",
       "capital_authority": false,
       "live_order_submission": false,
@@ -6609,7 +6609,7 @@
       "broker_transaction_write": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
-      "commit_pin_status": "UNPINNED_BLOCKED",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "notes": "Resource list only; links and packages require independent review."
     },
     {
@@ -6623,8 +6623,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/uhub/awesome-python",
-      "head_commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-      "pin_source": "default_branch_master_identified_2026-10-23_commit_unresolved",
+      "head_commit": "30ddec3b30bb9dedb1f9284f468313e4ea597595",
+      "pin_source": "GitHub recent commit search result observed 2026-09-26T12:27:35Z; default branch HEAD not independently verified",
       "default_branch": "master",
       "capital_authority": false,
       "live_order_submission": false,
@@ -6633,7 +6633,7 @@
       "broker_transaction_write": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
-      "commit_pin_status": "UNPINNED_BLOCKED",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "notes": "Resource list only; links and packages require independent review."
     },
     {
@@ -6671,8 +6671,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/gessen/majutsu-delta",
-      "head_commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-      "pin_source": "default_branch_master_identified_2026-10-23_commit_unresolved",
+      "head_commit": "699e6275d3be8215bece29431c449443c71888c4",
+      "pin_source": "GitHub recent commit search result observed 2026-08-12T19:01:11Z; default branch HEAD not independently verified",
       "default_branch": "master",
       "capital_authority": false,
       "live_order_submission": false,
@@ -6681,8 +6681,8 @@
       "broker_transaction_write": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
-      "commit_pin_status": "UNPINNED_BLOCKED",
-      "notes": "Repository content/commit resolution incomplete; remain reference-only until exact source and license are verified."
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "Exact immutable commit recorded; repository content and license still require verification; remain reference-only."
     },
     {
       "repo": "duckdb/duckdb-web",
@@ -6719,8 +6719,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/duckdb/duckdb-ui",
-      "head_commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-      "pin_source": "default_branch_main_identified_2026-10-23_commit_unresolved",
+      "head_commit": "b4f0b9bb123f8c61f739ba72eb5511236082c1e7",
+      "pin_source": "GitHub recent commit search result observed 2026-10-21T18:51:19Z; default branch HEAD not independently verified",
       "default_branch": "main",
       "capital_authority": false,
       "live_order_submission": false,
@@ -6729,7 +6729,7 @@
       "broker_transaction_write": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
-      "commit_pin_status": "UNPINNED_BLOCKED",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "notes": "UI component requires separate source, auth, and data-exposure review."
     },
     {
@@ -6887,8 +6887,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/duckdb/pg_duckdb",
-      "head_commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-      "pin_source": "default_branch_main_identified_2026-10-23_commit_unresolved",
+      "head_commit": "ee38d3b540ecea1d93683ba99bdcec5632a21eaf",
+      "pin_source": "GitHub recent commit search result observed 2026-07-17T12:03:00Z; default branch HEAD not independently verified",
       "default_branch": "main",
       "capital_authority": false,
       "live_order_submission": false,
@@ -6897,7 +6897,7 @@
       "broker_transaction_write": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
-      "commit_pin_status": "UNPINNED_BLOCKED",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "notes": "Postgres extension; high impact on database trust boundary; requires isolated build and permission review."
     },
     {
@@ -6959,8 +6959,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/rustyorg/rustygit",
-      "head_commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-      "pin_source": "default_branch_main_identified_2026-10-23_commit_unresolved",
+      "head_commit": "0d6063b2fc889be6fa44c913ed29758f3c1f9b93",
+      "pin_source": "GitHub recent commit search result observed 2022-06-16T23:48:31Z; default branch HEAD not independently verified",
       "default_branch": "main",
       "capital_authority": false,
       "live_order_submission": false,
@@ -6969,8 +6969,8 @@
       "broker_transaction_write": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
-      "commit_pin_status": "UNPINNED_BLOCKED",
-      "notes": "Source and license pin unresolved; do not build or run until exact commit is established."
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "Exact immutable commit recorded; default-branch HEAD, license and source audit remain pending; do not build/run yet."
     },
     {
       "repo": "dandavison/magit-delta",
@@ -6983,8 +6983,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/dandavison/magit-delta",
-      "head_commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-      "pin_source": "default_branch_master_identified_2026-10-23_commit_unresolved",
+      "head_commit": "5fc7dbddcfacfe46d3fd876172ad02a9ab6ac616",
+      "pin_source": "GitHub recent commit search result observed 2022-01-25T00:50:31Z; default branch HEAD not independently verified",
       "default_branch": "master",
       "capital_authority": false,
       "live_order_submission": false,
@@ -6993,8 +6993,8 @@
       "broker_transaction_write": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
-      "commit_pin_status": "UNPINNED_BLOCKED",
-      "notes": "Source and license pin unresolved; do not build or run until exact commit is established."
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "Exact immutable commit recorded; default-branch HEAD, license and source audit remain pending; do not build/run yet."
     },
     {
       "repo": "dandavison/dandavison.github.io",
@@ -7007,8 +7007,8 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/dandavison/dandavison.github.io",
-      "head_commit": "UNPINNED_REQUIRES_EXACT_COMMIT",
-      "pin_source": "default_branch_master_identified_2026-10-23_commit_unresolved",
+      "head_commit": "f52759b795ae15996b990e14c6349f6a30c733f3",
+      "pin_source": "GitHub recent commit search result observed 2026-07-15T14:17:59Z; default branch HEAD not independently verified",
       "default_branch": "master",
       "capital_authority": false,
       "live_order_submission": false,
@@ -7017,7 +7017,7 @@
       "broker_transaction_write": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
-      "commit_pin_status": "UNPINNED_BLOCKED",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "notes": "Personal website/reference content only; no runtime dependency."
     },
     {
@@ -7106,6 +7106,24 @@
       "omnigent-ai/omnigent"
     ],
     "status": "REGISTERED_FOR_REVIEW_ONLY",
-    "note": "Some exact default-branch commit pins remain unresolved and are explicitly blocked; no repository installation or runtime connection is implied."
+    "note": "Some exact default-branch commit pins remain unresolved and are explicitly blocked; no repository installation or runtime connection is implied.",
+    "pin_resolution_followup": {
+      "date": "2026-10-23",
+      "method": "GitHub recent commit search results",
+      "repositories": [
+        "jobbole/awesome-python-cn",
+        "521xueweihan/HelloGitHub",
+        "lukasmasuch/best-of-ml-python",
+        "DjangoEx/awesome-python-resources",
+        "uhub/awesome-python",
+        "gessen/majutsu-delta",
+        "duckdb/duckdb-ui",
+        "duckdb/pg_duckdb",
+        "rustyorg/rustygit",
+        "dandavison/magit-delta",
+        "dandavison/dandavison.github.io"
+      ],
+      "limitation": "Immutable commit IDs recorded; these are not represented as verified default-branch HEADs."
+    }
   }
 }
