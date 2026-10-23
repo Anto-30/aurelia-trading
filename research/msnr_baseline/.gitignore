@@ -1,0 +1,10 @@
+data/raw/
+data/derived/
+evidence/run-*/
+*.partial
+*.failure.json
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/

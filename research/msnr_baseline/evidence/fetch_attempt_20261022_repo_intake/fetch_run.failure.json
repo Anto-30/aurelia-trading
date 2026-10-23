@@ -1,0 +1,20 @@
+{
+  "account_token_used": false,
+  "authentication": "none",
+  "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
+  "error": "FetchError: Could not verify active_symbols.pip_size price unit through the new public API: gaierror: [Errno -3] Temporary failure in name resolution",
+  "granularities_requested_seconds": [
+    60,
+    900
+  ],
+  "live_orders_submitted": false,
+  "market_data_received": false,
+  "otp_used": false,
+  "output_dir": "/mnt/data/msnrwork/atos_v2_validation_bundle/research/msnr_baseline/evidence/fetch_attempt_20261022_repo_intake",
+  "requested_end_date_utc_inclusive": "2024-10-21",
+  "requested_start_date_utc_inclusive": "2022-10-21",
+  "schema": "atos.deriv_history_fetch_run_failure.v1",
+  "status": "FAILED_CLOSED",
+  "timestamp_utc": "2026-10-22T17:58:33.034231+00:00",
+  "underlying_symbol": "R_100"
+}

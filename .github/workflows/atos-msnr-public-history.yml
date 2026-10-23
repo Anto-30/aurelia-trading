@@ -1,0 +1,434 @@
+name: ATOS MSNR R_100 Historical Validation (Public Research Only)
+
+on:
+  push:
+    branches:
+      - research/msnr-baseline-r100-20261022
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atos-msnr-public-history-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fetch-verify-simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+    env:
+      PYTHONUNBUFFERED: "1"
+      LIVE_EXECUTION: "BLOCKED"
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      AURELIA_VERIFY_ONLY: "true"
+      AURELIA_ALLOW_LIVE_ORDERS: "false"
+    steps:
+      - name: Check out exact commit
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: research/msnr_baseline/requirements.txt
+
+      - name: Install research-only dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r research/msnr_baseline/requirements.txt pytest
+
+      - name: Run isolated MSNR and ledger guard tests
+        run: python -m pytest -q research/msnr_baseline/tests
+
+      - name: Initialize run evidence
+        id: initialize
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT_DIR="research/msnr_baseline/ci_artifacts/msnr-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$OUT_DIR/evidence" "$OUT_DIR/data/raw"
+          export OUT_DIR
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          out = Path(os.environ["OUT_DIR"])
+          metadata = {
+              "schema": "atos.msnr.ci_run_metadata.v1",
+              "run_id": os.environ["GITHUB_RUN_ID"],
+              "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "git_commit_sha": os.environ["GITHUB_SHA"],
+              "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
+              "authentication": "none",
+              "account_token_used": False,
+              "otp_used": False,
+              "live_orders_submitted": False,
+              "live_execution": "BLOCKED",
+              "final_execution_authorization": False,
+              "requested_start_utc": "2022-10-21",
+              "requested_end_utc_inclusive": "2024-10-21",
+              "status": "INITIALIZED",
+          }
+          (out / "evidence" / "run_metadata.json").write_text(
+              json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+          print(f"OUT_DIR={out}")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write(f"out_dir={out}\n")
+          PY
+
+      - name: Probe bounded history request semantics (old and recent intervals)
+        id: history_bounds_probe
+        shell: bash
+        env:
+          OUT_DIR: ${{ steps.initialize.outputs.out_dir }}
+        run: |
+          set -euo pipefail
+          export OUT_DIR
+          python - <<'PY'
+          import asyncio, json, os, time
+          from pathlib import Path
+          import websockets
+
+          ENDPOINT = "wss://api.derivws.com/trading/v1/options/ws/public"
+          GRANULARITY = 60
+          anchors = [
+              ("requested_start_2022", 1666310400),
+              ("requested_end_2024", 1729468800),
+          ]
+          recent_end_exclusive = (int(time.time()) // 60) * 60
+          recent_start = recent_end_exclusive - 12 * 3600
+
+          async def probe(name, start, end_exclusive, mode, req_id):
+              end_last = end_exclusive - GRANULARITY
+              expected = list(range(start, end_exclusive, GRANULARITY))
+              payload = {
+                  "ticks_history": "R_100",
+                  "end": str(end_last),
+                  "style": "candles",
+                  "granularity": GRANULARITY,
+                  "count": len(expected),
+                  "req_id": req_id,
+              }
+              if mode in ("both_bounds_count", "both_bounds_no_count", "both_bounds_adjusted", "start_latest_count"):
+                  payload["start"] = int(start)
+              if mode == "start_latest_count":
+                  payload["end"] = "latest"
+              if mode == "end_count_only":
+                  payload.pop("start", None)
+              if mode in ("both_bounds_count", "both_bounds_no_count", "both_bounds_adjusted"):
+                  payload["start"] = int(start)
+                  payload["end"] = str(end_last)
+              if mode in ("both_bounds_no_count", "both_bounds_adjusted"):
+                  payload.pop("count", None)
+              if mode == "both_bounds_adjusted":
+                  payload["adjust_start_time"] = 1
+              try:
+                  async with websockets.connect(ENDPOINT, open_timeout=10, close_timeout=5, max_size=8*1024*1024) as ws:
+                      await ws.send(json.dumps(payload, separators=(",", ":")))
+                      raw = await asyncio.wait_for(ws.recv(), timeout=15)
+                  response = json.loads(raw)
+                  if not isinstance(response, dict):
+                      raise ValueError("Response was not a JSON object.")
+                  candles = response.get("candles") if isinstance(response.get("candles"), list) else []
+                  epochs = []
+                  for row in candles:
+                      if isinstance(row, dict) and all(k in row for k in ("open","high","low","close","epoch")):
+                          try:
+                              epochs.append(int(row["epoch"]))
+                          except (TypeError, ValueError, OverflowError):
+                              pass
+                  echo = response.get("echo_req")
+                  echo_keys = ("ticks_history","start","end","style","granularity","count","adjust_start_time","subscribe","req_id")
+                  echo_subset = {k:echo[k] for k in echo_keys if k in echo} if isinstance(echo,dict) else None
+                  exact = sorted(epochs) == expected
+                  in_range = bool(epochs) and min(epochs) >= start and max(epochs) < end_exclusive
+                  return {
+                      "name":name,"mode":mode,"sent_payload":payload,
+                      "requested_start_epoch":start,"requested_end_exclusive_epoch":end_exclusive,
+                      "expected_rows":len(expected),"response_msg_type":response.get("msg_type"),
+                      "response_req_id":response.get("req_id"),"api_error":response.get("error"),
+                      "echo_req_subset":echo_subset,"response_candle_count":len(candles),
+                      "response_epoch_count":len(epochs),"response_epoch_min":min(epochs) if epochs else None,
+                      "response_epoch_max":max(epochs) if epochs else None,
+                      "in_range":in_range,"exact_epoch_coverage":exact,
+                      "status":"PASS_EXACT" if exact else ("PASS_RANGE_PARTIAL" if in_range else "RANGE_IGNORED_OR_DATA_UNAVAILABLE")
+                  }
+              except Exception as exc:
+                  return {"name":name,"mode":mode,"requested_start_epoch":start,
+                      "requested_end_exclusive_epoch":end_exclusive,"expected_rows":len(expected),
+                      "status":"PROBE_ERROR","error":f"{type(exc).__name__}: {exc}",
+                      "in_range":False,"exact_epoch_coverage":False}
+
+          async def main():
+              diagnostics=[]
+              # Historical endpoint documented behavior: count plus numeric end.
+              # Compare with both boundaries and start+latest to isolate what gateway honors.
+              for name, start in anchors:
+                  diagnostics.append(await probe(name, start, start + 12*3600, "both_bounds_count", 7101+len(diagnostics)))
+                  await asyncio.sleep(1.5)
+                  diagnostics.append(await probe(name+"_end_only", start, start + 12*3600, "end_count_only", 7101+len(diagnostics)))
+                  await asyncio.sleep(1.5)
+                  diagnostics.append(await probe(name+"_start_latest", start, start + 12*3600, "start_latest_count", 7101+len(diagnostics)))
+                  await asyncio.sleep(1.5)
+              for name, start in anchors:
+                  diagnostics.append(await probe(name + "_no_count", start, start + 12*3600, "both_bounds_no_count", 7120 + len(diagnostics)))
+                  await asyncio.sleep(1.5)
+                  diagnostics.append(await probe(name + "_adjust_start_time", start, start + 12*3600, "both_bounds_adjusted", 7140 + len(diagnostics)))
+                  await asyncio.sleep(1.5)
+              diagnostics.append(await probe("recent_now", recent_start, recent_end_exclusive, "both_bounds_no_count", 7160))
+              await asyncio.sleep(1.5)
+              # Reproduce a one-candle boundary check, omitting subscribe=0 because the current API schema only permits subscribe=1.
+              diagnostics.append(await probe(
+                  "requested_start_2022_single_candle_end_only",
+                  1666310400, 1666310460, "end_count_only", 7170
+              ))
+              await asyncio.sleep(1.5)
+              diagnostics.append(await probe(
+                  "requested_end_2024_single_candle_end_only",
+                  1729468800, 1729468860, "end_count_only", 7171
+              ))
+              return {
+                  "schema":"atos.deriv.history_bounds_probe.v3","endpoint":ENDPOINT,
+                  "authentication":"none","account_token_used":False,"otp_used":False,"live_orders_submitted":False,
+                  "granularity_seconds":GRANULARITY,"interval_hours":12,"diagnostics":diagnostics,
+                  # One-candle checks are diagnostic only; they must never authorize a two-year download.
+                  "requested_start_anchor_supported":any(x.get("name","").startswith("requested_start_2022") and x.get("expected_rows")==720 and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "requested_end_anchor_supported":any(x.get("name","").startswith("requested_end_2024") and x.get("expected_rows")==720 and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "single_candle_2022_boundary_supported":any(x.get("name")=="requested_start_2022_single_candle_end_only" and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "single_candle_2024_boundary_supported":any(x.get("name")=="requested_end_2024_single_candle_end_only" and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "recent_interval_supported":any(x.get("name")=="recent_now" and x.get("expected_rows")==720 and x.get("exact_epoch_coverage") for x in diagnostics),
+                  "any_historical_interval_supported":any("requested_" in x.get("name","") and x.get("expected_rows")==720 and x.get("in_range") for x in diagnostics),
+                  "note":"Data retrieval probe only. Requires exact/within-range evidence before a full fetch, and computes no trading metrics."
+              }
+
+          report = asyncio.run(main())
+          out = Path(os.environ["OUT_DIR"]) / "evidence" / "history_bounds_probe.json"
+          out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          print(json.dumps(report, indent=2, sort_keys=True))
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write("historical_anchors_supported=" + str(report["requested_start_anchor_supported"] and report["requested_end_anchor_supported"]).lower() + "\n")
+              f.write("recent_bounded_supported=" + str(report["recent_interval_supported"]).lower() + "\n")
+          PY
+
+      - name: Require the public API to honor both historical bounds
+        if: steps.history_bounds_probe.outputs.historical_anchors_supported != 'true' || steps.history_bounds_probe.outputs.recent_bounded_supported != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "FAILED CLOSED: public history did not return exact candle timestamps for both diagnostic intervals."
+          echo "See history_bounds_probe.json in the uploaded artifact. No market-history CSV or performance metrics were produced."
+          exit 2
+
+      - name: Capture a recent 24-hour R_100 candle sample for MT5 equivalence only
+        if: always() && steps.history_bounds_probe.outputs.recent_bounded_supported == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT_DIR="research/msnr_baseline/ci_artifacts/msnr-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          export OUT_DIR
+          python - <<'PY'
+          import asyncio, csv, hashlib, json, math, os, sys, time
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import websockets
+
+          endpoint = "wss://api.derivws.com/trading/v1/options/ws/public"
+          out = Path(os.environ["OUT_DIR"]) / "mt5_equivalence_recent24h"
+          out.mkdir(parents=True, exist_ok=True)
+          csv_path = out / "api_R_100_1m_recent24h.csv"
+          manifest_path = out / "manifest.json"
+          failure_path = out / "capture.failure.json"
+          page_evidence = []
+
+          def sha(path):
+              h = hashlib.sha256()
+              with path.open("rb") as f:
+                  for block in iter(lambda: f.read(1024*1024), b""): h.update(block)
+              return h.hexdigest()
+
+          async def fetch_page(start, end_exclusive, page_no):
+              req_id = 8180 + page_no
+              request = {"ticks_history":"R_100","start":start,"end":str(end_exclusive-60),
+                         "style":"candles","granularity":60,"req_id":req_id}
+              req_path = out / f"api_page_{page_no:02d}_request.json"
+              raw_path = out / f"api_page_{page_no:02d}_raw_response.json"
+              req_path.write_text(json.dumps(request,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+              async with websockets.connect(endpoint,open_timeout=15,close_timeout=5,
+                                             ping_interval=20,ping_timeout=20,
+                                             max_size=8*1024*1024) as ws:
+                  await ws.send(json.dumps(request,separators=(",",":")))
+                  raw = await asyncio.wait_for(ws.recv(),timeout=30)
+              raw_path.write_text(raw,encoding="utf-8")
+              response=json.loads(raw)
+              if not isinstance(response,dict): raise RuntimeError(f"Page {page_no}: response is not a JSON object.")
+              if response.get("error"):
+                  err=response["error"]
+                  raise RuntimeError(f"Page {page_no}: Deriv API error {err.get('code','unknown')}: {err.get('message',err)}")
+              if response.get("msg_type")!="candles": raise RuntimeError(f"Page {page_no}: expected candles response, got {response.get('msg_type')!r}.")
+              candles=response.get("candles")
+              expected=list(range(start,end_exclusive,60))
+              if not isinstance(candles,list) or len(candles)!=len(expected):
+                  raise RuntimeError(f"Page {page_no}: expected {len(expected)} candles, got {len(candles) if isinstance(candles,list) else 'non-list'}.")
+              epochs=[]
+              for idx,candle in enumerate(candles):
+                  if not isinstance(candle,dict) or not all(k in candle for k in ("epoch","open","high","low","close")):
+                      raise RuntimeError(f"Page {page_no}: malformed candle at response index {idx}.")
+                  ef=float(candle["epoch"])
+                  if not math.isfinite(ef) or int(ef)!=ef: raise RuntimeError(f"Page {page_no}: invalid epoch at response index {idx}.")
+                  epoch=int(ef)
+                  if not all(math.isfinite(float(candle[k])) and float(candle[k])>0 for k in ("open","high","low","close")):
+                      raise RuntimeError(f"Page {page_no}: invalid OHLC price at epoch {epoch}.")
+                  o,h,l,cl=(float(candle[k]) for k in ("open","high","low","close"))
+                  if h<max(o,cl) or l>min(o,cl) or h<l: raise RuntimeError(f"Page {page_no}: OHLC invariant failed at epoch {epoch}.")
+                  epochs.append(epoch)
+              if len(set(epochs))!=len(epochs): raise RuntimeError(f"Page {page_no}: duplicate candle epoch.")
+              if sorted(epochs)!=expected:
+                  raise RuntimeError(f"Page {page_no}: requested range [{start},{end_exclusive}) not exactly covered; rows={len(epochs)}, first={min(epochs) if epochs else None}, last={max(epochs) if epochs else None}.")
+              by_epoch={int(c["epoch"]):c for c in candles}
+              page_rows=[by_epoch[e] for e in expected]
+              page_evidence.append({
+                  "page":page_no,"start_epoch_inclusive":start,"end_epoch_exclusive":end_exclusive,
+                  "expected_rows":len(expected),"actual_rows":len(candles),
+                  "first_epoch":expected[0],"last_epoch":expected[-1],
+                  "request_file":req_path.name,"request_sha256":sha(req_path),
+                  "raw_response_file":raw_path.name,"raw_response_sha256":sha(raw_path),
+                  "status":"PASS_EXACT"})
+              return page_rows
+
+          async def main():
+              end_exclusive=(int(time.time())//60)*60
+              start=end_exclusive-24*60*60
+              mid=start+12*60*60
+              rows=[]
+              rows.extend(await fetch_page(start,mid,1))
+              await asyncio.sleep(1.5)
+              rows.extend(await fetch_page(mid,end_exclusive,2))
+              expected=list(range(start,end_exclusive,60))
+              epochs=[int(row["epoch"]) for row in rows]
+              if epochs!=expected: raise RuntimeError(f"Combined coverage failed: expected {len(expected)} ordered epochs; got {len(epochs)}.")
+              with csv_path.open("x",newline="",encoding="utf-8") as f:
+                  writer=csv.writer(f,lineterminator="\n"); writer.writerow(["epoch","open","high","low","close"])
+                  for row in rows: writer.writerow([int(row["epoch"]),*(str(row[k]) for k in ("open","high","low","close"))])
+              manifest={
+                "schema":"aurelia.deriv_mt5_equivalence_api_sample.v1",
+                "status":"API_24H_SAMPLE_READY_FOR_MT5_RECONCILIATION",
+                "purpose":"bounded recent-window comparison only; not 2022-2024 baseline data",
+                "symbol":"R_100","style":"candles","granularity_seconds":60,
+                "start_epoch_inclusive":start,"end_epoch_exclusive":end_exclusive,
+                "start_utc":datetime.fromtimestamp(start,timezone.utc).isoformat(),
+                "end_utc_exclusive":datetime.fromtimestamp(end_exclusive,timezone.utc).isoformat(),
+                "expected_rows":len(expected),"actual_rows":len(rows),
+                "first_epoch":epochs[0],"last_epoch":epochs[-1],"endpoint":endpoint,
+                "authentication":"none","account_token_used":False,"otp_used":False,"live_orders_submitted":False,
+                "pages":page_evidence,"csv_file":csv_path.name,"csv_sha256":sha(csv_path),
+                "generated_utc":datetime.now(timezone.utc).isoformat(),
+                "caveat":"Exact equality in this sample does not prove MT5 symbol mapping, contract economics, or historical-source equivalence for 2022-2024."}
+              manifest_path.write_text(json.dumps(manifest,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+              print(json.dumps(manifest,indent=2,sort_keys=True))
+
+          try: asyncio.run(main())
+          except Exception as exc:
+              failure={"schema":"aurelia.deriv_mt5_equivalence_api_sample_failure.v1","status":"FAILED_CLOSED",
+                "error":f"{type(exc).__name__}: {exc}","completed_pages":page_evidence,
+                "csv_file_exists":csv_path.exists(),"csv_sha256":sha(csv_path) if csv_path.exists() else None,
+                "generated_utc":datetime.now(timezone.utc).isoformat(),
+                "account_token_used":False,"otp_used":False,"live_orders_submitted":False}
+              failure_path.write_text(json.dumps(failure,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+              print(json.dumps(failure,indent=2,sort_keys=True)); sys.exit(1)
+          PY
+
+      - name: Fetch authentic R_100 1m and 15m history from the public API
+        id: fetch_history
+        if: steps.history_bounds_probe.outputs.historical_anchors_supported == 'true' && steps.history_bounds_probe.outputs.recent_bounded_supported == 'true'
+        shell: bash
+        env:
+          OUT_DIR: ${{ steps.initialize.outputs.out_dir }}
+        run: |
+          set -euo pipefail
+          python research/msnr_baseline/scripts/fetch_history.py --start-date 2022-10-21 --end-date 2024-10-21 --output-dir "$OUT_DIR/data/raw" --chunk-days 3 --timeout 15 --retries 2 --retry-delay 2
+
+      - name: Verify complete 1m and 15m datasets
+        id: verify_history
+        if: steps.fetch_history.outcome == 'success'
+        shell: bash
+        env:
+          OUT_DIR: ${{ steps.initialize.outputs.out_dir }}
+        run: |
+          set -euo pipefail
+          python research/msnr_baseline/scripts/verify_history.py "$OUT_DIR/data/raw/R_100_1m.csv" --manifest "$OUT_DIR/data/raw/R_100_1m.manifest.json" --output "$OUT_DIR/data/raw/R_100_1m.verification.json"
+          python research/msnr_baseline/scripts/verify_history.py "$OUT_DIR/data/raw/R_100_15m.csv" --manifest "$OUT_DIR/data/raw/R_100_15m.manifest.json" --output "$OUT_DIR/data/raw/R_100_15m.verification.json"
+
+      - name: Run the frozen MSNR baseline on verified 1m history
+        id: simulate
+        if: steps.verify_history.outcome == 'success'
+        shell: bash
+        env:
+          OUT_DIR: ${{ steps.initialize.outputs.out_dir }}
+        run: |
+          set -uo pipefail
+          python research/msnr_baseline/scripts/run_msnr_simulator.py "$OUT_DIR/data/raw/R_100_1m.csv" --manifest "$OUT_DIR/data/raw/R_100_1m.manifest.json" --verification "$OUT_DIR/data/raw/R_100_1m.verification.json" --ledger "$OUT_DIR/evidence/trade_ledger.jsonl" --summary "$OUT_DIR/evidence/summary.json" --git-commit "$GITHUB_SHA" --allow-unverified-linear-proxy 2>&1 | tee "$OUT_DIR/evidence/simulator_console.log"
+          status=${PIPESTATUS[0]}
+          echo "simulator_exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Record blocked release state
+        if: always()
+        shell: bash
+        env:
+          OUT_DIR: ${{ steps.initialize.outputs.out_dir }}
+          SIMULATOR_EXIT_CODE: ${{ steps.simulate.outputs.simulator_exit_code }}
+        run: |
+          set -euo pipefail
+          export OUT_DIR SIMULATOR_EXIT_CODE
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          out = Path(os.environ["OUT_DIR"])
+          path = out / "evidence" / "run_metadata.json"
+          data = json.loads(path.read_text(encoding="utf-8"))
+          summary_path = out / "evidence" / "summary.json"
+          if summary_path.is_file():
+              summary = json.loads(summary_path.read_text(encoding="utf-8"))
+              data["simulation_status"] = summary.get("run_status")
+              data["qualification_status"] = summary.get("qualification_status")
+              data["metrics"] = summary.get("metrics")
+              data["kill_rule"] = summary.get("kill_rule")
+              data["holy_trinity"] = {
+                  "data_csv_sha256": summary.get("data_csv_sha256"),
+                  "repository_commit_sha": summary.get("repository_commit_sha"),
+                  "explicit_random_seed": summary.get("explicit_random_seed"),
+              }
+              data["status"] = "SIMULATION_SUMMARY_AVAILABLE_NOT_QUALIFIED"
+          else:
+              data["simulator_exit_code"] = os.environ.get("SIMULATOR_EXIT_CODE") or None
+              probe_path = out / "evidence" / "history_bounds_probe.json"
+              if probe_path.is_file():
+                  probe = json.loads(probe_path.read_text(encoding="utf-8"))
+                  data["history_bounds_probe"] = probe
+                  if not probe.get("recent_interval_supported", False):
+                      data["status"] = "PUBLIC_ENDPOINT_BOUNDED_HISTORY_PROBE_FAILED"
+                  elif not (probe.get("requested_start_anchor_supported", False) and probe.get("requested_end_anchor_supported", False)):
+                      data["status"] = "2022_HISTORY_UNAVAILABLE_OR_BOUNDS_IGNORED"
+                  else:
+                      data["status"] = "FETCH_VERIFY_OR_SIMULATION_FAILED"
+              else:
+                  data["status"] = "FETCH_VERIFY_OR_SIMULATION_FAILED"
+          data["live_execution"] = "BLOCKED"
+          data["final_execution_authorization"] = False
+          data["account_token_used"] = False
+          data["otp_used"] = False
+          data["live_orders_submitted"] = False
+          path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+
+      - name: Upload full public research evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atos-msnr-r100-research-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.initialize.outputs.out_dir }}/
+          if-no-files-found: error
+          retention-days: 30
