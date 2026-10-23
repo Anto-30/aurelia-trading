@@ -222,6 +222,103 @@ jobs:
           echo "See history_bounds_probe.json in the uploaded artifact. No market-history CSV or performance metrics were produced."
           exit 2
 
+      - name: Capture a recent 24-hour R_100 candle sample for MT5 equivalence only
+        if: always() && steps.history_bounds_probe.outputs.recent_bounded_supported == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT_DIR="research/msnr_baseline/ci_artifacts/msnr-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          export OUT_DIR
+          python - <<'PY'
+          import asyncio, csv, hashlib, json, math, os, sys, time
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import websockets
+
+          endpoint = "wss://api.derivws.com/trading/v1/options/ws/public"
+          out = Path(os.environ["OUT_DIR"]) / "mt5_equivalence_recent24h"
+          out.mkdir(parents=True, exist_ok=True)
+          request_path = out / "api_request.json"
+          raw_path = out / "api_raw_response.json"
+          csv_path = out / "api_R_100_1m_recent24h.csv"
+          manifest_path = out / "manifest.json"
+          failure_path = out / "capture.failure.json"
+
+          def sha(path):
+              h = hashlib.sha256()
+              with path.open("rb") as f:
+                  for block in iter(lambda: f.read(1024*1024), b""): h.update(block)
+              return h.hexdigest()
+
+          async def main():
+              end_exclusive = (int(time.time()) // 60) * 60
+              start = end_exclusive - 24 * 60 * 60
+              request = {"ticks_history":"R_100","start":start,"end":str(end_exclusive-60),
+                         "style":"candles","granularity":60,"req_id":8181}
+              request_path.write_text(json.dumps(request, indent=2, sort_keys=True)+"\n", encoding="utf-8")
+              async with websockets.connect(endpoint, open_timeout=15, close_timeout=5,
+                                             ping_interval=20, ping_timeout=20,
+                                             max_size=8*1024*1024) as ws:
+                  await ws.send(json.dumps(request, separators=(",",":")))
+                  raw = await asyncio.wait_for(ws.recv(), timeout=30)
+              raw_path.write_text(raw, encoding="utf-8")
+              response = json.loads(raw)
+              if not isinstance(response, dict): raise RuntimeError("Response is not a JSON object.")
+              if response.get("error"):
+                  err=response["error"]; raise RuntimeError(f"Deriv API error {err.get('code','unknown')}: {err.get('message',err)}")
+              if response.get("msg_type") != "candles": raise RuntimeError(f"Expected candles response; received {response.get('msg_type')!r}.")
+              candles=response.get("candles"); expected=list(range(start,end_exclusive,60))
+              if not isinstance(candles,list) or len(candles)!=len(expected):
+                  raise RuntimeError(f"Expected {len(expected)} candles, got {len(candles) if isinstance(candles,list) else 'non-list'}.")
+              epochs=[]
+              for i,candle in enumerate(candles):
+                  if not isinstance(candle,dict) or not all(k in candle for k in ("epoch","open","high","low","close")):
+                      raise RuntimeError(f"Malformed candle at response index {i}.")
+                  ef=float(candle["epoch"])
+                  if not math.isfinite(ef) or int(ef)!=ef: raise RuntimeError(f"Invalid epoch at response index {i}.")
+                  epoch=int(ef)
+                  if not all(math.isfinite(float(candle[k])) and float(candle[k])>0 for k in ("open","high","low","close")):
+                      raise RuntimeError(f"Invalid OHLC price at epoch {epoch}.")
+                  o,h,l,cl=(float(candle[k]) for k in ("open","high","low","close"))
+                  if h<max(o,cl) or l>min(o,cl) or h<l: raise RuntimeError(f"OHLC invariant failed at epoch {epoch}.")
+                  epochs.append(epoch)
+              if epochs!=expected:
+                  raise RuntimeError(f"Recent window mismatch: expected exact {len(expected)} epochs [{start},{end_exclusive}); got {len(epochs)}, first={epochs[0] if epochs else None}, last={epochs[-1] if epochs else None}.")
+              with csv_path.open("x",newline="",encoding="utf-8") as f:
+                  w=csv.writer(f,lineterminator="\n"); w.writerow(["epoch","open","high","low","close"])
+                  for c in candles: w.writerow([int(c["epoch"]),*(str(c[k]) for k in ("open","high","low","close"))])
+              manifest={
+                "schema":"aurelia.deriv_mt5_equivalence_api_sample.v1",
+                "status":"API_24H_SAMPLE_READY_FOR_MT5_RECONCILIATION",
+                "purpose":"bounded recent-window comparison only; not 2022-2024 baseline data",
+                "symbol":"R_100","style":"candles","granularity_seconds":60,
+                "start_epoch_inclusive":start,"end_epoch_exclusive":end_exclusive,
+                "start_utc":datetime.fromtimestamp(start,timezone.utc).isoformat(),
+                "end_utc_exclusive":datetime.fromtimestamp(end_exclusive,timezone.utc).isoformat(),
+                "expected_rows":len(expected),"actual_rows":len(candles),
+                "first_epoch":epochs[0],"last_epoch":epochs[-1],"endpoint":endpoint,
+                "authentication":"none","account_token_used":False,"otp_used":False,"live_orders_submitted":False,
+                "request_file":request_path.name,"request_sha256":sha(request_path),
+                "raw_response_file":raw_path.name,"raw_response_sha256":sha(raw_path),
+                "csv_file":csv_path.name,"csv_sha256":sha(csv_path),
+                "generated_utc":datetime.now(timezone.utc).isoformat(),
+                "caveat":"Hash binds captured bytes and interval; it does not prove MT5 symbol mapping or contract economics."}
+              manifest_path.write_text(json.dumps(manifest,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+              print(json.dumps(manifest,indent=2,sort_keys=True))
+
+          try: asyncio.run(main())
+          except Exception as exc:
+              failure={"schema":"aurelia.deriv_mt5_equivalence_api_sample_failure.v1","status":"FAILED_CLOSED",
+                "error":f"{type(exc).__name__}: {exc}","request_file_exists":request_path.exists(),
+                "raw_response_file_exists":raw_path.exists(),
+                "request_sha256":sha(request_path) if request_path.exists() else None,
+                "raw_response_sha256":sha(raw_path) if raw_path.exists() else None,
+                "generated_utc":datetime.now(timezone.utc).isoformat(),
+                "account_token_used":False,"otp_used":False,"live_orders_submitted":False}
+              failure_path.write_text(json.dumps(failure,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+              print(json.dumps(failure,indent=2,sort_keys=True)); sys.exit(1)
+          PY
+
       - name: Fetch authentic R_100 1m and 15m history from the public API
         id: fetch_history
         if: steps.history_bounds_probe.outputs.historical_anchors_supported == 'true' && steps.history_bounds_probe.outputs.recent_bounded_supported == 'true'
