@@ -1539,7 +1539,19 @@
         "arbitrage-opportunity-scanning",
         "market-pair-enumeration"
       ],
-      "integration_note": "Legacy reference only; public README states the active trading-bot code is private. Do not treat this repository as production execution code."
+      "integration_note": "Legacy reference only; public README states the active trading-bot code is private. Do not treat this repository as production execution code.",
+      "pin_source": "github_recent_commit_search_observed_2018-01-30T07:45:50Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "security_review_status": "PENDING",
+      "runtime_install": "NOT_CLAIMED",
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "Eigenwise/atomic-agents",
@@ -7070,8 +7082,8 @@
     },
     {
       "repo": "cloudflare/cloudflare-os",
-      "category": "ai-agent-platform",
-      "domain": "agent-infrastructure",
+      "category": "cloudflare-app-reference",
+      "domain": "engineering",
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
@@ -7081,26 +7093,33 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/cloudflare/cloudflare-os",
       "head_commit": "03cf8766ecebd6e6b59b7bdd1902eeefc45643eb",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-23T18:44:42Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "agent-chat-ui",
-        "sandboxed-app-development",
-        "gatekeeper-policy-framework"
+        "application-reference",
+        "workflow-ideas"
       ],
-      "integration_note": "Early-access AI productivity environment with connectors and tool execution. Sandbox only; test prompt-injection resistance, approval enforcement, tenant isolation and connector permissions before any adoption.",
+      "integration_note": "Untrusted application source; sandbox only until purpose, dependencies, permissions and deployment model are reviewed.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "caddy-dns/cloudflare",
-      "category": "dns-provider-plugin",
+      "category": "dns-provider-module",
       "domain": "infrastructure",
       "assigned_agents": [
         "ClaudeCode",
@@ -7111,21 +7130,29 @@
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/caddy-dns/cloudflare",
       "head_commit": "a8737d095ad5a48ca031cea6ab704057dbc2d250",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-03-23T19:12:14Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "caddy-dns-challenge",
-        "cloudflare-dns-api"
+        "caddy-dns-provider",
+        "acme-dns-challenge"
       ],
-      "integration_note": "DNS challenge plugin can use Cloudflare API credentials and modify DNS challenge records. Use narrowly scoped token and isolated staging zone; no production secrets or DNS writes during intake.",
+      "integration_note": "DNS-write capable when configured; no production DNS tokens, no certificate/DNS mutations in AURELIA. Review least-privilege token scope and dependency chain.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "zhuima/awesome-cloudflare",
@@ -7140,25 +7167,33 @@
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/zhuima/awesome-cloudflare",
       "head_commit": "4d90410f80178f4c41655c1252a7d5b653e8e8bd",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-13T09:29:29Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "cloudflare-project-discovery"
+        "resource-discovery"
       ],
-      "integration_note": "Curated links are discovery material, not endorsements. Review every downstream project, license and revision independently.",
+      "integration_note": "Curated list only; every linked project needs separate license, provenance and security review.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "MarSeventh/CloudFlare-ImgBed",
-      "category": "cloudflare-image-hosting",
-      "domain": "web-infrastructure",
+      "category": "cloudflare-image-hosting-app",
+      "domain": "application",
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
@@ -7168,27 +7203,34 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/MarSeventh/CloudFlare-ImgBed",
       "head_commit": "fbd4785d1a577c85da824eef232b36b11a2180eb",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-23T07:23:02Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
         "image-upload",
-        "object-storage",
-        "worker-based-image-hosting"
+        "object-storage-integration"
       ],
-      "integration_note": "User-upload and object-storage surface. Review authentication, public exposure, upload validation, abuse controls, storage ACLs and secret handling before any deployment.",
+      "integration_note": "Untrusted upload/storage app; review auth, upload validation, public bucket exposure, XSS, secrets and billing before any deployment.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "cloudflare/cloudflared",
       "category": "cloudflare-tunnel-client",
-      "domain": "networking",
+      "domain": "infrastructure",
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
@@ -7198,27 +7240,34 @@
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/cloudflare/cloudflared",
       "head_commit": "8cc81c7fcc524a2b1ebec51506685180652ea25d",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-23T09:19:17Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "cloudflare-tunnel",
-        "private-network-connectivity",
-        "reverse-proxy"
+        "tunnel-client",
+        "connectivity"
       ],
-      "integration_note": "Privileged network connector that can expose internal services. Review tunnel ingress, egress, identity policy, metrics/debug endpoints and least-privilege service tokens; do not connect AURELIA or production networks during intake.",
+      "integration_note": "Potential network ingress/egress and remote access path; do not create tunnels or expose AURELIA services. Verify metrics/debug endpoints and egress policy.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "dreamhunter2333/cloudflare_temp_email",
-      "category": "temporary-email-service",
-      "domain": "web-infrastructure",
+      "category": "temporary-email-platform",
+      "domain": "application",
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
@@ -7228,26 +7277,34 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/dreamhunter2333/cloudflare_temp_email",
       "head_commit": "8bdd353efcdd65559fb5c0ea6f036a69541595d5",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-23T10:25:07Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "temporary-mailboxes",
-        "email-parsing",
-        "agent-email-workflow"
+        "temporary-mailbox",
+        "email-processing",
+        "cloudflare-workers"
       ],
-      "integration_note": "Handles inbound email and mailbox credentials; README advertises agent-friendly email skill. Isolate test mailboxes, review data retention and authentication, and never expose AURELIA credentials or use for account/security bypass.",
+      "integration_note": "Handles sensitive inbound mail and attachments; test auth/tenant isolation, XSS, SMTP/IMAP exposure, retention, abuse controls and secrets in isolated sandbox only.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "yonggekkk/Cloudflare-vless-trojan",
-      "category": "proxy-tunnel-deployment",
+      "category": "proxy-tunnel-config-reference",
       "domain": "networking",
       "assigned_agents": [
         "ClaudeCode",
@@ -7258,25 +7315,32 @@
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/yonggekkk/Cloudflare-vless-trojan",
       "head_commit": "4a61f9c4e2b96b0ee05519570cf92ff29a6d1b22",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-09-20T01:59:28Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "workers-pages-proxy",
-        "vless-trojan-config"
+        "proxy-configuration-reference"
       ],
-      "integration_note": "Proxy/tunnel deployment scripts and client subscription configuration; do not deploy or route AURELIA traffic through it. Review provenance, security, acceptable use and license before any separate authorized evaluation.",
+      "integration_note": "Reference only. Do not deploy or wire proxy/tunnel configuration into production agents or AURELIA.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "cloudflare/cloudflare-docs",
-      "category": "cloudflare-documentation",
+      "category": "official-documentation",
       "domain": "reference",
       "assigned_agents": [
         "ClaudeCode",
@@ -7287,24 +7351,32 @@
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/cloudflare/cloudflare-docs",
       "head_commit": "06eb1cd432068d63617dbaa973682e1ccda46dbc",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-23T14:45:10Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "official-product-documentation"
+        "documentation-reference"
       ],
-      "integration_note": "Documentation source only. Prefer current official docs; no runtime dependency.",
+      "integration_note": "Documentation source only; use for human-reviewed guidance, not as executable code or authority.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "XIU2/CloudflareSpeedTest",
-      "category": "network-performance-tool",
+      "category": "network-performance-test-tool",
       "domain": "networking",
       "assigned_agents": [
         "ClaudeCode",
@@ -7312,29 +7384,37 @@
         "GrokBot",
         "JEV"
       ],
-      "mode": "TOOLCHAIN_ONLY",
+      "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/XIU2/CloudflareSpeedTest",
       "head_commit": "50b42c7f95cfb06413740ce6e1967578ebe63380",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-09-15T05:40:30Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
         "latency-testing",
-        "Cloudflare-IP-performance-comparison"
+        "network-throughput-testing"
       ],
-      "integration_note": "Network testing tool; restrict probes to authorized infrastructure, rate-limit tests, and verify binaries/build provenance. No production network probing during intake.",
+      "integration_note": "Network probes only against authorized endpoints and from isolated environment; do not use results to modify AURELIA routing or broker connectivity.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "sarperavci/CloudflareBypassForScraping",
-      "category": "anti-bot-bypass-tool",
-      "domain": "security-review",
+      "category": "anti-bot-circumvention-reference",
+      "domain": "security-research",
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
@@ -7344,26 +7424,33 @@
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/sarperavci/CloudflareBypassForScraping",
       "head_commit": "97e4d9777c7d12f9449b9581383858ec06fcbaee",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-22T12:27:23Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "browser-based-challenge-bypass",
-        "request-mirroring"
+        "anti-bot-research-reference"
       ],
-      "integration_note": "README explicitly describes bypassing Cloudflare challenges, cookie extraction and request replay. Do not integrate for evading third-party access controls or anti-abuse protections; reference-only pending legal, policy and security review.",
+      "integration_note": "Do not execute for bypassing access controls or scraping protected targets; use only for authorized defensive research and policy review.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "gslege/CloudflareIP",
-      "category": "cloudflare-ip-list",
-      "domain": "networking",
+      "category": "network-indicator-list",
+      "domain": "reference",
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
@@ -7373,20 +7460,28 @@
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/gslege/CloudflareIP",
       "head_commit": "597aea7ae4dfd4e971846a7664b1884f164f3355",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-23T18:07:23Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "published-ip-and-domain-lists"
+        "ip-list-reference"
       ],
-      "integration_note": "Auto-updated IP/domain lists are untrusted inputs; verify against official Cloudflare IP ranges before firewall or routing use. Do not grant network policy authority.",
+      "integration_note": "Auto-updated network lists are untrusted indicators; validate provenance, integrity and freshness before any firewall use. Never apply automatically.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "cloudflare/cloudflare-go",
@@ -7401,25 +7496,33 @@
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/cloudflare/cloudflare-go",
       "head_commit": "91580cb481bde15bf5738770243f6b7f5908c8a9",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-20T22:59:44Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "cloudflare-api-client-go"
+        "cloudflare-api-client"
       ],
-      "integration_note": "Official Go API client. Pin a reviewed release, inspect dependency/SBOM and scopes, and test only against mocked or staging accounts. No production API mutations.",
+      "integration_note": "SDK can perform privileged account operations depending on token; least-privilege scoped test credentials only, no production secrets or writes.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "maillab/cloud-mail",
-      "category": "cloudflare-mail-service",
-      "domain": "web-infrastructure",
+      "category": "cloudflare-email-service",
+      "domain": "application",
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
@@ -7429,21 +7532,30 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/maillab/cloud-mail",
       "head_commit": "c0009ddae326197e22c44986b6537ca7d97e803a",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-22T06:22:22Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "mail-service",
-        "cloudflare-deployment"
+        "email-service",
+        "role-based-access-control",
+        "object-storage"
       ],
-      "integration_note": "Email service with sensitive inbound/outbound data. Review auth, anti-abuse, retention, deliverability and secrets. Use synthetic test mail only; no connection to AURELIA notification channels.",
+      "integration_note": "Email and attachment storage service; review RBAC, tenant isolation, outbound mail abuse, attachment access, and secret handling before deployment.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "timothymiller/cloudflare-ddns",
@@ -7458,55 +7570,71 @@
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/timothymiller/cloudflare-ddns",
       "head_commit": "545f49d016fdd21f9d5e63f29b5756ed40c4ea24",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-19T13:43:31Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "dynamic-dns-updates",
-        "cloudflare-dns-api"
+        "dynamic-dns",
+        "ip-detection",
+        "dns-record-updates"
       ],
-      "integration_note": "Can mutate DNS records using an API token. Test with mock/staging zone and least-privilege token; no production DNS changes or secrets during intake.",
+      "integration_note": "Can mutate DNS records; dry-run only for initial review, no production API token, no record cleanup, no live DNS writes.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "cloudflare/mcp-server-cloudflare",
-      "category": "cloudflare-mcp-servers",
-      "domain": "agent-infrastructure",
+      "category": "cloudflare-mcp-server",
+      "domain": "agent-integration",
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
         "GrokBot",
         "JEV"
       ],
-      "mode": "TOOLCHAIN_ONLY",
+      "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/cloudflare/mcp-server-cloudflare",
       "head_commit": "a21972e219289337731a066befb5c66886b9ce7b",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-22T15:20:22Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "cloudflare-product-mcp-tools",
-        "account-configuration-read",
-        "potential-api-actions"
+        "cloudflare-api-tools",
+        "mcp-integration"
       ],
-      "integration_note": "Official product-specific MCP server catalog; README directs broad API use to cloudflare/mcp and states the legacy /sse endpoint returns 410, so configure Streamable HTTP /mcp. Treat tool annotations as untrusted, require per-action approval, and use narrow read-only scopes; never allow auto-approved writes.",
+      "integration_note": "High-privilege agent surface: sandbox only; audit tool list, OAuth scopes, prompt-injection/data exfiltration paths and account isolation. No production credentials or write scopes.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "cloudflare/terraform-provider-cloudflare",
-      "category": "terraform-cloudflare-provider",
+      "category": "terraform-provider",
       "domain": "infrastructure",
       "assigned_agents": [
         "ClaudeCode",
@@ -7517,26 +7645,34 @@
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/cloudflare/terraform-provider-cloudflare",
       "head_commit": "9b51a582458f5c5d46d8547ed2604fcba91fb861",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-20T23:33:44Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "terraform-infrastructure-as-code",
-        "cloudflare-api-management"
+        "infrastructure-as-code",
+        "cloudflare-resource-management"
       ],
-      "integration_note": "Can create, update or delete Cloudflare infrastructure. Review provider version, plan output and permissions; sandbox plan-only by default, explicit human approval for any apply, and no production credentials in intake.",
+      "integration_note": "Plan/validate only in isolated workspace; terraform apply and destroy prohibited until independently approved infrastructure change.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "Jazee6/cloudflare-ai-web",
-      "category": "cloudflare-ai-web-app",
-      "domain": "web-infrastructure",
+      "category": "ai-web-application",
+      "domain": "application",
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
@@ -7546,49 +7682,66 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Jazee6/cloudflare-ai-web",
       "head_commit": "50d49147225010eff862053604c453d34910bd5b",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2026-10-10T12:05:32Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "AI-web-app",
-        "Cloudflare-deployment"
+        "ai-web-app",
+        "cloudflare-deployment"
       ],
-      "integration_note": "Application template with web and AI dependencies. Isolate, audit dependency tree and secret handling, and test auth/rate limits before considering use; no production deployment or secrets.",
+      "integration_note": "Sandbox only pending auth, API route, model provider, prompt-injection, rate-limit and secret-handling review.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "supermemoryai/cloudflare-saas-stack",
-      "category": "cloudflare-saas-template",
-      "domain": "web-infrastructure",
+      "category": "saas-starter",
+      "domain": "application",
       "assigned_agents": [
         "ClaudeCode",
         "KimiK3",
         "GrokBot",
         "JEV"
       ],
-      "mode": "REFERENCE_ONLY",
+      "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/supermemoryai/cloudflare-saas-stack",
       "head_commit": "600a5b385e30e8a387dce6d0d782b5a6283db872",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23; default_branch_head_not_independently_verified",
-      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "pin_source": "github_recent_commit_search_observed_2024-11-05T16:43:48Z; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
       "capabilities": [
-        "SaaS-starter-template"
+        "saas-scaffold",
+        "cloudflare-stack"
       ],
-      "integration_note": "Latest observed commit is from 2024; treat as potentially stale. Verify framework/runtime compatibility, security fixes, license and dependencies before use.",
+      "integration_note": "Historical revision; verify current maintenance and dependency/security state. Sandbox only; no tenant data, secrets or production deployment.",
       "security_review_status": "PENDING",
       "license_status": "PENDING_VERIFICATION",
-      "runtime_install": "NOT_PERFORMED",
+      "runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "live_order_submission": false,
       "broker_transaction_write": false,
       "live_lock_mutation": false,
-      "production_secret_access": false
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     }
   ],
   "pin_policy": {
@@ -7599,33 +7752,6 @@
   "last_sync": {
     "checked_date": "2026-10-23",
     "external_repo_batch": [
-      "vinta/awesome-python",
-      "jobbole/awesome-python-cn",
-      "mahmoud/awesome-python-applications",
-      "Shubhamsaboo/awesome-llm-apps",
-      "521xueweihan/HelloGitHub",
-      "lukasmasuch/best-of-ml-python",
-      "DjangoEx/awesome-python-resources",
-      "uhub/awesome-python",
-      "duckdb/duckdb",
-      "gessen/majutsu-delta",
-      "duckdb/duckdb-web",
-      "duckdb/duckdb-ui",
-      "duckdb/duckdb-httpfs",
-      "duckdb/duckdb-java",
-      "duckdb/duckdb-rs",
-      "duckdb/duckdb-python",
-      "duckdb/dbt-duckdb",
-      "duckdb/duckdb-postgres",
-      "duckdb/pg_duckdb",
-      "duckdb/duckdb-wasm",
-      "davidgasquez/awesome-duckdb",
-      "rustyorg/rustygit",
-      "dandavison/magit-delta",
-      "dandavison/dandavison.github.io",
-      "openai/php2shell-checker",
-      "9bie/php2shell-bypass-aslr-exp",
-      "omnigent-ai/omnigent",
       "cloudflare/cloudflare-os",
       "caddy-dns/cloudflare",
       "zhuima/awesome-cloudflare",
@@ -7643,10 +7769,11 @@
       "cloudflare/mcp-server-cloudflare",
       "cloudflare/terraform-provider-cloudflare",
       "Jazee6/cloudflare-ai-web",
-      "supermemoryai/cloudflare-saas-stack"
+      "supermemoryai/cloudflare-saas-stack",
+      "manu354/cryptocurrency-arbitrage"
     ],
     "status": "REGISTERED_FOR_REVIEW_ONLY",
-    "note": "19-repository Cloudflare/crypto batch reviewed as metadata only; 18 new entries added, one cryptocurrency arbitrage repository already existed. Observed commits are immutable identifiers but are not verified as current default-branch HEADs. No install or runtime connection.",
+    "note": "All newly observed commit IDs are immutable revisions from recent-commit search, not verified default-branch HEADs. No installs, execution, deployment, API writes or runtime connections are implied.",
     "pin_resolution_followup": {
       "date": "2026-10-23",
       "method": "GitHub recent commit search results",
@@ -7664,6 +7791,13 @@
         "dandavison/dandavison.github.io"
       ],
       "limitation": "Immutable commit IDs recorded; these are not represented as verified default-branch HEADs."
+    },
+    "cloudflare_batch": {
+      "repository_count": 19,
+      "new_records": 18,
+      "preexisting_records": 1,
+      "commit_pin_status": "IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "install_policy": "BLOCKED_PENDING_HEAD_LICENSE_AND_SECURITY_REVIEW"
     }
   }
 }
