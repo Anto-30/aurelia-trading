@@ -145,7 +145,7 @@ class AgentWorkerSupervisor:
                                 "capital_authority": False,
                             }
                             try:
-                                process.stdin.write((json.dumps(request, sort_keys=True) + "\\n").encode("utf-8"))
+                                process.stdin.write((json.dumps(request, sort_keys=True) + "\n").encode("utf-8"))
                                 await process.stdin.drain()
                                 raw_result = await asyncio.wait_for(
                                     process.stdout.readline(), timeout=self.task_timeout_seconds
