@@ -96,6 +96,12 @@ def test_new_public_request_schema_and_forbidden_keys():
     validate_public_payload({"active_symbols": "brief"})
     validate_public_payload({"ticks": "R_100", "subscribe": 1})
     validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "count": 5000})
+    validate_public_payload({"ticks_history": "frxEURUSD", "end": "latest", "style": "ticks"})
+    with pytest.raises(PublicMarketDataError, match="end is required"):
+        validate_public_payload({"ticks_history": "R_100", "style": "ticks"})
+    for symbol in ("R", "R-100", "A" * 31, "éR100", "R_100\n"):
+        with pytest.raises(PublicMarketDataError, match="2-30 character ASCII word"):
+            validate_public_payload({"ticks_history": symbol, "end": "latest", "style": "ticks"})
     # Current schema supports an explicit enum of candle intervals, not arbitrary positive integers.
     validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 120, "subscribe": 1, "adjust_start_time": 1})
     validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 900, "subscribe": 1})
