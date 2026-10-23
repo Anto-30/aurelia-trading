@@ -21,6 +21,12 @@ from deriv_public_market_data import (
     validate_public_payload,
     validate_tick_response,
 )
+from fetch_history import (
+    FetchError,
+    build_candle_payload,
+    normalize_candles,
+    validate_fetch_controls,
+)
 
 
 def raw_trades():
@@ -35,6 +41,80 @@ def raw_trades():
 def engine(multiplier=1.0):
     return EmpiricalValidationEngine(commission_per_unit_round_trip=0.01, spread_pips_round_trip=2.0,
         pip_size_price=0.1, slippage_bps_per_fill=5.0, linear_multiplier=multiplier, initial_equity=1000.0)
+
+
+def test_history_fetcher_normalizes_only_strict_json_candle_types_and_exact_coverage():
+    rows = [
+        {"epoch": 60, "open": 100, "high": 101, "low": 99, "close": 100.5},
+        {"epoch": 120, "open": 100.5, "high": 102, "low": 100, "close": 101.5},
+    ]
+    normalized = normalize_candles(rows, 60, 180, 60)
+    assert normalized == [
+        {"epoch": 60, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5},
+        {"epoch": 120, "open": 100.5, "high": 102.0, "low": 100.0, "close": 101.5},
+    ]
+
+    invalid_candles = (
+        {**rows[0], "epoch": True},
+        {**rows[0], "epoch": "60"},
+        {**rows[0], "epoch": 60.0},
+        {**rows[0], "epoch": -1},
+        {**rows[0], "epoch": 10000000000},
+        {**rows[0], "open": "100"},
+        {**rows[0], "open": True},
+        {**rows[0], "close": False},
+        {**rows[0], "high": float("nan")},
+        {**rows[0], "low": float("inf")},
+    )
+    for candle in invalid_candles:
+        with pytest.raises(FetchError):
+            normalize_candles([candle], 60, 120, 60)
+
+    for bad_args in (
+        (True, 0, 0),
+        (0, 0, 0),
+        (-1, 0, 0),
+        (float("nan"), 0, 0),
+        (float("inf"), 0, 0),
+        ("1", 0, 0),
+        (1, True, 0),
+        (1, -1, 0),
+        (1, 11, 0),
+        (1, 1.0, 0),
+        (1, 0, True),
+        (1, 0, -1),
+        (1, 0, float("nan")),
+        (1, 0, float("inf")),
+        (1, 0, "1"),
+    ):
+        with pytest.raises(FetchError):
+            validate_fetch_controls(*bad_args)
+
+    assert validate_fetch_controls(1, 2, 0) == (1.0, 2, 0.0)
+
+
+def test_history_fetcher_builds_bounded_valid_current_api_candle_request():
+    payload = build_candle_payload(60, 180, 60)
+    assert payload == {
+        "ticks_history": "R_100",
+        "start": 60,
+        "end": "120",
+        "style": "candles",
+        "granularity": 60,
+        "req_id": 1,
+    }
+
+    for args in (
+        (True, 180, 60),
+        (60, 180.0, 60),
+        (180, 120, 60),
+        (60, 180, True),
+        (60, 180, 61),
+        (60, 10000000000, 60),
+        (60, 60 + 5001 * 60, 60),
+    ):
+        with pytest.raises(FetchError):
+            build_candle_payload(*args)
 
 
 def test_perf_ledger_post_cost_metrics_and_exit_order():
