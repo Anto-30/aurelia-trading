@@ -468,6 +468,7 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
     decision_count = 0
     trade_count = 0
     cancellation_count = 0
+    seen_event_ids: set[str] = set()
     observed_code_hashes: set[str] = set()
     observed_data_hashes: set[str] = set()
     with ledger_path.open("r", encoding="utf-8") as stream:
@@ -480,6 +481,12 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
                 raise ValueError(f"line {line_no}: invalid JSON record") from exc
             if not isinstance(record, dict) or record.get("schema") != SCHEMA:
                 raise ValueError(f"line {line_no}: invalid record schema")
+            event_id = record.get("event_id")
+            if not isinstance(event_id, str) or not event_id.strip():
+                raise ValueError(f"line {line_no}: event_id must be a non-empty string")
+            if event_id in seen_event_ids:
+                raise ValueError(f"line {line_no}: duplicate event_id")
+            seen_event_ids.add(event_id)
             observed_hash = record.get("record_sha256")
             observed_previous = record.get("previous_record_sha256")
             if observed_previous != previous:
@@ -491,8 +498,30 @@ def verify_ledger(path: str | Path, manifest_path: str | Path | None = None) -> 
                 raise ValueError(f"line {line_no}: record hash mismatch")
             if record.get("record_type") == "decision":
                 decision_count += 1
+                action = record.get("action")
+                decision_status = record.get("decision_status")
+                if action not in ACTIONS:
+                    raise ValueError(f"line {line_no}: invalid decision action")
+                reasons = record.get("reason_codes")
+                if not isinstance(reasons, list) or any(not isinstance(reason, str) or not reason.strip() for reason in reasons):
+                    raise ValueError(f"line {line_no}: decision reason_codes must be a list of non-empty strings")
+                if action == "NO_TRADE":
+                    if decision_status != "NO_TRADE":
+                        raise ValueError(f"line {line_no}: NO_TRADE action requires NO_TRADE decision_status")
+                elif decision_status not in {"ACCEPTED", "REJECTED"}:
+                    raise ValueError(f"line {line_no}: entry action requires ACCEPTED or REJECTED decision_status")
+                elif decision_status == "ACCEPTED" and record.get("hmm_regime_state") is None:
+                    raise ValueError(f"line {line_no}: accepted entry requires an HMM regime state")
+                elif decision_status == "REJECTED" and not reasons:
+                    raise ValueError(f"line {line_no}: rejected entry decision requires reason_codes")
                 granularity = record.get("granularity_seconds")
-                if granularity not in (60, 900) or record.get("execution_bar_epoch") != record.get("signal_bar_epoch") + granularity:
+                signal_epoch = record.get("signal_bar_epoch")
+                execution_epoch = record.get("execution_bar_epoch")
+                if isinstance(granularity, bool) or not isinstance(granularity, int) or granularity not in (60, 900):
+                    raise ValueError(f"line {line_no}: decision granularity must be integer 60 or 900")
+                if isinstance(signal_epoch, bool) or not isinstance(signal_epoch, int) or signal_epoch < 0:
+                    raise ValueError(f"line {line_no}: signal_bar_epoch must be a nonnegative integer")
+                if isinstance(execution_epoch, bool) or not isinstance(execution_epoch, int) or execution_epoch != signal_epoch + granularity:
                     raise ValueError(f"line {line_no}: decision does not respect next-bar execution timing")
                 expected_decision_utc = _epoch_iso(int(record["execution_bar_epoch"]))
                 if record.get("timestamp_utc") != expected_decision_utc or record.get("signal_timestamp_utc") != expected_decision_utc:
