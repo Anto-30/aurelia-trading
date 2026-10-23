@@ -87,6 +87,12 @@ def main() -> int:
         authority = read("runtime/core/authority.py")
         runtime_min = re.search(r"(?m)^MIN_PROBABILITY\s*=\s*([0-9.]+)\s*$", authority)
         runtime_max = re.search(r"(?m)^MAX_PROBABILITY\s*=\s*([0-9.]+)\s*$", authority)
+        invariants = read("assurance/aurelia_invariants.py")
+        if "return isfinite(value) and 0.55 <= value <= 0.75" not in invariants:
+            failures.append("ASSURANCE_PROBABILITY_POLICY_MISMATCH_EXPECTED_0.55_TO_0.75")
+        lifecycle = read("scripts/verify_deriv_transaction_lifecycle.py")
+        if "0.55 <= verify_probability <= 0.75" not in lifecycle:
+            failures.append("DERIV_VERIFY_PROBABILITY_POLICY_MISMATCH_EXPECTED_0.55_TO_0.75")
         readme = read("README.md")
         try:
             policy_values = (
@@ -97,9 +103,9 @@ def main() -> int:
             )
         except (TypeError, ValueError):
             policy_values = (None, None, None, None)
-        if policy_values != (0.50, 0.75, 0.50, 0.75):
-            failures.append("PROBABILITY_POLICY_RANGE_MISMATCH_EXPECTED_0.50_TO_0.75")
-        if "hard probability band is **50%–75%**" not in readme:
+        if policy_values != (0.55, 0.75, 0.55, 0.75):
+            failures.append("PROBABILITY_POLICY_RANGE_MISMATCH_EXPECTED_0.55_TO_0.75")
+        if "hard probability band is **55%–75%**" not in readme:
             failures.append("README_PROBABILITY_POLICY_RANGE_MISMATCH")
 
     # Scan text files for obvious credential material. This is deliberately
@@ -125,7 +131,7 @@ def main() -> int:
         return 1
 
     print("AURELIA_PRODUCTION_ACCEPTANCE=AUDIT_PASS")
-    print("PROBABILITY_POLICY_RANGE=0.50..0.75")
+    print("PROBABILITY_POLICY_RANGE=0.55..0.75")
     print("CAPITAL_MOVEMENT_PERMITTED=false")
     print("FINAL_EXECUTION_AUTHORIZATION=false")
     print("LIVE_EXECUTION=BLOCKED")

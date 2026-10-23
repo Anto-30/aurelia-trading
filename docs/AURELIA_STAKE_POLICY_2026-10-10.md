@@ -1,8 +1,8 @@
-# AURELIA Stake and Probability Policy — 2026-10-10
+# AURELIA Stake and Probability Policy — updated 2026-10-23 (original 2026-10-10)
 
 ## Probability threshold
 
-A live candidate's estimated trade probability must be within the inclusive range **50% to 75%**. Values outside the range are rejected, never clipped. The numeric band is only one gate: probability must also be calibrated, fresh, and free of unresolved drift, and the trade must have positive expected value after execution costs, slippage, and quote costs. A 50% probability is not inherently profitable.
+The canonical live candidate probability band, updated 2026-10-23, is **55% to 75% inclusive**. This supersedes the initial 50% lower bound from the original 2026-10-10 version. Values outside the current range are rejected, never clipped. The numeric band is only one gate: probability must also be calibrated, fresh, and free of unresolved drift, and the trade must have positive expected value after execution costs, slippage, and quote costs. A 50% probability is not inherently profitable.
 
 ## Balance-scaled stake
 

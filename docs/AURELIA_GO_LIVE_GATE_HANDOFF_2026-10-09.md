@@ -54,7 +54,7 @@ Before strategy eligibility can pass, retain the existing frozen campaign and de
 1. Complete prospective OOS collection after the campaign's predeclared OOS start, without retuning or reuse.
 2. At least 100 valid OOS observations for the strategy/symbol/regime cell and positive OOS expectancy.
 3. At least 100 observed quoted-contract economics samples with positive mean net return after actual quote-based payout, costs, and applicable execution assumptions.
-4. Valid calibration under the existing reliability requirements, with no unresolved drift; the global capital-plane hard band is 0.50–0.75 with no clipping. The frozen R100 research collector retains its narrower 0.55–0.75 range for that predeclared campaign and must not be retuned mid-campaign.
+4. Valid calibration under the existing reliability requirements, with no unresolved drift. At the time of this 2026-10-09 handoff, the global hard band was 0.50–0.75; that historical baseline was superseded on 2026-10-23 by the current global 0.55–0.75 band. The frozen R100 research campaign remains 0.55–0.75 and must not be retuned mid-campaign.
 5. A production deployment tied to the exact source commit, authenticated broker evidence, production soak, and signed/current attestations for market data, probability, Risk Warden, Execution Firewall, exposure, idempotency, watchdog, and reconciliation.
 6. After any separately authorized live transaction, broker-confirmed transaction evidence and healthy reconciliation. Simulation, proposals, tests, and a green CI badge do not substitute for this evidence.
 

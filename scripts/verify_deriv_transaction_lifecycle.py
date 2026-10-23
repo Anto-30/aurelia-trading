@@ -165,7 +165,7 @@ async def run() -> int:
             except ValueError:
                 return fail("VERIFY_ONLY_PROBABILITY_INVALID")
             if not isfinite(verify_probability) or not (
-                0.50 <= verify_probability <= 0.75
+                0.55 <= verify_probability <= 0.75
             ):
                 return fail("VERIFY_ONLY_PROBABILITY_OUTSIDE_HARD_POLICY")
 

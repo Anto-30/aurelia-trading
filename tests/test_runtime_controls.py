@@ -90,10 +90,11 @@ def dec(probability: float = 0.60, stake: float = 2.0) -> Decision:
 
 class TestControls(unittest.TestCase):
     def test_probability_no_clipping(self):
-        self.assertTrue(probability_is_valid(0.50))
+        self.assertFalse(probability_is_valid(0.50))
         self.assertTrue(probability_is_valid(0.55))
         self.assertTrue(probability_is_valid(0.75))
         self.assertFalse(probability_is_valid(0.49))
+        self.assertFalse(probability_is_valid(0.549999))
         self.assertFalse(probability_is_valid(0.76))
         self.assertFalse(probability_is_valid(0.82))
         self.assertFalse(probability_is_valid(True))
@@ -324,11 +325,14 @@ class TestControls(unittest.TestCase):
             self.assertEqual(len(journal.read_all()), 1)
 
     def test_idempotency_duplicate_rejected(self):
-        store = IdempotencyStore()
-        store.register_intent("I")
-        store.record_economic_effect("I")
-        with self.assertRaises(RuntimeError):
+        # Use an isolated temporary store so developer/runtime state cannot make
+        # the first effect look like a duplicate before this test starts.
+        with tempfile.TemporaryDirectory() as td:
+            store = IdempotencyStore(os.path.join(td, "idempotency.json"))
+            store.register_intent("I")
             store.record_economic_effect("I")
+            with self.assertRaisesRegex(RuntimeError, "DUPLICATE_ECONOMIC_EFFECT"):
+                store.record_economic_effect("I")
 
     def test_fencing(self):
         fence = ExecutionFence()
