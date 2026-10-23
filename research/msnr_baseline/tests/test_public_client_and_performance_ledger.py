@@ -153,6 +153,38 @@ def test_client_is_pinned_to_public_endpoint_and_current_history_schema():
         validate_history_response({"msg_type":"history","history":{"prices":[1.0]}})
 
 
+def test_market_data_response_validators_reject_coerced_json_types():
+    valid_candle = {"open": 100, "high": 102, "low": 99, "close": 101, "epoch": 100}
+    for field, invalid_value in (
+        ("open", "100"),
+        ("high", True),
+        ("low", False),
+        ("close", "101.0"),
+        ("epoch", "100"),
+        ("epoch", True),
+        ("epoch", 100.0),
+    ):
+        candle = {**valid_candle, field: invalid_value}
+        with pytest.raises(PublicMarketDataError):
+            validate_candle_response({"msg_type": "candles", "candles": [candle]})
+
+    invalid_histories = (
+        {"prices": ["1.1"], "times": [100]},
+        {"prices": [True], "times": [100]},
+        {"prices": [1.1], "times": ["100"]},
+        {"prices": [1.1], "times": [True]},
+        {"prices": [1.1], "times": [100.0]},
+    )
+    for history in invalid_histories:
+        with pytest.raises(PublicMarketDataError):
+            validate_history_response({"msg_type": "history", "history": history})
+
+    with pytest.raises(PublicMarketDataError, match="Expected candles response"):
+        validate_candle_response(None)
+    with pytest.raises(PublicMarketDataError, match="Expected history response"):
+        validate_history_response(None)
+
+
 def test_history_builder_keeps_ticks_history_request_key():
     client = DerivPublicMarketDataClient()
     with pytest.raises(PublicMarketDataError, match="Candle granularity must be one of"):
