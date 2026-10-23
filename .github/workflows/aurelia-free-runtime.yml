@@ -166,6 +166,7 @@ jobs:
 
   whatsapp-alert-smoke:
     if: ${{ github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
+    environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
