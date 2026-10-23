@@ -25,6 +25,13 @@ FORBIDDEN_KEYS = frozenset({
 })
 COMMON_KEYS = frozenset({"req_id", "passthrough"})
 CANDLE_FIELDS = ("open", "high", "low", "close", "epoch")
+SYMBOL_PATTERN = re.compile(r"\w{2,30}", flags=re.ASCII)
+
+
+def _valid_symbol(value: Any) -> bool:
+    return isinstance(value, str) and SYMBOL_PATTERN.fullmatch(value) is not None
+
+
 # Allowed values from the current Deriv ticks_history schema (style="candles").
 SUPPORTED_CANDLE_GRANULARITIES = frozenset({60, 120, 180, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400})
 
@@ -64,20 +71,27 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
     if operation == "active_symbols":
         if payload[operation] not in ("brief", "full"):
             raise PublicMarketDataError("active_symbols must be 'brief' or 'full'.")
-        if "contract_type" in payload and not isinstance(payload["contract_type"], list):
-            raise PublicMarketDataError("active_symbols contract_type, when provided, must be an array.")
+        if "contract_type" in payload and (
+            not isinstance(payload["contract_type"], list)
+            or any(not isinstance(item, str) or not item for item in payload["contract_type"])
+        ):
+            raise PublicMarketDataError("active_symbols contract_type, when provided, must be an array of non-empty strings.")
     elif operation == "ticks":
         symbols = payload[operation]
-        valid_symbols = (isinstance(symbols, str) and bool(symbols)) or (
-            isinstance(symbols, list) and bool(symbols) and all(isinstance(x, str) and x for x in symbols)
+        valid_symbols = _valid_symbol(symbols) or (
+            isinstance(symbols, list) and bool(symbols) and all(_valid_symbol(x) for x in symbols)
         )
         if not valid_symbols:
-            raise PublicMarketDataError("ticks must name a symbol or non-empty list of symbols.")
-        if "subscribe" in payload and payload["subscribe"] != 1:
-            raise PublicMarketDataError("Current ticks subscriptions accept subscribe=1 only.")
+            raise PublicMarketDataError("ticks must name a 2-30 character ASCII word symbol or non-empty list of symbols.")
+        if "subscribe" in payload and (
+            isinstance(payload["subscribe"], bool)
+            or not isinstance(payload["subscribe"], int)
+            or payload["subscribe"] != 1
+        ):
+            raise PublicMarketDataError("Current ticks subscriptions accept integer subscribe=1 only.")
     elif operation == "ticks_history":
         symbol = payload[operation]
-        if not isinstance(symbol, str) or re.fullmatch(r"\w{2,30}", symbol, flags=re.ASCII) is None:
+        if not _valid_symbol(symbol):
             raise PublicMarketDataError("ticks_history symbol must match the 2-30 character ASCII word pattern.")
         if "end" not in payload:
             raise PublicMarketDataError("ticks_history end is required.")
@@ -184,6 +198,39 @@ def validate_history_response(message: dict[str, Any]) -> tuple[list[float], lis
     return clean_prices, clean_times
 
 
+def validate_tick_response(message: dict[str, Any], *, requested_symbol: str) -> dict[str, float | int]:
+    if not isinstance(message, dict) or message.get("msg_type") != "tick":
+        actual = message.get("msg_type") if isinstance(message, dict) else type(message).__name__
+        raise PublicMarketDataError(f"Expected tick response, got {actual!r}.")
+    if not _valid_symbol(requested_symbol):
+        raise PublicMarketDataError("Requested tick symbol must match the 2-30 character ASCII word pattern.")
+    tick = message.get("tick")
+    if not isinstance(tick, dict):
+        raise PublicMarketDataError("Tick response must contain a tick object.")
+    if "quote" not in tick or "epoch" not in tick:
+        raise PublicMarketDataError("Tick observation requires quote and epoch for research use.")
+    quote_raw, epoch_raw = tick["quote"], tick["epoch"]
+    if isinstance(quote_raw, bool) or not isinstance(quote_raw, (int, float)):
+        raise PublicMarketDataError("Tick quote must be a JSON number, not a coercible string or boolean.")
+    if isinstance(epoch_raw, bool) or not isinstance(epoch_raw, int):
+        raise PublicMarketDataError("Tick epoch must be a JSON integer.")
+    try:
+        quote = float(quote_raw)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise PublicMarketDataError("Tick quote is invalid.") from exc
+    if not math.isfinite(quote) or quote <= 0:
+        raise PublicMarketDataError("Tick quote must be finite and positive.")
+    if not 0 <= epoch_raw <= 9999999999:
+        raise PublicMarketDataError("Tick epoch is outside the supported integer range.")
+    response_symbol = tick.get("symbol")
+    if response_symbol is not None:
+        if not _valid_symbol(response_symbol):
+            raise PublicMarketDataError("Returned tick symbol is malformed.")
+        if response_symbol != requested_symbol:
+            raise PublicMarketDataError("Returned tick symbol does not match the requested symbol.")
+    return {"epoch": epoch_raw, "quote": quote}
+
+
 class DerivPublicMarketDataClient:
     """One-shot public requests and bounded reconnecting tick observation.
 
@@ -285,8 +332,20 @@ class DerivPublicMarketDataClient:
 
     async def stream_ticks(self, *, underlying_symbol: str, max_reconnects: int = 5,
                            initial_backoff_seconds: float = 1.0) -> AsyncIterator[dict[str, Any]]:
-        if not underlying_symbol or max_reconnects < 0 or initial_backoff_seconds <= 0:
-            raise PublicMarketDataError("Invalid stream/reconnect parameters.")
+        if not _valid_symbol(underlying_symbol):
+            raise PublicMarketDataError("Stream symbol must match the 2-30 character ASCII word pattern.")
+        if (
+            isinstance(max_reconnects, bool)
+            or not isinstance(max_reconnects, int)
+            or not 0 <= max_reconnects <= 100
+            or isinstance(initial_backoff_seconds, bool)
+            or not isinstance(initial_backoff_seconds, (int, float))
+            or not math.isfinite(float(initial_backoff_seconds))
+            or initial_backoff_seconds <= 0
+        ):
+            raise PublicMarketDataError("Reconnect count must be an integer from 0 to 100 and backoff must be finite and positive.")
+        stream_request = {"ticks": underlying_symbol, "subscribe": 1}
+        validate_public_payload(stream_request)
         failures = 0
         while True:
             try:
@@ -294,7 +353,7 @@ class DerivPublicMarketDataClient:
                     self.endpoint, open_timeout=self.connect_timeout, close_timeout=3,
                     ping_interval=20, ping_timeout=20, max_size=8 * 1024 * 1024,
                 ) as ws:
-                    await ws.send(json.dumps({"ticks": underlying_symbol, "subscribe": 1, "req_id": self._next_id()}))
+                    await ws.send(json.dumps({**stream_request, "req_id": self._next_id()}))
                     async for raw in ws:
                         try:
                             message = json.loads(raw)
@@ -307,16 +366,11 @@ class DerivPublicMarketDataClient:
                             raise PublicMarketDataError(f"Deriv tick stream error {error.get('code', 'unknown')}: {error.get('message', error)}")
                         if message.get("msg_type") != "tick":
                             continue
-                        tick = message.get("tick")
-                        if not isinstance(tick, dict):
+                        if message.get("msg_type") != "tick":
                             continue
-                        if "quote" not in tick or "epoch" not in tick:
-                            raise PublicMarketDataError("Tick observation requires quote and epoch for research use.")
-                        quote, epoch_f = float(tick["quote"]), float(tick["epoch"])
-                        if not math.isfinite(quote) or quote <= 0 or not math.isfinite(epoch_f) or int(epoch_f) != epoch_f:
-                            raise PublicMarketDataError("Tick quote/epoch is invalid.")
+                        clean_tick = validate_tick_response(message, requested_symbol=underlying_symbol)
                         yield {"msg_type": "tick", "underlying_symbol_requested": underlying_symbol,
-                               "epoch": int(epoch_f), "quote": quote, "raw": message}
+                               **clean_tick, "raw": message}
                 failures += 1
             except asyncio.CancelledError:
                 raise
