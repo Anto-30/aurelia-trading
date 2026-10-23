@@ -132,6 +132,8 @@ def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | 
         raw_ohlc = tuple(candle[key] for key in ("open", "high", "low", "close"))
         if isinstance(epoch_raw, bool) or not isinstance(epoch_raw, int):
             raise PublicMarketDataError(f"Candle {i} epoch must be a JSON integer.")
+        if not 0 <= epoch_raw <= 9999999999:
+            raise PublicMarketDataError(f"Candle {i} epoch is outside the supported integer range.")
         if any(isinstance(value, bool) or not isinstance(value, (int, float)) for value in raw_ohlc):
             raise PublicMarketDataError(f"Candle {i} OHLC values must be JSON numbers.")
         try:
@@ -167,6 +169,8 @@ def validate_history_response(message: dict[str, Any]) -> tuple[list[float], lis
             raise PublicMarketDataError("History prices must be JSON numbers, not coercible strings or booleans.")
         if isinstance(epoch, bool) or not isinstance(epoch, int):
             raise PublicMarketDataError("History times must be JSON integer epochs, not coercible values.")
+        if not 0 <= epoch <= 9999999999:
+            raise PublicMarketDataError("History epoch is outside the supported integer range.")
         try:
             px = float(price)
         except (TypeError, ValueError, OverflowError) as exc:
