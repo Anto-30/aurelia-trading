@@ -280,6 +280,17 @@ def test_stream_ticks_rejects_invalid_symbol_and_reconnect_parameters_before_con
             asyncio.run(consume("R_100", initial_backoff_seconds=backoff))
 
 
+def test_client_timeouts_must_be_finite_positive_numeric_seconds():
+    for bad in (True, False, 0, -1, float("nan"), float("inf"), float("-inf"), "1", 10 ** 1000):
+        with pytest.raises(PublicMarketDataError, match="finite positive number"):
+            DerivPublicMarketDataClient(connect_timeout=bad)
+        with pytest.raises(PublicMarketDataError, match="finite positive number"):
+            DerivPublicMarketDataClient(response_timeout=bad)
+    client = DerivPublicMarketDataClient(connect_timeout=0.25, response_timeout=1)
+    assert client.connect_timeout == 0.25
+    assert client.response_timeout == 1.0
+
+
 def test_stream_ticks_uses_public_request_and_yields_only_validated_tick(monkeypatch):
     received = {}
 
