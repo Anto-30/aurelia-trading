@@ -96,5 +96,27 @@ class ProtectedWorkflowGateTests(unittest.TestCase):
             self.assertIn(f"{gate} == 'true'", condition)
 
 
+    def test_every_external_github_action_uses_an_immutable_full_sha(self):
+        workflow_paths = sorted(WORKFLOW_DIR.glob("*.yml")) + sorted(WORKFLOW_DIR.glob("*.yaml"))
+        self.assertTrue(workflow_paths, "no GitHub Actions workflow files found")
+        for path in workflow_paths:
+            relative_path = path.relative_to(ROOT).as_posix()
+            for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+                match = re.match(r"^\\s*(?:-\\s*)?uses:\\s*([^\\s#]+)", line)
+                if not match:
+                    continue
+                action_ref = match.group(1)
+                if action_ref.startswith("./"):
+                    continue
+                with self.subTest(workflow=relative_path, line=line_number, action=action_ref):
+                    self.assertIn("@", action_ref, "external action must pin a ref")
+                    revision = action_ref.rsplit("@", 1)[1]
+                    self.assertRegex(
+                        revision,
+                        r"^[0-9a-f]{40}$",
+                        "external actions must use a full immutable commit SHA, not a branch or release tag",
+                    )
+
+
 if __name__ == "__main__":
     unittest.main()
