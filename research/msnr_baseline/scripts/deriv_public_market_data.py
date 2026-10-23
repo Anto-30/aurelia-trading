@@ -24,6 +24,8 @@ FORBIDDEN_KEYS = frozenset({
 })
 COMMON_KEYS = frozenset({"req_id", "passthrough"})
 CANDLE_FIELDS = ("open", "high", "low", "close", "epoch")
+# Allowed values from the current Deriv ticks_history schema (style="candles").
+SUPPORTED_CANDLE_GRANULARITIES = frozenset({60, 120, 180, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400})
 
 
 class PublicMarketDataError(RuntimeError):
@@ -84,9 +86,10 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
         if "count" in payload and (not isinstance(payload["count"], int) or not 1 <= payload["count"] <= 5000):
             raise PublicMarketDataError("ticks_history count must be between 1 and 5000.")
         if "granularity" in payload:
-            # Current API removes the legacy fixed enum. A positive integer candle width is accepted.
-            if isinstance(payload["granularity"], bool) or not isinstance(payload["granularity"], int) or payload["granularity"] <= 0:
-                raise PublicMarketDataError("ticks_history granularity must be a positive integer.")
+            granularity = payload["granularity"]
+            if isinstance(granularity, bool) or not isinstance(granularity, int) or granularity not in SUPPORTED_CANDLE_GRANULARITIES:
+                allowed = ", ".join(str(value) for value in sorted(SUPPORTED_CANDLE_GRANULARITIES))
+                raise PublicMarketDataError(f"ticks_history granularity must be one of: {allowed}.")
         # Current API accepts 0 or 1 for these optional flags; for one-shot requests
         # this client omits subscribe rather than relying on either value.
         for key in ("subscribe", "adjust_start_time"):
@@ -224,9 +227,10 @@ class DerivPublicMarketDataClient:
             "style": style, "count": int(count),
         }
         if style == "candles":
-            if granularity_seconds <= 0:
-                raise PublicMarketDataError("Candle granularity must be positive.")
-            payload["granularity"] = int(granularity_seconds)
+            if isinstance(granularity_seconds, bool) or not isinstance(granularity_seconds, int) or granularity_seconds not in SUPPORTED_CANDLE_GRANULARITIES:
+                allowed = ", ".join(str(value) for value in sorted(SUPPORTED_CANDLE_GRANULARITIES))
+                raise PublicMarketDataError(f"Candle granularity must be one of: {allowed}.")
+            payload["granularity"] = granularity_seconds
         return await self.request(payload, expected_msg_type="candles" if style == "candles" else "history")
 
     async def stream_ticks(self, *, underlying_symbol: str, max_reconnects: int = 5,
