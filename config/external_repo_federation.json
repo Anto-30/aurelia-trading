@@ -1540,8 +1540,8 @@
         "market-pair-enumeration"
       ],
       "integration_note": "Legacy reference only; public README states the active trading-bot code is private. Do not treat this repository as production execution code.",
-      "pin_source": "github_recent_commit_search_observed_2018-01-30T07:45:50Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "security_review_status": "PENDING",
       "runtime_install": "NOT_CLAIMED",
       "controls": {
@@ -7093,8 +7093,8 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/cloudflare/cloudflare-os",
       "head_commit": "03cf8766ecebd6e6b59b7bdd1902eeefc45643eb",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23T18:44:42Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "application-reference",
         "workflow-ideas"
@@ -7130,8 +7130,8 @@
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/caddy-dns/cloudflare",
       "head_commit": "a8737d095ad5a48ca031cea6ab704057dbc2d250",
-      "pin_source": "github_recent_commit_search_observed_2026-03-23T19:12:14Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "caddy-dns-provider",
         "acme-dns-challenge"
@@ -7167,8 +7167,8 @@
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/zhuima/awesome-cloudflare",
       "head_commit": "4d90410f80178f4c41655c1252a7d5b653e8e8bd",
-      "pin_source": "github_recent_commit_search_observed_2026-10-13T09:29:29Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "resource-discovery"
       ],
@@ -7203,8 +7203,8 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/MarSeventh/CloudFlare-ImgBed",
       "head_commit": "fbd4785d1a577c85da824eef232b36b11a2180eb",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23T07:23:02Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "image-upload",
         "object-storage-integration"
@@ -7240,8 +7240,8 @@
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/cloudflare/cloudflared",
       "head_commit": "8cc81c7fcc524a2b1ebec51506685180652ea25d",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23T09:19:17Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "tunnel-client",
         "connectivity"
@@ -7277,8 +7277,8 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/dreamhunter2333/cloudflare_temp_email",
       "head_commit": "8bdd353efcdd65559fb5c0ea6f036a69541595d5",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23T10:25:07Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "temporary-mailbox",
         "email-processing",
@@ -7315,8 +7315,8 @@
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/yonggekkk/Cloudflare-vless-trojan",
       "head_commit": "4a61f9c4e2b96b0ee05519570cf92ff29a6d1b22",
-      "pin_source": "github_recent_commit_search_observed_2026-09-20T01:59:28Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "proxy-configuration-reference"
       ],
@@ -7351,8 +7351,8 @@
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/cloudflare/cloudflare-docs",
       "head_commit": "06eb1cd432068d63617dbaa973682e1ccda46dbc",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23T14:45:10Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "documentation-reference"
       ],
@@ -7387,8 +7387,8 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/XIU2/CloudflareSpeedTest",
       "head_commit": "50b42c7f95cfb06413740ce6e1967578ebe63380",
-      "pin_source": "github_recent_commit_search_observed_2026-09-15T05:40:30Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "latency-testing",
         "network-throughput-testing"
@@ -7424,8 +7424,8 @@
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/sarperavci/CloudflareBypassForScraping",
       "head_commit": "97e4d9777c7d12f9449b9581383858ec06fcbaee",
-      "pin_source": "github_recent_commit_search_observed_2026-10-22T12:27:23Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "anti-bot-research-reference"
       ],
@@ -7460,8 +7460,8 @@
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/gslege/CloudflareIP",
       "head_commit": "597aea7ae4dfd4e971846a7664b1884f164f3355",
-      "pin_source": "github_recent_commit_search_observed_2026-10-23T18:07:23Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "ip-list-reference"
       ],
@@ -7496,8 +7496,8 @@
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/cloudflare/cloudflare-go",
       "head_commit": "91580cb481bde15bf5738770243f6b7f5908c8a9",
-      "pin_source": "github_recent_commit_search_observed_2026-10-20T22:59:44Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "cloudflare-api-client"
       ],
@@ -7532,8 +7532,8 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/maillab/cloud-mail",
       "head_commit": "c0009ddae326197e22c44986b6537ca7d97e803a",
-      "pin_source": "github_recent_commit_search_observed_2026-10-22T06:22:22Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "email-service",
         "role-based-access-control",
@@ -7570,8 +7570,8 @@
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/timothymiller/cloudflare-ddns",
       "head_commit": "545f49d016fdd21f9d5e63f29b5756ed40c4ea24",
-      "pin_source": "github_recent_commit_search_observed_2026-10-19T13:43:31Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "dynamic-dns",
         "ip-detection",
@@ -7608,8 +7608,8 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/cloudflare/mcp-server-cloudflare",
       "head_commit": "a21972e219289337731a066befb5c66886b9ce7b",
-      "pin_source": "github_recent_commit_search_observed_2026-10-22T15:20:22Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "cloudflare-api-tools",
         "mcp-integration"
@@ -7645,8 +7645,8 @@
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/cloudflare/terraform-provider-cloudflare",
       "head_commit": "9b51a582458f5c5d46d8547ed2604fcba91fb861",
-      "pin_source": "github_recent_commit_search_observed_2026-10-20T23:33:44Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "infrastructure-as-code",
         "cloudflare-resource-management"
@@ -7682,8 +7682,8 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Jazee6/cloudflare-ai-web",
       "head_commit": "50d49147225010eff862053604c453d34910bd5b",
-      "pin_source": "github_recent_commit_search_observed_2026-10-10T12:05:32Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "ai-web-app",
         "cloudflare-deployment"
@@ -7719,8 +7719,8 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/supermemoryai/cloudflare-saas-stack",
       "head_commit": "600a5b385e30e8a387dce6d0d782b5a6283db872",
-      "pin_source": "github_recent_commit_search_observed_2024-11-05T16:43:48Z; default_branch_head_unverified",
-      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
       "capabilities": [
         "saas-scaffold",
         "cloudflare-stack"
