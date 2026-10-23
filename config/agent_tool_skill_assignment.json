@@ -843,5 +843,64 @@
     "Tool access is role-scoped; agent names in a registry do not grant connector authentication.",
     "The Dev role is registered logically but cannot run until a user-controlled device is connected.",
     "Only the existing AURELIA deterministic capital plane owns live trading authorization; all agent profiles have capital_authority=false except the AURELIA policy-owner label, which still cannot bypass gates."
+  ],
+  "external_repo_batches": [
+    {
+      "checked_date": "2026-10-23",
+      "registry_path": "config/external_repo_federation.json",
+      "repository_count": 3,
+      "repositories": [
+        {
+          "repo": "Jakeschincariol/day-trader-skill",
+          "commit": "3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "KanishkThakar/day-trader-warroom",
+          "commit": "3e46cfaf991694a5be118d3b57bc119f988635f9",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "yoavfael/day-trading-skill",
+          "commit": "b0623ec77c7accbd6bc96a16627840d7f16dd423",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "runtime_install": "NOT_CLAIMED"
+        }
+      ],
+      "immutable_commit_object_verification": {
+        "checked_date": "2026-10-23",
+        "verified_count": 3,
+        "failed_count": 0,
+        "method": "GitHub commit lookup returned the exact requested SHA for each repository",
+        "limitation": "This confirms immutable commit objects exist; it does not prove each SHA equals the repository default-branch HEAD.",
+        "default_branch_head_verification": "PENDING"
+      },
+      "validation_status": {
+        "sbom": "NOT_RUN",
+        "dependency_and_secret_scans": "NOT_RUN",
+        "isolated_smoke_tests": "NOT_RUN",
+        "independent_review": "PENDING",
+        "canonical_ci": "NOT_VERIFIED",
+        "default_branch_head_verification": "PENDING",
+        "exact_commit_pins": "3_IMMUTABLE_COMMIT_OBJECTS_VERIFIED; DEFAULT_BRANCH_HEAD_NOT_VERIFIED"
+      },
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      },
+      "high_risk_note": "The first two repositories contain multi-step trading toolkits, simulated replay and broker-ticket workflow concepts; do not copy their execution logic into AURELIA. No candidate has capital authority or order permission."
+    }
   ]
 }
