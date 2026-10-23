@@ -163,6 +163,8 @@ def test_market_data_response_validators_reject_coerced_json_types():
         ("epoch", "100"),
         ("epoch", True),
         ("epoch", 100.0),
+        ("epoch", -1),
+        ("epoch", 10000000000),
     ):
         candle = {**valid_candle, field: invalid_value}
         with pytest.raises(PublicMarketDataError):
@@ -174,6 +176,8 @@ def test_market_data_response_validators_reject_coerced_json_types():
         {"prices": [1.1], "times": ["100"]},
         {"prices": [1.1], "times": [True]},
         {"prices": [1.1], "times": [100.0]},
+        {"prices": [1.1], "times": [-1]},
+        {"prices": [1.1], "times": [10000000000]},
     )
     for history in invalid_histories:
         with pytest.raises(PublicMarketDataError):
