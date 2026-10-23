@@ -64,3 +64,60 @@ This plugin routes Hermes terminal, file and code operations into a Cua Space. I
 - Pull request #174 remains open and draft. CI workflows triggered by the registry commits were still queued/waiting at the last check; no passing result is claimed.
 
 The registries contain metadata only. This is not evidence of installation, source-code execution, completed SBOM/scans, passing tests, independent approval, or runtime connectivity.
+
+
+## Additional repository batch — 2026-10-23
+
+Status: **REGISTERED FOR REVIEW — NO INSTALLATION OR RUNTIME CONNECTION**
+
+The following 27 supplied URLs were checked for repository identity and default branch where available, then recorded in the canonical external repository registry. This batch adds 26 new records; `gessen/majutsu-delta` was already present and remains unpinned. Registry total after the update: 329 entries. Commit observations are not treated as verified default-branch HEAD pins until rechecked against the branch ref. Entries marked `UNPINNED_BLOCKED` must not be installed or executed.
+
+| Repository | Default branch | Recorded commit / pin status | Classification |
+|---|---|---|---|
+| https://github.com/vinta/awesome-python | master | `8c385dcab9b1a7b6029a6ecb7c5b1f52597fd418` — observed commit, HEAD recheck required | REFERENCE_ONLY |
+| https://github.com/jobbole/awesome-python-cn | master | UNPINNED — blocked | REFERENCE_ONLY |
+| https://github.com/mahmoud/awesome-python-applications | master | `ee6ff705d902d4b59f3203c44015ec8e7c759c8a` — observed commit, HEAD recheck required | REFERENCE_ONLY |
+| https://github.com/Shubhamsaboo/awesome-llm-apps | main | `6c16b23f1bacd0fdf240bb5141ef45e59e82c306` — observed commit, HEAD recheck required | REFERENCE_ONLY |
+| https://github.com/521xueweihan/HelloGitHub | master | UNPINNED — blocked | REFERENCE_ONLY |
+| https://github.com/lukasmasuch/best-of-ml-python | main | UNPINNED — blocked | REFERENCE_ONLY |
+| https://github.com/DjangoEx/awesome-python-resources | main | UNPINNED — blocked | REFERENCE_ONLY |
+| https://github.com/uhub/awesome-python | master | UNPINNED — blocked | REFERENCE_ONLY |
+| https://github.com/duckdb/duckdb | main | `1641475ef1db08ec063631ff6a8f08d9d6736ae7` — observed commit, HEAD recheck required | TOOLCHAIN_ONLY |
+| https://github.com/gessen/majutsu-delta | master | UNPINNED — blocked; repository README lookup returned 404 | REFERENCE_ONLY |
+| https://github.com/duckdb/duckdb-web | main | `5d13ec7734088f793b3547f852a8eb0878fa4ceb` — observed commit, HEAD recheck required | REFERENCE_ONLY |
+| https://github.com/duckdb/duckdb-ui | main | UNPINNED — blocked | TOOLCHAIN_ONLY |
+| https://github.com/duckdb/duckdb-httpfs | main | `77392a72077a85897db2519fae11e2c0da972b8a` — observed commit, HEAD recheck required | TOOLCHAIN_ONLY |
+| https://github.com/duckdb/duckdb-java | main | `679d526542cf9dfb24322d9d9c75641624f24bc1` — observed commit, HEAD recheck required | TOOLCHAIN_ONLY |
+| https://github.com/duckdb/duckdb-rs | main | `4acbea84794582c4cd962ee971a3d7a5dcb72e39` — observed commit, HEAD recheck required | TOOLCHAIN_ONLY |
+| https://github.com/duckdb/duckdb-python | main | `4154efc6aa9114a04ee705e2182e044e13381fff` — observed commit, HEAD recheck required | TOOLCHAIN_ONLY |
+| https://github.com/duckdb/dbt-duckdb | master | `a993eaee5674de1acc2226279739842012f929e3` — observed commit, HEAD recheck required | TOOLCHAIN_ONLY |
+| https://github.com/duckdb/duckdb-postgres | main | `487235919b12b66cc6fdbf2ec1511273aac168d0` — observed commit, HEAD recheck required | TOOLCHAIN_ONLY |
+| https://github.com/duckdb/pg_duckdb | main | UNPINNED — blocked | TOOLCHAIN_ONLY |
+| https://github.com/duckdb/duckdb-wasm | main | `1f85a503e0c25f0c0980f205915de328c923f476` — observed commit, HEAD recheck required | TOOLCHAIN_ONLY |
+| https://github.com/davidgasquez/awesome-duckdb | main | `2fe7c07d3e6f1fdb02f3bba703f0d5f5037f93b0` — observed commit, HEAD recheck required | REFERENCE_ONLY |
+| https://github.com/rustyorg/rustygit | main | UNPINNED — blocked | TOOLCHAIN_ONLY |
+| https://github.com/dandavison/magit-delta | master | UNPINNED — blocked | TOOLCHAIN_ONLY |
+| https://github.com/dandavison/dandavison.github.io | master | UNPINNED — blocked | REFERENCE_ONLY |
+| https://github.com/openai/php2shell-checker | main | `ffcd3fc82e5b404f2a04a95b2805ca7639d530fa` — observed commit, HEAD recheck required | REFERENCE_ONLY |
+| https://github.com/9bie/php2shell-bypass-aslr-exp | main | `80eae705288de858d73f075795dc7e1b0fdb7479` — observed commit, HEAD recheck required | REFERENCE_ONLY |
+| https://github.com/omnigent-ai/omnigent | main | `464fba3e9520516838f0e184a56bb7dc8d379169` — observed commit, HEAD recheck required | SANDBOX_ONLY |
+
+### Batch-specific security decisions
+
+- **Awesome lists and catalogues:** discovery/reference material only. A listing is not a security endorsement; review each linked package separately before adding dependencies or agent skills.
+- **DuckDB core and integrations:** toolchain evaluation only. Before use, pin mutually compatible engine/client/extension versions, produce an SBOM, scan dependencies, and test with synthetic data. Specifically review remote-file access and outbound network behavior in `duckdb-httpfs`; review extension permissions, SQL semantics and database isolation for Postgres integrations; review build scripts and native dependencies for language clients. No database migration or production connection is authorized by these registry entries.
+- **Git tooling:** `rustygit`, `magit-delta` and `majutsu-delta` remain blocked from execution until exact commits and licenses are confirmed.
+- **PHP2Shell checker:** defensive version-warning utility only. It checks advertised HTTP headers and may send HEAD/GET requests; this is not proof that a server is patched. Only check systems with authorization.
+- **PHP2Shell ASLR bypass:** the README explicitly describes remote code execution against a PHP/Apache target. This source is retained as defensive threat-intelligence reference only. Do not execute it, test it against any target, deploy it, or wire it into AURELIA, CI, or any agent workflow.
+- **Omnigent:** alpha multi-agent meta-harness. Sandbox-only, no broker session, production secrets, home-directory mounts, or capital-plane access.
+
+### Verification and readiness
+
+- Canonical external repository registry update: commit `614ecf4729f853a0522d86327b43b59b08bf6161`.
+- Canonical agent/tool assignment metadata update: commit `ee351d782530978dbfd52d10dd054120db4aa7f4`.
+- Registry JSON parsing succeeded after the writes. Four entries from the prior batch plus this batch remain metadata-only; all new records deny capital authority, live-order submission, broker transaction writes, secret reading and live-lock mutation.
+- Exact default-branch HEAD verification for all observed commits: **PENDING**. Eleven repositories in this batch are explicitly unpinned and blocked.
+- SBOM, dependency/secret scans, isolated smoke tests and independent review: **NOT RUN / PENDING**.
+- Installation, code execution and runtime connection: **NOT PERFORMED**.
+
+The AURELIA `config/LIVE_LOCK.yaml` must remain unchanged and VERIFY_ONLY. This intake is not an installation or release approval.
