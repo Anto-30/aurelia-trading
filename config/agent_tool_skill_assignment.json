@@ -654,223 +654,178 @@
     "latest_review_batch": {
       "checked_date": "2026-10-23",
       "registry_path": "config/external_repo_federation.json",
-      "repository_count": 27,
+      "repository_count": 19,
       "repositories": [
         {
-          "repo": "vinta/awesome-python",
-          "commit": "8c385dcab9b1a7b6029a6ecb7c5b1f52597fd418",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "jobbole/awesome-python-cn",
-          "commit": "e718fecd821fb94d696713da1259a86f18b400af",
+          "repo": "manu354/cryptocurrency-arbitrage",
+          "commit": "853d1d0d026997ace7c380aba350978c064a6519",
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
           "mode": "REFERENCE_ONLY",
           "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
         },
         {
-          "repo": "mahmoud/awesome-python-applications",
-          "commit": "ee6ff705d902d4b59f3203c44015ec8e7c759c8a",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "Shubhamsaboo/awesome-llm-apps",
-          "commit": "6c16b23f1bacd0fdf240bb5141ef45e59e82c306",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "521xueweihan/HelloGitHub",
-          "commit": "030121514da552ed91e640ef8bde4083c753dd52",
+          "repo": "cloudflare/cloudflare-os",
+          "commit": "03cf8766ecebd6e6b59b7bdd1902eeefc45643eb",
           "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "lukasmasuch/best-of-ml-python",
-          "commit": "47f29706164810be3fe3c3e50f5216fe8e95d2dc",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "DjangoEx/awesome-python-resources",
-          "commit": "fbe8a7d2fb1f685366aa07266ca3dceec4e694e3",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "uhub/awesome-python",
-          "commit": "30ddec3b30bb9dedb1f9284f468313e4ea597595",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "duckdb/duckdb",
-          "commit": "1641475ef1db08ec063631ff6a8f08d9d6736ae7",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "TOOLCHAIN_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "gessen/majutsu-delta",
-          "commit": "699e6275d3be8215bece29431c449443c71888c4",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "duckdb/duckdb-web",
-          "commit": "5d13ec7734088f793b3547f852a8eb0878fa4ceb",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "duckdb/duckdb-ui",
-          "commit": "b4f0b9bb123f8c61f739ba72eb5511236082c1e7",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
-          "mode": "TOOLCHAIN_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "duckdb/duckdb-httpfs",
-          "commit": "77392a72077a85897db2519fae11e2c0da972b8a",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "TOOLCHAIN_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "duckdb/duckdb-java",
-          "commit": "679d526542cf9dfb24322d9d9c75641624f24bc1",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "TOOLCHAIN_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "duckdb/duckdb-rs",
-          "commit": "4acbea84794582c4cd962ee971a3d7a5dcb72e39",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "TOOLCHAIN_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "duckdb/duckdb-python",
-          "commit": "4154efc6aa9114a04ee705e2182e044e13381fff",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "TOOLCHAIN_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "duckdb/dbt-duckdb",
-          "commit": "a993eaee5674de1acc2226279739842012f929e3",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "TOOLCHAIN_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "duckdb/duckdb-postgres",
-          "commit": "487235919b12b66cc6fdbf2ec1511273aac168d0",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "TOOLCHAIN_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "duckdb/pg_duckdb",
-          "commit": "ee38d3b540ecea1d93683ba99bdcec5632a21eaf",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
-          "mode": "TOOLCHAIN_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "duckdb/duckdb-wasm",
-          "commit": "1f85a503e0c25f0c0980f205915de328c923f476",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "TOOLCHAIN_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "davidgasquez/awesome-duckdb",
-          "commit": "2fe7c07d3e6f1fdb02f3bba703f0d5f5037f93b0",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "rustyorg/rustygit",
-          "commit": "0d6063b2fc889be6fa44c913ed29758f3c1f9b93",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
-          "mode": "TOOLCHAIN_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "dandavison/magit-delta",
-          "commit": "5fc7dbddcfacfe46d3fd876172ad02a9ab6ac616",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
-          "mode": "TOOLCHAIN_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "dandavison/dandavison.github.io",
-          "commit": "f52759b795ae15996b990e14c6349f6a30c733f3",
-          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "openai/php2shell-checker",
-          "commit": "ffcd3fc82e5b404f2a04a95b2805ca7639d530fa",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "9bie/php2shell-bypass-aslr-exp",
-          "commit": "80eae705288de858d73f075795dc7e1b0fdb7479",
-          "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
-          "mode": "REFERENCE_ONLY",
-          "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
-        },
-        {
-          "repo": "omnigent-ai/omnigent",
-          "commit": "54c21ba8ff841aab03f53889498274256e138812",
-          "commit_pin_status": "PREEXISTING_ENTRY_REVIEW_REQUIRED",
           "mode": "SANDBOX_ONLY",
           "security_review": "PENDING",
-          "runtime_install": "NOT_CLAIMED"
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "caddy-dns/cloudflare",
+          "commit": "a8737d095ad5a48ca031cea6ab704057dbc2d250",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "zhuima/awesome-cloudflare",
+          "commit": "4d90410f80178f4c41655c1252a7d5b653e8e8bd",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "MarSeventh/CloudFlare-ImgBed",
+          "commit": "fbd4785d1a577c85da824eef232b36b11a2180eb",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "SANDBOX_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "cloudflare/cloudflared",
+          "commit": "8cc81c7fcc524a2b1ebec51506685180652ea25d",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "dreamhunter2333/cloudflare_temp_email",
+          "commit": "8bdd353efcdd65559fb5c0ea6f036a69541595d5",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "SANDBOX_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "yonggekkk/Cloudflare-vless-trojan",
+          "commit": "4a61f9c4e2b96b0ee05519570cf92ff29a6d1b22",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "cloudflare/cloudflare-docs",
+          "commit": "06eb1cd432068d63617dbaa973682e1ccda46dbc",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "XIU2/CloudflareSpeedTest",
+          "commit": "50b42c7f95cfb06413740ce6e1967578ebe63380",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "SANDBOX_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "sarperavci/CloudflareBypassForScraping",
+          "commit": "97e4d9777c7d12f9449b9581383858ec06fcbaee",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "gslege/CloudflareIP",
+          "commit": "597aea7ae4dfd4e971846a7664b1884f164f3355",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "REFERENCE_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "cloudflare/cloudflare-go",
+          "commit": "91580cb481bde15bf5738770243f6b7f5908c8a9",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "maillab/cloud-mail",
+          "commit": "c0009ddae326197e22c44986b6537ca7d97e803a",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "SANDBOX_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "timothymiller/cloudflare-ddns",
+          "commit": "545f49d016fdd21f9d5e63f29b5756ed40c4ea24",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "cloudflare/mcp-server-cloudflare",
+          "commit": "a21972e219289337731a066befb5c66886b9ce7b",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "SANDBOX_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "cloudflare/terraform-provider-cloudflare",
+          "commit": "9b51a582458f5c5d46d8547ed2604fcba91fb861",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "TOOLCHAIN_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "Jazee6/cloudflare-ai-web",
+          "commit": "50d49147225010eff862053604c453d34910bd5b",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "SANDBOX_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
+        },
+        {
+          "repo": "supermemoryai/cloudflare-saas-stack",
+          "commit": "600a5b385e30e8a387dce6d0d782b5a6283db872",
+          "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+          "mode": "SANDBOX_ONLY",
+          "security_review": "PENDING",
+          "license_review": "PENDING_VERIFICATION",
+          "runtime_install": "NOT_PERFORMED"
         }
       ],
       "controls": {
@@ -888,10 +843,10 @@
         "independent_review": "PENDING",
         "canonical_ci": "NOT_VERIFIED",
         "default_branch_head_verification": "PENDING",
-        "exact_commit_pins": "IMMUTABLE_COMMIT_IDS_RECORDED; DEFAULT_BRANCH_HEAD_NOT_VERIFIED"
+        "exact_commit_pins": "OBSERVED_COMMIT_IDS_RECORDED; CURRENT_DEFAULT_BRANCH_HEAD_NOT_VERIFIED"
       },
-      "high_risk_note": "9bie/php2shell-bypass-aslr-exp is exploit/RCE research and must not be executed, deployed, or wired into CI/runtime. openai/php2shell-checker is defensive version-checking only and requires authorization for URL checks.",
-      "note": "Registry references only. Any unresolved commit pin blocks installation. Agent routing metadata does not establish installed software or running agents."
+      "high_risk_note": "sarperavci/CloudflareBypassForScraping is reference-only: do not use to evade third-party anti-bot controls. yonggekkk/Cloudflare-vless-trojan is reference-only proxy configuration; no AURELIA traffic routing. cloudflared, DDNS, Caddy DNS and Terraform provider can change network/DNS/infra and must not receive production credentials or write permissions during review. Cloudflare MCP actions require narrow scopes and per-action approval.",
+      "note": "18 new records added; manu354/cryptocurrency-arbitrage was already registered and remains a legacy reference-only arbitrage scanner, not executable trading authority. All repositories remain metadata-only; no install, build, runtime connection, DNS change, deployment or broker/capital interaction was performed."
     }
   },
   "invariants": [
