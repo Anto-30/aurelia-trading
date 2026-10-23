@@ -183,3 +183,11 @@ The AURELIA `config/LIVE_LOCK.yaml` must remain unchanged and VERIFY_ONLY. This 
 - A repository focused on anti-bot challenge handling is reference-only and must not be used for unauthorized third-party access. The proxy/tunnel template remains reference-only.
 - SBOM, dependency/secret scans, isolated smoke tests and independent review are not run. No source was installed, built, executed or connected to a runtime.
 - Global controls remain unchanged: no capital authority, live orders, broker transaction writes, live-lock mutation, production-secret access or production deployment authority. `config/LIVE_LOCK.yaml` remains `VERIFY_ONLY` and `LIVE_EXECUTION: BLOCKED`.
+
+## Follow-up verification — 2026-10-23
+
+- GitHub's commit endpoint successfully resolved the exact immutable commit object recorded for each of the 19 Cloudflare/crypto intake entries. This confirms the commit objects exist; it does **not** establish that they are the current default-branch HEADs. The 19 records now use `PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED` and retain default-branch HEAD verification as pending.
+- Registry metadata update commit: `0e21a3f3e3c2d29fda9a8c0b25d130a0b20ed0e6`.
+- At the time of this update, the workflow runs associated with that registry commit were still active or queued: Agent Continuity Watchdog run 1598, Agent Federation Audit run 1503, gstack Workflow Federation Assurance run 188 (all in progress), and AURELIA Assurance run 3755 (waiting). Their results must be checked after completion; no pass is inferred from a running or queued state.
+- PR #186 has no submitted reviews and no inline review threads at the time of this check. Keep the PR in draft. SBOM, dependency/secret scans, isolated source tests, license/source audit, and independent review remain pending.
+- `config/LIVE_LOCK.yaml` blob SHA remains `b2cddd1efb0f25f35a6a08354290f805812bf34c` on both the intake branch and `main`; live execution remains blocked and capital-plane mode remains `VERIFY_ONLY`.
