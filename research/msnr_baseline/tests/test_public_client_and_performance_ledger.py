@@ -279,6 +279,87 @@ def test_stream_ticks_rejects_invalid_symbol_and_reconnect_parameters_before_con
             asyncio.run(consume("R_100", initial_backoff_seconds=backoff))
 
 
+def test_stream_ticks_uses_public_request_and_yields_only_validated_tick(monkeypatch):
+    received = {}
+
+    class FakeSocket:
+        def __init__(self, messages):
+            self.messages = list(messages)
+        async def send(self, payload):
+            received["request"] = json.loads(payload)
+        def __aiter__(self):
+            return self
+        async def __anext__(self):
+            if not self.messages:
+                raise StopAsyncIteration
+            return json.dumps(self.messages.pop(0))
+
+    class FakeConnection:
+        def __init__(self, socket):
+            self.socket = socket
+        async def __aenter__(self):
+            return self.socket
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    message = {"msg_type": "tick", "tick": {"quote": 123.45, "epoch": 1700000000, "symbol": "R_100", "pip_size": 2}}
+    monkeypatch.setattr(
+        "deriv_public_market_data.websockets.connect",
+        lambda *args, **kwargs: FakeConnection(FakeSocket([message])),
+    )
+    client = DerivPublicMarketDataClient()
+
+    async def take_first_tick():
+        stream = client.stream_ticks(underlying_symbol="R_100", max_reconnects=0)
+        try:
+            return await anext(stream)
+        finally:
+            await stream.aclose()
+
+    result = asyncio.run(take_first_tick())
+    assert received["request"]["ticks"] == "R_100"
+    assert received["request"]["subscribe"] == 1
+    assert received["request"]["req_id"] == 1001
+    assert result["msg_type"] == "tick"
+    assert result["underlying_symbol_requested"] == "R_100"
+    assert result["epoch"] == 1700000000
+    assert result["quote"] == 123.45
+
+
+def test_stream_ticks_rejects_coercible_quote_in_mocked_websocket(monkeypatch):
+    class FakeSocket:
+        def __init__(self):
+            self.messages = [json.dumps({"msg_type": "tick", "tick": {"quote": "123.45", "epoch": 1700000000, "symbol": "R_100"}})]
+        async def send(self, payload):
+            return None
+        def __aiter__(self):
+            return self
+        async def __anext__(self):
+            if not self.messages:
+                raise StopAsyncIteration
+            return self.messages.pop(0)
+
+    class FakeConnection:
+        async def __aenter__(self):
+            self.socket = FakeSocket()
+            return self.socket
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        "deriv_public_market_data.websockets.connect",
+        lambda *args, **kwargs: FakeConnection(),
+    )
+    client = DerivPublicMarketDataClient()
+
+    async def take_first_tick():
+        stream = client.stream_ticks(underlying_symbol="R_100", max_reconnects=0)
+        return await anext(stream)
+
+    with pytest.raises(PublicMarketDataError, match="max reconnect count"):
+        asyncio.run(take_first_tick())
+
+
 def test_malformed_api_error_payloads_fail_with_controlled_public_data_errors(monkeypatch):
     class FakeSocket:
         async def send(self, payload):
