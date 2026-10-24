@@ -224,3 +224,17 @@ These are targeted text spot checks, not a full legal opinion or exhaustive lice
 - The MIT root license does not automatically settle terms for every dependency, icon, logo, or paid/commercial feature. The README separately identifies the Bruno name as a trademark and the logo source as OpenMoji under CC BY-SA 4.0.
 
 **Status:** `INTAKE_ONLY — NOT SECURITY-QUALIFIED — NOT INSTALLED — NOT EXECUTED — NOT PROMOTED`. No SBOM, CVE scan, secret scan, build, or test was performed in this intake. The SHA pins source identity only; it does not attest to safety or suitability.
+
+
+### Follow-up source review — Bruno workflow and setup script
+
+Read the pinned `.github/workflows/npm-bru-cli.yml`, `scripts/setup.js`, and `packages/bruno-cli/package.json` at the same SHA. These are static source observations only.
+
+**Review flags:**
+1. The manual CLI test workflow declares broad write permissions: `statuses: write`, `checks: write`, `contents: write`, `pull-requests: write`, and `actions: write`. That is more authority than an ordinary local API smoke test needs. Do not copy this workflow into AURELIA; if a workflow is adapted later, set least-privilege permissions at workflow/job scope and use a dedicated test repository.
+2. The workflow installs the published CLI globally from npm (`npm install -g @usebruno/cli`) rather than explicitly building/testing the checked-out source commit, then runs a collection with `--env Prod`. This is not acceptable as an AURELIA integration test without inspecting the collection and proving the selected environment cannot point at a live service.
+3. `scripts/setup.js` executes npm installs and build commands, removes existing `node_modules` directories, and force-installs platform-specific `node-pty` packages with `npm i --legacy-peer-deps --no-save --force`. That script must not be run on a developer host or trusted runtime during intake. Any later test must use an ephemeral sandbox with network restrictions, no credentials, and disposable filesystem state.
+4. The package declares a substantial HTTP/authentication/proxy-related dependency surface, including AWS credential providers, axios integrations, NTLM, and proxy agents. This is not evidence of a vulnerability; it does mean dependency/SBOM and credential-flow review is mandatory before using the CLI against a protected endpoint.
+5. The inspected workflow uses major-version action tags (for example, `actions/checkout@v6`, `actions/setup-node@v5`, `dorny/test-reporter@v3`) rather than full commit-SHA pins. AURELIA must not copy this supply-chain posture without a separately reviewed pinning policy.
+
+**Disposition refined:** useful only as a potential developer-operated API test client, with the above workflow/setup patterns explicitly excluded from direct reuse. No commands from Bruno were executed; no dependency install, network request, build, or test was run. No vulnerability status is asserted.
