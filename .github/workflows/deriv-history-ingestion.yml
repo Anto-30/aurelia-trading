@@ -1,0 +1,82 @@
+name: Deriv historical research data ingestion
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_id:
+        description: "Numeric Deriv application ID (public identifier, not an account token)"
+        required: false
+        default: ""
+        type: string
+      symbol:
+        description: "Deriv market symbol"
+        required: true
+        default: "R_100"
+        type: string
+      start:
+        description: "Start time; UTC epoch seconds or timezone-qualified ISO-8601"
+        required: true
+        default: "2022-10-21T00:00:00Z"
+        type: string
+      end:
+        description: "End time; UTC epoch seconds or timezone-qualified ISO-8601"
+        required: true
+        default: "2024-10-21T00:00:00Z"
+        type: string
+      granularity:
+        description: "Candle size: 60 seconds (1m) or 900 seconds (15m)"
+        required: true
+        default: "60"
+        type: choice
+        options:
+          - "60"
+          - "900"
+
+permissions:
+  contents: read
+
+jobs:
+  ingest-public-market-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    env:
+      DERIV_APP_ID: ${{ inputs.app_id }}
+      DERIV_SYMBOL: ${{ inputs.symbol }}
+      DERIV_START: ${{ inputs.start }}
+      DERIV_END: ${{ inputs.end }}
+      DERIV_GRANULARITY: ${{ inputs.granularity }}
+      GITHUB_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Install history-client dependencies
+        run: pip install numpy pandas websocket-client
+      - name: Fetch and validate exact historical coverage
+        run: |
+          mkdir -p artifacts/deriv
+          extra=()
+          if [ -n "$DERIV_APP_ID" ]; then extra+=(--app-id "$DERIV_APP_ID"); fi
+          python scripts/fetch_deriv_history.py \
+            --symbol "$DERIV_SYMBOL" \
+            --start "$DERIV_START" \
+            --end "$DERIV_END" \
+            --granularity "$DERIV_GRANULARITY" \
+            --bars-per-request 4500 \
+            --request-delay-seconds 1.5 \
+            --max-attempts 4 \
+            --retry-base-seconds 1.5 \
+            "${extra[@]}" \
+            --out artifacts/deriv/history.csv
+      - name: Upload normalized bars and checksummed manifest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: deriv-history-${{ inputs.granularity }}s-${{ github.sha }}
+          path: |
+            artifacts/deriv/history.csv
+            artifacts/deriv/history.csv.manifest.json
+          if-no-files-found: error
+          retention-days: 90

@@ -1,0 +1,58 @@
+name: ATOS research validation
+on:
+  pull_request:
+    paths:
+      - 'research/atos_validation/**'
+      - 'scripts/run_oos_validation.py'
+      - 'scripts/run_soak_test.py'
+      - 'scripts/build_release_evidence.py'
+      - 'scripts/fetch_deriv_history.py'
+      - 'scripts/run_frozen_simulator.py'
+      - 'config/msnr_simulation.schema.json'
+      - 'research/labs/deterministic_intraday_strategies.py'
+      - 'config/STAGING_PAPER.yaml'
+      - '.github/workflows/atos-research-validation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'research/atos_validation/**'
+      - 'scripts/run_oos_validation.py'
+      - 'scripts/run_soak_test.py'
+      - 'config/STAGING_PAPER.yaml'
+      - '.github/workflows/atos-research-validation.yml'
+permissions:
+  contents: read
+jobs:
+  research-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: research/atos_validation/requirements.txt
+      - name: Install research dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r research/atos_validation/requirements.txt
+      - name: Compile research modules
+        run: python -m compileall -q research/atos_validation research/labs/deterministic_intraday_strategies.py scripts/run_oos_validation.py scripts/run_soak_test.py scripts/fetch_deriv_history.py scripts/build_release_evidence.py scripts/run_frozen_simulator.py
+      - name: Check operational runner CLI parsing without network access
+        run: |
+          python scripts/run_oos_validation.py --help >/dev/null
+          python scripts/run_soak_test.py --help >/dev/null
+          python scripts/fetch_deriv_history.py --help >/dev/null
+          python scripts/build_release_evidence.py --help >/dev/null
+          python scripts/run_frozen_simulator.py --help >/dev/null
+      - name: Run research tests
+        run: python -m unittest discover -s research/atos_validation/tests -v
+      - name: Assert canonical live lock is still fail-closed
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('config/LIVE_LOCK.yaml').read_text()
+          assert 'live_trading_enabled: false' in p
+          assert 'LIVE_EXECUTION: BLOCKED' in p
+          assert 'capital_plane_mode: VERIFY_ONLY' in p
+          assert 'FINAL_EXECUTION_AUTHORIZATION: false' in p
+          PY

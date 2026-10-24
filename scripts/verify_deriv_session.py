@@ -175,7 +175,7 @@ async def run() -> int:
         write_evidence(OUTPUT, enriched)
 
         print("DERIV_AUTH_SESSION=VERIFIED")
-        print(f"DERIV_ACCOUNT_LOGINID={snapshot.account.loginid}")
+        print("DERIV_ACCOUNT_BINDING_MATCH=true")
         print(f"DERIV_ACCOUNT_ENVIRONMENT={snapshot.account.environment}")
         print(f"DERIV_VERIFICATION_SCOPE=AUTHENTICATED_DERIV_{expected_environment.upper()}_SESSION")
         print(f"DERIV_ACCOUNT_CURRENCY={snapshot.currency}")
