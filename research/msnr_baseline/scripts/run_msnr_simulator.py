@@ -27,7 +27,14 @@ from numba import njit
 
 SCRIPT = Path(__file__).resolve()
 PROJECT_ROOT = SCRIPT.parents[1]
+REPOSITORY_ROOT = SCRIPT.parents[3]
 DEFAULT_MODEL = PROJECT_ROOT / "config" / "model_frozen.json"
+DEFAULT_COST_MODEL = REPOSITORY_ROOT / "config" / "COST_MODEL.json"
+COST_MODEL_SCHEMA = "aurelia.deriv.cost_model.v1"
+OBSERVED_COST_SOURCE_ENDPOINTS = frozenset({"statement", "profit_table"})
+# Empty intentionally: this simulator currently implements only normalized linear
+# price-PnL, not a verified Deriv Trader contract-specific payoff engine.
+SUPPORTED_QUALIFIED_PAYOFF_ENGINES: frozenset[str] = frozenset()
 REQUIRED_FIELDS = ("epoch", "open", "high", "low", "close")
 TRADE_FIELDS = (
     "entry_epoch", "exit_epoch", "side", "entry_mid", "exit_mid", "atr_at_entry",
@@ -448,6 +455,99 @@ def compute_metrics_from_ledger(ledger: Path, initial_equity: float) -> dict[str
     }
 
 
+def require_empirically_qualified_economics(
+    cost_model_path: Path | None,
+    allow_unverified_linear_proxy: bool,
+    repository_root: Path = REPOSITORY_ROOT,
+) -> None:
+    """Fail closed unless observed cost evidence reconciles and a qualified payoff engine exists.
+
+    The current simulator's kernel is a unit-normalized linear-price proxy. Even a valid
+    aggregate costs reconciliation cannot make this kernel compatible with an unverified
+    Deriv Trader contract or turn assumed spread/slippage into observed per-trade economics.
+    """
+    if allow_unverified_linear_proxy:
+        raise SimulationError(
+            "The legacy --allow-unverified-linear-proxy override is prohibited by the empirical release gate. "
+            "It cannot bypass observed cost reconciliation or contract-specific payoff validation."
+        )
+    if cost_model_path is None:
+        raise SimulationError("COST_MODEL.json is required; no observed statement/profit_table cost model was supplied.")
+    root = repository_root.resolve()
+    path = Path(cost_model_path).resolve()
+    try:
+        path.relative_to(root)
+    except ValueError as exc:
+        raise SimulationError("COST_MODEL.json must reside inside the repository evidence boundary.") from exc
+    if not path.is_file():
+        raise SimulationError(
+            f"Observed economics gate is blocked: required cost model does not exist: {path}"
+        )
+    try:
+        cost_model = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SimulationError(f"COST_MODEL.json cannot be read as valid JSON: {exc}") from exc
+    if not isinstance(cost_model, dict) or cost_model.get("schema") != COST_MODEL_SCHEMA:
+        raise SimulationError(f"COST_MODEL.json must use schema {COST_MODEL_SCHEMA}.")
+    if cost_model.get("status") != "VERIFIED_FROM_OBSERVED_CASH_FLOWS":
+        raise SimulationError("COST_MODEL.json is not marked VERIFIED_FROM_OBSERVED_CASH_FLOWS.")
+    if cost_model.get("underlying_symbol") != "R_100":
+        raise SimulationError("COST_MODEL.json must be scoped to underlying_symbol R_100.")
+    for field in ("contract_type", "currency", "payoff_engine_id"):
+        value = cost_model.get(field)
+        if not isinstance(value, str) or not value.strip():
+            raise SimulationError(f"COST_MODEL.json requires a non-empty {field}.")
+    if cost_model.get("source_endpoint") not in OBSERVED_COST_SOURCE_ENDPOINTS:
+        raise SimulationError("COST_MODEL source_endpoint must be statement or profit_table.")
+    source_path_raw = cost_model.get("source_evidence_path")
+    source_hash = cost_model.get("source_evidence_sha256")
+    if not isinstance(source_path_raw, str) or not source_path_raw.strip() or Path(source_path_raw).is_absolute():
+        raise SimulationError("COST_MODEL requires a repository-relative source_evidence_path.")
+    if not isinstance(source_hash, str) or re.fullmatch(r"[0-9a-f]{64}", source_hash) is None:
+        raise SimulationError("COST_MODEL source_evidence_sha256 must be a lowercase SHA-256 digest.")
+    source_path = (root / source_path_raw).resolve()
+    try:
+        source_path.relative_to(root)
+    except ValueError as exc:
+        raise SimulationError("Cost evidence path escapes the repository evidence boundary.") from exc
+    if not source_path.is_file():
+        raise SimulationError(f"Cost evidence file is missing: {source_path}")
+    if sha256_file(source_path) != source_hash:
+        raise SimulationError("Cost evidence SHA-256 does not match the observed source artifact.")
+    observed_trade_count = cost_model.get("observed_trade_count")
+    if isinstance(observed_trade_count, bool) or not isinstance(observed_trade_count, int) or observed_trade_count <= 0:
+        raise SimulationError("COST_MODEL observed_trade_count must be a positive integer.")
+    numeric_fields = (
+        "theoretical_gross_pnl_total",
+        "realized_net_pnl_total",
+        "known_fees_total",
+        "residual_tolerance_total",
+    )
+    numbers: dict[str, float] = {}
+    for field in numeric_fields:
+        value = cost_model.get(field)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)):
+            raise SimulationError(f"COST_MODEL {field} must be a finite JSON number.")
+        numbers[field] = float(value)
+    if numbers["known_fees_total"] < 0 or numbers["residual_tolerance_total"] < 0:
+        raise SimulationError("COST_MODEL known_fees_total and residual_tolerance_total must be non-negative.")
+    gross_to_net_delta = numbers["theoretical_gross_pnl_total"] - numbers["realized_net_pnl_total"]
+    residual = gross_to_net_delta - numbers["known_fees_total"]
+    if abs(residual) > numbers["residual_tolerance_total"]:
+        raise SimulationError(
+            "Observed cost reconciliation fails: gross-minus-net delta "
+            f"{gross_to_net_delta} minus known_fees_total leaves residual {residual}, "
+            f"exceeding tolerance {numbers['residual_tolerance_total']}."
+        )
+    if cost_model["payoff_engine_id"] not in SUPPORTED_QUALIFIED_PAYOFF_ENGINES:
+        raise SimulationError(
+            "Cost cash flows reconcile, but the frozen MSNR simulator still has no implemented, "
+            "verified contract-specific Deriv payoff engine for this contract_type. Its current kernel "
+            "uses multiplier=1.0 normalized linear price-PnL and the frozen model carries assumed "
+            "spread/slippage with commission excluded. The empirical kill rule remains NOT EVALUATED."
+        )
+
+
 def evaluate_kill_rule(metrics: dict[str, Any]) -> tuple[bool, bool]:
     """Return (evaluated, met) using the exact frozen kill rule.
 
@@ -473,8 +573,10 @@ def run(args: argparse.Namespace) -> int:
         raise SimulationError("Refusing to overwrite evidence. Choose a new ledger and summary path.")
     manifest, verification, model = load_verified_inputs(args.csv.resolve(), args.manifest.resolve(),
                                                           args.verification.resolve(), args.model.resolve())
-    if not args.allow_unverified_linear_proxy:
-        raise SimulationError("No independently verified Deriv linear contract/multiplier is available. Use --allow-unverified-linear-proxy only for explicitly unqualified research metrics.")
+    require_empirically_qualified_economics(
+        getattr(args, "cost_model", DEFAULT_COST_MODEL),
+        bool(getattr(args, "allow_unverified_linear_proxy", False)),
+    )
     pip_size_price = manifest.get("pip_size_price_from_active_symbols")
     if (isinstance(pip_size_price, bool) or not isinstance(pip_size_price, (float, int)) or
             not math.isfinite(float(pip_size_price)) or float(pip_size_price) <= 0):
@@ -623,8 +725,10 @@ def main() -> int:
     parser.add_argument("--ledger", type=Path, required=True)
     parser.add_argument("--summary", type=Path, required=True)
     parser.add_argument("--git-commit", help="Exact 40-character commit SHA, required when running outside a clone")
+    parser.add_argument("--cost-model", type=Path, default=DEFAULT_COST_MODEL,
+                        help="Observed, reconciled COST_MODEL.json; the current simulator remains blocked until a qualified contract-specific payoff engine is implemented.")
     parser.add_argument("--allow-unverified-linear-proxy", action="store_true",
-                        help="Run R-metric research with multiplier=1 normalization; output remains NOT_QUALIFIED")
+                        help="Deprecated legacy flag. It is rejected and cannot bypass the observed-cost/payoff gate.")
     args = parser.parse_args()
     try: return run(args)
     except (SimulationError, OSError, ValueError, KeyError) as exc:
