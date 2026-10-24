@@ -77,9 +77,9 @@ def load_verified_inputs(csv_path: Path, manifest_path: Path, verification_path:
     if manifest.get("row_count") != verification.get("row_count"):
         raise SimulationError("Manifest and independent verifier disagree on row count.")
     expected = (datetime.fromisoformat(manifest["start_date_utc_inclusive"]).date(),
-                datetime.fromisoformat(manifest["end_date_utc_inclusive"]).date())
+                datetime.fromisoformat(manifest["end_date_utc_exclusive"]).date())
     if (str(expected[0]), str(expected[1])) != ("2022-10-21", "2024-10-21"):
-        raise SimulationError("Historical range is not the frozen 2022-10-21 through 2024-10-21 interval.")
+        raise SimulationError("Historical range is not the frozen half-open interval [2022-10-21T00:00:00Z, 2024-10-21T00:00:00Z).")
     if model.get("safety", {}).get("live_execution") != "BLOCKED" or model.get("safety", {}).get("final_execution_authorization") is not False:
         raise SimulationError("Model safety configuration is not fail-closed.")
     return manifest, verification, model
