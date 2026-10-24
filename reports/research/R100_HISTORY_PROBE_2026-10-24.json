@@ -1,0 +1,85 @@
+{
+  "schema": "atos.r100_history_probe.v1",
+  "observed_at_utc": "2026-10-24T15:53:21.245950+00:00",
+  "repository": "Anto-30/aurelia-trading",
+  "main_commit_checked": "d04564aca0648201feff0326fe9af0fbcee92e94",
+  "history_branch_checked": "research/msnr-baseline-r100-20261022",
+  "history_branch_commit": "bb2d35c51b1e8c768e70231d2cc82ec378317f2a",
+  "runtime": {
+    "python": "3.13.17",
+    "websockets": "17.1",
+    "pandas": "2.2.3",
+    "websocket_dns_reachable": true
+  },
+  "safety": {
+    "authentication": "none",
+    "otp_used": false,
+    "account_token_used": false,
+    "live_orders_submitted": false,
+    "live_execution": "BLOCKED",
+    "final_execution_authorization": false,
+    "capital_plane_mode": "VERIFY_ONLY"
+  },
+  "request": {
+    "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
+    "operation": "ticks_history",
+    "symbol": "R_100",
+    "start_epoch": 1666310400,
+    "start_utc": "2022-10-21T00:00:00Z",
+    "end_exclusive_epoch": 1666310460,
+    "end_exclusive_utc": "2022-10-21T00:01:00Z",
+    "granularity_seconds": 60,
+    "style": "candles",
+    "count": "omitted",
+    "subscribe": "omitted per current official schema",
+    "req_id": 2026102402
+  },
+  "bounded_probe": {
+    "websocket_connected": true,
+    "response_type": "candles",
+    "api_error": null,
+    "returned_candle_count": 1000,
+    "returned_first_epoch": 1792797180,
+    "returned_first_epoch_utc": "2026-10-23T23:13:00Z",
+    "returned_last_epoch": 1792857120,
+    "returned_last_epoch_utc": "2026-10-24T15:52:00Z",
+    "all_epochs_in_requested_range": false,
+    "strict_one_candle_sequence_match": false,
+    "raw_response_sha256": "89a82f78886b3ea15d8929244986977522c3a3bb876934325296e3938354e974",
+    "result": "BLOCKED: response epochs are outside requested 2022 window"
+  },
+  "full_fetcher_attempt": {
+    "command": "python research/msnr_baseline/scripts/fetch_history.py --start-date 2022-10-21 --end-date 2024-10-21 --output-dir /tmp/atos_r100_fetch_attempt_20261024 --timeout 5 --retries 0 --retry-delay 0 --chunk-days 3",
+    "exit_status": 2,
+    "stdout": [
+      "Current-API active_symbols pip_size price unit for R_100: 0.01; response_sha256=f296e7096fc8c10cc2049e4a12f5eb1705806d95795654b320621ade833e2313",
+      "[1m] chunk 1: 2022-10-21T00:00:00+00:00 → 2022-10-24T00:00:00+00:00"
+    ],
+    "stderr": "HISTORY FETCH FAILED CLOSED: chunk failed after 1 attempts: FetchError: Chunk continuity failure: no epochs inside requested interval; response returned 1000 candle(s) spanning 1792797240..1792857180; requested [1666310400, 1666569600) at 60s.; response_msg_type='candles'; response_req_id=1; echo_req_subset={\"end\":\"1666569540\",\"granularity\":60,\"req_id\":1,\"start\":1666310400,\"style\":\"candles\",\"ticks_history\":\"R_100\"}",
+    "failure_record": {
+      "path": "R_100_1m.failure.json",
+      "sha256": "fb0254a13805370da69154ade62275736a98c10a7848787aae6e4560b3caa8b2"
+    },
+    "partial_file": {
+      "path": "R_100_1m.csv.partial",
+      "size_bytes": 26,
+      "sha256": "7950b35ef97dc8353103b0c04d55b824d7eb3bcecd7be4cbe40b495a14941000",
+      "valid_dataset": false
+    },
+    "active_symbols_response_sha256": "f296e7096fc8c10cc2049e4a12f5eb1705806d95795654b320621ade833e2313",
+    "result": "FAILED_CLOSED; stopped on first chunk"
+  },
+  "dataset_status": "NOT PRODUCED",
+  "raw_jsonl_sha256": null,
+  "final_csv_sha256": null,
+  "manifest_sha256": null,
+  "mt5_reconciliation": "BLOCKED; mt5_bars.csv not provided",
+  "cost_model": "BLOCKED; no observed cash-flow statement/profit_table evidence and config/COST_MODEL.json is absent on main",
+  "frozen_runner": "tools/frozen_run.py not present in the inspected main/research branch files; existing similar path is research/msnr_baseline/scripts/run_msnr_simulator.py, but it was not run",
+  "strategy_metrics": {
+    "profit_factor": null,
+    "net_expectancy": null,
+    "kill_rule": "NOT EVALUATED"
+  },
+  "release_status": "BLOCKED / VERIFY_ONLY"
+}
