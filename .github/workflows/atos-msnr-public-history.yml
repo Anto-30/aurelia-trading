@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - research/msnr-baseline-r100-20261022
+  pull_request:
+    branches:
+      - research/msnr-baseline-r100-20261022
+    paths:
+      - "research/msnr_baseline/**"
+      - ".github/workflows/atos-msnr-public-history.yml"
 
 permissions:
   contents: read
