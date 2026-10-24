@@ -347,7 +347,23 @@ class DerivPublicMarketDataClient:
                 allowed = ", ".join(str(value) for value in sorted(SUPPORTED_CANDLE_GRANULARITIES))
                 raise PublicMarketDataError(f"Candle granularity must be one of: {allowed}.")
             payload["granularity"] = granularity_seconds
-        return await self.request(payload, expected_msg_type="candles" if style == "candles" else "history")
+        message = await self.request(payload, expected_msg_type="candles" if style == "candles" else "history")
+        if style == "candles":
+            # The public endpoint has been observed returning current candles for a
+            # historical request. Never treat a successful WebSocket response as
+            # proof that the requested time range was honored.
+            candles = validate_candle_response(message)
+            out_of_range = [
+                int(candle["epoch"])
+                for candle in candles
+                if not start_epoch <= int(candle["epoch"]) < end_epoch
+            ]
+            if out_of_range:
+                raise PublicMarketDataError(
+                    "Deriv returned candle epochs outside the requested half-open range "
+                    f"[{start_epoch}, {end_epoch}); refusing mismatched historical data."
+                )
+        return message
 
     async def stream_ticks(self, *, underlying_symbol: str, max_reconnects: int = 5,
                            initial_backoff_seconds: float = 1.0) -> AsyncIterator[dict[str, Any]]:
