@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -209,3 +210,58 @@ def test_no_verified_history_means_no_empirical_metrics_or_ledger(tmp_path):
         sim.run(args)
     assert not ledger.exists()
     assert not summary.exists()
+
+
+def test_historical_workflow_pins_actions_and_hash_locks_dependencies():
+    repo_root = ROOT.parents[1]
+    workflow_path = repo_root / ".github" / "workflows" / "atos-msnr-public-history.yml"
+    workflow = workflow_path.read_text(encoding="utf-8")
+
+    uses_pattern = re.compile(r"^\s*uses:\s*([^\s#]+)")
+    sample = uses_pattern.match("      - uses: actions/checkout@" + "a" * 40)
+    assert sample is not None, "action scanner must recognize a standard uses line"
+    assert sample.group(1) == "actions/checkout@" + "a" * 40
+
+    action_refs = []
+    for line_number, line in enumerate(workflow.splitlines(), start=1):
+        match = uses_pattern.match(line)
+        if not match:
+            continue
+        action_ref = match.group(1)
+        if action_ref.startswith("./"):
+            continue
+        action_refs.append((line_number, action_ref))
+        assert "@" in action_ref, f"external Action at line {line_number} lacks a ref"
+        revision = action_ref.rsplit("@", 1)[1]
+        assert re.fullmatch(r"[0-9a-f]{40}", revision), (
+            f"external Action at line {line_number} must pin a full commit SHA: {action_ref}"
+        )
+    assert len(action_refs) >= 3, "scanner must verify all expected external workflow Actions"
+
+    locked_requirements = "research/msnr_baseline/requirements-ci.lock"
+    assert f"cache-dependency-path: {locked_requirements}" in workflow
+    assert f"pip install --require-hashes -r {locked_requirements}" in workflow
+    assert "pip install --upgrade pip" not in workflow
+    assert "pip install -r research/msnr_baseline/requirements.txt pytest" not in workflow
+
+    requirements_input = (repo_root / "research" / "msnr_baseline" / "requirements-ci.in").read_text(
+        encoding="utf-8"
+    )
+    assert requirements_input == "-r requirements.txt\npytest==9.1.1\n"
+    lock = (repo_root / locked_requirements).read_text(encoding="utf-8")
+    lock_lines = lock.splitlines()
+    package_lines = [
+        i for i, line in enumerate(lock_lines)
+        if re.match(r"^[A-Za-z0-9_.-]+==", line)
+    ]
+    assert package_lines, "lockfile must contain pinned package versions"
+    for position, line_index in enumerate(package_lines):
+        end = package_lines[position + 1] if position + 1 < len(package_lines) else len(lock_lines)
+        package_stanza = "\n".join(lock_lines[line_index:end])
+        assert "--hash=sha256:" in package_stanza, (
+            f"package stanza lacks SHA-256 hashes: {lock_lines[line_index]}"
+        )
+    for package in ("numpy", "pandas", "websockets", "numba", "pytest"):
+        assert any(line.startswith(package + "==") for line in lock_lines), (
+            f"direct dependency missing from lock: {package}"
+        )
