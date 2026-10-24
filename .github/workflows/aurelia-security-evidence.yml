@@ -57,7 +57,7 @@ jobs:
         continue-on-error: true
         run: |
           set +e
-          bandit -r runtime research tests assurance -ll -f json -o artifacts/security/bandit.json
+          bandit -r runtime research tests assurance scripts -ll -f json -o artifacts/security/bandit.json
           status=$?
           set -e
           echo "exit_code=$status" >> "$GITHUB_OUTPUT"
