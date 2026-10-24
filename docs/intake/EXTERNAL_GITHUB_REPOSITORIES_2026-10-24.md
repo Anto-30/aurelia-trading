@@ -204,3 +204,23 @@ Read the beginning of the following exact license files, beyond relying on GitHu
 - maxiaof/github-hosts/LICENSE contains the Mulan Permissive Software License, Version 2, in Chinese. This explains why GitHub's API NOASSERTION label is not the same as an absent license file; obtain a reliable interpretation of the actual terms before reuse.
 
 These are targeted text spot checks, not a full legal opinion or exhaustive license-compliance review. No code was executed and no dependency packages were installed.
+
+
+## Additional candidate 31 — Bruno API client
+
+**Repository:** https://github.com/usebruno/bruno  
+**Pinned ref:** `main` at commit `ab6e3efa6346cd7778971d73404cc45ba3bfc47d` (commit timestamp reported by GitHub: `2026-10-24T10:20:09Z`; captured 2026-10-24).  
+**Repository metadata:** public, active, default branch `main`; GitHub API license metadata and root `license.md` both identify MIT.  
+**Tree inventory:** 5,049 blob entries; recursive Git Trees response `truncated: false`. Root `package.json` and `package-lock.json`; multiple package workspaces with individual `package.json` files; several package-level license files; Dockerfiles for CLI images; seven GitHub Actions workflow files observed.
+
+**Purpose and potential relevance:** Bruno is a desktop API client and CLI for exploring/testing APIs; its README describes file-based plain-text request collections and local/offline-first storage. It may be useful as a human-operated API verification harness for AURELIA's non-production endpoints and mock/test fixtures. It is not a trading strategy, broker execution adapter, risk engine, or proof of Deriv API compatibility.
+
+**Security and integration guardrails:**
+- Treat all Bruno collections, scripts, environment files, imported certificates, and request bodies as executable or secret-bearing test artifacts. Never place production/live Deriv tokens in collections or environments.
+- Trial only against local mocks or an explicitly authorized non-production endpoint with synthetic credentials; disable write/destructive operations where possible and inspect scripts, pre/post-request hooks, environment interpolation and imported collection content first.
+- Keep collection variables free of real secrets; avoid committing auth headers, client certificates, account identifiers or response data. Use dedicated throwaway credentials if authentication is necessary.
+- Do not install the desktop app/CLI or run its scripts as part of this intake. Review package manifests, lockfile, package-level licenses, CI permissions, release provenance, and applicable advisories before any sandbox trial.
+- The public repository Security page lists historical advisories, including advisories concerning OAuth callback state validation, the Axios npm supply-chain incident, a transitive `@postman/tunnel-agent` compromise, Safe-Mode handling in asserts, and XSS in environment names. These are **review leads, not a finding that the pinned commit is vulnerable**; verify each advisory's affected and patched ranges against the pinned dependency graph and release before any use.
+- The MIT root license does not automatically settle terms for every dependency, icon, logo, or paid/commercial feature. The README separately identifies the Bruno name as a trademark and the logo source as OpenMoji under CC BY-SA 4.0.
+
+**Status:** `INTAKE_ONLY — NOT SECURITY-QUALIFIED — NOT INSTALLED — NOT EXECUTED — NOT PROMOTED`. No SBOM, CVE scan, secret scan, build, or test was performed in this intake. The SHA pins source identity only; it does not attest to safety or suitability.
