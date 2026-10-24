@@ -123,8 +123,12 @@ def main(argv: list[str] | None = None) -> int:
     report={"schema":"aurelia.mt5_api_candle_equivalence.v1","api_symbol":args.api_symbol,"mt5_symbol":args.mt5_symbol,"style":"candles","granularity_seconds":60,"start_epoch_inclusive":args.start_epoch,"end_epoch_exclusive":args.end_epoch_exclusive,"mt5_timezone":args.mt5_timezone,"api_file":str(args.api),"mt5_file":str(args.mt5),"price_tolerance":"0.0","credentials_used":False,"live_orders_submitted":False,"warning":"A pass covers only this sample and does not establish historical-source provenance for 2022-2024."}
     code=0
     try:
-        report["api_sha256"]=digest(args.api); report["mt5_sha256"]=digest(args.mt5)
-        report.update(compare(load(args.api,None),load(args.mt5,args.mt5_timezone),args.start_epoch,args.end_epoch_exclusive))
+        # Load inputs first so missing paths receive the typed INPUT_FILE_MISSING diagnosis.
+        api_rows = load(args.api, None)
+        mt5_rows = load(args.mt5, args.mt5_timezone)
+        report["api_sha256"] = digest(args.api)
+        report["mt5_sha256"] = digest(args.mt5)
+        report.update(compare(api_rows, mt5_rows, args.start_epoch, args.end_epoch_exclusive))
     except ReconcileError as e:
         report.update({"status":"BLOCKED_OHLC_MISMATCH" if e.code=="OHLC_MISMATCH" else "BLOCKED_COVERAGE_MISMATCH" if e.code in ("EPOCH_SET_MISMATCH","API_EPOCH_SET_MISMATCH") else "BLOCKED_INPUT_VALIDATION","reason_code":e.code,"message":str(e),"details":e.details}); code=1
     except Exception as e:
