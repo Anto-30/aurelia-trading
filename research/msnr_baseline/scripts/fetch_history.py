@@ -14,7 +14,7 @@ import json
 import math
 import os
 import sys
-from datetime import date, datetime, time as dtime, timedelta, timezone
+from datetime import date, datetime, time as dtime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -24,7 +24,7 @@ PUBLIC_WS = "wss://api.derivws.com/trading/v1/options/ws/public"
 UNDERLYING_SYMBOL = "R_100"
 INTERVALS = {"1m": 60, "15m": 900}
 DEFAULT_START = "2022-10-21"
-DEFAULT_END = "2024-10-21"
+DEFAULT_END = "2024-10-21"  # Exclusive UTC midnight boundary; bars on this date are excluded.
 CHUNK_DAYS = 3
 PACING_SECONDS = 1.5
 REQUIRED_CANDLE_FIELDS = ("open", "high", "low", "close", "epoch")
@@ -44,6 +44,18 @@ def sha256_file(path: Path) -> str:
 
 def utc_epoch(day: date) -> int:
     return int(datetime.combine(day, dtime.min, tzinfo=timezone.utc).timestamp())
+
+
+def utc_window_epochs(start_day_inclusive: date, end_day_exclusive: date) -> tuple[int, int]:
+    """Convert a UTC calendar window to [start, end) epoch bounds.
+
+    The end date is an exclusive midnight boundary. For example,
+    2022-10-21 through 2024-10-21 means end_epoch=2024-10-21T00:00:00Z;
+    no bars from 2024-10-21 itself are included.
+    """
+    if end_day_exclusive <= start_day_inclusive:
+        raise FetchError("End date is an exclusive UTC boundary and must be after start date.")
+    return utc_epoch(start_day_inclusive), utc_epoch(end_day_exclusive)
 
 
 def validate_active_symbols_pip_size(pip_size: Any) -> float:
@@ -67,7 +79,6 @@ def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
     if not isinstance(candles, list) or not candles:
         raise FetchError("Response has no non-empty candles array; dataset cannot be declared complete.")
     out: list[dict[str, int | float]] = []
-    observed_epochs: list[int] = []
     for candle in candles:
         if not isinstance(candle, dict):
             raise FetchError("Candle entry is not an object.")
@@ -88,9 +99,12 @@ def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
             raise FetchError(f"OHLC invariant failed at epoch {epoch}.")
         if epoch % granularity != 0:
             raise FetchError(f"Candle epoch {epoch} is not aligned to {granularity}s interval.")
-        observed_epochs.append(epoch)
-        if start_epoch <= epoch < end_exclusive:
-            out.append({"epoch": epoch, **px})
+        if not start_epoch <= epoch < end_exclusive:
+            raise FetchError(
+                f"Candle epoch {epoch} is outside requested half-open range "
+                f"[{start_epoch}, {end_exclusive}); refusing out-of-window data."
+            )
+        out.append({"epoch": epoch, **px})
     out.sort(key=lambda r: int(r["epoch"]))
     epochs = [int(r["epoch"]) for r in out]
     if len(set(epochs)) != len(epochs):
@@ -172,7 +186,10 @@ async def request_chunk(start_epoch: int, end_exclusive: int, granularity: int,
                 except FetchError as exc:
                     # Keep diagnostics limited to the public history request shape;
                     # never dump arbitrary responses, credentials, or unrelated fields.
-                    if "no epochs inside requested interval" in str(exc):
+                    if (
+                        "outside requested half-open range" in str(exc)
+                        or "no epochs inside requested interval" in str(exc)
+                    ):
                         echo = response.get("echo_req")
                         allowed = ("ticks_history", "start", "end", "style", "granularity", "count",
                                    "adjust_start_time", "subscribe", "req_id")
@@ -198,8 +215,7 @@ async def fetch_interval(label: str, granularity: int, start_day: date, end_day:
                          out_dir: Path, pip_size_price: float, active_symbols_response_sha256: str,
                          active_symbol_row: dict[str, Any], timeout: float, retries: int,
                          retry_delay: float) -> dict[str, Any]:
-    start_epoch = utc_epoch(start_day)
-    end_exclusive = utc_epoch(end_day + timedelta(days=1))
+    start_epoch, end_exclusive = utc_window_epochs(start_day, end_day)
     # Fixed canonical filenames are hashed in the evidence manifest; exact date
     # bounds remain in the manifest so filenames cannot imply unverified coverage.
     stem = f"R_100_{label}"
@@ -245,13 +261,13 @@ async def fetch_interval(label: str, granularity: int, start_day: date, end_day:
             os.fsync(f.fileno())
         os.replace(partial_path, csv_path)
         manifest = {
-            "schema": "atos.deriv_history_manifest.v2",
+            "schema": "atos.deriv_history_manifest.v3",
             "status": "FETCHED_AWAITING_INDEPENDENT_VERIFICATION",
             "underlying_symbol": UNDERLYING_SYMBOL,
             "timeframe": label,
             "granularity_seconds": granularity,
             "start_date_utc_inclusive": start_day.isoformat(),
-            "end_date_utc_inclusive": end_day.isoformat(),
+            "end_date_utc_exclusive": end_day.isoformat(),
             "range_end_exclusive_epoch": end_exclusive,
             "endpoint": PUBLIC_WS,
             "transport": "Deriv current Options API public WebSocket",
@@ -332,8 +348,8 @@ async def fetch_active_symbols_pip_size(timeout: float, retries: int, retry_dela
 async def async_main(args: argparse.Namespace) -> int:
     start_day = date.fromisoformat(args.start_date)
     end_day = date.fromisoformat(args.end_date)
-    if end_day < start_day:
-        raise FetchError("End date precedes start date.")
+    if end_day <= start_day:
+        raise FetchError("End date is an exclusive UTC boundary and must be after start date.")
     if args.timeout <= 0 or args.retries < 0 or args.retry_delay < 0 or args.chunk_days != CHUNK_DAYS:
         raise FetchError("Timeout/retries invalid, or chunk_days differs from frozen three-day policy.")
     out_dir = Path(args.output_dir).resolve()
@@ -355,7 +371,7 @@ async def async_main(args: argparse.Namespace) -> int:
             "endpoint": PUBLIC_WS,
             "output_dir": str(out_dir),
             "requested_start_date_utc_inclusive": args.start_date,
-            "requested_end_date_utc_inclusive": args.end_date,
+            "requested_end_date_utc_exclusive": args.end_date,
             "granularities_requested_seconds": list(INTERVALS.values()),
             "error": f"{type(exc).__name__}: {exc}",
             "timestamp_utc": datetime.now(timezone.utc).isoformat(),
@@ -386,7 +402,11 @@ async def async_main(args: argparse.Namespace) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--start-date", default=DEFAULT_START)
-    parser.add_argument("--end-date", default=DEFAULT_END, help="Inclusive UTC calendar date")
+    parser.add_argument(
+        "--end-date",
+        default=DEFAULT_END,
+        help="Exclusive UTC date boundary at 00:00:00; bars on this date are excluded",
+    )
     parser.add_argument("--output-dir", default="data/raw")
     parser.add_argument("--chunk-days", type=int, default=CHUNK_DAYS)
     parser.add_argument("--timeout", type=float, default=15.0)
