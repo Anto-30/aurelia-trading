@@ -498,29 +498,59 @@ def test_request_has_overall_deadline_when_irrelevant_messages_keep_arriving(mon
         asyncio.run(client.request({"ticks": "R_100"}, expected_msg_type="tick"))
 
 
-@pytest.mark.asyncio
-async def test_ticks_history_rejects_candles_outside_requested_time_window(monkeypatch):
-    client = DerivPublicMarketDataClient()
-    latest_candle_response = {
-        "msg_type": "candles",
-        "candles": [{
-            "epoch": 1792876920,
-            "open": 668.69,
-            "high": 669.60,
-            "low": 668.11,
-            "close": 669.60,
-        }],
-    }
+def test_ticks_history_rejects_candles_outside_requested_time_window(monkeypatch):
+    async def run():
+        client = DerivPublicMarketDataClient()
+        latest_candle_response = {
+            "msg_type": "candles",
+            "candles": [{
+                "epoch": 1792876920,
+                "open": 668.69,
+                "high": 669.60,
+                "low": 668.11,
+                "close": 669.60,
+            }],
+        }
 
-    async def fake_request(payload, *, expected_msg_type=None):
-        assert payload["start"] == 1666310400
-        assert payload["end"] == "1666310460"
-        assert expected_msg_type == "candles"
-        return latest_candle_response
+        async def fake_request(payload, *, expected_msg_type=None):
+            assert payload["start"] == 1666310400
+            assert payload["end"] == "1666310460"
+            assert expected_msg_type == "candles"
+            return latest_candle_response
 
-    monkeypatch.setattr(client, "request", fake_request)
-    with pytest.raises(PublicMarketDataError, match="outside the requested half-open range"):
-        await client.ticks_history(
+        monkeypatch.setattr(client, "request", fake_request)
+        with pytest.raises(PublicMarketDataError, match="outside the requested half-open range"):
+            await client.ticks_history(
+                underlying_symbol="R_100",
+                start_epoch=1666310400,
+                end_epoch=1666310460,
+                granularity_seconds=60,
+                style="candles",
+                count=1,
+            )
+
+    asyncio.run(run())
+
+
+def test_ticks_history_accepts_candles_within_requested_time_window(monkeypatch):
+    async def run():
+        client = DerivPublicMarketDataClient()
+        valid_response = {
+            "msg_type": "candles",
+            "candles": [{
+                "epoch": 1666310400,
+                "open": 100.0,
+                "high": 101.0,
+                "low": 99.0,
+                "close": 100.5,
+            }],
+        }
+
+        async def fake_request(payload, *, expected_msg_type=None):
+            return valid_response
+
+        monkeypatch.setattr(client, "request", fake_request)
+        result = await client.ticks_history(
             underlying_symbol="R_100",
             start_epoch=1666310400,
             end_epoch=1666310460,
@@ -528,32 +558,6 @@ async def test_ticks_history_rejects_candles_outside_requested_time_window(monke
             style="candles",
             count=1,
         )
+        assert result == valid_response
 
-
-@pytest.mark.asyncio
-async def test_ticks_history_accepts_candles_within_requested_time_window(monkeypatch):
-    client = DerivPublicMarketDataClient()
-    valid_response = {
-        "msg_type": "candles",
-        "candles": [{
-            "epoch": 1666310400,
-            "open": 100.0,
-            "high": 101.0,
-            "low": 99.0,
-            "close": 100.5,
-        }],
-    }
-
-    async def fake_request(payload, *, expected_msg_type=None):
-        return valid_response
-
-    monkeypatch.setattr(client, "request", fake_request)
-    result = await client.ticks_history(
-        underlying_symbol="R_100",
-        start_epoch=1666310400,
-        end_epoch=1666310460,
-        granularity_seconds=60,
-        style="candles",
-        count=1,
-    )
-    assert result == valid_response
+    asyncio.run(run())
