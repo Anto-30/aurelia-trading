@@ -1,0 +1,64 @@
+{
+  "schema": "aurelia.r100_history_probe.v1",
+  "status": "BLOCKED",
+  "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
+  "request_sent_at_utc": "2026-10-24T21:40:41.517448+00:00",
+  "response_received_at_utc": "2026-10-24T21:40:42.009982+00:00",
+  "runtime": {
+    "python": "3.13.17",
+    "websockets": "16.1.1"
+  },
+  "request": {
+    "ticks_history": "R_100",
+    "start": 1666310400,
+    "end": "1666310460",
+    "style": "candles",
+    "granularity": 60,
+    "count": 1,
+    "req_id": 91024004
+  },
+  "request_semantics": {
+    "authentication_used": false,
+    "subscribe_field": "omitted",
+    "orders_submitted": 0
+  },
+  "response": {
+    "msg_type": "candles",
+    "req_id": 91024004,
+    "echo_req": {
+      "ticks_history": "R_100",
+      "start": 1666310400,
+      "end": "1666310460",
+      "style": "candles",
+      "granularity": 60,
+      "count": 1,
+      "req_id": 91024004
+    },
+    "error": null,
+    "candle_count": 1,
+    "candle_epochs": [
+      1792878000
+    ],
+    "candles": [
+      {
+        "close": 665.89,
+        "epoch": 1792878000,
+        "high": 666.39,
+        "low": 665.7,
+        "open": 665.99
+      }
+    ],
+    "missing_required_fields": []
+  },
+  "requested_window": {
+    "start_epoch": 1666310400,
+    "end_epoch_exclusive": 1666310460,
+    "start_utc": "2022-10-21T00:00:00Z",
+    "end_utc": "2022-10-21T00:01:00Z"
+  },
+  "all_returned_epochs_in_requested_half_open_window": false,
+  "exact_requested_epoch_present": false,
+  "raw_response_sha256": "a44382da137e88de97b5bad9915c707746ce374dad8f0cafda885073066eecd1",
+  "raw_frame_utf8": "{\"candles\":[{\"close\":665.89,\"epoch\":1792878000,\"high\":666.39,\"low\":665.70,\"open\":665.99}],\"echo_req\":{\"ticks_history\":\"R_100\",\"start\":1666310400,\"end\":\"1666310460\",\"style\":\"candles\",\"granularity\":60,\"count\":1,\"req_id\":91024004},\"msg_type\":\"candles\",\"pip_size\":2.0,\"req_id\":91024004}",
+  "elapsed_seconds": 0.493
+}
