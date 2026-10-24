@@ -217,7 +217,7 @@ def test_historical_workflow_pins_actions_and_hash_locks_dependencies():
     workflow_path = repo_root / ".github" / "workflows" / "atos-msnr-public-history.yml"
     workflow = workflow_path.read_text(encoding="utf-8")
 
-    uses_pattern = re.compile(r"^\s*uses:\s*([^\s#]+)")
+    uses_pattern = re.compile(r"^\s*(?:-\s*)?uses:\s*([^\s#]+)")
     sample = uses_pattern.match("      - uses: actions/checkout@" + "a" * 40)
     assert sample is not None, "action scanner must recognize a standard uses line"
     assert sample.group(1) == "actions/checkout@" + "a" * 40
@@ -237,6 +237,12 @@ def test_historical_workflow_pins_actions_and_hash_locks_dependencies():
             f"external Action at line {line_number} must pin a full commit SHA: {action_ref}"
         )
     assert len(action_refs) >= 3, "scanner must verify all expected external workflow Actions"
+    assert workflow.index("Initialize run evidence") < workflow.index("Set up Python")
+    assert workflow.index("Initialize run evidence") < workflow.index("Install hash-pinned research-only dependencies")
+    assert workflow.index("Install hash-pinned research-only dependencies") < workflow.index("Run isolated MSNR and ledger guard tests")
+    assert "if not path.is_file():" in workflow, "finalization must tolerate missing initialization metadata"
+    assert "initialization-failed" in workflow, "artifact path must never fall back to the filesystem root"
+    assert "if-no-files-found: warn" in workflow
 
     locked_requirements = "research/msnr_baseline/requirements-ci.lock"
     assert f"cache-dependency-path: {locked_requirements}" in workflow
