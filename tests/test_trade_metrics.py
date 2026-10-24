@@ -7,8 +7,8 @@ from assurance.trade_metrics import (
 )
 
 
-def trade(gross, tx=0.0, payout=0.0, slip=0.0, risk=1.0):
-    return TradeObservation(gross, tx, payout, slip, risk)
+def trade(gross, spread=0.0, commission=0.0, payout=0.0, slip=0.0, risk=1.0):
+    return TradeObservation(gross, spread, commission, payout, slip, risk)
 
 
 class TradeMetricsTests(unittest.TestCase):
@@ -22,17 +22,21 @@ class TradeMetricsTests(unittest.TestCase):
         self.assertAlmostEqual(result.maximum_drawdown_r, 2.0)
 
     def test_profit_factor_uses_gross_pnl_while_net_profit_deducts_costs(self):
-        result = compute_research_metrics([trade(2.0, tx=1.5), trade(-1.0)])
+        result = compute_research_metrics([trade(2.0, spread=1.5), trade(-1.0)])
         self.assertAlmostEqual(result.profit_factor, 2.0)
         self.assertAlmostEqual(result.net_profit, -0.5)
         self.assertAlmostEqual(result.expectancy_per_trade, -0.25)
 
     def test_deriv_costs_are_deducted_explicitly(self):
-        result = compute_research_metrics([trade(1.5, tx=0.1, payout=0.2, slip=0.3), trade(-1.0)])
-        self.assertAlmostEqual(result.net_profit, -0.1)
-        self.assertAlmostEqual(result.total_transaction_costs, 0.1)
+        result = compute_research_metrics([
+            trade(1.5, spread=0.05, commission=0.02, payout=0.2, slip=0.03),
+            trade(-1.0),
+        ])
+        self.assertAlmostEqual(result.net_profit, 0.2)
+        self.assertAlmostEqual(result.total_spread_costs, 0.05)
+        self.assertAlmostEqual(result.total_commission_costs, 0.02)
         self.assertAlmostEqual(result.total_payout_costs, 0.2)
-        self.assertAlmostEqual(result.total_slippage_costs, 0.3)
+        self.assertAlmostEqual(result.total_slippage_costs, 0.03)
 
     def test_profit_factor_is_json_safe_when_no_gross_losses(self):
         result = compute_research_metrics([trade(1), trade(2)])
@@ -45,7 +49,7 @@ class TradeMetricsTests(unittest.TestCase):
 
     def test_bad_costs_or_risk_reject(self):
         with self.assertRaisesRegex(ValueError, "COSTS_MUST_BE_NON_NEGATIVE"):
-            trade(1, tx=-1).net_pnl()
+            trade(1, spread=-1).net_pnl()
         with self.assertRaisesRegex(ValueError, "RISK_AMOUNT_MUST_BE_POSITIVE"):
             trade(1, risk=0).net_r()
 
