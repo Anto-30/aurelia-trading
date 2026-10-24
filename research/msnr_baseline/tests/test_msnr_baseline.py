@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import csv
+import hashlib
 import json
 import sys
 from datetime import date, datetime, timezone
@@ -17,6 +19,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 import fetch_history  # noqa: E402
 import run_msnr_simulator as sim  # noqa: E402
+import verify_history  # noqa: E402
 
 
 def test_frozen_history_window_uses_exact_exclusive_utc_end_date():
@@ -225,6 +228,91 @@ def test_streaming_segmenter_preserves_every_row_across_90_day_boundaries(tmp_pa
     assert [len(part) for part in segments] == [90, 90, 1]
     joined = pd.concat(segments, ignore_index=True)
     assert joined["epoch"].astype(np.int64).tolist() == epochs.tolist()
+
+
+def test_history_verifier_accepts_v3_exclusive_end_manifest_and_exact_continuity(tmp_path):
+    # Synthetic schema fixture only; this is not source market data or strategy evidence.
+    start_day = date.fromisoformat("2022-10-21")
+    end_day_exclusive = date.fromisoformat("2022-10-22")
+    start_epoch, end_exclusive = fetch_history.utc_window_epochs(start_day, end_day_exclusive)
+    granularity = 900
+    csv_path = tmp_path / "fixture.csv"
+    rows = [
+        {"epoch": start_epoch + i * granularity, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5}
+        for i in range(96)
+    ]
+    with csv_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["epoch", "open", "high", "low", "close"], lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+
+    active_row = {"underlying_symbol": "R_100", "pip_size": 0.01}
+    active_response = {"msg_type": "active_symbols", "active_symbols": [active_row]}
+    active_path = tmp_path / "R_100_active_symbols_response.json"
+    active_raw = json.dumps(active_response, separators=(",", ":")) + "\n"
+    active_path.write_text(active_raw, encoding="utf-8")
+    csv_hash = hashlib.sha256(csv_path.read_bytes()).hexdigest()
+    active_hash = hashlib.sha256(active_path.read_bytes()).hexdigest()
+    manifest = {
+        "schema": "atos.deriv_history_manifest.v3",
+        "status": "FETCHED_AWAITING_INDEPENDENT_VERIFICATION",
+        "underlying_symbol": "R_100",
+        "timeframe": "15m",
+        "granularity_seconds": granularity,
+        "start_date_utc_inclusive": start_day.isoformat(),
+        "end_date_utc_exclusive": end_day_exclusive.isoformat(),
+        "range_end_exclusive_epoch": end_exclusive,
+        "endpoint": fetch_history.PUBLIC_WS,
+        "authentication": "none",
+        "account_token_used": False,
+        "active_symbols_response_file": active_path.name,
+        "active_symbols_response_sha256": active_hash,
+        "active_symbol_metadata_row": active_row,
+        "pip_size_price_from_active_symbols": 0.01,
+        "row_count": 96,
+        "expected_row_count": 96,
+        "first_epoch": start_epoch,
+        "last_epoch": end_exclusive - granularity,
+        "csv_path": str(csv_path),
+        "csv_bytes": csv_path.stat().st_size,
+        "csv_sha256": csv_hash,
+    }
+    manifest_path = tmp_path / "fixture.manifest.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    output_path = tmp_path / "fixture.verification.json"
+
+    verify_history.verify(csv_path, manifest_path, output_path)
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    assert report["status"] == "VERIFIED_CONTIGUOUS"
+    assert report["row_count"] == 96
+    assert report["first_epoch"] == start_epoch
+    assert report["last_epoch"] == end_exclusive - granularity
+    assert report["checks"]["last_epoch_matches_requested_last_bar"] is True
+
+
+def test_history_verifier_rejects_legacy_inclusive_end_manifest(tmp_path):
+    csv_path = tmp_path / "legacy.csv"
+    csv_path.write_text("epoch,open,high,low,close\n", encoding="utf-8")
+    manifest_path = tmp_path / "legacy.manifest.json"
+    manifest_path.write_text(json.dumps({"schema": "atos.deriv_history_manifest.v2"}), encoding="utf-8")
+    output_path = tmp_path / "legacy.verification.json"
+
+    verify_history.verify(csv_path, manifest_path, output_path)
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    assert report["status"] == "CORRUPTED"
+    assert any("manifest.v3" in error for error in report["errors"])
+
+
+def test_simulator_rejects_legacy_inclusive_end_manifest(tmp_path):
+    csv_path = tmp_path / "legacy.csv"
+    csv_path.write_text("epoch,open,high,low,close\n", encoding="utf-8")
+    manifest_path = tmp_path / "legacy.manifest.json"
+    manifest_path.write_text(json.dumps({"schema": "atos.deriv_history_manifest.v2"}), encoding="utf-8")
+    verification_path = tmp_path / "legacy.verification.json"
+    verification_path.write_text(json.dumps({}), encoding="utf-8")
+
+    with pytest.raises(sim.SimulationError, match="Unsupported or legacy source manifest schema"):
+        sim.load_verified_inputs(csv_path, manifest_path, verification_path, ROOT / "config" / "model_frozen.json")
 
 
 def test_no_verified_history_means_no_empirical_metrics_or_ledger(tmp_path):
