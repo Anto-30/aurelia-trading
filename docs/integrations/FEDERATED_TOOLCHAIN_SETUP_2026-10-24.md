@@ -62,3 +62,10 @@ Setup is not considered complete until each provider has: (a) an owner-authorize
 ## Explicit non-claims
 
 This document does not claim that tools or plugins have been installed into Claude or DeepSeek, that ChatGPT account-level settings were changed, that provider credentials exist, that agents can call one another, that every skill is secure, or that any external tool is authorized for trading. No package was installed, no provider secret was read or written, no live broker session was opened, and no order was submitted.
+
+
+## Captured ChatGPT session inventory — 2026-10-24
+
+A session-scoped inventory snapshot was added at [CHATGPT_SESSION_TOOL_SKILL_INVENTORY_2026-10-24.json](./CHATGPT_SESSION_TOOL_SKILL_INVENTORY_2026-10-24.json). At capture it contained **4,087 exposed tool entries, 548 skill records, and 135 connector/tool namespaces**. The file includes tool names, skill URIs/descriptions, and namespace counts.
+
+This is a useful baseline for an inventory reconciliation; it is not a full ChatGPT account plugin export, does not prove every listed integration is connected to an external account, and does not make the tools portable to Claude, DeepSeek Harness, or the AURELIA runtime. Re-capture after connector changes and diff against a reviewed allowlist before granting access.
