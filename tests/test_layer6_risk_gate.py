@@ -5,6 +5,7 @@ import time
 import unittest
 
 from runtime.core.layer6_risk_gate import Layer6RiskGate, RiskPolicy, RiskRequest
+from scripts.run_layer6_matrix import run_matrix
 
 
 def policy(**overrides):
@@ -100,6 +101,15 @@ class Layer6RiskGateTests(unittest.TestCase):
         result = Layer6RiskGate(policy()).evaluate(request())
         self.assertFalse(result.risk_approved)
         self.assertEqual(result.reason, "RISK_GATE_DISABLED")
+
+    def test_matrix_names_daily_loss_case_truthfully_and_records_reason(self):
+        results = run_matrix(timeout_ms=50)
+        by_name = {item["test_case"]: item for item in results}
+        self.assertIn("DAILY_LOSS_LIMIT_BREACH", by_name)
+        self.assertNotIn("KILL_SWITCH_TRIGGER", by_name)
+        self.assertEqual(by_name["DAILY_LOSS_LIMIT_BREACH"]["reason"], "DAILY_LOSS_LIMIT_BREACHED")
+        self.assertEqual(by_name["DAILY_LOSS_LIMIT_BREACH"]["status"], "PASS")
+        self.assertFalse(any(item["test_case"] == "KILL_SWITCH_TRIGGER" for item in results))
 
     def test_invalid_direction_or_blank_symbol_reject(self):
         gate = Layer6RiskGate(policy(), enabled=True)
