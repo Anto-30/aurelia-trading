@@ -32,7 +32,7 @@ Required R_100 window: **2022-10-21 00:00:00 UTC through 2024-10-21 00:00:00 UTC
 
 ### Current empirical status
 
-A bounded public probe for the first minute of the required window connected successfully, but the server returned candle epoch `1792867680` rather than an epoch in the requested 2022 interval. This does **not** establish historical availability. The historical provenance gate is **BLOCKED**; do not start a bulk download, fabricate a substitute dataset, or run the frozen baseline.
+A bounded public probe for the first minute of the required window connected successfully, but the server returned candle epoch `1792867680` rather than an epoch in the requested 2022 interval. A second independently executed bounded probe in the Composio remote sandbox on **2026-10-24** again failed the bounds gate: request `{"ticks_history":"R_100","adjust_start_time":1,"start":1666310400,"end":1666310460,"granularity":60,"style":"candles"}` to the public endpoint (no `subscribe`, no authentication) returned 1,000 candles with first epoch `1792808040` (**2026-10-24T02:14:00Z**) and last epoch `1792867980` (**2026-10-24T18:53:00Z**), outside the requested 2022 minute. Response SHA-256: `b712be8eeb1a365122a14c565a8bffdaaa6f6256dcbb975868fcae5e299659dc`. Runtime: Python `3.13.17`, websockets `17.3`, pandas `2.2.3`; these versions were checked in the remote sandbox, **not** on the user's local computer. This does **not** establish historical availability. The historical provenance gate is **BLOCKED**; do not start a bulk download, fabricate a substitute dataset, or run the frozen baseline.
 
 ## 4. MT5 reconciliation gate
 
