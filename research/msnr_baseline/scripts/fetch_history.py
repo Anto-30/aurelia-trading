@@ -42,6 +42,14 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def jsonl_record_count(path: Path) -> int:
+    """Count non-empty JSONL records without loading a full evidence file into memory."""
+    if not path.exists():
+        return 0
+    with path.open("r", encoding="utf-8") as f:
+        return sum(1 for line in f if line.strip())
+
+
 def utc_epoch(day: date) -> int:
     return int(datetime.combine(day, dtime.min, tzinfo=timezone.utc).timestamp())
 
@@ -142,19 +150,57 @@ def build_candle_payload(start_epoch: int, end_exclusive: int, granularity: int)
 
 
 async def request_chunk(start_epoch: int, end_exclusive: int, granularity: int,
-                        timeout: float, retries: int, retry_delay: float) -> tuple[list[dict[str, int | float]], int]:
+                        timeout: float, retries: int, retry_delay: float,
+                        raw_response_jsonl_path: Path | None = None,
+                        chunk_number: int | None = None) -> tuple[list[dict[str, int | float]], int, list[str]]:
+    """Request one bounded chunk and archive every received response before validating it.
+
+    Each JSONL record stores the exact response text in `raw_response`. Its
+    `raw_response_sha256` hashes the UTF-8 bytes of that text before the outer
+    JSONL record is serialized, allowing the response body to be independently
+    verified even if it later fails schema or continuity validation.
+    """
     last_error = "unknown error"
+    raw_response_hashes: list[str] = []
     for attempt in range(1, retries + 2):
         try:
             async with websockets.connect(
                 PUBLIC_WS, open_timeout=timeout, close_timeout=5,
                 ping_interval=20, ping_timeout=20, max_size=8 * 1024 * 1024,
             ) as ws:
-                # Explicit epoch end bounds make each three-day chunk independent;
+                # Explicit epoch end bounds make each chunk independent;
                 # end="latest" would not bound each historical chunk.
                 payload = build_candle_payload(start_epoch, end_exclusive, granularity)
-                await ws.send(json.dumps(payload, separators=(",", ":")))
+                request_raw = json.dumps(payload, separators=(",", ":"))
+                await ws.send(request_raw)
                 response_raw = await asyncio.wait_for(ws.recv(), timeout=timeout)
+
+                # Persist the exact received frame before parsing or semantic
+                # validation. API errors and malformed response bodies are evidence too.
+                response_bytes = response_raw.encode("utf-8")
+                response_sha256 = hashlib.sha256(response_bytes).hexdigest()
+                raw_response_hashes.append(response_sha256)
+                if raw_response_jsonl_path is not None:
+                    record = {
+                        "schema": "atos.deriv_history_raw_response.v1",
+                        "endpoint": PUBLIC_WS,
+                        "chunk_number": chunk_number,
+                        "attempt": attempt,
+                        "received_utc": datetime.now(timezone.utc).isoformat(),
+                        "request": payload,
+                        "request_raw": request_raw,
+                        "request_sha256": hashlib.sha256(request_raw.encode("utf-8")).hexdigest(),
+                        "raw_response": response_raw,
+                        "raw_response_sha256": response_sha256,
+                        "raw_response_utf8_bytes": len(response_bytes),
+                        "capture_stage": "FRAME_RECEIVED_BEFORE_VALIDATION",
+                    }
+                    raw_response_jsonl_path.parent.mkdir(parents=True, exist_ok=True)
+                    with raw_response_jsonl_path.open("a", encoding="utf-8", newline="\n") as raw_file:
+                        raw_file.write(json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n")
+                        raw_file.flush()
+                        os.fsync(raw_file.fileno())
+
                 try:
                     response = json.loads(response_raw)
                 except json.JSONDecodeError as exc:
@@ -171,7 +217,7 @@ async def request_chunk(start_epoch: int, end_exclusive: int, granularity: int,
                     rows = normalize_candles(response.get("candles"), start_epoch, end_exclusive, granularity)
                 except FetchError as exc:
                     # Keep diagnostics limited to the public history request shape;
-                    # never dump arbitrary responses, credentials, or unrelated fields.
+                    # never dump credentials or unrelated response fields to the console.
                     if "no epochs inside requested interval" in str(exc):
                         echo = response.get("echo_req")
                         allowed = ("ticks_history", "start", "end", "style", "granularity", "count",
@@ -186,7 +232,7 @@ async def request_chunk(start_epoch: int, end_exclusive: int, granularity: int,
                             f"echo_req_subset={json.dumps(echo_summary, sort_keys=True, separators=(',', ':'))}"
                         ) from exc
                     raise
-                return rows, attempt
+                return rows, attempt, raw_response_hashes
         except Exception as exc:
             last_error = f"{type(exc).__name__}: {exc}"
             if attempt <= retries:
@@ -207,7 +253,9 @@ async def fetch_interval(label: str, granularity: int, start_day: date, end_day:
     partial_path = out_dir / f"{stem}.csv.partial"
     manifest_path = out_dir / f"{stem}.manifest.json"
     failure_path = out_dir / f"{stem}.failure.json"
-    for p in (csv_path, partial_path, manifest_path, failure_path):
+    raw_jsonl_path = out_dir / f"{stem}.raw.jsonl"
+    raw_jsonl_partial_path = out_dir / f"{stem}.raw.jsonl.partial"
+    for p in (csv_path, partial_path, manifest_path, failure_path, raw_jsonl_path, raw_jsonl_partial_path):
         if p.exists():
             raise FetchError(f"Refusing to overwrite existing evidence: {p}")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -218,6 +266,12 @@ async def fetch_interval(label: str, granularity: int, start_day: date, end_day:
     chunk_no = 0
     failure: str | None = None
     try:
+        # Create an exclusive partial archive before the first request. A failed
+        # transport still leaves a hashable empty/partial artifact and cannot
+        # accidentally overwrite evidence from a prior run.
+        with raw_jsonl_partial_path.open("x", encoding="utf-8", newline="\n") as raw_file:
+            raw_file.flush()
+            os.fsync(raw_file.fileno())
         with partial_path.open("x", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=CSV_FIELDS, lineterminator="\n")
             writer.writeheader()
@@ -231,18 +285,28 @@ async def fetch_interval(label: str, granularity: int, start_day: date, end_day:
                 label_start = datetime.fromtimestamp(cursor, timezone.utc).isoformat()
                 label_end = datetime.fromtimestamp(chunk_end, timezone.utc).isoformat()
                 print(f"[{label}] chunk {chunk_no}: {label_start} → {label_end}", flush=True)
-                rows, attempts = await request_chunk(cursor, chunk_end, granularity, timeout, retries, retry_delay)
+                rows, attempts, response_hashes = await request_chunk(
+                    cursor, chunk_end, granularity, timeout, retries, retry_delay,
+                    raw_response_jsonl_path=raw_jsonl_partial_path,
+                    chunk_number=chunk_no,
+                )
                 previous_request = asyncio.get_running_loop().time()
                 writer.writerows(rows)
                 f.flush()
                 total_rows += len(rows)
                 chunks.append({"chunk": chunk_no, "start_epoch": cursor, "end_epoch_inclusive": chunk_end - granularity,
                                "expected_rows": len(range(cursor, chunk_end, granularity)), "actual_rows": len(rows),
-                               "status": "OK", "attempts": attempts, "sha256_chunk_rows": hashlib.sha256(
+                               "status": "OK", "attempts": attempts,
+                               "raw_response_attempt_sha256s": response_hashes,
+                               "raw_response_sha256": response_hashes[-1] if response_hashes else None,
+                               "sha256_chunk_rows": hashlib.sha256(
                                    json.dumps(rows, sort_keys=True, separators=(",", ":")).encode()).hexdigest()})
                 cursor = chunk_end
             f.flush()
             os.fsync(f.fileno())
+        # Promote the raw archive first. The CSV is only renamed to its final
+        # filename after every raw response frame has been durably preserved.
+        os.replace(raw_jsonl_partial_path, raw_jsonl_path)
         os.replace(partial_path, csv_path)
         manifest = {
             "schema": "atos.deriv_history_manifest.v2",
@@ -272,6 +336,14 @@ async def fetch_interval(label: str, granularity: int, start_day: date, end_day:
             "csv_path": str(csv_path),
             "csv_bytes": csv_path.stat().st_size,
             "csv_sha256": sha256_file(csv_path),
+            "raw_response_jsonl_path": str(raw_jsonl_path),
+            "raw_response_jsonl_bytes": raw_jsonl_path.stat().st_size,
+            "raw_response_jsonl_sha256": sha256_file(raw_jsonl_path),
+            "raw_response_record_count": jsonl_record_count(raw_jsonl_path),
+            "raw_response_hash_semantics": (
+                "Each JSONL record stores exact response text in raw_response; "
+                "raw_response_sha256 hashes that text's UTF-8 bytes before outer JSONL serialization."
+            ),
             "chunks": chunks,
             "generated_utc": datetime.now(timezone.utc).isoformat(),
             "caveat": "Source and continuity still require independent verification; hash proves file integrity, not economic validity.",
@@ -280,14 +352,26 @@ async def fetch_interval(label: str, granularity: int, start_day: date, end_day:
         print(f"WROTE {csv_path} rows={total_rows} sha256={manifest['csv_sha256']}", flush=True)
         print(f"WROTE {manifest_path}", flush=True)
         return {"csv": str(csv_path), "manifest": str(manifest_path), "rows": total_rows,
-                "sha256": manifest["csv_sha256"], "status": manifest["status"]}
+                "sha256": manifest["csv_sha256"], "status": manifest["status"],
+                "raw_response_jsonl": str(raw_jsonl_path),
+                "raw_response_jsonl_sha256": manifest["raw_response_jsonl_sha256"],
+                "raw_response_record_count": manifest["raw_response_record_count"]}
     except Exception as exc:
         failure = f"{type(exc).__name__}: {exc}"
+        raw_evidence_path = (
+            raw_jsonl_path if raw_jsonl_path.exists()
+            else raw_jsonl_partial_path if raw_jsonl_partial_path.exists()
+            else None
+        )
         failure_record = {
-            "schema": "atos.deriv_history_fetch_failure.v1", "status": "FAILED_CLOSED",
+            "schema": "atos.deriv_history_fetch_failure.v2", "status": "FAILED_CLOSED",
             "underlying_symbol": UNDERLYING_SYMBOL, "timeframe": label,
             "endpoint": PUBLIC_WS, "error": failure, "completed_chunks": chunks,
             "partial_path": str(partial_path) if partial_path.exists() else None,
+            "raw_response_jsonl_path": str(raw_evidence_path) if raw_evidence_path else None,
+            "raw_response_jsonl_sha256": sha256_file(raw_evidence_path) if raw_evidence_path else None,
+            "raw_response_jsonl_bytes": raw_evidence_path.stat().st_size if raw_evidence_path else None,
+            "raw_response_record_count": jsonl_record_count(raw_evidence_path) if raw_evidence_path else 0,
             "timestamp_utc": datetime.now(timezone.utc).isoformat(),
             "live_tokens_used": False, "live_orders_submitted": False,
         }

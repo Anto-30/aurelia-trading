@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import asyncio
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -209,3 +211,168 @@ def test_no_verified_history_means_no_empirical_metrics_or_ledger(tmp_path):
         sim.run(args)
     assert not ledger.exists()
     assert not summary.exists()
+
+
+def test_historical_workflow_pins_actions_and_hash_locks_dependencies():
+    repo_root = ROOT.parents[1]
+    workflow_path = repo_root / ".github" / "workflows" / "atos-msnr-public-history.yml"
+    workflow = workflow_path.read_text(encoding="utf-8")
+
+    uses_pattern = re.compile(r"^\s*(?:-\s*)?uses:\s*([^\s#]+)")
+    sample = uses_pattern.match("      - uses: actions/checkout@" + "a" * 40)
+    assert sample is not None, "action scanner must recognize a standard uses line"
+    assert sample.group(1) == "actions/checkout@" + "a" * 40
+
+    action_refs = []
+    for line_number, line in enumerate(workflow.splitlines(), start=1):
+        match = uses_pattern.match(line)
+        if not match:
+            continue
+        action_ref = match.group(1)
+        if action_ref.startswith("./"):
+            continue
+        action_refs.append((line_number, action_ref))
+        assert "@" in action_ref, f"external Action at line {line_number} lacks a ref"
+        revision = action_ref.rsplit("@", 1)[1]
+        assert re.fullmatch(r"[0-9a-f]{40}", revision), (
+            f"external Action at line {line_number} must pin a full commit SHA: {action_ref}"
+        )
+    assert len(action_refs) >= 3, "scanner must verify all expected external workflow Actions"
+    assert workflow.index("Initialize run evidence") < workflow.index("Set up Python")
+    assert workflow.index("Initialize run evidence") < workflow.index("Install hash-pinned research-only dependencies")
+    assert workflow.index("Install hash-pinned research-only dependencies") < workflow.index("Run isolated MSNR and ledger guard tests")
+    assert "if not path.is_file():" in workflow, "finalization must tolerate missing initialization metadata"
+    assert "initialization-failed" in workflow, "artifact path must never fall back to the filesystem root"
+    assert "if-no-files-found: warn" in workflow
+
+    locked_requirements = "research/msnr_baseline/requirements-ci.lock"
+    assert f"cache-dependency-path: {locked_requirements}" in workflow
+    assert f"pip install --require-hashes -r {locked_requirements}" in workflow
+    assert "  pull_request:\n    branches:\n      - research/msnr-baseline-r100-20261022" in workflow
+    assert "pip install --upgrade pip" not in workflow
+    assert "pip install -r research/msnr_baseline/requirements.txt pytest" not in workflow
+
+    requirements_input = (repo_root / "research" / "msnr_baseline" / "requirements-ci.in").read_text(
+        encoding="utf-8"
+    )
+    assert requirements_input == "-r requirements.txt\npytest==9.1.1\n"
+    lock = (repo_root / locked_requirements).read_text(encoding="utf-8")
+    lock_lines = lock.splitlines()
+    package_lines = [
+        i for i, line in enumerate(lock_lines)
+        if re.match(r"^[A-Za-z0-9_.-]+==", line)
+    ]
+    assert package_lines, "lockfile must contain pinned package versions"
+    for position, line_index in enumerate(package_lines):
+        end = package_lines[position + 1] if position + 1 < len(package_lines) else len(lock_lines)
+        package_stanza = "\n".join(lock_lines[line_index:end])
+        assert "--hash=sha256:" in package_stanza, (
+            f"package stanza lacks SHA-256 hashes: {lock_lines[line_index]}"
+        )
+    for package in ("numpy", "pandas", "websockets", "numba", "pytest"):
+        assert any(line.startswith(package + "==") for line in lock_lines), (
+            f"direct dependency missing from lock: {package}"
+        )
+
+
+def test_fetch_interval_manifest_binds_exact_raw_response_jsonl(tmp_path, monkeypatch):
+    # A synthetic in-memory WebSocket fixture verifies provenance mechanics only.
+    # This fixture is not market evidence and is never passed to the strategy.
+    start = 1_666_310_400
+    end_exclusive = start + 86400
+    candles = []
+    for i, epoch in enumerate(range(start, end_exclusive, 60)):
+        close = 100.0 + i * 0.001
+        candles.append({
+            "epoch": epoch, "open": close - 0.01, "high": close + 0.05,
+            "low": close - 0.05, "close": close,
+        })
+    raw_frame = json.dumps(
+        {"msg_type": "candles", "candles": candles, "req_id": 1},
+        separators=(",", ":"),
+    )
+    sent_payloads = []
+
+    class FakeSocket:
+        async def send(self, payload):
+            sent_payloads.append(payload)
+
+        async def recv(self):
+            return raw_frame
+
+    class FakeConnection:
+        async def __aenter__(self):
+            return FakeSocket()
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        fetch_history.websockets,
+        "connect",
+        lambda *args, **kwargs: FakeConnection(),
+    )
+    out_dir = tmp_path / "raw-history-success"
+    result = asyncio.run(fetch_history.fetch_interval(
+        "1m", 60, fetch_history.date(2022, 10, 21), fetch_history.date(2022, 10, 21),
+        out_dir, 0.01, "a" * 64, {"symbol": "R_100", "pip_size": 0.01},
+        timeout=1.0, retries=0, retry_delay=0.0,
+    ))
+
+    raw_path = out_dir / "R_100_1m.raw.jsonl"
+    manifest = json.loads((out_dir / "R_100_1m.manifest.json").read_text(encoding="utf-8"))
+    records = [json.loads(line) for line in raw_path.read_text(encoding="utf-8").splitlines()]
+    raw_hash = hashlib.sha256(raw_frame.encode("utf-8")).hexdigest()
+    assert result["rows"] == 1440
+    assert len(sent_payloads) == 1
+    assert records[0]["raw_response"] == raw_frame
+    assert records[0]["raw_response_sha256"] == raw_hash
+    assert records[0]["request_raw"] == sent_payloads[0]
+    assert records[0]["request_sha256"] == hashlib.sha256(sent_payloads[0].encode("utf-8")).hexdigest()
+    assert manifest["raw_response_jsonl_sha256"] == fetch_history.sha256_file(raw_path)
+    assert manifest["raw_response_record_count"] == 1
+    assert manifest["chunks"][0]["raw_response_sha256"] == raw_hash
+    assert manifest["csv_sha256"] == fetch_history.sha256_file(out_dir / "R_100_1m.csv")
+    assert result["raw_response_jsonl_sha256"] == manifest["raw_response_jsonl_sha256"]
+
+
+def test_request_chunk_archives_api_error_body_before_fail_closed(tmp_path, monkeypatch):
+    # API-error response bodies are also raw evidence; do not discard them on failure.
+    raw_error = json.dumps({
+        "msg_type": "error",
+        "error": {"code": "RateLimit", "message": "synthetic unit-test error"},
+        "req_id": 1,
+    }, separators=(",", ":"))
+
+    class FakeSocket:
+        async def send(self, payload):
+            return None
+
+        async def recv(self):
+            return raw_error
+
+    class FakeConnection:
+        async def __aenter__(self):
+            return FakeSocket()
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        fetch_history.websockets,
+        "connect",
+        lambda *args, **kwargs: FakeConnection(),
+    )
+    raw_path = tmp_path / "error-frames.raw.jsonl"
+    with pytest.raises(fetch_history.FetchError, match="API error RateLimit"):
+        asyncio.run(fetch_history.request_chunk(
+            1_666_310_400, 1_666_310_460, 60, timeout=1.0, retries=0,
+            retry_delay=0.0, raw_response_jsonl_path=raw_path, chunk_number=3,
+        ))
+
+    records = [json.loads(line) for line in raw_path.read_text(encoding="utf-8").splitlines()]
+    assert len(records) == 1
+    assert records[0]["chunk_number"] == 3
+    assert records[0]["raw_response"] == raw_error
+    assert records[0]["raw_response_sha256"] == hashlib.sha256(raw_error.encode("utf-8")).hexdigest()
+    assert records[0]["capture_stage"] == "FRAME_RECEIVED_BEFORE_VALIDATION"

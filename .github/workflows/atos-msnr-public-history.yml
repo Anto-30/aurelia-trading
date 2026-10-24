@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - research/msnr-baseline-r100-20261022
+  pull_request:
+    branches:
+      - research/msnr-baseline-r100-20261022
+    paths:
+      - "research/msnr_baseline/**"
+      - ".github/workflows/atos-msnr-public-history.yml"
 
 permissions:
   contents: read
@@ -26,22 +32,7 @@ jobs:
       AURELIA_ALLOW_LIVE_ORDERS: "false"
     steps:
       - name: Check out exact commit
-        uses: actions/checkout@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-          cache: pip
-          cache-dependency-path: research/msnr_baseline/requirements.txt
-
-      - name: Install research-only dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r research/msnr_baseline/requirements.txt pytest
-
-      - name: Run isolated MSNR and ledger guard tests
-        run: python -m pytest -q research/msnr_baseline/tests
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Initialize run evidence
         id: initialize
@@ -78,6 +69,20 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
               f.write(f"out_dir={out}\n")
           PY
+
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: research/msnr_baseline/requirements-ci.lock
+
+      - name: Install hash-pinned research-only dependencies
+        run: python -m pip install --require-hashes -r research/msnr_baseline/requirements-ci.lock
+
+      - name: Run isolated MSNR and ledger guard tests
+        run: python -m pytest -q research/msnr_baseline/tests
 
       - name: Probe bounded history request semantics (old and recent intervals)
         id: history_bounds_probe
@@ -388,6 +393,9 @@ jobs:
           from pathlib import Path
           out = Path(os.environ["OUT_DIR"])
           path = out / "evidence" / "run_metadata.json"
+          if not path.is_file():
+              print("No initialized run metadata; this run started before the evidence directory was available. Release remains BLOCKED.")
+              raise SystemExit(0)
           data = json.loads(path.read_text(encoding="utf-8"))
           summary_path = out / "evidence" / "summary.json"
           if summary_path.is_file():
@@ -426,9 +434,9 @@ jobs:
 
       - name: Upload full public research evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: atos-msnr-r100-research-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ steps.initialize.outputs.out_dir }}/
-          if-no-files-found: error
+          path: ${{ steps.initialize.outputs.out_dir || 'research/msnr_baseline/ci_artifacts/initialization-failed' }}/
+          if-no-files-found: warn
           retention-days: 30
