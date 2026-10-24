@@ -349,21 +349,7 @@ class DerivPublicMarketDataClient:
                 allowed = ", ".join(str(value) for value in sorted(SUPPORTED_CANDLE_GRANULARITIES))
                 raise PublicMarketDataError(f"Candle granularity must be one of: {allowed}.")
             payload["granularity"] = granularity_seconds
-        response = await self.request(payload, expected_msg_type="candles" if style == "candles" else "history")
-        if style == "candles":
-            clean_rows = validate_candle_response(response)
-            observed_epochs = [int(row["epoch"]) for row in clean_rows]
-        else:
-            _, observed_epochs = validate_history_response(response)
-        if not observed_epochs:
-            raise PublicMarketDataError("History response contained no observations for the requested window.")
-        outside = [epoch for epoch in observed_epochs if epoch < start_epoch or epoch > end_epoch]
-        if outside:
-            raise PublicMarketDataError(
-                "History response contains epoch outside requested bounds "
-                f"[{start_epoch}, {end_epoch}]; returned range [{min(observed_epochs)}, {max(observed_epochs)}]."
-            )
-        return response
+        return await self.request(payload, expected_msg_type="candles" if style == "candles" else "history")
 
     async def stream_ticks(self, *, underlying_symbol: str, max_reconnects: int = 5,
                            initial_backoff_seconds: float = 1.0) -> AsyncIterator[dict[str, Any]]:
