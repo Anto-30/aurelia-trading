@@ -67,12 +67,21 @@ def validate_agent_remediation_backlog(
         for field in ("title", "finding", "evidence_path"):
             assert isinstance(stream.get(field), str) and stream[field].strip(), (stream_id, field)
         assert stream["evidence_path"].startswith("artifacts/"), (stream_id, stream["evidence_path"])
-        assert isinstance(stream.get("owner"), str) and stream["owner"] in known_agents, (
-            stream_id, stream.get("owner")
+        owner = stream.get("owner")
+        assert isinstance(owner, str) and owner in known_agents, (
+            f"{stream_id}: unknown workstream owner {owner!r}"
         )
         collaborators = stream.get("collaborators")
-        assert isinstance(collaborators, list) and collaborators, stream_id
-        assert all(isinstance(agent, str) and agent in known_agents for agent in collaborators), stream_id
+        assert isinstance(collaborators, list) and collaborators, (
+            f"{stream_id}: collaborators must be a non-empty list"
+        )
+        unknown_collaborators = [
+            agent for agent in collaborators
+            if not isinstance(agent, str) or agent not in known_agents
+        ]
+        assert not unknown_collaborators, (
+            f"{stream_id}: unknown collaborators {unknown_collaborators!r}"
+        )
         acceptance = stream.get("acceptance_criteria")
         assert isinstance(acceptance, list) and acceptance, stream_id
         assert all(isinstance(item, str) and item.strip() for item in acceptance), stream_id
