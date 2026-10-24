@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - fix/deriv-granularity-enum-20261023
+      - fix/reject-out-of-range-deriv-history-20261025
   pull_request:
     branches:
       - research/msnr-baseline-r100-20261022
+      - fix/deriv-granularity-enum-20261023
     paths:
       - "research/msnr_baseline/**"
       - ".github/workflows/atos-research-unit-tests.yml"
