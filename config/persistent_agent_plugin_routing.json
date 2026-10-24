@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.persistent_agent_plugin_routing.v1",
-  "updated_utc": "2026-10-23",
+  "updated_utc": "2026-10-24",
   "objective": "Keep the intended ChatGPT, ClaudeCode, and DeepSeekHarness tool/skill/plugin assignments in a version-controlled registry and require task-start preflight on every material task.",
   "guarantee_boundary": {
     "repository_policy_persists": true,
@@ -50,7 +50,7 @@
       ],
       "runtime_status": "EXTERNAL_RUNTIME_NOT_VERIFIED_BY_THIS_CHAT",
       "persistence_status": "NOT_PROVEN",
-      "activation_rule": "Require a reachable ClaudeCode runtime and connector-level probe before delegation. Repo plugin metadata or skill files alone are insufficient."
+      "activation_rule": "Keep blocked until a reachable authorized runtime identity and authenticated capability probe with timestamp and permission scope are verified."
     },
     "DeepSeekHarness": {
       "role": "independent harness/code review, adversarial validation, CI/evidence critique",
