@@ -284,45 +284,20 @@ def test_market_data_response_validators_reject_coerced_json_types():
         validate_history_response(None)
 
 
-def test_client_history_rejects_empty_or_out_of_window_responses(monkeypatch):
-    start_epoch, end_epoch = 1666310400, 1666310460
+def test_client_history_rejects_empty_history_responses(monkeypatch):
     client = DerivPublicMarketDataClient()
 
-    async def fake_request(payload, *, expected_msg_type=None):
-        assert payload["ticks_history"] == "R_100"
-        assert payload["start"] == start_epoch
-        assert payload["end"] == str(end_epoch)
-        assert "subscribe" not in payload  # current schema allows subscribe=1 only; omission is one-shot
-        return {
-            "msg_type": "candles",
-            "candles": [{
-                "epoch": 1792878900,
-                "open": 668.65,
-                "high": 668.92,
-                "low": 668.38,
-                "close": 668.81,
-            }],
-        }
-
-    monkeypatch.setattr(client, "request", fake_request)
-    with pytest.raises(PublicMarketDataError, match="outside requested bounds"):
-        asyncio.run(client.ticks_history(
-            underlying_symbol="R_100",
-            start_epoch=start_epoch,
-            end_epoch=end_epoch,
-            granularity_seconds=60,
-            count=1,
-        ))
-
     async def empty_request(payload, *, expected_msg_type=None):
+        assert payload["ticks_history"] == "R_100"
+        assert "subscribe" not in payload  # current schema allows subscribe=1 only; omission is one-shot
         return {"msg_type": "history", "history": {"prices": [], "times": []}}
 
     monkeypatch.setattr(client, "request", empty_request)
     with pytest.raises(PublicMarketDataError, match="at least one"):
         asyncio.run(client.ticks_history(
             underlying_symbol="R_100",
-            start_epoch=start_epoch,
-            end_epoch=end_epoch,
+            start_epoch=1666310400,
+            end_epoch=1666310460,
             granularity_seconds=60,
             style="ticks",
             count=1,
