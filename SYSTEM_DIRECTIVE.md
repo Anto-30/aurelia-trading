@@ -124,4 +124,6 @@ The probe report in `reports/research/R100_HISTORY_PROBE_2026-10-24.json` record
 
 At the time that report was produced, `websockets` and `pandas` were installed, but Deriv returned 1,000 current/recent candles for an October 2022 request. The strict range check failed and the full fetcher exited nonzero. No bulk download, MT5 reconciliation, cost calibration, frozen run, or empirical kill-rule verdict was produced. Main's `config/LIVE_LOCK.yaml` remained in its fail-closed state.
 
+**Additional implementation blocker:** the inspected `research/msnr_baseline/scripts/fetch_history.py` currently retains the raw `active_symbols` response and hashes normalized rows per chunk, but does not archive each raw history WebSocket response as JSONL. This does not satisfy the raw-response archive requirement above. Before any future full-range retry, add a reviewed implementation and tests that preserve the raw response records and the JSONL file hash in the manifest/failure evidence; do not infer raw-response provenance from normalized-row hashes.
+
 This document is a repository policy artifact; it does not itself prove the runtime is configured, any external agent is connected, any provider data is available, or any release gate has passed.
