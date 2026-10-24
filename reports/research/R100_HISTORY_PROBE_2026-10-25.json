@@ -1,0 +1,75 @@
+{
+  "schema": "aurelia.r100_history_probe.v1",
+  "status": "BLOCKED",
+  "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
+  "request_sent_at_utc": "2026-10-24T21:29:14.861926+00:00",
+  "response_received_at_utc": "2026-10-24T21:29:15.320942+00:00",
+  "runtime": {
+    "python": "3.13.17",
+    "websockets": "16.1.1",
+    "pandas": "2.2.3"
+  },
+  "request": {
+    "ticks_history": "R_100",
+    "start": 1666310400,
+    "end": "1666310460",
+    "style": "candles",
+    "granularity": 60,
+    "count": 1,
+    "req_id": 9101
+  },
+  "request_semantics": {
+    "authentication_used": false,
+    "subscribe_field": "omitted",
+    "reason": "Official Deriv New API ticks_history schema allows subscribe=1 only; omit it for a one-shot request.",
+    "orders_submitted": 0,
+    "capital_authority_granted": false
+  },
+  "response": {
+    "msg_type": "candles",
+    "req_id": 9101,
+    "echo_req": {
+      "ticks_history": "R_100",
+      "start": 1666310400,
+      "end": "1666310460",
+      "style": "candles",
+      "granularity": 60,
+      "count": 1,
+      "req_id": 9101
+    },
+    "error": null,
+    "candle_count": 1,
+    "candles": [
+      {
+        "epoch": 1792877340,
+        "open": 666.45,
+        "high": 666.45,
+        "low": 665.81,
+        "close": 665.85
+      }
+    ]
+  },
+  "requested_window": {
+    "start_epoch_utc": "2022-10-21T00:00:00+00:00",
+    "start_epoch": 1666310400,
+    "end_epoch_utc": "2022-10-21T00:01:00+00:00",
+    "end_epoch_exclusive": 1666310460
+  },
+  "returned_epoch_utc": [
+    "2026-10-24T21:29:00+00:00"
+  ],
+  "exact_requested_epoch_present": false,
+  "all_returned_epochs_in_requested_half_open_window": false,
+  "raw_response_sha256": "a96b9db34389de496d725d958215b7c0a7acfa9d135d67b952358291c0296a90",
+  "conclusion": "The WebSocket request succeeded and echoed the requested bounds, but returned candle data from 2026 outside [1666310400,1666310460). This is not valid 2022 history. Do not bulk-download, generate a dataset hash, run MT5 reconciliation, calibrate costs, or evaluate the frozen MSNR kill rule from this response.",
+  "sources": {
+    "ticks_history_schema": "https://developers.deriv.com/docs/data/ticks-history/",
+    "ticks_history_comparison": "https://developers.deriv.com/comparison/ticks-history/"
+  },
+  "limitations": [
+    "This is one bounded response, not a historical dataset.",
+    "Remote disposable environment versions do not verify the user's local environment.",
+    "No MT5 file was present in the searched conversation/library results.",
+    "No exact MSNR contract_type or verified Deriv statement/profit_table cash-flow evidence was supplied."
+  ]
+}

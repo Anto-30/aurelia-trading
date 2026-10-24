@@ -1,0 +1,77 @@
+{
+  "schema": "aurelia.r100_history_probe.v1",
+  "status": "BLOCKED",
+  "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
+  "request_sent_at_utc": "2026-10-24T21:59:28.035485+00:00",
+  "response_received_at_utc": "2026-10-24T21:59:28.512123+00:00",
+  "runtime": {
+    "python": "3.13.17",
+    "websockets": "15.0.1",
+    "pandas": "2.2.3"
+  },
+  "request": {
+    "ticks_history": "R_100",
+    "start": 1666310400,
+    "end": "1666310460",
+    "style": "candles",
+    "granularity": 60,
+    "count": 1,
+    "req_id": 9051025
+  },
+  "request_semantics": {
+    "authentication_used": false,
+    "subscribe_field": "omitted",
+    "reason": "Official Deriv ticks_history schema allows subscribe=1 only; omit it for a one-shot historical request.",
+    "orders_submitted": 0,
+    "capital_authority_granted": false
+  },
+  "response": {
+    "msg_type": "candles",
+    "req_id": 9051025,
+    "echo_req": {
+      "ticks_history": "R_100",
+      "start": 1666310400,
+      "end": "1666310460",
+      "style": "candles",
+      "granularity": 60,
+      "count": 1,
+      "req_id": 9051025
+    },
+    "error": null,
+    "candle_count": 1,
+    "candles": [
+      {
+        "epoch": 1792879140,
+        "open": 670.71,
+        "high": 670.78,
+        "low": 669.76,
+        "close": 669.76
+      }
+    ]
+  },
+  "requested_window": {
+    "start_epoch": 1666310400,
+    "start_utc": "2022-10-21T00:00:00Z",
+    "end_epoch_exclusive": 1666310460,
+    "end_utc": "2022-10-21T00:01:00Z"
+  },
+  "returned_epoch_utc": [
+    "2026-10-24T21:59:00Z"
+  ],
+  "exact_requested_epoch_present": false,
+  "all_returned_epochs_in_requested_half_open_window": false,
+  "response_bytes": 280,
+  "raw_response_sha256": "dc4c920b54bff125043301a920ea6e716c4795af2ce0d488c65c11b9c2f808f6",
+  "raw_frame_utf8": "{\"candles\":[{\"close\":669.76,\"epoch\":1792879140,\"high\":670.78,\"low\":669.76,\"open\":670.71}],\"echo_req\":{\"ticks_history\":\"R_100\",\"start\":1666310400,\"end\":\"1666310460\",\"style\":\"candles\",\"granularity\":60,\"count\":1,\"req_id\":9051025},\"msg_type\":\"candles\",\"pip_size\":2.0,\"req_id\":9051025}",
+  "conclusion": "The public WebSocket connected and echoed the requested historical bounds, but returned a candle from October 2026, outside [1666310400,1666310460). Treat the probe as BLOCKED; do not bulk-download, reconcile MT5, calibrate costs, run the frozen baseline, or evaluate the MSNR kill rule from this result.",
+  "sources": {
+    "ticks_history_schema": "https://developers.deriv.com/docs/data/ticks-history/",
+    "options_public_endpoint": "https://developers.deriv.com/docs/options/ws-public/"
+  },
+  "limitations": [
+    "One bounded response only; not a historical dataset.",
+    "The installed package versions describe the disposable remote probe environment, not the user's local machine.",
+    "No authenticated account, statement, profit_table, or trading operation was performed.",
+    "No MT5 export or contract_type/payoff confirmation was provided."
+  ]
+}
