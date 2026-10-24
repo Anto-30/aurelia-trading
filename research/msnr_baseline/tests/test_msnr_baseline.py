@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 import sys
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -16,6 +17,36 @@ sys.path.insert(0, str(SCRIPTS))
 
 import fetch_history  # noqa: E402
 import run_msnr_simulator as sim  # noqa: E402
+
+
+def test_frozen_history_window_uses_exact_exclusive_utc_end_date():
+    start_day = date.fromisoformat("2022-10-21")
+    end_day_exclusive = date.fromisoformat("2024-10-21")
+    start_epoch, end_exclusive = fetch_history.utc_window_epochs(start_day, end_day_exclusive)
+
+    assert start_epoch == 1666310400
+    assert end_exclusive == 1729468800
+    assert datetime.fromtimestamp(start_epoch, timezone.utc).isoformat() == "2022-10-21T00:00:00+00:00"
+    assert datetime.fromtimestamp(end_exclusive, timezone.utc).isoformat() == "2024-10-21T00:00:00+00:00"
+    assert end_exclusive - start_epoch == 731 * 86400
+    assert (end_exclusive - start_epoch) // 60 == 731 * 24 * 60
+    assert end_exclusive - 60 == 1729468740
+
+    for invalid_end in (start_day, date.fromisoformat("2022-10-20")):
+        with pytest.raises(fetch_history.FetchError, match="exclusive UTC boundary"):
+            fetch_history.utc_window_epochs(start_day, invalid_end)
+
+
+def test_candle_normalizer_rejects_any_out_of_window_row_even_if_expected_rows_are_present():
+    start = 1_666_310_400  # 2022-10-21T00:00:00Z
+    valid = [
+        {"epoch": start, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5},
+        {"epoch": start + 60, "open": 100.5, "high": 102.0, "low": 100.0, "close": 101.0},
+    ]
+    for out_of_range_epoch in (start - 60, start + 120):
+        response = [*valid, {**valid[-1], "epoch": out_of_range_epoch}]
+        with pytest.raises(fetch_history.FetchError, match="outside requested half-open range"):
+            fetch_history.normalize_candles(response, start, start + 120, 60)
 
 
 def test_public_history_payload_uses_current_bounded_request_shape():
@@ -168,6 +199,9 @@ def test_metadata_network_failure_persists_failed_closed_evidence_without_market
         asyncio.run(fetch_history.async_main(args))
     failure = json.loads((out_dir / "fetch_run.failure.json").read_text(encoding="utf-8"))
     assert failure["status"] == "FAILED_CLOSED"
+    assert failure["requested_start_date_utc_inclusive"] == "2022-10-21"
+    assert failure["requested_end_date_utc_exclusive"] == "2024-10-21"
+    assert "requested_end_date_utc_inclusive" not in failure
     assert failure["market_data_received"] is False
     assert failure["account_token_used"] is False
     assert failure["live_orders_submitted"] is False
