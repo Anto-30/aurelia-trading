@@ -67,3 +67,31 @@ These are bounded metadata/root-file observations, not a complete source, licens
 - No changes to `config/LIVE_LOCK.yaml`, production secrets/environment, or deployment.
 - `LIVE_EXECUTION=BLOCKED`, `FINAL_EXECUTION_AUTHORIZATION=false`, `capital_plane_mode=VERIFY_ONLY` remain mandatory.
 - DeepSeekHarness/other external agents remain unavailable until authenticated runtime connection and attributable execution evidence exist.
+
+
+## Additional exact-SHA tree inventory — 2026-10-24
+
+Recursive Git tree API responses were retrieved at the pinned commits for eight additional/high-priority source snapshots. These checks identify files and dependency surfaces; they do not execute builds or establish vulnerability status.
+
+| Repository at pinned SHA | Tree result | License files observed | Dependency/build surface observed | Disposition update |
+|---|---:|---|---|---|
+| `github/github-mcp-server` — `f38526264abb14961b32cea386e38ec6d3cf674f` | 660 files; not truncated | Root `LICENSE` plus numerous vendored third-party LICENSE/NOTICE files | `go.mod`, `go.sum`, `Dockerfile`, `.github/actions/build-ui/action.yml`, `ui/package.json`, `ui/package-lock.json` | Inventory is substantial; must reconcile vendored notices/SBOM and review container/action/tool permissions before sandbox execution |
+| `semantic-release/github` — `0c577cbaefd8c7402a22729f69180c3d9b3cbf1c` | 50 files; not truncated | Root `LICENSE` | `package.json`, `package-lock.json` | Exact dependency lock exists; no install/test or vulnerability scan run |
+| `PacktPublishing/Hands-On-Machine-Learning-for-Algorithmic-Trading` — `c7291523e95bce9dde21ea1b8acd5682f96f5cac` | 882 files; not truncated | Root `LICENSE` | Root and chapter-level Conda `environment.yml` files, including Zipline/Pyfolio environments | Do not install the historical environment on a host; recreate in isolated disposable environment only after licensing and compatibility review |
+| `jenkinsci/github-branch-source-plugin` — `801e40614d00819c1b7f379e260aa7c071a47b12` | 568 files; not truncated | Root `LICENSE.txt` | Maven `pom.xml`, demo Dockerfile | Sandbox CI/webhook/credential boundaries only |
+| `gitkraken/vscode-gitlens` — `5a7c061756ae3059973c98182c2b58e133670977` | 2,920 files; not truncated | `LICENSE`, `LICENSE.plus`, package-specific licenses, third-party notices observed in prior root listing | Root `package.json`, `pnpm-lock.yaml`, many package manifests including plus/AI/GitHub integrations | License and feature-scope review required; do not assume the root license covers all Plus features |
+| `ineo6/hosts` — `11fde366b4318acb322a25174e1721b2f1113d81` | 29 files; not truncated | Root `LICENSE` | `package.json`, `package-lock.json`, `yarn.lock` | Two lockfiles require reconciliation; inspect data source, install/build scripts and exact host-write behavior before use |
+| `maxiaof/github-hosts` — `00f8f9c094964e503d58401a509aa921a0648dcc` | 11 files; not truncated | Root `LICENSE` exists despite GitHub API returning `NOASSERTION` | Maven `pom.xml` | Read the actual license text and inspect update/host-write behavior; API metadata alone is insufficient |
+| `PyGithub/PyGithub` — `5aeb43916b197a0fe8016600817b868fc894af5a` | 1,504 files; not truncated | `COPYING`, `COPYING.LESSER` | `pyproject.toml` | Read the applicable license terms and resolve dependency/license obligations before bundling |
+
+### Evidence boundary
+
+- The recursive-tree responses were complete (GitHub returned `truncated: false`) for the eight repositories above.
+- Root-file existence is not a full license determination. No full text legal review, SPDX normalization, license compatibility decision, SBOM generation, CVE scan, secret scan, static analysis, dynamic analysis, install, or test was completed by this pass.
+- No dependency installation was performed; the tree API only returned paths and object metadata.
+- The earlier GitHub API license label `NOASSERTION` for `maxiaof/github-hosts` does not mean no license file exists: a root `LICENSE` file is present at the pinned commit. Its text still needs review.
+- GitHub MCP Server contains vendored third-party licenses and multiple build surfaces; this increases the need for SBOM/license reconciliation and sandboxing rather than reducing it.
+
+## Closure decision
+
+**Intake stage: complete. Admission stage: not approved.** The only safe closure for this batch without performing the missing code-security/legal work is to keep all 30 candidates research/reference/sandbox-only and keep PR #194 as a draft pending independent review. No candidate is approved for production or trading runtime.
