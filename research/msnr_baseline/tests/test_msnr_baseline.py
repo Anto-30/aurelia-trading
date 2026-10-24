@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import asyncio
 import json
 import re
@@ -272,3 +273,106 @@ def test_historical_workflow_pins_actions_and_hash_locks_dependencies():
         assert any(line.startswith(package + "==") for line in lock_lines), (
             f"direct dependency missing from lock: {package}"
         )
+
+
+def test_fetch_interval_manifest_binds_exact_raw_response_jsonl(tmp_path, monkeypatch):
+    # A synthetic in-memory WebSocket fixture verifies provenance mechanics only.
+    # This fixture is not market evidence and is never passed to the strategy.
+    start = 1_666_310_400
+    end_exclusive = start + 86400
+    candles = []
+    for i, epoch in enumerate(range(start, end_exclusive, 60)):
+        close = 100.0 + i * 0.001
+        candles.append({
+            "epoch": epoch, "open": close - 0.01, "high": close + 0.05,
+            "low": close - 0.05, "close": close,
+        })
+    raw_frame = json.dumps(
+        {"msg_type": "candles", "candles": candles, "req_id": 1},
+        separators=(",", ":"),
+    )
+    sent_payloads = []
+
+    class FakeSocket:
+        async def send(self, payload):
+            sent_payloads.append(payload)
+
+        async def recv(self):
+            return raw_frame
+
+    class FakeConnection:
+        async def __aenter__(self):
+            return FakeSocket()
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        fetch_history.websockets,
+        "connect",
+        lambda *args, **kwargs: FakeConnection(),
+    )
+    out_dir = tmp_path / "raw-history-success"
+    result = asyncio.run(fetch_history.fetch_interval(
+        "1m", 60, fetch_history.date(2022, 10, 21), fetch_history.date(2022, 10, 21),
+        out_dir, 0.01, "a" * 64, {"symbol": "R_100", "pip_size": 0.01},
+        timeout=1.0, retries=0, retry_delay=0.0,
+    ))
+
+    raw_path = out_dir / "R_100_1m.raw.jsonl"
+    manifest = json.loads((out_dir / "R_100_1m.manifest.json").read_text(encoding="utf-8"))
+    records = [json.loads(line) for line in raw_path.read_text(encoding="utf-8").splitlines()]
+    raw_hash = hashlib.sha256(raw_frame.encode("utf-8")).hexdigest()
+    assert result["rows"] == 1440
+    assert len(sent_payloads) == 1
+    assert records[0]["raw_response"] == raw_frame
+    assert records[0]["raw_response_sha256"] == raw_hash
+    assert records[0]["request_raw"] == sent_payloads[0]
+    assert records[0]["request_sha256"] == hashlib.sha256(sent_payloads[0].encode("utf-8")).hexdigest()
+    assert manifest["raw_response_jsonl_sha256"] == fetch_history.sha256_file(raw_path)
+    assert manifest["raw_response_record_count"] == 1
+    assert manifest["chunks"][0]["raw_response_sha256"] == raw_hash
+    assert manifest["csv_sha256"] == fetch_history.sha256_file(out_dir / "R_100_1m.csv")
+    assert result["raw_response_jsonl_sha256"] == manifest["raw_response_jsonl_sha256"]
+
+
+def test_request_chunk_archives_api_error_body_before_fail_closed(tmp_path, monkeypatch):
+    # API-error response bodies are also raw evidence; do not discard them on failure.
+    raw_error = json.dumps({
+        "msg_type": "error",
+        "error": {"code": "RateLimit", "message": "synthetic unit-test error"},
+        "req_id": 1,
+    }, separators=(",", ":"))
+
+    class FakeSocket:
+        async def send(self, payload):
+            return None
+
+        async def recv(self):
+            return raw_error
+
+    class FakeConnection:
+        async def __aenter__(self):
+            return FakeSocket()
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        fetch_history.websockets,
+        "connect",
+        lambda *args, **kwargs: FakeConnection(),
+    )
+    raw_path = tmp_path / "error-frames.raw.jsonl"
+    with pytest.raises(fetch_history.FetchError, match="API error RateLimit"):
+        asyncio.run(fetch_history.request_chunk(
+            1_666_310_400, 1_666_310_460, 60, timeout=1.0, retries=0,
+            retry_delay=0.0, raw_response_jsonl_path=raw_path, chunk_number=3,
+        ))
+
+    records = [json.loads(line) for line in raw_path.read_text(encoding="utf-8").splitlines()]
+    assert len(records) == 1
+    assert records[0]["chunk_number"] == 3
+    assert records[0]["raw_response"] == raw_error
+    assert records[0]["raw_response_sha256"] == hashlib.sha256(raw_error.encode("utf-8")).hexdigest()
+    assert records[0]["capture_stage"] == "FRAME_RECEIVED_BEFORE_VALIDATION"
