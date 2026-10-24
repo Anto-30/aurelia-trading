@@ -190,3 +190,17 @@ GitHub's recursive Git Trees API was queried for each exact commit SHA in the ta
 ## Intake gate outcome after tree check
 
 **Source inventory is complete for this batch at the metadata/tree level. Security/legal qualification is still incomplete.** Do not mark all candidates “audited” or “approved”; retain the existing per-candidate restrictions and require separate evidence for any promotion.
+
+
+## Selected license-text spot checks at pinned commits
+
+Read the beginning of the following exact license files, beyond relying on GitHub's metadata field:
+
+- github/github-mcp-server/LICENSE: MIT License, copyright GitHub (2025). This covers the project's own license text; vendored dependencies still require their individual notices/terms to be preserved.
+- semantic-release/github/LICENSE: MIT License, copyright Contributors (2017).
+- PacktPublishing/Hands-On-Machine-Learning-for-Algorithmic-Trading/LICENSE: MIT License, copyright Packt (2018). This does not qualify any strategy, notebook output, dataset, or external data source as economically valid or necessarily covered by the same terms.
+- gitkraken/vscode-gitlens/LICENSE explicitly says paths in or under a directory named plus are instead covered by LICENSE.plus. The LICENSE.plus file is headed “GitLens Pro License” and identifies GitKraken; therefore the API NOASSERTION must not be interpreted as permission to use Plus features under the base license.
+- PyGithub/PyGithub/COPYING.LESSER contains GNU LGPL version 3 terms. The repository also contains COPYING; verify the complete applicable license and distribution obligations, plus third-party dependency terms, before bundling.
+- maxiaof/github-hosts/LICENSE contains the Mulan Permissive Software License, Version 2, in Chinese. This explains why GitHub's API NOASSERTION label is not the same as an absent license file; obtain a reliable interpretation of the actual terms before reuse.
+
+These are targeted text spot checks, not a full legal opinion or exhaustive license-compliance review. No code was executed and no dependency packages were installed.
