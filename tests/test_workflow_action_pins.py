@@ -11,7 +11,7 @@ PINNED_WORKFLOWS = (
     ".github/workflows/deriv-history-ingestion.yml",
     ".github/workflows/deriv-readonly-verification.yml",
 )
-USES_PATTERN = re.compile(r"^\\s*(?:-\\s*)?uses:\\s*([^\\s#]+)")
+USES_PATTERN = re.compile(r"^\s*(?:-\s*)?uses:\s*([^\s#]+)")
 
 
 class WorkflowActionPinTests(unittest.TestCase):
