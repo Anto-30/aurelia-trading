@@ -72,9 +72,9 @@ def verify(csv_path: Path, manifest_path: Path, output: Path) -> int:
             raise ValueError("CSV SHA-256 differs from manifest; data file or evidence was modified.")
         start_epoch = utc_epoch(date.fromisoformat(manifest["start_date_utc_inclusive"]))
         end_exclusive = int(manifest["range_end_exclusive_epoch"])
-        declared_end_exclusive = utc_epoch(date.fromisoformat(manifest["end_date_utc_inclusive"]) + timedelta(days=1))
+        declared_end_exclusive = utc_epoch(date.fromisoformat(manifest["end_date_utc_exclusive"]))
         if end_exclusive != declared_end_exclusive:
-            raise ValueError("Manifest range_end_exclusive_epoch disagrees with inclusive UTC end date.")
+            raise ValueError("Manifest range_end_exclusive_epoch disagrees with exclusive UTC end date.")
         expected_rows = (end_exclusive - start_epoch) // granularity
         previous: int | None = None
         count = 0
