@@ -59,6 +59,14 @@ def validate_persistent_agent_routing(
         assert agent and agent not in task_by_agent, f"duplicate or missing delegation task owner: {agent!r}"
         task_by_agent[agent] = task
 
+    registered_agents = set(profiles)
+    task_owners = set(task_by_agent)
+    assert task_owners == registered_agents, (
+        "delegation task owners must exactly match registered agent profiles "
+        f"(missing={sorted(registered_agents - task_owners)!r}, "
+        f"unknown={sorted(task_owners - registered_agents)!r})"
+    )
+
     for name, route in agent_routes.items():
         assert route.get("role"), name
         assert isinstance(route.get("intended_plugins"), list) and route["intended_plugins"], name
