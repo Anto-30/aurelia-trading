@@ -67,7 +67,6 @@ def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
     if not isinstance(candles, list) or not candles:
         raise FetchError("Response has no non-empty candles array; dataset cannot be declared complete.")
     out: list[dict[str, int | float]] = []
-    observed_epochs: list[int] = []
     for candle in candles:
         if not isinstance(candle, dict):
             raise FetchError("Candle entry is not an object.")
@@ -88,29 +87,20 @@ def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
             raise FetchError(f"OHLC invariant failed at epoch {epoch}.")
         if epoch % granularity != 0:
             raise FetchError(f"Candle epoch {epoch} is not aligned to {granularity}s interval.")
-        observed_epochs.append(epoch)
-        if start_epoch <= epoch < end_exclusive:
-            out.append({"epoch": epoch, **px})
+        if not start_epoch <= epoch < end_exclusive:
+            raise FetchError(
+                f"Candle epoch {epoch} outside requested interval "
+                f"[{start_epoch}, {end_exclusive}); refusing out-of-range history."
+            )
+        out.append({"epoch": epoch, **px})
     out.sort(key=lambda r: int(r["epoch"]))
     epochs = [int(r["epoch"]) for r in out]
     if len(set(epochs)) != len(epochs):
         raise FetchError("Duplicate candle epochs returned inside a chunk.")
     expected = list(range(start_epoch, end_exclusive, granularity))
     if epochs != expected:
-        if not epochs and observed_epochs:
-            observed_first = min(observed_epochs)
-            observed_last = max(observed_epochs)
-            detail = (
-                "no epochs inside requested interval; "
-                f"response returned {len(observed_epochs)} candle(s) spanning "
-                f"{observed_first}..{observed_last}; requested "
-                f"[{start_epoch}, {end_exclusive}) at {granularity}s"
-            )
-        elif not epochs:
-            detail = (
-                f"no candle epochs returned; requested [{start_epoch}, {end_exclusive}) "
-                f"at {granularity}s"
-            )
+        if not epochs:
+            detail = f"no candle epochs returned; requested [{start_epoch}, {end_exclusive}) at {granularity}s"
         else:
             missing_count = len(set(expected).difference(epochs))
             extra_count = len(set(epochs).difference(expected))
