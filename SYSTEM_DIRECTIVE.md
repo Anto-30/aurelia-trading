@@ -81,3 +81,10 @@ Request: R_100, 60-second candles, start epoch 1666310400 (2022-10-21 00:00:00 U
 Observed: WebSocket connected; response type was `candles`; 1,000 candle objects contained the five required fields, but their epochs were 1792816620 through 1792876560 (2026), outside the requested 2022 interval. The response echoed the requested start/end. The bounded probe therefore **FAILED the historical-range gate**.
 
 Disposition: **BLOCKED**. Do not run the full 24-month download, MT5 reconciliation, frozen simulator, cost-calibrated ledger, or kill rule until a supported historical retrieval path is proven. No 24-month dataset, empirical PF/expectancy, or strategy verdict is established by this probe. The next required inputs are a supported source for the requested 2022–2024 R_100 history, the user's `mt5_bars.csv` for reconciliation, and the exact frozen strategy contract type. No authenticated session or live order was used.
+
+
+## Follow-up bounded probe — 2026-10-24T21:29:15Z
+
+A second schema-conformant one-candle probe was recorded at `reports/research/R100_HISTORY_PROBE_2026-10-25.json`. Request: `ticks_history=R_100`, `start=1666310400`, `end="1666310460"`, `style="candles"`, `granularity=60`, `count=1`; `subscribe` omitted. The response echoed the request bounds but returned epoch `1792877340` (`2026-10-24T21:29:00Z`), outside the requested half-open 2022 interval. Raw response SHA-256: `a96b9db34389de496d725d958215b7c0a7acfa9d135d67b952358291c0296a90`. Verdict remains **BLOCKED**.
+
+Official schema correction: the current Deriv [ticks_history reference](https://developers.deriv.com/docs/data/ticks-history/) permits `subscribe=1` only; a one-shot request must omit `subscribe`, not send `subscribe=0`. This probe did not authenticate, request account data, or submit orders. It is not a historical dataset and does not justify a strategy verdict.
