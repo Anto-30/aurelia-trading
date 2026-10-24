@@ -73,7 +73,7 @@ def run_matrix(timeout_ms: int = 50) -> list[dict]:
     cases = [
         ("HAPPY_PATH", gate, _request(), "RISK_PASS"),
         ("POSITION_BREACH", gate, _request(stake=2.01), "REJECT"),
-        ("KILL_SWITCH_TRIGGER", gate, _request(daily_pnl=-5.0), "REJECT"),
+        ("DAILY_LOSS_LIMIT_BREACH", gate, _request(daily_pnl=-5.0), "REJECT"),
         ("EXCEPTION_FAIL_CLOSED", BrokenGate(risk_policy, enabled=True), _request(), "REJECT"),
         ("TIMEOUT_FAIL_CLOSED", SlowGate(risk_policy, enabled=True), _request(), "REJECT"),
     ]
