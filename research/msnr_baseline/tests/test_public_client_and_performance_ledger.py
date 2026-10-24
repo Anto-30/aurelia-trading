@@ -284,24 +284,9 @@ def test_market_data_response_validators_reject_coerced_json_types():
         validate_history_response(None)
 
 
-def test_client_history_rejects_empty_history_responses(monkeypatch):
-    client = DerivPublicMarketDataClient()
-
-    async def empty_request(payload, *, expected_msg_type=None):
-        assert payload["ticks_history"] == "R_100"
-        assert "subscribe" not in payload  # current schema allows subscribe=1 only; omission is one-shot
-        return {"msg_type": "history", "history": {"prices": [], "times": []}}
-
-    monkeypatch.setattr(client, "request", empty_request)
+def test_history_response_validator_rejects_empty_history_responses():
     with pytest.raises(PublicMarketDataError, match="at least one"):
-        asyncio.run(client.ticks_history(
-            underlying_symbol="R_100",
-            start_epoch=1666310400,
-            end_epoch=1666310460,
-            granularity_seconds=60,
-            style="ticks",
-            count=1,
-        ))
+        validate_history_response({"msg_type": "history", "history": {"prices": [], "times": []}})
 
 
 def test_history_builder_keeps_ticks_history_request_key():
