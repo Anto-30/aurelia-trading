@@ -68,6 +68,23 @@ def test_candle_normalizer_requires_every_current_schema_field_and_contiguity():
         fetch_history.normalize_candles(gap, start, start + 180, 60)
 
 
+def test_candle_normalizer_rejects_out_of_range_candle_even_when_window_is_complete():
+    start = 1_666_320_000
+    in_range = [
+        {"epoch": start, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5},
+        {"epoch": start + 60, "open": 100.5, "high": 102.0, "low": 100.0, "close": 101.0},
+    ]
+    # Reproduces a response containing full exact coverage plus an extra bar
+    # outside the request. The old normalizer silently discarded that extra row.
+    extra = {"epoch": start + 120, "open": 101.0, "high": 102.0, "low": 100.5, "close": 101.5}
+    with pytest.raises(fetch_history.FetchError, match="outside requested interval"):
+        fetch_history.normalize_candles(in_range + [extra], start, start + 120, 60)
+
+    before = {"epoch": start - 60, "open": 99.0, "high": 100.0, "low": 98.0, "close": 99.5}
+    with pytest.raises(fetch_history.FetchError, match="outside requested interval"):
+        fetch_history.normalize_candles([before] + in_range, start, start + 120, 60)
+
+
 def test_vectorized_features_have_strict_one_bar_execution_lag_and_no_forward_fill():
     n = 500
     close = 100.0 + np.sin(np.arange(n, dtype=float) / 7.0) * 2.0 + np.arange(n) * 0.002
