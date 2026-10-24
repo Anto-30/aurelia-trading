@@ -1,0 +1,35 @@
+{
+  "schema": "aurelia.deriv_historical_range_probe.v1",
+  "generated_utc": "2026-10-24T16:41:00.497674+00:00",
+  "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
+  "auth_used": false,
+  "otp_used": false,
+  "live_orders_submitted": false,
+  "requested_symbol": "R_100",
+  "requested_style": "candles",
+  "granularity_seconds": 60,
+  "start_epoch_inclusive": 1666310400,
+  "end_epoch_exclusive": 1666310460,
+  "start_utc": "2022-10-21T00:00:00+00:00",
+  "end_utc_exclusive": "2022-10-21T00:01:00+00:00",
+  "request": {
+    "ticks_history": "R_100",
+    "start": 1666310400,
+    "end": "1666310460",
+    "style": "candles",
+    "granularity": 60,
+    "count": 2,
+    "req_id": 7210426
+  },
+  "response_msg_type": "candles",
+  "response_epochs": [
+    1792860000,
+    1792860060
+  ],
+  "requested_start_epoch_present": false,
+  "response_error": null,
+  "status": "BLOCKED_HISTORICAL_RANGE_UNAVAILABLE",
+  "raw_response_sha256": "e31b19047c6172dbb865dd5d8d314dba28a9386c80b2f6876dd1852eac575c53",
+  "raw_response_bytes": 357,
+  "note": "The endpoint returned an actual response, but its candle epochs did not match the requested historical interval. Do not use it as the 2022 historical dataset."
+}
