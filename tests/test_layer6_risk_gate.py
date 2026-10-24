@@ -26,6 +26,7 @@ def request(**overrides):
         "stake": 1.0,
         "available_balance": 100.0,
         "daily_pnl": 0.0,
+        "worst_case_loss": 1.0,
         "existing_exposure": 0.0,
         "pending_exposure": 0.0,
         "concurrent_exposure": 0.0,
@@ -55,6 +56,24 @@ class Layer6RiskGateTests(unittest.TestCase):
         result = Layer6RiskGate(policy(), enabled=True).evaluate(request(daily_pnl=-5.0))
         self.assertFalse(result.risk_approved)
         self.assertEqual(result.reason, "DAILY_LOSS_LIMIT_BREACHED")
+
+    def test_proposed_worst_case_loss_cannot_cross_daily_loss_cap(self):
+        gate = Layer6RiskGate(policy(), enabled=True)
+        boundary = gate.evaluate(request(daily_pnl=-4.5, worst_case_loss=0.5))
+        self.assertFalse(boundary.risk_approved)
+        self.assertEqual(boundary.reason, "DAILY_LOSS_LIMIT_BREACHED")
+
+        within_budget = gate.evaluate(request(daily_pnl=-4.49, worst_case_loss=0.5))
+        self.assertTrue(within_budget.risk_approved)
+        self.assertEqual(within_budget.reason, "RISK_CHECKS_PASSED")
+
+    def test_missing_or_invalid_worst_case_loss_fails_closed(self):
+        gate = Layer6RiskGate(policy(), enabled=True)
+        for bad in (None, True, "1", 0, -1, float("nan"), float("inf")):
+            with self.subTest(value=repr(bad)):
+                result = gate.evaluate(request(worst_case_loss=bad))
+                self.assertFalse(result.risk_approved)
+                self.assertEqual(result.reason, "WORST_CASE_LOSS_UNVERIFIED")
 
     def test_malformed_numeric_inputs_reject_without_raising(self):
         gate = Layer6RiskGate(policy(), enabled=True)
