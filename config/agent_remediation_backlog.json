@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_remediation_backlog.v1",
-  "generated": "2026-10-12",
+  "generated": "2026-10-24",
   "canonical_repository": "https://github.com/Anto-30/aurelia-trading",
   "authority_model": {
     "scope": "maximum practical engineering, research, testing, repository, and deployment-preparation permissions subject to connected-tool and platform permissions",
@@ -49,16 +49,17 @@
         "GrokBot",
         "ChatGPT"
       ],
-      "dependencies": [
-        "explicit user-authorized device enrollment"
-      ],
+      "dependencies": [],
       "acceptance_criteria": [
         "authorized device identity and online state are actually observed",
         "always-on host/service manager, startup behavior, restart-on-failure, health checks, log rotation, alerting, and revocation are documented",
         "reboot, provider disconnect, network loss, and reconnect recovery are tested",
         "host uptime and worker health are recorded as evidence rather than inferred"
       ],
-      "evidence_path": "artifacts/agent-delegation/dev-runtime.json"
+      "evidence_path": "artifacts/agent-delegation/dev-runtime.json",
+      "external_prerequisites": [
+        "Explicit user-authorized device enrollment"
+      ]
     },
     {
       "id": "PROVIDER-002",
@@ -73,8 +74,7 @@
         "KimiK3"
       ],
       "dependencies": [
-        "HOST-001",
-        "supported integration and authorized credentials"
+        "HOST-001"
       ],
       "acceptance_criteria": [
         "each agent is explicitly reported as authenticated/connected or blocked with a concrete reason",
@@ -82,7 +82,11 @@
         "secret material is held in an approved secret store, scoped, masked in logs, and revocable",
         "unconfigured provider reports CONNECTOR_REQUIRED and does not create a false live lease"
       ],
-      "evidence_path": "artifacts/agent-delegation/claudecode.json"
+      "evidence_path": "artifacts/agent-delegation/claudecode.json",
+      "external_prerequisites": [
+        "Supported provider integration",
+        "Authorized credentials and secret-store access"
+      ]
     },
     {
       "id": "TASK-003",
@@ -113,7 +117,8 @@
         "https://github.com/Anto-30/aurelia-trading/actions/runs/38258872303",
         "https://github.com/Anto-30/aurelia-trading/actions/runs/38258872335",
         "https://github.com/Anto-30/aurelia-trading/actions/runs/38258872316"
-      ]
+      ],
+      "external_prerequisites": []
     },
     {
       "id": "CI-004",
@@ -144,7 +149,8 @@
         "combined watchdog, federation audit, and assurance checks pass on the proposed commit",
         "exact logs and run IDs are linked and the PRs' combined behavior is independently reviewed"
       ],
-      "evidence_path": "artifacts/agent-delegation/claudecode.json"
+      "evidence_path": "artifacts/agent-delegation/claudecode.json",
+      "external_prerequisites": []
     },
     {
       "id": "STORAGE-005",
@@ -164,7 +170,9 @@
         "crash recovery and stale claim/lease behavior are exercised using fault-injection tests",
         "replay, duplicate enqueue, completion, and event-ID collisions are tested"
       ],
-      "evidence_path": "artifacts/agent-delegation/claudecode.json"
+      "evidence_path": "artifacts/agent-delegation/claudecode.json",
+      "dependencies": [],
+      "external_prerequisites": []
     },
     {
       "id": "SECRETS-006",
@@ -185,7 +193,9 @@
         "move secrets to the approved secret store with least-privilege access and masked output",
         "verify credential absence from generated artifacts and pull-request diffs"
       ],
-      "evidence_path": "artifacts/agent-delegation/google-agent-skills.json"
+      "evidence_path": "artifacts/agent-delegation/google-agent-skills.json",
+      "dependencies": [],
+      "external_prerequisites": []
     },
     {
       "id": "RELEASE-007",
@@ -206,7 +216,9 @@
         "missing artifacts remain explicitly blocked until acquired",
         "the release gate and independent certification agree on readiness"
       ],
-      "evidence_path": "artifacts/agent-delegation/glm.json"
+      "evidence_path": "artifacts/agent-delegation/glm.json",
+      "dependencies": [],
+      "external_prerequisites": []
     },
     {
       "id": "DERIV-008",
@@ -228,7 +240,9 @@
         "stake affordability is evaluated against current broker minimums and fresh available balance",
         "account isolation, idempotency, transaction status, ledger, and reconciliation are independently tested"
       ],
-      "evidence_path": "artifacts/agent-delegation/aurelia.json"
+      "evidence_path": "artifacts/agent-delegation/aurelia.json",
+      "dependencies": [],
+      "external_prerequisites": []
     },
     {
       "id": "QUAL-009",
@@ -250,7 +264,9 @@
         "market data freshness, timestamp ordering, and session continuity are tested",
         "3600-second runtime soak has zero unhandled critical failures and is explicitly classified as test or production environment"
       ],
-      "evidence_path": "artifacts/agent-delegation/aurelia.json"
+      "evidence_path": "artifacts/agent-delegation/aurelia.json",
+      "dependencies": [],
+      "external_prerequisites": []
     },
     {
       "id": "CONTROL-010",
@@ -271,7 +287,9 @@
         "reconciliation mismatch, account mismatch, balance staleness, market-data staleness, and control failure all transition to protective state",
         "no external agent can enable orders or grant capital authority"
       ],
-      "evidence_path": "artifacts/agent-delegation/aurelia.json"
+      "evidence_path": "artifacts/agent-delegation/aurelia.json",
+      "dependencies": [],
+      "external_prerequisites": []
     },
     {
       "id": "DEPLOY-011",
@@ -298,7 +316,8 @@
         "logs, heartbeats, alerts, and task outcome evidence are available to the command center",
         "production status is not inferred from a CI simulation or local-only probe"
       ],
-      "evidence_path": "artifacts/agent-delegation/dev-runtime.json"
+      "evidence_path": "artifacts/agent-delegation/dev-runtime.json",
+      "external_prerequisites": []
     },
     {
       "id": "OBS-012",
@@ -318,7 +337,9 @@
         "task ID, owner, current state, last completion/failure, and evidence link are visible where a real UI exists",
         "if target UI or deployment is absent, status is explicitly blocked instead of simulated"
       ],
-      "evidence_path": "artifacts/agent-delegation/playwright-cli.json"
+      "evidence_path": "artifacts/agent-delegation/playwright-cli.json",
+      "dependencies": [],
+      "external_prerequisites": []
     },
     {
       "id": "TEST-013",
@@ -338,7 +359,9 @@
         "CI runs are pinned to actual commit SHAs and results are captured with logs",
         "independent review records residual risk and any unavailable test dependencies"
       ],
-      "evidence_path": "artifacts/agent-delegation/jev.json"
+      "evidence_path": "artifacts/agent-delegation/jev.json",
+      "dependencies": [],
+      "external_prerequisites": []
     },
     {
       "id": "SUPPLY-014",
@@ -358,7 +381,9 @@
         "external repositories remain research-only and cannot grant capital authority",
         "no unreviewed external code is promoted to the capital plane"
       ],
-      "evidence_path": "artifacts/agent-delegation/google-agent-skills.json"
+      "evidence_path": "artifacts/agent-delegation/google-agent-skills.json",
+      "dependencies": [],
+      "external_prerequisites": []
     },
     {
       "id": "SCHED-015",
@@ -379,7 +404,9 @@
         "worker/provider unavailability produces a visible alert and queued/reassigned task without fabricated completion",
         "SLOs define heartbeat freshness, queue age, retry/backoff, alerting, and recovery evidence"
       ],
-      "evidence_path": "artifacts/agent-delegation/grokbot.json"
+      "evidence_path": "artifacts/agent-delegation/grokbot.json",
+      "dependencies": [],
+      "external_prerequisites": []
     }
   ],
   "agent_operating_model": [
