@@ -498,13 +498,14 @@ def test_request_has_overall_deadline_when_irrelevant_messages_keep_arriving(mon
         asyncio.run(client.request({"ticks": "R_100"}, expected_msg_type="tick"))
 
 
-def test_ticks_history_rejects_candles_outside_requested_time_window(monkeypatch):
+@pytest.mark.parametrize("returned_epoch", [1666310399, 1666310460, 1792876920])
+def test_ticks_history_rejects_candles_outside_requested_time_window(monkeypatch, returned_epoch):
     async def run():
         client = DerivPublicMarketDataClient()
         latest_candle_response = {
             "msg_type": "candles",
             "candles": [{
-                "epoch": 1792876920,
+                "epoch": returned_epoch,
                 "open": 668.69,
                 "high": 669.60,
                 "low": 668.11,
