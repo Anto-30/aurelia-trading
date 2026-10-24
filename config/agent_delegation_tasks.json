@@ -15,7 +15,7 @@
     {
       "task_id": "AGT-CLAUDE-001",
       "agent": "ClaudeCode",
-      "status": "assigned",
+      "status": "blocked",
       "objective": "Repair and certify the agent delegation proof chain, including inventory validation and continuity evidence.",
       "acceptance_criteria": [
         "inventory validator passes",
@@ -26,7 +26,13 @@
       "runtime_proof": {
         "required_event": "subagent.started",
         "execution_proof": false
-      }
+      },
+      "blocked_reason": "ClaudeCode external runtime identity and authenticated capability probe are not verified in this session; do not claim a delegated run.",
+      "unblock_evidence_required": [
+        "Reachable authorized ClaudeCode runtime identity",
+        "Successful authenticated capability probe with timestamp and read-only scope",
+        "Attributable subagent.started lifecycle event and task-specific result"
+      ]
     },
     {
       "task_id": "AGT-KIMI-001",
