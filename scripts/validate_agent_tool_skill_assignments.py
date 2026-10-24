@@ -69,7 +69,17 @@ def validate_persistent_agent_routing(
         assert profiles[name].get("capital_authority") is False, name
 
         runtime_status = route["runtime_status"].upper()
-        if "NOT_CONNECTED" in runtime_status or "BLOCKED_NOT_CONNECTED" in runtime_status:
+        # Treat any unverified/unavailable runtime label as blocked. Do not
+        # whitelist only NOT_CONNECTED: statuses such as NOT_VERIFIED and
+        # SHADOW_ONLY must fail closed in exactly the same way.
+        unavailable_markers = (
+            "NOT_CONNECTED",
+            "NOT_VERIFIED",
+            "UNVERIFIED",
+            "SHADOW_ONLY",
+            "NOT_PROVEN",
+        )
+        if any(marker in runtime_status for marker in unavailable_markers):
             task = task_by_agent.get(name)
             assert task is not None, f"{name}: missing delegation task"
             assert task.get("status") == "blocked", (
