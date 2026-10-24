@@ -35,6 +35,18 @@ def test_public_history_payload_uses_current_bounded_request_shape():
     assert "subscribe" not in req  # one-shot request: omit rather than send legacy 0
 
 
+def test_half_open_historical_window_uses_exact_midnight_end_boundary():
+    start_day, end_day, start_epoch, end_exclusive = fetch_history.parse_utc_window("2022-10-21", "2024-10-21")
+    assert start_day.isoformat() == "2022-10-21"
+    assert end_day.isoformat() == "2024-10-21"
+    assert start_epoch == 1666310400
+    assert end_exclusive == 1729468800
+    assert (end_exclusive - start_epoch) // 60 == 1_052_640
+    assert (end_exclusive - start_epoch) // 900 == 70_176
+    with pytest.raises(fetch_history.FetchError, match="exclusive UTC midnight"):
+        fetch_history.parse_utc_window("2024-10-21", "2024-10-21")
+
+
 def test_active_symbols_pip_size_is_price_unit_not_history_display_precision():
     assert fetch_history.validate_active_symbols_pip_size(0.0001) == 0.0001
     assert fetch_history.validate_active_symbols_pip_size(0.01) == 0.01
