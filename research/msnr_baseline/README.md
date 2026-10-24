@@ -25,11 +25,15 @@ The frozen configuration in config/model_frozen.json defines a price-action swee
 
 The stateful simulation uses a Numba-compiled loop across 90-day segments, a 250-row feature warm-up, append-only JSONL trade ledger, and explicit memory cleanup. The final bar closes any remaining position. The simulator requires genuine history, a matching SHA-256 manifest and a passing continuity report.
 
-Run only after verification succeeds:
+## Economics gate — currently blocked
 
-    python scripts/run_msnr_simulator.py data/raw/R_100_1m.csv --manifest data/raw/R_100_1m.manifest.json --verification data/raw/R_100_1m.verification.json --ledger evidence/run-01/trade_ledger.jsonl --summary evidence/run-01/summary.json --git-commit EXACT_40_CHARACTER_GIT_COMMIT_SHA --allow-unverified-linear-proxy
+Do **not** run the frozen simulator or evaluate the kill rule with the current implementation. The legacy `--allow-unverified-linear-proxy` flag is rejected; it cannot override the evidence gate. The current kernel calculates normalized linear price-PnL with multiplier 1.0 and applies assumed spread/slippage while excluding commission. That does not implement the payout mechanics for a confirmed Deriv Trader `contract_type`.
 
-The linear-proxy flag means results remain NOT_QUALIFIED: multiplier 1.0 is normalized price-PnL, not an independently verified Deriv contract multiplier. Spread 2.0 pips and slippage 5 bps per fill are assumptions, not observations; commission is excluded. The Holy Trinity values (CSV SHA-256, exact repository commit, seed 42) are printed only after a data-backed run completes.
+A future eligible run requires `config/COST_MODEL.json` with schema `aurelia.deriv.cost_model.v1`, status `VERIFIED_FROM_OBSERVED_CASH_FLOWS`, exact contract type, currency, an observed evidence source from `statement` or `profit_table`, its path and SHA-256, observed trade count, theoretical gross PnL total, realized net PnL total, `known_fees_total`, and `residual_tolerance_total`. The gate checks source hash and verifies that (gross PnL - realized net PnL - known fees) is within the stated residual tolerance.
+
+Even a reconciled cost file will **not** permit a run until a tested contract-specific Deriv payout/per-trade-cost adapter is implemented. The currently supported qualified payoff-engine set is intentionally empty. No `COST_MODEL.json` is present yet, and the contract type and observed statement/profit-table evidence have not been supplied. This is a hard blocker, not an invitation to fill values with assumptions.
+
+Once source history, empirical cost reconciliation, a contract-specific payoff engine, and independent release review are all verified, update the gate and follow the single-run frozen-baseline procedure. Until then the kill rule is `NOT EVALUATED` and any run must fail closed.
 
 Fixed kill rule: profit factor below 1.15 OR net expectancy at or below 0R prints exactly: KILL CRITERIA MET: Baseline alpha insufficient. Halting HMM integration. If verified data or computable metrics are absent, the kill rule is NOT EVALUATED, not passed or failed.
 
