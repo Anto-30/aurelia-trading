@@ -153,13 +153,13 @@ async def test_provider_completion_requires_nonempty_evidence_and_string_status(
     )
     encoded_template = repr(json.dumps(provider_result))
     provider_code = (
-        "import json,sys\\n"
-        f"template=json.loads({encoded_template})\\n"
-        "for line in sys.stdin:\\n"
-        " request=json.loads(line)\\n"
-        " result=dict(template)\\n"
-        " result['task_id']=request['task_id']\\n"
-        " print(json.dumps(result),flush=True)\\n"
+        "import json,sys\n"
+        f"template=json.loads({encoded_template})\n"
+        "for line in sys.stdin:\n"
+        " request=json.loads(line)\n"
+        " result=dict(template)\n"
+        " result['task_id']=request['task_id']\n"
+        " print(json.dumps(result),flush=True)\n"
     )
     monkeypatch.setenv(
         "AURELIA_AGENT_CLAUDECODE_COMMAND",
