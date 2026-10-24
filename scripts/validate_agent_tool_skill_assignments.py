@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+# These validators use assert-based invariants; -O strips them and can create false PASS reports.
+if not __debug__:
+    raise SystemExit("Refusing optimized Python mode: validator assertions would be disabled")
+
 import json
 import re
 from pathlib import Path
