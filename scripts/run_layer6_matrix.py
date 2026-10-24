@@ -40,6 +40,7 @@ def _request(**overrides) -> RiskRequest:
         "stake": 1.0,
         "available_balance": 100.0,
         "daily_pnl": 0.0,
+        "worst_case_loss": 1.0,
         "existing_exposure": 0.0,
         "pending_exposure": 0.0,
         "concurrent_exposure": 0.0,
@@ -73,7 +74,7 @@ def run_matrix(timeout_ms: int = 50) -> list[dict]:
     cases = [
         ("HAPPY_PATH", gate, _request(), "RISK_PASS"),
         ("POSITION_BREACH", gate, _request(stake=2.01), "REJECT"),
-        ("DAILY_LOSS_LIMIT_BREACH", gate, _request(daily_pnl=-5.0), "REJECT"),
+        ("DAILY_LOSS_LIMIT_BREACH", gate, _request(daily_pnl=-4.5, worst_case_loss=0.5), "REJECT"),
         ("EXCEPTION_FAIL_CLOSED", BrokenGate(risk_policy, enabled=True), _request(), "REJECT"),
         ("TIMEOUT_FAIL_CLOSED", SlowGate(risk_policy, enabled=True), _request(), "REJECT"),
     ]
