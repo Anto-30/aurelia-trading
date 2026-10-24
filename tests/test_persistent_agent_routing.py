@@ -93,6 +93,24 @@ class PersistentAgentRoutingTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "runtime is not connected"):
             validate_persistent_agent_routing(routing, profiles, delegation)
 
+    def test_unverified_runtime_cannot_be_marked_assigned(self):
+        routing, profiles, delegation = fixtures()
+        routing["agents"]["DeepSeekHarness"]["runtime_status"] = (
+            "EXTERNAL_RUNTIME_NOT_VERIFIED_BY_THIS_CHAT"
+        )
+        delegation["tasks"][0]["status"] = "assigned"
+        with self.assertRaisesRegex(AssertionError, "runtime is not connected"):
+            validate_persistent_agent_routing(routing, profiles, delegation)
+
+    def test_shadow_only_runtime_cannot_be_marked_assigned(self):
+        routing, profiles, delegation = fixtures()
+        routing["agents"]["DeepSeekHarness"]["runtime_status"] = (
+            "REGISTERED_SHADOW_ONLY"
+        )
+        delegation["tasks"][0]["status"] = "assigned"
+        with self.assertRaisesRegex(AssertionError, "runtime is not connected"):
+            validate_persistent_agent_routing(routing, profiles, delegation)
+
     def test_external_agent_cannot_gain_capital_authority(self):
         routing, profiles, delegation = fixtures()
         routing["governance"]["external_agents_capital_authority"] = True
