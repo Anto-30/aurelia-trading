@@ -25,7 +25,7 @@ Review pin observed 2026-10-24: `09790944a405ba81a7df27bc2577c6b0db283900`. GitH
 1. Build and run only in a disposable container or VM; use a non-root runtime identity.
 2. Publish CDP to host loopback only. The upstream Dockerfile's server binds to `0.0.0.0` inside the container for port forwarding; this does not justify exposing the host port publicly.
 3. Supply a strong random CDP token through a secret manager whenever the server binds to a non-loopback interface. Never commit or log it.
-4. Deny outbound traffic by default; explicitly allowlist only approved test hosts. Block metadata endpoints and internal network ranges.
+4. Deny outbound traffic by default; explicitly allowlist only approved test hosts. Block metadata endpoints and internal network ranges. Never enable Obscura's `--allow-private-network` flag or set `OBSCURA_ALLOW_PRIVATE_NETWORK=1` in the sandbox; both bypass the default denial for loopback, RFC1918, and link-local targets.
 5. Use an empty, ephemeral browser profile for each run.
 6. Set CPU, memory, process, request-count, and wall-clock limits.
 7. Pin source, dependency lockfiles, toolchain, and output artifact digests. Inspect release provenance; do not assume an unverified image is official.
