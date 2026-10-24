@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/msnr-half-open-history-window-20261025
+      - fix/block-unverified-msnr-economics-20261025
   pull_request:
     branches:
       - research/msnr-baseline-r100-20261022
