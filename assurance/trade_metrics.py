@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from math import fsum, isfinite
-from typing import Iterable, Mapping, Any
+from typing import Iterable, Any
 
 
 def _finite(value: Any, name: str) -> float:
@@ -20,7 +20,7 @@ def _finite(value: Any, name: str) -> float:
 
 @dataclass(frozen=True)
 class TradeObservation:
-    """One closed research trade. Costs are explicit and never inferred."""
+    """One closed research trade with each modeled cost explicitly recorded."""
 
     gross_pnl: float
     transaction_costs: float
@@ -78,12 +78,12 @@ def _max_drawdown(values: Iterable[float]) -> float:
 
 
 def compute_research_metrics(trades: Iterable[TradeObservation]) -> ResearchMetrics:
-    """Calculate cost-adjusted expectancy, PF and peak-to-trough drawdowns.
+    """Compute gross profit factor, net expectancy, and net equity drawdowns.
 
-    Expectancy is mean per-trade net P&L, equivalent to
-    (win probability * average net win) - (loss probability * average net loss).
-    A profit factor with no losing trades is serialized as null rather than
-    non-standard JSON infinity and labelled explicitly.
+    Expectancy is the mean of each trade's net P&L after the recorded costs.
+    Profit factor follows the standard gross-profit / absolute-gross-loss formula
+    on gross P&L; cost totals and net profit are reported separately. If the
+    sample has no gross losses, profit factor is null (not JSON infinity).
     """
     rows = list(trades)
     if not rows:
@@ -93,14 +93,15 @@ def compute_research_metrics(trades: Iterable[TradeObservation]) -> ResearchMetr
 
     net = [row.net_pnl() for row in rows]
     net_r = [row.net_r() for row in rows]
-    gross_profit = fsum(value for value in net if value > 0)
-    gross_loss = -fsum(value for value in net if value < 0)
+    gross = [_finite(row.gross_pnl, "gross_pnl") for row in rows]
+    gross_profit = fsum(value for value in gross if value > 0)
+    gross_loss = -fsum(value for value in gross if value < 0)
     if gross_loss > 0:
         profit_factor = gross_profit / gross_loss
         pf_status = "DEFINED"
     else:
         profit_factor = None
-        pf_status = "UNDEFINED_NO_NET_LOSSES"
+        pf_status = "UNDEFINED_NO_GROSS_LOSSES"
     winning = [value for value in net if value > 0]
     losing = [-value for value in net if value < 0]
     return ResearchMetrics(
@@ -129,6 +130,8 @@ def out_of_sample_degradation(
     ins = _finite(in_sample_expectancy, "in_sample_expectancy")
     oos = _finite(out_of_sample_expectancy, "out_of_sample_expectancy")
     threshold = _finite(rejection_threshold, "rejection_threshold")
+    if threshold < 0 or threshold >= 1:
+        raise ValueError("OOS_DEGRADATION_THRESHOLD_OUT_OF_RANGE")
     if ins <= 0:
         return {
             "degradation_fraction": None,
@@ -136,8 +139,6 @@ def out_of_sample_degradation(
             "status": "REJECT_NON_POSITIVE_IN_SAMPLE_EXPECTANCY",
             "rejected": True,
         }
-    if threshold < 0 or threshold >= 1:
-        raise ValueError("OOS_DEGRADATION_THRESHOLD_OUT_OF_RANGE")
     degradation = (ins - oos) / ins
     return {
         "degradation_fraction": degradation,
@@ -147,8 +148,10 @@ def out_of_sample_degradation(
     }
 
 
-def report_to_dict(metrics: ResearchMetrics, *, is_expectancy: float, oos_expectancy: float) -> dict[str, Any]:
-    """Build a strict JSON-safe report; deliberately omits standalone win-rate claims."""
+def report_to_dict(
+    metrics: ResearchMetrics, *, is_expectancy: float, oos_expectancy: float
+) -> dict[str, Any]:
+    """Build JSON-safe metrics; deliberately omits standalone win-rate claims."""
     degradation = out_of_sample_degradation(is_expectancy, oos_expectancy)
     return {
         "schema": "aurelia.research_metrics.v1",
