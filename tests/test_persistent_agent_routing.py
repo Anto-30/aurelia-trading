@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import subprocess
+import sys
 import unittest
 
 from scripts.validate_agent_tool_skill_assignments import validate_persistent_agent_routing
@@ -60,6 +62,28 @@ def fixtures():
 
 
 class PersistentAgentRoutingTests(unittest.TestCase):
+    def test_validators_refuse_optimized_python_mode(self):
+        root = __import__("pathlib").Path(__file__).resolve().parents[1]
+        for script in (
+            "scripts/validate_agent_inventory.py",
+            "scripts/validate_agent_tool_skill_assignments.py",
+        ):
+            with self.subTest(script=script):
+                result = subprocess.run(
+                    [sys.executable, "-O", str(root / script)],
+                    cwd=root,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    timeout=15,
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(
+                    "Refusing optimized Python mode: validator assertions would be disabled",
+                    result.stderr + result.stdout,
+                )
+
+
     def test_disconnected_agent_with_blocked_task_is_valid(self):
         validate_persistent_agent_routing(*fixtures())
 
