@@ -141,3 +141,52 @@ Checked the pinned branch names' root directory listings through the GitHub Cont
 - PyGithub has `COPYING` and `COPYING.LESSER`; its actual applicable license obligations and dependency notices must be checked before bundling.
 - No root license file was observed for HelloGitHub, GitHub520, arslanbilal/git-cheat-sheet, robotze/GithubDesktopZhTool, or jonbarron/jonbarron.github.io at the checked roots. Keep these reference-only and do not redistribute or incorporate code until an authoritative license is found.
 - The root listing does not prove absence of nested licenses, data-set terms, notebook content rights, or third-party assets. Recursive tree and per-file review remains necessary for every candidate.
+
+
+## Recursive tree completeness check — all 30 pinned snapshots
+
+GitHub's recursive Git Trees API was queried for each exact commit SHA in the table above. All 30 requests returned successfully with `truncated: false`. The counts below are blob/file entries returned by GitHub for the pinned tree, not audited or tested file counts.
+
+| Repository | Blob entries | Tree response truncated? | License files found in recursive path scan |
+|---|---:|---|---|
+| PacktPublishing/Hands-On-Machine-Learning-for-Algorithmic-Trading | 882 | No | `LICENSE` |
+| semantic-release/github | 50 | No | `LICENSE` |
+| github/github-mcp-server | 660 | No | Root `LICENSE` plus numerous vendored third-party licenses/notices |
+| 521xueweihan/HelloGitHub | 266 | No | None matching the root/nested license filename scan |
+| anuraghazra/github-readme-stats | 132 | No | `LICENSE` |
+| 521xueweihan/GitHub520 | 17 | No | None matching the license filename scan |
+| skills/introduction-to-github | 25 | No | `LICENSE` |
+| gitbutlerapp/gitbutler | 5,573 | No | `LICENSE.md` plus image/icon asset files whose names contain “license” |
+| conwnet/github1s | 391 | No | Root `LICENSE` and extension-specific licenses |
+| academicpages/academicpages.github.io | 313 | No | `LICENSE` |
+| desktop/desktop | 2,609 | No | Root `LICENSE`, vendor licenses and fixture license files |
+| pwntester/octo.nvim | 139 | No | `LICENSE` |
+| refined-github/refined-github | 593 | No | Root `license` |
+| maxiaof/github-hosts | 11 | No | `LICENSE` |
+| abhisheknaiidu/awesome-github-profile-readme | 11 | No | `LICENSE` |
+| google/go-github | 578 | No | `LICENSE` |
+| gitkraken/vscode-gitlens | 2,920 | No | `LICENSE`, `LICENSE.plus`, `ThirdPartyNotices.txt`, and package-specific licenses |
+| PyGithub/PyGithub | 1,504 | No | `COPYING`, `COPYING.LESSER` |
+| mouredev/hello-git | 95 | No | `LICENSE` |
+| arslanbilal/git-cheat-sheet | 18 | No | None matching the license filename scan |
+| ineo6/hosts | 29 | No | `LICENSE` |
+| jenkinsci/github-branch-source-plugin | 568 | No | `LICENSE.txt` |
+| Wechat-ggGitHub/Awesome-GitHub-Repo | 2 | No | `LICENSE` |
+| ekalinin/github-markdown-toc | 58 | No | `LICENSE` |
+| GTFOBins/GTFOBins.github.io | 518 | No | `LICENSE` |
+| CarGuo/gsy_github_app_flutter | 596 | No | Root `LICENSE` and vendored dependency licenses |
+| CarGuo/GSYGithubAPP | 292 | No | `LICENSE` |
+| robotze/GithubDesktopZhTool | 3 | No | None matching the license filename scan |
+| jonbarron/jonbarron.github.io | 353 | No | None matching the license filename scan |
+| ryo-ma/github-profile-trophy | 53 | No | `LICENSE` |
+
+### What this proves — and what it does not
+
+- **Proves:** all 30 pinned SHA tree responses were returned and none was marked truncated by GitHub.
+- **Does not prove:** source correctness, absence of malicious code, legal compatibility, full license coverage (filename heuristics can miss unusual names), dependency safety, absence of CVEs/secrets, build reproducibility, runtime behavior, or trading value.
+- A repository with no license file detected remains on hold for code reuse/redistribution unless an authoritative license is established. A repository with a license file still requires review of its text, subcomponents, embedded data, vendored files and dependencies.
+- No repository was cloned or built from this API-only tree check. No SBOM, vulnerability scan, secret scan, static analyzer, dynamic test, or isolated execution was run in this step.
+
+## Intake gate outcome after tree check
+
+**Source inventory is complete for this batch at the metadata/tree level. Security/legal qualification is still incomplete.** Do not mark all candidates “audited” or “approved”; retain the existing per-candidate restrictions and require separate evidence for any promotion.
