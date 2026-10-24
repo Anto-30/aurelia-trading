@@ -1,0 +1,69 @@
+# External GitHub Repository Intake — 2026-10-24
+
+**Status:** preliminary / research-only. **No repository has been installed, executed, or promoted.**  
+**AURELIA execution posture:** `LIVE_EXECUTION=BLOCKED`, `FINAL_EXECUTION_AUTHORIZATION=false`, `capital_plane_mode=VERIFY_ONLY`.
+
+This manifest pins the 30 user-supplied repositories to default-branch commit SHAs observed on 2026-10-24. GitHub API license metadata is indicative only; it is not a legal determination and does not replace root/nested LICENSE, NOTICE, per-file, dependency, and transitive-license review.
+
+| # | Repository | Branch | Commit SHA | GitHub API license metadata | Initial disposition |
+|---:|---|---|---|---|---|
+| 1 | [PacktPublishing/Hands-On-Machine-Learning-for-Algorithmic-Trading](https://github.com/PacktPublishing/Hands-On-Machine-Learning-for-Algorithmic-Trading) | master | `c7291523e95bce9dde21ea1b8acd5682f96f5cac` | MIT | Research/education only; pinned source last committed 2023-01-18; old Python/scientific stack and strategy results require revalidation |
+| 2 | [semantic-release/github](https://github.com/semantic-release/github) | master | `0c577cbaefd8c7402a22729f69180c3d9b3cbf1c` | MIT | Sandbox-only release automation; synthetic credentials and disposable repository |
+| 3 | [github/github-mcp-server](https://github.com/github/github-mcp-server) | main | `f38526264abb14961b32cea386e38ec6d3cf674f` | MIT | Sandbox-only; broad read/write GitHub tool surface; least privilege and prompt-injection/egress review required |
+| 4 | [521xueweihan/HelloGitHub](https://github.com/521xueweihan/HelloGitHub) | master | `030121514da552ed91e640ef8bde4083c753dd52` | Not detected | Reference-only; verify licensing of the project and linked third-party repositories individually |
+| 5 | [anuraghazra/github-readme-stats](https://github.com/anuraghazra/github-readme-stats) | master | `54a7985aeefda00d5eadb55b80c17c7f976c37d2` | MIT | Profile/web tooling only; review external API, caching, rate-limit and deployment exposure |
+| 6 | [521xueweihan/GitHub520](https://github.com/521xueweihan/GitHub520) | main | `6ea5e106d236e12c1e69341eea410a8d5dd27ba6` | Not detected | Reference-only; no automatic host/network configuration changes |
+| 7 | [skills/introduction-to-github](https://github.com/skills/introduction-to-github) | main | `dbe048e0b08f0ba1e1a2634ae69aa10f6327832a` | MIT | Educational reference |
+| 8 | [gitbutlerapp/gitbutler](https://github.com/gitbutlerapp/gitbutler) | master | `8b922fedf1a651e1cbd1abcb11fcfa53bcce58a4` | NOASSERTION | Developer workstation tool only; license gate remains open |
+| 9 | [conwnet/github1s](https://github.com/conwnet/github1s) | master | `bf13d041f1e3ece9fa0bce7639bc093203871db5` | MIT | Reference/developer tool; no private repository data unless explicitly authorized |
+| 10 | [academicpages/academicpages.github.io](https://github.com/academicpages/academicpages.github.io) | master | `7b958332ce9970cfb6987a049d7684ac615397e8` | MIT | Website template only; inspect theme/build dependencies before deployment |
+| 11 | [desktop/desktop](https://github.com/desktop/desktop) | development | `bf4ec63e50eae5c5cde7043fe2eb7c94c881dd34` | MIT | Developer workstation tool only |
+| 12 | [pwntester/octo.nvim](https://github.com/pwntester/octo.nvim) | master | `8461d99d13cca243f89848bf4d9fadee096f0a48` | MIT | Editor integration sandbox; review token scopes and commands |
+| 13 | [refined-github/refined-github](https://github.com/refined-github/refined-github) | main | `12ab2729861f438f168a56338b9598e67925d53f` | MIT | Browser extension sandbox; inspect permissions/content scripts/update chain |
+| 14 | [maxiaof/github-hosts](https://github.com/maxiaof/github-hosts) | master | `00f8f9c094964e503d58401a509aa921a0648dcc` | NOASSERTION | Reference-only; no host-file changes without source review and rollback plan |
+| 15 | [abhisheknaiidu/awesome-github-profile-readme](https://github.com/abhisheknaiidu/awesome-github-profile-readme) | master | `a2f2de46099a6d503d9240d8f90b4f504755b27f` | CC0-1.0 | Curated reference list; downstream projects need separate review |
+| 16 | [google/go-github](https://github.com/google/go-github) | master | `64e5188a52deb30d534dc4d5b30a5c6c3541b334` | BSD-3-Clause | Candidate Go REST SDK; pin dependency version and test auth/pagination/rate-limit behavior |
+| 17 | [gitkraken/vscode-gitlens](https://github.com/gitkraken/vscode-gitlens) | main | `5a7c061756ae3059973c98182c2b58e133670977` | NOASSERTION | Editor extension; LICENSE and LICENSE.plus both exist; resolve licensing/feature scope before use |
+| 18 | [PyGithub/PyGithub](https://github.com/PyGithub/PyGithub) | main | `5aeb43916b197a0fe8016600817b868fc894af5a` | LGPL-3.0 (API field) | Candidate Python REST SDK; COPYING and COPYING.LESSER exist; inspect all applicable terms and dependencies |
+| 19 | [mouredev/hello-git](https://github.com/mouredev/hello-git) | main | `103093203ceff26a05c629bc4798153000224a1e` | Apache-2.0 | Educational reference |
+| 20 | [arslanbilal/git-cheat-sheet](https://github.com/arslanbilal/git-cheat-sheet) | main | `4098de6b02a1a9ccb0f7e1eb8b6da29d91c67841` | Not detected | Reference-only; license verification required before redistribution |
+| 21 | [ineo6/hosts](https://github.com/ineo6/hosts) | master | `11fde366b4318acb322a25174e1721b2f1113d81` | MIT | Host/network utility; package scripts and network data source require review; do not run or apply automatically |
+| 22 | [jenkinsci/github-branch-source-plugin](https://github.com/jenkinsci/github-branch-source-plugin) | master | `801e40614d00819c1b7f379e260aa7c071a47b12` | MIT | Sandbox-only CI integration; test webhook/credential/job-trigger boundaries |
+| 23 | [Wechat-ggGitHub/Awesome-GitHub-Repo](https://github.com/Wechat-ggGitHub/Awesome-GitHub-Repo) | main | `b580168c397e5345ddd1454272da90a115cc80b7` | CC0-1.0 | Curated reference list; downstream projects need separate review |
+| 24 | [ekalinin/github-markdown-toc](https://github.com/ekalinin/github-markdown-toc) | master | `7af407ac43d0106664bb3b7fc9cf882964042ef7` | MIT | Documentation build helper; unprivileged evaluation only |
+| 25 | [GTFOBins/GTFOBins.github.io](https://github.com/GTFOBins/GTFOBins.github.io) | master | `acd524623f9c406acedd2754ebd9c2431f3675ad` | GPL-3.0 | Security reference only; no operational integration into trading infrastructure |
+| 26 | [CarGuo/gsy_github_app_flutter](https://github.com/CarGuo/gsy_github_app_flutter) | master | `93a055576a94ca250b67434bf11ac23546c8013f` | Apache-2.0 | Educational Flutter app; not a trading runtime dependency |
+| 27 | [CarGuo/GSYGithubAPP](https://github.com/CarGuo/GSYGithubAPP) | master | `f6c15328ddca8b6b9e2a1812108a1a006bd098be` | Apache-2.0 | Related React Native app; compare overlap with Flutter variant before any reuse |
+| 28 | [robotze/GithubDesktopZhTool](https://github.com/robotze/GithubDesktopZhTool) | main | `61a7c4cddf78498be84116547c4f76fc20073113` | Not detected | Desktop-client localization/modification; license and patch/install behavior unverified |
+| 29 | [jonbarron/jonbarron.github.io](https://github.com/jonbarron/jonbarron.github.io) | master | `2ccee987d9690acd43a3914415f60960fa54da25` | Not detected | Personal website reference only; no reuse pending license check |
+| 30 | [ryo-ma/github-profile-trophy](https://github.com/ryo-ma/github-profile-trophy) | master | `e3c89df995e92e67cdd4b2acaab9d974583dc1f7` | MIT | Profile widget only; review API/rate-limit and deployment exposure |
+
+## Focused source inspection performed
+
+Root directory listings were inspected for the following pinned repositories: Packt's algorithmic-trading examples, GitHub MCP Server, semantic-release GitHub plugin, go-github, PyGithub, GitLens, and both host-file utilities.
+
+- Packt's repository includes `environment.yml`, platform-specific environment files, chapter notebooks/scripts, and a LICENSE. Its README describes a legacy Python 2.7/3.5-era stack. Treat it as historical learning material; do not transplant old dependencies or accept strategy claims without independent, cost-adjusted, no-lookahead replays.
+- GitHub MCP Server's README explicitly describes reading code and managing issues, pull requests, and workflows. It is a privileged integration surface, not a passive read-only library by default. `server.json` documents OAuth/PAT authentication and a local container OAuth callback port. Any trial must use a dedicated least-privilege identity, disabled write-capable tools where possible, restricted egress, synthetic/non-production repositories, and attributable logs.
+- `semantic-release/github` contains `package.json` and `package-lock.json`; its package declares Node engine requirements and dependencies including Octokit retry/throttling/pagination plugins. A release token and publish workflow make this a CI supply-chain component; no production release credentials during evaluation.
+- `google/go-github` contains Go module and checksum files; `PyGithub` contains `pyproject.toml`, `COPYING`, and `COPYING.LESSER`. Dependency and license scans are not yet complete.
+- GitLens root includes `LICENSE`, `LICENSE.plus`, `ThirdPartyNotices.txt`, `package.json`, and `pnpm-lock.yaml`. The API's `NOASSERTION` is a hold, not a clean license result.
+- `ineo6/hosts` has `package.json`, lockfiles, a CLI entry point, and host data. Its package includes network/DNS-related dependencies and build/binary-packaging scripts. Do not run its CLI or alter host configuration before a full code review and reversible test.
+
+These are bounded metadata/root-file observations, not a complete source, license, vulnerability, malware, or behavioral audit. No packages were installed and no candidate code was executed.
+
+## Required remaining gates
+
+1. Review complete LICENSE/NOTICE and nested/per-file licensing, especially repositories with no API license or `NOASSERTION`; obtain legal review where needed.
+2. Run exact-SHA dependency inventory, SBOM and vulnerability scans; verify scan coverage and triage by reachable package/version/path/fix availability.
+3. Review install/build/release scripts, GitHub Actions, extension permissions, token scopes, network egress, telemetry, filesystem and command access.
+4. Run focused tests only in disposable unprivileged environments with synthetic credentials and restricted network access. Do not test privileged MCP/CI components against production.
+5. For the Packt repository, port no code until compatibility, provenance, licensing and independent cost-adjusted research validation are complete.
+6. Obtain independent human review before merging this documentation PR or changing any admission status.
+7. Keep every candidate outside the AURELIA production runtime until a separately reviewed promotion record explicitly authorizes it.
+
+## Safety invariants
+
+- No live orders, broker credentials, capital authority, execution permissions, or release authority for external repositories.
+- No changes to `config/LIVE_LOCK.yaml`, production secrets/environment, or deployment.
+- `LIVE_EXECUTION=BLOCKED`, `FINAL_EXECUTION_AUTHORIZATION=false`, `capital_plane_mode=VERIFY_ONLY` remain mandatory.
+- DeepSeekHarness/other external agents remain unavailable until authenticated runtime connection and attributable execution evidence exist.
