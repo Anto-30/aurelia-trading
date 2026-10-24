@@ -98,3 +98,88 @@ async def test_provider_jsonl_protocol_records_attributable_task_result(tmp_path
         assert record["result"] == {"verified": True}
     finally:
         await supervisor.stop()
+
+
+@pytest.mark.parametrize(
+    ("provider_result", "expected_reason"),
+    [
+        (
+            {
+                "schema": "aurelia.agent_task_result.v1",
+                "status": "COMPLETED",
+                "result": {"verified": True},
+            },
+            "PROVIDER_EVIDENCE_REF_REQUIRED",
+        ),
+        (
+            {
+                "schema": "aurelia.agent_task_result.v1",
+                "task_id": "placeholder",
+                "status": "COMPLETED",
+                "evidence_ref": "   ",
+                "result": {},
+            },
+            "PROVIDER_EVIDENCE_REF_REQUIRED",
+        ),
+        (
+            {
+                "schema": "aurelia.agent_task_result.v1",
+                "status": ["COMPLETED"],
+                "evidence_ref": "test://provider-result",
+                "result": {},
+            },
+            "PROVIDER_RESULT_STATUS_INVALID",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_provider_completion_requires_nonempty_evidence_and_string_status(
+    tmp_path, monkeypatch, provider_result, expected_reason
+):
+    task_path = tmp_path / "tasks.json"
+    federation = PersistentAgentFederation(
+        journal_path=tmp_path / "journal.ndjson",
+        lease_path=tmp_path / "leases.json",
+        task_path=task_path,
+        config_hash="cfg",
+        source_hash="src",
+        lease_seconds=2,
+    )
+    task = await federation.enqueue_task(
+        task_type="TEST_TASK",
+        payload={"instruction": "return a malformed test result"},
+        correlation_id="test-malformed-result",
+        assigned_agent="ClaudeCode",
+    )
+    encoded_template = repr(json.dumps(provider_result))
+    provider_code = (
+        "import json,sys\\n"
+        f"template=json.loads({encoded_template})\\n"
+        "for line in sys.stdin:\\n"
+        " request=json.loads(line)\\n"
+        " result=dict(template)\\n"
+        " result['task_id']=request['task_id']\\n"
+        " print(json.dumps(result),flush=True)\\n"
+    )
+    monkeypatch.setenv(
+        "AURELIA_AGENT_CLAUDECODE_COMMAND",
+        shlex.join([sys.executable, "-u", "-c", provider_code]),
+    )
+    supervisor = AgentWorkerSupervisor(
+        federation, agents=("ClaudeCode",), interval_seconds=0.05, task_timeout_seconds=1
+    )
+    supervisor.start()
+    try:
+        record = None
+        for _ in range(60):
+            await asyncio.sleep(0.05)
+            saved = json.loads(task_path.read_text(encoding="utf-8"))
+            record = next(x for x in saved["tasks"] if x["task_id"] == task.task_id)
+            if record["status"] not in {"PENDING", "CLAIMED"}:
+                break
+        assert record is not None
+        assert record["status"] == "FAILED"
+        assert record["result"]["reason"] == expected_reason
+        assert not record.get("evidence_ref")
+    finally:
+        await supervisor.stop()
