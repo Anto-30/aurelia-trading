@@ -79,14 +79,22 @@ jobs:
 
       - name: Enforce security scan results after artifact upload
         if: always()
+        env:
+          PIP_AUDIT_OUTCOME: ${{ steps.pip_audit.outcome }}
+          BANDIT_OUTCOME: ${{ steps.bandit.outcome }}
         run: |
           python - <<'PY'
           import json
+          import os
           import sys
           from pathlib import Path
 
           root = Path("artifacts/security")
           errors = []
+          if os.getenv("PIP_AUDIT_OUTCOME") != "success":
+              errors.append("PIP_AUDIT_EXECUTION_FAILED")
+          if os.getenv("BANDIT_OUTCOME") != "success":
+              errors.append("BANDIT_EXECUTION_FAILED")
 
           audit_path = root / "pip-audit.json"
           if not audit_path.is_file():
