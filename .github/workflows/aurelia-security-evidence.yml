@@ -1,0 +1,128 @@
+name: AURELIA Security Evidence
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-security-evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-evidence:
+    # Secret-free scanners and build only. No production environment or broker credentials.
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source without persisted credentials
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install declared runtime dependencies and pinned scanners
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements.txt
+          python -m pip install --disable-pip-version-check pip-audit==2.10.1 bandit==1.9.4 cyclonedx-bom==7.5.0
+
+      - name: Create evidence directory
+        run: mkdir -p artifacts/security
+
+      - name: Generate CycloneDX SBOM from declared runtime requirements
+        run: cyclonedx-py requirements requirements.txt --output-file artifacts/security/aurelia-runtime-sbom.json --output-format JSON --output-reproducible
+
+      - name: Audit declared runtime dependencies
+        id: pip_audit
+        continue-on-error: true
+        run: |
+          set +e
+          pip-audit --requirement requirements.txt --format json --output artifacts/security/pip-audit.json
+          status=$?
+          set -e
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Run Bandit source scan for medium/high findings
+        id: bandit
+        continue-on-error: true
+        run: |
+          set +e
+          bandit -r runtime research tests assurance -ll -f json -o artifacts/security/bandit.json
+          status=$?
+          set -e
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Build isolated runtime container and preserve build log
+        run: |
+          set -o pipefail
+          docker build --pull --progress=plain -t aurelia-runtime:security-ci . 2>&1 | tee artifacts/security/container-build.log
+
+      - name: Upload security reports, SBOM, and build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-security-evidence-${{ github.run_id }}
+          path: artifacts/security/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Enforce security scan results after artifact upload
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          root = Path("artifacts/security")
+          errors = []
+
+          audit_path = root / "pip-audit.json"
+          if not audit_path.is_file():
+              errors.append("PIP_AUDIT_REPORT_MISSING")
+          else:
+              try:
+                  audit = json.loads(audit_path.read_text(encoding="utf-8"))
+                  vulnerabilities = sum(len(item.get("vulns", [])) for item in audit)
+                  print(f"PIP_AUDIT_VULNERABILITY_COUNT={vulnerabilities}")
+                  if vulnerabilities:
+                      errors.append("DEPENDENCY_VULNERABILITIES_FOUND")
+              except Exception:
+                  errors.append("PIP_AUDIT_REPORT_INVALID")
+
+          bandit_path = root / "bandit.json"
+          if not bandit_path.is_file():
+              errors.append("BANDIT_REPORT_MISSING")
+          else:
+              try:
+                  bandit = json.loads(bandit_path.read_text(encoding="utf-8"))
+                  findings = bandit.get("results", [])
+                  print(f"BANDIT_MEDIUM_HIGH_FINDING_COUNT={len(findings)}")
+                  if findings:
+                      errors.append("BANDIT_MEDIUM_HIGH_FINDINGS_FOUND")
+              except Exception:
+                  errors.append("BANDIT_REPORT_INVALID")
+
+          sbom_path = root / "aurelia-runtime-sbom.json"
+          if not sbom_path.is_file():
+              errors.append("SBOM_MISSING")
+          if not (root / "container-build.log").is_file():
+              errors.append("CONTAINER_BUILD_LOG_MISSING")
+
+          for error in errors:
+              print(f"SECURITY_GATE={error}")
+          if errors:
+              sys.exit(1)
+          print("SECURITY_GATE=PASS")
+          PY
