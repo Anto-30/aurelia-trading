@@ -27,8 +27,8 @@ jobs:
       AURELIA_AGENT_PERFORMANCE_PATH: "/tmp/aurelia/agent-performance.json"
       DERIV_ENVIRONMENT: "real"
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: Install runtime
@@ -55,7 +55,7 @@ jobs:
           echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
       - name: Upload runtime journal
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: aurelia-runtime-journal-${{ github.run_id }}
           path: /tmp/aurelia/
@@ -64,6 +64,7 @@ jobs:
 
   authenticated-deriv-evidence:
     # Load production-scoped Actions secrets for authenticated verification only.
+    if: ${{ github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
     environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -82,8 +83,8 @@ jobs:
       DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
       DERIV_ENVIRONMENT: "real"
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - run: pip install -r requirements.txt
@@ -104,7 +105,7 @@ jobs:
         run: python scripts/verify_deriv_broker_evidence.py
       - name: Upload authenticated evidence
         if: always() && env.DERIV_AUTH_CONFIGURED == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: deriv-authenticated-evidence-${{ github.run_id }}
           path: |
@@ -116,6 +117,7 @@ jobs:
   deriv-lifecycle-verify-only:
     # Authenticated broker lifecycle verification: proposal + control-chain only.
     # This job must never submit a buy transaction or grant capital authority.
+    if: ${{ github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
     environment:
       name: production
       deployment: false
@@ -136,8 +138,8 @@ jobs:
       DERIV_VERIFY_PROBABILITY: "0.60"
       DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - run: pip install -r requirements.txt
@@ -155,7 +157,7 @@ jobs:
         run: python scripts/verify_deriv_transaction_lifecycle.py
       - name: Upload verify-only lifecycle evidence
         if: always() && env.DERIV_AUTH_CONFIGURED == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: deriv-transaction-lifecycle-verify-only-${{ github.run_id }}
           path: artifacts/deriv_transaction_lifecycle.json
@@ -163,6 +165,8 @@ jobs:
           retention-days: 7
 
   whatsapp-alert-smoke:
+    if: ${{ github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
+    environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -179,8 +183,8 @@ jobs:
       TWILIO_CONTENT_SID: ${{ secrets.TWILIO_CONTENT_SID }}
       TWILIO_HTTP_TIMEOUT_SECONDS: "8"
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - run: pip install -r requirements.txt
