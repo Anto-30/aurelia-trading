@@ -39,6 +39,7 @@ Minimum controls:
 - Bind host-published CDP access to `127.0.0.1` only. Obscura may bind to `0.0.0.0` inside the container for port forwarding; never publish the host port to public interfaces.
 - Require a strong, randomly generated CDP token whenever the server binds to a non-loopback interface. Supply it through a secret manager, never commit or log it.
 - Deny outbound traffic by default; allowlist only approved test hosts. Block metadata endpoints and internal network ranges, except explicitly necessary local control channels.
+- Never enable Obscura's `--allow-private-network` flag or set `OBSCURA_ALLOW_PRIVATE_NETWORK=1` in the sandbox; both bypass the default denial for loopback, RFC1918, and link-local targets. Do not use this bypass to test AURELIA against a broker, trading account, or production host.
 - Use a fresh, ephemeral browser profile per test; no saved passwords, cookies, wallet sessions, broker sessions, or personal profiles.
 - Apply CPU, memory, process, request, and wall-clock limits; capture sanitized logs.
 - Pin source, dependencies, toolchain, and resulting artifact digests; scan dependencies and verify build provenance.
