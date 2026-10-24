@@ -1,0 +1,9 @@
+{
+  "ticks_history": "R_100",
+  "start": 1666310400,
+  "end": "1666310460",
+  "style": "candles",
+  "granularity": 60,
+  "count": 2,
+  "req_id": 7210426
+}
