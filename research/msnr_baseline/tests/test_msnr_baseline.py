@@ -241,6 +241,7 @@ def test_historical_workflow_pins_actions_and_hash_locks_dependencies():
     locked_requirements = "research/msnr_baseline/requirements-ci.lock"
     assert f"cache-dependency-path: {locked_requirements}" in workflow
     assert f"pip install --require-hashes -r {locked_requirements}" in workflow
+    assert "  pull_request:\n    branches:\n      - research/msnr-baseline-r100-20261022" in workflow
     assert "pip install --upgrade pip" not in workflow
     assert "pip install -r research/msnr_baseline/requirements.txt pytest" not in workflow
 
