@@ -20,25 +20,29 @@ def _finite(value: Any, name: str) -> float:
 
 @dataclass(frozen=True)
 class TradeObservation:
-    """One closed research trade with each modeled cost explicitly recorded."""
+    """One closed research trade; all modeled costs are separately recorded."""
 
     gross_pnl: float
-    transaction_costs: float
+    spread_costs: float
+    commission_costs: float
     payout_costs: float
     slippage_costs: float
     risk_amount: float
 
     def net_pnl(self) -> float:
         gross = _finite(self.gross_pnl, "gross_pnl")
-        transaction = _finite(self.transaction_costs, "transaction_costs")
-        payout = _finite(self.payout_costs, "payout_costs")
-        slippage = _finite(self.slippage_costs, "slippage_costs")
+        costs = (
+            _finite(self.spread_costs, "spread_costs"),
+            _finite(self.commission_costs, "commission_costs"),
+            _finite(self.payout_costs, "payout_costs"),
+            _finite(self.slippage_costs, "slippage_costs"),
+        )
         risk = _finite(self.risk_amount, "risk_amount")
-        if min(transaction, payout, slippage) < 0:
+        if min(costs) < 0:
             raise ValueError("COSTS_MUST_BE_NON_NEGATIVE")
         if risk <= 0:
             raise ValueError("RISK_AMOUNT_MUST_BE_POSITIVE")
-        net = gross - transaction - payout - slippage
+        net = gross - fsum(costs)
         if not isfinite(net):
             raise ValueError("NET_PNL_NON_FINITE")
         return net
@@ -61,7 +65,8 @@ class ResearchMetrics:
     maximum_drawdown_r: float
     average_win_currency: float | None
     average_loss_currency: float | None
-    total_transaction_costs: float
+    total_spread_costs: float
+    total_commission_costs: float
     total_payout_costs: float
     total_slippage_costs: float
 
@@ -78,12 +83,12 @@ def _max_drawdown(values: Iterable[float]) -> float:
 
 
 def compute_research_metrics(trades: Iterable[TradeObservation]) -> ResearchMetrics:
-    """Compute gross profit factor, net expectancy, and net equity drawdowns.
+    """Compute gross profit factor, net expectancy and net equity drawdowns.
 
-    Expectancy is the mean of each trade's net P&L after the recorded costs.
-    Profit factor follows the standard gross-profit / absolute-gross-loss formula
-    on gross P&L; cost totals and net profit are reported separately. If the
-    sample has no gross losses, profit factor is null (not JSON infinity).
+    Expectancy is the mean of trade net P&L after spread, commissions, payout
+    costs, and slippage. Profit factor is gross profit divided by absolute gross
+    loss on gross P&L. If the sample has no gross losses, it is null rather than
+    non-standard JSON infinity; net performance and costs are still reported.
     """
     rows = list(trades)
     if not rows:
@@ -114,7 +119,8 @@ def compute_research_metrics(trades: Iterable[TradeObservation]) -> ResearchMetr
         maximum_drawdown_r=_max_drawdown(net_r),
         average_win_currency=fsum(winning) / len(winning) if winning else None,
         average_loss_currency=fsum(losing) / len(losing) if losing else None,
-        total_transaction_costs=fsum(_finite(row.transaction_costs, "transaction_costs") for row in rows),
+        total_spread_costs=fsum(_finite(row.spread_costs, "spread_costs") for row in rows),
+        total_commission_costs=fsum(_finite(row.commission_costs, "commission_costs") for row in rows),
         total_payout_costs=fsum(_finite(row.payout_costs, "payout_costs") for row in rows),
         total_slippage_costs=fsum(_finite(row.slippage_costs, "slippage_costs") for row in rows),
     )
@@ -126,7 +132,7 @@ def out_of_sample_degradation(
     *,
     rejection_threshold: float = 0.30,
 ) -> dict[str, float | str | bool]:
-    """Apply (IS expectancy - OOS expectancy) / IS expectancy; reject undefined baselines."""
+    """Apply (IS expectancy - OOS expectancy) / IS expectancy."""
     ins = _finite(in_sample_expectancy, "in_sample_expectancy")
     oos = _finite(out_of_sample_expectancy, "out_of_sample_expectancy")
     threshold = _finite(rejection_threshold, "rejection_threshold")
