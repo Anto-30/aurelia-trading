@@ -70,3 +70,23 @@ def test_reversed_rows_fail_without_sorting(tmp_path):
     rows = [[START+120,"100.00","100.50","99.50","100.20"],[START+60,"100.00","100.50","99.50","100.20"],[START,"100.00","100.50","99.50","100.20"]]
     api, mt5 = build_files(tmp_path, mt5_rows=rows); result=run(api,mt5,tmp_path/"report.json")
     assert result.returncode != 0 and "NON_MONOTONIC_EPOCHS" in result.stdout
+
+
+def test_missing_api_or_mt5_file_returns_typed_input_missing_diagnostic(tmp_path):
+    for missing_side in ("api", "mt5"):
+        case_dir = tmp_path / missing_side
+        case_dir.mkdir()
+        api, mt5 = build_files(case_dir)
+        missing = api if missing_side == "api" else mt5
+        missing.unlink()
+        out = case_dir / "report.json"
+
+        result = run(api, mt5, out)
+        assert result.returncode == 1, result.stdout + result.stderr
+        report = json.loads(out.read_text(encoding="utf-8"))
+        assert report["status"] == "BLOCKED_INPUT_VALIDATION"
+        assert report["reason_code"] == "INPUT_FILE_MISSING"
+        assert "Input file not found" in report["message"]
+        assert missing.name in report["message"]
+        assert report["credentials_used"] is False
+        assert report["live_orders_submitted"] is False
