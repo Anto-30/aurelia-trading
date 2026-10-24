@@ -160,11 +160,13 @@ class AgentWorkerSupervisor:
                                 if result_message.get("task_id") != task.task_id:
                                     raise ValueError("PROVIDER_RESULT_TASK_ID_MISMATCH")
                                 status = result_message.get("status")
-                                if status not in {"COMPLETED", "FAILED", "BLOCKED"}:
+                                if not isinstance(status, str) or status not in {"COMPLETED", "FAILED", "BLOCKED"}:
                                     raise ValueError("PROVIDER_RESULT_STATUS_INVALID")
                                 evidence_ref = result_message.get("evidence_ref", "")
                                 if not isinstance(evidence_ref, str):
                                     raise ValueError("PROVIDER_EVIDENCE_REF_INVALID")
+                                if status == "COMPLETED" and not evidence_ref.strip():
+                                    raise ValueError("PROVIDER_EVIDENCE_REF_REQUIRED")
                                 result_body = result_message.get("result", {})
                                 if not isinstance(result_body, dict):
                                     raise ValueError("PROVIDER_RESULT_BODY_INVALID")
