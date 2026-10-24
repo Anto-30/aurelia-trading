@@ -95,3 +95,49 @@ Recursive Git tree API responses were retrieved at the pinned commits for eight 
 ## Closure decision
 
 **Intake stage: complete. Admission stage: not approved.** The only safe closure for this batch without performing the missing code-security/legal work is to keep all 30 candidates research/reference/sandbox-only and keep PR #194 as a draft pending independent review. No candidate is approved for production or trading runtime.
+
+
+## Root-level license and dependency manifest presence across all 30 candidates
+
+Checked the pinned branch names' root directory listings through the GitHub Contents API on 2026-10-24. This table records file presence only; it is not proof that all nested licenses or dependencies have been enumerated. Rows marked `none observed` are held from reuse until licensing is resolved.
+
+| Repository | Root license/notice file(s) observed | Root dependency/build files observed |
+|---|---|---|
+| PacktPublishing/Hands-On-Machine-Learning-for-Algorithmic-Trading | `LICENSE` | `environment.yml` |
+| semantic-release/github | `LICENSE` | `package.json`, `package-lock.json`, `.github/` |
+| github/github-mcp-server | `LICENSE` | `go.mod`, `go.sum`, `Dockerfile`, `.github/` |
+| 521xueweihan/HelloGitHub | none observed | `.github/` |
+| anuraghazra/github-readme-stats | `LICENSE` | `package.json`, `package-lock.json`, `.github/` |
+| 521xueweihan/GitHub520 | none observed | `requirements.txt`, `.github/` |
+| skills/introduction-to-github | `LICENSE` | `.github/` |
+| gitbutlerapp/gitbutler | `LICENSE.md` | `Cargo.toml`, `Cargo.lock`, `package.json`, `pnpm-lock.yaml`, `Makefile`, `.github/` |
+| conwnet/github1s | `LICENSE` | `package.json`, `package-lock.json`, `.github/` |
+| academicpages/academicpages.github.io | `LICENSE` | `Gemfile`, `package.json`, `Dockerfile` |
+| desktop/desktop | `LICENSE` | `package.json`, `yarn.lock`, `.github/` |
+| pwntester/octo.nvim | `LICENSE` | `Makefile`, `.github/` |
+| refined-github/refined-github | `license` | `package.json`, `package-lock.json`, `.github/` |
+| maxiaof/github-hosts | `LICENSE` | `pom.xml` |
+| abhisheknaiidu/awesome-github-profile-readme | `LICENSE` | `.github/` |
+| google/go-github | `LICENSE` | `go.mod`, `go.sum`, `.github/` |
+| gitkraken/vscode-gitlens | `LICENSE`, `LICENSE.plus` | `package.json`, `pnpm-lock.yaml`, `.github/` |
+| PyGithub/PyGithub | `COPYING`, `COPYING.LESSER` | `pyproject.toml`, `.github/` |
+| mouredev/hello-git | `LICENSE` | no common dependency manifest observed at root |
+| arslanbilal/git-cheat-sheet | none observed | no common dependency manifest observed at root |
+| ineo6/hosts | `LICENSE` | `package.json`, `package-lock.json`, `yarn.lock`, `.github/` |
+| jenkinsci/github-branch-source-plugin | `LICENSE.txt` | `pom.xml`, `.github/` |
+| Wechat-ggGitHub/Awesome-GitHub-Repo | `LICENSE` | no common dependency manifest observed at root |
+| ekalinin/github-markdown-toc | `LICENSE` | `Dockerfile`, `Makefile`, `.github/` |
+| GTFOBins/GTFOBins.github.io | `LICENSE` | `Gemfile`, `Dockerfile`, `Makefile`, `.github/` |
+| CarGuo/gsy_github_app_flutter | `LICENSE` | `pubspec.yaml`, `.github/` |
+| CarGuo/GSYGithubAPP | `LICENSE` | `package.json`, `package-lock.json`, `.github/` |
+| robotze/GithubDesktopZhTool | none observed | no common dependency manifest observed at root |
+| jonbarron/jonbarron.github.io | none observed | no common dependency manifest observed at root |
+| ryo-ma/github-profile-trophy | `LICENSE` | `Dockerfile`, `.github/` |
+
+### Corrective license triage
+
+- GitHub's repository metadata returned `NOASSERTION` for `maxiaof/github-hosts`, but the pinned root tree does contain `LICENSE`. Read and classify that actual license before reuse.
+- GitLens has `LICENSE` and `LICENSE.plus`; the latter and feature-specific packages require separate terms review. Do not assume one root label covers every feature.
+- PyGithub has `COPYING` and `COPYING.LESSER`; its actual applicable license obligations and dependency notices must be checked before bundling.
+- No root license file was observed for HelloGitHub, GitHub520, arslanbilal/git-cheat-sheet, robotze/GithubDesktopZhTool, or jonbarron/jonbarron.github.io at the checked roots. Keep these reference-only and do not redistribute or incorporate code until an authoritative license is found.
+- The root listing does not prove absence of nested licenses, data-set terms, notebook content rights, or third-party assets. Recursive tree and per-file review remains necessary for every candidate.
