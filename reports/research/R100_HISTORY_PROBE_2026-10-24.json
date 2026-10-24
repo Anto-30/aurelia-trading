@@ -88,5 +88,19 @@
     "current_behavior": "Retains the raw active_symbols response and per-chunk normalized-row hashes; does not persist the raw history WebSocket response bodies as JSONL.",
     "implication": "Gate 1 provenance requirement is not implementable end-to-end until a reviewed code change and regression tests add raw response retention and hash binding.",
     "full_download_started": false
-  }
+  },
+  "supplemental_bounded_probes": [
+    {
+      "generated_utc": "2026-10-24T16:41:00.497674+00:00",
+      "request_path": "evidence/deriv-historical-probes/2022-10-21/request.json",
+      "response_path": "evidence/deriv-historical-probes/2022-10-21/raw_response.json",
+      "metadata_path": "evidence/deriv-historical-probes/2022-10-21/metadata.json",
+      "raw_response_sha256": "e31b19047c6172dbb865dd5d8d314dba28a9386c80b2f6876dd1852eac575c53",
+      "response_epochs": [
+        1792860000,
+        1792860060
+      ],
+      "status": "BLOCKED_HISTORICAL_RANGE_UNAVAILABLE"
+    }
+  ]
 }

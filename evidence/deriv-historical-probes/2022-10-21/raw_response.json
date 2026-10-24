@@ -1,0 +1,1 @@
+{"candles":[{"close":694.34,"epoch":1792860000,"high":694.43,"low":693.56,"open":694.13},{"close":694.27,"epoch":1792860060,"high":694.27,"low":694.27,"open":694.27}],"echo_req":{"ticks_history":"R_100","start":1666310400,"end":"1666310460","style":"candles","granularity":60,"count":2,"req_id":7210426},"msg_type":"candles","pip_size":2.0,"req_id":7210426}
