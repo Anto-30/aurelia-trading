@@ -15,6 +15,67 @@ def load_json(relative: str) -> dict:
     return value
 
 
+def validate_persistent_agent_routing(
+    routing: dict, profiles: dict, delegation: dict
+) -> None:
+    """Fail closed when persistent-routing intent contradicts runtime/delegation evidence."""
+    assert routing.get("schema") == "aurelia.persistent_agent_plugin_routing.v1"
+    guarantee = routing.get("guarantee_boundary", {})
+    assert guarantee.get("repository_policy_persists") is True
+    assert guarantee.get("runtime_plugin_installation_or_authentication_guaranteed_by_registry") is False
+    assert guarantee.get("automatic_external_provider_connection_from_chatgpt") is False
+    assert guarantee.get("report_unavailable_capability_as") == "BLOCKED_NOT_CONNECTED"
+    never_claim = guarantee.get("never_claim_connection_without")
+    assert isinstance(never_claim, list) and {
+        "provider/runtime identity",
+        "successful authenticated capability probe",
+        "timestamped evidence",
+        "permission scope",
+    }.issubset(never_claim)
+
+    governance = routing.get("governance", {})
+    assert governance.get("live_execution") == "BLOCKED"
+    assert governance.get("final_execution_authorization") is False
+    assert governance.get("live_lock_mutation_by_external_agents") is False
+    assert governance.get("external_agents_capital_authority") is False
+
+    task_contract = routing.get("task_start_contract")
+    assert isinstance(task_contract, list) and task_contract
+    assert all(isinstance(item, str) and item.strip() for item in task_contract)
+
+    agent_routes = routing.get("agents")
+    assert isinstance(agent_routes, dict) and agent_routes
+    assert set(agent_routes).issubset(profiles), "persistent routing references unknown agent profiles"
+
+    tasks = delegation.get("tasks")
+    assert isinstance(tasks, list) and tasks
+    task_by_agent = {}
+    for task in tasks:
+        agent = task.get("agent")
+        assert agent and agent not in task_by_agent, f"duplicate or missing delegation task owner: {agent!r}"
+        task_by_agent[agent] = task
+
+    for name, route in agent_routes.items():
+        assert route.get("role"), name
+        assert isinstance(route.get("intended_plugins"), list) and route["intended_plugins"], name
+        assert route.get("runtime_status"), name
+        assert route.get("persistence_status"), name
+        assert route.get("activation_rule"), name
+        assert profiles[name].get("can_mutate_live_lock") is False, name
+        assert profiles[name].get("capital_authority") is False, name
+
+        runtime_status = route["runtime_status"].upper()
+        if "NOT_CONNECTED" in runtime_status or "BLOCKED_NOT_CONNECTED" in runtime_status:
+            task = task_by_agent.get(name)
+            assert task is not None, f"{name}: missing delegation task"
+            assert task.get("status") == "blocked", (
+                f"{name}: runtime is not connected but task status is {task.get('status')!r}"
+            )
+            assert task.get("runtime_proof", {}).get("execution_proof") is False, name
+            assert task.get("blocked_reason"), f"{name}: blocked task needs an explicit reason"
+            assert task.get("unblock_evidence_required"), f"{name}: blocked task needs explicit unblock evidence"
+
+
 def main() -> None:
     assignment = load_json("config/agent_tool_skill_assignment.json")
     matrix = load_json("config/agent_capability_matrix.json")
@@ -25,6 +86,8 @@ def main() -> None:
     repo_registry = load_json("config/external_repo_federation.json")
     skill_registry = load_json("config/agent_skill_federation.json")
     intake = load_json("config/external_repo_intake_2026-10-11.json")
+    persistent_routing = load_json("config/persistent_agent_plugin_routing.json")
+    delegation = load_json("config/agent_delegation_tasks.json")
 
     assert assignment["schema"] == "aurelia.agent_tool_skill_assignment.v1"
     assert assignment["authority_model"]["canonical_repository"] == "Anto-30/aurelia-trading"
@@ -33,6 +96,7 @@ def main() -> None:
     assert assignment["runtime_connection_snapshot"]["dev_runtime"] == "NOT_CONNECTED"
 
     profiles = assignment["agents"]
+    validate_persistent_agent_routing(persistent_routing, profiles, delegation)
     canonical = set(profiles)
     assert canonical == set(matrix["agents"]), "assignment and capability-matrix agents differ"
     assert canonical.issubset(router["agents"]), "one or more assigned agents missing from repo routing"
