@@ -46,6 +46,20 @@ def utc_epoch(day: date) -> int:
     return int(datetime.combine(day, dtime.min, tzinfo=timezone.utc).timestamp())
 
 
+def parse_utc_window(start_date_text: str, end_date_text: str) -> tuple[date, date, int, int]:
+    """Interpret dates as the exact half-open UTC interval [start midnight, end midnight)."""
+    try:
+        start_day = date.fromisoformat(start_date_text)
+        end_day = date.fromisoformat(end_date_text)
+    except ValueError as exc:
+        raise FetchError("Start/end dates must be ISO UTC calendar dates (YYYY-MM-DD).") from exc
+    start_epoch = utc_epoch(start_day)
+    end_exclusive = utc_epoch(end_day)
+    if end_exclusive <= start_epoch:
+        raise FetchError("End date is an exclusive UTC midnight and must be after start date.")
+    return start_day, end_day, start_epoch, end_exclusive
+
+
 def validate_active_symbols_pip_size(pip_size: Any) -> float:
     """Validate active_symbols.pip_size as the API's price-unit increment.
 
@@ -199,7 +213,7 @@ async def fetch_interval(label: str, granularity: int, start_day: date, end_day:
                          active_symbol_row: dict[str, Any], timeout: float, retries: int,
                          retry_delay: float) -> dict[str, Any]:
     start_epoch = utc_epoch(start_day)
-    end_exclusive = utc_epoch(end_day + timedelta(days=1))
+    end_exclusive = utc_epoch(end_day)
     # Fixed canonical filenames are hashed in the evidence manifest; exact date
     # bounds remain in the manifest so filenames cannot imply unverified coverage.
     stem = f"R_100_{label}"
@@ -251,7 +265,7 @@ async def fetch_interval(label: str, granularity: int, start_day: date, end_day:
             "timeframe": label,
             "granularity_seconds": granularity,
             "start_date_utc_inclusive": start_day.isoformat(),
-            "end_date_utc_inclusive": end_day.isoformat(),
+            "end_date_utc_exclusive": end_day.isoformat(),
             "range_end_exclusive_epoch": end_exclusive,
             "endpoint": PUBLIC_WS,
             "transport": "Deriv current Options API public WebSocket",
@@ -330,10 +344,7 @@ async def fetch_active_symbols_pip_size(timeout: float, retries: int, retry_dela
 
 
 async def async_main(args: argparse.Namespace) -> int:
-    start_day = date.fromisoformat(args.start_date)
-    end_day = date.fromisoformat(args.end_date)
-    if end_day < start_day:
-        raise FetchError("End date precedes start date.")
+    start_day, end_day, _, _ = parse_utc_window(args.start_date, args.end_date)
     if args.timeout <= 0 or args.retries < 0 or args.retry_delay < 0 or args.chunk_days != CHUNK_DAYS:
         raise FetchError("Timeout/retries invalid, or chunk_days differs from frozen three-day policy.")
     out_dir = Path(args.output_dir).resolve()
@@ -355,7 +366,7 @@ async def async_main(args: argparse.Namespace) -> int:
             "endpoint": PUBLIC_WS,
             "output_dir": str(out_dir),
             "requested_start_date_utc_inclusive": args.start_date,
-            "requested_end_date_utc_inclusive": args.end_date,
+            "requested_end_date_utc_exclusive": args.end_date,
             "granularities_requested_seconds": list(INTERVALS.values()),
             "error": f"{type(exc).__name__}: {exc}",
             "timestamp_utc": datetime.now(timezone.utc).isoformat(),
@@ -386,7 +397,7 @@ async def async_main(args: argparse.Namespace) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--start-date", default=DEFAULT_START)
-    parser.add_argument("--end-date", default=DEFAULT_END, help="Inclusive UTC calendar date")
+    parser.add_argument("--end-date", default=DEFAULT_END, help="Exclusive UTC midnight date boundary (not included)")
     parser.add_argument("--output-dir", default="data/raw")
     parser.add_argument("--chunk-days", type=int, default=CHUNK_DAYS)
     parser.add_argument("--timeout", type=float, default=15.0)
