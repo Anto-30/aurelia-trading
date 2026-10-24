@@ -77,17 +77,12 @@ def validate_persistent_agent_routing(
         assert profiles[name].get("capital_authority") is False, name
 
         runtime_status = route["runtime_status"].upper()
-        # Treat any unverified/unavailable runtime label as blocked. Do not
-        # whitelist only NOT_CONNECTED: statuses such as NOT_VERIFIED and
-        # SHADOW_ONLY must fail closed in exactly the same way.
-        unavailable_markers = (
-            "NOT_CONNECTED",
-            "NOT_VERIFIED",
-            "UNVERIFIED",
-            "SHADOW_ONLY",
-            "NOT_PROVEN",
-        )
-        if any(marker in runtime_status for marker in unavailable_markers):
+        # Fail closed on every runtime label except the one explicitly supported
+        # by this registry: ChatGPT's current conversation context. External
+        # runtimes need a future schema that carries authenticated connection
+        # evidence before any other status can be treated as available.
+        available_runtime_statuses = {"AVAILABLE_IN_CURRENT_CHAT_CONTEXT_ONLY"}
+        if runtime_status not in available_runtime_statuses:
             task = task_by_agent.get(name)
             assert task is not None, f"{name}: missing delegation task"
             assert task.get("status") == "blocked", (
