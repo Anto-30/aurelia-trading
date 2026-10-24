@@ -64,6 +64,7 @@ class RiskRequest:
     stake: Any
     available_balance: Any
     daily_pnl: Any
+    worst_case_loss: Any
     existing_exposure: Any = 0.0
     pending_exposure: Any = 0.0
     concurrent_exposure: Any = 0.0
@@ -120,6 +121,9 @@ class Layer6RiskGate:
         daily_pnl = _finite_number(request.daily_pnl)
         if daily_pnl is None:
             return "DAILY_PNL_UNVERIFIED"
+        worst_case_loss = _finite_number(request.worst_case_loss)
+        if worst_case_loss is None or worst_case_loss <= 0:
+            return "WORST_CASE_LOSS_UNVERIFIED"
 
         exposure_values: list[float] = []
         for name in (
@@ -134,7 +138,10 @@ class Layer6RiskGate:
             return "EXCEEDS_MAX_POSITION_SIZE"
         if stake > balance:
             return "STAKE_EXCEEDS_VERIFIED_AVAILABLE_BALANCE"
-        if daily_pnl <= -self.policy.max_daily_loss:
+        # Reserve the proposed trade's verified worst-case loss against the
+        # remaining daily loss budget; checking only today's realized PnL can
+        # approve a trade that crosses the hard limit on its next loss.
+        if daily_pnl - worst_case_loss <= -self.policy.max_daily_loss:
             return "DAILY_LOSS_LIMIT_BREACHED"
         total_exposure = math.fsum((*exposure_values, stake))
         if not math.isfinite(total_exposure):
