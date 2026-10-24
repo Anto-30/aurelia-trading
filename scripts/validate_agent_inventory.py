@@ -25,6 +25,120 @@ def load(path: str) -> dict:
     return value
 
 
+def validate_agent_remediation_backlog(
+    backlog: dict, delegation: dict, known_agents: set[str]
+) -> None:
+    """Validate backlog schema and cross-references before treating it as actionable."""
+    assert backlog.get("schema") == "aurelia.agent_remediation_backlog.v1"
+    assert backlog.get("canonical_repository") == "https://github.com/Anto-30/aurelia-trading"
+
+    authority = backlog.get("authority_model", {})
+    constraints = authority.get("constraints")
+    assert isinstance(constraints, list) and all(isinstance(x, str) and x.strip() for x in constraints)
+    constraint_text = " ".join(constraints).lower()
+    assert "external agents have no capital authority" in constraint_text
+    assert "do not change live_lock to force release" in constraint_text
+    assert "no merge/deploy/promotion claim without observed platform result and required review" in constraint_text
+    continuous_claim = authority.get("continuous_operation_claim", "")
+    assert isinstance(continuous_claim, str) and continuous_claim.startswith("NOT_VERIFIED")
+
+    status_legend = backlog.get("status_legend")
+    assert isinstance(status_legend, dict) and status_legend
+    allowed_statuses = set(status_legend)
+    streams = backlog.get("workstreams")
+    assert isinstance(streams, list) and streams
+
+    required_fields = {
+        "id", "priority", "status", "title", "finding", "owner",
+        "collaborators", "dependencies", "external_prerequisites",
+        "acceptance_criteria", "evidence_path",
+    }
+    stream_by_id = {}
+    for index, stream in enumerate(streams):
+        assert isinstance(stream, dict), f"workstream[{index}] must be an object"
+        missing = required_fields - set(stream)
+        assert not missing, f"workstream[{index}] missing fields: {sorted(missing)}"
+        stream_id = stream.get("id")
+        assert isinstance(stream_id, str) and stream_id.strip(), f"workstream[{index}] missing id"
+        assert stream_id not in stream_by_id, f"duplicate workstream id: {stream_id}"
+        stream_by_id[stream_id] = stream
+        assert stream.get("priority") in {"P0", "P1", "P2"}, stream_id
+        assert stream.get("status") in allowed_statuses, (stream_id, stream.get("status"))
+        for field in ("title", "finding", "evidence_path"):
+            assert isinstance(stream.get(field), str) and stream[field].strip(), (stream_id, field)
+        assert stream["evidence_path"].startswith("artifacts/"), (stream_id, stream["evidence_path"])
+        owner = stream.get("owner")
+        assert isinstance(owner, str) and owner in known_agents, (
+            f"{stream_id}: unknown workstream owner {owner!r}"
+        )
+        collaborators = stream.get("collaborators")
+        assert isinstance(collaborators, list) and collaborators, (
+            f"{stream_id}: collaborators must be a non-empty list"
+        )
+        unknown_collaborators = [
+            agent for agent in collaborators
+            if not isinstance(agent, str) or agent not in known_agents
+        ]
+        assert not unknown_collaborators, (
+            f"{stream_id}: unknown collaborators {unknown_collaborators!r}"
+        )
+        acceptance = stream.get("acceptance_criteria")
+        assert isinstance(acceptance, list) and acceptance, stream_id
+        assert all(isinstance(item, str) and item.strip() for item in acceptance), stream_id
+
+        dependencies = stream.get("dependencies")
+        assert isinstance(dependencies, list), f"{stream_id}: dependencies must be a list"
+        assert all(isinstance(dep, str) and dep.strip() for dep in dependencies), stream_id
+        assert len(dependencies) == len(set(dependencies)), f"{stream_id}: duplicate dependency"
+        assert stream_id not in dependencies, f"{stream_id}: self-dependency is forbidden"
+        for dependency in dependencies:
+            assert dependency in {x.get("id") for x in streams}, (
+                stream_id, f"dangling dependency reference: {dependency}"
+            )
+
+        prerequisites = stream.get("external_prerequisites")
+        assert isinstance(prerequisites, list), (
+            f"{stream_id}: external_prerequisites must be a list"
+        )
+        assert all(isinstance(item, str) and item.strip() for item in prerequisites), stream_id
+
+    # Dependencies form a directed acyclic graph; otherwise no workstream order is satisfiable.
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(stream_id: str) -> None:
+        if stream_id in visiting:
+            raise AssertionError(f"workstream dependency cycle detected at {stream_id}")
+        if stream_id in visited:
+            return
+        visiting.add(stream_id)
+        for dependency in stream_by_id[stream_id]["dependencies"]:
+            visit(dependency)
+        visiting.remove(stream_id)
+        visited.add(stream_id)
+
+    for stream_id in stream_by_id:
+        visit(stream_id)
+
+    tasks = delegation.get("tasks")
+    assert isinstance(tasks, list) and tasks
+    task_agents = [task.get("agent") for task in tasks]
+    assert len(task_agents) == len(set(task_agents)), "duplicate delegation task agent"
+    assert set(task_agents) == known_agents, "backlog task ownership must cover the registered agent set"
+
+    assigned_streams: set[str] = set()
+    for task in tasks:
+        ids = task.get("workstream_ids")
+        assert isinstance(ids, list) and ids, f"{task.get('agent')}: workstream_ids required"
+        assert len(ids) == len(set(ids)), f"{task.get('agent')}: duplicate workstream assignment"
+        for stream_id in ids:
+            assert stream_id in stream_by_id, (task.get("agent"), f"unknown workstream id: {stream_id}")
+            assigned_streams.add(stream_id)
+    assert assigned_streams == set(stream_by_id), (
+        f"orphan workstreams: {sorted(set(stream_by_id) - assigned_streams)}"
+    )
+
+
 def main() -> None:
     tools = load("config/agent_tool_inventory.json")
     skills = load("config/agent_skill_inventory.json")
@@ -33,6 +147,8 @@ def main() -> None:
     boundary = load("config/agent_capability_boundary.json")
     continuity = load("config/agent_continuity_policy.json")
     delegation = load("config/agent_delegation_tasks.json")
+    remediation_backlog = load("config/agent_remediation_backlog.json")
+    validate_agent_remediation_backlog(remediation_backlog, delegation, AGENTS)
     lock = (ROOT / "config/LIVE_LOCK.yaml").read_text(encoding="utf-8")
 
     assert tools["total_tool_definitions"] > 0
