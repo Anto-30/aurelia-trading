@@ -68,7 +68,7 @@ jobs:
               "live_execution": "BLOCKED",
               "final_execution_authorization": False,
               "requested_start_utc": "2022-10-21",
-              "requested_end_utc_inclusive": "2024-10-21",
+              "requested_end_utc_exclusive": "2024-10-21T00:00:00Z",
               "status": "INITIALIZED",
           }
           (out / "evidence" / "run_metadata.json").write_text(
