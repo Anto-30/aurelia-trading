@@ -88,3 +88,10 @@ Disposition: **BLOCKED**. Do not run the full 24-month download, MT5 reconciliat
 A second schema-conformant one-candle probe was recorded at `reports/research/R100_HISTORY_PROBE_2026-10-25.json`. Request: `ticks_history=R_100`, `start=1666310400`, `end="1666310460"`, `style="candles"`, `granularity=60`, `count=1`; `subscribe` omitted. The response echoed the request bounds but returned epoch `1792877340` (`2026-10-24T21:29:00Z`), outside the requested half-open 2022 interval. Raw response SHA-256: `a96b9db34389de496d725d958215b7c0a7acfa9d135d67b952358291c0296a90`. Verdict remains **BLOCKED**.
 
 Official schema correction: the current Deriv [ticks_history reference](https://developers.deriv.com/docs/data/ticks-history/) permits `subscribe=1` only; a one-shot request must omit `subscribe`, not send `subscribe=0`. This probe did not authenticate, request account data, or submit orders. It is not a historical dataset and does not justify a strategy verdict.
+
+
+## Latest bounded probe — 2026-10-24T21:40:42Z
+
+Evidence artifact: `reports/research/R100_HISTORY_PROBE_2026-10-25T2140Z.json` (raw response SHA-256 `a44382da137e88de97b5bad9915c707746ce374dad8f0cafda885073066eecd1`).
+
+The one-candle request again echoed the 2022-10-21 00:00–00:01 UTC bounds, but the single returned candle had epoch `1792878000` (`2026-10-24T21:40:00Z`). All required OHLC/epoch fields were present; the range check failed. This is a second new, independent response showing that transport connectivity and structural schema validity do not prove requested historical coverage. Status remains **BLOCKED**. No full download, MT5 reconciliation, observed cost model, frozen simulation, or kill-rule evaluation was run.
