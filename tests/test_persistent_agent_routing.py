@@ -137,6 +137,24 @@ class PersistentAgentRoutingTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "duplicate or missing delegation task owner"):
             validate_persistent_agent_routing(routing, profiles, delegation)
 
+    def test_every_registered_agent_must_have_exactly_one_task(self):
+        routing, profiles, delegation = fixtures()
+        profiles["ClaudeCode"] = {
+            "can_mutate_live_lock": False,
+            "capital_authority": False,
+        }
+        with self.assertRaisesRegex(AssertionError, "missing=\\['ClaudeCode'\\]"):
+            validate_persistent_agent_routing(routing, profiles, delegation)
+
+    def test_unregistered_agent_cannot_own_a_task(self):
+        routing, profiles, delegation = fixtures()
+        unexpected = copy.deepcopy(delegation["tasks"][0])
+        unexpected["task_id"] = "AGT-UNKNOWN-001"
+        unexpected["agent"] = "GhostAgent"
+        delegation["tasks"].append(unexpected)
+        with self.assertRaisesRegex(AssertionError, "unknown=\\['GhostAgent'\\]"):
+            validate_persistent_agent_routing(routing, profiles, delegation)
+
 
 if __name__ == "__main__":
     unittest.main()
