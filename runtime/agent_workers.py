@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import shlex
 from dataclasses import dataclass
@@ -30,10 +31,12 @@ class AgentWorkerSupervisor:
         *,
         agents: Iterable[str],
         interval_seconds: float = 10.0,
+        task_timeout_seconds: float = 120.0,
     ) -> None:
         self.federation = federation
         self.agents = tuple(sorted(set(agents)))
         self.interval_seconds = max(2.0, float(interval_seconds))
+        self.task_timeout_seconds = max(1.0, float(task_timeout_seconds))
         self._tasks: dict[str, asyncio.Task[None]] = {}
         self._running = False
 
@@ -57,7 +60,12 @@ class AgentWorkerSupervisor:
             process = None
             try:
                 if command:
-                    process = await asyncio.create_subprocess_exec(*command)
+                    process = await asyncio.create_subprocess_exec(
+                        *command,
+                        stdin=asyncio.subprocess.PIPE,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.DEVNULL,
+                    )
                 await self.federation.publish(
                     sender="AURELIA",
                     recipients=(spec.agent,),
@@ -74,6 +82,26 @@ class AgentWorkerSupervisor:
                     priority=60,
                     requires_response=False,
                 )
+                if process is None:
+                    # A local supervisor loop is not proof that the provider agent
+                    # is connected. Do not emit an agent heartbeat or claim work
+                    # until an explicitly configured provider command is running.
+                    await self.federation.publish(
+                        sender="AURELIA",
+                        recipients=(spec.agent,),
+                        message_type="CONNECTOR_REQUIRED",
+                        payload={
+                            "agent": spec.agent,
+                            "reason": "NO_AUTHENTICATED_PROVIDER_COMMAND",
+                            "provider_session": "NOT_CONFIGURED",
+                            "capital_authority": False,
+                        },
+                        correlation_id=f"connector-required:{spec.agent}",
+                        priority=95,
+                        requires_response=False,
+                    )
+                    await asyncio.sleep(self.interval_seconds)
+                    continue
                 while self._running:
                     await self.federation.heartbeat(
                         spec.agent,
@@ -97,26 +125,67 @@ class AgentWorkerSupervisor:
                             priority=task.priority,
                             requires_response=True,
                         )
-                        # A configured external worker owns execution. The local
-                        # supervisor never fabricates a provider result. It leaves
-                        # the task CLAIMED so the provider worker can complete it;
-                        # stale claims are requeued by the federation.
-                        if process is None:
+                        # Provider commands must implement a JSON Lines protocol:
+                        # one request line in, one result line out. Process presence
+                        # alone is not task completion evidence.
+                        if process is None or process.stdin is None or process.stdout is None:
                             await self.federation.complete_task(
-                                task.task_id, agent=spec.agent, status="BLOCKED"
+                                task.task_id, agent=spec.agent, status="BLOCKED",
+                                result={"reason": "PROVIDER_STREAMS_UNAVAILABLE"},
                             )
+                        else:
+                            request = {
+                                "schema": "aurelia.agent_task_request.v1",
+                                "task_id": task.task_id,
+                                "correlation_id": task.correlation_id,
+                                "task_type": task.task_type,
+                                "payload": task.payload,
+                                "deadline_seconds": self.task_timeout_seconds,
+                                "authorized_scope": "ADVISORY_ENGINEERING_ONLY",
+                                "capital_authority": False,
+                            }
+                            try:
+                                process.stdin.write((json.dumps(request, sort_keys=True) + "\n").encode("utf-8"))
+                                await process.stdin.drain()
+                                raw_result = await asyncio.wait_for(
+                                    process.stdout.readline(), timeout=self.task_timeout_seconds
+                                )
+                                if not raw_result:
+                                    raise ValueError("PROVIDER_RESULT_EOF")
+                                result_message = json.loads(raw_result.decode("utf-8"))
+                                if not isinstance(result_message, dict):
+                                    raise ValueError("PROVIDER_RESULT_NOT_OBJECT")
+                                if result_message.get("schema") != "aurelia.agent_task_result.v1":
+                                    raise ValueError("PROVIDER_RESULT_SCHEMA_MISMATCH")
+                                if result_message.get("task_id") != task.task_id:
+                                    raise ValueError("PROVIDER_RESULT_TASK_ID_MISMATCH")
+                                status = result_message.get("status")
+                                if not isinstance(status, str) or status not in {"COMPLETED", "FAILED", "BLOCKED"}:
+                                    raise ValueError("PROVIDER_RESULT_STATUS_INVALID")
+                                evidence_ref = result_message.get("evidence_ref", "")
+                                if not isinstance(evidence_ref, str):
+                                    raise ValueError("PROVIDER_EVIDENCE_REF_INVALID")
+                                if status == "COMPLETED" and not evidence_ref.strip():
+                                    raise ValueError("PROVIDER_EVIDENCE_REF_REQUIRED")
+                                result_body = result_message.get("result", {})
+                                if not isinstance(result_body, dict):
+                                    raise ValueError("PROVIDER_RESULT_BODY_INVALID")
+                                await self.federation.complete_task(
+                                    task.task_id, agent=spec.agent, status=status,
+                                    evidence_ref=evidence_ref, result=result_body,
+                                )
+                            except (asyncio.TimeoutError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+                                await self.federation.complete_task(
+                                    task.task_id, agent=spec.agent, status="FAILED",
+                                    result={"reason": str(exc)[:160], "error_class": type(exc).__name__},
+                                )
                             await self.federation.publish(
                                 sender="AURELIA",
                                 recipients=(spec.agent,),
-                                message_type="CONNECTOR_REQUIRED",
-                                payload={
-                                    "task_id": task.task_id,
-                                    "reason": "NO_AUTHENTICATED_PROVIDER_COMMAND",
-                                    "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
-                                    "capital_authority": False,
-                                },
+                                message_type="AGENT_TASK_RESULT_RECORDED",
+                                payload={"task_id": task.task_id, "capital_authority": False},
                                 correlation_id=task.correlation_id,
-                                priority=95,
+                                priority=70,
                                 requires_response=False,
                             )
                     if process is not None and process.returncode is not None:
