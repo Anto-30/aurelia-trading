@@ -6333,10 +6333,10 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/iOfficeAI/OfficeCLI",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "5e3e26278753be846b4b0b2fb0387f42d911553a",
+      "pin_source": "https://github.com/iOfficeAI/OfficeCLI/commit/5e3e26278753be846b4b0b2fb0387f42d911553a",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "Jia-Ethan/codex-keysmith",
@@ -6349,10 +6349,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Jia-Ethan/codex-keysmith",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "cfcd96eb727c324ee8649170c43aaa632ff53cb3",
+      "pin_source": "https://github.com/Jia-Ethan/codex-keysmith/commit/cfcd96eb727c324ee8649170c43aaa632ff53cb3",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "Loongphy/codex-auth",
@@ -6365,10 +6365,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Loongphy/codex-auth",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "a83059701ee54c4c8f91aa030810b97bd35e254b",
+      "pin_source": "https://github.com/Loongphy/codex-auth/commit/a83059701ee54c4c8f91aa030810b97bd35e254b",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "ryfineZ/codex-session-patcher",
@@ -6381,10 +6381,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/ryfineZ/codex-session-patcher",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "cf7deab2d5b28c1f70f5b5498461848b69024a15",
+      "pin_source": "https://github.com/ryfineZ/codex-session-patcher/commit/cf7deab2d5b28c1f70f5b5498461848b69024a15",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "openai/codex-security",
@@ -6397,10 +6397,10 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/openai/codex-security",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "796fa130e92787085ab36aa4313d8c4bd9414560",
+      "pin_source": "https://github.com/openai/codex-security/commit/796fa130e92787085ab36aa4313d8c4bd9414560",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "qxcnm/Codex-Manager",
@@ -6413,10 +6413,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/qxcnm/Codex-Manager",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "430eddb0af9ae6277f8133fbac7f8634b7699dc6",
+      "pin_source": "https://github.com/qxcnm/Codex-Manager/commit/430eddb0af9ae6277f8133fbac7f8634b7699dc6",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "composio-community/awesome-codex-skills",
@@ -6429,10 +6429,10 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/composio-community/awesome-codex-skills",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "0930e1373789d2eda449039f7ac154b33031de89",
+      "pin_source": "https://github.com/composio-community/awesome-codex-skills/commit/0930e1373789d2eda449039f7ac154b33031de89",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "router-for-me/CLIProxyAPI",
@@ -6445,10 +6445,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/router-for-me/CLIProxyAPI",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "bc0643405a1d0adf77dd0f109972ac3313d66397",
+      "pin_source": "https://github.com/router-for-me/CLIProxyAPI/commit/bc0643405a1d0adf77dd0f109972ac3313d66397",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "OpenHands/OpenHands",
@@ -6461,10 +6461,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/OpenHands/OpenHands",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "b7fdc6c312039a0b840fdcd34a5c23ca7e65c218",
+      "pin_source": "https://github.com/OpenHands/OpenHands/commit/b7fdc6c312039a0b840fdcd34a5c23ca7e65c218",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "OpenHands/software-agent-sdk",
@@ -6477,10 +6477,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/OpenHands/software-agent-sdk",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "d2ee0cdea60825608c2f8906eb54e1d4d264fb42",
+      "pin_source": "https://github.com/OpenHands/software-agent-sdk/commit/d2ee0cdea60825608c2f8906eb54e1d4d264fb42",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "OpenHands/extensions",
@@ -6493,10 +6493,10 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/OpenHands/extensions",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "1ea389f96e44a7f1db8969b25ec460d02e8fcf09",
+      "pin_source": "https://github.com/OpenHands/extensions/commit/1ea389f96e44a7f1db8969b25ec460d02e8fcf09",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "OpenHands/OpenHands-CLI",
@@ -6509,10 +6509,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/OpenHands/OpenHands-CLI",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "283c6ac3610f4299f405f7389f65766dcb83e12a",
+      "pin_source": "https://github.com/OpenHands/OpenHands-CLI/commit/283c6ac3610f4299f405f7389f65766dcb83e12a",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "OpenHands/automation",
@@ -6525,10 +6525,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/OpenHands/automation",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "2c110703bbe91e4113a57adc1fa64a912ac7f4f8",
+      "pin_source": "https://github.com/OpenHands/automation/commit/2c110703bbe91e4113a57adc1fa64a912ac7f4f8",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "OpenHands/openhands-aci",
@@ -6541,10 +6541,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/OpenHands/openhands-aci",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "a8d8d23ec635f9aaa94af17aec3c851656f10c8a",
+      "pin_source": "https://github.com/OpenHands/openhands-aci/commit/a8d8d23ec635f9aaa94af17aec3c851656f10c8a",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "OpenHands/OpenHands-Cloud",
@@ -6557,10 +6557,10 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/OpenHands/OpenHands-Cloud",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "d1c3b0d8cae493e15c7d8931f1d9d06180799928",
+      "pin_source": "https://github.com/OpenHands/OpenHands-Cloud/commit/d1c3b0d8cae493e15c7d8931f1d9d06180799928",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "cline/cline",
@@ -6573,10 +6573,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/cline/cline",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "40c5d99031fe1128189c5b52e40638d2b7787754",
+      "pin_source": "https://github.com/cline/cline/commit/40c5d99031fe1128189c5b52e40638d2b7787754",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "cline/prompts",
@@ -6589,10 +6589,10 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/cline/prompts",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "2fc3b77a8fe39553ac424bfc7cdc9883e4a21e1f",
+      "pin_source": "https://github.com/cline/prompts/commit/2fc3b77a8fe39553ac424bfc7cdc9883e4a21e1f",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "decolua/9router",
@@ -6605,10 +6605,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/decolua/9router",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "f39d8f07481ae8518e93175f0ecaaafa61573c6c",
+      "pin_source": "https://github.com/decolua/9router/commit/f39d8f07481ae8518e93175f0ecaaafa61573c6c",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "aaif-goose/goose",
@@ -6621,10 +6621,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/aaif-goose/goose",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "2b17adc33a7176e701c2fef9578a5fc5834ea89a",
+      "pin_source": "https://github.com/aaif-goose/goose/commit/2b17adc33a7176e701c2fef9578a5fc5834ea89a",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "pressly/goose",
@@ -6636,10 +6636,10 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/pressly/goose",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "0aa9878439d23c25b62634b9cb9306a007d326d4",
+      "pin_source": "https://github.com/pressly/goose/commit/0aa9878439d23c25b62634b9cb9306a007d326d4",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "b-nnett/goose",
@@ -6652,10 +6652,10 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/b-nnett/goose",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "ba9ae0280c9b5b9a1545baab8e944cb3b7563c62",
+      "pin_source": "https://github.com/b-nnett/goose/commit/ba9ae0280c9b5b9a1545baab8e944cb3b7563c62",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "gooseworks-ai/goose-skills",
@@ -6668,10 +6668,10 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/gooseworks-ai/goose-skills",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "6d5d5f160c623613d7eb682b6a467beb165cc2a4",
+      "pin_source": "https://github.com/gooseworks-ai/goose-skills/commit/6d5d5f160c623613d7eb682b6a467beb165cc2a4",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "mz-automation/libiec61850",
@@ -6684,10 +6684,10 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/mz-automation/libiec61850",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "6e265c54af66ea686453b6d31c4dcce1cf7ad2bd",
+      "pin_source": "https://github.com/mz-automation/libiec61850/commit/6e265c54af66ea686453b6d31c4dcce1cf7ad2bd",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "tag1consulting/goose",
@@ -6699,10 +6699,10 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/tag1consulting/goose",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "7bf83ae35a6c3acc666c5a5ea38332ddeb0735d9",
+      "pin_source": "https://github.com/tag1consulting/goose/commit/7bf83ae35a6c3acc666c5a5ea38332ddeb0735d9",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "Aider-AI/aider",
@@ -6715,10 +6715,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/Aider-AI/aider",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+      "pin_source": "https://github.com/Aider-AI/aider/commit/5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "hotovo/aider-desk",
@@ -6731,10 +6731,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/hotovo/aider-desk",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "438e8710fa5f89a9509ce8d4b1c6f314a801b779",
+      "pin_source": "https://github.com/hotovo/aider-desk/commit/438e8710fa5f89a9509ce8d4b1c6f314a801b779",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "coder/agentapi",
@@ -6747,10 +6747,10 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/coder/agentapi",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
-      "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "head_commit": "7c468d5b25ec9d3d76c41313cf4e08904ff5968d",
+      "pin_source": "https://github.com/coder/agentapi/commit/7c468d5b25ec9d3d76c41313cf4e08904ff5968d",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25. The pinned commit message explicitly states that AgentAPI is deprecated and unmaintained; BLOCKED from adoption unless maintainership and supported status are independently verified. Do not install or execute. No capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "aide/aide",
@@ -6763,10 +6763,10 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/aide/aide",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "db923656149ea64bee63f7e45275322a20c7dbe3",
+      "pin_source": "https://github.com/aide/aide/commit/db923656149ea64bee63f7e45275322a20c7dbe3",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     },
     {
       "repo": "iamfakeguru/agent-md",
@@ -6779,10 +6779,10 @@
       ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/iamfakeguru/agent-md",
-      "head_commit": "SYNC_REQUIRED",
-      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "head_commit": "65c6a8e8ca1b2aa3a84fde5b1ea20f1abbbf063f",
+      "pin_source": "https://github.com/iamfakeguru/agent-md/commit/65c6a8e8ca1b2aa3a84fde5b1ea20f1abbbf063f",
       "intake_status": "UNREVIEWED",
-      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+      "integration_note": "Pinned to the observed default-branch commit on 2026-10-25; the SHA is a point-in-time source snapshot, not security approval. Not approved for installation or execution until license, maintenance, dependency, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, and isolated tests are reviewed. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     }
   ],
   "pin_policy": {
