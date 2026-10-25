@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
@@ -15,6 +16,7 @@ OTP_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts/{account_id}
 MODERN_OPTIONS_WS_HOST = "api.derivws.com"
 MODERN_OPTIONS_WS_PREFIX = "/trading/v1/options/ws/"
 LIVE_LOCK_PATH = Path(__file__).resolve().parents[2] / "config" / "LIVE_LOCK.yaml"
+EXPECTED_LIVE_LOCK_BLOB_SHA = "b2cddd1efb0f25f35a6a08354290f805812bf34c"
 
 # OTP acquisition is a bounded authentication retry, not a financial transaction.
 # A failed attempt's URL is never reused. HTTP input/business-rule errors are not retried.
@@ -95,8 +97,20 @@ def _read_live_lock(path: Path | None = None) -> dict[str, str]:
     """Read the small top-level live-lock contract without a YAML dependency."""
     lock_path = path or LIVE_LOCK_PATH
     try:
-        lines = lock_path.read_text(encoding="utf-8").splitlines()
-    except (OSError, UnicodeError):
+        raw = lock_path.read_bytes()
+    except OSError:
+        raise DerivSessionError("LIVE_LOCK_UNREADABLE") from None
+
+    # Validate the Git blob object id, not a plain file digest. This binds the
+    # verifier to the exact approved canonical safety-lock content.
+    blob_header = b"blob " + str(len(raw)).encode("ascii") + b"\\0"
+    actual_blob_sha = hashlib.sha1(blob_header + raw).hexdigest()
+    if actual_blob_sha != EXPECTED_LIVE_LOCK_BLOB_SHA:
+        raise DerivSessionError("LIVE_LOCK_BLOB_SHA_MISMATCH")
+
+    try:
+        lines = raw.decode("utf-8").splitlines()
+    except UnicodeError:
         raise DerivSessionError("LIVE_LOCK_UNREADABLE") from None
 
     values: dict[str, str] = {}
