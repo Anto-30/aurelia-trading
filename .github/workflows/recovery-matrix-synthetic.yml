@@ -24,6 +24,7 @@ jobs:
       contents: read
     env:
       PYTHONUNBUFFERED: "1"
+      PYTHONPATH: "."
     steps:
       - name: Checkout code without persisting credentials
         uses: actions/checkout@v7
