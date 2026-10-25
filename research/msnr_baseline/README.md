@@ -6,7 +6,7 @@ This directory holds an isolated, frozen price-action MSNR baseline, public hist
 
 ## Current Deriv public API
 
-The history fetcher uses only the unauthenticated endpoint wss://api.derivws.com/trading/v1/options/ws/public. It captures active-symbol metadata, then requests 1m and 15m OHLC candles in 3-day chunks with at least 1.5-second pacing for inclusive UTC dates 2022-10-21 through 2024-10-21. Every candle requires open, high, low, close and epoch; current history responses require prices and times arrays. The request field for history remains ticks_history with the symbol as its string value; underlying_symbol is used for current active-symbol metadata and where the new API schemas specify that field. The current comparison permits subscribe and adjust_start_time values 0 or 1, and removes the legacy fixed granularity enum; this client omits subscribe for one-shot requests and validates positive integer granularity. No loginid or credential is used.
+The history fetcher uses only the unauthenticated endpoint wss://api.derivws.com/trading/v1/options/ws/public. It captures active-symbol metadata, then requests 1m and 15m OHLC candles in chunks capped at 900 candles and at most 3 days, with at least 1.5-second pacing, over the exact half-open UTC window [2022-10-21T00:00:00Z, 2024-10-21T00:00:00Z). The 1m span is therefore at most 15 hours per request, while the 15m span is at most 3 days. This stays below the current API's default count of 1000 while avoiding the observed gateway behavior when an explicit count is paired with bounded start/end. See https://developers.deriv.com/docs/data/ticks-history/. The --end-date argument is an exclusive midnight boundary; no bars from the end date are included. Every candle requires open, high, low, and close plus an epoch; any source candle outside the exact requested chunk is rejected, even if all expected in-window bars are also present. The request operation remains ticks_history, with the symbol as its value; underlying_symbol is used where the current schema requires that field. The official current schema has an explicit candle-granularity enum and permits subscribe/adjust_start_time only as integer 1 if supplied. This one-shot fetcher omits both flags rather than sending legacy 0 values. No loginid or credential is used.
 
 Commands:
 
@@ -15,7 +15,9 @@ Commands:
     python scripts/verify_history.py data/raw/R_100_1m.csv --manifest data/raw/R_100_1m.manifest.json --output data/raw/R_100_1m.verification.json
     python scripts/verify_history.py data/raw/R_100_15m.csv --manifest data/raw/R_100_15m.manifest.json --output data/raw/R_100_15m.verification.json
 
-No interpolation, backfill or forward-fill is allowed. Any missing bars, checksum mismatch or failed source verification blocks simulation. Partial CSV files and failure records are not valid data.
+The source manifest uses schema v3 and records start_date_utc_inclusive plus end_date_utc_exclusive; the verifier rejects legacy inclusive-end manifests rather than silently changing their meaning.
+
+No interpolation, backfill, forward-fill, or silent dropping of extra/out-of-window candles is allowed. Any missing bars, extra bars, checksum mismatch or failed source verification blocks simulation. Partial CSV files and failure records are not valid data.
 
 ## Frozen MSNR baseline
 

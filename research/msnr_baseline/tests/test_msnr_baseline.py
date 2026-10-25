@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import csv
+import hashlib
 import json
 import sys
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -16,6 +19,37 @@ sys.path.insert(0, str(SCRIPTS))
 
 import fetch_history  # noqa: E402
 import run_msnr_simulator as sim  # noqa: E402
+import verify_history  # noqa: E402
+
+
+def test_frozen_history_window_uses_exact_exclusive_utc_end_date():
+    start_day = date.fromisoformat("2022-10-21")
+    end_day_exclusive = date.fromisoformat("2024-10-21")
+    start_epoch, end_exclusive = fetch_history.utc_window_epochs(start_day, end_day_exclusive)
+
+    assert start_epoch == 1666310400
+    assert end_exclusive == 1729468800
+    assert datetime.fromtimestamp(start_epoch, timezone.utc).isoformat() == "2022-10-21T00:00:00+00:00"
+    assert datetime.fromtimestamp(end_exclusive, timezone.utc).isoformat() == "2024-10-21T00:00:00+00:00"
+    assert end_exclusive - start_epoch == 731 * 86400
+    assert (end_exclusive - start_epoch) // 60 == 731 * 24 * 60
+    assert end_exclusive - 60 == 1729468740
+
+    for invalid_end in (start_day, date.fromisoformat("2022-10-20")):
+        with pytest.raises(fetch_history.FetchError, match="exclusive UTC boundary"):
+            fetch_history.utc_window_epochs(start_day, invalid_end)
+
+
+def test_candle_normalizer_rejects_any_out_of_window_row_even_if_expected_rows_are_present():
+    start = 1_666_310_400  # 2022-10-21T00:00:00Z
+    valid = [
+        {"epoch": start, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5},
+        {"epoch": start + 60, "open": 100.5, "high": 102.0, "low": 100.0, "close": 101.0},
+    ]
+    for out_of_range_epoch in (start - 60, start + 120):
+        response = [*valid, {**valid[-1], "epoch": out_of_range_epoch}]
+        with pytest.raises(fetch_history.FetchError, match="outside requested half-open range"):
+            fetch_history.normalize_candles(response, start, start + 120, 60)
 
 
 def test_public_history_payload_uses_current_bounded_request_shape():
@@ -33,6 +67,58 @@ def test_public_history_payload_uses_current_bounded_request_shape():
     assert "loginid" not in req
     assert "adjust_start_time" not in req  # current schema only accepts 1 if set
     assert "subscribe" not in req  # one-shot request: omit rather than send legacy 0
+
+
+@pytest.mark.parametrize(
+    "start_epoch,end_exclusive,granularity",
+    [
+        (True, 1_666_320_060, 60),
+        ("1666320000", 1_666_320_060, 60),
+        (1_666_320_000, 1_666_320_060.0, 60),
+        (1_666_320_000, 1_666_320_060, True),
+        (-60, 0, 60),
+        (1_666_320_000, 1_666_320_060, 0),
+        (1_666_320_001, 1_666_320_061, 60),
+        (1_666_320_000, 1_666_320_901, 60),
+    ],
+)
+def test_candle_normalizer_rejects_invalid_window_and_granularity(start_epoch, end_exclusive, granularity):
+    candle = {"epoch": 1_666_320_000, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5}
+    with pytest.raises(fetch_history.FetchError):
+        fetch_history.normalize_candles([candle], start_epoch, end_exclusive, granularity)
+
+
+@pytest.mark.parametrize(
+    "start_epoch,end_exclusive,granularity",
+    [
+        (True, 1_666_320_060, 60),
+        ("1666320000", 1_666_320_060, 60),
+        (1_666_320_000, 1_666_320_060.0, 60),
+        (1_666_320_000, 1_666_320_060, True),
+        (-60, 0, 60),
+        (1_666_320_000, 1_666_320_060, 0),
+        (1_666_320_001, 1_666_320_061, 60),
+        (1_666_320_000, 1_666_320_901, 60),
+    ],
+)
+def test_candle_payload_builder_rejects_invalid_window_and_granularity(start_epoch, end_exclusive, granularity):
+    with pytest.raises(fetch_history.FetchError):
+        fetch_history.build_candle_payload(start_epoch, end_exclusive, granularity)
+
+
+def test_history_chunk_span_respects_new_api_default_count_limit():
+    one_minute_span = fetch_history.chunk_span_seconds(60)
+    fifteen_minute_span = fetch_history.chunk_span_seconds(900)
+
+    assert one_minute_span == 900 * 60
+    assert fifteen_minute_span == 3 * 86400
+    for granularity, span in ((60, one_minute_span), (900, fifteen_minute_span)):
+        assert span % granularity == 0
+        assert span // granularity <= fetch_history.MAX_CANDLES_PER_CHUNK
+    with pytest.raises(fetch_history.FetchError, match="Unsupported granularity"):
+        fetch_history.chunk_span_seconds(61)
+    with pytest.raises(fetch_history.FetchError, match="Unsupported granularity"):
+        fetch_history.chunk_span_seconds(True)
 
 
 def test_active_symbols_pip_size_is_price_unit_not_history_display_precision():
@@ -66,6 +152,29 @@ def test_candle_normalizer_requires_every_current_schema_field_and_contiguity():
     gap = [good[0], {**good[1], "epoch": start + 120}]
     with pytest.raises(fetch_history.FetchError, match="continuity failure"):
         fetch_history.normalize_candles(gap, start, start + 180, 60)
+
+
+@pytest.mark.parametrize(
+    "field,invalid_value",
+    [
+        ("epoch", True),
+        ("epoch", False),
+        ("epoch", "1666320000"),
+        ("epoch", 1666320000.0),
+        ("epoch", -1),
+        ("epoch", 10_000_000_000),
+        ("open", "100.0"),
+        ("high", True),
+        ("low", False),
+        ("close", "100.5"),
+    ],
+)
+def test_candle_normalizer_rejects_coerced_or_out_of_range_json_values(field, invalid_value):
+    start = 1_666_320_000
+    candle = {"epoch": start, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5}
+    candle[field] = invalid_value
+    with pytest.raises(fetch_history.FetchError):
+        fetch_history.normalize_candles([candle], start, start + 60, 60)
 
 
 def test_vectorized_features_have_strict_one_bar_execution_lag_and_no_forward_fill():
@@ -168,6 +277,9 @@ def test_metadata_network_failure_persists_failed_closed_evidence_without_market
         asyncio.run(fetch_history.async_main(args))
     failure = json.loads((out_dir / "fetch_run.failure.json").read_text(encoding="utf-8"))
     assert failure["status"] == "FAILED_CLOSED"
+    assert failure["requested_start_date_utc_inclusive"] == "2022-10-21"
+    assert failure["requested_end_date_utc_exclusive"] == "2024-10-21"
+    assert "requested_end_date_utc_inclusive" not in failure
     assert failure["market_data_received"] is False
     assert failure["account_token_used"] is False
     assert failure["live_orders_submitted"] is False
@@ -191,6 +303,91 @@ def test_streaming_segmenter_preserves_every_row_across_90_day_boundaries(tmp_pa
     assert [len(part) for part in segments] == [90, 90, 1]
     joined = pd.concat(segments, ignore_index=True)
     assert joined["epoch"].astype(np.int64).tolist() == epochs.tolist()
+
+
+def test_history_verifier_accepts_v3_exclusive_end_manifest_and_exact_continuity(tmp_path):
+    # Synthetic schema fixture only; this is not source market data or strategy evidence.
+    start_day = date.fromisoformat("2022-10-21")
+    end_day_exclusive = date.fromisoformat("2022-10-22")
+    start_epoch, end_exclusive = fetch_history.utc_window_epochs(start_day, end_day_exclusive)
+    granularity = 900
+    csv_path = tmp_path / "fixture.csv"
+    rows = [
+        {"epoch": start_epoch + i * granularity, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5}
+        for i in range(96)
+    ]
+    with csv_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["epoch", "open", "high", "low", "close"], lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+
+    active_row = {"underlying_symbol": "R_100", "pip_size": 0.01}
+    active_response = {"msg_type": "active_symbols", "active_symbols": [active_row]}
+    active_path = tmp_path / "R_100_active_symbols_response.json"
+    active_raw = json.dumps(active_response, separators=(",", ":")) + "\n"
+    active_path.write_text(active_raw, encoding="utf-8")
+    csv_hash = hashlib.sha256(csv_path.read_bytes()).hexdigest()
+    active_hash = hashlib.sha256(active_path.read_bytes()).hexdigest()
+    manifest = {
+        "schema": "atos.deriv_history_manifest.v3",
+        "status": "FETCHED_AWAITING_INDEPENDENT_VERIFICATION",
+        "underlying_symbol": "R_100",
+        "timeframe": "15m",
+        "granularity_seconds": granularity,
+        "start_date_utc_inclusive": start_day.isoformat(),
+        "end_date_utc_exclusive": end_day_exclusive.isoformat(),
+        "range_end_exclusive_epoch": end_exclusive,
+        "endpoint": fetch_history.PUBLIC_WS,
+        "authentication": "none",
+        "account_token_used": False,
+        "active_symbols_response_file": active_path.name,
+        "active_symbols_response_sha256": active_hash,
+        "active_symbol_metadata_row": active_row,
+        "pip_size_price_from_active_symbols": 0.01,
+        "row_count": 96,
+        "expected_row_count": 96,
+        "first_epoch": start_epoch,
+        "last_epoch": end_exclusive - granularity,
+        "csv_path": str(csv_path),
+        "csv_bytes": csv_path.stat().st_size,
+        "csv_sha256": csv_hash,
+    }
+    manifest_path = tmp_path / "fixture.manifest.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    output_path = tmp_path / "fixture.verification.json"
+
+    verify_history.verify(csv_path, manifest_path, output_path)
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    assert report["status"] == "VERIFIED_CONTIGUOUS"
+    assert report["row_count"] == 96
+    assert report["first_epoch"] == start_epoch
+    assert report["last_epoch"] == end_exclusive - granularity
+    assert report["checks"]["last_epoch_matches_requested_last_bar"] is True
+
+
+def test_history_verifier_rejects_legacy_inclusive_end_manifest(tmp_path):
+    csv_path = tmp_path / "legacy.csv"
+    csv_path.write_text("epoch,open,high,low,close\n", encoding="utf-8")
+    manifest_path = tmp_path / "legacy.manifest.json"
+    manifest_path.write_text(json.dumps({"schema": "atos.deriv_history_manifest.v2"}), encoding="utf-8")
+    output_path = tmp_path / "legacy.verification.json"
+
+    verify_history.verify(csv_path, manifest_path, output_path)
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    assert report["status"] == "CORRUPTED"
+    assert any("manifest.v3" in error for error in report["errors"])
+
+
+def test_simulator_rejects_legacy_inclusive_end_manifest(tmp_path):
+    csv_path = tmp_path / "legacy.csv"
+    csv_path.write_text("epoch,open,high,low,close\n", encoding="utf-8")
+    manifest_path = tmp_path / "legacy.manifest.json"
+    manifest_path.write_text(json.dumps({"schema": "atos.deriv_history_manifest.v2"}), encoding="utf-8")
+    verification_path = tmp_path / "legacy.verification.json"
+    verification_path.write_text(json.dumps({}), encoding="utf-8")
+
+    with pytest.raises(sim.SimulationError, match="Unsupported or legacy source manifest schema"):
+        sim.load_verified_inputs(csv_path, manifest_path, verification_path, ROOT / "config" / "model_frozen.json")
 
 
 def test_no_verified_history_means_no_empirical_metrics_or_ledger(tmp_path):

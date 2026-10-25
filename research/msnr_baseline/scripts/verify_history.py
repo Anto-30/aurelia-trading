@@ -2,7 +2,7 @@
 """Independently verify source manifest, SHA-256, OHLC integrity and continuity."""
 from __future__ import annotations
 import argparse, csv, hashlib, json, math, sys
-from datetime import date, datetime, time as dtime, timedelta, timezone
+from datetime import date, datetime, time as dtime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -29,8 +29,8 @@ def verify(csv_path: Path, manifest_path: Path, output: Path) -> int:
         if not csv_path.is_file() or not manifest_path.is_file():
             raise ValueError("CSV and manifest must both exist as regular files.")
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if manifest.get("schema") != "atos.deriv_history_manifest.v2":
-            raise ValueError("Unexpected manifest schema; expected atos.deriv_history_manifest.v2.")
+        if manifest.get("schema") != "atos.deriv_history_manifest.v3":
+            raise ValueError("Unexpected manifest schema; expected atos.deriv_history_manifest.v3.")
         if manifest.get("underlying_symbol") != "R_100":
             raise ValueError("Manifest underlying_symbol must equal R_100.")
         if manifest.get("endpoint") != "wss://api.derivws.com/trading/v1/options/ws/public":
@@ -71,10 +71,14 @@ def verify(csv_path: Path, manifest_path: Path, output: Path) -> int:
         if not report["checks"]["csv_sha256_matches_manifest"]:
             raise ValueError("CSV SHA-256 differs from manifest; data file or evidence was modified.")
         start_epoch = utc_epoch(date.fromisoformat(manifest["start_date_utc_inclusive"]))
-        end_exclusive = int(manifest["range_end_exclusive_epoch"])
-        declared_end_exclusive = utc_epoch(date.fromisoformat(manifest["end_date_utc_inclusive"]) + timedelta(days=1))
+        end_exclusive = utc_epoch(date.fromisoformat(manifest["end_date_utc_exclusive"]))
+        declared_end_exclusive = manifest.get("range_end_exclusive_epoch")
+        if end_exclusive <= start_epoch:
+            raise ValueError("Manifest end date must be an exclusive UTC boundary after the start date.")
+        if isinstance(declared_end_exclusive, bool) or not isinstance(declared_end_exclusive, int):
+            raise ValueError("Manifest range_end_exclusive_epoch must be an integer.")
         if end_exclusive != declared_end_exclusive:
-            raise ValueError("Manifest range_end_exclusive_epoch disagrees with inclusive UTC end date.")
+            raise ValueError("Manifest range_end_exclusive_epoch disagrees with exclusive UTC end date.")
         expected_rows = (end_exclusive - start_epoch) // granularity
         previous: int | None = None
         count = 0
