@@ -320,7 +320,7 @@ components:
           scopes:
             trade: Access to trading operations
             account_manage: Write access for account creation and management
-            application_read: Read-only access to registered applications
+            application_read: Read-only access to your registered applications
             payment: Access to payment agent deposit and withdrawal operations
   parameters:
     RequestId:
@@ -346,7 +346,7 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
     Forbidden:
-      description: Bearer token lacks payment scope.
+      description: Valid token lacks the required payment scope.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
