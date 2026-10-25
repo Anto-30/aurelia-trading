@@ -90,6 +90,21 @@ class ProtectedWorkflowGateTests(unittest.TestCase):
                     for gate in REQUIRED_GATES:
                         self.assertIn(f"{gate} == 'true'", condition)
 
+    def test_assurance_jobs_set_explicit_fail_closed_execution_flags(self):
+        path = ROOT / ".github/workflows/aurelia-assurance.yml"
+        jobs = dict(iter_jobs(path.read_text(encoding="utf-8")))
+        required = (
+            'LIVE_EXECUTION: "BLOCKED"',
+            'FINAL_EXECUTION_AUTHORIZATION: "false"',
+            'AURELIA_VERIFY_ONLY: "true"',
+            'AURELIA_ALLOW_LIVE_ORDERS: "false"',
+        )
+        for job_id in ("assurance", "protected-deriv-evidence"):
+            with self.subTest(job=job_id):
+                self.assertIn(job_id, jobs)
+                for flag in required:
+                    self.assertIn(flag, jobs[job_id], f"{job_id} missing explicit fail-closed flag: {flag}")
+
     def test_protected_deriv_evidence_requires_main_push_and_all_gates(self):
         path = ROOT / ".github/workflows/aurelia-assurance.yml"
         jobs = dict(iter_jobs(path.read_text(encoding="utf-8")))
