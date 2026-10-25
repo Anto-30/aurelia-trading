@@ -23,10 +23,10 @@ jobs:
       FINAL_EXECUTION_AUTHORIZATION: "false"
       LIVE_EXECUTION: "BLOCKED"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7, resolved by GitHub Actions run 40209026944
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7, resolved by GitHub Actions run 40209026944
         with:
           python-version: "3.13"
       - name: Install runtime dependencies
@@ -58,7 +58,7 @@ jobs:
         run: python scripts/verify_deriv_public_transport.py
       - name: Upload public Deriv transport evidence
         if: always() && hashFiles('artifacts/deriv_public_transport.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, resolved by GitHub Actions run 40209026944
         with:
           name: deriv-public-transport-evidence
           path: artifacts/deriv_public_transport.json
