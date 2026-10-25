@@ -145,19 +145,12 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
             if isinstance(granularity, bool) or not isinstance(granularity, int) or granularity not in SUPPORTED_CANDLE_GRANULARITIES:
                 allowed = ", ".join(str(value) for value in sorted(SUPPORTED_CANDLE_GRANULARITIES))
                 raise PublicMarketDataError(f"ticks_history granularity must be one of: {allowed}.")
-        # Historical requests may explicitly set subscribe=0 for one-shot
-        # retrieval; adjust_start_time is an enable-only flag (1).
+        # The current API schema allows value 1 only for these optional flags.
         for key in ("subscribe", "adjust_start_time"):
             if key in payload:
                 flag_value = payload[key]
-                allowed_values = (0, 1) if key == "subscribe" else (1,)
-                if (
-                    isinstance(flag_value, bool)
-                    or not isinstance(flag_value, int)
-                    or flag_value not in allowed_values
-                ):
-                    allowed = "0 or 1" if key == "subscribe" else "1"
-                    raise PublicMarketDataError(f"{key} must be integer {allowed}.")
+                if isinstance(flag_value, bool) or not isinstance(flag_value, int) or flag_value != 1:
+                    raise PublicMarketDataError(f"{key} must be integer 1.")
 
 
 def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | int]]:
@@ -349,7 +342,7 @@ class DerivPublicMarketDataClient:
             raise PublicMarketDataError("History count must be an integer between 1 and 5000.")
         payload: dict[str, Any] = {
             "ticks_history": underlying_symbol, "start": int(start_epoch), "end": str(int(end_epoch)),
-            "style": style, "count": int(count), "subscribe": 0,
+            "style": style, "count": int(count),
         }
         if style == "candles":
             if isinstance(granularity_seconds, bool) or not isinstance(granularity_seconds, int) or granularity_seconds not in SUPPORTED_CANDLE_GRANULARITIES:
