@@ -103,7 +103,7 @@ def _read_live_lock(path: Path | None = None) -> dict[str, str]:
 
     # Validate the Git blob object id, not a plain file digest. This binds the
     # verifier to the exact approved canonical safety-lock content.
-    blob_header = b"blob " + str(len(raw)).encode("ascii") + b"\\0"
+    blob_header = b"blob " + str(len(raw)).encode("ascii") + b"\0"
     actual_blob_sha = hashlib.sha1(blob_header + raw).hexdigest()
     if actual_blob_sha != EXPECTED_LIVE_LOCK_BLOB_SHA:
         raise DerivSessionError("LIVE_LOCK_BLOB_SHA_MISMATCH")
