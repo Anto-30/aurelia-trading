@@ -630,6 +630,7 @@ async def main() -> int:
         save_state(STATE_PATH, state)
         report = evaluation(state)
         report["collection_status"] = "FAILED_RETRYABLE"
+        report["transport_reconnect_count"] = len(state.get("transport_reconnect_events", []))
         report["collection_error_type"] = type(exc).__name__
         report_path.write_text(
             json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
@@ -648,6 +649,7 @@ async def main() -> int:
     state.pop("last_run_error_at_utc", None)
     report = evaluation(state)
     report["collection_status"] = "PASS"
+    report["transport_reconnect_count"] = len(state.get("transport_reconnect_events", []))
     save_state(STATE_PATH, state)
     report_path.write_text(
         json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
