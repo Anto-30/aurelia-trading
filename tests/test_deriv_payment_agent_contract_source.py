@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-import re
-
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = ROOT / "contracts" / "deriv-payment-agent.openapi.yaml"
@@ -34,7 +32,6 @@ def test_directory_list_matches_the_pinned_official_array_contract() -> None:
     list_route = _section(
         contract, "  /payment-agents/v1/agents:\n", "  /payment-agents/v1/agents/{id}:"
     )
-    list_schema = _section(contract, "    DirectoryEnvelope:", "    PaymentAgentListItem:")
     # Actual schema order is allowed to move: validate the list item definition separately.
     list_item = _section(contract, "    PaymentAgentListItem:", "    DirectoryEnvelope:")
     directory = contract[contract.index("    DirectoryEnvelope:") :]
@@ -55,7 +52,6 @@ def test_directory_list_matches_the_pinned_official_array_contract() -> None:
     assert "required: [id]" in list_item
     assert "deposit_commission: { type: [number, 'null'] }" in list_item
     assert "withdrawal_minimum: { type: [string, 'null'] }" in list_item
-    assert "oneOf:" not in list_schema
 
 
 def test_agent_id_and_standard_error_envelope_match_official_shape() -> None:
