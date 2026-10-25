@@ -78,7 +78,21 @@ def run_command(
         check=False,
     )
     if process.returncode not in allowed_codes:
-        # Do not propagate untrusted source excerpts or possible secret values from tool output.
+        # Only print narrowly allowlisted CLI parser diagnostics. Never print raw stderr/stdout,
+        # which may contain source excerpts, findings, or detected secret values.
+        safe_patterns = (
+            r"No such option: --[A-Za-z0-9_-]+",
+            r"unrecognized arguments?: --[A-Za-z0-9_-]+",
+            r"No such command '[A-Za-z0-9_-]+'",
+            r"unknown command [A-Za-z0-9_-]+",
+            r"executable file not found in \\$PATH",
+        )
+        for text_blob in (process.stderr, process.stdout):
+            for pattern in safe_patterns:
+                match = re.search(pattern, text_blob or "", flags=re.IGNORECASE)
+                if match:
+                    print("SAFE_TOOL_CLI_HINT=" + match.group(0)[:160])
+                    break
         raise RuntimeError(
             "COMMAND_FAILED:"
             + Path(command[0]).name
