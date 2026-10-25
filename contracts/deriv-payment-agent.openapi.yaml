@@ -114,7 +114,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
-        '404': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '500': { $ref: '#/components/responses/ServerError' }
         '504': { $ref: '#/components/responses/Timeout' }
   /payment-agents/v1/clients/me:
@@ -309,6 +309,11 @@ components:
       description: Original idempotency key; never generate a replacement after ambiguous timeout.
       schema: { $ref: '#/components/schemas/RequestId' }
   responses:
+    NotFound:
+      description: Agent or request id not found.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
     BadRequest:
       description: Invalid parameters or business-rule failure.
       content:
