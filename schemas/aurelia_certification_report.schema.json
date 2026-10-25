@@ -1,0 +1,495 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Anto-30/aurelia-trading/blob/main/schemas/aurelia_certification_report.schema.json",
+  "title": "AURELIA Certification Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_metadata",
+    "safety_state",
+    "gate_1_broker_lifecycle",
+    "gate_2_recovery_matrix",
+    "gate_3_soak_test_3600s",
+    "gate_4_out_of_sample",
+    "gate_5_calibration",
+    "gate_6_execution_economics",
+    "gate_7_security_audit",
+    "gate_8_deployment",
+    "gate_9_strategy_eligibility",
+    "final_disposition"
+  ],
+  "properties": {
+    "report_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commit_sha",
+        "generated_at_utc",
+        "environment"
+      ],
+      "properties": {
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "generated_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "demo",
+            "paper",
+            "verify_only"
+          ]
+        }
+      }
+    },
+    "safety_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "live_execution",
+        "final_authorization",
+        "capital_plane_mode"
+      ],
+      "properties": {
+        "live_execution": {
+          "const": "BLOCKED"
+        },
+        "final_authorization": {
+          "const": false
+        },
+        "capital_plane_mode": {
+          "const": "VERIFY_ONLY"
+        }
+      }
+    },
+    "gate_1_broker_lifecycle": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "otp_latency_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "otp_latency_ms"
+            ]
+          }
+        }
+      ]
+    },
+    "gate_2_recovery_matrix": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "simulated_drops": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "successful_reconnects": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "simulated_drops",
+              "successful_reconnects"
+            ]
+          }
+        }
+      ]
+    },
+    "gate_3_soak_test_3600s": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "duration_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "peak_memory_mb": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ws_disconnects": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "duration_seconds",
+              "peak_memory_mb",
+              "ws_disconnects"
+            ],
+            "properties": {
+              "duration_seconds": {
+                "minimum": 3600
+              }
+            }
+          }
+        }
+      ]
+    },
+    "gate_4_out_of_sample": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "dataset_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "parameter_lock_hash": {
+          "$ref": "#/$defs/hash"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "dataset_hash",
+              "parameter_lock_hash"
+            ]
+          }
+        }
+      ]
+    },
+    "gate_5_calibration": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "config_hash_pre": {
+          "$ref": "#/$defs/hash"
+        },
+        "config_hash_post": {
+          "$ref": "#/$defs/hash"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "config_hash_pre",
+              "config_hash_post"
+            ],
+            "properties": {
+              "config_hash_pre": {
+                "$ref": "#/$defs/hash"
+              },
+              "config_hash_post": {
+                "$ref": "#/$defs/hash"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "gate_6_execution_economics": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "known_fees_total": {
+          "type": "number"
+        },
+        "residual_tolerance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "actual_residual": {
+          "type": "number"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "known_fees_total",
+              "residual_tolerance",
+              "actual_residual"
+            ],
+            "properties": {
+              "actual_residual": {
+                "maximum": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "gate_7_security_audit": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "sast_findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "secret_scan_findings": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "sast_findings",
+              "secret_scan_findings"
+            ],
+            "properties": {
+              "sast_findings": {
+                "const": 0
+              },
+              "secret_scan_findings": {
+                "const": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "gate_8_deployment": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "iac_validation_hash": {
+          "$ref": "#/$defs/hash"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "iac_validation_hash"
+            ]
+          }
+        }
+      ]
+    },
+    "gate_9_strategy_eligibility": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "profit_factor": {
+          "type": "number",
+          "minimum": 0
+        },
+        "net_expectancy": {
+          "type": "number"
+        },
+        "kill_rule_triggered": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "profit_factor",
+              "net_expectancy",
+              "kill_rule_triggered"
+            ],
+            "properties": {
+              "profit_factor": {
+                "minimum": 1.15
+              },
+              "net_expectancy": {
+                "exclusiveMinimum": 0
+              },
+              "kill_rule_triggered": {
+                "const": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "final_disposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overall_status",
+        "human_review_required",
+        "human_reviewer_signature"
+      ],
+      "properties": {
+        "overall_status": {
+          "type": "string",
+          "enum": [
+            "NOT_READY",
+            "PENDING_HUMAN_REVIEW",
+            "CERTIFIED"
+          ]
+        },
+        "human_review_required": {
+          "const": true
+        },
+        "human_reviewer_signature": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "overall_status": {
+                "const": "CERTIFIED"
+              }
+            },
+            "required": [
+              "overall_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "human_reviewer_signature": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "FAIL",
+            "PENDING"
+          ]
+        },
+        "evidence_log_hash": {
+          "$ref": "#/$defs/hash"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "evidence_log_hash"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
