@@ -85,14 +85,19 @@ def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
         missing = [key for key in REQUIRED_CANDLE_FIELDS if key not in candle]
         if missing:
             raise FetchError(f"Current API candle response is missing required fields: {missing}")
+        epoch_raw = candle["epoch"]
+        if isinstance(epoch_raw, bool) or not isinstance(epoch_raw, int):
+            raise FetchError("Candle epoch must be a JSON integer; strings, floats, and booleans are rejected.")
+        if not 0 <= epoch_raw <= 9999999999:
+            raise FetchError(f"Candle epoch is outside the supported range: {epoch_raw!r}")
+        raw_prices = tuple(candle[k] for k in ("open", "high", "low", "close"))
+        if any(isinstance(value, bool) or not isinstance(value, (int, float)) for value in raw_prices):
+            raise FetchError("Candle OHLC values must be JSON numbers; strings and booleans are rejected.")
         try:
-            epoch_float = float(candle["epoch"])
-            epoch = int(epoch_float)
+            epoch = epoch_raw
             px = {k: float(candle[k]) for k in ("open", "high", "low", "close")}
         except (TypeError, ValueError, OverflowError) as exc:
-            raise FetchError(f"Invalid candle value: {candle!r}") from exc
-        if not math.isfinite(epoch_float) or epoch_float != epoch or epoch < 0:
-            raise FetchError(f"Invalid candle epoch: {candle.get('epoch')!r}")
+            raise FetchError("Candle contains an invalid numeric value.") from exc
         if not all(math.isfinite(v) and v > 0 for v in px.values()):
             raise FetchError(f"Non-positive or non-finite R_100 price at epoch {epoch}.")
         if px["high"] < max(px["open"], px["close"]) or px["low"] > min(px["open"], px["close"]) or px["high"] < px["low"]:
@@ -111,16 +116,7 @@ def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
         raise FetchError("Duplicate candle epochs returned inside a chunk.")
     expected = list(range(start_epoch, end_exclusive, granularity))
     if epochs != expected:
-        if not epochs and observed_epochs:
-            observed_first = min(observed_epochs)
-            observed_last = max(observed_epochs)
-            detail = (
-                "no epochs inside requested interval; "
-                f"response returned {len(observed_epochs)} candle(s) spanning "
-                f"{observed_first}..{observed_last}; requested "
-                f"[{start_epoch}, {end_exclusive}) at {granularity}s"
-            )
-        elif not epochs:
+        if not epochs:
             detail = (
                 f"no candle epochs returned; requested [{start_epoch}, {end_exclusive}) "
                 f"at {granularity}s"
