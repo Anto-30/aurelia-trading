@@ -1,0 +1,53 @@
+name: Public Deriv WebSocket Soak (3600 seconds, no credentials)
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "tools/soak_public_deriv_ws.py"
+      - ".github/workflows/soak-public-deriv.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-deriv-soak
+  cancel-in-progress: false
+
+jobs:
+  public-feed-soak:
+    name: Non-production public WebSocket soak
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    permissions:
+      contents: read
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout code without persisting credentials
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install only pinned WebSocket client
+        run: python -m pip install --disable-pip-version-check --no-deps websockets==16.0
+
+      - name: Validate soak script
+        run: python -m py_compile tools/soak_public_deriv_ws.py
+
+      - name: Run continuous 3600-second public listener
+        run: python tools/soak_public_deriv_ws.py --duration-seconds 3600 --output-dir evidence/soak_3600s
+
+      - name: Preserve soak report and event telemetry
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-deriv-soak-3600s
+          path: evidence/soak_3600s/
+          if-no-files-found: warn
+          retention-days: 30
