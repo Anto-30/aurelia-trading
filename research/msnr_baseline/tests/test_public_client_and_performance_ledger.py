@@ -95,16 +95,24 @@ def test_perf_factor_uses_post_cost_wins_and_losses():
 def test_new_public_request_schema_and_forbidden_keys():
     validate_public_payload({"active_symbols": "brief"})
     validate_public_payload({"ticks": "R_100", "subscribe": 1})
-    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "count": 5000})
-    # New API comparison: one-shot flag value 0 is valid; positive non-legacy granularity is valid.
-    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 61, "subscribe": 0, "adjust_start_time": 0})
+    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "count": 1000})
+    # Current New API accepts only documented granularity values and optional flags=1.
     validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 900, "subscribe": 1})
     bad = [
         {"buy": "proposal-id", "price": 1}, {"sell": 1, "price": 0}, {"proposal": 1},
         {"balance": 1}, {"otp": "secret"}, {"Authorization": "Bearer x"}, {"loginid": "CR123"},
         {"ticks": "R_100", "passthrough": {"loginid": "CR123"}},
-        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "subscribe": 2},
-        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "adjust_start_time": 2},
+        {"ticks": "R_100", "subscribe": True},
+        {"ticks_history": "R_100", "start": True, "end": "200", "style": "candles", "granularity": 60},
+        {"ticks_history": "R_100", "start": 100.0, "end": "200", "style": "candles", "granularity": 60},
+        {"ticks_history": "R_100", "start": 10_000_000_000, "end": "200", "style": "candles", "granularity": 60},
+        {"ticks_history": "R_100", "start": 100, "end": 200, "style": "candles", "granularity": 60},
+        {"ticks_history": "R_100", "start": 100, "end": "10000000000", "style": "candles", "granularity": 60},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "count": True},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 61},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": True},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "subscribe": 0},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "adjust_start_time": 0},
         {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 0},
         {"ticks": "R_100", "extra": "unknown"},
     ]
@@ -122,10 +130,36 @@ def test_client_is_pinned_to_public_endpoint_and_current_history_schema():
     assert rows[0]["epoch"] == 100
     with pytest.raises(PublicMarketDataError, match="missing a required"):
         validate_candle_response({"msg_type":"candles","candles":[{"open":100,"high":102,"low":99,"epoch":100}]})
+
+    valid_candle = {"open":100,"high":102,"low":99,"close":101,"epoch":100}
+    for invalid_epoch in ("100", 100.0, True, -1, 10_000_000_000):
+        bad_candle = {**valid_candle, "epoch": invalid_epoch}
+        with pytest.raises(PublicMarketDataError):
+            validate_candle_response({"msg_type":"candles","candles":[bad_candle]})
+
+    for field, invalid_value in (("open", "100"), ("high", True), ("low", float("nan")), ("close", float("inf"))):
+        bad_candle = {**valid_candle, field: invalid_value}
+        with pytest.raises(PublicMarketDataError):
+            validate_candle_response({"msg_type":"candles","candles":[bad_candle]})
+
+    with pytest.raises(PublicMarketDataError, match="JSON object"):
+        validate_candle_response([valid_candle])
     prices, times = validate_history_response({"msg_type":"history","history":{"prices":[1.0,1.1],"times":[100,101]}})
     assert prices == [1.0,1.1] and times == [100,101]
     with pytest.raises(PublicMarketDataError, match="both prices and times"):
         validate_history_response({"msg_type":"history","history":{"prices":[1.0]}})
+
+    for invalid_epoch in ("100", 100.0, True):
+        with pytest.raises(PublicMarketDataError, match="JSON integer"):
+            validate_history_response({"msg_type":"history","history":{"prices":[1.0],"times":[invalid_epoch]}})
+    for invalid_epoch in (-1, 10_000_000_000):
+        with pytest.raises(PublicMarketDataError, match="in-range integer epoch"):
+            validate_history_response({"msg_type":"history","history":{"prices":[1.0],"times":[invalid_epoch]}})
+    for invalid_price in ("1.0", True, float("nan"), float("inf"), 0):
+        with pytest.raises(PublicMarketDataError):
+            validate_history_response({"msg_type":"history","history":{"prices":[invalid_price],"times":[100]}})
+    with pytest.raises(PublicMarketDataError, match="JSON object"):
+        validate_history_response([])
 
 
 def test_history_builder_keeps_ticks_history_request_key():

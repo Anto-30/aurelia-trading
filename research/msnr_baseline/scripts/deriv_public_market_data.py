@@ -70,51 +70,82 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
         )
         if not valid_symbols:
             raise PublicMarketDataError("ticks must name a symbol or non-empty list of symbols.")
-        if "subscribe" in payload and payload["subscribe"] != 1:
+        if "subscribe" in payload and (
+            isinstance(payload["subscribe"], bool) or payload["subscribe"] != 1
+        ):
             raise PublicMarketDataError("Current ticks subscriptions accept subscribe=1 only.")
     elif operation == "ticks_history":
         if not isinstance(payload[operation], str) or not payload[operation]:
             raise PublicMarketDataError("ticks_history requires its short symbol as a string value.")
         if payload.get("style", "ticks") not in ("ticks", "candles"):
             raise PublicMarketDataError("ticks_history style must be 'ticks' or 'candles'.")
-        if "start" in payload and (not isinstance(payload["start"], int) or payload["start"] < 0):
-            raise PublicMarketDataError("ticks_history start must be a non-negative integer epoch.")
-        if "end" in payload and not (payload["end"] == "latest" or str(payload["end"]).isdigit()):
-            raise PublicMarketDataError("ticks_history end must be 'latest' or a numeric epoch string.")
-        if "count" in payload and (not isinstance(payload["count"], int) or not 1 <= payload["count"] <= 5000):
-            raise PublicMarketDataError("ticks_history count must be between 1 and 5000.")
+        if "start" in payload and (
+            isinstance(payload["start"], bool)
+            or not isinstance(payload["start"], int)
+            or not 0 <= payload["start"] <= 9999999999
+        ):
+            raise PublicMarketDataError("ticks_history start must be an integer epoch in [0, 9999999999].")
+        if "end" in payload:
+            end = payload["end"]
+            valid_end = isinstance(end, str) and (
+                end == "latest"
+                or (1 <= len(end) <= 10 and end.isdigit() and int(end) <= 9999999999)
+            )
+            if not valid_end:
+                raise PublicMarketDataError("ticks_history end must be 'latest' or a 1-10 digit epoch string.")
+        if "count" in payload and (
+            isinstance(payload["count"], bool)
+            or not isinstance(payload["count"], int)
+            or not 1 <= payload["count"] <= 5000
+        ):
+            raise PublicMarketDataError("ticks_history count must be an integer between 1 and 5000.")
         if "granularity" in payload:
-            # Current API removes the legacy fixed enum. A positive integer candle width is accepted.
-            if isinstance(payload["granularity"], bool) or not isinstance(payload["granularity"], int) or payload["granularity"] <= 0:
-                raise PublicMarketDataError("ticks_history granularity must be a positive integer.")
-        # Current API accepts 0 or 1 for these optional flags; for one-shot requests
-        # this client omits subscribe rather than relying on either value.
+            supported_granularities = {60, 120, 180, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400}
+            if (
+                isinstance(payload["granularity"], bool)
+                or not isinstance(payload["granularity"], int)
+                or payload["granularity"] not in supported_granularities
+            ):
+                raise PublicMarketDataError("ticks_history granularity must be one of the documented candle intervals.")
+        # New API schemas permit value 1 only. One-shot history requests omit both
+        # optional flags rather than sending the legacy value 0.
         for key in ("subscribe", "adjust_start_time"):
-            if key in payload and (isinstance(payload[key], bool) or payload[key] not in (0, 1)):
-                raise PublicMarketDataError(f"{key} must be 0 or 1.")
+            if key in payload and (
+                isinstance(payload[key], bool) or payload[key] != 1
+            ):
+                raise PublicMarketDataError(f"{key} must be 1 when provided.")
 
 
 def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | int]]:
+    if not isinstance(message, dict):
+        raise PublicMarketDataError("Candles response must be a JSON object.")
     if message.get("msg_type") != "candles":
         raise PublicMarketDataError(f"Expected candles response, got {message.get('msg_type')!r}.")
     candles = message.get("candles")
     if not isinstance(candles, list) or not candles:
         raise PublicMarketDataError("Candles response must contain a non-empty candles array.")
-    output = []
+    output: list[dict[str, float | int]] = []
     for i, candle in enumerate(candles):
         if not isinstance(candle, dict) or any(field not in candle for field in CANDLE_FIELDS):
             raise PublicMarketDataError(f"Candle {i} is missing a required OHLC/epoch field.")
-        try:
-            epoch_f = float(candle["epoch"])
-            epoch = int(epoch_f)
-            op, hi, lo, cl = (float(candle[k]) for k in ("open", "high", "low", "close"))
-        except (ValueError, TypeError, OverflowError) as exc:
-            raise PublicMarketDataError(f"Candle {i} has invalid numeric values.") from exc
-        if not math.isfinite(epoch_f) or epoch_f != epoch or not all(math.isfinite(x) and x > 0 for x in (op, hi, lo, cl)):
+
+        # JSON schema types are part of provenance: do not coerce strings, floats,
+        # or booleans into integers/prices before validating the raw API response.
+        epoch_raw = candle["epoch"]
+        if isinstance(epoch_raw, bool) or not isinstance(epoch_raw, int):
+            raise PublicMarketDataError(f"Candle {i} epoch must be a JSON integer.")
+        if not 0 <= epoch_raw <= 9999999999:
+            raise PublicMarketDataError(f"Candle {i} epoch is outside the supported range.")
+
+        raw_prices = tuple(candle[k] for k in ("open", "high", "low", "close"))
+        if any(isinstance(value, bool) or not isinstance(value, (int, float)) for value in raw_prices):
+            raise PublicMarketDataError(f"Candle {i} OHLC values must be JSON numbers.")
+        op, hi, lo, cl = (float(value) for value in raw_prices)
+        if not all(math.isfinite(value) and value > 0 for value in (op, hi, lo, cl)):
             raise PublicMarketDataError(f"Candle {i} contains a non-finite or non-positive value.")
         if hi < max(op, cl) or lo > min(op, cl) or hi < lo:
             raise PublicMarketDataError(f"Candle {i} violates OHLC invariants.")
-        output.append({"epoch": epoch, "open": op, "high": hi, "low": lo, "close": cl})
+        output.append({"epoch": epoch_raw, "open": op, "high": hi, "low": lo, "close": cl})
     epochs = [int(row["epoch"]) for row in output]
     if any(b <= a for a, b in zip(epochs, epochs[1:])):
         raise PublicMarketDataError("Candle epochs must be strictly increasing with no duplicates.")
@@ -122,6 +153,8 @@ def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | 
 
 
 def validate_history_response(message: dict[str, Any]) -> tuple[list[float], list[int]]:
+    if not isinstance(message, dict):
+        raise PublicMarketDataError("History response must be a JSON object.")
     if message.get("msg_type") != "history":
         raise PublicMarketDataError(f"Expected history response, got {message.get('msg_type')!r}.")
     history = message.get("history")
@@ -132,18 +165,18 @@ def validate_history_response(message: dict[str, Any]) -> tuple[list[float], lis
         raise PublicMarketDataError("Current ticks-history schema requires both prices and times arrays.")
     if len(prices) != len(times):
         raise PublicMarketDataError("history.prices and history.times lengths differ.")
-    clean_prices, clean_times = [], []
+    clean_prices: list[float] = []
+    clean_times: list[int] = []
     for price, epoch in zip(prices, times):
-        try:
-            px = float(price)
-            epoch_f = float(epoch)
-            ts = int(epoch_f)
-        except (TypeError, ValueError, OverflowError) as exc:
-            raise PublicMarketDataError("History price/time value is invalid.") from exc
-        if not math.isfinite(px) or px <= 0 or not math.isfinite(epoch_f) or epoch_f != ts:
-            raise PublicMarketDataError("History price/time must be finite, positive price and integer epoch.")
+        if isinstance(price, bool) or not isinstance(price, (int, float)):
+            raise PublicMarketDataError("History price must be a JSON number, not a string or boolean.")
+        if isinstance(epoch, bool) or not isinstance(epoch, int):
+            raise PublicMarketDataError("History time must be a JSON integer epoch.")
+        px = float(price)
+        if not math.isfinite(px) or px <= 0 or not 0 <= epoch <= 9999999999:
+            raise PublicMarketDataError("History price/time must be finite, positive price and in-range integer epoch.")
         clean_prices.append(px)
-        clean_times.append(ts)
+        clean_times.append(epoch)
     if any(b <= a for a, b in zip(clean_times, clean_times[1:])):
         raise PublicMarketDataError("History times must be strictly increasing with no duplicates.")
     return clean_prices, clean_times
