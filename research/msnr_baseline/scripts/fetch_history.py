@@ -178,8 +178,6 @@ def build_candle_payload(start_epoch: int, end_exclusive: int, granularity: int)
         "end": str(end_exclusive - granularity),
         "style": "candles",
         "granularity": int(granularity),
-        # Explicitly request a one-shot history response, not a subscription.
-        "subscribe": 0,
         "req_id": 1,
     }
 
