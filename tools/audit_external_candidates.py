@@ -403,8 +403,8 @@ def run_semgrep(
     repo_dir: Path, scratch_dir: Path, cache_dir: Path, image: str
 ) -> dict[str, Any]:
     raw_path = scratch_dir / "semgrep.raw.json"
-    command = docker_common_args(image, "", repo_dir, scratch_dir, cache_dir) + [
-        "semgrep", "scan",
+    command = docker_common_args(image, "semgrep", repo_dir, scratch_dir, cache_dir) + [
+        "scan",
         "--config", "p/default", "--config", "p/secrets",
         "--metrics=off", "--json",
         "--output", "/scan/semgrep.raw.json",
@@ -432,8 +432,8 @@ def run_trivy(
 ) -> dict[str, Any]:
     raw_path = scratch_dir / "trivy.raw.json"
     sbom_path = candidate_out / "sbom.cdx.json"
-    command = docker_common_args(image, "", repo_dir, scratch_dir, cache_dir) + [
-        "trivy", "fs", "--cache-dir", "/root/.cache/trivy",
+    command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir) + [
+        "fs", "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,misconfig,secret,license",
         "--format", "json", "--output", "/scan/trivy.raw.json", "/src",
     ]
@@ -450,8 +450,8 @@ def run_trivy(
             raw_path.unlink()
 
     # Write an SBOM containing package/license metadata; do not include the secret scan output.
-    sbom_command = docker_common_args(image, "", repo_dir, scratch_dir, cache_dir) + [
-        "trivy", "fs", "--cache-dir", "/root/.cache/trivy",
+    sbom_command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir) + [
+        "fs", "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,license",
         "--format", "cyclonedx", "--output", "/scan/sbom.cdx.json", "/src",
     ]
