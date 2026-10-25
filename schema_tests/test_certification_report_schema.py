@@ -76,6 +76,15 @@ class CertificationReportSchemaTests(unittest.TestCase):
         }
         self.assertTrue(list(self.validator.iter_errors(report)))
 
+    def test_certified_report_requires_all_nine_gates_to_pass(self):
+        report = pending_report()
+        report["final_disposition"] = {
+            "overall_status": "CERTIFIED",
+            "human_review_required": True,
+            "human_reviewer_signature": "reviewer-signature-reference",
+        }
+        self.assertTrue(list(self.validator.iter_errors(report)))
+
     def test_non_fail_closed_safety_state_is_rejected(self):
         report = pending_report()
         report["safety_state"]["final_authorization"] = True
