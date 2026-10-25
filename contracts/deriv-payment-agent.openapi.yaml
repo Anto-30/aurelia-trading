@@ -129,7 +129,7 @@ paths:
         - name: id
           in: path
           required: true
-          schema: { type: string, pattern: '^(?:[1-9]\d*|me) }
+          schema: { type: string, pattern: '^(?:[1-9]\d*|me)$' }
       responses:
         '200':
           description: Full profile returned.
