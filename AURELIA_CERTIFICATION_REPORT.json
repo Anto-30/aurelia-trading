@@ -1,6 +1,6 @@
 {
   "schema_version": "aurelia.certification-report.v1",
-  "generated_at_utc": "2026-10-25T18:53:00Z",
+  "generated_at_utc": "2026-10-25T18:55:00Z",
   "repository": "Anto-30/aurelia-trading",
   "assessed_main_commit": "d04564aca0648201feff0326fe9af0fbcee92e94",
   "overall_status": "BLOCKED",
@@ -143,8 +143,8 @@
           "type": "github_actions_run",
           "id": 40223290199,
           "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40223290199",
-          "conclusion": "queued_at_report_refresh",
-          "finding": "Follow-up commit updates the duplicate-count assertion to 24. The workflow run is queued; source scan results are not available."
+          "conclusion": "in_progress_at_report_refresh",
+          "finding": "The duplicate-count assertion was corrected to 24. The workflow is currently in scanner smoke-test preparation; the source/dependency scan step has not started and no findings are available."
         }
       ],
       "blocker": "No completed source-level scan or independent human disposition exists. Two previous runs failed at Semgrep invocation due to read-only HOME; the first 24-candidate retry then failed manifest validation before source analysis. A follow-up run is queued. Twelve candidates remain blocked in intake, and no candidate is approved. Two repositories without top-level license files remain excluded."
@@ -188,7 +188,7 @@
     "candidate_count": 33,
     "blocked_count": 12,
     "audit_candidate_count": 24,
-    "audit_run_status": "QUEUED_CORRECTED_RUN_40223290199"
+    "audit_run_status": "IN_PROGRESS_SMOKE_TEST_40223290199"
   },
   "required_human_actions": [
     "Review and merge intake/audit changes only after the source-level audit completes and findings are dispositioned.",
