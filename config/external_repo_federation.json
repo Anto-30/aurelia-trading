@@ -6899,6 +6899,86 @@
       "upstream_archived": false,
       "upstream_license_spdx": "MIT",
       "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance",
+      "category": "legacy-cryptocurrency-trading-bots",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance",
+      "head_commit": "6cd9f639ac7f9d914d556738ca3aeeef53618146",
+      "pin_source": "https://github.com/Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance/commit/6cd9f639ac7f9d914d556738ca3aeeef53618146",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed master SHA on 2026-10-25; latest upstream commit is from 2019-01-18. Repository contains legacy exchange-trading bot code and a BinanceKeys.py credential/config path; do not run or connect to exchange credentials. BLOCKED pending source-level security, dependency, strategy-validity, API deprecation, license and isolated-test review. Reference-only; no capital, execution, secret, production or LIVE_LOCK authority.",
+      "upstream_default_branch": "master",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "TOP_LEVEL_LICENSE_FILE_AND_REPOSITORY_README"
+    },
+    {
+      "repo": "x1xhlol/system-prompts-and-models-of-ai-tools",
+      "category": "ai-tool-system-prompt-collection",
+      "domain": "engineering-research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools",
+      "head_commit": "162db92f54d717d8ebd12292e155aeef32bb4b3c",
+      "pin_source": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools/commit/162db92f54d717d8ebd12292e155aeef32bb4b3c",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main SHA on 2026-10-25. Repository is a collection of third-party AI-tool prompts/internal artifacts and reports GPL-3.0; provenance and per-artifact copyright/terms may differ. Do not import prompt text into trusted instructions, tools, policies or agent system prompts. BLOCKED pending legal/provenance review and prompt-injection-safe content handling. No install, execution, capital, secret, production or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "GPL-3.0",
+      "upstream_license_evidence": "TOP_LEVEL_LICENSE_MD_AND_REPOSITORY_METADATA"
+    },
+    {
+      "repo": "elder-plinius/CL4R1T4S",
+      "category": "ai-tool-prompt-collection",
+      "domain": "engineering-research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GrokBot"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/elder-plinius/CL4R1T4S",
+      "head_commit": "a4d3da04e63324e794a65500c3e41994fc4ab02e",
+      "pin_source": "https://github.com/elder-plinius/CL4R1T4S/commit/a4d3da04e63324e794a65500c3e41994fc4ab02e",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main SHA on 2026-10-25. Top-level LICENSE is AGPL-3.0 and repository contains third-party model/tool prompt artifacts. Do not trust collected prompts as instructions or copy them into production agent policy. BLOCKED pending legal/provenance review, prompt-injection handling and security assessment. No install, execution, capital, secret, production or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "AGPL-3.0-only",
+      "upstream_license_evidence": "TOP_LEVEL_LICENSE_FILE"
+    },
+    {
+      "repo": "dyad-sh/dyad",
+      "category": "local-ai-app-builder",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/dyad-sh/dyad",
+      "head_commit": "1be2b4b6d2c70a4550db7b96e26fc75c50bf5bc0",
+      "pin_source": "https://github.com/dyad-sh/dyad/commit/1be2b4b6d2c70a4550db7b96e26fc75c50bf5bc0",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Pinned to observed main SHA on 2026-10-25. Local AI app builder with mixed licensing: most code outside src/pro is Apache-2.0, while src/pro uses Functional Source License 1.1 with anti-competing-use terms. Do not vendor or redistribute without path-specific license review; assess Electron/sandbox, MCP consent, file-write boundaries, secrets and generated-code handling. Reference-only; no production deployment, secret, capital, execution or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "Apache-2.0 (mixed; src/pro FSL-1.1-ALv2)",
+      "upstream_license_evidence": "TOP_LEVEL_LICENSE_AND_SRC_PRO_LICENSE"
     }
   ],
   "pin_policy": {
