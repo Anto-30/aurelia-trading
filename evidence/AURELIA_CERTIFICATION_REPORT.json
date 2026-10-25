@@ -88,7 +88,7 @@
     "csv_sha256": null,
     "raw_jsonl_sha256": null,
     "full_capture_attempted": false,
-    "next_action": "Do not re-run the capture until the out-of-range historical query behavior is independently clarified. The workflow is manual-dispatch-only."
+    "next_action": "Historical capture remains stopped: three remote requests echoed 2022 bounds but returned 2026 candles. The historical workflow is manual-dispatch-only until independently clarified."
   },
   "mt5_gate": {
     "status": "BLOCKED",
@@ -119,16 +119,41 @@
     {
       "id": 2,
       "name": "Recovery matrix",
-      "status": "NOT_RUN",
-      "reason": "No completed fault-injection evidence for disconnects/rate limits, reconnect state reconciliation or duplicate-state prevention.",
-      "evidence": []
+      "status": "PARTIAL",
+      "reason": "A synthetic localhost-only recovery harness has been added and a CI run is pending. No authenticated Deriv recovery, real OTP renewal, or broker trade duplication test is performed.",
+      "evidence": [
+        {
+          "run_id": 40205832922,
+          "run_url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40205832922",
+          "status": "PENDING",
+          "scope": "Localhost mock transport failures only; no broker account, credentials, OTP, orders or network access to Deriv."
+        }
+      ]
     },
     {
       "id": 3,
       "name": "3600-second non-production soak",
-      "status": "NOT_RUN",
-      "reason": "No continuous 60-minute listener run or memory/connection/state-integrity report exists.",
-      "evidence": []
+      "status": "FAILED",
+      "reason": "The first public non-production soak run ended after 120.442s instead of 3600s. The WebSocket closed unexpectedly with ConnectionClosedError: no close frame received or sent. The result fails the gate; it is not a completed soak.",
+      "evidence": [
+        {
+          "run_id": 40205187176,
+          "run_url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40205187176",
+          "artifact_id": 12603666975,
+          "artifact_name": "public-deriv-soak-3600s",
+          "artifact_archive_sha256": "7b3420a3483d8d8fa8b47f46002a4dcb5a5cd10796fd19fb409c7d4197425393",
+          "report_sha256": "8abe42ab9c31d069012142fbbdd053f5fc70684a90b262a14edccbf60f072b3f",
+          "event_log_sha256": "e6606df08f34a46b7296658006c485cc398319eba4423c57b993b3e510f5acbf",
+          "actual_duration_seconds": 120.442,
+          "ticks_received": 61,
+          "messages_received": 61,
+          "disconnect_or_protocol_failure_count": 1,
+          "failure": "ConnectionClosedError: no close frame received or sent",
+          "rss_growth_bytes": 4837376,
+          "order_or_trade_requests_sent": 0,
+          "authenticated": false
+        }
+      ]
     },
     {
       "id": 4,
@@ -155,14 +180,14 @@
       "id": 7,
       "name": "Security audit",
       "status": "BLOCKED",
-      "reason": "Static audit harness is present, but the latest recorded audit attempt marked all 20 candidate scans SCAN_INCOMPLETE_BLOCKED due to a Semgrep CLI/container invocation error. No completed SAST/dependency finding report exists yet. The Tier 1 secret-free CI boundary was previously tested separately.",
+      "reason": "The latest candidate SAST run has not completed successfully. Earlier runs were blocked by scanner CLI and sandbox setup issues; no candidate-level security conclusions may be inferred from those runs. The latest corrected scan is pending.",
       "evidence": [
         {
-          "run_id": 40204688520,
-          "status": "AUDIT_INCOMPLETE_BLOCKED",
+          "run_id": 40205761464,
+          "run_url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40205761464",
+          "status": "PENDING",
           "candidates_total": 20,
-          "scans_complete": 0,
-          "disposition": "No security conclusions may be inferred from a failed scanner invocation."
+          "scans_complete": null
         }
       ]
     },
@@ -202,8 +227,9 @@
       "composio-community/awesome-codex-skills",
       "cline/prompts"
     ],
-    "approved_dependency_list_exists": false,
-    "approved_dependency_list_sha256": null
+    "approved_dependency_list_exists": true,
+    "approved_dependency_list_sha256": null,
+    "approved_dependency_list_status": "NO_CANDIDATES_APPROVED"
   },
   "required_human_actions": [
     "Independently clarify why the public Deriv endpoint returns current candles despite echoing historical start/end bounds; do not re-run capture until reviewed.",
