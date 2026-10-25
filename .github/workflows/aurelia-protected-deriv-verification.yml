@@ -54,7 +54,7 @@ jobs:
           DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: real
           DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
-        run: python scripts/verify_deriv_session.py
+        run: python scripts/run_redacted_deriv_verifier.py python scripts/verify_deriv_session.py
       - name: Verify broker account statement and portfolio (read-only)
         env:
           DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
@@ -64,20 +64,19 @@ jobs:
           DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: real
           DERIV_BROKER_EVIDENCE_OUT: artifacts/deriv_broker_account_evidence.json
-        run: python scripts/verify_deriv_broker_evidence.py
-      - name: Upload sanitized authenticated session evidence
-        if: always() && hashFiles('artifacts/deriv_authenticated_session.json') != ''
+        run: python scripts/run_redacted_deriv_verifier.py python scripts/verify_deriv_broker_evidence.py
+      - name: Create privacy-minimised read-only attestation
+        if: always()
+        run: |
+          python scripts/sanitize_deriv_readonly_evidence.py \
+            --session artifacts/deriv_authenticated_session.json \
+            --broker artifacts/deriv_broker_account_evidence.json \
+            --output artifacts/deriv_read_only_attestation.json
+      - name: Upload privacy-minimised read-only attestation
+        if: always() && hashFiles('artifacts/deriv_read_only_attestation.json') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: deriv-authenticated-session-read-only
-          path: artifacts/deriv_authenticated_session.json
-          if-no-files-found: error
-          retention-days: 3
-      - name: Upload broker account evidence
-        if: always() && hashFiles('artifacts/deriv_broker_account_evidence.json') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: deriv-broker-account-read-only
-          path: artifacts/deriv_broker_account_evidence.json
+          name: deriv-read-only-attestation
+          path: artifacts/deriv_read_only_attestation.json
           if-no-files-found: error
           retention-days: 3
