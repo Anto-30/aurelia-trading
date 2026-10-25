@@ -58,7 +58,17 @@ jobs:
   "iamfakeguru/agent-md"
 ]
           registry = json.loads(Path("config/external_repo_federation.json").read_text())
-          lock = __import__("yaml").safe_load(Path("config/LIVE_LOCK.yaml").read_text())
+          lock_text = Path("config/LIVE_LOCK.yaml").read_text()
+          required_lock_lines = [
+              "live_trading_enabled: false",
+              "FINAL_EXECUTION_AUTHORIZATION: false",
+              "LIVE_EXECUTION: BLOCKED",
+              "capital_plane_mode: VERIFY_ONLY",
+              "research_capital_authority: false",
+              "external_repositories_capital_forbidden: true",
+          ]
+          for line in required_lock_lines:
+              assert re.search(r"(?m)^\\s*" + re.escape(line) + r"\\s*$", lock_text), f"LIVE_LOCK missing required fail-closed line: {line}"
           repos = registry["repositories"]
           by_name = {item["repo"]: item for item in repos}
 
