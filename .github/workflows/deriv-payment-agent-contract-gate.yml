@@ -29,14 +29,14 @@ jobs:
       AURELIA_PAYMENT_TRANSPORT_MODE: TEST_ONLY
     steps:
       - name: Checkout source without persisted credentials
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
 
       - name: Set up Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Install pinned Spectral CLI
         run: |
@@ -50,7 +50,7 @@ jobs:
             --fail-severity=error
 
       - name: Set up Python
-        uses: actions/setup-python@0a5c615913ec0ff9c0f0f0ed6de4c27f8d48ce80
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.13"
 
