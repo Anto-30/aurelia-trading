@@ -291,20 +291,29 @@ def test_history_response_validator_rejects_empty_history_responses():
 
 def test_history_builder_keeps_ticks_history_request_key():
     client = DerivPublicMarketDataClient()
+    start, end = 1666310400, 1666310460
     with pytest.raises(PublicMarketDataError, match="Candle granularity must be one of"):
-        asyncio.run(client.ticks_history(underlying_symbol="R_100", start_epoch=100, end_epoch=160, granularity_seconds=61))
+        asyncio.run(client.ticks_history(underlying_symbol="R_100", start_epoch=start, end_epoch=end, granularity_seconds=61))
     with pytest.raises(PublicMarketDataError, match="integer epochs"):
-        asyncio.run(client.ticks_history(underlying_symbol="R_100", start_epoch=True, end_epoch=160, granularity_seconds=60))
+        asyncio.run(client.ticks_history(underlying_symbol="R_100", start_epoch=True, end_epoch=end, granularity_seconds=60))
     with pytest.raises(PublicMarketDataError, match="count must be an integer"):
-        asyncio.run(client.ticks_history(underlying_symbol="R_100", start_epoch=100, end_epoch=160, granularity_seconds=60, count=1.5))
+        asyncio.run(client.ticks_history(underlying_symbol="R_100", start_epoch=start, end_epoch=end, granularity_seconds=60, count=1.5))
+    with pytest.raises(PublicMarketDataError, match="end > start"):
+        asyncio.run(client.ticks_history(underlying_symbol="R_100", start_epoch=start, end_epoch=start, granularity_seconds=60))
+    with pytest.raises(PublicMarketDataError, match="granularity-aligned"):
+        asyncio.run(client.ticks_history(underlying_symbol="R_100", start_epoch=start + 1, end_epoch=end, granularity_seconds=60))
     seen = {}
     async def fake_request(payload, expected_msg_type=None):
         seen["payload"] = payload
         seen["expected"] = expected_msg_type
-        return {"msg_type":"candles","candles":[{"open":1,"high":1.1,"low":.9,"close":1,"epoch":100}]}
+        return {"msg_type":"candles","candles":[{"open":1,"high":1.1,"low":.9,"close":1,"epoch":start}]}
     client.request = fake_request
-    asyncio.run(client.ticks_history(underlying_symbol="R_100",start_epoch=100,end_epoch=160,granularity_seconds=60))
+    asyncio.run(client.ticks_history(underlying_symbol="R_100",start_epoch=start,end_epoch=end,granularity_seconds=60))
     assert seen["payload"]["ticks_history"] == "R_100"
+    assert seen["payload"]["start"] == start
+    assert seen["payload"]["end"] == str(end - 60)
+    assert "count" not in seen["payload"]  # explicit bounds plus count caused latest-window responses on this gateway
+    assert seen["payload"]["granularity"] == 60
     assert "subscribe" not in seen["payload"]  # one-shot history request: omit optional flag
     assert "symbol" not in seen["payload"] and "underlying_symbol" not in seen["payload"] and "loginid" not in seen["payload"]
     assert seen["expected"] == "candles"
@@ -520,7 +529,8 @@ def test_ticks_history_rejects_candles_outside_requested_time_window(monkeypatch
 
         async def fake_request(payload, *, expected_msg_type=None):
             assert payload["start"] == 1666310400
-            assert payload["end"] == "1666310460"
+            assert payload["end"] == "1666310400"
+            assert "count" not in payload
             assert expected_msg_type == "candles"
             return latest_candle_response
 
@@ -553,6 +563,8 @@ def test_ticks_history_accepts_candles_within_requested_time_window(monkeypatch)
         }
 
         async def fake_request(payload, *, expected_msg_type=None):
+            assert payload["end"] == "1666310400"
+            assert "count" not in payload
             return valid_response
 
         monkeypatch.setattr(client, "request", fake_request)
