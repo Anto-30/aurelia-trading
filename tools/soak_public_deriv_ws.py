@@ -308,7 +308,6 @@ async def run_soak(duration_seconds: int, output_dir: Path) -> dict[str, Any]:
     event("soak_finished", status=status, pass_conditions=pass_conditions)
     # Re-write report because the final event log hash is now available.
     report["event_log_sha256"] = sha256_file(events_path)
-    report["report_sha256_before_hash_field"] = sha256_file(report_path)
     write_json(report_path, report)
 
     print("SOAK_RESULT=" + status)
