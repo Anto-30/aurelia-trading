@@ -1,10 +1,8 @@
 name: R100 Historical Data Provenance (Secret-Free)
 
+# Manual dispatch only. The current API returned candles outside requested bounds;
+# do not re-probe until the API behavior is independently reviewed.
 on:
-  pull_request:
-    branches: ["main"]
-    paths:
-      - "tools/fetch_r100_historical.py"
   workflow_dispatch:
 
 permissions:
