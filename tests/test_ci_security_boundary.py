@@ -47,6 +47,95 @@ class CISecurityBoundaryTests(unittest.TestCase):
             r"(?m)^\s*- uses: [^\s@]+@[0-9a-f]{40}(?:\s+#.*)?$",
         )
 
+    def test_public_runtime_worker_is_secret_free_and_main_gated(self):
+        workflow = (
+            ROOT / ".github" / "workflows" / "aurelia-free-runtime.yml"
+        ).read_text(encoding="utf-8")
+        self.assertNotRegex(workflow, r"\\$\\{\\{[^}]*\\bsecrets\\s*\\.")
+        self.assertNotRegex(workflow, r"(?m)^\\s*environment:\\s*production\\s*$")
+        self.assertIn("if: github.ref == 'refs/heads/main'", workflow)
+        self.assertIn('AURELIA_VERIFY_DERIV_AUTH: "false"', workflow)
+        self.assertIn("persist-credentials: false", workflow)
+        self.assertNotIn("authenticated-deriv-evidence:", workflow)
+        self.assertNotIn("deriv-lifecycle-verify-only:", workflow)
+        self.assertNotIn("whatsapp-alert-smoke:", workflow)
+        self.assertRegex(
+            workflow,
+            r"(?m)^\\s*- uses: [^\\s@]+@[0-9a-f]{40}(?:\\s+#.*)?$",
+        )
+
+    def test_secret_presence_report_gates_main_and_scopes_secrets_to_report_step(self):
+        path = ROOT / ".github" / "workflows" / "secret-presence-report.yml"
+        workflow = path.read_text(encoding="utf-8")
+        secret_expression = r"\\$\\{\\{[^}]*\\bsecrets\\s*\\."
+        self.assertIn("if: github.ref == 'refs/heads/main'", workflow)
+        self.assertRegex(workflow, r"(?m)^\\s*environment:\\s*production\\s*$")
+        self.assertIn("persist-credentials: false", workflow)
+        before_steps = workflow.split("    steps:", 1)[0]
+        self.assertNotRegex(before_steps, secret_expression)
+        report_section = workflow.split(
+            "      - name: Run secret presence report", 1
+        )[1].split("      - name: Install secret-report test dependency", 1)[0]
+        self.assertRegex(report_section, secret_expression)
+        after_report = workflow.split(
+            "      - name: Install secret-report test dependency", 1
+        )[1]
+        self.assertNotRegex(after_report, secret_expression)
+
+    def test_self_hosted_deployment_is_explicit_verify_only_and_main_gated(self):
+        workflow = (
+            ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            "if: github.ref == 'refs/heads/main' && inputs.confirm_verify_only == true",
+            workflow,
+        )
+        self.assertIn("confirm_verify_only:", workflow)
+        self.assertIn("type: boolean", workflow)
+        self.assertIn("default: false", workflow)
+        self.assertIn('DEPLOYMENT_MODE: "VERIFY_ONLY"', workflow)
+        self.assertIn(EXPECTED_LOCK_BLOB_SHA, workflow)
+        self.assertIn('FINAL_EXECUTION_AUTHORIZATION: "false"', workflow)
+        self.assertIn('LIVE_EXECUTION: "BLOCKED"', workflow)
+        self.assertIn("persist-credentials: false", workflow)
+        self.assertNotIn("inputs.deployment_mode", workflow)
+        self.assertNotIn("deployment_mode:", workflow)
+        self.assertNotIn("          - LIVE", workflow)
+        self.assertNotIn("if: inputs.deployment_mode == 'LIVE'", workflow)
+        self.assertNotRegex(
+            workflow, r"\\$\\{\\{[^}]*\\bsecrets\\s*\\.\\s*DERIV_"
+        )
+        sections = re.split(r"(?m)^      - name: ", workflow)
+        secret_sections = [section for section in sections if "secrets." in section]
+        self.assertEqual(len(secret_sections), 1)
+        self.assertIn("Configure strict SSH transport", secret_sections[0])
+        self.assertNotIn(
+            "secrets.",
+            workflow.split("      - name: Package exact source commit", 1)[1],
+        )
+
+    def test_legacy_deriv_workflows_are_retired_and_have_no_secret_boundary(self):
+        legacy_paths = (
+            ".github/workflows/deriv-auth-evidence.yml",
+            ".github/workflows/deriv-session-verification.yml",
+            ".github/workflows/deriv-verify-only-lifecycle.yml",
+        )
+        for relative_path in legacy_paths:
+            with self.subTest(path=relative_path):
+                workflow = (ROOT / relative_path).read_text(encoding="utf-8")
+                self.assertIn("LEGACY_DERIV_WORKFLOW=RETIRED", workflow)
+                self.assertIn("exit 1", workflow)
+                self.assertIn("permissions: {}", workflow)
+                self.assertNotRegex(
+                    workflow, r"\\$\\{\\{[^}]*\\bsecrets\\s*\\."
+                )
+                self.assertNotRegex(
+                    workflow, r"(?m)^\\s*environment:\\s*production\\s*$"
+                )
+                self.assertNotIn("schedule:", workflow)
+                self.assertNotIn("actions/checkout@", workflow)
+                self.assertNotIn("python scripts/verify_deriv_", workflow)
+
     def test_authenticated_verifier_requires_manual_main_read_only_gate(self):
         workflow = PROTECTED_PATH.read_text(encoding="utf-8")
         self.assertIn("workflow_dispatch:", workflow)
