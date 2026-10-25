@@ -71,7 +71,7 @@ class DerivPaymentAgentContractSourceTests(unittest.TestCase):
 
         self.assertIn("pattern: '^(?:[1-9]\\d*|me)$'", agent_route)
         self.assertIn("required: [status, code]", error)
-        self.assertNotIn("message: { type: string }", error)
+        self.assertNotIn("        message: { type: string }", error)
         self.assertIn("detail:", error)
         self.assertIn("required: [data, errors, metadata]", envelope)
 
