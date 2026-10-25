@@ -1,7 +1,7 @@
 {
   "schema": "aurelia.external_candidate_audit.v1",
   "generated_at_utc": "2026-10-25",
-  "purpose": "Point-in-time security/dependency audit manifest for the 20 previously UNREVIEWED external candidates. This is not an approved dependency list.",
+  "purpose": "Point-in-time security/dependency audit manifest for 24 pinned external candidates, including candidates already BLOCKED from adoption. This is not an approved dependency list.",
   "execution_policy": {
     "install_candidate_dependencies": false,
     "execute_candidate_code": false,
@@ -225,6 +225,46 @@
       "intake_status": "UNREVIEWED",
       "source_url": "https://github.com/iamfakeguru/agent-md",
       "pin_source": "https://github.com/iamfakeguru/agent-md/commit/65c6a8e8ca1b2aa3a84fde5b1ea20f1abbbf063f"
+    },
+    {
+      "repository": "Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance",
+      "commit_sha": "6cd9f639ac7f9d914d556738ca3aeeef53618146",
+      "default_branch": "master",
+      "expected_license": "MIT",
+      "scope_note": "BLOCKED intake: legacy exchange trading bot; inspect stale API usage, BinanceKeys.py credential handling, network/order calls, dependency state and secret leakage. Static scan only; never run or connect to credentials.",
+      "intake_status": "BLOCKED",
+      "source_url": "https://github.com/Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance",
+      "pin_source": "https://github.com/Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance/commit/6cd9f639ac7f9d914d556738ca3aeeef53618146"
+    },
+    {
+      "repository": "x1xhlol/system-prompts-and-models-of-ai-tools",
+      "commit_sha": "162db92f54d717d8ebd12292e155aeef32bb4b3c",
+      "default_branch": "main",
+      "expected_license": "GPL-3.0",
+      "scope_note": "BLOCKED intake: third-party AI tool prompt/internal artifact collection. Inspect source provenance, license claims, secret-like content and prompt-injection risks. Never import as trusted system instructions.",
+      "intake_status": "BLOCKED",
+      "source_url": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools",
+      "pin_source": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools/commit/162db92f54d717d8ebd12292e155aeef32bb4b3c"
+    },
+    {
+      "repository": "elder-plinius/CL4R1T4S",
+      "commit_sha": "a4d3da04e63324e794a65500c3e41994fc4ab02e",
+      "default_branch": "main",
+      "expected_license": "AGPL-3.0-only",
+      "scope_note": "BLOCKED intake: third-party AI tool prompt collection under AGPL-3.0. Inspect provenance/license boundaries and prompt-injection risks; never treat collected prompts as trusted instructions.",
+      "intake_status": "BLOCKED",
+      "source_url": "https://github.com/elder-plinius/CL4R1T4S",
+      "pin_source": "https://github.com/elder-plinius/CL4R1T4S/commit/a4d3da04e63324e794a65500c3e41994fc4ab02e"
+    },
+    {
+      "repository": "dyad-sh/dyad",
+      "commit_sha": "1be2b4b6d2c70a4550db7b96e26fc75c50bf5bc0",
+      "default_branch": "main",
+      "expected_license": "Apache-2.0 mixed with FSL-1.1-ALv2 in src/pro",
+      "scope_note": "UNREVIEWED intake: local AI app builder with mixed license. Inspect Electron/sandbox, generated-code handling, MCP consent, filesystem write boundaries and secrets; do not vendor src/pro without path-specific license review.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/dyad-sh/dyad",
+      "pin_source": "https://github.com/dyad-sh/dyad/commit/1be2b4b6d2c70a4550db7b96e26fc75c50bf5bc0"
     }
   ]
 }
