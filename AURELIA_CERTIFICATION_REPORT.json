@@ -1,201 +1,44 @@
 {
-  "schema_version": "aurelia.certification-report.v1",
-  "generated_at_utc": "2026-10-25T18:55:00Z",
-  "repository": "Anto-30/aurelia-trading",
-  "assessed_main_commit": "d04564aca0648201feff0326fe9af0fbcee92e94",
-  "overall_status": "BLOCKED",
-  "release_authorization": {
+  "report_metadata": {
+    "commit_sha": "d04564aca0648201feff0326fe9af0fbcee92e94",
+    "generated_at_utc": "2026-10-25T18:58:53Z",
+    "environment": "verify_only"
+  },
+  "safety_state": {
     "live_execution": "BLOCKED",
-    "final_execution_authorization": false,
-    "capital_plane_mode": "VERIFY_ONLY",
-    "research_capital_authority": false,
-    "lock_file": "config/LIVE_LOCK.yaml",
-    "lock_file_sha256_git_blob": "b2cddd1efb0f25f35a6a08354290f805812bf34c",
-    "modification_permitted_by_this_report": false
+    "final_authorization": false,
+    "capital_plane_mode": "VERIFY_ONLY"
   },
-  "evidence_policy": {
-    "missing_evidence_is_failure": true,
-    "test_success_alone_means_live_ready": false,
-    "external_candidates_auto_approved": false,
-    "live_or_real_money_actions_performed": false,
-    "report_is_authorization": false
+  "gate_1_broker_lifecycle": {
+    "status": "PENDING"
   },
-  "gates": [
-    {
-      "id": 1,
-      "name": "Broker lifecycle and authentication",
-      "status": "NOT_RUN_BLOCKED",
-      "evidence": [],
-      "blocker": "No approved non-production authenticated lifecycle evidence package was produced in this review. Do not create or use OTP/authenticated broker sessions as part of this report."
-    },
-    {
-      "id": 2,
-      "name": "Network recovery, rate limits, reconnect and state reconciliation",
-      "status": "PARTIAL_BLOCKED",
-      "evidence": [
-        {
-          "type": "github_actions_run",
-          "id": 40218683466,
-          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40218683466",
-          "conclusion": "success",
-          "scope": "localhost-only synthetic recovery matrix",
-          "tests_passed": 9,
-          "tests_total": 9,
-          "server_connections": 2,
-          "request_ids_unique": true,
-          "trade_commands_sent": 0,
-          "event_log_sha256": "9c8e80fe4ec7155dded737b681373a6372c597840b21805e316dcbb632c2bf8f",
-          "report_sha256": "5683cc51381011aebabca61063a160a8b9b47c407a47c4b9a15d4984b55e04e9"
-        }
-      ],
-      "blocker": "Synthetic localhost recovery is now proven (9/9 tests), but authenticated broker lifecycle, OTP/session renewal, broker-state reconciliation and duplicate-order behavior remain unverified. Synthetic evidence is not broker certification."
-    },
-    {
-      "id": 3,
-      "name": "3600-second VERIFY_ONLY soak",
-      "status": "FAILED_BLOCKED",
-      "evidence": [
-        {
-          "type": "github_actions_run",
-          "id": 40205890054,
-          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40205890054",
-          "conclusion": "failure",
-          "observed_duration_seconds": 120.463,
-          "ticks_received": 61,
-          "messages_received": 61,
-          "disconnect_or_protocol_failures": 1,
-          "event_log_sha256": "ee250dfe91c336728eb435485ea8e1eafb2b80b2845246f4ac796397e760c018",
-          "report_sha256": "1b6f560ff222e15841ed118586367033c1e2e63b96fd63c863eb5cf7493eda04"
-        },
-        {
-          "type": "github_actions_run",
-          "id": 40218683458,
-          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40218683458",
-          "conclusion": "pending_at_report_generation",
-          "finding": "Retry was queued; no 3600-second result available at report generation."
-        }
-      ],
-      "blocker": "The latest completed soak stopped after 120.463 seconds with one disconnect/protocol failure, not the required 3600 seconds. A retry is queued; until it completes and meets all pass conditions, this gate remains failed/blocked."
-    },
-    {
-      "id": 4,
-      "name": "Prospective out-of-sample strategy evaluation",
-      "status": "FAILED_BLOCKED",
-      "evidence": [
-        {
-          "type": "github_actions_run",
-          "id": 40216274444,
-          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40216274444",
-          "conclusion": "failure",
-          "observed_error": "DerivTransportError: TRANSPORT_READER_FAILED on both collection attempts; zero observations preserved."
-        }
-      ],
-      "blocker": "The collector did not obtain observations. No OOS performance metrics or verified historical R_100 dataset exist in this evidence package."
-    },
-    {
-      "id": 5,
-      "name": "Parameter freeze and calibration integrity",
-      "status": "NOT_VERIFIED_BLOCKED",
-      "evidence": [],
-      "blocker": "No sealed OOS run, frozen parameter/config hash and post-run immutability proof are available."
-    },
-    {
-      "id": 6,
-      "name": "Execution economics reconciled to observed cash flows",
-      "status": "NOT_RUN_BLOCKED",
-      "evidence": [],
-      "blocker": "No source-bound Deriv statement/profit_table export, realized net PnL reconciliation or verified fee/slippage model was supplied."
-    },
-    {
-      "id": 7,
-      "name": "Security audit: credentials, logs and external candidates",
-      "status": "INCOMPLETE_BLOCKED",
-      "evidence": [
-        {
-          "type": "github_actions_run",
-          "id": 40205761464,
-          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40205761464",
-          "conclusion": "failure",
-          "finding": "Earlier 20-candidate scan ended SCAN_INCOMPLETE_BLOCKED at Semgrep invocation; not evidence of clean sources."
-        },
-        {
-          "type": "github_actions_run",
-          "id": 40217946001,
-          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40217946001",
-          "conclusion": "failure",
-          "finding": "Scanner setup passed, but all 20 candidate scans stopped at Semgrep because its Git safe.directory initialization attempted to write /root/.gitconfig on a read-only filesystem; zero source findings were produced."
-        },
-        {
-          "type": "github_actions_run",
-          "id": 40218136417,
-          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40218136417",
-          "conclusion": "failure",
-          "finding": "The same read-only HOME / Semgrep Git config failure blocked all 20 candidate scans; zero source findings were produced. Artifact SHA-256: 2b4d131fef56c512c4a966a6109378b917877aa5c84f00f322ae0db828a10706."
-        },
-        {
-          "type": "github_actions_run",
-          "id": 40222995058,
-          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40222995058",
-          "conclusion": "failure",
-          "finding": "Scanner image pulls and smoke tests passed, but manifest validation failed because the duplicate-repository assertion still expected 20 instead of 24. Source scans were skipped; no source findings were produced."
-        },
-        {
-          "type": "github_actions_run",
-          "id": 40223290199,
-          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40223290199",
-          "conclusion": "in_progress_at_report_refresh",
-          "finding": "The duplicate-count assertion was corrected to 24. The workflow is currently in scanner smoke-test preparation; the source/dependency scan step has not started and no findings are available."
-        }
-      ],
-      "blocker": "No completed source-level scan or independent human disposition exists. Two previous runs failed at Semgrep invocation due to read-only HOME; the first 24-candidate retry then failed manifest validation before source analysis. A follow-up run is queued. Twelve candidates remain blocked in intake, and no candidate is approved. Two repositories without top-level license files remain excluded."
-    },
-    {
-      "id": 8,
-      "name": "Deployment environment isolation and IaC",
-      "status": "NOT_VERIFIED_BLOCKED",
-      "evidence": [],
-      "blocker": "No completed review artifact proves Demo/Real separation, scoped short-lived secrets, and protected environment approval for read-only verification."
-    },
-    {
-      "id": 9,
-      "name": "Strategy eligibility kill rule",
-      "status": "NOT_RUN_BLOCKED",
-      "evidence": [],
-      "blocker": "No valid cost-calibrated OOS ledger exists. Profit Factor and Net Expectancy cannot be evaluated. If PF < 1.15 OR net expectancy <= 0, permanently reject the strategy baseline."
-    }
-  ],
-  "historical_data_gate": {
-    "status": "FAILED_BLOCKED",
-    "requested_symbol": "R_100",
-    "requested_start_utc": "2022-10-21T00:00:00Z",
-    "requested_end_utc": "2024-10-21T00:00:00Z",
-    "verified_csv_available": false,
-    "verified_raw_jsonl_available": false,
-    "verification_manifest_available": false,
-    "mt5_reconciliation": "NOT_RUN_MISSING_mt5_bars.csv",
-    "blocker": "The bounded public API probe returned current-dated candles despite historical request bounds and was rejected by strict bounds validation. No data file or hash is claimed as verified."
+  "gate_2_recovery_matrix": {
+    "status": "PENDING"
   },
-  "dependency_intake": {
-    "status": "UNREVIEWED_NOT_APPROVED",
-    "intake_pr": "https://github.com/Anto-30/aurelia-trading/pull/211",
-    "audit_pr": "https://github.com/Anto-30/aurelia-trading/pull/213",
-    "excluded_repositories": [
-      "composio-community/awesome-codex-skills",
-      "cline/prompts"
-    ],
-    "install_or_execution_of_candidates": false,
-    "independent_human_signoff": false,
-    "candidate_count": 33,
-    "blocked_count": 12,
-    "audit_candidate_count": 24,
-    "audit_run_status": "IN_PROGRESS_SMOKE_TEST_40223290199"
+  "gate_3_soak_test_3600s": {
+    "status": "FAIL"
   },
-  "required_human_actions": [
-    "Review and merge intake/audit changes only after the source-level audit completes and findings are dispositioned.",
-    "Supply a verified historical dataset or resolve Deriv API history semantics with authoritative evidence.",
-    "Provide the MT5 1440-candle comparison export if MT5 reconciliation is still required.",
-    "Provide source-bound Deriv statement/profit_table cash-flow evidence for economic calibration.",
-    "Review all nine gate artifacts independently and sign the certification decision.",
-    "Do not change config/LIVE_LOCK.yaml unless a human release authority explicitly approves after every gate passes."
-  ]
+  "gate_4_out_of_sample": {
+    "status": "FAIL"
+  },
+  "gate_5_calibration": {
+    "status": "PENDING"
+  },
+  "gate_6_execution_economics": {
+    "status": "PENDING"
+  },
+  "gate_7_security_audit": {
+    "status": "PENDING"
+  },
+  "gate_8_deployment": {
+    "status": "PENDING"
+  },
+  "gate_9_strategy_eligibility": {
+    "status": "PENDING"
+  },
+  "final_disposition": {
+    "overall_status": "NOT_READY",
+    "human_review_required": true,
+    "human_reviewer_signature": null
+  }
 }
