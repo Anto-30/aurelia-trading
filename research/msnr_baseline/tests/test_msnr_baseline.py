@@ -102,6 +102,29 @@ def test_candle_normalizer_requires_every_current_schema_field_and_contiguity():
         fetch_history.normalize_candles(gap, start, start + 180, 60)
 
 
+@pytest.mark.parametrize(
+    "field,invalid_value",
+    [
+        ("epoch", True),
+        ("epoch", False),
+        ("epoch", "1666320000"),
+        ("epoch", 1666320000.0),
+        ("epoch", -1),
+        ("epoch", 10_000_000_000),
+        ("open", "100.0"),
+        ("high", True),
+        ("low", False),
+        ("close", "100.5"),
+    ],
+)
+def test_candle_normalizer_rejects_coerced_or_out_of_range_json_values(field, invalid_value):
+    start = 1_666_320_000
+    candle = {"epoch": start, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5}
+    candle[field] = invalid_value
+    with pytest.raises(fetch_history.FetchError):
+        fetch_history.normalize_candles([candle], start, start + 60, 60)
+
+
 def test_vectorized_features_have_strict_one_bar_execution_lag_and_no_forward_fill():
     n = 500
     close = 100.0 + np.sin(np.arange(n, dtype=float) / 7.0) * 2.0 + np.arange(n) * 0.002
