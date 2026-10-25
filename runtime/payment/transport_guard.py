@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Any, Protocol
 
 
@@ -36,7 +37,7 @@ def _allowed_status_path(path: str) -> bool:
         if path.startswith(prefix):
             request_id = path[len(prefix):]
             # These status endpoints only; deliberately exclude verification_code and /withdraw.
-            return bool(request_id) and "/" not in request_id and request_id.replace("-", "").replace("_", "").isalnum()
+            return bool(re.fullmatch(r"[A-Za-z0-9_-]{1,128}", request_id)) and request_id != "verification_code"
     return False
 
 
