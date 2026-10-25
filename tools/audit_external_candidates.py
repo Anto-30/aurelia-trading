@@ -260,6 +260,7 @@ def docker_common_args(
     return [
         "docker", "run", "--rm",
         "--network", "bridge",
+        "-e", "HOME=/tmp",
         "--read-only",
         "--cap-drop=ALL",
         "--security-opt=no-new-privileges",
