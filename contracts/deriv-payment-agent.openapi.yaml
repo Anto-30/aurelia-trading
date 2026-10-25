@@ -2,6 +2,9 @@ openapi: 3.1.0
 info:
   title: AURELIA Deriv Payment Agent REST Contract
   version: 0.2.0
+  contact:
+    name: AURELIA project maintainers
+    url: https://github.com/Anto-30/aurelia-trading
   description: |
     Safety-constrained AURELIA contract reconciled against the versioned official
     Deriv API schemas release production_v20260901_0. The exact source snapshot is
@@ -66,9 +69,10 @@ paths:
       operationId: getPaymentAgentStatistics
       tags: [Agent discovery]
       summary: Get supported agent countries and currencies
+      description: Lists countries and currencies covered by active, publicly listed payment agents; results may lag newly onboarded agents.
       security:
         - oauth2: [payment]
-      parameters:
+      parameters: []
       responses:
         '200':
           description: Statistics returned.
@@ -143,7 +147,8 @@ paths:
       operationId: getPaymentAgentClientSettings
       tags: [Client settings]
       summary: Read client's payment-agent settings
-      parameters:
+      description: Returns the caller's current deposit, withdrawal, and real-name visibility settings.
+      parameters: []
       responses:
         '200':
           description: Current settings.
@@ -160,7 +165,7 @@ paths:
       summary: Change real-name visibility for payment agents
       description: Mutates a privacy preference. Denied in TEST_ONLY; any later use requires explicit human action.
       x-aurelia-default-mode: DENY
-      parameters:
+      parameters: []
       requestBody:
         required: true
         content:
@@ -198,7 +203,7 @@ paths:
         request, dry_run must be forced true. A dry_run_ok response means validation only.
         Never blindly retry an ambiguous write; reconcile by the same request_id.
       x-aurelia-default-mode: DENY_REAL_TRANSFER
-      parameters:
+      parameters: []
       requestBody:
         required: true
         content:
@@ -220,6 +225,7 @@ paths:
       operationId: getPaymentAgentTransferStatus
       tags: [Transfers]
       summary: Reconcile a transfer by its original request id
+      description: Returns the current state of a transfer previously initiated with the same request_id.
       parameters:
         - $ref: '#/components/parameters/RequestId'
       responses:
@@ -240,7 +246,7 @@ paths:
       summary: Request one-time verification code for an intended withdrawal
       description: Sends code to registered contact; an external side effect. Denied in TEST_ONLY and unit tests.
       x-aurelia-default-mode: DENY
-      parameters:
+      parameters: []
       requestBody:
         required: true
         content:
@@ -267,7 +273,7 @@ paths:
         settlement to the client is outside Deriv. Denied in TEST_ONLY. Requires a fresh
         six-digit verification code and unique request_id.
       x-aurelia-default-mode: DENY
-      parameters:
+      parameters: []
       requestBody:
         required: true
         content:
@@ -289,6 +295,7 @@ paths:
       operationId: getPaymentAgentWithdrawalStatus
       tags: [Withdrawals]
       summary: Reconcile a withdrawal by its original request id
+      description: Returns the current state of a withdrawal previously initiated with the same request_id.
       parameters:
         - $ref: '#/components/parameters/RequestId'
       responses:
