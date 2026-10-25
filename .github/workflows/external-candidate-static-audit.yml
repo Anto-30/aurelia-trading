@@ -59,12 +59,12 @@ jobs:
           data = json.loads(Path("config/external_candidate_audit_manifest.json").read_text())
           assert data["schema"] == "aurelia.external_candidate_audit.v1"
           candidates = data["candidates"]
-          assert len(candidates) == 20
+          assert len(candidates) == 24
           assert len({item["repository"] for item in candidates}) == 20
           assert all(re.fullmatch(r"[0-9a-f]{40}", item["commit_sha"]) for item in candidates)
-          assert all(item["intake_status"] == "UNREVIEWED" for item in candidates)
+          assert all(item["intake_status"] in {"UNREVIEWED", "BLOCKED"} for item in candidates)
           print("MANIFEST_VALIDATION=PASS")
-          print("PINNED_CANDIDATES=20")
+          print("PINNED_CANDIDATES=24")
           PY
 
       - name: Run isolated source and dependency scans
