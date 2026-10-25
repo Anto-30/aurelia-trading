@@ -6,7 +6,7 @@ This is a controlled intake proposal for 29 repositories supplied for AURELIA en
 
 - Intake candidates: 29
 - Newly added registry records: 29
-- Candidate head revisions: `SYNC_REQUIRED` until the external-repository sync workflow verifies reachability and records exact heads.
+- Candidate head revisions: 29/29 pinned to the observed default-branch commit snapshot queried on 2026-10-25. The exact commit links and author dates are recorded in the pin manifest below. This is source provenance only, not a security approval.
 - Runtime installation: none performed by this change.
 - Capital/execution authority: none.
 - `config/LIVE_LOCK.yaml` is unchanged and remains fail-closed.
@@ -30,6 +30,45 @@ This is a controlled intake proposal for 29 repositories supplied for AURELIA en
 - `aide/aide` requires repository-purpose confirmation before anything beyond reference-only handling.
 - Skills, prompts and instruction files are untrusted inputs; review each item individually. Do not bulk-install.
 
+## Pin manifest — 2026-10-25
+
+These commit SHAs were retrieved from GitHub's public REST `GET /repos/{owner}/{repo}/commits?per_page=1` endpoint, which returns the latest commit on the repository's default branch at query time. Dates below are commit author dates (UTC). The default branch may advance later; these pins intentionally remain immutable until a reviewed update.
+
+| Repository | Pinned commit | Commit author date (UTC) | Disposition |
+|---|---|---|---|
+| `iOfficeAI/OfficeCLI` | [`5e3e26278753`](https://github.com/iOfficeAI/OfficeCLI/commit/5e3e26278753be846b4b0b2fb0387f42d911553a) | 2026-10-23 | UNREVIEWED |
+| `Jia-Ethan/codex-keysmith` | [`cfcd96eb727c`](https://github.com/Jia-Ethan/codex-keysmith/commit/cfcd96eb727c324ee8649170c43aaa632ff53cb3) | 2026-09-27 | UNREVIEWED |
+| `Loongphy/codex-auth` | [`a83059701ee5`](https://github.com/Loongphy/codex-auth/commit/a83059701ee54c4c8f91aa030810b97bd35e254b) | 2026-10-25 | UNREVIEWED |
+| `ryfineZ/codex-session-patcher` | [`cf7deab2d5b2`](https://github.com/ryfineZ/codex-session-patcher/commit/cf7deab2d5b28c1f70f5b5498461848b69024a15) | 2026-10-05 | UNREVIEWED |
+| `openai/codex-security` | [`796fa130e927`](https://github.com/openai/codex-security/commit/796fa130e92787085ab36aa4313d8c4bd9414560) | 2026-10-25 | UNREVIEWED |
+| `qxcnm/Codex-Manager` | [`430eddb0af9a`](https://github.com/qxcnm/Codex-Manager/commit/430eddb0af9ae6277f8133fbac7f8634b7699dc6) | 2026-10-18 | UNREVIEWED |
+| `composio-community/awesome-codex-skills` | [`0930e1373789`](https://github.com/composio-community/awesome-codex-skills/commit/0930e1373789d2eda449039f7ac154b33031de89) | 2026-07-26 | UNREVIEWED |
+| `router-for-me/CLIProxyAPI` | [`bc0643405a1d`](https://github.com/router-for-me/CLIProxyAPI/commit/bc0643405a1d0adf77dd0f109972ac3313d66397) | 2026-10-24 | UNREVIEWED |
+| `OpenHands/OpenHands` | [`b7fdc6c31203`](https://github.com/OpenHands/OpenHands/commit/b7fdc6c312039a0b840fdcd34a5c23ca7e65c218) | 2026-10-25 | UNREVIEWED |
+| `OpenHands/software-agent-sdk` | [`d2ee0cdea608`](https://github.com/OpenHands/software-agent-sdk/commit/d2ee0cdea60825608c2f8906eb54e1d4d264fb42) | 2026-10-25 | UNREVIEWED |
+| `OpenHands/extensions` | [`1ea389f96e44`](https://github.com/OpenHands/extensions/commit/1ea389f96e44a7f1db8969b25ec460d02e8fcf09) | 2026-10-24 | UNREVIEWED |
+| `OpenHands/OpenHands-CLI` | [`283c6ac3610f`](https://github.com/OpenHands/OpenHands-CLI/commit/283c6ac3610f4299f405f7389f65766dcb83e12a) | 2026-10-22 | UNREVIEWED |
+| `OpenHands/automation` | [`2c110703bbe9`](https://github.com/OpenHands/automation/commit/2c110703bbe91e4113a57adc1fa64a912ac7f4f8) | 2026-10-23 | UNREVIEWED |
+| `OpenHands/openhands-aci` | [`a8d8d23ec635`](https://github.com/OpenHands/openhands-aci/commit/a8d8d23ec635f9aaa94af17aec3c851656f10c8a) | 2026-03-24 | UNREVIEWED |
+| `OpenHands/OpenHands-Cloud` | [`d1c3b0d8cae4`](https://github.com/OpenHands/OpenHands-Cloud/commit/d1c3b0d8cae493e15c7d8931f1d9d06180799928) | 2026-10-23 | UNREVIEWED |
+| `cline/cline` | [`40c5d99031fe`](https://github.com/cline/cline/commit/40c5d99031fe1128189c5b52e40638d2b7787754) | 2026-10-24 | UNREVIEWED |
+| `cline/prompts` | [`2fc3b77a8fe3`](https://github.com/cline/prompts/commit/2fc3b77a8fe39553ac424bfc7cdc9883e4a21e1f) | 2026-02-27 | UNREVIEWED |
+| `decolua/9router` | [`f39d8f07481a`](https://github.com/decolua/9router/commit/f39d8f07481ae8518e93175f0ecaaafa61573c6c) | 2026-10-23 | UNREVIEWED |
+| `aaif-goose/goose` | [`2b17adc33a71`](https://github.com/aaif-goose/goose/commit/2b17adc33a7176e701c2fef9578a5fc5834ea89a) | 2026-10-24 | UNREVIEWED |
+| `pressly/goose` | [`0aa9878439d2`](https://github.com/pressly/goose/commit/0aa9878439d23c25b62634b9cb9306a007d326d4) | 2026-10-25 | UNREVIEWED |
+| `b-nnett/goose` | [`ba9ae0280c9b`](https://github.com/b-nnett/goose/commit/ba9ae0280c9b5b9a1545baab8e944cb3b7563c62) | 2026-06-02 | UNREVIEWED |
+| `gooseworks-ai/goose-skills` | [`6d5d5f160c62`](https://github.com/gooseworks-ai/goose-skills/commit/6d5d5f160c623613d7eb682b6a467beb165cc2a4) | 2026-10-20 | UNREVIEWED |
+| `mz-automation/libiec61850` | [`6e265c54af66`](https://github.com/mz-automation/libiec61850/commit/6e265c54af66ea686453b6d31c4dcce1cf7ad2bd) | 2026-10-21 | UNREVIEWED |
+| `tag1consulting/goose` | [`7bf83ae35a6c`](https://github.com/tag1consulting/goose/commit/7bf83ae35a6c3acc666c5a5ea38332ddeb0735d9) | 2026-10-25 | UNREVIEWED |
+| `Aider-AI/aider` | [`5dc9490bb35f`](https://github.com/Aider-AI/aider/commit/5dc9490bb35f9729ef2c95d00a19ccd30c26339c) | 2026-05-22 | UNREVIEWED |
+| `hotovo/aider-desk` | [`438e8710fa5f`](https://github.com/hotovo/aider-desk/commit/438e8710fa5f89a9509ce8d4b1c6f314a801b779) | 2026-10-25 | UNREVIEWED |
+| `coder/agentapi` | [`7c468d5b25ec`](https://github.com/coder/agentapi/commit/7c468d5b25ec9d3d76c41313cf4e08904ff5968d) | 2026-09-13 | BLOCKED — pinned commit message says deprecated/unmaintained |
+| `aide/aide` | [`db923656149e`](https://github.com/aide/aide/commit/db923656149ea64bee63f7e45275322a20c7dbe3) | 2026-10-18 | UNREVIEWED |
+| `iamfakeguru/agent-md` | [`65c6a8e8ca1b`](https://github.com/iamfakeguru/agent-md/commit/65c6a8e8ca1b2aa3a84fde5b1ea20f1abbbf063f) | 2026-09-21 | UNREVIEWED |
+
+Pinning does not establish license compatibility, benign behavior, maintainability, successful installation, test coverage, or fitness for AURELIA. `coder/agentapi` is explicitly blocked because its pinned commit's subject says the project is deprecated and unmaintained; reopening it requires independent verification of current maintainership and support status.
+
+---
 ## Candidate inventory
 
 | Repository | Preliminary mode | Main review focus |
@@ -60,7 +99,7 @@ This is a controlled intake proposal for 29 repositories supplied for AURELIA en
 | `tag1consulting/goose` | TOOLCHAIN_ONLY | rust-load-testing-tool |
 | `Aider-AI/aider` | SANDBOX_ONLY | coding-agent |
 | `hotovo/aider-desk` | SANDBOX_ONLY | coding-agent-ui |
-| `coder/agentapi` | SANDBOX_ONLY | agent-runtime-api |
+| `coder/agentapi` | BLOCKED | agent-runtime-api (deprecated/unmaintained signal) |
 | `aide/aide` | REFERENCE_ONLY | developer-agent-tooling-identity-unverified |
 | `iamfakeguru/agent-md` | REFERENCE_ONLY | agent-instruction-conventions |
 
