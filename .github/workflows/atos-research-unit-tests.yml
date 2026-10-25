@@ -5,9 +5,11 @@ on:
     branches:
       - fix/msnr-half-open-history-window-20261025
       - fix/block-unverified-msnr-economics-20261025
+      - fix/strict-public-candle-json-types-20261025
   pull_request:
     branches:
       - research/msnr-baseline-r100-20261022
+      - fix/block-unverified-msnr-economics-20261025
     paths:
       - "research/msnr_baseline/**"
       - ".github/workflows/atos-research-unit-tests.yml"
