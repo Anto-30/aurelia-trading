@@ -12,7 +12,7 @@ from scripts.run_redacted_deriv_verifier import redacted_status_lines
 
 class DerivReadOnlySanitizerTests(unittest.TestCase):
     def _record(self) -> dict:
-        return {
+        record = {
             "evidence_id": "DERIV_AUTH_SESSION:20261025T120000Z",
             "source_hash": "a" * 40,
             "record_hash": "b" * 64,
@@ -36,6 +36,14 @@ class DerivReadOnlySanitizerTests(unittest.TestCase):
                 "available_balance": 11.11,
             },
         }
+        return self._rehash(record)
+
+    @staticmethod
+    def _rehash(record: dict) -> dict:
+        record.pop("record_hash", None)
+        canonical = json.dumps(record, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+        record["record_hash"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+        return record
 
     def test_attestation_excludes_raw_account_and_financial_fields(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -76,6 +84,7 @@ class DerivReadOnlySanitizerTests(unittest.TestCase):
             with self.subTest(field=field), tempfile.TemporaryDirectory() as tmp:
                 record = self._record()
                 record[field] = True
+                record = self._rehash(record)
                 path = Path(tmp) / "raw.json"
                 path.write_text(json.dumps(record), encoding="utf-8")
                 with self.assertRaises(AttestationError):
