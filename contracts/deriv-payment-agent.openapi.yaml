@@ -353,7 +353,7 @@ components:
   schemas:
     Currency:
       type: string
-      pattern: '^[A-Z0-9]{2,20}
+      pattern: '^[A-Z0-9]{2,20}$'
     Amount:
       type: string
       pattern: '^(?:0|[1-9]\d{0,13})(?:\.\d{1,18})?$'
