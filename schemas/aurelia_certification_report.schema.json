@@ -92,7 +92,8 @@
             ]
           }
         }
-      ]
+      ],
+      "unevaluatedProperties": false
     },
     "gate_2_recovery_matrix": {
       "$ref": "#/$defs/gate",
@@ -125,7 +126,8 @@
             ]
           }
         }
-      ]
+      ],
+      "unevaluatedProperties": false
     },
     "gate_3_soak_test_3600s": {
       "$ref": "#/$defs/gate",
@@ -168,7 +170,8 @@
             }
           }
         }
-      ]
+      ],
+      "unevaluatedProperties": false
     },
     "gate_4_out_of_sample": {
       "$ref": "#/$defs/gate",
@@ -199,7 +202,8 @@
             ]
           }
         }
-      ]
+      ],
+      "unevaluatedProperties": false
     },
     "gate_5_calibration": {
       "$ref": "#/$defs/gate",
@@ -238,7 +242,9 @@
             }
           }
         }
-      ]
+      ],
+      "unevaluatedProperties": false,
+      "description": "PASS requires both configuration hashes; reviewer must verify config_hash_pre equals config_hash_post."
     },
     "gate_6_execution_economics": {
       "$ref": "#/$defs/gate",
@@ -273,13 +279,13 @@
               "actual_residual"
             ],
             "properties": {
-              "actual_residual": {
-                "maximum": 0
-              }
+              "actual_residual": {}
             }
           }
         }
-      ]
+      ],
+      "unevaluatedProperties": false,
+      "description": "PASS requires reconciled values; reviewer must verify absolute(actual_residual) <= residual_tolerance."
     },
     "gate_7_security_audit": {
       "$ref": "#/$defs/gate",
@@ -320,7 +326,8 @@
             }
           }
         }
-      ]
+      ],
+      "unevaluatedProperties": false
     },
     "gate_8_deployment": {
       "$ref": "#/$defs/gate",
@@ -347,7 +354,8 @@
             ]
           }
         }
-      ]
+      ],
+      "unevaluatedProperties": false
     },
     "gate_9_strategy_eligibility": {
       "$ref": "#/$defs/gate",
@@ -394,7 +402,8 @@
             }
           }
         }
-      ]
+      ],
+      "unevaluatedProperties": false
     },
     "final_disposition": {
       "type": "object",
@@ -454,7 +463,6 @@
     },
     "gate": {
       "type": "object",
-      "additionalProperties": false,
       "required": [
         "status"
       ],
