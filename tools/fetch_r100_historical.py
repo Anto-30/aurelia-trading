@@ -184,16 +184,16 @@ async def request_json(
     return response
 
 
-async def bounded_probe(ws: Any, first_req_id: int = 97001) -> dict[str, Any]:
+async def bounded_probe(ws: Any, first_req_id: int = 97001, raw_handle: Any | None = None) -> dict[str, Any]:
     """Ask for five one-minute candles bracketing the exact 2022 start epoch."""
     probe_end = START_EPOCH + 4 * GRANULARITY
     payload = {
         "ticks_history": SYMBOL,
+        "start": START_EPOCH,
         "end": str(probe_end),
         "style": STYLE,
         "granularity": GRANULARITY,
         "count": 5,
-        "adjust_start_time": 1,
         "req_id": first_req_id,
     }
     print("PROBE_ENDPOINT=" + PUBLIC_WS_URL)
@@ -202,16 +202,26 @@ async def bounded_probe(ws: Any, first_req_id: int = 97001) -> dict[str, Any]:
     print("PROBE_TARGET_UTC=" + datetime.fromtimestamp(START_EPOCH, timezone.utc).isoformat())
     print("PROBE_REQUEST=" + json.dumps(payload, sort_keys=True))
     response = await request_json(
-        ws, payload, first_req_id, raw_handle=None, timeout_seconds=PROBE_TIMEOUT_SECONDS
+        ws, payload, first_req_id, raw_handle=raw_handle, timeout_seconds=PROBE_TIMEOUT_SECONDS
     )
     candles = validate_response(response, first_req_id)
     epochs = sorted(int(candle["epoch"]) for candle in candles)
     print("PROBE_RESPONSE_KEYS=" + ",".join(sorted(response.keys())))
+    print("PROBE_ECHO_REQ=" + json.dumps(response.get("echo_req", {}), sort_keys=True))
     print("PROBE_CANDLE_COUNT=" + str(len(candles)))
     print("PROBE_CANDLE_EPOCHS=" + json.dumps(epochs))
     print("PROBE_CANDLE_UTC=" + json.dumps([
         datetime.fromtimestamp(epoch, timezone.utc).isoformat() for epoch in epochs
     ]))
+    out_of_bounds = [epoch for epoch in epochs if epoch < START_EPOCH or epoch > probe_end]
+    if out_of_bounds:
+        raise GateFailure(
+            "historical_probe",
+            "REQUEST_BOUNDS_NOT_RESPECTED",
+            "API returned candles outside the explicitly requested start/end bounds",
+            {"target_start": START_EPOCH, "target_end": probe_end, "returned_epochs": epochs,
+             "echo_req": response.get("echo_req", {})},
+        )
     if START_EPOCH not in epochs:
         raise GateFailure(
             "historical_probe",
@@ -235,6 +245,7 @@ def candle_signature(candle: dict[str, Any]) -> tuple[str, ...]:
 
 def ensure_new_output_dir(output_dir: Path) -> None:
     existing = [
+        output_dir / "probe_evidence.jsonl",
         output_dir / "r100_candles_raw.jsonl",
         output_dir / "R_100_60s_verified.csv",
         output_dir / "verification_manifest.json",
@@ -270,13 +281,14 @@ async def fetch_all_candles(
             )
 
         req_id = first_req_id + page_count
+        chunk_start = max(START_EPOCH, cursor - (MAX_COUNT - 1) * GRANULARITY)
         payload = {
             "ticks_history": SYMBOL,
+            "start": chunk_start,
             "end": str(cursor),
             "style": STYLE,
             "granularity": GRANULARITY,
             "count": MAX_COUNT,
-            "adjust_start_time": 1,
             "req_id": req_id,
         }
         response = await request_json(ws, payload, req_id, raw_handle=raw_handle)
@@ -294,6 +306,14 @@ async def fetch_all_candles(
             )
 
         page_epochs = [int(candle["epoch"]) for candle in candles]
+        outside_page = [epoch for epoch in page_epochs if epoch < chunk_start or epoch > cursor]
+        if outside_page:
+            raise GateFailure(
+                "pagination", "REQUEST_BOUNDS_NOT_RESPECTED",
+                "API returned candle epochs outside the requested page window",
+                {"page": page_count, "requested_start": chunk_start, "requested_end": cursor,
+                 "returned_epochs_sample": sorted(outside_page)[:20]},
+            )
         oldest_epoch = min(page_epochs)
         for candle in candles:
             epoch = int(candle["epoch"])
@@ -317,7 +337,7 @@ async def fetch_all_candles(
                 "Oldest candle did not move backward; stopping to avoid an infinite loop",
                 {"page": page_count, "cursor": cursor, "oldest_epoch": oldest_epoch},
             )
-        cursor = oldest_epoch - 1
+        cursor = oldest_epoch - GRANULARITY
         await asyncio.sleep(RATE_LIMIT_DELAY_SECONDS)
 
     return by_epoch, page_count
@@ -344,6 +364,8 @@ def write_failure(output_dir: Path, stage: str, code: str, message: str,
         "end_epoch_inclusive": END_EPOCH,
         "recorded_at_utc": utc_now(),
         "page_count": pages,
+        "probe_jsonl_path": str(output_dir / "probe_evidence.jsonl") if (output_dir / "probe_evidence.jsonl").exists() else None,
+        "probe_jsonl_sha256": sha256_file(output_dir / "probe_evidence.jsonl") if (output_dir / "probe_evidence.jsonl").exists() else None,
         "raw_jsonl_path": str(raw_path) if raw_path.exists() else None,
         "raw_jsonl_sha256": sha256_file(raw_path) if raw_path.exists() else None,
         "verified_csv_created": False,
@@ -356,6 +378,7 @@ async def full_capture(output_dir: Path) -> int:
     ensure_new_output_dir(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     raw_path = output_dir / "r100_candles_raw.jsonl"
+    probe_path = output_dir / "probe_evidence.jsonl"
 
     async with websockets.connect(
         PUBLIC_WS_URL,
@@ -365,8 +388,9 @@ async def full_capture(output_dir: Path) -> int:
         ping_timeout=15,
         max_size=2**24,
     ) as ws:
-        probe = await bounded_probe(ws)
-        # The raw capture starts only after the target-epoch probe succeeds.
+        with probe_path.open("x", encoding="utf-8", newline="\n") as probe_handle:
+            probe = await bounded_probe(ws, raw_handle=probe_handle)
+        # The historical capture starts only after the target-epoch probe succeeds.
         with raw_path.open("x", encoding="utf-8", newline="\n") as raw_handle:
             by_epoch, page_count = await fetch_all_candles(ws, raw_handle)
 
@@ -445,6 +469,8 @@ async def full_capture(output_dir: Path) -> int:
         "verified_csv_path": str(csv_path),
         "verified_csv_sha256": csv_hash,
         "probe": probe,
+        "probe_jsonl_path": str(probe_path),
+        "probe_jsonl_sha256": sha256_file(probe_path),
         "captured_at_utc": utc_now(),
         "verification_rules": {
             "unique_epochs": True,
