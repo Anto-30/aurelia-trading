@@ -407,11 +407,13 @@ def run_semgrep(
         "semgrep", "scan",
         "--config", "p/default", "--config", "p/secrets",
         "--metrics=off", "--json",
-        "--output", "/scan/semgrep.raw.json", "--exit-zero",
+        "--output", "/scan/semgrep.raw.json",
         "--exclude", ".git", "/src",
     ]
     try:
-        proc = run_command(command, timeout=1200, allowed_codes=(0,))
+        # Semgrep exits 1 when findings are present and 0 when none are found.
+        # Exit 2 and any other code remain hard scan failures.
+        proc = run_command(command, timeout=1200, allowed_codes=(0, 1))
         if not raw_path.is_file():
             raise RuntimeError("SEMGREP_REPORT_MISSING")
         report = json.loads(raw_path.read_text(encoding="utf-8"))
