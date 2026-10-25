@@ -75,6 +75,19 @@ class DerivPaymentAgentContractSourceTests(unittest.TestCase):
         self.assertIn("detail:", error)
         self.assertIn("required: [data, errors, metadata]", envelope)
 
+    def test_security_scheme_matches_official_payment_scope(self) -> None:
+        security_scheme = section(
+            self.contract, "  securitySchemes:", "  parameters:"
+        )
+        self.assertIn("- oauth2: [payment]", self.contract)
+        self.assertIn("type: oauth2", security_scheme)
+        self.assertIn("authorizationUrl: https://oauth.deriv.com/oauth2/authorize", security_scheme)
+        self.assertIn("tokenUrl: https://oauth.deriv.com/oauth2/token", security_scheme)
+        self.assertIn("payment: Access to payment agent deposit and withdrawal operations", security_scheme)
+        self.assertNotIn("BearerAuth", self.contract)
+        self.assertNotIn("DerivAppId", self.contract)
+        self.assertNotIn("PAT also requires Deriv-App-ID", self.contract)
+
     def test_contract_keeps_all_external_side_effects_deny_by_default(self) -> None:
         for expected in (
             "defaultMode: TEST_ONLY",
