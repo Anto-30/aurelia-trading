@@ -151,7 +151,10 @@ jobs:
             echo "AURELIA_ASSURANCE_DIAGNOSTICS=API_UNAVAILABLE"
             exit 0
           fi
-          report="$(printf '%s' "$payload" | jq -c '[.jobs[]? | select(.name == "assurance") | {id, name, conclusion, runner_id, runner_name, started_at, completed_at, steps_count: ((.steps // []) | length), failed_steps: [(.steps // [])[]? | select(.conclusion == "failure") | .name]}]')"
+          report="$(printf '%s' "$payload" | jq -c '[.jobs[]? | select(.name == "assurance") | {id, name, conclusion, runner_id, runner_name, started_at, completed_at, steps_count: ((.steps // []) | length), failed_steps: [(.steps // [])[]? | select(.conclusion == "failure") | .name]}]')" || {
+            echo "AURELIA_ASSURANCE_DIAGNOSTICS=JSON_PARSE_FAILED"
+            exit 0
+          }
           echo "AURELIA_ASSURANCE_JOB_METADATA=$report"
           if printf '%s' "$report" | jq -e 'any(.[]; .conclusion == "failure" and .steps_count == 0)' >/dev/null 2>&1; then
             echo "AURELIA_ASSURANCE_DIAGNOSIS=FAILED_WITHOUT_STEP_RECORDS"
