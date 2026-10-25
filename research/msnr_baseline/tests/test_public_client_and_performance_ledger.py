@@ -122,6 +122,20 @@ def test_client_is_pinned_to_public_endpoint_and_current_history_schema():
     assert rows[0]["epoch"] == 100
     with pytest.raises(PublicMarketDataError, match="missing a required"):
         validate_candle_response({"msg_type":"candles","candles":[{"open":100,"high":102,"low":99,"epoch":100}]})
+
+    valid_candle = {"open":100,"high":102,"low":99,"close":101,"epoch":100}
+    for invalid_epoch in ("100", 100.0, True, -1, 10_000_000_000):
+        bad_candle = {**valid_candle, "epoch": invalid_epoch}
+        with pytest.raises(PublicMarketDataError):
+            validate_candle_response({"msg_type":"candles","candles":[bad_candle]})
+
+    for field, invalid_value in (("open", "100"), ("high", True), ("low", float("nan")), ("close", float("inf"))):
+        bad_candle = {**valid_candle, field: invalid_value}
+        with pytest.raises(PublicMarketDataError):
+            validate_candle_response({"msg_type":"candles","candles":[bad_candle]})
+
+    with pytest.raises(PublicMarketDataError, match="JSON object"):
+        validate_candle_response([valid_candle])
     prices, times = validate_history_response({"msg_type":"history","history":{"prices":[1.0,1.1],"times":[100,101]}})
     assert prices == [1.0,1.1] and times == [100,101]
     with pytest.raises(PublicMarketDataError, match="both prices and times"):
