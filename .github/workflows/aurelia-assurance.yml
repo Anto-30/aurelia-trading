@@ -126,3 +126,41 @@ jobs:
           test "$status" -eq 2
           echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
           echo "$output" | grep -q "REASON="
+
+  # Runs on a separate runner to preserve diagnostic evidence when the assurance
+  # runner fails before emitting normal step records. It never downloads log bodies.
+  diagnostics:
+    if: ${{ always() }}
+    needs: [assurance]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ASSURANCE_RESULT: ${{ needs.assurance.result }}
+    steps:
+      - name: Record safe workflow/job metadata
+        shell: bash
+        run: |
+          set +e
+          payload="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs?per_page=100" 2>/dev/null)"
+          api_status=$?
+          set -e
+          echo "AURELIA_ASSURANCE_RESULT=${ASSURANCE_RESULT:-unknown}"
+          if [ "$api_status" -ne 0 ] || [ -z "$payload" ]; then
+            echo "AURELIA_ASSURANCE_DIAGNOSTICS=API_UNAVAILABLE"
+            exit 0
+          fi
+          report="$(printf '%s' "$payload" | jq -c '[.jobs[]? | select(.name == "assurance") | {id, name, conclusion, runner_id, runner_name, started_at, completed_at, steps_count: ((.steps // []) | length), failed_steps: [(.steps // [])[]? | select(.conclusion == "failure") | .name]}]')"
+          echo "AURELIA_ASSURANCE_JOB_METADATA=$report"
+          if printf '%s' "$report" | jq -e 'any(.[]; .conclusion == "failure" and .steps_count == 0)' >/dev/null 2>&1; then
+            echo "AURELIA_ASSURANCE_DIAGNOSIS=FAILED_WITHOUT_STEP_RECORDS"
+            echo "AURELIA_ASSURANCE_ROOT_CAUSE=UNKNOWN"
+            echo "NEXT_ACTION=Inspect GitHub Actions job API and runner/service events; do not infer a code failure."
+          elif printf '%s' "$report" | jq -e 'length == 0' >/dev/null 2>&1; then
+            echo "AURELIA_ASSURANCE_DIAGNOSIS=JOB_RECORD_MISSING"
+            echo "AURELIA_ASSURANCE_ROOT_CAUSE=UNKNOWN"
+          else
+            echo "AURELIA_ASSURANCE_DIAGNOSIS=METADATA_CAPTURED"
+          fi
+          exit 0
