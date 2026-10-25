@@ -194,7 +194,7 @@ def git_fetch_candidate(candidate: dict[str, Any], clone_dir: Path) -> dict[str,
 
 
 def docker_common_args(
-    image: str, repo_dir: Path, scratch_dir: Path, cache_dir: Path
+    image: str, entrypoint: str, repo_dir: Path, scratch_dir: Path, cache_dir: Path
 ) -> list[str]:
     return [
         "docker", "run", "--rm",
@@ -204,6 +204,7 @@ def docker_common_args(
         "--security-opt=no-new-privileges",
         "--pids-limit=512",
         "--memory=4g",
+        "--entrypoint", entrypoint,
         "--tmpfs", "/tmp:rw,nosuid,nodev,size=512m",
         "-v", str(repo_dir.resolve()) + ":/src:ro",
         "-v", str(scratch_dir.resolve()) + ":/scan:rw",
@@ -340,7 +341,7 @@ def run_semgrep(
     repo_dir: Path, scratch_dir: Path, cache_dir: Path, image: str
 ) -> dict[str, Any]:
     raw_path = scratch_dir / "semgrep.raw.json"
-    command = docker_common_args(image, repo_dir, scratch_dir, cache_dir) + [
+    command = docker_common_args(image, "semgrep", repo_dir, scratch_dir, cache_dir) + [
         "scan", "--config", "p/default", "--config", "p/secrets",
         "--metrics=off", "--disable-version-check", "--json",
         "--output", "/scan/semgrep.raw.json", "--exit-zero",
@@ -366,7 +367,7 @@ def run_trivy(
 ) -> dict[str, Any]:
     raw_path = scratch_dir / "trivy.raw.json"
     sbom_path = candidate_out / "sbom.cdx.json"
-    command = docker_common_args(image, repo_dir, scratch_dir, cache_dir) + [
+    command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir) + [
         "fs", "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,misconfig,secret,license",
         "--format", "json", "--output", "/scan/trivy.raw.json", "/src",
@@ -384,7 +385,7 @@ def run_trivy(
             raw_path.unlink()
 
     # Write an SBOM containing package/license metadata; do not include the secret scan output.
-    sbom_command = docker_common_args(image, repo_dir, scratch_dir, cache_dir) + [
+    sbom_command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir) + [
         "fs", "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,license",
         "--format", "cyclonedx", "--output", "/scan/sbom.cdx.json", "/src",
@@ -481,14 +482,17 @@ def main() -> int:
             "report_files": {},
         }
 
+        phase = "source_checkout"
         try:
             metadata = git_fetch_candidate(candidate, clone_dir)
             result["source_metadata"] = metadata
+            phase = "semgrep"
             semgrep_report = run_semgrep(clone_dir, scratch_dir, cache_dir, args.semgrep_image)
             semgrep_out = candidate_out / "semgrep_findings.json"
             semgrep_out.write_text(
                 json.dumps(semgrep_report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
+            phase = "trivy"
             trivy_report = run_trivy(
                 clone_dir, candidate_out, scratch_dir, cache_dir, args.trivy_image
             )
@@ -515,14 +519,15 @@ def main() -> int:
         except Exception as exc:
             failed_scans += 1
             status = "SCAN_INCOMPLETE_BLOCKED"
-            result["scanner_status"]["failed_stage"] = "source_checkout_or_scan"
+            result["scanner_status"]["failed_stage"] = phase
             result["scanner_status"]["error_type"] = type(exc).__name__
-            # Deliberately omit exception messages and scanner stderr from artifacts/logs.
-            result["scanner_status"]["error_code"] = (
-                str(exc).split(":", 1)[0][:100]
-                if str(exc).startswith(("COMMAND_FAILED:", "INVALID_", "PIN_", "TRIVY_", "SEMGREP_"))
-                else "AUDIT_STEP_FAILED"
+            # Preserve only a tightly constrained internal code; never include stdout/stderr or source excerpts.
+            match = re.match(
+                r"^(COMMAND_FAILED:[A-Za-z0-9_.-]+:exit=[0-9]+|[A-Z][A-Z0-9_]{2,80})$",
+                str(exc),
             )
+            error_code = match.group(1) if match else "AUDIT_STEP_FAILED"
+            result["scanner_status"]["error_code"] = error_code
         finally:
             result["status"] = status
             result["finished_at_utc"] = utc_now()
@@ -540,6 +545,10 @@ def main() -> int:
                 + repository
                 + " STATUS="
                 + status
+                + " FAILED_STAGE="
+                + str(result.get("scanner_status", {}).get("failed_stage", "none"))
+                + " ERROR_CODE="
+                + str(result.get("scanner_status", {}).get("error_code", "none"))
                 + " SEMGREP_COUNT="
                 + str(result.get("finding_counts", {}).get("semgrep", "NA"))
                 + " TRIVY_COUNT="
