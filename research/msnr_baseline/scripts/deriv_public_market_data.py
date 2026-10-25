@@ -95,26 +95,35 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
 
 
 def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | int]]:
+    if not isinstance(message, dict):
+        raise PublicMarketDataError("Candles response must be a JSON object.")
     if message.get("msg_type") != "candles":
         raise PublicMarketDataError(f"Expected candles response, got {message.get('msg_type')!r}.")
     candles = message.get("candles")
     if not isinstance(candles, list) or not candles:
         raise PublicMarketDataError("Candles response must contain a non-empty candles array.")
-    output = []
+    output: list[dict[str, float | int]] = []
     for i, candle in enumerate(candles):
         if not isinstance(candle, dict) or any(field not in candle for field in CANDLE_FIELDS):
             raise PublicMarketDataError(f"Candle {i} is missing a required OHLC/epoch field.")
-        try:
-            epoch_f = float(candle["epoch"])
-            epoch = int(epoch_f)
-            op, hi, lo, cl = (float(candle[k]) for k in ("open", "high", "low", "close"))
-        except (ValueError, TypeError, OverflowError) as exc:
-            raise PublicMarketDataError(f"Candle {i} has invalid numeric values.") from exc
-        if not math.isfinite(epoch_f) or epoch_f != epoch or not all(math.isfinite(x) and x > 0 for x in (op, hi, lo, cl)):
+
+        # JSON schema types are part of provenance: do not coerce strings, floats,
+        # or booleans into integers/prices before validating the raw API response.
+        epoch_raw = candle["epoch"]
+        if isinstance(epoch_raw, bool) or not isinstance(epoch_raw, int):
+            raise PublicMarketDataError(f"Candle {i} epoch must be a JSON integer.")
+        if not 0 <= epoch_raw <= 9999999999:
+            raise PublicMarketDataError(f"Candle {i} epoch is outside the supported range.")
+
+        raw_prices = tuple(candle[k] for k in ("open", "high", "low", "close"))
+        if any(isinstance(value, bool) or not isinstance(value, (int, float)) for value in raw_prices):
+            raise PublicMarketDataError(f"Candle {i} OHLC values must be JSON numbers.")
+        op, hi, lo, cl = (float(value) for value in raw_prices)
+        if not all(math.isfinite(value) and value > 0 for value in (op, hi, lo, cl)):
             raise PublicMarketDataError(f"Candle {i} contains a non-finite or non-positive value.")
         if hi < max(op, cl) or lo > min(op, cl) or hi < lo:
             raise PublicMarketDataError(f"Candle {i} violates OHLC invariants.")
-        output.append({"epoch": epoch, "open": op, "high": hi, "low": lo, "close": cl})
+        output.append({"epoch": epoch_raw, "open": op, "high": hi, "low": lo, "close": cl})
     epochs = [int(row["epoch"]) for row in output]
     if any(b <= a for a, b in zip(epochs, epochs[1:])):
         raise PublicMarketDataError("Candle epochs must be strictly increasing with no duplicates.")
