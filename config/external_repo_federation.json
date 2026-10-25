@@ -6391,16 +6391,16 @@
         "ClaudeCode",
         "JEV"
       ],
-      "mode": "SANDBOX_ONLY",
+      "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/ryfineZ/codex-session-patcher",
       "head_commit": "cf7deab2d5b28c1f70f5b5498461848b69024a15",
       "pin_source": "https://github.com/ryfineZ/codex-session-patcher/commit/cf7deab2d5b28c1f70f5b5498461848b69024a15",
       "intake_status": "BLOCKED",
-      "integration_note": "BLOCKED: no top-level LICENSE file was found in repository contents. Do not install, copy, or execute until license rights are clarified. The exact source SHA is pinned for provenance only. No capital, execution, production deployment, LIVE_LOCK, or secret authority.",
+      "integration_note": "BLOCKED for AURELIA toolchain integration. The README describes modifying stored assistant sessions to replace refusals, injecting prompt context, and removing reasoning/thinking blocks; that is inappropriate for the governed AURELIA agent workflow and creates audit/provenance risk. pyproject.toml declares MIT but the repository root has no LICENSE file, so license grant must also be clarified. Pinned SHA is provenance only; do not install or execute. No capital, execution, production deployment, LIVE_LOCK, or secret authority.",
       "upstream_default_branch": "main",
       "upstream_archived": false,
-      "upstream_license_spdx": null,
-      "upstream_license_evidence": "NO_TOP_LEVEL_LICENSE_FILE_FOUND"
+      "upstream_license_spdx": "MIT (declared in pyproject.toml; root LICENSE file missing)",
+      "upstream_license_evidence": "pyproject declares MIT; top-level LICENSE missing; README advertises refusal replacement, CTF/pentest prompt injection and reasoning-block removal"
     },
     {
       "repo": "openai/codex-security",
@@ -6431,16 +6431,16 @@
         "ClaudeCode",
         "JEV"
       ],
-      "mode": "SANDBOX_ONLY",
+      "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/qxcnm/Codex-Manager",
       "head_commit": "430eddb0af9ae6277f8133fbac7f8634b7699dc6",
       "pin_source": "https://github.com/qxcnm/Codex-Manager/commit/430eddb0af9ae6277f8133fbac7f8634b7699dc6",
-      "intake_status": "UNREVIEWED",
-      "integration_note": "Pinned to an observed default-branch SHA on 2026-10-25; this is a point-in-time source snapshot, not a security approval. GitHub license metadata: MIT. Review dependencies, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, prompt-injection risks, and isolated test evidence before any promotion. No capital, execution, production deployment, LIVE_LOCK, or secret authority.",
+      "intake_status": "BLOCKED",
+      "integration_note": "BLOCKED for deployment/integration pending a hardened configuration and security review. The sample Compose publishes a service bound to 0.0.0.0, runs container as root, uses a mutable :latest image with pull_policy always, enables gateway trace output, persists auth/database material, and includes optional Docker-socket Watchtower auto-updates. Do not run this default config on a shared or internet-reachable host or with production credentials. No capital, execution, production deployment, LIVE_LOCK, or secret authority.",
       "upstream_default_branch": "main",
       "upstream_archived": false,
       "upstream_license_spdx": "MIT",
-      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+      "upstream_license_evidence": "GitHub license metadata; sample docker-compose reviewed"
     },
     {
       "repo": "composio-community/awesome-codex-skills",
@@ -6471,16 +6471,16 @@
         "ClaudeCode",
         "GrokBot"
       ],
-      "mode": "SANDBOX_ONLY",
+      "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/router-for-me/CLIProxyAPI",
       "head_commit": "bc0643405a1d0adf77dd0f109972ac3313d66397",
       "pin_source": "https://github.com/router-for-me/CLIProxyAPI/commit/bc0643405a1d0adf77dd0f109972ac3313d66397",
-      "intake_status": "UNREVIEWED",
-      "integration_note": "Pinned to an observed default-branch SHA on 2026-10-25; this is a point-in-time source snapshot, not a security approval. GitHub license metadata: MIT. Review dependencies, build/install hooks, credential/session handling, subprocess/network behavior, secret exposure, prompt-injection risks, and isolated test evidence before any promotion. No capital, execution, production deployment, LIVE_LOCK, or secret authority.",
+      "intake_status": "BLOCKED",
+      "integration_note": "BLOCKED for AURELIA integration until endpoint exposure and credential isolation are audited. Sample Compose publishes six ports, uses a mutable :latest image by default, and mounts auth credentials, configuration, logs, and plugins from the host. Do not deploy the sample configuration in a trusted or production environment; pinned SHA is reference-only. No capital, execution, production deployment, LIVE_LOCK, or secret authority.",
       "upstream_default_branch": "main",
       "upstream_archived": false,
       "upstream_license_spdx": "MIT",
-      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+      "upstream_license_evidence": "GitHub license metadata; sample docker-compose reviewed"
     },
     {
       "repo": "OpenHands/OpenHands",
