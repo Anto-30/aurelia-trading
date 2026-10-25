@@ -77,6 +77,8 @@ jobs:
               "cline/prompts",
               "b-nnett/goose",
               "coder/agentapi",
+              "qxcnm/Codex-Manager",
+              "router-for-me/CLIProxyAPI",
           }
           for name in required_blocked:
               assert by_name[name]["intake_status"] == "BLOCKED", f"required blocker was removed: {name}"
@@ -84,6 +86,11 @@ jobs:
               if item["repo"] in required_blocked:
                   assert item["intake_status"] == "BLOCKED"
           assert by_name["coder/agentapi"]["mode"] == "REFERENCE_ONLY"
+          assert by_name["qxcnm/Codex-Manager"]["mode"] == "REFERENCE_ONLY"
+          assert by_name["router-for-me/CLIProxyAPI"]["mode"] == "REFERENCE_ONLY"
+          assert "refusal" in by_name["ryfineZ/codex-session-patcher"]["integration_note"].lower()
+          assert "root" in by_name["qxcnm/Codex-Manager"]["integration_note"].lower()
+          assert "ports" in by_name["router-for-me/CLIProxyAPI"]["integration_note"].lower()
           assert by_name["OpenHands/openhands-aci"]["mode"] == "REFERENCE_ONLY"
           assert by_name["OpenHands/OpenHands-Cloud"]["upstream_license_spdx"] == "PolyForm-Free-Trial-1.0.0"
 
