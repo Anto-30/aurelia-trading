@@ -336,7 +336,7 @@ class DerivPublicMarketDataClient:
             raise PublicMarketDataError(
                 "History start/end must be integer epochs from 0 to 9999999999 with end > start."
             )
-        if not isinstance(underlying_symbol, str) or re.fullmatch(r"\\w{2,30}", underlying_symbol, flags=re.ASCII) is None:
+        if not isinstance(underlying_symbol, str) or re.fullmatch(r"\w{2,30}", underlying_symbol, flags=re.ASCII) is None:
             raise PublicMarketDataError("History symbol must match the 2-30 character ASCII word pattern.")
         if style not in ("candles", "ticks"):
             raise PublicMarketDataError("History style must be 'candles' or 'ticks'.")
