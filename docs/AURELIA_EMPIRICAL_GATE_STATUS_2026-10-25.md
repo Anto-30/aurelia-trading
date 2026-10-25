@@ -18,13 +18,13 @@ The canonical config/LIVE_LOCK.yaml is unchanged. Public market-data tests do no
 | Item | Current evidence | Status |
 |---|---|---|
 | Local tooling | Python 3.13.5; websockets 16.0; pandas 2.2.3 imports succeeded | PASS |
-| Bounded R_100 historical probe | The local WebSocket attempt stopped at DNS resolution with gaierror: Temporary failure in name resolution; no request reached Deriv and no API response was observed | BLOCKED in local environment |
-| Remote public probe and conditional capture | Secret-free GitHub Actions workflow is being added; its actual run output/artifact must be reviewed before any data is called verified | PENDING |
+| Bounded R_100 historical probe — local | The local WebSocket attempt stopped at DNS resolution with gaierror: Temporary failure in name resolution; no request reached Deriv | BLOCKED in local environment |
+| Bounded R_100 historical probe — GitHub Actions | Run 40203287647 reached Deriv; API returned InputValidationFailed with details subscribe: must be 1 because the client sent subscribe=0. No candles were returned. The client was corrected to omit the optional field for a one-time request; the rerun result is still pending. | BLOCKED — schema correction under test |
 | Verified dataset | No verified CSV, raw JSONL or verification manifest has been produced by this environment | NOT READY |
 | MT5 export | mt5_bars.csv was not found in the current workspace | WAITING FOR ACTUAL UPLOAD |
 | Observed cost evidence | No verified transaction statement/profit_table data was supplied in this task | BLOCKED |
 
-Official API references: https://developers.deriv.com/docs/options/ws-public/ and https://developers.deriv.com/docs/data/ticks-history/. The documented ticks_history granularity schema lists allowed values including 60 seconds; it must not be described as accepting every arbitrary integer.
+Official API references: https://developers.deriv.com/docs/options/ws-public/ and https://developers.deriv.com/docs/data/ticks-history/. The documented ticks_history granularity schema lists allowed values including 60 seconds; it must not be described as accepting every arbitrary integer. The API empirically rejected subscribe=0; omit the optional subscribe field for a one-time request rather than setting subscribe=1, which is a subscription request.
 
 ### Nine release gates
 
