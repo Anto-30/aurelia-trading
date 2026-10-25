@@ -70,28 +70,50 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
         )
         if not valid_symbols:
             raise PublicMarketDataError("ticks must name a symbol or non-empty list of symbols.")
-        if "subscribe" in payload and payload["subscribe"] != 1:
+        if "subscribe" in payload and (
+            isinstance(payload["subscribe"], bool) or payload["subscribe"] != 1
+        ):
             raise PublicMarketDataError("Current ticks subscriptions accept subscribe=1 only.")
     elif operation == "ticks_history":
         if not isinstance(payload[operation], str) or not payload[operation]:
             raise PublicMarketDataError("ticks_history requires its short symbol as a string value.")
         if payload.get("style", "ticks") not in ("ticks", "candles"):
             raise PublicMarketDataError("ticks_history style must be 'ticks' or 'candles'.")
-        if "start" in payload and (not isinstance(payload["start"], int) or payload["start"] < 0):
-            raise PublicMarketDataError("ticks_history start must be a non-negative integer epoch.")
-        if "end" in payload and not (payload["end"] == "latest" or str(payload["end"]).isdigit()):
-            raise PublicMarketDataError("ticks_history end must be 'latest' or a numeric epoch string.")
-        if "count" in payload and (not isinstance(payload["count"], int) or not 1 <= payload["count"] <= 5000):
-            raise PublicMarketDataError("ticks_history count must be between 1 and 5000.")
+        if "start" in payload and (
+            isinstance(payload["start"], bool)
+            or not isinstance(payload["start"], int)
+            or not 0 <= payload["start"] <= 9999999999
+        ):
+            raise PublicMarketDataError("ticks_history start must be an integer epoch in [0, 9999999999].")
+        if "end" in payload:
+            end = payload["end"]
+            valid_end = isinstance(end, str) and (
+                end == "latest"
+                or (1 <= len(end) <= 10 and end.isdigit() and int(end) <= 9999999999)
+            )
+            if not valid_end:
+                raise PublicMarketDataError("ticks_history end must be 'latest' or a 1-10 digit epoch string.")
+        if "count" in payload and (
+            isinstance(payload["count"], bool)
+            or not isinstance(payload["count"], int)
+            or not 1 <= payload["count"] <= 5000
+        ):
+            raise PublicMarketDataError("ticks_history count must be an integer between 1 and 5000.")
         if "granularity" in payload:
-            # Current API removes the legacy fixed enum. A positive integer candle width is accepted.
-            if isinstance(payload["granularity"], bool) or not isinstance(payload["granularity"], int) or payload["granularity"] <= 0:
-                raise PublicMarketDataError("ticks_history granularity must be a positive integer.")
-        # Current API accepts 0 or 1 for these optional flags; for one-shot requests
-        # this client omits subscribe rather than relying on either value.
+            supported_granularities = {60, 120, 180, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400}
+            if (
+                isinstance(payload["granularity"], bool)
+                or not isinstance(payload["granularity"], int)
+                or payload["granularity"] not in supported_granularities
+            ):
+                raise PublicMarketDataError("ticks_history granularity must be one of the documented candle intervals.")
+        # New API schemas permit value 1 only. One-shot history requests omit both
+        # optional flags rather than sending the legacy value 0.
         for key in ("subscribe", "adjust_start_time"):
-            if key in payload and (isinstance(payload[key], bool) or payload[key] not in (0, 1)):
-                raise PublicMarketDataError(f"{key} must be 0 or 1.")
+            if key in payload and (
+                isinstance(payload[key], bool) or payload[key] != 1
+            ):
+                raise PublicMarketDataError(f"{key} must be 1 when provided.")
 
 
 def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | int]]:
