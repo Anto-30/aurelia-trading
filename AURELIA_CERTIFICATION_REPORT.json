@@ -1,6 +1,6 @@
 {
   "schema_version": "aurelia.certification-report.v1",
-  "generated_at_utc": "2026-10-25T17:48:00Z",
+  "generated_at_utc": "2026-10-25T17:55:00Z",
   "repository": "Anto-30/aurelia-trading",
   "assessed_main_commit": "d04564aca0648201feff0326fe9af0fbcee92e94",
   "overall_status": "BLOCKED",
@@ -31,16 +31,51 @@
     {
       "id": 2,
       "name": "Network recovery, rate limits, reconnect and state reconciliation",
-      "status": "NOT_RUN_BLOCKED",
-      "evidence": [],
-      "blocker": "No completed recovery-matrix artifact proving reconnect, fresh OTP handling, state reconciliation and no duplicate transactions."
+      "status": "PARTIAL_BLOCKED",
+      "evidence": [
+        {
+          "type": "github_actions_run",
+          "id": 40218683466,
+          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40218683466",
+          "conclusion": "success",
+          "scope": "localhost-only synthetic recovery matrix",
+          "tests_passed": 9,
+          "tests_total": 9,
+          "server_connections": 2,
+          "request_ids_unique": true,
+          "trade_commands_sent": 0,
+          "event_log_sha256": "9c8e80fe4ec7155dded737b681373a6372c597840b21805e316dcbb632c2bf8f",
+          "report_sha256": "5683cc51381011aebabca61063a160a8b9b47c407a47c4b9a15d4984b55e04e9"
+        }
+      ],
+      "blocker": "Synthetic localhost recovery is now proven (9/9 tests), but authenticated broker lifecycle, OTP/session renewal, broker-state reconciliation and duplicate-order behavior remain unverified. Synthetic evidence is not broker certification."
     },
     {
       "id": 3,
       "name": "3600-second VERIFY_ONLY soak",
-      "status": "NOT_RUN_BLOCKED",
-      "evidence": [],
-      "blocker": "No verified continuous 3600-second run with memory, connection and state-integrity telemetry."
+      "status": "FAILED_BLOCKED",
+      "evidence": [
+        {
+          "type": "github_actions_run",
+          "id": 40205890054,
+          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40205890054",
+          "conclusion": "failure",
+          "observed_duration_seconds": 120.463,
+          "ticks_received": 61,
+          "messages_received": 61,
+          "disconnect_or_protocol_failures": 1,
+          "event_log_sha256": "ee250dfe91c336728eb435485ea8e1eafb2b80b2845246f4ac796397e760c018",
+          "report_sha256": "1b6f560ff222e15841ed118586367033c1e2e63b96fd63c863eb5cf7493eda04"
+        },
+        {
+          "type": "github_actions_run",
+          "id": 40218683458,
+          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40218683458",
+          "conclusion": "pending_at_report_generation",
+          "finding": "Retry was queued; no 3600-second result available at report generation."
+        }
+      ],
+      "blocker": "The latest completed soak stopped after 120.463 seconds with one disconnect/protocol failure, not the required 3600 seconds. A retry is queued; until it completes and meets all pass conditions, this gate remains failed/blocked."
     },
     {
       "id": 4,
@@ -94,9 +129,9 @@
           "type": "github_actions_run",
           "id": 40218136417,
           "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40218136417",
-          "conclusion": "in_progress_at_last_check",
+          "conclusion": "in_progress_at_report_generation",
           "head_sha": "7d3387dca8bd313cf1127906cb637e649b5d6497",
-          "finding": "Newest workflow revision corrects the scanner entrypoint smoke tests and workflow concurrency expression; scan results are not yet available."
+          "finding": "Scanner image pulls and smoke tests passed; isolated source/dependency scans are still running. No scan artifact or findings conclusion is available."
         }
       ],
       "blocker": "No completed clean source-level scan or independent human disposition exists. No candidate is approved. Two repositories without top-level license files are excluded."
