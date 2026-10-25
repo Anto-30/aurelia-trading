@@ -19,12 +19,12 @@ The canonical config/LIVE_LOCK.yaml is unchanged. Public market-data tests do no
 |---|---|---|
 | Local tooling | Python 3.13.5; websockets 16.0; pandas 2.2.3 imports succeeded | PASS |
 | Bounded R_100 historical probe — local | The local WebSocket attempt stopped at DNS resolution with gaierror: Temporary failure in name resolution; no request reached Deriv | BLOCKED in local environment |
-| Bounded R_100 historical probe — GitHub Actions | Run 40203287647 reached Deriv; API returned InputValidationFailed with details subscribe: must be 1 because the client sent subscribe=0. No candles were returned. The client was corrected to omit the optional field for a one-time request; the rerun result is still pending. | BLOCKED — schema correction under test |
+| Bounded R_100 historical probe — GitHub Actions | Run 40203287647 returned InputValidationFailed (subscribe must be 1); subscribe was removed for the one-time request. Run 40203440157 then echoed explicit 2022 start/end bounds but returned five candles from 2026-10-25 (epochs 1792939020–1792939260). The strict range check stopped before full pagination. Artifact: r100-historical-provenance-40203440157, archive SHA-256 681e20c9722d40a9f8a396c309b7f506a22d609438dd75405cd6a60b26ad71a7. | BLOCKED — historical bounds not respected |
 | Verified dataset | No verified CSV, raw JSONL or verification manifest has been produced by this environment | NOT READY |
 | MT5 export | mt5_bars.csv was not found in the current workspace | WAITING FOR ACTUAL UPLOAD |
 | Observed cost evidence | No verified transaction statement/profit_table data was supplied in this task | BLOCKED |
 
-Official API references: https://developers.deriv.com/docs/options/ws-public/ and https://developers.deriv.com/docs/data/ticks-history/. The documented ticks_history granularity schema lists allowed values including 60 seconds; it must not be described as accepting every arbitrary integer. The API empirically rejected subscribe=0; omit the optional subscribe field for a one-time request rather than setting subscribe=1, which is a subscription request.
+Official API references: https://developers.deriv.com/docs/options/ws-public/ and https://developers.deriv.com/docs/data/ticks-history/. The documented ticks_history granularity schema lists allowed values including 60 seconds; it must not be described as accepting every arbitrary integer. The API rejected subscribe=0, so the client omits the optional field for one-time requests. More importantly, the API returned 2026 candles despite echoing explicit 2022 start/end bounds. Per the fail-closed directive, no further capture is attempted until this source-bound historical-query behavior is explained and independently reviewed.
 
 ### Nine release gates
 
@@ -50,4 +50,4 @@ Official API references: https://developers.deriv.com/docs/options/ws-public/ an
 
 ### Artifacts and provenance
 
-The local probe produced no API output and therefore no data hash. Hashes must be computed only from actual captured files. GitHub Actions capture artifacts, if generated, are point-in-time evidence and must be downloaded, hashed/checked and retained with the associated workflow run ID and commit SHA. The current intake PR remains independent from empirical readiness and cannot authorize live execution.
+The local probe produced no API output and therefore no data hash. Hashes must be computed only from actual captured files. The failed probe artifact is retained in GitHub Actions for 30 days with archive digest 681e20c9722d40a9f8a396c309b7f506a22d609438dd75405cd6a60b26ad71a7 and run ID 40203440157; it contains probe evidence and a failure report, not a verified dataset. GitHub Actions capture artifacts must be downloaded, hashed/checked and retained with the associated workflow run ID and commit SHA. The current intake PR remains independent from empirical readiness and cannot authorize live execution.
