@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: external-candidate-audit-\${{ github.ref }}
+  group: external-candidate-audit-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -45,9 +45,9 @@ jobs:
 
       - name: Smoke test isolated scanner command lines
         run: |
-          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges --tmpfs /tmp:rw,nosuid,nodev,size=512m --tmpfs /root/.semgrep:rw,nosuid,nodev,size=16m --entrypoint "" semgrep/semgrep:1.182.0 semgrep --version
-          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges --tmpfs /tmp:rw,nosuid,nodev,size=512m --tmpfs /root/.semgrep:rw,nosuid,nodev,size=16m --entrypoint "" semgrep/semgrep:1.182.0 semgrep scan --help >/dev/null
-          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges --tmpfs /tmp:rw,nosuid,nodev,size=512m --entrypoint "" aquasec/trivy:0.76.1 trivy --version
+          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges --tmpfs /tmp:rw,nosuid,nodev,size=512m --tmpfs /root/.semgrep:rw,nosuid,nodev,size=16m --entrypoint semgrep semgrep/semgrep:1.182.0 --version
+          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges --tmpfs /tmp:rw,nosuid,nodev,size=512m --tmpfs /root/.semgrep:rw,nosuid,nodev,size=16m --entrypoint semgrep semgrep/semgrep:1.182.0 scan --help >/dev/null
+          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges --tmpfs /tmp:rw,nosuid,nodev,size=512m --entrypoint trivy aquasec/trivy:0.76.1 --version
 
       - name: Validate audit harness syntax
         run: |
