@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "schemas/aurelia_certification_report.schema.json"
+      - "AURELIA_CERTIFICATION_REPORT.json"
       - "schema_tests/test_certification_report_schema.py"
       - ".github/workflows/certification-report-schema-gate.yml"
   workflow_dispatch:
