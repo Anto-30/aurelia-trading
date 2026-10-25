@@ -2,7 +2,7 @@
 
 ## Status
 
-This is a controlled intake proposal for 28 repositories supplied for AURELIA engineering evaluation. Registration is not a security approval, installation, dependency pin, or production integration.
+This is a controlled intake proposal for 29 repositories supplied for AURELIA engineering evaluation. Registration is not a security approval, installation, dependency pin, or production integration.
 
 - Intake candidates: 29
 - Newly added registry records: 29
