@@ -141,8 +141,11 @@ def test_client_is_pinned_to_public_endpoint_and_current_history_schema():
     with pytest.raises(PublicMarketDataError, match="both prices and times"):
         validate_history_response({"msg_type":"history","history":{"prices":[1.0]}})
 
-    for invalid_epoch in ("100", 100.0, True, -1, 10_000_000_000):
+    for invalid_epoch in ("100", 100.0, True):
         with pytest.raises(PublicMarketDataError, match="JSON integer"):
+            validate_history_response({"msg_type":"history","history":{"prices":[1.0],"times":[invalid_epoch]}})
+    for invalid_epoch in (-1, 10_000_000_000):
+        with pytest.raises(PublicMarketDataError, match="in-range integer epoch"):
             validate_history_response({"msg_type":"history","history":{"prices":[1.0],"times":[invalid_epoch]}})
     for invalid_price in ("1.0", True, float("nan"), float("inf"), 0):
         with pytest.raises(PublicMarketDataError):
