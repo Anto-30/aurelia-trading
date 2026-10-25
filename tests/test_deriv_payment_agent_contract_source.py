@@ -29,6 +29,7 @@ class DerivPaymentAgentContractSourceTests(unittest.TestCase):
             pin,
         )
         self.assertIn("content_bytes: 241091", pin)
+        self.assertIn("content_bytes: 241565", pin)
         self.assertIn("direct_live_endpoint_identity_verified: false", pin)
 
     def test_directory_list_matches_the_pinned_official_array_contract(self) -> None:
