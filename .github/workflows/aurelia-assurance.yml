@@ -35,6 +35,21 @@ jobs:
         run: python -m compileall -q runtime research tests assurance
       - name: Run static production acceptance audit
         run: python scripts/production_acceptance_audit.py
+      - name: Assert canonical safety lock integrity
+        env:
+          EXPECTED_LIVE_LOCK_BLOB_SHA: b2cddd1efb0f25f35a6a08354290f805812bf34c
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse "HEAD:config/LIVE_LOCK.yaml")"
+          echo "LIVE_LOCK_BLOB_SHA=$actual"
+          test "$actual" = "$EXPECTED_LIVE_LOCK_BLOB_SHA"
+          grep -Fxq 'live_trading_enabled: false' config/LIVE_LOCK.yaml
+          grep -Fxq 'FINAL_EXECUTION_AUTHORIZATION: false' config/LIVE_LOCK.yaml
+          grep -Fxq 'LIVE_EXECUTION: BLOCKED' config/LIVE_LOCK.yaml
+          grep -Fxq 'capital_plane_mode: VERIFY_ONLY' config/LIVE_LOCK.yaml
+          grep -Fxq 'research_capital_authority: false' config/LIVE_LOCK.yaml
+          grep -Fxq 'external_repositories_capital_forbidden: true' config/LIVE_LOCK.yaml
+          echo "CANONICAL_LIVE_LOCK=PASS"
       - name: Validate deployment and secret-provisioning script syntax
         run: |
           bash -n scripts/deploy/bootstrap_and_deploy.sh
