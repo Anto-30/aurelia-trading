@@ -1,0 +1,83 @@
+name: AURELIA Protected Deriv Read-Only Verification
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_read_only:
+        description: "Confirm this workflow performs authenticated read-only account checks only; no orders or payments."
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-protected-deriv-verification
+  cancel-in-progress: false
+
+jobs:
+  verify-read-only:
+    if: github.ref == 'refs/heads/main' && inputs.confirm_read_only == true
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    env:
+      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+      DERIV_ENVIRONMENT: real
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      LIVE_EXECUTION: "BLOCKED"
+      AURELIA_VERIFY_DERIV_AUTH: "true"
+    steps:
+      - name: Reject unexpected trigger context
+        env:
+          REF: ${{ github.ref }}
+          CONFIRM_READ_ONLY: ${{ inputs.confirm_read_only }}
+        run: |
+          test "$REF" = "refs/heads/main"
+          test "$CONFIRM_READ_ONLY" = "true"
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+      - name: Verify authenticated account binding and balance (read-only)
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: real
+          DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
+        run: python scripts/verify_deriv_session.py
+      - name: Verify broker account statement and portfolio (read-only)
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: real
+          DERIV_BROKER_EVIDENCE_OUT: artifacts/deriv_broker_account_evidence.json
+        run: python scripts/verify_deriv_broker_evidence.py
+      - name: Upload sanitized authenticated session evidence
+        if: always() && hashFiles('artifacts/deriv_authenticated_session.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: deriv-authenticated-session-read-only
+          path: artifacts/deriv_authenticated_session.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Upload broker account evidence
+        if: always() && hashFiles('artifacts/deriv_broker_account_evidence.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: deriv-broker-account-read-only
+          path: artifacts/deriv_broker_account_evidence.json
+          if-no-files-found: error
+          retention-days: 3
