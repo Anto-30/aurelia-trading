@@ -1,0 +1,57 @@
+name: R100 Historical Data Provenance (Secret-Free)
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "SYSTEM_DIRECTIVE.md"
+      - "tools/fetch_r100_historical.py"
+      - "tools/reconcile_mt5.py"
+      - "docs/AURELIA_EMPIRICAL_GATE_STATUS_2026-10-25.md"
+      - ".github/workflows/deriv-r100-historical.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r100-historical-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  historical-provenance:
+    name: Probe then conditionally capture public R_100 history
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout reviewed source
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install repository-pinned public WebSocket dependency
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Validate script syntax and tooling
+        run: |
+          python -m py_compile tools/fetch_r100_historical.py tools/reconcile_mt5.py
+          python -c "import websockets; print('WEBSOCKETS_VERSION=' + websockets.__version__)"
+
+      - name: Bounded public historical probe then strict full capture
+        run: python tools/fetch_r100_historical.py --full
+
+      - name: Preserve raw capture, verification manifest or failure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r100-historical-provenance-${{ github.run_id }}
+          path: data/r100_historical_2022-2024/
+          if-no-files-found: ignore
+          retention-days: 30
