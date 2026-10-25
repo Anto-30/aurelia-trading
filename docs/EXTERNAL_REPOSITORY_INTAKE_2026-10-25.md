@@ -2,11 +2,11 @@
 
 ## Status
 
-This is a controlled intake proposal for 29 repositories supplied for AURELIA engineering evaluation. Registration is not a security approval, installation, dependency pin, or production integration.
+This is a controlled intake proposal for 33 repositories supplied for AURELIA engineering evaluation. Registration is not a security approval, installation, dependency pin, or production integration.
 
-- Intake candidates: 29
-- Newly added registry records: 29
-- Candidate head revisions: 29/29 pinned to the observed default-branch commit snapshot queried on 2026-10-25. The exact commit links and author dates are recorded in the pin manifest below. This is source provenance only, not a security approval.
+- Intake candidates: 33
+- Newly added registry records: 33
+- Candidate head revisions: 33/33 pinned to the observed default-branch commit snapshot queried on 2026-10-25. The exact commit links and author dates are recorded in the pin manifest below. This is source provenance only, not a security approval.
 - Runtime installation: none performed by this change.
 - Capital/execution authority: none.
 - `config/LIVE_LOCK.yaml` is unchanged and remains fail-closed.
@@ -67,8 +67,12 @@ License dispositions use GitHub repository license metadata unless the table not
 | `coder/agentapi` | `main` | [`7c468d5b25ec`](https://github.com/coder/agentapi/commit/7c468d5b25ec9d3d76c41313cf4e08904ff5968d) | 2026-09-13 | MIT | Yes | BLOCKED — archived |
 | `aide/aide` | `master` | [`db923656149e`](https://github.com/aide/aide/commit/db923656149ea64bee63f7e45275322a20c7dbe3) | 2026-10-18 | GPL-2.0 | No | UNREVIEWED |
 | `iamfakeguru/agent-md` | `main` | [`65c6a8e8ca1b`](https://github.com/iamfakeguru/agent-md/commit/65c6a8e8ca1b2aa3a84fde5b1ea20f1abbbf063f) | 2026-09-21 | MIT | No | UNREVIEWED |
+| `Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance` | `master` | [`6cd9f639ac7f`](https://github.com/Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance/commit/6cd9f639ac7f9d914d556738ca3aeeef53618146) | 2019-01-18 | MIT | No | BLOCKED — legacy exchange code / stale snapshot |
+| `x1xhlol/system-prompts-and-models-of-ai-tools` | `main` | [`162db92f54d7`](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools/commit/162db92f54d717d8ebd12292e155aeef32bb4b3c) | 2026-10-12 | GPL-3.0 | No | BLOCKED — third-party prompt provenance |
+| `elder-plinius/CL4R1T4S` | `main` | [`a4d3da04e633`](https://github.com/elder-plinius/CL4R1T4S/commit/a4d3da04e63324e794a65500c3e41994fc4ab02e) | 2026-09-22 | AGPL-3.0 | No | BLOCKED — third-party prompt provenance |
+| `dyad-sh/dyad` | `main` | [`1be2b4b6d2c7`](https://github.com/dyad-sh/dyad/commit/1be2b4b6d2c70a4550db7b96e26fc75c50bf5bc0) | 2026-10-22 | Apache-2.0 / FSL-1.1-ALv2 in `src/pro` | No | UNREVIEWED — mixed license |
 
-**Pinned set:** 29/29. **Blocked pending prerequisites:** seven. **Security/functional source audits and isolated tests:** not yet completed. `coder/agentapi` is archived and its pinned commit subject explicitly says deprecated and unmaintained; OpenHands ACI and `b-nnett/goose` are archived; the three no-license skill/session/prompt sources are blocked from installation or redistribution; OpenHands Cloud is blocked for adoption pending legal review of its restrictive license.
+**Pinned set:** 33/33. **Blocked pending prerequisites:** twelve. **Security/functional source audits and isolated tests:** not yet completed. `coder/agentapi` is archived and its pinned commit subject explicitly says deprecated and unmaintained; OpenHands ACI and `b-nnett/goose` are archived; the no-license skill/session/prompt sources are blocked from installation or redistribution; OpenHands Cloud is blocked for adoption pending legal review of its restrictive license; legacy Roibal trading code and third-party prompt collections are blocked pending security, provenance and license review.
 
 Pinning establishes provenance only. It does not establish license compatibility, benign behavior, maintainability, successful installation, test coverage, or fitness for AURELIA.
 
@@ -106,6 +110,10 @@ Pinning establishes provenance only. It does not establish license compatibility
 | `coder/agentapi` | REFERENCE_ONLY (BLOCKED) | agent-runtime-api (deprecated/unmaintained signal) |
 | `aide/aide` | REFERENCE_ONLY | developer-agent-tooling-identity-unverified |
 | `iamfakeguru/agent-md` | REFERENCE_ONLY | agent-instruction-conventions |
+| `Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance` | REFERENCE_ONLY (BLOCKED) | legacy trading code / credential and exchange API review |
+| `x1xhlol/system-prompts-and-models-of-ai-tools` | REFERENCE_ONLY (BLOCKED) | third-party AI prompt collection / provenance and license |
+| `elder-plinius/CL4R1T4S` | REFERENCE_ONLY (BLOCKED) | third-party AI prompt collection / AGPL and provenance |
+| `dyad-sh/dyad` | REFERENCE_ONLY | local AI app builder / mixed license and sandbox review |
 
 ## Completion criteria
 
