@@ -131,6 +131,8 @@ def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | 
 
 
 def validate_history_response(message: dict[str, Any]) -> tuple[list[float], list[int]]:
+    if not isinstance(message, dict):
+        raise PublicMarketDataError("History response must be a JSON object.")
     if message.get("msg_type") != "history":
         raise PublicMarketDataError(f"Expected history response, got {message.get('msg_type')!r}.")
     history = message.get("history")
@@ -141,18 +143,18 @@ def validate_history_response(message: dict[str, Any]) -> tuple[list[float], lis
         raise PublicMarketDataError("Current ticks-history schema requires both prices and times arrays.")
     if len(prices) != len(times):
         raise PublicMarketDataError("history.prices and history.times lengths differ.")
-    clean_prices, clean_times = [], []
+    clean_prices: list[float] = []
+    clean_times: list[int] = []
     for price, epoch in zip(prices, times):
-        try:
-            px = float(price)
-            epoch_f = float(epoch)
-            ts = int(epoch_f)
-        except (TypeError, ValueError, OverflowError) as exc:
-            raise PublicMarketDataError("History price/time value is invalid.") from exc
-        if not math.isfinite(px) or px <= 0 or not math.isfinite(epoch_f) or epoch_f != ts:
-            raise PublicMarketDataError("History price/time must be finite, positive price and integer epoch.")
+        if isinstance(price, bool) or not isinstance(price, (int, float)):
+            raise PublicMarketDataError("History price must be a JSON number, not a string or boolean.")
+        if isinstance(epoch, bool) or not isinstance(epoch, int):
+            raise PublicMarketDataError("History time must be a JSON integer epoch.")
+        px = float(price)
+        if not math.isfinite(px) or px <= 0 or not 0 <= epoch <= 9999999999:
+            raise PublicMarketDataError("History price/time must be finite, positive price and in-range integer epoch.")
         clean_prices.append(px)
-        clean_times.append(ts)
+        clean_times.append(epoch)
     if any(b <= a for a, b in zip(clean_times, clean_times[1:])):
         raise PublicMarketDataError("History times must be strictly increasing with no duplicates.")
     return clean_prices, clean_times
