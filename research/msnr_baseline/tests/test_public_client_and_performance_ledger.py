@@ -604,6 +604,7 @@ def test_ticks_history_rejects_ticks_outside_requested_time_window(monkeypatch, 
                 underlying_symbol="R_100",
                 start_epoch=1666310400,
                 end_epoch=1666310460,
+                granularity_seconds=60,
                 style="ticks",
                 count=1,
             )
@@ -630,6 +631,7 @@ def test_ticks_history_accepts_ticks_within_requested_time_window(monkeypatch):
             underlying_symbol="R_100",
             start_epoch=1666310400,
             end_epoch=1666310460,
+            granularity_seconds=60,
             style="ticks",
         )
         assert result == valid_history
