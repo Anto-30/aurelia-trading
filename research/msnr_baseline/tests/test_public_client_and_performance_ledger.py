@@ -579,3 +579,59 @@ def test_ticks_history_accepts_candles_within_requested_time_window(monkeypatch)
         assert result == valid_response
 
     asyncio.run(run())
+
+
+@pytest.mark.parametrize("returned_epoch", [1666310399, 1666310460, 1792876920])
+def test_ticks_history_rejects_ticks_outside_requested_time_window(monkeypatch, returned_epoch):
+    async def run():
+        client = DerivPublicMarketDataClient()
+        latest_tick_history = {
+            "msg_type": "history",
+            "history": {"prices": [668.69], "times": [returned_epoch]},
+        }
+
+        async def fake_request(payload, *, expected_msg_type=None):
+            assert payload["ticks_history"] == "R_100"
+            assert payload["start"] == 1666310400
+            assert payload["end"] == "1666310459"
+            assert payload["count"] == 1
+            assert expected_msg_type == "history"
+            return latest_tick_history
+
+        monkeypatch.setattr(client, "request", fake_request)
+        with pytest.raises(PublicMarketDataError, match="outside the requested half-open range"):
+            await client.ticks_history(
+                underlying_symbol="R_100",
+                start_epoch=1666310400,
+                end_epoch=1666310460,
+                style="ticks",
+                count=1,
+            )
+
+    asyncio.run(run())
+
+
+def test_ticks_history_accepts_ticks_within_requested_time_window(monkeypatch):
+    async def run():
+        client = DerivPublicMarketDataClient()
+        valid_history = {
+            "msg_type": "history",
+            "history": {"prices": [668.69, 669.60], "times": [1666310400, 1666310459]},
+        }
+
+        async def fake_request(payload, *, expected_msg_type=None):
+            assert payload["end"] == "1666310459"
+            assert payload["count"] == 5000
+            assert expected_msg_type == "history"
+            return valid_history
+
+        monkeypatch.setattr(client, "request", fake_request)
+        result = await client.ticks_history(
+            underlying_symbol="R_100",
+            start_epoch=1666310400,
+            end_epoch=1666310460,
+            style="ticks",
+        )
+        assert result == valid_history
+
+    asyncio.run(run())
