@@ -98,7 +98,7 @@ def test_candle_normalizer_rejects_invalid_window_and_granularity(start_epoch, e
         (-60, 0, 60),
         (1_666_320_000, 1_666_320_060, 0),
         (1_666_320_001, 1_666_320_061, 60),
-        (1_666_320_000, 1_666_320_900, 60),
+        (1_666_320_000, 1_666_320_901, 60),
     ],
 )
 def test_candle_payload_builder_rejects_invalid_window_and_granularity(start_epoch, end_exclusive, granularity):
