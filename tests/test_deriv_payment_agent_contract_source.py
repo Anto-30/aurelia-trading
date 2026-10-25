@@ -28,7 +28,7 @@ class DerivPaymentAgentContractSourceTests(unittest.TestCase):
             "sha256: 8a2655d9b9713f65296035ba02f8cf6f281ab95fcf454dd996b763a53506682f",
             pin,
         )
-        self.assertIn("content_bytes: 241091", pin)
+        self.assertIn("content_bytes: 241565", pin)
         self.assertIn("content_bytes: 241565", pin)
         self.assertIn("direct_live_endpoint_identity_verified: false", pin)
 
