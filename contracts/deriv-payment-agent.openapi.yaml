@@ -7,7 +7,7 @@ info:
     Deriv API schemas release production_v20260901_0. The exact source snapshot is
     pinned in x-aurelia-upstream-source below. Equality with the live endpoint
     https://api.derivws.com/data/production-openapi.json has not been verified;
-    fetch and hash that endpoint before generating a runtime client.
+    fetch and hash that endpoint before generating a runtime client. The pinned schema describes OAuth2 with the payment scope; PAT/header compatibility outside that specification is not assumed.
 
     SAFETY: default AURELIA mode is TEST_ONLY. This specification grants no external
     request permission. Tests must use fake HTTP transport; no real-money transfer,
@@ -34,7 +34,7 @@ tags:
   - name: Transfers
   - name: Withdrawals
 security:
-  - BearerAuth: []
+  - oauth2: [payment]
 x-aurelia-safety-policy:
   specificationOnly: true
   defaultMode: TEST_ONLY
@@ -67,9 +67,8 @@ paths:
       tags: [Agent discovery]
       summary: Get supported agent countries and currencies
       security:
-        - BearerAuth: []
+        - oauth2: [payment]
       parameters:
-        - $ref: '#/components/parameters/DerivAppId'
       responses:
         '200':
           description: Statistics returned.
@@ -87,9 +86,8 @@ paths:
       summary: List agents for a currency
       description: Official paginated array of payment agents. The schema is matched to the pinned versioned source snapshot; live endpoint identity remains unverified.
       security:
-        - BearerAuth: []
+        - oauth2: [payment]
       parameters:
-        - $ref: '#/components/parameters/DerivAppId'
         - name: currency
           in: query
           required: true
@@ -124,7 +122,6 @@ paths:
       summary: Get full payment-agent profile
       description: The literal id me returns the authenticated caller's own agent profile.
       parameters:
-        - $ref: '#/components/parameters/DerivAppId'
         - name: id
           in: path
           required: true
@@ -147,7 +144,6 @@ paths:
       tags: [Client settings]
       summary: Read client's payment-agent settings
       parameters:
-        - $ref: '#/components/parameters/DerivAppId'
       responses:
         '200':
           description: Current settings.
@@ -165,7 +161,6 @@ paths:
       description: Mutates a privacy preference. Denied in TEST_ONLY; any later use requires explicit human action.
       x-aurelia-default-mode: DENY
       parameters:
-        - $ref: '#/components/parameters/DerivAppId'
       requestBody:
         required: true
         content:
@@ -204,7 +199,6 @@ paths:
         Never blindly retry an ambiguous write; reconcile by the same request_id.
       x-aurelia-default-mode: DENY_REAL_TRANSFER
       parameters:
-        - $ref: '#/components/parameters/DerivAppId'
       requestBody:
         required: true
         content:
@@ -227,7 +221,6 @@ paths:
       tags: [Transfers]
       summary: Reconcile a transfer by its original request id
       parameters:
-        - $ref: '#/components/parameters/DerivAppId'
         - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
@@ -248,7 +241,6 @@ paths:
       description: Sends code to registered contact; an external side effect. Denied in TEST_ONLY and unit tests.
       x-aurelia-default-mode: DENY
       parameters:
-        - $ref: '#/components/parameters/DerivAppId'
       requestBody:
         required: true
         content:
@@ -276,7 +268,6 @@ paths:
         six-digit verification code and unique request_id.
       x-aurelia-default-mode: DENY
       parameters:
-        - $ref: '#/components/parameters/DerivAppId'
       requestBody:
         required: true
         content:
@@ -299,7 +290,6 @@ paths:
       tags: [Withdrawals]
       summary: Reconcile a withdrawal by its original request id
       parameters:
-        - $ref: '#/components/parameters/DerivAppId'
         - $ref: '#/components/parameters/RequestId'
       responses:
         '200':
@@ -314,18 +304,18 @@ paths:
         '504': { $ref: '#/components/responses/Timeout' }
 components:
   securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: OAuth2 access token or PAT
-      description: Requires OAuth2 payment scope. PAT also requires Deriv-App-ID; OAuth bearer tokens do not.
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.deriv.com/oauth2/authorize
+          tokenUrl: https://oauth.deriv.com/oauth2/token
+          scopes:
+            trade: Access to trading operations
+            account_manage: Write access for account creation and management
+            application_read: Read-only access to registered applications
+            payment: Access to payment agent deposit and withdrawal operations
   parameters:
-    DerivAppId:
-      name: Deriv-App-ID
-      in: header
-      required: false
-      description: Required only for PAT authentication.
-      schema: { type: string, minLength: 1 }
     RequestId:
       name: request_id
       in: path
