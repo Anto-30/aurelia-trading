@@ -197,6 +197,8 @@ def validate_history_response(message: dict[str, Any]) -> tuple[list[float], lis
     prices, times = history.get("prices"), history.get("times")
     if not isinstance(prices, list) or not isinstance(times, list):
         raise PublicMarketDataError("Current ticks-history schema requires both prices and times arrays.")
+    if not prices or not times:
+        raise PublicMarketDataError("History response must contain at least one price/time observation.")
     if len(prices) != len(times):
         raise PublicMarketDataError("history.prices and history.times lengths differ.")
     clean_prices, clean_times = [], []

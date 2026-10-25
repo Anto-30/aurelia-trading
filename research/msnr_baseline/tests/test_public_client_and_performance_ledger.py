@@ -284,6 +284,11 @@ def test_market_data_response_validators_reject_coerced_json_types():
         validate_history_response(None)
 
 
+def test_history_response_validator_rejects_empty_history_responses():
+    with pytest.raises(PublicMarketDataError, match="at least one"):
+        validate_history_response({"msg_type": "history", "history": {"prices": [], "times": []}})
+
+
 def test_history_builder_keeps_ticks_history_request_key():
     client = DerivPublicMarketDataClient()
     with pytest.raises(PublicMarketDataError, match="Candle granularity must be one of"):
