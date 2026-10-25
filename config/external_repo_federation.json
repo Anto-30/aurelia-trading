@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-10-25",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -6321,6 +6321,468 @@
         "developer-experience-reference"
       ],
       "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "iOfficeAI/OfficeCLI",
+      "category": "office-document-agent-tool",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/iOfficeAI/OfficeCLI",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "Jia-Ethan/codex-keysmith",
+      "category": "agent-instruction-management",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Jia-Ethan/codex-keysmith",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "Loongphy/codex-auth",
+      "category": "credential-account-manager",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Loongphy/codex-auth",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "ryfineZ/codex-session-patcher",
+      "category": "session-modification-tool",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/ryfineZ/codex-session-patcher",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "openai/codex-security",
+      "category": "code-security-assurance",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/openai/codex-security",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "qxcnm/Codex-Manager",
+      "category": "coding-agent-account-management",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/qxcnm/Codex-Manager",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "composio-community/awesome-codex-skills",
+      "category": "agent-skills-catalog",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/composio-community/awesome-codex-skills",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "router-for-me/CLIProxyAPI",
+      "category": "llm-api-proxy",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/router-for-me/CLIProxyAPI",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "OpenHands/OpenHands",
+      "category": "coding-agent-application",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/OpenHands/OpenHands",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "OpenHands/software-agent-sdk",
+      "category": "coding-agent-sdk",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/OpenHands/software-agent-sdk",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "OpenHands/extensions",
+      "category": "agent-extension-registry",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/OpenHands/extensions",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "OpenHands/OpenHands-CLI",
+      "category": "coding-agent-cli",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/OpenHands/OpenHands-CLI",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "OpenHands/automation",
+      "category": "agent-automation-orchestration",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "GoogleAgentSkills",
+        "ClaudeCode"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/OpenHands/automation",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "OpenHands/openhands-aci",
+      "category": "agent-computer-interaction",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/OpenHands/openhands-aci",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "OpenHands/OpenHands-Cloud",
+      "category": "hosted-agent-platform",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/OpenHands/OpenHands-Cloud",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "cline/cline",
+      "category": "coding-agent-extension",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/cline/cline",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "cline/prompts",
+      "category": "agent-prompt-library",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/cline/prompts",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "decolua/9router",
+      "category": "llm-api-router",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/decolua/9router",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "aaif-goose/goose",
+      "category": "coding-agent-framework",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/aaif-goose/goose",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "pressly/goose",
+      "category": "database-migration-tool",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/pressly/goose",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "b-nnett/goose",
+      "category": "goose-project-identity-unverified",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/b-nnett/goose",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "gooseworks-ai/goose-skills",
+      "category": "agent-skills-library",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/gooseworks-ai/goose-skills",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "mz-automation/libiec61850",
+      "category": "industrial-protocol-library",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/mz-automation/libiec61850",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "tag1consulting/goose",
+      "category": "rust-load-testing-tool",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/tag1consulting/goose",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "Aider-AI/aider",
+      "category": "coding-agent",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Aider-AI/aider",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "hotovo/aider-desk",
+      "category": "coding-agent-ui",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/hotovo/aider-desk",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "coder/agentapi",
+      "category": "agent-runtime-api",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/coder/agentapi",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "aide/aide",
+      "category": "developer-agent-tooling-identity-unverified",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/aide/aide",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
+    },
+    {
+      "repo": "iamfakeguru/agent-md",
+      "category": "agent-instruction-conventions",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/iamfakeguru/agent-md",
+      "head_commit": "SYNC_REQUIRED",
+      "pin_source": "pending_external_repo_sync_workflow_verification_2026-10-25",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Intake registration only. Not approved for installation or execution. Resolve current head SHA, license, maintenance, dependency and security findings before promotion. External source has no capital, execution, production deployment, LIVE_LOCK, or secret authority."
     }
   ],
   "pin_policy": {
