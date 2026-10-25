@@ -51,8 +51,8 @@ class CISecurityBoundaryTests(unittest.TestCase):
         workflow = (
             ROOT / ".github" / "workflows" / "aurelia-free-runtime.yml"
         ).read_text(encoding="utf-8")
-        self.assertNotRegex(workflow, r"\\$\\{\\{[^}]*\\bsecrets\\s*\\.")
-        self.assertNotRegex(workflow, r"(?m)^\\s*environment:\\s*production\\s*$")
+        self.assertNotRegex(workflow, r"\$\{\{[^}]*\bsecrets\s*\.")
+        self.assertNotRegex(workflow, r"(?m)^\s*environment:\s*production\s*$")
         self.assertIn("if: github.ref == 'refs/heads/main'", workflow)
         self.assertIn('AURELIA_VERIFY_DERIV_AUTH: "false"', workflow)
         self.assertIn("persist-credentials: false", workflow)
@@ -61,15 +61,15 @@ class CISecurityBoundaryTests(unittest.TestCase):
         self.assertNotIn("whatsapp-alert-smoke:", workflow)
         self.assertRegex(
             workflow,
-            r"(?m)^\\s*- uses: [^\\s@]+@[0-9a-f]{40}(?:\\s+#.*)?$",
+            r"(?m)^\s*- uses: [^\s@]+@[0-9a-f]{40}(?:\s+#.*)?$",
         )
 
     def test_secret_presence_report_gates_main_and_scopes_secrets_to_report_step(self):
         path = ROOT / ".github" / "workflows" / "secret-presence-report.yml"
         workflow = path.read_text(encoding="utf-8")
-        secret_expression = r"\\$\\{\\{[^}]*\\bsecrets\\s*\\."
+        secret_expression = r"\$\{\{[^}]*\bsecrets\s*\."
         self.assertIn("if: github.ref == 'refs/heads/main'", workflow)
-        self.assertRegex(workflow, r"(?m)^\\s*environment:\\s*production\\s*$")
+        self.assertRegex(workflow, r"(?m)^\s*environment:\s*production\s*$")
         self.assertIn("persist-credentials: false", workflow)
         before_steps = workflow.split("    steps:", 1)[0]
         self.assertNotRegex(before_steps, secret_expression)
@@ -103,7 +103,7 @@ class CISecurityBoundaryTests(unittest.TestCase):
         self.assertNotIn("          - LIVE", workflow)
         self.assertNotIn("if: inputs.deployment_mode == 'LIVE'", workflow)
         self.assertNotRegex(
-            workflow, r"\\$\\{\\{[^}]*\\bsecrets\\s*\\.\\s*DERIV_"
+            workflow, r"\$\{\{[^}]*\bsecrets\s*\.\s*DERIV_"
         )
         sections = re.split(r"(?m)^      - name: ", workflow)
         secret_sections = [section for section in sections if "secrets." in section]
@@ -127,10 +127,10 @@ class CISecurityBoundaryTests(unittest.TestCase):
                 self.assertIn("exit 1", workflow)
                 self.assertIn("permissions: {}", workflow)
                 self.assertNotRegex(
-                    workflow, r"\\$\\{\\{[^}]*\\bsecrets\\s*\\."
+                    workflow, r"\$\{\{[^}]*\bsecrets\s*\."
                 )
                 self.assertNotRegex(
-                    workflow, r"(?m)^\\s*environment:\\s*production\\s*$"
+                    workflow, r"(?m)^\s*environment:\s*production\s*$"
                 )
                 self.assertNotIn("schedule:", workflow)
                 self.assertNotIn("actions/checkout@", workflow)
