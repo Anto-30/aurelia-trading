@@ -59,6 +59,28 @@ def safe_env() -> dict[str, str]:
     return result
 
 
+def safe_tool_failure_class(stderr: str, stdout: str) -> str:
+    text = ((stderr or "") + "\\n" + (stdout or "")).lower()
+    patterns = [
+        (("no such option", "unrecognized option", "unknown option"), "CLI_OPTION_ERROR"),
+        (("usage:", "invalid choice", "unrecognized arguments"), "CLI_ARGUMENT_ERROR"),
+        (("could not resolve", "failed to fetch", "failed to download", "connection refused",
+          "temporary failure in name resolution", "certificate verify failed", "http error"),
+         "NETWORK_OR_RULESET_FETCH_ERROR"),
+        (("permission denied", "read-only file system", "operation not permitted"),
+         "SANDBOX_FILESYSTEM_ERROR"),
+        (("no such file or directory", "executable file not found", "not found"),
+         "EXECUTABLE_OR_PATH_ERROR"),
+        (("invalid configuration", "could not find config", "could not resolve config",
+          "failed to load config", "no config found"), "RULESET_CONFIGURATION_ERROR"),
+        (("semgrep-core", "internal error", "traceback"), "SCANNER_RUNTIME_ERROR"),
+    ]
+    for needles, code in patterns:
+        if any(needle in text for needle in needles):
+            return code
+    return "SCANNER_NONZERO_EXIT"
+
+
 def run_command(
     command: list[str],
     *,
@@ -93,6 +115,7 @@ def run_command(
                 if match:
                     print("SAFE_TOOL_CLI_HINT=" + match.group(0)[:160])
                     break
+        print("SAFE_TOOL_FAILURE_CLASS=" + safe_tool_failure_class(process.stderr, process.stdout))
         raise RuntimeError(
             "COMMAND_FAILED:"
             + Path(command[0]).name
@@ -379,9 +402,10 @@ def run_semgrep(
     repo_dir: Path, scratch_dir: Path, cache_dir: Path, image: str
 ) -> dict[str, Any]:
     raw_path = scratch_dir / "semgrep.raw.json"
-    command = docker_common_args(image, "semgrep", repo_dir, scratch_dir, cache_dir) + [
-        "scan", "--config", "p/default", "--config", "p/secrets",
-        "--metrics=off", "--disable-version-check", "--json",
+    command = docker_common_args(image, "", repo_dir, scratch_dir, cache_dir) + [
+        "semgrep", "--disable-version-check", "scan",
+        "--config", "p/default", "--config", "p/secrets",
+        "--metrics=off", "--json",
         "--output", "/scan/semgrep.raw.json", "--exit-zero",
         "--exclude", ".git", "/src",
     ]
@@ -405,8 +429,8 @@ def run_trivy(
 ) -> dict[str, Any]:
     raw_path = scratch_dir / "trivy.raw.json"
     sbom_path = candidate_out / "sbom.cdx.json"
-    command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir) + [
-        "fs", "--cache-dir", "/root/.cache/trivy",
+    command = docker_common_args(image, "", repo_dir, scratch_dir, cache_dir) + [
+        "trivy", "fs", "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,misconfig,secret,license",
         "--format", "json", "--output", "/scan/trivy.raw.json", "/src",
     ]
@@ -423,8 +447,8 @@ def run_trivy(
             raw_path.unlink()
 
     # Write an SBOM containing package/license metadata; do not include the secret scan output.
-    sbom_command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir) + [
-        "fs", "--cache-dir", "/root/.cache/trivy",
+    sbom_command = docker_common_args(image, "", repo_dir, scratch_dir, cache_dir) + [
+        "trivy", "fs", "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,license",
         "--format", "cyclonedx", "--output", "/scan/sbom.cdx.json", "/src",
     ]
