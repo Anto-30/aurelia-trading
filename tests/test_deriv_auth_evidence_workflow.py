@@ -1,35 +1,32 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKFLOW = ROOT / ".github" / "workflows" / "deriv-auth-evidence.yml"
+LEGACY_WORKFLOWS = (
+    ".github/workflows/deriv-auth-evidence.yml",
+    ".github/workflows/deriv-session-verification.yml",
+    ".github/workflows/deriv-verify-only-lifecycle.yml",
+)
 
 
-def test_scheduled_deriv_verifier_loads_production_environment_secrets() -> None:
-    workflow = WORKFLOW.read_text(encoding="utf-8")
+def test_legacy_deriv_workflows_are_retired_without_secret_or_network_access() -> None:
+    for relative_path in LEGACY_WORKFLOWS:
+        workflow_path = ROOT / relative_path
+        workflow = workflow_path.read_text(encoding="utf-8")
 
-    assert "environment: production" in workflow
-    assert "DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}" in workflow
-    assert "DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}" in workflow
-    assert "DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}" in workflow
-    assert "secrets.DERIV_AUTH_MODE" not in workflow
-    assert "DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}" in workflow
-    assert "DERIV_AUTH_SESSION=BLOCKED_EXPECTED_CURRENCY_MISSING" in workflow
-    assert "DERIV_AUTH_SESSION=BLOCKED_UNSUPPORTED_CURRENCY" in workflow
-    assert "secrets.DERIV_EXPECTED_CURRENCY || 'USD'" not in workflow
+        assert "workflow_dispatch:" in workflow, relative_path
+        assert "LEGACY_DERIV_WORKFLOW=RETIRED" in workflow, relative_path
+        assert "exit 1" in workflow, relative_path
+        assert "permissions: {}" in workflow, relative_path
 
-
-def test_scheduled_workflow_generates_read_only_broker_account_evidence() -> None:
-    workflow = WORKFLOW.read_text(encoding="utf-8")
-    assert "python scripts/verify_deriv_broker_evidence.py" in workflow
-    assert "artifacts/deriv_broker_account_evidence.json" in workflow
-
-
-def test_scheduled_deriv_verifier_keeps_capital_authority_blocked() -> None:
-    workflow = WORKFLOW.read_text(encoding="utf-8")
-
-    assert 'FINAL_EXECUTION_AUTHORIZATION: "false"' in workflow
-    assert 'LIVE_EXECUTION: "BLOCKED"' in workflow
-    assert 'echo "DERIV_ORDERS_SUBMITTED=0"' in workflow
+        # Legacy workflows must not expose protected credentials to branch code,
+        # schedule recurring account access, download source, or run a verifier.
+        assert not re.search(r"\$\{\{[^}]*\bsecrets\s*\.", workflow), relative_path
+        assert not re.search(r"(?m)^\s*environment:\s*production\s*$", workflow), relative_path
+        assert "schedule:" not in workflow, relative_path
+        assert "actions/checkout@" not in workflow, relative_path
+        assert "python scripts/verify_deriv_" not in workflow, relative_path
+        assert "Upload" not in workflow, relative_path
