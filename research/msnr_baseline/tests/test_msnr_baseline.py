@@ -390,6 +390,106 @@ def test_simulator_rejects_legacy_inclusive_end_manifest(tmp_path):
         sim.load_verified_inputs(csv_path, manifest_path, verification_path, ROOT / "config" / "model_frozen.json")
 
 
+def test_simulator_rejects_legacy_unverified_linear_proxy_override(tmp_path):
+    with pytest.raises(sim.SimulationError, match="legacy --allow-unverified-linear-proxy override is prohibited"):
+        sim.require_empirically_qualified_economics(
+            tmp_path / "COST_MODEL.json",
+            allow_unverified_linear_proxy=True,
+            repository_root=tmp_path,
+        )
+
+
+def test_simulator_requires_observed_cost_model_file(tmp_path):
+    with pytest.raises(sim.SimulationError, match="cost model does not exist"):
+        sim.require_empirically_qualified_economics(
+            tmp_path / "config" / "COST_MODEL.json",
+            allow_unverified_linear_proxy=False,
+            repository_root=tmp_path,
+        )
+
+
+def test_simulator_rejects_cost_model_when_observed_delta_exceeds_tolerance(tmp_path):
+    evidence = tmp_path / "profit_table.json"
+    evidence.write_text(json.dumps({"fixture": "synthetic-only"}), encoding="utf-8")
+    model_dir = tmp_path / "config"
+    model_dir.mkdir()
+    cost_path = model_dir / "COST_MODEL.json"
+    cost_model = {
+        "schema": "aurelia.deriv.cost_model.v1",
+        "status": "VERIFIED_FROM_OBSERVED_CASH_FLOWS",
+        "underlying_symbol": "R_100",
+        "contract_type": "SYNTHETIC_TEST_ONLY",
+        "currency": "TEST",
+        "payoff_engine_id": "unsupported.synthetic.test",
+        "source_endpoint": "profit_table",
+        "source_evidence_path": "profit_table.json",
+        "source_evidence_sha256": hashlib.sha256(evidence.read_bytes()).hexdigest(),
+        "observed_trade_count": 1,
+        "theoretical_gross_pnl_total": 10.0,
+        "realized_net_pnl_total": 7.0,
+        "known_fees_total": 2.0,
+        "residual_tolerance_total": 0.0,
+    }
+    cost_path.write_text(json.dumps(cost_model), encoding="utf-8")
+    with pytest.raises(sim.SimulationError, match="gross-minus-net delta"):
+        sim.require_empirically_qualified_economics(cost_path, False, tmp_path)
+
+
+def test_simulator_blocks_even_reconciled_cost_model_without_contract_payoff_engine(tmp_path):
+    # Synthetic fixture checks the gate only; it is not a real Deriv statement or trade result.
+    evidence = tmp_path / "profit_table.json"
+    evidence.write_text(json.dumps({"fixture": "synthetic-only"}), encoding="utf-8")
+    model_dir = tmp_path / "config"
+    model_dir.mkdir()
+    cost_path = model_dir / "COST_MODEL.json"
+    cost_model = {
+        "schema": "aurelia.deriv.cost_model.v1",
+        "status": "VERIFIED_FROM_OBSERVED_CASH_FLOWS",
+        "underlying_symbol": "R_100",
+        "contract_type": "SYNTHETIC_TEST_ONLY",
+        "currency": "TEST",
+        "payoff_engine_id": "unsupported.synthetic.test",
+        "source_endpoint": "profit_table",
+        "source_evidence_path": "profit_table.json",
+        "source_evidence_sha256": hashlib.sha256(evidence.read_bytes()).hexdigest(),
+        "observed_trade_count": 1,
+        "theoretical_gross_pnl_total": 10.0,
+        "realized_net_pnl_total": 8.0,
+        "known_fees_total": 2.0,
+        "residual_tolerance_total": 0.0,
+    }
+    cost_path.write_text(json.dumps(cost_model), encoding="utf-8")
+    with pytest.raises(sim.SimulationError, match="no implemented, verified contract-specific Deriv payoff engine"):
+        sim.require_empirically_qualified_economics(cost_path, False, tmp_path)
+
+
+def test_simulator_blocks_bad_source_evidence_hash(tmp_path):
+    evidence = tmp_path / "statement.json"
+    evidence.write_text(json.dumps({"fixture": "synthetic-only"}), encoding="utf-8")
+    model_dir = tmp_path / "config"
+    model_dir.mkdir()
+    cost_path = model_dir / "COST_MODEL.json"
+    cost_model = {
+        "schema": "aurelia.deriv.cost_model.v1",
+        "status": "VERIFIED_FROM_OBSERVED_CASH_FLOWS",
+        "underlying_symbol": "R_100",
+        "contract_type": "SYNTHETIC_TEST_ONLY",
+        "currency": "TEST",
+        "payoff_engine_id": "unsupported.synthetic.test",
+        "source_endpoint": "statement",
+        "source_evidence_path": "statement.json",
+        "source_evidence_sha256": "0" * 64,
+        "observed_trade_count": 1,
+        "theoretical_gross_pnl_total": 10.0,
+        "realized_net_pnl_total": 8.0,
+        "known_fees_total": 2.0,
+        "residual_tolerance_total": 0.0,
+    }
+    cost_path.write_text(json.dumps(cost_model), encoding="utf-8")
+    with pytest.raises(sim.SimulationError, match="SHA-256 does not match"):
+        sim.require_empirically_qualified_economics(cost_path, False, tmp_path)
+
+
 def test_no_verified_history_means_no_empirical_metrics_or_ledger(tmp_path):
     missing_csv = tmp_path / "R_100_1m.csv"
     missing_manifest = tmp_path / "R_100_1m.manifest.json"
