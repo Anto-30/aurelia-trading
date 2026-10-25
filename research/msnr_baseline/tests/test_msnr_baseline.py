@@ -69,6 +69,43 @@ def test_public_history_payload_uses_current_bounded_request_shape():
     assert "subscribe" not in req  # one-shot request: omit rather than send legacy 0
 
 
+@pytest.mark.parametrize(
+    "start_epoch,end_exclusive,granularity",
+    [
+        (True, 1_666_320_060, 60),
+        ("1666320000", 1_666_320_060, 60),
+        (1_666_320_000, 1_666_320_060.0, 60),
+        (1_666_320_000, 1_666_320_060, True),
+        (-60, 0, 60),
+        (1_666_320_000, 1_666_320_060, 0),
+        (1_666_320_001, 1_666_320_061, 60),
+        (1_666_320_000, 1_666_320_900, 60),
+    ],
+)
+def test_candle_normalizer_rejects_invalid_window_and_granularity(start_epoch, end_exclusive, granularity):
+    candle = {"epoch": 1_666_320_000, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5}
+    with pytest.raises(fetch_history.FetchError):
+        fetch_history.normalize_candles([candle], start_epoch, end_exclusive, granularity)
+
+
+@pytest.mark.parametrize(
+    "start_epoch,end_exclusive,granularity",
+    [
+        (True, 1_666_320_060, 60),
+        ("1666320000", 1_666_320_060, 60),
+        (1_666_320_000, 1_666_320_060.0, 60),
+        (1_666_320_000, 1_666_320_060, True),
+        (-60, 0, 60),
+        (1_666_320_000, 1_666_320_060, 0),
+        (1_666_320_001, 1_666_320_061, 60),
+        (1_666_320_000, 1_666_320_900, 60),
+    ],
+)
+def test_candle_payload_builder_rejects_invalid_window_and_granularity(start_epoch, end_exclusive, granularity):
+    with pytest.raises(fetch_history.FetchError):
+        fetch_history.build_candle_payload(start_epoch, end_exclusive, granularity)
+
+
 def test_active_symbols_pip_size_is_price_unit_not_history_display_precision():
     assert fetch_history.validate_active_symbols_pip_size(0.0001) == 0.0001
     assert fetch_history.validate_active_symbols_pip_size(0.01) == 0.01
