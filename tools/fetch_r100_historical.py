@@ -194,7 +194,6 @@ async def bounded_probe(ws: Any, first_req_id: int = 97001) -> dict[str, Any]:
         "granularity": GRANULARITY,
         "count": 5,
         "adjust_start_time": 1,
-        "subscribe": 0,
         "req_id": first_req_id,
     }
     print("PROBE_ENDPOINT=" + PUBLIC_WS_URL)
@@ -278,7 +277,6 @@ async def fetch_all_candles(
             "granularity": GRANULARITY,
             "count": MAX_COUNT,
             "adjust_start_time": 1,
-            "subscribe": 0,
             "req_id": req_id,
         }
         response = await request_json(ws, payload, req_id, raw_handle=raw_handle)
