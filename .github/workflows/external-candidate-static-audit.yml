@@ -1,0 +1,78 @@
+name: External Candidate Static Audit
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "config/external_candidate_audit_manifest.json"
+      - "tools/audit_external_candidates.py"
+      - ".github/workflows/external-candidate-static-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: external-candidate-audit-\${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  static-audit:
+    name: Isolated SAST and dependency/license inventory
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    permissions:
+      contents: read
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout audit harness only
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Pull version-tagged scanner images
+        run: |
+          docker pull semgrep/semgrep:1.182.0
+          docker pull aquasec/trivy:0.76.1
+          docker image inspect --format='{{json .RepoDigests}}' semgrep/semgrep:1.182.0 > /tmp/semgrep-image-digest.json
+          docker image inspect --format='{{json .RepoDigests}}' aquasec/trivy:0.76.1 > /tmp/trivy-image-digest.json
+
+      - name: Validate audit harness syntax
+        run: |
+          python -m py_compile tools/audit_external_candidates.py
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+          data = json.loads(Path("config/external_candidate_audit_manifest.json").read_text())
+          assert data["schema"] == "aurelia.external_candidate_audit.v1"
+          candidates = data["candidates"]
+          assert len(candidates) == 20
+          assert len({item["repository"] for item in candidates}) == 20
+          assert all(re.fullmatch(r"[0-9a-f]{40}", item["commit_sha"]) for item in candidates)
+          assert all(item["intake_status"] == "UNREVIEWED" for item in candidates)
+          print("MANIFEST_VALIDATION=PASS")
+          print("PINNED_CANDIDATES=20")
+          PY
+
+      - name: Run isolated source and dependency scans
+        run: |
+          python tools/audit_external_candidates.py \
+            --manifest config/external_candidate_audit_manifest.json \
+            --output-dir evidence/external-candidate-audit \
+            --scratch-dir /tmp/aurelia-external-candidate-audit
+
+      - name: Preserve sanitized audit reports, SBOMs and SHA-256 manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-candidate-static-audit-\${{ github.run_id }}
+          path: evidence/external-candidate-audit/
+          if-no-files-found: warn
+          retention-days: 30
