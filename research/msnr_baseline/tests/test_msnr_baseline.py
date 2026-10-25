@@ -106,6 +106,21 @@ def test_candle_payload_builder_rejects_invalid_window_and_granularity(start_epo
         fetch_history.build_candle_payload(start_epoch, end_exclusive, granularity)
 
 
+def test_history_chunk_span_respects_new_api_default_count_limit():
+    one_minute_span = fetch_history.chunk_span_seconds(60)
+    fifteen_minute_span = fetch_history.chunk_span_seconds(900)
+
+    assert one_minute_span == 900 * 60
+    assert fifteen_minute_span == 3 * 86400
+    for granularity, span in ((60, one_minute_span), (900, fifteen_minute_span)):
+        assert span % granularity == 0
+        assert span // granularity <= fetch_history.MAX_CANDLES_PER_CHUNK
+    with pytest.raises(fetch_history.FetchError, match="Unsupported granularity"):
+        fetch_history.chunk_span_seconds(61)
+    with pytest.raises(fetch_history.FetchError, match="Unsupported granularity"):
+        fetch_history.chunk_span_seconds(True)
+
+
 def test_active_symbols_pip_size_is_price_unit_not_history_display_precision():
     assert fetch_history.validate_active_symbols_pip_size(0.0001) == 0.0001
     assert fetch_history.validate_active_symbols_pip_size(0.01) == 0.01
