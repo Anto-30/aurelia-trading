@@ -25,7 +25,8 @@ UNDERLYING_SYMBOL = "R_100"
 INTERVALS = {"1m": 60, "15m": 900}
 DEFAULT_START = "2022-10-21"
 DEFAULT_END = "2024-10-21"  # Exclusive UTC midnight boundary; bars on this date are excluded.
-CHUNK_DAYS = 3
+CHUNK_DAYS = 3  # Maximum wall-clock span; chunks are also capped by bar count.
+MAX_CANDLES_PER_CHUNK = 900  # Leave headroom below the public API default count of 1000.
 PACING_SECONDS = 1.5
 REQUIRED_CANDLE_FIELDS = ("open", "high", "low", "close", "epoch")
 CSV_FIELDS = ("epoch", "open", "high", "low", "close")
@@ -56,6 +57,18 @@ def utc_window_epochs(start_day_inclusive: date, end_day_exclusive: date) -> tup
     if end_day_exclusive <= start_day_inclusive:
         raise FetchError("End date is an exclusive UTC boundary and must be after start date.")
     return utc_epoch(start_day_inclusive), utc_epoch(end_day_exclusive)
+
+
+def chunk_span_seconds(granularity: int) -> int:
+    """Return a bounded chunk span below the public API's default bar count.
+
+    This fetcher omits count because the public gateway has returned its latest
+    window when count is combined with explicit start/end. The current API defaults
+    count to 1000, so each request must stay below that limit.
+    """
+    if isinstance(granularity, bool) or not isinstance(granularity, int) or granularity not in INTERVALS.values():
+        raise FetchError("Unsupported granularity for bounded history chunking.")
+    return min(CHUNK_DAYS * 86400, MAX_CANDLES_PER_CHUNK * granularity)
 
 
 def validate_active_symbols_pip_size(pip_size: Any) -> float:
@@ -252,7 +265,7 @@ async def fetch_interval(label: str, granularity: int, start_day: date, end_day:
             writer.writeheader()
             while cursor < end_exclusive:
                 chunk_no += 1
-                chunk_end = min(cursor + CHUNK_DAYS * 86400, end_exclusive)
+                chunk_end = min(cursor + chunk_span_seconds(granularity), end_exclusive)
                 if previous_request is not None:
                     elapsed = asyncio.get_running_loop().time() - previous_request
                     if elapsed < PACING_SECONDS:
