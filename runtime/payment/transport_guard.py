@@ -17,27 +17,35 @@ class HttpTransport(Protocol):
         ...
 
 
-_ALLOWED_READ_PATHS = (
+_ALLOWED_READ_PATHS = frozenset({
     "/payment-agents/v1/agent-statistics",
     "/payment-agents/v1/agents",
     "/payment-agents/v1/clients/me",
-)
+})
+_AGENT_PROFILE_PATH = re.compile(r"^/payment-agents/v1/agents/(?:me|[0-9]+)$")
+_TRANSFER_STATUS_PATH = re.compile(r"^/payment-agents/v1/transfer/([A-Za-z0-9_-]{1,128})$")
+_WITHDRAWAL_STATUS_PATH = re.compile(r"^/payment-agents/v1/withdraw/([A-Za-z0-9_-]{1,128})$")
 
 
 def _allowed_status_path(path: str) -> bool:
+    """Accept only exact, origin-relative allowlisted read paths.
+
+    Full matches deliberately reject nested suffixes, path traversal, encoded
+    separators, query strings, fragments, absolute URLs, and other ambiguous
+    representations before a downstream HTTP transport can normalize them.
+    """
+    if not isinstance(path, str):
+        return False
     if path in _ALLOWED_READ_PATHS:
         return True
-    if path.startswith("/payment-agents/v1/agents/"):
-        agent_id = path.rsplit("/", 1)[-1]
-        return agent_id == "me" or (agent_id.isascii() and agent_id.isdigit() and len(agent_id) > 0)
-    for prefix in (
-        "/payment-agents/v1/transfer/",
-        "/payment-agents/v1/withdraw/",
-    ):
-        if path.startswith(prefix):
-            request_id = path[len(prefix):]
-            # These status endpoints only; deliberately exclude verification_code and /withdraw.
-            return bool(re.fullmatch(r"[A-Za-z0-9_-]{1,128}", request_id)) and request_id != "verification_code"
+    if _AGENT_PROFILE_PATH.fullmatch(path):
+        return True
+    if _TRANSFER_STATUS_PATH.fullmatch(path):
+        return True
+    withdrawal_match = _WITHDRAWAL_STATUS_PATH.fullmatch(path)
+    if withdrawal_match:
+        # The verification-code route is a side-effecting POST, never a status GET.
+        return withdrawal_match.group(1) != "verification_code"
     return False
 
 
@@ -59,7 +67,7 @@ def assert_payment_request_allowed(
         raise PaymentPolicyError("CAPITAL_PLANE_MODE_NOT_VERIFY_ONLY")
     if transport_mode != "AUTHENTICATED_VERIFY_ONLY":
         raise PaymentPolicyError("PAYMENT_TRANSPORT_NOT_AUTHENTICATED_VERIFY_ONLY")
-    if method.upper() != "GET":
+    if not isinstance(method, str) or method.upper() != "GET":
         raise PaymentPolicyError("PAYMENT_WRITE_DISABLED")
     if not _allowed_status_path(path):
         raise PaymentPolicyError("PAYMENT_ENDPOINT_NOT_ALLOWLISTED")
