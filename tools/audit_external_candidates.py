@@ -481,7 +481,7 @@ def main() -> int:
 
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     candidates = manifest.get("candidates")
-    if not isinstance(candidates, list) or len(candidates) != 20:
+    if not isinstance(candidates, list) or len(candidates) != 24:
         print("AUDIT_RESULT=BLOCKED")
         print("AUDIT_REASON=EXPECTED_20_PINNED_CANDIDATES")
         return 2
@@ -491,7 +491,7 @@ def main() -> int:
         print("AUDIT_REASON=DUPLICATE_REPOSITORIES")
         return 2
     for candidate in candidates:
-        if candidate.get("intake_status") != "UNREVIEWED":
+        if candidate.get("intake_status") not in {"UNREVIEWED", "BLOCKED"}:
             print("AUDIT_RESULT=BLOCKED")
             print("AUDIT_REASON=CANDIDATE_NOT_UNREVIEWED")
             return 2
@@ -535,7 +535,7 @@ def main() -> int:
             "default_branch": candidate.get("default_branch"),
             "expected_license": candidate.get("expected_license"),
             "scope_note": candidate.get("scope_note"),
-            "intake_status": "UNREVIEWED",
+            "intake_status": candidate.get("intake_status"),
             "promotion_approved": False,
             "review_status": "HUMAN_REVIEW_REQUIRED",
             "candidate_code_executed": False,
