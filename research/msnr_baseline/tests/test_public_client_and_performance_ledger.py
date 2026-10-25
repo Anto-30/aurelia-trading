@@ -101,7 +101,6 @@ def test_history_fetcher_builds_bounded_valid_current_api_candle_request():
         "end": "120",
         "style": "candles",
         "granularity": 60,
-        "subscribe": 0,
         "req_id": 1,
     }
 
@@ -197,8 +196,7 @@ def test_new_public_request_schema_and_forbidden_keys():
     for symbol in ("R", "R-100", "A" * 31, "éR100", "R_100\n"):
         with pytest.raises(PublicMarketDataError, match="2-30 character ASCII word"):
             validate_public_payload({"ticks_history": symbol, "end": "latest", "style": "ticks"})
-    # Historical one-shot requests use subscribe=0; subscription remains an explicit opt-in.
-    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 120, "subscribe": 0})
+    # Current public endpoint rejects subscribe=0; one-shot history requests omit the optional field.
     validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 120, "subscribe": 1, "adjust_start_time": 1})
     validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 900, "subscribe": 1})
     for granularity in (1, 59, 61, 899, 901, 86401, True, 1.0):
@@ -206,12 +204,9 @@ def test_new_public_request_schema_and_forbidden_keys():
             validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": granularity})
     with pytest.raises(PublicMarketDataError, match="only applicable"):
         validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "ticks", "granularity": 60})
-    for key, invalid_values, expected_message in (
-        ("subscribe", (2, True, False, 1.0, "1"), "subscribe must be integer 0 or 1"),
-        ("adjust_start_time", (0, True, False, 1.0, "1"), "adjust_start_time must be integer 1"),
-    ):
-        for invalid_value in invalid_values:
-            with pytest.raises(PublicMarketDataError, match=expected_message):
+    for key in ("subscribe", "adjust_start_time"):
+        for invalid_value in (0, 2, True, False, 1.0, "1"):
+            with pytest.raises(PublicMarketDataError, match=f"{key} must be integer 1"):
                 validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "ticks", key: invalid_value})
     schema_invalid = [
         {"ticks_history": "R_100", "start": True, "end": "200", "style": "ticks"},
@@ -310,7 +305,7 @@ def test_history_builder_keeps_ticks_history_request_key():
     client.request = fake_request
     asyncio.run(client.ticks_history(underlying_symbol="R_100",start_epoch=100,end_epoch=160,granularity_seconds=60))
     assert seen["payload"]["ticks_history"] == "R_100"
-    assert seen["payload"]["subscribe"] == 0  # explicit one-shot history request
+    assert "subscribe" not in seen["payload"]  # one-shot history request: omit optional flag
     assert "symbol" not in seen["payload"] and "underlying_symbol" not in seen["payload"] and "loginid" not in seen["payload"]
     assert seen["expected"] == "candles"
 
