@@ -83,7 +83,7 @@ Pinning establishes provenance only. It does not establish license compatibility
 | `ryfineZ/codex-session-patcher` | REFERENCE_ONLY (BLOCKED) | session-modification-tool / refusal-patching / prompt-injection |
 | `openai/codex-security` | TOOLCHAIN_ONLY | code-security-assurance |
 | `qxcnm/Codex-Manager` | REFERENCE_ONLY (BLOCKED) | coding-agent-account-management |
-| `composio-community/awesome-codex-skills` | REFERENCE_ONLY | agent-skills-catalog |
+| `composio-community/awesome-codex-skills` | REFERENCE_ONLY (BLOCKED) | agent-skills-catalog / no license file |
 | `router-for-me/CLIProxyAPI` | REFERENCE_ONLY (BLOCKED) | llm-api-proxy |
 | `OpenHands/OpenHands` | SANDBOX_ONLY | coding-agent-application |
 | `OpenHands/software-agent-sdk` | SANDBOX_ONLY | coding-agent-sdk |
@@ -91,13 +91,13 @@ Pinning establishes provenance only. It does not establish license compatibility
 | `OpenHands/OpenHands-CLI` | SANDBOX_ONLY | coding-agent-cli |
 | `OpenHands/automation` | SANDBOX_ONLY | agent-automation-orchestration |
 | `OpenHands/openhands-aci` | REFERENCE_ONLY (BLOCKED) | agent-computer-interaction |
-| `OpenHands/OpenHands-Cloud` | REFERENCE_ONLY | hosted-agent-platform |
+| `OpenHands/OpenHands-Cloud` | REFERENCE_ONLY (BLOCKED) | hosted-agent-platform / restrictive license |
 | `cline/cline` | SANDBOX_ONLY | coding-agent-extension |
-| `cline/prompts` | REFERENCE_ONLY | agent-prompt-library |
+| `cline/prompts` | REFERENCE_ONLY (BLOCKED) | agent-prompt-library / no license file |
 | `decolua/9router` | SANDBOX_ONLY | llm-api-router |
 | `aaif-goose/goose` | SANDBOX_ONLY | coding-agent-framework |
 | `pressly/goose` | TOOLCHAIN_ONLY | database-migration-tool |
-| `b-nnett/goose` | REFERENCE_ONLY | goose-project-identity-unverified |
+| `b-nnett/goose` | REFERENCE_ONLY (BLOCKED) | goose-project-identity-unverified / archived / no license file |
 | `gooseworks-ai/goose-skills` | REFERENCE_ONLY | agent-skills-library |
 | `mz-automation/libiec61850` | REFERENCE_ONLY | industrial-protocol-library |
 | `tag1consulting/goose` | TOOLCHAIN_ONLY | rust-load-testing-tool |
