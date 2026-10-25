@@ -1,6 +1,6 @@
 {
   "schema_version": "aurelia.certification-report.v1",
-  "generated_at_utc": "2026-10-25T17:55:00Z",
+  "generated_at_utc": "2026-10-25T18:43:00Z",
   "repository": "Anto-30/aurelia-trading",
   "assessed_main_commit": "d04564aca0648201feff0326fe9af0fbcee92e94",
   "overall_status": "BLOCKED",
@@ -116,25 +116,31 @@
           "id": 40205761464,
           "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40205761464",
           "conclusion": "failure",
-          "finding": "20 candidate scans ended SCAN_INCOMPLETE_BLOCKED at the Semgrep invocation stage; this run is not evidence of clean sources."
+          "finding": "Earlier 20-candidate scan ended SCAN_INCOMPLETE_BLOCKED at Semgrep invocation; not evidence of clean sources."
         },
         {
           "type": "github_actions_run",
           "id": 40217946001,
           "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40217946001",
-          "conclusion": "in_progress_at_last_check",
-          "finding": "The runner remained in the image-pull/smoke-test preparation stage; no findings report is available."
+          "conclusion": "failure",
+          "finding": "Scanner setup passed, but all 20 candidate scans stopped at Semgrep because its Git safe.directory initialization attempted to write /root/.gitconfig on a read-only filesystem; zero source findings were produced."
         },
         {
           "type": "github_actions_run",
           "id": 40218136417,
           "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40218136417",
-          "conclusion": "in_progress_at_report_generation",
-          "head_sha": "7d3387dca8bd313cf1127906cb637e649b5d6497",
-          "finding": "Scanner image pulls and smoke tests passed; isolated source/dependency scans are still running. No scan artifact or findings conclusion is available."
+          "conclusion": "failure",
+          "finding": "The same read-only HOME / Semgrep Git config failure blocked all 20 candidate scans; zero source findings were produced. Artifact SHA-256: 2b4d131fef56c512c4a966a6109378b917877aa5c84f00f322ae0db828a10706."
+        },
+        {
+          "type": "github_actions_run",
+          "id": 40222995058,
+          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40222995058",
+          "conclusion": "queued_at_report_refresh",
+          "finding": "Corrective change supplies a writable HOME=/tmp to the read-only scanner container and expands the manifest to 24 pinned candidates; the run is pending, so no scan findings or completion are claimed."
         }
       ],
-      "blocker": "No completed clean source-level scan or independent human disposition exists. No candidate is approved. Two repositories without top-level license files are excluded."
+      "blocker": "No completed source-level scan or independent human disposition exists. The two latest completed scans failed before analysis due to the scanner container's read-only HOME/Git configuration. A corrective run for 24 pinned candidates is pending. Twelve candidates are blocked in intake, and no candidate is approved. Two repositories without top-level license files remain excluded."
     },
     {
       "id": 8,
@@ -171,7 +177,11 @@
       "cline/prompts"
     ],
     "install_or_execution_of_candidates": false,
-    "independent_human_signoff": false
+    "independent_human_signoff": false,
+    "candidate_count": 33,
+    "blocked_count": 12,
+    "audit_candidate_count": 24,
+    "audit_run_status": "PENDING_CORRECTED_RUN_40222995058"
   },
   "required_human_actions": [
     "Review and merge intake/audit changes only after the source-level audit completes and findings are dispositioned.",
