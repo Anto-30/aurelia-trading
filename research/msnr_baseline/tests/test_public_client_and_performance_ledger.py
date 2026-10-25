@@ -95,16 +95,24 @@ def test_perf_factor_uses_post_cost_wins_and_losses():
 def test_new_public_request_schema_and_forbidden_keys():
     validate_public_payload({"active_symbols": "brief"})
     validate_public_payload({"ticks": "R_100", "subscribe": 1})
-    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "count": 5000})
-    # New API comparison: one-shot flag value 0 is valid; positive non-legacy granularity is valid.
-    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 61, "subscribe": 0, "adjust_start_time": 0})
+    validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "count": 1000})
+    # Current New API accepts only documented granularity values and optional flags=1.
     validate_public_payload({"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 900, "subscribe": 1})
     bad = [
         {"buy": "proposal-id", "price": 1}, {"sell": 1, "price": 0}, {"proposal": 1},
         {"balance": 1}, {"otp": "secret"}, {"Authorization": "Bearer x"}, {"loginid": "CR123"},
         {"ticks": "R_100", "passthrough": {"loginid": "CR123"}},
-        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "subscribe": 2},
-        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 60, "adjust_start_time": 2},
+        {"ticks": "R_100", "subscribe": True},
+        {"ticks_history": "R_100", "start": True, "end": "200", "style": "candles", "granularity": 60},
+        {"ticks_history": "R_100", "start": 100.0, "end": "200", "style": "candles", "granularity": 60},
+        {"ticks_history": "R_100", "start": 10_000_000_000, "end": "200", "style": "candles", "granularity": 60},
+        {"ticks_history": "R_100", "start": 100, "end": 200, "style": "candles", "granularity": 60},
+        {"ticks_history": "R_100", "start": 100, "end": "10000000000", "style": "candles", "granularity": 60},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "count": True},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 61},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": True},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "subscribe": 0},
+        {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "adjust_start_time": 0},
         {"ticks_history": "R_100", "start": 100, "end": "200", "style": "candles", "granularity": 0},
         {"ticks": "R_100", "extra": "unknown"},
     ]
