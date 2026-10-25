@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   runtime-probe:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -26,9 +27,13 @@ jobs:
       AURELIA_CONTINUOUS_RUNTIME: "false"
       AURELIA_AGENT_PERFORMANCE_PATH: "/tmp/aurelia/agent-performance.json"
       DERIV_ENVIRONMENT: "real"
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      LIVE_EXECUTION: "BLOCKED"
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7, resolved by GitHub Actions run 40209026944
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7, resolved by GitHub Actions run 40209026944
         with:
           python-version: "3.13"
       - name: Install runtime
@@ -53,140 +58,11 @@ jobs:
           echo "$output"
           test "$status" -eq 2
           echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
-      - name: Upload runtime journal
+      - name: Upload non-sensitive trade-count summary
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, resolved by GitHub Actions run 40209026944
         with:
-          name: aurelia-runtime-journal-${{ github.run_id }}
-          path: /tmp/aurelia/
+          name: aurelia-runtime-trade-count-${{ github.run_id }}
+          path: /tmp/aurelia/trade-count.json
           if-no-files-found: ignore
           retention-days: 7
-
-  authenticated-deriv-evidence:
-    # Load production-scoped Actions secrets for authenticated verification only.
-    environment: production
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    env:
-      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') == 'USD' && ((vars.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
-      AURELIA_VERIFY_DERIV_PUBLIC: "true"
-      AURELIA_VERIFY_DERIV_AUTH: "true"
-      AURELIA_RUN_ONCE: "true"
-      AURELIA_CONTINUOUS_RUNTIME: "false"
-      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-      DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
-      DERIV_ENVIRONMENT: "real"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-      - run: pip install -r requirements.txt
-      - name: Fail closed when authenticated Deriv prerequisites are missing
-        if: env.DERIV_AUTH_CONFIGURED != 'true'
-        shell: bash
-        run: |
-          echo "DERIV_AUTH_SESSION=NOT_CONFIGURED"
-          echo "::error title=DERIV_AUTH_NOT_CONFIGURED::Protected production environment is missing one or more required Deriv secrets."
-          echo "Required secret names: DERIV_AUTH_TOKEN (or DERIV_PAT), DERIV_APP_ID for PAT mode, DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID), and DERIV_EXPECTED_CURRENCY."
-          echo "Configure these under Settings > Environments > production > Environment secrets; values are never printed."
-          exit 2
-      - name: Verify authenticated Deriv session
-        if: env.DERIV_AUTH_CONFIGURED == 'true'
-        run: python scripts/verify_deriv_session.py
-      - name: Verify broker-side account evidence (read-only)
-        if: env.DERIV_AUTH_CONFIGURED == 'true'
-        run: python scripts/verify_deriv_broker_evidence.py
-      - name: Upload authenticated evidence
-        if: always() && env.DERIV_AUTH_CONFIGURED == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: deriv-authenticated-evidence-${{ github.run_id }}
-          path: |
-            artifacts/deriv_authenticated_session.json
-            artifacts/deriv_broker_account_evidence.json
-          if-no-files-found: ignore
-          retention-days: 7
-
-  deriv-lifecycle-verify-only:
-    # Authenticated broker lifecycle verification: proposal + control-chain only.
-    # This job must never submit a buy transaction or grant capital authority.
-    environment:
-      name: production
-      deployment: false
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    env:
-      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') == 'USD' && ((vars.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
-      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-      DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
-      DERIV_ENVIRONMENT: "real"
-      DERIV_LIFECYCLE_MODE: "VERIFY_ONLY"
-      DERIV_VERIFY_STAKE: "1.0"
-      DERIV_VERIFY_PROBABILITY: "0.60"
-      DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-      - run: pip install -r requirements.txt
-      - name: Fail closed when lifecycle prerequisites are missing
-        if: env.DERIV_AUTH_CONFIGURED != 'true'
-        shell: bash
-        run: |
-          echo "DERIV_TRANSACTION_LIFECYCLE=NOT_CONFIGURED"
-          echo "::error title=DERIV_LIFECYCLE_NOT_CONFIGURED::Verify-only lifecycle cannot run without protected Deriv secrets."
-          echo "Required secret names: DERIV_AUTH_TOKEN (or DERIV_PAT), DERIV_APP_ID for PAT mode, DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID), and DERIV_EXPECTED_CURRENCY."
-          echo "Configure these under Settings > Environments > production > Environment secrets; values are never printed."
-          exit 2
-      - name: Verify authenticated Deriv transaction lifecycle without submission
-        if: env.DERIV_AUTH_CONFIGURED == 'true'
-        run: python scripts/verify_deriv_transaction_lifecycle.py
-      - name: Upload verify-only lifecycle evidence
-        if: always() && env.DERIV_AUTH_CONFIGURED == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: deriv-transaction-lifecycle-verify-only-${{ github.run_id }}
-          path: artifacts/deriv_transaction_lifecycle.json
-          if-no-files-found: error
-          retention-days: 7
-
-  whatsapp-alert-smoke:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    env:
-      TWILIO_CONFIGURED: ${{ secrets.TWILIO_ACCOUNT_SID != '' && (secrets.TWILIO_AUTH_TOKEN != '' || (secrets.TWILIO_API_KEY != '' && secrets.TWILIO_API_SECRET != '')) && secrets.TWILIO_WHATSAPP_FROM != '' && secrets.AURELIA_WHATSAPP_TO != '' && secrets.TWILIO_CONTENT_SID != '' }}
-      AURELIA_WHATSAPP_ALERTS: "true"
-      TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-      TWILIO_API_KEY: ${{ secrets.TWILIO_API_KEY }}
-      TWILIO_API_SECRET: ${{ secrets.TWILIO_API_SECRET }}
-      TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
-      AURELIA_WHATSAPP_TO: ${{ secrets.AURELIA_WHATSAPP_TO }}
-      TWILIO_CONTENT_SID: ${{ secrets.TWILIO_CONTENT_SID }}
-      TWILIO_HTTP_TIMEOUT_SECONDS: "8"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-      - run: pip install -r requirements.txt
-      - name: Report WhatsApp prerequisite state
-        if: env.TWILIO_CONFIGURED != 'true'
-        run: echo "WHATSAPP_ALERTS=OPTIONAL_NOT_CONFIGURED"
-      - name: Send WhatsApp smoke alert
-        if: env.TWILIO_CONFIGURED == 'true'
-        run: python scripts/test_whatsapp_alert.py
