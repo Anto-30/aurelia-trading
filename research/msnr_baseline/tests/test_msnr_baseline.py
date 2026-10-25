@@ -32,7 +32,7 @@ def test_public_history_payload_uses_current_bounded_request_shape():
     assert "symbol" not in req
     assert "loginid" not in req
     assert "adjust_start_time" not in req  # current schema only accepts 1 if set
-    assert req["subscribe"] == 0  # explicit one-shot history request
+    assert "subscribe" not in req  # one-shot request: omit rather than send legacy 0
 
 
 def test_active_symbols_pip_size_is_price_unit_not_history_display_precision():
