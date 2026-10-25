@@ -151,7 +151,7 @@ def test_client_is_pinned_to_public_endpoint_and_current_history_schema():
         with pytest.raises(PublicMarketDataError):
             validate_history_response({"msg_type":"history","history":{"prices":[invalid_price],"times":[100]}})
     with pytest.raises(PublicMarketDataError, match="JSON object"):
-        validate_history_response({"msg_type":"history","history":[]})
+        validate_history_response([])
 
 
 def test_history_builder_keeps_ticks_history_request_key():
