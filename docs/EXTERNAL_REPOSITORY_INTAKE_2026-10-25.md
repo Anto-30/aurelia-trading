@@ -41,11 +41,11 @@ License dispositions use GitHub repository license metadata unless the table not
 | `iOfficeAI/OfficeCLI` | `main` | [`5e3e26278753`](https://github.com/iOfficeAI/OfficeCLI/commit/5e3e26278753be846b4b0b2fb0387f42d911553a) | 2026-10-23 | Apache-2.0 | No | UNREVIEWED |
 | `Jia-Ethan/codex-keysmith` | `main` | [`cfcd96eb727c`](https://github.com/Jia-Ethan/codex-keysmith/commit/cfcd96eb727c324ee8649170c43aaa632ff53cb3) | 2026-09-27 | MIT | No | UNREVIEWED |
 | `Loongphy/codex-auth` | `main` | [`a83059701ee5`](https://github.com/Loongphy/codex-auth/commit/a83059701ee54c4c8f91aa030810b97bd35e254b) | 2026-10-25 | MIT | No | UNREVIEWED |
-| `ryfineZ/codex-session-patcher` | `main` | [`cf7deab2d5b2`](https://github.com/ryfineZ/codex-session-patcher/commit/cf7deab2d5b28c1f70f5b5498461848b69024a15) | 2026-10-05 | NO LICENSE FILE | No | BLOCKED — no top-level license file |
+| `ryfineZ/codex-session-patcher` | `main` | [`cf7deab2d5b2`](https://github.com/ryfineZ/codex-session-patcher/commit/cf7deab2d5b28c1f70f5b5498461848b69024a15) | 2026-10-05 | MIT declared in pyproject; LICENSE file missing | No | BLOCKED — refusal patching / prompt injection / reasoning erasure and license-file gap |
 | `openai/codex-security` | `main` | [`796fa130e927`](https://github.com/openai/codex-security/commit/796fa130e92787085ab36aa4313d8c4bd9414560) | 2026-10-25 | Apache-2.0 | No | UNREVIEWED |
-| `qxcnm/Codex-Manager` | `main` | [`430eddb0af9a`](https://github.com/qxcnm/Codex-Manager/commit/430eddb0af9ae6277f8133fbac7f8634b7699dc6) | 2026-10-18 | MIT | No | UNREVIEWED |
+| `qxcnm/Codex-Manager` | `main` | [`430eddb0af9a`](https://github.com/qxcnm/Codex-Manager/commit/430eddb0af9ae6277f8133fbac7f8634b7699dc6) | 2026-10-18 | MIT | No | BLOCKED — sample Compose runs root/latest and exposes gateway service |
 | `composio-community/awesome-codex-skills` | `master` | [`0930e1373789`](https://github.com/composio-community/awesome-codex-skills/commit/0930e1373789d2eda449039f7ac154b33031de89) | 2026-07-26 | NO LICENSE FILE | No | BLOCKED — no top-level license file |
-| `router-for-me/CLIProxyAPI` | `main` | [`bc0643405a1d`](https://github.com/router-for-me/CLIProxyAPI/commit/bc0643405a1d0adf77dd0f109972ac3313d66397) | 2026-10-24 | MIT | No | UNREVIEWED |
+| `router-for-me/CLIProxyAPI` | `main` | [`bc0643405a1d`](https://github.com/router-for-me/CLIProxyAPI/commit/bc0643405a1d0adf77dd0f109972ac3313d66397) | 2026-10-24 | MIT | No | BLOCKED — sample Compose exposes multiple ports and mounts auth/plugin directories |
 | `OpenHands/OpenHands` | `main` | [`b7fdc6c31203`](https://github.com/OpenHands/OpenHands/commit/b7fdc6c312039a0b840fdcd34a5c23ca7e65c218) | 2026-10-25 | MIT | No | UNREVIEWED |
 | `OpenHands/software-agent-sdk` | `main` | [`d2ee0cdea608`](https://github.com/OpenHands/software-agent-sdk/commit/d2ee0cdea60825608c2f8906eb54e1d4d264fb42) | 2026-10-25 | MIT | No | UNREVIEWED |
 | `OpenHands/extensions` | `main` | [`1ea389f96e44`](https://github.com/OpenHands/extensions/commit/1ea389f96e44a7f1db8969b25ec460d02e8fcf09) | 2026-10-24 | MIT | No | UNREVIEWED |
@@ -80,11 +80,11 @@ Pinning establishes provenance only. It does not establish license compatibility
 | `iOfficeAI/OfficeCLI` | TOOLCHAIN_ONLY | office-document-agent-tool |
 | `Jia-Ethan/codex-keysmith` | SANDBOX_ONLY | agent-instruction-management |
 | `Loongphy/codex-auth` | SANDBOX_ONLY | credential-account-manager |
-| `ryfineZ/codex-session-patcher` | SANDBOX_ONLY | session-modification-tool |
+| `ryfineZ/codex-session-patcher` | REFERENCE_ONLY (BLOCKED) | session-modification-tool / refusal-patching / prompt-injection |
 | `openai/codex-security` | TOOLCHAIN_ONLY | code-security-assurance |
-| `qxcnm/Codex-Manager` | SANDBOX_ONLY | coding-agent-account-management |
+| `qxcnm/Codex-Manager` | REFERENCE_ONLY (BLOCKED) | coding-agent-account-management |
 | `composio-community/awesome-codex-skills` | REFERENCE_ONLY | agent-skills-catalog |
-| `router-for-me/CLIProxyAPI` | SANDBOX_ONLY | llm-api-proxy |
+| `router-for-me/CLIProxyAPI` | REFERENCE_ONLY (BLOCKED) | llm-api-proxy |
 | `OpenHands/OpenHands` | SANDBOX_ONLY | coding-agent-application |
 | `OpenHands/software-agent-sdk` | SANDBOX_ONLY | coding-agent-sdk |
 | `OpenHands/extensions` | REFERENCE_ONLY | agent-extension-registry |
