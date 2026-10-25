@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import time
 from dataclasses import dataclass
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
@@ -12,10 +15,26 @@ from runtime.core.secrets import get_optional_secret
 OTP_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts/{account_id}/otp"
 MODERN_OPTIONS_WS_HOST = "api.derivws.com"
 MODERN_OPTIONS_WS_PREFIX = "/trading/v1/options/ws/"
+LIVE_LOCK_PATH = Path(__file__).resolve().parents[2] / "config" / "LIVE_LOCK.yaml"
+EXPECTED_LIVE_LOCK_BLOB_SHA = "b2cddd1efb0f25f35a6a08354290f805812bf34c"
+
+# OTP acquisition is a bounded authentication retry, not a financial transaction.
+# A failed attempt's URL is never reused. HTTP input/business-rule errors are not retried.
+OTP_MAX_ATTEMPTS = 3
+OTP_BACKOFF_BASE_SECONDS = 0.25
+OTP_BACKOFF_CAP_SECONDS = 1.0
+OTP_RETRYABLE_HTTP_STATUSES = frozenset({408, 500, 502, 503, 504})
+_REQUIRED_LOCK_KEYS = (
+    "live_trading_enabled",
+    "FINAL_EXECUTION_AUTHORIZATION",
+    "LIVE_EXECUTION",
+    "capital_plane_mode",
+)
 
 
 class DerivSessionError(ValueError):
-    """Deriv session validation error - inherits from ValueError for test compatibility."""
+    """Deriv session validation error with secret-free stable codes."""
+
     pass
 
 
@@ -30,7 +49,7 @@ class AuthenticatedWebSocketUrl:
 
 
 def redact_ws_url(url: str) -> str:
-    """Remove OTP parameter from WebSocket URL for safe logging."""
+    """Remove OTP query value from a WebSocket URL before logging."""
     parts = urlsplit(url)
     query = parse_qs(parts.query, keep_blank_values=True)
     query.pop("otp", None)
@@ -43,19 +62,9 @@ def redact_ws_url(url: str) -> str:
 
 
 def derive_ws_environment(url: str) -> str:
-    """Extract and validate the Deriv environment from an authenticated WS URL.
-    
-    Args:
-        url: WebSocket URL from OTP response
-    
-    Returns:
-        Environment name ('real' or 'demo')
-    
-    Raises:
-        ValueError: If URL is invalid or environment is unknown
-    """
+    """Extract and validate the environment from an authenticated WS URL."""
     if not isinstance(url, str) or not url:
-        raise ValueError("DERIV_WS_URL_MISSING")
+        raise DerivSessionError("DERIV_WS_URL_MISSING")
     validate_modern_options_ws_url(url)
     path = urlsplit(url).path.lower().rstrip("/")
     return path.rsplit("/", 1)[-1]
@@ -66,18 +75,7 @@ def validate_modern_options_ws_url(
     *,
     expected_environment: str | None = None,
 ) -> bool:
-    """Require the current Deriv Options WebSocket host and path.
-    
-    Args:
-        url: WebSocket URL to validate
-        expected_environment: Optional environment to verify against
-    
-    Returns:
-        True if valid
-    
-    Raises:
-        ValueError (via DerivSessionError): If URL is invalid
-    """
+    """Require the current Deriv Options WebSocket host and environment path."""
     if not isinstance(url, str) or not url:
         raise DerivSessionError("DERIV_WS_URL_MISSING")
     parts = urlsplit(url)
@@ -95,6 +93,104 @@ def validate_modern_options_ws_url(
     return True
 
 
+def _read_live_lock(path: Path | None = None) -> dict[str, str]:
+    """Read the small top-level live-lock contract without a YAML dependency."""
+    lock_path = path or LIVE_LOCK_PATH
+    try:
+        raw = lock_path.read_bytes()
+    except OSError:
+        raise DerivSessionError("LIVE_LOCK_UNREADABLE") from None
+
+    # Validate the Git blob object id, not a plain file digest. This binds the
+    # verifier to the exact approved canonical safety-lock content.
+    blob_header = b"blob " + str(len(raw)).encode("ascii") + b"\0"
+    actual_blob_sha = hashlib.sha1(blob_header + raw).hexdigest()
+    if actual_blob_sha != EXPECTED_LIVE_LOCK_BLOB_SHA:
+        raise DerivSessionError("LIVE_LOCK_BLOB_SHA_MISMATCH")
+
+    try:
+        lines = raw.decode("utf-8").splitlines()
+    except UnicodeError:
+        raise DerivSessionError("LIVE_LOCK_UNREADABLE") from None
+
+    values: dict[str, str] = {}
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or ":" not in stripped:
+            continue
+        key, value = stripped.split(":", 1)
+        key = key.strip()
+        if key not in _REQUIRED_LOCK_KEYS:
+            continue
+        if key in values:
+            raise DerivSessionError("LIVE_LOCK_DUPLICATE_KEY")
+        values[key] = value.split("#", 1)[0].strip().strip('"').strip("'")
+
+    if any(key not in values for key in _REQUIRED_LOCK_KEYS):
+        raise DerivSessionError("LIVE_LOCK_STATE_UNKNOWN")
+    return values
+
+
+def _assert_verify_only_lock() -> None:
+    """Deny authenticated REST OTP requests unless the canonical lock is fail-closed."""
+    lock = _read_live_lock()
+    if lock["capital_plane_mode"] != "VERIFY_ONLY":
+        raise DerivSessionError("CAPITAL_PLANE_MODE_NOT_VERIFY_ONLY")
+    if (
+        lock["live_trading_enabled"] != "false"
+        or lock["FINAL_EXECUTION_AUTHORIZATION"] != "false"
+        or lock["LIVE_EXECUTION"] != "BLOCKED"
+    ):
+        raise DerivSessionError("LIVE_LOCK_NOT_FAIL_CLOSED")
+
+
+def _otp_retry_delay(attempt_index: int) -> float:
+    """Return bounded exponential delay before retry number attempt_index + 1."""
+    return min(OTP_BACKOFF_BASE_SECONDS * (2**attempt_index), OTP_BACKOFF_CAP_SECONDS)
+
+
+def _request_otp_payload(
+    *,
+    account_id: str,
+    headers: dict[str, str],
+    timeout_seconds: float,
+) -> object:
+    """Request OTP with bounded retries for transient transport/5xx failures only."""
+    for attempt_index in range(OTP_MAX_ATTEMPTS):
+        # A fresh Request object is made for each attempt; the response URL is never replayed.
+        request = Request(
+            OTP_ENDPOINT.format(account_id=account_id),
+            method="POST",
+            headers=headers,
+        )
+        try:
+            with urlopen(request, timeout=timeout_seconds) as response:
+                raw_body = response.read()
+        except HTTPError as exc:
+            if (
+                exc.code in OTP_RETRYABLE_HTTP_STATUSES
+                and attempt_index + 1 < OTP_MAX_ATTEMPTS
+            ):
+                time.sleep(_otp_retry_delay(attempt_index))
+                continue
+            if exc.code in OTP_RETRYABLE_HTTP_STATUSES:
+                raise DerivSessionError("OTP_REQUEST_FAILED_RETRY_EXHAUSTED") from None
+            # Do not log response bodies or echo auth headers.
+            raise DerivSessionError(f"OTP_REQUEST_REJECTED_HTTP_{exc.code}") from None
+        except (URLError, TimeoutError, ConnectionError, OSError):
+            if attempt_index + 1 < OTP_MAX_ATTEMPTS:
+                time.sleep(_otp_retry_delay(attempt_index))
+                continue
+            raise DerivSessionError("OTP_REQUEST_FAILED_RETRY_EXHAUSTED") from None
+
+        try:
+            return json.loads(raw_body.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            raise DerivSessionError("OTP_RESPONSE_INVALID_JSON") from None
+
+    raise DerivSessionError("OTP_REQUEST_FAILED_RETRY_EXHAUSTED")
+
+
 def get_authenticated_ws_url(
     account_id: str,
     *,
@@ -102,20 +198,15 @@ def get_authenticated_ws_url(
     app_id: str | None = None,
     timeout_seconds: float = 10.0,
 ) -> AuthenticatedWebSocketUrl:
-    """Request an authenticated WebSocket URL from Deriv OTP endpoint.
-    
-    Args:
-        account_id: Deriv account ID
-        bearer_token: Authentication token (or DERIV_AUTH_TOKEN env var)
-        app_id: Deriv app ID for PAT auth mode (or DERIV_APP_ID env var)
-        timeout_seconds: Request timeout
-    
-    Returns:
-        AuthenticatedWebSocketUrl with account_id and validated ws URL
-    
-    Raises:
-        DerivSessionError: If validation or request fails
+    """Request a modern Options API WebSocket URL under the fail-closed live lock.
+
+    The canonical config must explicitly remain VERIFY_ONLY with live execution and
+    final authorization blocked. Retries are bounded, only for transient network/5xx
+    failures, and never reuse a URL returned by a previous OTP response. This endpoint
+    is not called by default in TEST_ONLY; tests must mock the transport.
     """
+    _assert_verify_only_lock()
+
     token = (
         bearer_token
         if bearer_token is not None
@@ -127,28 +218,25 @@ def get_authenticated_ws_url(
         else get_optional_secret("DERIV_APP_ID")
     )
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
+
     if not account_id:
         raise DerivSessionError("ACCOUNT_ID_REQUIRED")
     if not token:
         raise DerivSessionError("DERIV_BEARER_TOKEN_MISSING")
+    if auth_mode not in {"pat", "oauth"}:
+        raise DerivSessionError("DERIV_AUTH_MODE_INVALID")
     if auth_mode == "pat" and not application_id:
         raise DerivSessionError("DERIV_APP_ID_MISSING")
 
     headers = {"Authorization": f"Bearer {token}"}
     if auth_mode == "pat":
-        headers["Deriv-App-ID"] = application_id
+        headers["Deriv-App-ID"] = str(application_id)
 
-    request = Request(
-        OTP_ENDPOINT.format(account_id=account_id),
-        method="POST",
+    payload = _request_otp_payload(
+        account_id=account_id,
         headers=headers,
+        timeout_seconds=timeout_seconds,
     )
-    try:
-        with urlopen(request, timeout=timeout_seconds) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
-        raise DerivSessionError("OTP_REQUEST_FAILED") from exc
-
     url = ((payload.get("data") or {}).get("url") if isinstance(payload, dict) else None)
     if not isinstance(url, str) or not url.startswith("wss://"):
         raise DerivSessionError("OTP_RESPONSE_MISSING_WS_URL")

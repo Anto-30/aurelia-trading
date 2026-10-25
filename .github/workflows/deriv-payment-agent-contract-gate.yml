@@ -1,0 +1,78 @@
+name: Deriv Payment Agent Contract Gate
+
+on:
+  pull_request:
+    paths:
+      - "contracts/deriv-payment-agent.openapi.yaml"
+      - "tools/deriv-payment-agent.spectral.yaml"
+      - "runtime/payment/**"
+      - "runtime/adapters/deriv_session.py"
+      - "tests/test_payment_agent_transport_guard.py"
+      - "tests/test_deriv_payment_agent_contract_source.py"
+      - "tests/test_deriv_session_retry_and_mode.py"
+      - ".github/workflows/deriv-payment-agent-contract-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deriv-payment-agent-contract-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract-and-mock-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LIVE_EXECUTION: BLOCKED
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      AURELIA_PAYMENT_TRANSPORT_MODE: TEST_ONLY
+    steps:
+      - name: Checkout source without persisted credentials
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: "24"
+
+      - name: Install pinned Spectral CLI
+        run: |
+          npm install --global --ignore-scripts --no-audit --no-fund @stoplight/spectral-cli@6.17.0
+          test "$(spectral --version)" = "6.17.0"
+
+      - name: Lint OpenAPI 3.1 contract
+        run: |
+          spectral lint contracts/deriv-payment-agent.openapi.yaml \
+            --ruleset tools/deriv-payment-agent.spectral.yaml \
+            --fail-severity=error
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13"
+
+      - name: Compile changed policy and session modules
+        run: python -m py_compile runtime/payment/transport_guard.py runtime/adapters/deriv_session.py
+
+      - name: Run mocked Payment Agent policy tests
+        run: python -m unittest discover -s tests -p 'test_payment_agent_transport_guard.py' -v
+
+      - name: Run pinned upstream Payment Agent contract regressions
+        run: python -m unittest discover -s tests -p 'test_deriv_payment_agent_contract_source.py' -v
+
+      - name: Run mocked Deriv OTP retry and lock tests
+        run: python -m unittest discover -s tests -p 'test_deriv_session_retry_and_mode.py' -v
+
+      - name: Assert the canonical live lock remains blocked
+        shell: bash
+        run: |
+          grep -q '^live_trading_enabled: false$' config/LIVE_LOCK.yaml
+          grep -q '^FINAL_EXECUTION_AUTHORIZATION: false$' config/LIVE_LOCK.yaml
+          grep -q '^LIVE_EXECUTION: BLOCKED$' config/LIVE_LOCK.yaml
+          grep -q '^capital_plane_mode: VERIFY_ONLY$' config/LIVE_LOCK.yaml
+
+      # Deliberately no production environment, broker credentials, or secrets context.

@@ -1,0 +1,115 @@
+extends:
+  - spectral:oas
+formats:
+  - oas3_1
+
+rules:
+  aurelia-payment-operation-id:
+    description: Every REST operation needs a stable operationId.
+    severity: error
+    given:
+      - "$.paths[*].get"
+      - "$.paths[*].post"
+      - "$.paths[*].put"
+      - "$.paths[*].patch"
+      - "$.paths[*].delete"
+      - "$.paths[*].options"
+      - "$.paths[*].head"
+      - "$.paths[*].trace"
+    then:
+      field: operationId
+      function: truthy
+
+  aurelia-no-loginid-parameter:
+    description: loginid must not be used as a request parameter in the modern API contract.
+    severity: error
+    given: "$.paths[*][*].parameters[*].name"
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "^loginid$"
+
+  aurelia-no-loginid-request-property:
+    description: loginid must not be exposed as a request-body model property.
+    severity: error
+    given: "$.paths[*][*].requestBody.content[*].schema..properties.loginid"
+    then:
+      function: undefined
+
+  aurelia-no-legacy-product-type:
+    description: Deprecated product_type must not appear in REST request schemas.
+    severity: error
+    given: "$.paths[*][*].requestBody.content[*].schema..properties.product_type"
+    then:
+      function: undefined
+
+  aurelia-no-legacy-landing-company-short:
+    description: Deprecated landing_company_short must not appear in REST request schemas.
+    severity: error
+    given: "$.paths[*][*].requestBody.content[*].schema..properties.landing_company_short"
+    then:
+      function: undefined
+
+  aurelia-no-legacy-barrier-range:
+    description: Deprecated barrier_range must not appear in REST request schemas.
+    severity: error
+    given: "$.paths[*][*].requestBody.content[*].schema..properties.barrier_range"
+    then:
+      function: undefined
+
+  aurelia-payment-error-response:
+    description: Every operation must declare at least one client/server error response.
+    severity: error
+    given: "$.paths[*][*].responses"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          anyOf:
+            - required: ["400"]
+            - required: ["401"]
+            - required: ["403"]
+            - required: ["500"]
+            - required: ["504"]
+
+  aurelia-test-mode-restrictions:
+    description: Safety restrictions must be machine-readable on the OpenAPI root.
+    severity: error
+    given: "$"
+    then:
+      field: x-aurelia-test-mode
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - default
+            - authenticatedRestPolicy
+            - realMoneyTransactionsPermitted
+            - verificationCodeDispatchPermitted
+            - clientPrivacyMutationsPermitted
+            - defaultTransport
+            - liveMoneyWritesPermitted
+            - forceDryRunForTransferPreflight
+            - dryRunResultIsTransaction
+            - unknownStateAction
+          properties:
+            default:
+              const: TEST_ONLY
+            realMoneyTransactionsPermitted:
+              const: false
+            verificationCodeDispatchPermitted:
+              const: false
+            clientPrivacyMutationsPermitted:
+              const: false
+            defaultTransport:
+              const: mock_only
+            liveMoneyWritesPermitted:
+              const: false
+            forceDryRunForTransferPreflight:
+              const: true
+            dryRunResultIsTransaction:
+              const: false
+            unknownStateAction:
+              const: ABORT
