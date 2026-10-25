@@ -80,6 +80,41 @@ class PaymentAgentTransportGuardTests(unittest.TestCase):
                 client.request("GET", path)
         self.assertEqual(self.raw_transport.request.call_count, 2)
 
+    def test_exact_agent_profile_routes_are_allowed(self):
+        client = GuardedPaymentAgentTransport(
+            self.raw_transport,
+            capital_plane_mode="VERIFY_ONLY",
+            transport_mode="AUTHENTICATED_VERIFY_ONLY",
+        )
+        client.request("GET", "/payment-agents/v1/agents/me")
+        client.request("GET", "/payment-agents/v1/agents/123")
+        self.assertEqual(self.raw_transport.request.call_count, 2)
+
+    def test_nested_traversal_and_normalized_paths_are_denied(self):
+        paths = (
+            "/payment-agents/v1/agents/../transfer/req_123",
+            "/payment-agents/v1/agents/7/transfer/req_123",
+            "/payment-agents/v1/agents/%2e%2e/transfer/req_123",
+            "/payment-agents/v1/transfer/req_123?expand=true",
+            "/payment-agents/v1/transfer/req_123#fragment",
+            "/payment-agents/v1/withdraw/verification_code/123",
+            "https://api.derivws.com/payment-agents/v1/agents/123",
+            "//api.derivws.com/payment-agents/v1/agents/123",
+        )
+        for path in paths:
+            with self.subTest(path=path):
+                raw = Mock()
+                client = GuardedPaymentAgentTransport(
+                    raw,
+                    capital_plane_mode="VERIFY_ONLY",
+                    transport_mode="AUTHENTICATED_VERIFY_ONLY",
+                )
+                with self.assertRaisesRegex(
+                    PaymentPolicyError, "PAYMENT_ENDPOINT_NOT_ALLOWLISTED"
+                ):
+                    client.request("GET", path)
+                raw.request.assert_not_called()
+
     def test_write_like_or_unknown_paths_are_denied(self):
         paths = (
             "/payment-agents/v1/transfer/",
