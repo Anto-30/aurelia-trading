@@ -69,6 +69,15 @@ def build_attestation(
     record_hash = record.get("record_hash")
     if not isinstance(record_hash, str) or not _SHA256.fullmatch(record_hash):
         raise AttestationError("INVALID_EVIDENCE_RECORD_HASH")
+    unhashed_record = {key: value for key, value in record.items() if key != "record_hash"}
+    canonical = json.dumps(
+        unhashed_record,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    if hashlib.sha256(canonical).hexdigest() != record_hash:
+        raise AttestationError("EVIDENCE_RECORD_HASH_MISMATCH")
     if record.get("result") != "PROVEN" or record.get("status") != "CURRENT":
         raise AttestationError("EVIDENCE_NOT_CURRENT_AND_PROVEN")
     if record.get("environment") != "real":
