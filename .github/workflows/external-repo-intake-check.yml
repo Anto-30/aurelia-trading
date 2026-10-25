@@ -1,0 +1,99 @@
+name: External Repository Intake Guard
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "config/external_repo_federation.json"
+      - "config/LIVE_LOCK.yaml"
+      - "docs/EXTERNAL_REPOSITORY_INTAKE_2026-10-25.md"
+      - ".github/workflows/external-repo-intake-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-intake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate pinned intake, provenance, and fail-closed controls
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          expected = [
+  "iOfficeAI/OfficeCLI",
+  "Jia-Ethan/codex-keysmith",
+  "Loongphy/codex-auth",
+  "ryfineZ/codex-session-patcher",
+  "openai/codex-security",
+  "qxcnm/Codex-Manager",
+  "composio-community/awesome-codex-skills",
+  "router-for-me/CLIProxyAPI",
+  "OpenHands/OpenHands",
+  "OpenHands/software-agent-sdk",
+  "OpenHands/extensions",
+  "OpenHands/OpenHands-CLI",
+  "OpenHands/automation",
+  "OpenHands/openhands-aci",
+  "OpenHands/OpenHands-Cloud",
+  "cline/cline",
+  "cline/prompts",
+  "decolua/9router",
+  "aaif-goose/goose",
+  "pressly/goose",
+  "b-nnett/goose",
+  "gooseworks-ai/goose-skills",
+  "mz-automation/libiec61850",
+  "tag1consulting/goose",
+  "Aider-AI/aider",
+  "hotovo/aider-desk",
+  "coder/agentapi",
+  "aide/aide",
+  "iamfakeguru/agent-md"
+]
+          registry = json.loads(Path("config/external_repo_federation.json").read_text())
+          lock = __import__("yaml").safe_load(Path("config/LIVE_LOCK.yaml").read_text())
+          repos = registry["repositories"]
+          by_name = {item["repo"]: item for item in repos}
+
+          assert len(by_name) == len(repos), "duplicate repository identifiers in registry"
+          assert registry["global_controls"]["capital_authority"] is False
+          assert registry["global_controls"]["live_order_submission"] is False
+          assert registry["global_controls"]["secret_reading"] is False
+          assert registry["global_controls"]["external_code_execution"] == "DENY_BY_DEFAULT"
+
+          allowed_modes = {"RESEARCH_ONLY", "SANDBOX_ONLY", "TOOLCHAIN_ONLY", "REFERENCE_ONLY"}
+          for item in repos:
+              assert item.get("mode") in allowed_modes, f"invalid mode: {item.get('repo')}"
+              assert item.get("source_url", "").startswith("https://github.com/"), f"invalid source URL: {item.get('repo')}"
+              assert item.get("capital_authority", False) is False, f"capital authority must remain false: {item.get('repo')}"
+
+          missing = sorted(set(expected) - set(by_name))
+          assert not missing, f"expected candidate(s) absent: {missing}"
+          for name in expected:
+              item = by_name[name]
+              sha = item.get("head_commit", "")
+              assert re.fullmatch(r"[0-9a-f]{40}", sha), f"not pinned to full 40-character SHA: {name}"
+              expected_url = item["source_url"].rstrip("/") + "/commit/" + sha
+              assert item.get("pin_source") == expected_url, f"pin source does not match SHA: {name}"
+              assert item.get("intake_status") in {"UNREVIEWED", "BLOCKED"}, f"candidate cannot be promoted by intake PR: {name}"
+          assert by_name["coder/agentapi"]["intake_status"] == "BLOCKED", "deprecated/unmaintained AgentAPI candidate must stay blocked"
+
+          assert lock["live_trading_enabled"] is False
+          assert lock["FINAL_EXECUTION_AUTHORIZATION"] is False
+          assert lock["LIVE_EXECUTION"] == "BLOCKED"
+          assert lock["capital_plane_mode"] == "VERIFY_ONLY"
+          assert lock["research_capital_authority"] is False
+          assert lock["external_repositories_capital_forbidden"] is True
+          print(f"INTAKE_POLICY=PASS")
+          print(f"REGISTRY_RECORDS={len(repos)}")
+          print(f"CANDIDATES_PINNED={len(expected)}/{len(expected)}")
+          print("AGENTAPI_STATUS=BLOCKED")
+          print("LIVE_LOCK=FAIL_CLOSED")
+          PY
