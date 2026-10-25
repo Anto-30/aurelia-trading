@@ -1,8 +1,9 @@
 name: AURELIA Assurance
 on:
   push:
-    branches: ["**"]
+    branches: ["main"]
   pull_request:
+    branches: ["main", "research/third-party-agent-skills-review", "fix/probability-policy-055-075-stacked"]
 permissions:
   contents: read
 
@@ -11,17 +12,17 @@ concurrency:
   cancel-in-progress: true
 jobs:
   assurance:
-    # Load production-scoped Actions secrets for authenticated verification.
-    environment: production
+    timeout-minutes: 45
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
-      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') == 'USD' && ((vars.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
-      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+      LIVE_EXECUTION: "BLOCKED"
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      AURELIA_VERIFY_ONLY: "true"
+      AURELIA_ALLOW_LIVE_ORDERS: "false"
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: Install runtime dependencies
@@ -37,9 +38,11 @@ jobs:
       - name: Run research-plane tests
         run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
       - name: Run assurance tests
-        run: python -m unittest discover -s assurance -p 'test_*.py' -v
+        timeout-minutes: 10
+        run: timeout --signal=TERM --kill-after=30s 570s python -m unittest discover -s assurance -p 'test_*.py' -v
       - name: Run runtime tests
-        run: python -m unittest discover -s tests -p 'test_*.py' -v
+        timeout-minutes: 10
+        run: timeout --signal=TERM --kill-after=30s 570s python -m unittest discover -s tests -p 'test_*.py' -v
       - name: Run secret presence report tests
         run: python -m pytest -q tests/test_secret_presence_report.py
       - name: Run hardening tests
@@ -53,98 +56,11 @@ jobs:
 
       - name: Upload public Deriv transport evidence
         if: always() && hashFiles('artifacts/deriv_public_transport.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: deriv-public-transport-evidence
           path: artifacts/deriv_public_transport.json
           if-no-files-found: error
-      - name: Verify protected Deriv authentication prerequisites
-        if: always()
-        env:
-          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-        run: python scripts/deriv_auth_prerequisites.py
-
-      - name: Upload Deriv authentication prerequisite evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: deriv-auth-prerequisites
-          path: artifacts/deriv_auth_prerequisites.json
-          if-no-files-found: warn
-
-      - name: Verify authenticated Deriv real-account session
-        if: env.DERIV_AUTH_CONFIGURED == 'true'
-        env:
-          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
-          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
-          DERIV_ENVIRONMENT: "real"
-          DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
-        run: |
-          python scripts/verify_deriv_session.py
-
-      - name: Verify authenticated Deriv broker account evidence (read-only)
-        if: env.DERIV_AUTH_CONFIGURED == 'true'
-        env:
-          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
-          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
-          DERIV_ENVIRONMENT: "real"
-          DERIV_BROKER_EVIDENCE_OUT: artifacts/deriv_broker_account_evidence.json
-        run: python scripts/verify_deriv_broker_evidence.py
-
-      - name: Verify authenticated Deriv verify-only transaction lifecycle
-        if: env.DERIV_AUTH_CONFIGURED == 'true'
-        env:
-          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
-          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
-          DERIV_ENVIRONMENT: "real"
-          DERIV_LIFECYCLE_MODE: "VERIFY_ONLY"
-          DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
-          DERIV_VERIFY_STAKE: "1.0"
-          DERIV_VERIFY_PROBABILITY: "0.60"
-        run: |
-          python scripts/verify_deriv_transaction_lifecycle.py
-
-      - name: Upload authenticated broker account evidence
-        if: always() && hashFiles('artifacts/deriv_broker_account_evidence.json') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: deriv-broker-account-read-only
-          path: artifacts/deriv_broker_account_evidence.json
-          if-no-files-found: error
-
-      - name: Upload authenticated verify-only lifecycle evidence
-        if: always() && hashFiles('artifacts/deriv_transaction_lifecycle.json') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: deriv-transaction-lifecycle-verify-only
-          path: artifacts/deriv_transaction_lifecycle.json
-          if-no-files-found: error
-
-      - name: Report authenticated Deriv prerequisite state
-        if: env.DERIV_AUTH_CONFIGURED != 'true'
-        run: |
-          echo "DERIV_AUTH_SESSION=NOT_CONFIGURED"
-          echo "Configure DERIV_AUTH_TOKEN (or DERIV_PAT) and DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID) as GitHub Actions secrets to run real-account session evidence."
-
-      - name: Upload authenticated Deriv evidence
-        if: always() && hashFiles('artifacts/deriv_authenticated_session.json') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: deriv-authenticated-session
-          path: artifacts/deriv_authenticated_session.json
-          if-no-files-found: error
-
       - name: Generate current readiness report
         if: always()
         env:
@@ -196,3 +112,115 @@ jobs:
           test "$status" -eq 2
           echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
           echo "$output" | grep -q "REASON="
+
+  # This job is intentionally restricted to trusted pushes to canonical main.
+  # Pull-request and feature-branch code must never execute with production environment secrets.
+  protected-deriv-evidence:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
+    needs: assurance
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      LIVE_EXECUTION: "BLOCKED"
+      FINAL_EXECUTION_AUTHORIZATION: "false"
+      AURELIA_VERIFY_ONLY: "true"
+      AURELIA_ALLOW_LIVE_ORDERS: "false"
+      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') == 'USD' && ((vars.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') }}
+      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Install verification dependencies
+        run: pip install -r requirements.txt
+      - name: Verify protected Deriv authentication prerequisites
+        if: always()
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+        run: python scripts/deriv_auth_prerequisites.py
+
+      - name: Upload Deriv authentication prerequisite evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: deriv-auth-prerequisites
+          path: artifacts/deriv_auth_prerequisites.json
+          if-no-files-found: warn
+
+      - name: Verify authenticated Deriv real-account session
+        if: env.DERIV_AUTH_CONFIGURED == 'true'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: "real"
+          DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
+        run: |
+          python scripts/verify_deriv_session.py
+
+      - name: Verify authenticated Deriv broker account evidence (read-only)
+        if: env.DERIV_AUTH_CONFIGURED == 'true'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || secrets.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: "real"
+          DERIV_BROKER_EVIDENCE_OUT: artifacts/deriv_broker_account_evidence.json
+        run: python scripts/verify_deriv_broker_evidence.py
+
+      - name: Verify authenticated Deriv verify-only transaction lifecycle
+        if: env.DERIV_AUTH_CONFIGURED == 'true'
+        env:
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
+          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_ENVIRONMENT: "real"
+          DERIV_LIFECYCLE_MODE: "VERIFY_ONLY"
+          DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
+          DERIV_VERIFY_STAKE: "1.0"
+          DERIV_VERIFY_PROBABILITY: "0.60"
+        run: |
+          python scripts/verify_deriv_transaction_lifecycle.py
+
+      - name: Upload authenticated broker account evidence
+        if: always() && hashFiles('artifacts/deriv_broker_account_evidence.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: deriv-broker-account-read-only
+          path: artifacts/deriv_broker_account_evidence.json
+          if-no-files-found: error
+
+      - name: Upload authenticated verify-only lifecycle evidence
+        if: always() && hashFiles('artifacts/deriv_transaction_lifecycle.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: deriv-transaction-lifecycle-verify-only
+          path: artifacts/deriv_transaction_lifecycle.json
+          if-no-files-found: error
+
+      - name: Report authenticated Deriv prerequisite state
+        if: env.DERIV_AUTH_CONFIGURED != 'true'
+        run: |
+          echo "DERIV_AUTH_SESSION=NOT_CONFIGURED"
+          echo "Configure DERIV_AUTH_TOKEN (or DERIV_PAT) and DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID) as GitHub Actions secrets to run real-account session evidence."
+
+      - name: Upload authenticated Deriv evidence
+        if: always() && hashFiles('artifacts/deriv_authenticated_session.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: deriv-authenticated-session
+          path: artifacts/deriv_authenticated_session.json
+          if-no-files-found: error

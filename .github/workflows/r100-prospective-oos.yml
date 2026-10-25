@@ -25,8 +25,8 @@ jobs:
       AURELIA_R100_HORIZON_TICKS: "10"
       AURELIA_R100_STATE_PATH: ".research_state/aurelia_r100_state.json"
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: Install runtime dependencies
@@ -148,7 +148,7 @@ jobs:
           PY
       - name: Upload prospective research archive
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: aurelia-r100-prospective-oos
           path: |
