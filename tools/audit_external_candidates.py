@@ -103,7 +103,7 @@ def run_command(
         # Only print narrowly allowlisted CLI parser diagnostics. Never print raw stderr/stdout,
         # which may contain source excerpts, findings, or detected secret values.
         safe_patterns = (
-            r"No such option: --[A-Za-z0-9_-]+",
+            r"(?:No such option|unrecognized option|unknown option)[: ]+['\"]?[-A-Za-z0-9_]+['\"]?",
             r"unrecognized arguments?: --[A-Za-z0-9_-]+",
             r"No such command '[A-Za-z0-9_-]+'",
             r"unknown command [A-Za-z0-9_-]+",
@@ -403,7 +403,7 @@ def run_semgrep(
 ) -> dict[str, Any]:
     raw_path = scratch_dir / "semgrep.raw.json"
     command = docker_common_args(image, "", repo_dir, scratch_dir, cache_dir) + [
-        "semgrep", "--disable-version-check", "scan",
+        "semgrep", "scan",
         "--config", "p/default", "--config", "p/secrets",
         "--metrics=off", "--json",
         "--output", "/scan/semgrep.raw.json", "--exit-zero",
