@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+from collections import Counter
 import json
 import sys
 from datetime import datetime, timezone
@@ -72,7 +73,8 @@ def load_bars(path: Path, label: str) -> tuple[list[dict[str, str]], dict[str, A
             rows.append(normalized)
 
     epochs = [int(row["epoch"]) for row in rows]
-    duplicates = sorted(epoch for epoch in set(epochs) if epochs.count(epoch) > 1)
+    counts = Counter(epochs)
+    duplicates = sorted(epoch for epoch, count in counts.items() if count > 1)
     return rows, {
         "row_count": len(rows),
         "duplicate_epoch_count": len(duplicates),
