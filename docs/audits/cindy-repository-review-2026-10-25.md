@@ -1,51 +1,54 @@
 # Cindy Repository Review — 2026-10-25
 
 **Candidate:** [makecindy/cindy](https://github.com/makecindy/cindy)  
-**Reviewed branch:** `main`  
-**Review scope:** Repository metadata, README, package manifest, contributor guidance, security disclosure policy, and docs index. This is a limited static review, not a full source audit.
+**Reviewed ref:** `main` (mutable; immutable revision not pinned)  
+**Decision:** **Conditional development-tool candidate; not approved for AURELIA production or trading runtime.**
 
-## Decision
+## Purpose and fit
 
-**Conditional development-tool candidate; do not integrate into AURELIA's trading runtime.** Cindy is an open-source desktop/mobile AI-agent client and orchestration surface, not a trading strategy, risk engine, broker adapter, or AURELIA backend. Its possible value is as a separate human-operated development workspace for agent-assisted research and coding. AURELIA does not need it as a production dependency.
+Cindy is an open-source desktop/mobile AI-agent client monorepo, not a trading strategy, broker adapter, backtester, risk engine, or execution service. Its possible value is as a separate human-operated workspace for coding, research, and coordinating development agents. AURELIA does not need Cindy as a runtime dependency.
 
-## What the repository says
+## Static evidence reviewed
 
-- The root project identifies itself as the Cindy desktop/mobile client monorepo; the server is maintained in a separate repository and is outside this source tree.
-- The client supports multiple harnesses, including Claude Code and Codex, with shared task context, memory, skills, tools, browser/computer/phone control, and task automation.
-- Default behavior connects to Cindy's official cloud services when signed in. The README says that “Skip Sign-In” runs local agents but disables server-backed capabilities; it does not mean the app is connected to a locally hosted Cindy backend.
-- Root `package.json` declares Apache-2.0, Node `>=22.12`, pnpm `>=10.7 <11`, and a pinned pnpm 10.33.2 package-manager version. It is a substantial pnpm monorepo, not a small library to add to Python trading services.
-- The README describes official distribution builds as sending aggregate product analytics (device/OS/app-version metadata associated with the account ID after sign-in) and an online heartbeat. It says chat content, file content, and working-directory data are not collected by those analytics. Self-built desktop builds can remove analytics; mobile analytics is inactive without build-time credentials.
-- The project has explicit documentation areas for Electron process boundaries, local credentials/storage, plugin sandboxing, agent behavior, log redaction, and third-party license/SBOM notices. These are useful review entry points, not independent proof that all controls are effective.
-- Security issues should be reported privately under the repository's security policy, not disclosed in a public issue or PR.
+Read repository README, `package.json`, `pnpm-workspace.yaml`, `config/endpoint.global.json`, `SECURITY.en.md`, and selected authoritative developer rules for Electron process boundaries, credentials/local storage, plugin security/authoring, agent behavior, and log upload/redaction. This is a targeted documentation/manifest review, not a line-by-line source audit.
 
-## Fit for AURELIA
+- Root manifest declares Apache-2.0, Node `>=22.12`, pnpm `>=10.7 <11`, pinned pnpm `10.33.2`, and a pnpm workspace covering `apps/*` and `packages/*`.
+- README identifies `apps/desktop` as Electron, `apps/mobile` as Expo/React Native, shared packages for agent/model/tool integrations, and separately maintained backend services outside this repository.
+- The checked-in global endpoint manifest names hosted endpoints for auth, chat, device linking, OAuth broker, object storage, heartbeat, model access, voice, GitHub, plugin/skill hubs, CDN, and mobile updates. A trial must treat the default signed-in build as a networked client; source visibility does not establish that the hosted backend is self-hostable.
+- README describes official-build analytics as aggregate device/OS/app-version metadata associated with account ID after sign-in, plus a signed-in heartbeat. It says chat/file/working-directory contents are not included in those analytics and crash dumps are not automatically uploaded. These are repository statements, not independent traffic-capture verification.
+- Plugin-security rules define a capability-oriented model, a `.cindy` package format, manifest validation, sandbox/runtime boundaries, and named capability slots for network, filesystem, agent, and other host features. This is design evidence, not independent proof that every runtime path enforces the intended permissions.
+- Credential rules explicitly distinguish a trusted Node worker from a security sandbox and warn that a trusted worker is not isolated from malicious code in the same way as a sandboxed plugin.
+- Electron rules describe Renderer as untrusted, require restrictive BrowserWindow defaults and IPC sender validation, and treat remote content, plugins, paths, and renderer-supplied identity as untrusted. Implementation-level tests and configuration still need independent verification.
+- The README says vendor binaries, including agent CLIs and ripgrep, are fetched during dependency setup; platform-specific integrity handling is noted for Android platform tools. This adds a software-supply-chain surface to pin and verify.
+- `SECURITY.en.md` asks reporters to use private vulnerability reporting rather than public issues/PRs for exploitable findings.
 
-| Area | Assessment | Decision |
-|---|---|---|
-| Development-time agent orchestration | Potentially useful to coordinate coding/research harnesses | Trial only in a separate, non-production workspace |
-| Repository/code editing | High-capability local file and tool access is useful but increases blast radius | Use a disposable worktree, least-privilege account, and explicit allowlisted directories |
-| Trading runtime | Desktop/mobile client is not a runtime dependency or deterministic risk authority | Exclude |
-| Capital and execution | No agent client may authorize orders or change risk gates | Explicitly deny access to broker credentials, live tokens, execution APIs, and production secret stores |
-| Hosted service/privacy | Default signed-in behavior reaches official cloud endpoints; service/backend is separate from this repo | Assess account, data residency, endpoint, and organizational policy before use; do not assume the client is fully self-hostable |
-| Licensing | Repository client is Apache-2.0, but dependencies, binaries, model weights, datasets, prompts, and trademarks can have separate terms | Preserve notices; review generated SBOM and third-party notices before redistribution or packaging |
+## AURELIA integration boundary
 
-## Required controls before any trial
+| Area | Disposition |
+|---|---|
+| Development-time agent workspace | Conditional trial only in a disposable VM or isolated OS user/worktree |
+| Research/docs/code assistance | Potentially useful with read-only repository access first and explicit human approval for writes, shell, and network actions |
+| Production trading runtime | Reject; no runtime dependency required |
+| Capital, broker, and release authority | Explicitly deny access; no path to Layer 6, capital plane, live tokens, execution APIs, release authorization, or production secret stores |
+| Hosted service / data handling | Confirm privacy, account, region, and endpoint requirements before sign-in; do not assume self-hostability |
+| License and redistribution | Root Apache-2.0 applies to repo code except separately licensed assets/dependencies; preserve NOTICE and third-party notices and inspect the actual build SBOM before packaging or redistribution |
 
-1. Pin the exact commit and inspect the complete source paths that implement agent tool invocation, subprocesses, browser/computer control, plugin sandboxing, credentials, update delivery, and telemetry.
-2. Review `docs/dev-rules/electron-security-and-process-boundaries.md`, `docs/dev-rules/credentials-and-local-storage.md`, `docs/dev-rules/plugin-security-and-authoring.md`, `docs/dev-rules/maker-core-and-agent-behavior.md`, `docs/dev-rules/log-upload-and-redaction.md`, and `docs/legal/README.md` at the pinned revision.
-3. Run in a disposable OS user/worktree or isolated VM, with no access to production credentials, `.env` files, Deriv tokens, cloud secret managers, or the AURELIA execution host.
-4. Give tools read-only repository access first. Require explicit human approval for writes, shell execution, external network calls, and any action affecting shared repositories.
-5. Test deny-by-default tool permissions, path traversal and symlink handling, prompt/tool injection, untrusted repository instructions, credential redaction, and whether browser/computer automation can reach authenticated production sessions.
-6. Confirm outbound endpoints, update mechanisms, analytics behavior, and data-handling terms for the actual build and account mode. Do not assume the public client source contains the separately hosted backend.
-7. Keep all outputs in the research plane. No direct or indirect path from Cindy or any connected agent to Layer 6 risk authority, the capital plane, live execution, release authorization, or production secrets.
-8. Verify the pinned revision's license notices, SBOM, dependency audit, and required test suite before distribution or integration.
+## Minimum controls before a trial
 
-## Evidence and limitations
+1. Pin an immutable commit and verify source integrity before installing dependencies.
+2. Use a disposable VM/OS account with no access to production credentials, `.env` files, Deriv tokens, secret managers, authenticated production browser profiles, or the AURELIA execution host.
+3. Start with read-only access to a throwaway AURELIA clone. No permission to push, merge, deploy, or invoke production workflows. Allowlist filesystem paths and deny arbitrary shell/network actions unless individually approved.
+4. Review plugin runtime, capability authorization, Node worker boundary, subprocess creation, browser/computer-control paths, update delivery, endpoint manifests, and telemetry implementation at the pinned revision. Test prompt/tool injection, hostile repository instructions, path traversal/symlinks, permission escalation, credential redaction, and external-session access.
+5. Inspect lockfile and downloaded binary provenance; generate an SBOM and license inventory, run dependency and secret scans, and review Electron/Chromium configuration and IPC sender checks.
+6. Confirm network destinations and data handling through configuration review and, if permitted, network observation of the exact build/account mode. Disable analytics in a controlled source build only if policy requires it and the change is understood and tested.
+7. Keep all activity in the research plane. Cindy or any connected agent must not authorize capital, alter deterministic risk settings, change `config/LIVE_LOCK.yaml`, or reach live execution.
 
-- Repository metadata and selected documentation/manifest files were read through GitHub at the `main` branch on 2026-10-25.
-- The public README states Apache-2.0 for the client and describes hosted service behavior and analytics; those statements have not been independently verified against network traces or a built release.
-- No clone, dependency install, source execution, security scan, SBOM generation, or automated test run was performed for Cindy. No security certification or runtime compatibility is claimed.
+## Verification status and limits
+
+- GitHub metadata, selected manifest/config files, and selected docs were inspected at `main` on 2026-10-25. Because `main` is mutable, the review is not reproducible until an immutable commit SHA is pinned.
+- No clone, dependency install, build, test suite, source execution, SBOM generation, vulnerability scan, license scan, or network capture was performed. No vulnerability-free claim, security certification, performance claim, or compatibility sign-off is made.
+- This review did not install Cindy, add dependencies, connect agents to AURELIA, or modify runtime code.
 
 ## Final disposition
 
-**Accept for further evaluation as an optional, isolated development-time agent client only. Reject as a production trading dependency.** This assessment adds documentation to AURELIA's external repository review; it does not install Cindy, connect its agents to AURELIA, modify runtime code, expose credentials, or change the fail-closed live lock.
+**Accept only for further evaluation as an optional, isolated development-time agent client. Reject as a production trading dependency.** Preserve AURELIA's fail-closed live lock and canonical deterministic risk authority. Any future trial needs a pinned revision, isolated environment, reviewed permissions, dependency/SBOM evidence, and human-approved access boundaries.
