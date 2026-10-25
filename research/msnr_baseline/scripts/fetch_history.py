@@ -76,6 +76,15 @@ def validate_active_symbols_pip_size(pip_size: Any) -> float:
 
 def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
                       granularity: int) -> list[dict[str, int | float]]:
+    if any(isinstance(value, bool) or not isinstance(value, int)
+           for value in (start_epoch, end_exclusive, granularity)):
+        raise FetchError("Requested start, exclusive end, and granularity must be JSON-compatible integers.")
+    if not 0 <= start_epoch < end_exclusive <= 9999999999:
+        raise FetchError("Requested half-open epoch window is invalid or outside the supported range.")
+    if granularity not in (60, 900):
+        raise FetchError("Unsupported granularity; only 60-second and 900-second bars are in scope.")
+    if start_epoch % granularity or end_exclusive % granularity or (end_exclusive - start_epoch) % granularity:
+        raise FetchError("Requested half-open epoch window must be aligned to the chosen granularity.")
     if not isinstance(candles, list) or not candles:
         raise FetchError("Response has no non-empty candles array; dataset cannot be declared complete.")
     out: list[dict[str, int | float]] = []
@@ -131,8 +140,16 @@ def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
 
 def build_candle_payload(start_epoch: int, end_exclusive: int, granularity: int) -> dict[str, int | str]:
     """Build a current-API, bounded history request without legacy/invalid fields."""
-    if granularity not in (60, 900) or end_exclusive <= start_epoch or (end_exclusive - start_epoch) % granularity:
-        raise FetchError("Invalid candle request interval or granularity.")
+    if any(isinstance(value, bool) or not isinstance(value, int)
+           for value in (start_epoch, end_exclusive, granularity)):
+        raise FetchError("Candle request start, exclusive end, and granularity must be integers.")
+    if not 0 <= start_epoch < end_exclusive <= 9999999999:
+        raise FetchError("Candle request half-open epoch window is invalid or outside the supported range.")
+    if granularity not in (60, 900):
+        raise FetchError("Invalid candle request granularity.")
+    if (start_epoch % granularity or end_exclusive % granularity or
+            (end_exclusive - start_epoch) % granularity):
+        raise FetchError("Candle request half-open epoch window must be aligned to the chosen granularity.")
     count = (end_exclusive - start_epoch) // granularity
     if count < 1 or count > 5000:
         raise FetchError(f"Requested chunk has {count} candles; current cap is 5000.")
