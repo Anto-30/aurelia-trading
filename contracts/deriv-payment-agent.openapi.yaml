@@ -579,3 +579,35 @@ components:
         errors: { type: array, items: { $ref: '#/components/schemas/ApiError' } }
         metadata: { $ref: '#/components/schemas/Metadata' }
       additionalProperties: true
+
+    PaymentAgentListItem:
+      type: object
+      required: [id]
+      properties:
+        id: { type: integer }
+        created_at: { type: integer, description: Epoch timestamp in milliseconds. }
+        is_listed: { type: boolean }
+        name: { type: [string, 'null'] }
+        nickname: { type: [string, 'null'] }
+        information: { type: [string, 'null'] }
+        email: { type: [string, 'null'] }
+        phone_numbers: { type: [array, 'null'], items: { type: string } }
+        payment_methods: { type: [array, 'null'], items: { type: string } }
+        countries: { type: [array, 'null'], items: { type: string } }
+        urls: { type: [array, 'null'], items: { type: string } }
+        deposit_commission: { type: [number, 'null'] }
+        withdrawal_commission: { type: [number, 'null'] }
+        withdrawal_minimum: { type: [string, 'null'] }
+        withdrawal_maximum: { type: [string, 'null'] }
+      additionalProperties: true
+    DirectoryEnvelope:
+      type: object
+      required: [data, errors, metadata]
+      properties:
+        data:
+          type: array
+          description: Payment agent list items sorted by agent ID ascending.
+          items: { $ref: '#/components/schemas/PaymentAgentListItem' }
+        errors: { type: array, items: { $ref: '#/components/schemas/ApiError' } }
+        metadata: { $ref: '#/components/schemas/Metadata' }
+      additionalProperties: true
