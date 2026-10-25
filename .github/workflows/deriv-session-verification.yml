@@ -1,51 +1,17 @@
-name: AURELIA Deriv Authenticated Session Verification
+name: DEPRECATED - AURELIA Deriv Authenticated Session Verification
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: "Deriv account environment to verify"
-        required: true
-        default: "demo"
-        type: choice
-        options:
-          - real
-          - demo
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
-  verify:
-    # Credentials may be stored as production environment-scoped Actions secrets.
-    environment: production
+  retired:
     runs-on: ubuntu-latest
-    env:
-      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-      DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
-      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
-      DERIV_ENVIRONMENT: ${{ inputs.environment }}
-      FINAL_EXECUTION_AUTHORIZATION: "false"
-      LIVE_EXECUTION: "BLOCKED"
     steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-
-      - name: Install runtime dependencies
-        run: pip install -r requirements.txt
-
-      - name: Verify authenticated Deriv session and fresh balance
-        run: python scripts/verify_deriv_session.py
-
-      - name: Assert no capital authorization occurred
+      - name: Fail closed - legacy workflow retired
+        shell: bash
         run: |
-          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
-          test "$LIVE_EXECUTION" = "BLOCKED"
-          echo "FINAL_EXECUTION_AUTHORIZATION=false"
-          echo "LIVE_EXECUTION=BLOCKED"
-          test ! -f artifacts/deriv_authenticated_session.json || jq -e '.orders_submitted == 0 and .capital_authority_granted == false and .order_submission_permitted == false' artifacts/deriv_authenticated_session.json >/dev/null
+          echo "LEGACY_DERIV_WORKFLOW=RETIRED"
+          echo "NEXT_ACTION=Use the protected read-only verification workflow from main after independent review."
+          exit 1

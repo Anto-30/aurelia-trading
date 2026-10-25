@@ -44,7 +44,7 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("scripts/deploy/bootstrap_and_deploy.sh", workflow)
         self.assertNotIn("scripts/oci/bootstrap_and_deploy.sh", workflow)
 
-    def test_live_secrets_are_separate_root_only_and_not_loaded_in_verify_only(self):
+    def test_live_secrets_remain_separate_but_workflow_only_has_verify_only_mode(self):
         workflow = (ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml").read_text(
             encoding="utf-8"
         )
@@ -58,37 +58,50 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
             ROOT / "scripts" / "deploy" / "provision_deriv_readonly_secrets.py"
         ).read_text(encoding="utf-8")
 
-        self.assertIn("Provision LIVE runtime secrets to root-only host store", workflow)
-        self.assertIn("sudo -n python3 /opt/aurelia/releases/$GITHUB_SHA/scripts/deploy/provision_runtime_secrets.py", workflow)
-        self.assertIn("artifacts/attestations", workflow)
+        # The deployment workflow cannot request or configure LIVE mode.
+        self.assertIn(
+            "if: github.ref == 'refs/heads/main' && inputs.confirm_verify_only == true",
+            workflow,
+        )
+        self.assertIn('DEPLOYMENT_MODE: "VERIFY_ONLY"', workflow)
+        self.assertNotIn("inputs.deployment_mode", workflow)
+        self.assertNotIn("Provision LIVE runtime secrets", workflow)
+        self.assertNotIn("secrets.DERIV_AUTH_TOKEN", workflow)
+        self.assertIn("Configure strict SSH transport", workflow)
+
+        # Keep host-side storage code independently fail-closed and separated.
         self.assertIn('LIVE_SECRET_FILE="$ENV_DIR/aurelia-live-secrets.env"', deploy)
-        self.assertIn('SECRET_ENV_ARGS+=(--env-file "$LIVE_SECRET_FILE")', deploy)
+        self.assertIn('READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"', deploy)
         self.assertIn('if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then', deploy)
         self.assertIn("os.fchmod(fd, 0o600)", provisioner)
         self.assertIn("os.replace(temporary, destination)", provisioner)
         self.assertIn('CAPITAL_AUTHORITY_GRANTED=false', provisioner)
-        self.assertIn('READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"', deploy)
-        self.assertIn('elif [ -f "$READONLY_SECRET_FILE" ]', deploy)
         self.assertIn('CAPITAL_AUTHORITY_GRANTED=false', readonly_provisioner)
+
         presence_workflow = (
             ROOT / ".github" / "workflows" / "secret-presence-report.yml"
         ).read_text(encoding="utf-8")
-        self.assertIn(
-            "DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}",
-            presence_workflow,
-        )
-        self.assertNotIn("secrets.DERIV_EXPECTED_CURRENCY || 'USD'", presence_workflow)
+        self.assertIn("DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}", presence_workflow)
+        self.assertIn("if: github.ref == 'refs/heads/main'", presence_workflow)
+        self.assertNotIn("workflow_dispatch:", presence_workflow)
 
-    def test_live_deployment_requires_release_gate(self):
-        workflow = (ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("python scripts/live_release_gate.py", workflow)
-        self.assertIn("if: inputs.deployment_mode == 'LIVE'", workflow)
-        self.assertIn("AURELIA_READINESS_OUT: artifacts/AURELIA_READINESS.current.json", workflow)
-        self.assertIn("AURELIA_READINESS_PATH: artifacts/AURELIA_READINESS.current.json", workflow)
-        self.assertIn("DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT: artifacts/deriv_public_transport.json", workflow)
-        self.assertIn("python scripts/verify_deriv_public_transport.py", workflow)
+    def test_self_hosted_workflow_is_explicitly_verify_only_and_never_runs_live_release_gate(self):
+        workflow = (
+            ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml"
+        ).read_text(encoding="utf-8")
+        self.assertTrue((ROOT / "scripts" / "live_release_gate.py").is_file())
+        self.assertTrue((ROOT / "scripts" / "verify_deriv_public_transport.py").is_file())
+        self.assertIn("config/LIVE_LOCK.yaml", workflow)
+        self.assertIn("b2cddd1efb0f25f35a6a08354290f805812bf34c", workflow)
+        self.assertIn('FINAL_EXECUTION_AUTHORIZATION: "false"', workflow)
+        self.assertIn('LIVE_EXECUTION: "BLOCKED"', workflow)
+        self.assertIn("DEPLOYMENT_MODE=VERIFY_ONLY", workflow)
+        self.assertNotIn("python scripts/live_release_gate.py", workflow)
+        self.assertNotIn("if: inputs.deployment_mode == 'LIVE'", workflow)
+        self.assertNotIn("deployment_mode:", workflow)
+        self.assertNotIn("AURELIA_READINESS_OUT", workflow)
+        self.assertNotIn("DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT", workflow)
+        self.assertNotIn("artifacts/attestations", workflow)
 
 
 if __name__ == "__main__":
