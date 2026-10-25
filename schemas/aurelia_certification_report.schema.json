@@ -614,5 +614,6 @@
         }
       }
     }
-  ]
+  ],
+  "$comment": "Schema validation checks report structure and hash formatting only. Certification tooling must independently recompute SHA-256 from each evidence log and compare it to evidence_log_hash; a 64-character string alone is not proof. CERTIFIED additionally requires every gate PASS and a non-empty human reviewer signature."
 }
