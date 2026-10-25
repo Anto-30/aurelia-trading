@@ -349,7 +349,7 @@ class DerivPublicMarketDataClient:
             raise PublicMarketDataError("History count must be an integer between 1 and 5000.")
         payload: dict[str, Any] = {
             "ticks_history": underlying_symbol, "start": int(start_epoch), "end": str(int(end_epoch)),
-            "style": style, "count": int(count),
+            "style": style, "count": int(count), "subscribe": 0,
         }
         if style == "candles":
             if isinstance(granularity_seconds, bool) or not isinstance(granularity_seconds, int) or granularity_seconds not in SUPPORTED_CANDLE_GRANULARITIES:
