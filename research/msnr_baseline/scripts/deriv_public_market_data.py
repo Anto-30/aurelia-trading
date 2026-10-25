@@ -331,29 +331,57 @@ class DerivPublicMarketDataClient:
             or isinstance(end_epoch, bool) or not isinstance(end_epoch, int)
             or not 0 <= start_epoch <= 9999999999
             or not 0 <= end_epoch <= 9999999999
-            or end_epoch < start_epoch
+            or end_epoch <= start_epoch
         ):
-            raise PublicMarketDataError("History start/end must be integer epochs from 0 to 9999999999 with end >= start.")
-        if not isinstance(underlying_symbol, str) or not underlying_symbol:
-            raise PublicMarketDataError("History symbol must be a non-empty string.")
+            raise PublicMarketDataError(
+                "History start/end must be integer epochs from 0 to 9999999999 with end > start."
+            )
+        if not isinstance(underlying_symbol, str) or re.fullmatch(r"\\w{2,30}", underlying_symbol, flags=re.ASCII) is None:
+            raise PublicMarketDataError("History symbol must match the 2-30 character ASCII word pattern.")
         if style not in ("candles", "ticks"):
             raise PublicMarketDataError("History style must be 'candles' or 'ticks'.")
         if isinstance(count, bool) or not isinstance(count, int) or not 1 <= count <= 5000:
             raise PublicMarketDataError("History count must be an integer between 1 and 5000.")
+
         payload: dict[str, Any] = {
-            "ticks_history": underlying_symbol, "start": int(start_epoch), "end": str(int(end_epoch)),
-            "style": style, "count": int(count),
+            "ticks_history": underlying_symbol,
+            "start": start_epoch,
+            "style": style,
         }
         if style == "candles":
-            if isinstance(granularity_seconds, bool) or not isinstance(granularity_seconds, int) or granularity_seconds not in SUPPORTED_CANDLE_GRANULARITIES:
+            if (
+                isinstance(granularity_seconds, bool)
+                or not isinstance(granularity_seconds, int)
+                or granularity_seconds not in SUPPORTED_CANDLE_GRANULARITIES
+            ):
                 allowed = ", ".join(str(value) for value in sorted(SUPPORTED_CANDLE_GRANULARITIES))
                 raise PublicMarketDataError(f"Candle granularity must be one of: {allowed}.")
+            if (
+                start_epoch % granularity_seconds != 0
+                or end_epoch % granularity_seconds != 0
+                or (end_epoch - start_epoch) % granularity_seconds != 0
+            ):
+                raise PublicMarketDataError(
+                    "Candle history half-open window must have granularity-aligned start and exclusive end."
+                )
+            requested_candles = (end_epoch - start_epoch) // granularity_seconds
+            if requested_candles > count:
+                raise PublicMarketDataError(
+                    f"Requested candle window has {requested_candles} bars, exceeding caller count cap {count}."
+                )
+            # Deriv's public gateway has been observed returning the latest window
+            # when count is sent with explicit start/end. Use the last included candle
+            # epoch as the API's inclusive end boundary and verify response coverage.
+            payload["end"] = str(end_epoch - granularity_seconds)
             payload["granularity"] = granularity_seconds
+        else:
+            # The API's end parameter is the latest included epoch; callers pass
+            # end_epoch as an exclusive boundary to keep one consistent range contract.
+            payload["end"] = str(end_epoch - 1)
+            payload["count"] = count
+
         message = await self.request(payload, expected_msg_type="candles" if style == "candles" else "history")
         if style == "candles":
-            # The public endpoint has been observed returning current candles for a
-            # historical request. Never treat a successful WebSocket response as
-            # proof that the requested time range was honored.
             candles = validate_candle_response(message)
             out_of_range = [
                 int(candle["epoch"])
@@ -363,6 +391,14 @@ class DerivPublicMarketDataClient:
             if out_of_range:
                 raise PublicMarketDataError(
                     "Deriv returned candle epochs outside the requested half-open range "
+                    f"[{start_epoch}, {end_epoch}); refusing mismatched historical data."
+                )
+        else:
+            prices, times = validate_history_response(message)
+            out_of_range = [epoch for epoch in times if not start_epoch <= epoch < end_epoch]
+            if out_of_range:
+                raise PublicMarketDataError(
+                    "Deriv returned tick epochs outside the requested half-open range "
                     f"[{start_epoch}, {end_epoch}); refusing mismatched historical data."
                 )
         return message
