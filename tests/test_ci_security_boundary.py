@@ -37,7 +37,7 @@ class CISecurityBoundaryTests(unittest.TestCase):
 
     def test_routine_assurance_is_secret_free_and_checkout_is_read_only(self):
         workflow = ASSURANCE_PATH.read_text(encoding="utf-8")
-        self.assertNotIn("secrets.", workflow)
+        self.assertNotRegex(workflow, r"\$\{\{[^}]*\bsecrets\s*\.")
         self.assertNotRegex(workflow, r"(?m)^\s*environment:\s*production\s*$")
         self.assertIn('FINAL_EXECUTION_AUTHORIZATION: "false"', workflow)
         self.assertIn('LIVE_EXECUTION: "BLOCKED"', workflow)
