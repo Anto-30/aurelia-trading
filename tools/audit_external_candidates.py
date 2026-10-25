@@ -131,14 +131,37 @@ def git_fetch_candidate(candidate: dict[str, Any], clone_dir: Path) -> dict[str,
     )
     # Fetch only the exact pinned commit; no checkout hooks, submodules, LFS smudge,
     # package installation, build scripts or tests are executed.
-    run_command(
-        ["git", "-C", str(clone_dir), "fetch", "--quiet", "--depth=1", "origin", sha],
-        timeout=300,
-    )
+    branch = str(candidate.get("default_branch") or "")
+    if not re.fullmatch(r"[A-Za-z0-9_./-]+", branch) or ".." in branch:
+        raise ValueError("INVALID_DEFAULT_BRANCH")
+
+    fetch_method = "direct-pinned-sha"
+    try:
+        run_command(
+            ["git", "-C", str(clone_dir), "fetch", "--quiet", "--filter=blob:none",
+             "--depth=1", "origin", sha],
+            timeout=300,
+        )
+        checkout_target = "FETCH_HEAD"
+    except Exception:
+        # Some servers reject a SHA-only want even when it is reachable. Fetch only the
+        # public default-branch history since 2026-01-01 (all manifest pins are newer),
+        # without blobs, then check out the exact SHA. Never check out HEAD as a substitute.
+        fetch_method = "default-branch-history-fallback"
+        run_command(
+            ["git", "-C", str(clone_dir), "fetch", "--quiet", "--filter=blob:none",
+             "--shallow-since=2026-01-01T00:00:00Z", "origin", "refs/heads/" + branch],
+            timeout=900,
+        )
+        checkout_target = sha
+        exists = run_command(
+            ["git", "-C", str(clone_dir), "cat-file", "-e", sha + "^{commit}"],
+            timeout=30,
+        )
     run_command(
         ["git", "-C", str(clone_dir), "-c", "core.hooksPath=" + os.devnull,
-         "checkout", "--quiet", "--detach", "FETCH_HEAD"],
-        timeout=120,
+         "checkout", "--quiet", "--detach", checkout_target],
+        timeout=180,
     )
     actual = run_command(
         ["git", "-C", str(clone_dir), "rev-parse", "HEAD"],
@@ -179,6 +202,7 @@ def git_fetch_candidate(candidate: dict[str, Any], clone_dir: Path) -> dict[str,
         "repository": repo,
         "requested_commit_sha": sha,
         "checked_out_commit_sha": actual,
+        "fetch_method": fetch_method,
         "pin_verified": True,
         "file_count": len(tree),
         "root_file_names": sorted(root_names)[:500],
