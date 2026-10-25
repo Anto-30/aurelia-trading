@@ -7,9 +7,9 @@
 
 ## Executive decision
 
-Do not bulk-import or install these repositories into AURELIA. Treat each as an external source under review. The initial classification below is a triage decision, not a completed source-code security audit, compatibility test, or profitability validation. No external code is authorized to place orders or authorize capital.
+Do not bulk-import or install these repositories into AURELIA. Treat each as an external source under review. The classifications below are triage decisions, not completed source-code audits, compatibility tests, or profitability validation. No external code is authorized to place orders or authorize capital.
 
-Preserve the existing fail-closed policy: `LIVE_EXECUTION=BLOCKED`, `FINAL_EXECUTION_AUTHORIZATION=false`, and capital-plane `VERIFY_ONLY` until every release gate is evidenced and independently approved. Never weaken or infer the location/content of the canonical live lock from a guessed path.
+The canonical lock is `config/LIVE_LOCK.yaml` (lowercase `config/`). At the inspected `main` revision it explicitly sets `live_trading_enabled: false`, `FINAL_EXECUTION_AUTHORIZATION: false`, `LIVE_EXECUTION: BLOCKED`, `capital_plane_mode: VERIFY_ONLY`, `research_capital_authority: false`, `external_repositories_capital_forbidden: true`, and `kill_switch_independent: true`. Preserve these values. Do not infer that a missing path using different capitalization means the lock is absent.
 
 ## Repository-by-repository disposition
 
@@ -50,12 +50,13 @@ Preserve the existing fail-closed policy: `LIVE_EXECUTION=BLOCKED`, `FINAL_EXECU
 
 ## Verified observations and limitations
 
-- GitHub API access confirmed that `Anto-30/aurelia-trading` has a `main` branch and a repository tree containing 518 entries at the time of inspection.
-- The attempted path `CONFIG/LIVE_LOCK.yaml` returned 404 on `main`. This does **not** prove that the lock is absent; the canonical path must be found from the actual repository tree before any lock-related action.
-- The GitHub branch-protection endpoint returned no branch-protection data for `main`. Treat this as an unresolved governance risk until repository rulesets and branch protection are inspected; do not guess required CI check names or change protection settings blindly.
-- Repository documentation was inspected for selected candidates, and repository metadata was queried. This pass did **not** clone or execute the candidates, inspect every source file, complete an SBOM/vulnerability scan, run AURELIA tests, or verify live/deployment behavior.
+- GitHub API inspection confirmed the `main` branch and a repository tree containing 518 entries at the time of inspection.
+- The canonical lock path is `config/LIVE_LOCK.yaml`; its current content was read and confirms fail-closed settings. The earlier `CONFIG/LIVE_LOCK.yaml` lookup returned 404 because paths are case-sensitive.
+- GitHub's branch-protection and required-status-check endpoints both returned `404 Branch not protected` for `main`. This is a confirmed governance gap, not merely a visibility limitation. No branch protection was changed during this audit because required check names and intended policy were not yet verified.
+- The `aurelia-assurance.yml` and `gstack-workflow-assurance.yml` workflows were inspected at a documentation level. The former defines production-environment Deriv verification steps, with secret values passed to individual verification steps; this is not proof that secrets are configured or that the workflow has passed. The latter contains explicit assertions that external repositories have no capital, production-deployment, live-order, or secret-reading authority and checks the canonical lock values.
+- Selected candidate documentation and metadata were queried. This pass did **not** clone or execute the candidate repositories, inspect every source file, complete an SBOM/vulnerability scan, run AURELIA tests, or verify live/deployment behavior.
 - Therefore this document records an initial review and safe next steps only. It is not a security certification, compatibility sign-off, or performance claim.
 
 ## Next action
 
-Review this documentation-only change, locate the canonical live-lock path from the tree, verify repository rulesets/branch protection, then perform source-level audits of Omnigent and fast-trade in isolated environments. Do not merge until an independent reviewer and required checks approve. Do not authorize live execution as part of this work.
+Restore branch governance with a pull-request requirement, independent approval, stale-review dismissal, and verified required checks; do not guess CI check names. Then conduct isolated source-level audits of Omnigent and fast-trade. Do not merge until independent review and required checks approve. Do not authorize live execution as part of this work.
