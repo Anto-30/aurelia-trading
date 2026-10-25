@@ -484,10 +484,10 @@ def main() -> int:
     candidates = manifest.get("candidates")
     if not isinstance(candidates, list) or len(candidates) != 24:
         print("AUDIT_RESULT=BLOCKED")
-        print("AUDIT_REASON=EXPECTED_20_PINNED_CANDIDATES")
+        print("AUDIT_REASON=EXPECTED_24_PINNED_CANDIDATES")
         return 2
     names = [candidate.get("repository") for candidate in candidates]
-    if len(set(names)) != 20:
+    if len(set(names)) != len(names):
         print("AUDIT_RESULT=BLOCKED")
         print("AUDIT_REASON=DUPLICATE_REPOSITORIES")
         return 2
