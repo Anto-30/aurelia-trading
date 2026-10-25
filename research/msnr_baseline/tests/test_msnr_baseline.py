@@ -69,6 +69,43 @@ def test_public_history_payload_uses_current_bounded_request_shape():
     assert "subscribe" not in req  # one-shot request: omit rather than send legacy 0
 
 
+@pytest.mark.parametrize(
+    "start_epoch,end_exclusive,granularity",
+    [
+        (True, 1_666_320_060, 60),
+        ("1666320000", 1_666_320_060, 60),
+        (1_666_320_000, 1_666_320_060.0, 60),
+        (1_666_320_000, 1_666_320_060, True),
+        (-60, 0, 60),
+        (1_666_320_000, 1_666_320_060, 0),
+        (1_666_320_001, 1_666_320_061, 60),
+        (1_666_320_000, 1_666_320_901, 60),
+    ],
+)
+def test_candle_normalizer_rejects_invalid_window_and_granularity(start_epoch, end_exclusive, granularity):
+    candle = {"epoch": 1_666_320_000, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5}
+    with pytest.raises(fetch_history.FetchError):
+        fetch_history.normalize_candles([candle], start_epoch, end_exclusive, granularity)
+
+
+@pytest.mark.parametrize(
+    "start_epoch,end_exclusive,granularity",
+    [
+        (True, 1_666_320_060, 60),
+        ("1666320000", 1_666_320_060, 60),
+        (1_666_320_000, 1_666_320_060.0, 60),
+        (1_666_320_000, 1_666_320_060, True),
+        (-60, 0, 60),
+        (1_666_320_000, 1_666_320_060, 0),
+        (1_666_320_001, 1_666_320_061, 60),
+        (1_666_320_000, 1_666_320_901, 60),
+    ],
+)
+def test_candle_payload_builder_rejects_invalid_window_and_granularity(start_epoch, end_exclusive, granularity):
+    with pytest.raises(fetch_history.FetchError):
+        fetch_history.build_candle_payload(start_epoch, end_exclusive, granularity)
+
+
 def test_active_symbols_pip_size_is_price_unit_not_history_display_precision():
     assert fetch_history.validate_active_symbols_pip_size(0.0001) == 0.0001
     assert fetch_history.validate_active_symbols_pip_size(0.01) == 0.01
@@ -100,6 +137,29 @@ def test_candle_normalizer_requires_every_current_schema_field_and_contiguity():
     gap = [good[0], {**good[1], "epoch": start + 120}]
     with pytest.raises(fetch_history.FetchError, match="continuity failure"):
         fetch_history.normalize_candles(gap, start, start + 180, 60)
+
+
+@pytest.mark.parametrize(
+    "field,invalid_value",
+    [
+        ("epoch", True),
+        ("epoch", False),
+        ("epoch", "1666320000"),
+        ("epoch", 1666320000.0),
+        ("epoch", -1),
+        ("epoch", 10_000_000_000),
+        ("open", "100.0"),
+        ("high", True),
+        ("low", False),
+        ("close", "100.5"),
+    ],
+)
+def test_candle_normalizer_rejects_coerced_or_out_of_range_json_values(field, invalid_value):
+    start = 1_666_320_000
+    candle = {"epoch": start, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5}
+    candle[field] = invalid_value
+    with pytest.raises(fetch_history.FetchError):
+        fetch_history.normalize_candles([candle], start, start + 60, 60)
 
 
 def test_vectorized_features_have_strict_one_bar_execution_lag_and_no_forward_fill():

@@ -76,6 +76,15 @@ def validate_active_symbols_pip_size(pip_size: Any) -> float:
 
 def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
                       granularity: int) -> list[dict[str, int | float]]:
+    if any(isinstance(value, bool) or not isinstance(value, int)
+           for value in (start_epoch, end_exclusive, granularity)):
+        raise FetchError("Requested start, exclusive end, and granularity must be JSON-compatible integers.")
+    if not 0 <= start_epoch < end_exclusive <= 9999999999:
+        raise FetchError("Requested half-open epoch window is invalid or outside the supported range.")
+    if granularity not in (60, 900):
+        raise FetchError("Unsupported granularity; only 60-second and 900-second bars are in scope.")
+    if start_epoch % granularity or end_exclusive % granularity or (end_exclusive - start_epoch) % granularity:
+        raise FetchError("Requested half-open epoch window must be aligned to the chosen granularity.")
     if not isinstance(candles, list) or not candles:
         raise FetchError("Response has no non-empty candles array; dataset cannot be declared complete.")
     out: list[dict[str, int | float]] = []
@@ -85,14 +94,19 @@ def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
         missing = [key for key in REQUIRED_CANDLE_FIELDS if key not in candle]
         if missing:
             raise FetchError(f"Current API candle response is missing required fields: {missing}")
+        epoch_raw = candle["epoch"]
+        if isinstance(epoch_raw, bool) or not isinstance(epoch_raw, int):
+            raise FetchError("Candle epoch must be a JSON integer; strings, floats, and booleans are rejected.")
+        if not 0 <= epoch_raw <= 9999999999:
+            raise FetchError(f"Candle epoch is outside the supported range: {epoch_raw!r}")
+        raw_prices = tuple(candle[k] for k in ("open", "high", "low", "close"))
+        if any(isinstance(value, bool) or not isinstance(value, (int, float)) for value in raw_prices):
+            raise FetchError("Candle OHLC values must be JSON numbers; strings and booleans are rejected.")
         try:
-            epoch_float = float(candle["epoch"])
-            epoch = int(epoch_float)
+            epoch = epoch_raw
             px = {k: float(candle[k]) for k in ("open", "high", "low", "close")}
         except (TypeError, ValueError, OverflowError) as exc:
-            raise FetchError(f"Invalid candle value: {candle!r}") from exc
-        if not math.isfinite(epoch_float) or epoch_float != epoch or epoch < 0:
-            raise FetchError(f"Invalid candle epoch: {candle.get('epoch')!r}")
+            raise FetchError("Candle contains an invalid numeric value.") from exc
         if not all(math.isfinite(v) and v > 0 for v in px.values()):
             raise FetchError(f"Non-positive or non-finite R_100 price at epoch {epoch}.")
         if px["high"] < max(px["open"], px["close"]) or px["low"] > min(px["open"], px["close"]) or px["high"] < px["low"]:
@@ -111,16 +125,7 @@ def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
         raise FetchError("Duplicate candle epochs returned inside a chunk.")
     expected = list(range(start_epoch, end_exclusive, granularity))
     if epochs != expected:
-        if not epochs and observed_epochs:
-            observed_first = min(observed_epochs)
-            observed_last = max(observed_epochs)
-            detail = (
-                "no epochs inside requested interval; "
-                f"response returned {len(observed_epochs)} candle(s) spanning "
-                f"{observed_first}..{observed_last}; requested "
-                f"[{start_epoch}, {end_exclusive}) at {granularity}s"
-            )
-        elif not epochs:
+        if not epochs:
             detail = (
                 f"no candle epochs returned; requested [{start_epoch}, {end_exclusive}) "
                 f"at {granularity}s"
@@ -135,8 +140,16 @@ def normalize_candles(candles: Any, start_epoch: int, end_exclusive: int,
 
 def build_candle_payload(start_epoch: int, end_exclusive: int, granularity: int) -> dict[str, int | str]:
     """Build a current-API, bounded history request without legacy/invalid fields."""
-    if granularity not in (60, 900) or end_exclusive <= start_epoch or (end_exclusive - start_epoch) % granularity:
-        raise FetchError("Invalid candle request interval or granularity.")
+    if any(isinstance(value, bool) or not isinstance(value, int)
+           for value in (start_epoch, end_exclusive, granularity)):
+        raise FetchError("Candle request start, exclusive end, and granularity must be integers.")
+    if not 0 <= start_epoch < end_exclusive <= 9999999999:
+        raise FetchError("Candle request half-open epoch window is invalid or outside the supported range.")
+    if granularity not in (60, 900):
+        raise FetchError("Invalid candle request granularity.")
+    if (start_epoch % granularity or end_exclusive % granularity or
+            (end_exclusive - start_epoch) % granularity):
+        raise FetchError("Candle request half-open epoch window must be aligned to the chosen granularity.")
     count = (end_exclusive - start_epoch) // granularity
     if count < 1 or count > 5000:
         raise FetchError(f"Requested chunk has {count} candles; current cap is 5000.")
