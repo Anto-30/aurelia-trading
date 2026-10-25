@@ -22,12 +22,10 @@ jobs:
     environment: production
     timeout-minutes: 10
     env:
-      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
       DERIV_ENVIRONMENT: real
+      AURELIA_DEPLOYMENT_MODE: VERIFY_ONLY
       FINAL_EXECUTION_AUTHORIZATION: "false"
       LIVE_EXECUTION: "BLOCKED"
-      AURELIA_VERIFY_DERIV_AUTH: "true"
     steps:
       - name: Reject unexpected trigger context
         env:
@@ -38,8 +36,23 @@ jobs:
           test "$CONFIRM_READ_ONLY" = "true"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7, resolved by GitHub Actions run 40209026944
         with:
-          ref: main
+          ref: ${{ github.sha }}
           persist-credentials: false
+      - name: Assert canonical safety lock integrity
+        env:
+          EXPECTED_LIVE_LOCK_BLOB_SHA: b2cddd1efb0f25f35a6a08354290f805812bf34c
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse "HEAD:config/LIVE_LOCK.yaml")"
+          echo "LIVE_LOCK_BLOB_SHA=$actual"
+          test "$actual" = "$EXPECTED_LIVE_LOCK_BLOB_SHA"
+          grep -Fxq 'live_trading_enabled: false' config/LIVE_LOCK.yaml
+          grep -Fxq 'FINAL_EXECUTION_AUTHORIZATION: false' config/LIVE_LOCK.yaml
+          grep -Fxq 'LIVE_EXECUTION: BLOCKED' config/LIVE_LOCK.yaml
+          grep -Fxq 'capital_plane_mode: VERIFY_ONLY' config/LIVE_LOCK.yaml
+          grep -Fxq 'research_capital_authority: false' config/LIVE_LOCK.yaml
+          grep -Fxq 'external_repositories_capital_forbidden: true' config/LIVE_LOCK.yaml
+          echo "CANONICAL_LIVE_LOCK=PASS"
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7, resolved by GitHub Actions run 40209026944
         with:
           python-version: "3.13"
@@ -47,6 +60,7 @@ jobs:
         run: pip install -r requirements.txt
       - name: Verify authenticated account binding and balance (read-only)
         env:
+          AURELIA_VERIFY_DERIV_AUTH: "true"
           DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
