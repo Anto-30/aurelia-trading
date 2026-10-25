@@ -51,6 +51,11 @@ class CertificationReportSchemaTests(unittest.TestCase):
     def test_all_pending_report_is_valid_without_fabricated_evidence_hashes(self):
         self.validator.validate(pending_report())
 
+    def test_checked_in_certification_report_matches_schema(self):
+        report_path = ROOT / "AURELIA_CERTIFICATION_REPORT.json"
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        self.validator.validate(report)
+
     def test_pass_without_evidence_hash_is_rejected(self):
         report = pending_report()
         report["gate_1_broker_lifecycle"] = {
