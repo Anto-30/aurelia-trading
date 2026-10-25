@@ -267,6 +267,7 @@ def docker_common_args(
         "--memory=4g",
         "--entrypoint", entrypoint,
         "--tmpfs", "/tmp:rw,nosuid,nodev,size=512m",
+        "--tmpfs", "/root/.semgrep:rw,nosuid,nodev,size=16m",
         "-v", str(repo_dir.resolve()) + ":/src:ro",
         "-v", str(scratch_dir.resolve()) + ":/scan:rw",
         "-v", str(cache_dir.resolve()) + ":/root/.cache:rw",
