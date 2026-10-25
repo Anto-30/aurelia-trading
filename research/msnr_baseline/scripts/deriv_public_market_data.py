@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import math
+import re
 from typing import Any, AsyncIterator
 
 import websockets
@@ -24,6 +25,15 @@ FORBIDDEN_KEYS = frozenset({
 })
 COMMON_KEYS = frozenset({"req_id", "passthrough"})
 CANDLE_FIELDS = ("open", "high", "low", "close", "epoch")
+SYMBOL_PATTERN = re.compile(r"\w{2,30}", flags=re.ASCII)
+
+
+def _valid_symbol(value: Any) -> bool:
+    return isinstance(value, str) and SYMBOL_PATTERN.fullmatch(value) is not None
+
+
+# Allowed values from the current Deriv ticks_history schema (style="candles").
+SUPPORTED_CANDLE_GRANULARITIES = frozenset({60, 120, 180, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400})
 
 
 class PublicMarketDataError(RuntimeError):
@@ -39,6 +49,26 @@ def _check_no_forbidden_nested_keys(value: Any, path: str = "payload") -> None:
     elif isinstance(value, list):
         for i, child in enumerate(value):
             _check_no_forbidden_nested_keys(child, f"{path}[{i}]")
+
+
+def _format_api_error(error: Any, source: str) -> str:
+    if not isinstance(error, dict):
+        return f"{source} API returned a malformed error object."
+    code = error.get("code", "unknown")
+    message = error.get("message", "unspecified error")
+    return f"{source} API error {code}: {message}"
+
+
+def _positive_finite_seconds(value: Any, name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise PublicMarketDataError(f"{name} must be a finite positive number of seconds.")
+    try:
+        seconds = float(value)
+    except (OverflowError, TypeError, ValueError) as exc:
+        raise PublicMarketDataError(f"{name} must be a finite positive number of seconds.") from exc
+    if not math.isfinite(seconds) or seconds <= 0:
+        raise PublicMarketDataError(f"{name} must be a finite positive number of seconds.")
+    return seconds
 
 
 def validate_public_payload(payload: dict[str, Any]) -> None:
@@ -61,42 +91,72 @@ def validate_public_payload(payload: dict[str, Any]) -> None:
     if operation == "active_symbols":
         if payload[operation] not in ("brief", "full"):
             raise PublicMarketDataError("active_symbols must be 'brief' or 'full'.")
-        if "contract_type" in payload and not isinstance(payload["contract_type"], list):
-            raise PublicMarketDataError("active_symbols contract_type, when provided, must be an array.")
+        if "contract_type" in payload and (
+            not isinstance(payload["contract_type"], list)
+            or any(not isinstance(item, str) or not item for item in payload["contract_type"])
+        ):
+            raise PublicMarketDataError("active_symbols contract_type, when provided, must be an array of non-empty strings.")
     elif operation == "ticks":
         symbols = payload[operation]
-        valid_symbols = (isinstance(symbols, str) and bool(symbols)) or (
-            isinstance(symbols, list) and bool(symbols) and all(isinstance(x, str) and x for x in symbols)
+        valid_symbols = _valid_symbol(symbols) or (
+            isinstance(symbols, list) and bool(symbols) and all(_valid_symbol(x) for x in symbols)
         )
         if not valid_symbols:
-            raise PublicMarketDataError("ticks must name a symbol or non-empty list of symbols.")
-        if "subscribe" in payload and payload["subscribe"] != 1:
-            raise PublicMarketDataError("Current ticks subscriptions accept subscribe=1 only.")
+            raise PublicMarketDataError("ticks must name a 2-30 character ASCII word symbol or non-empty list of symbols.")
+        if "subscribe" in payload and (
+            isinstance(payload["subscribe"], bool)
+            or not isinstance(payload["subscribe"], int)
+            or payload["subscribe"] != 1
+        ):
+            raise PublicMarketDataError("Current ticks subscriptions accept integer subscribe=1 only.")
     elif operation == "ticks_history":
-        if not isinstance(payload[operation], str) or not payload[operation]:
-            raise PublicMarketDataError("ticks_history requires its short symbol as a string value.")
+        symbol = payload[operation]
+        if not _valid_symbol(symbol):
+            raise PublicMarketDataError("ticks_history symbol must match the 2-30 character ASCII word pattern.")
+        if "end" not in payload:
+            raise PublicMarketDataError("ticks_history end is required.")
         if payload.get("style", "ticks") not in ("ticks", "candles"):
             raise PublicMarketDataError("ticks_history style must be 'ticks' or 'candles'.")
-        if "start" in payload and (not isinstance(payload["start"], int) or payload["start"] < 0):
-            raise PublicMarketDataError("ticks_history start must be a non-negative integer epoch.")
-        if "end" in payload and not (payload["end"] == "latest" or str(payload["end"]).isdigit()):
-            raise PublicMarketDataError("ticks_history end must be 'latest' or a numeric epoch string.")
-        if "count" in payload and (not isinstance(payload["count"], int) or not 1 <= payload["count"] <= 5000):
-            raise PublicMarketDataError("ticks_history count must be between 1 and 5000.")
+        if "start" in payload and (
+            isinstance(payload["start"], bool)
+            or not isinstance(payload["start"], int)
+            or not 0 <= payload["start"] <= 9999999999
+        ):
+            raise PublicMarketDataError("ticks_history start must be an integer epoch from 0 to 9999999999.")
+        if "end" in payload:
+            end = payload["end"]
+            valid_end = isinstance(end, str) and (
+                end == "latest" or (1 <= len(end) <= 10 and end.isascii() and end.isdigit())
+            )
+            if not valid_end:
+                raise PublicMarketDataError("ticks_history end must be 'latest' or a 1-10 digit epoch string.")
+            if "start" in payload and end != "latest" and payload["start"] > int(end):
+                raise PublicMarketDataError("ticks_history start epoch must not exceed end epoch.")
+        if "count" in payload and (
+            isinstance(payload["count"], bool)
+            or not isinstance(payload["count"], int)
+            or not 1 <= payload["count"] <= 5000
+        ):
+            raise PublicMarketDataError("ticks_history count must be an integer between 1 and 5000.")
+        if "granularity" in payload and payload.get("style", "ticks") != "candles":
+            raise PublicMarketDataError("ticks_history granularity is only applicable to style='candles'.")
         if "granularity" in payload:
-            # Current API removes the legacy fixed enum. A positive integer candle width is accepted.
-            if isinstance(payload["granularity"], bool) or not isinstance(payload["granularity"], int) or payload["granularity"] <= 0:
-                raise PublicMarketDataError("ticks_history granularity must be a positive integer.")
-        # Current API accepts 0 or 1 for these optional flags; for one-shot requests
-        # this client omits subscribe rather than relying on either value.
+            granularity = payload["granularity"]
+            if isinstance(granularity, bool) or not isinstance(granularity, int) or granularity not in SUPPORTED_CANDLE_GRANULARITIES:
+                allowed = ", ".join(str(value) for value in sorted(SUPPORTED_CANDLE_GRANULARITIES))
+                raise PublicMarketDataError(f"ticks_history granularity must be one of: {allowed}.")
+        # The current API schema allows value 1 only for these optional flags.
         for key in ("subscribe", "adjust_start_time"):
-            if key in payload and (isinstance(payload[key], bool) or payload[key] not in (0, 1)):
-                raise PublicMarketDataError(f"{key} must be 0 or 1.")
+            if key in payload:
+                flag_value = payload[key]
+                if isinstance(flag_value, bool) or not isinstance(flag_value, int) or flag_value != 1:
+                    raise PublicMarketDataError(f"{key} must be integer 1.")
 
 
 def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | int]]:
-    if message.get("msg_type") != "candles":
-        raise PublicMarketDataError(f"Expected candles response, got {message.get('msg_type')!r}.")
+    if not isinstance(message, dict) or message.get("msg_type") != "candles":
+        actual = message.get("msg_type") if isinstance(message, dict) else type(message).__name__
+        raise PublicMarketDataError(f"Expected candles response, got {actual!r}.")
     candles = message.get("candles")
     if not isinstance(candles, list) or not candles:
         raise PublicMarketDataError("Candles response must contain a non-empty candles array.")
@@ -104,17 +164,23 @@ def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | 
     for i, candle in enumerate(candles):
         if not isinstance(candle, dict) or any(field not in candle for field in CANDLE_FIELDS):
             raise PublicMarketDataError(f"Candle {i} is missing a required OHLC/epoch field.")
+        epoch_raw = candle["epoch"]
+        raw_ohlc = tuple(candle[key] for key in ("open", "high", "low", "close"))
+        if isinstance(epoch_raw, bool) or not isinstance(epoch_raw, int):
+            raise PublicMarketDataError(f"Candle {i} epoch must be a JSON integer.")
+        if not 0 <= epoch_raw <= 9999999999:
+            raise PublicMarketDataError(f"Candle {i} epoch is outside the supported integer range.")
+        if any(isinstance(value, bool) or not isinstance(value, (int, float)) for value in raw_ohlc):
+            raise PublicMarketDataError(f"Candle {i} OHLC values must be JSON numbers.")
         try:
-            epoch_f = float(candle["epoch"])
-            epoch = int(epoch_f)
-            op, hi, lo, cl = (float(candle[k]) for k in ("open", "high", "low", "close"))
+            op, hi, lo, cl = (float(value) for value in raw_ohlc)
         except (ValueError, TypeError, OverflowError) as exc:
             raise PublicMarketDataError(f"Candle {i} has invalid numeric values.") from exc
-        if not math.isfinite(epoch_f) or epoch_f != epoch or not all(math.isfinite(x) and x > 0 for x in (op, hi, lo, cl)):
+        if not all(math.isfinite(value) and value > 0 for value in (op, hi, lo, cl)):
             raise PublicMarketDataError(f"Candle {i} contains a non-finite or non-positive value.")
         if hi < max(op, cl) or lo > min(op, cl) or hi < lo:
             raise PublicMarketDataError(f"Candle {i} violates OHLC invariants.")
-        output.append({"epoch": epoch, "open": op, "high": hi, "low": lo, "close": cl})
+        output.append({"epoch": epoch_raw, "open": op, "high": hi, "low": lo, "close": cl})
     epochs = [int(row["epoch"]) for row in output]
     if any(b <= a for a, b in zip(epochs, epochs[1:])):
         raise PublicMarketDataError("Candle epochs must be strictly increasing with no duplicates.")
@@ -122,31 +188,71 @@ def validate_candle_response(message: dict[str, Any]) -> list[dict[str, float | 
 
 
 def validate_history_response(message: dict[str, Any]) -> tuple[list[float], list[int]]:
-    if message.get("msg_type") != "history":
-        raise PublicMarketDataError(f"Expected history response, got {message.get('msg_type')!r}.")
+    if not isinstance(message, dict) or message.get("msg_type") != "history":
+        actual = message.get("msg_type") if isinstance(message, dict) else type(message).__name__
+        raise PublicMarketDataError(f"Expected history response, got {actual!r}.")
     history = message.get("history")
     if not isinstance(history, dict):
         raise PublicMarketDataError("History response is missing the history object.")
     prices, times = history.get("prices"), history.get("times")
     if not isinstance(prices, list) or not isinstance(times, list):
         raise PublicMarketDataError("Current ticks-history schema requires both prices and times arrays.")
+    if not prices or not times:
+        raise PublicMarketDataError("History response must contain at least one price/time observation.")
     if len(prices) != len(times):
         raise PublicMarketDataError("history.prices and history.times lengths differ.")
     clean_prices, clean_times = [], []
     for price, epoch in zip(prices, times):
+        if isinstance(price, bool) or not isinstance(price, (int, float)):
+            raise PublicMarketDataError("History prices must be JSON numbers, not coercible strings or booleans.")
+        if isinstance(epoch, bool) or not isinstance(epoch, int):
+            raise PublicMarketDataError("History times must be JSON integer epochs, not coercible values.")
+        if not 0 <= epoch <= 9999999999:
+            raise PublicMarketDataError("History epoch is outside the supported integer range.")
         try:
             px = float(price)
-            epoch_f = float(epoch)
-            ts = int(epoch_f)
         except (TypeError, ValueError, OverflowError) as exc:
             raise PublicMarketDataError("History price/time value is invalid.") from exc
-        if not math.isfinite(px) or px <= 0 or not math.isfinite(epoch_f) or epoch_f != ts:
-            raise PublicMarketDataError("History price/time must be finite, positive price and integer epoch.")
+        if not math.isfinite(px) or px <= 0:
+            raise PublicMarketDataError("History price must be finite and positive.")
         clean_prices.append(px)
-        clean_times.append(ts)
+        clean_times.append(epoch)
     if any(b <= a for a, b in zip(clean_times, clean_times[1:])):
         raise PublicMarketDataError("History times must be strictly increasing with no duplicates.")
     return clean_prices, clean_times
+
+
+def validate_tick_response(message: dict[str, Any], *, requested_symbol: str) -> dict[str, float | int]:
+    if not isinstance(message, dict) or message.get("msg_type") != "tick":
+        actual = message.get("msg_type") if isinstance(message, dict) else type(message).__name__
+        raise PublicMarketDataError(f"Expected tick response, got {actual!r}.")
+    if not _valid_symbol(requested_symbol):
+        raise PublicMarketDataError("Requested tick symbol must match the 2-30 character ASCII word pattern.")
+    tick = message.get("tick")
+    if not isinstance(tick, dict):
+        raise PublicMarketDataError("Tick response must contain a tick object.")
+    if "quote" not in tick or "epoch" not in tick:
+        raise PublicMarketDataError("Tick observation requires quote and epoch for research use.")
+    quote_raw, epoch_raw = tick["quote"], tick["epoch"]
+    if isinstance(quote_raw, bool) or not isinstance(quote_raw, (int, float)):
+        raise PublicMarketDataError("Tick quote must be a JSON number, not a coercible string or boolean.")
+    if isinstance(epoch_raw, bool) or not isinstance(epoch_raw, int):
+        raise PublicMarketDataError("Tick epoch must be a JSON integer.")
+    try:
+        quote = float(quote_raw)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise PublicMarketDataError("Tick quote is invalid.") from exc
+    if not math.isfinite(quote) or quote <= 0:
+        raise PublicMarketDataError("Tick quote must be finite and positive.")
+    if not 0 <= epoch_raw <= 9999999999:
+        raise PublicMarketDataError("Tick epoch is outside the supported integer range.")
+    if "symbol" in tick:
+        response_symbol = tick["symbol"]
+        if not _valid_symbol(response_symbol):
+            raise PublicMarketDataError("Returned tick symbol is malformed.")
+        if response_symbol != requested_symbol:
+            raise PublicMarketDataError("Returned tick symbol does not match the requested symbol.")
+    return {"epoch": epoch_raw, "quote": quote}
 
 
 class DerivPublicMarketDataClient:
@@ -158,11 +264,9 @@ class DerivPublicMarketDataClient:
     def __init__(self, *, endpoint: str = PUBLIC_WS, connect_timeout: float = 10.0, response_timeout: float = 15.0):
         if endpoint != PUBLIC_WS:
             raise PublicMarketDataError("Client is pinned to the official public Options API endpoint.")
-        if connect_timeout <= 0 or response_timeout <= 0:
-            raise PublicMarketDataError("Timeouts must be positive.")
+        self.connect_timeout = _positive_finite_seconds(connect_timeout, "connect_timeout")
+        self.response_timeout = _positive_finite_seconds(response_timeout, "response_timeout")
         self.endpoint = endpoint
-        self.connect_timeout = connect_timeout
-        self.response_timeout = response_timeout
         self._req_id = 1000
 
     def _next_id(self) -> int:
@@ -179,8 +283,16 @@ class DerivPublicMarketDataClient:
                 ping_interval=20, ping_timeout=20, max_size=8 * 1024 * 1024,
             ) as ws:
                 await ws.send(json.dumps(request, separators=(",", ":")))
+                loop = asyncio.get_running_loop()
+                response_deadline = loop.time() + self.response_timeout
                 while True:
-                    raw = await asyncio.wait_for(ws.recv(), timeout=self.response_timeout)
+                    remaining = response_deadline - loop.time()
+                    if remaining <= 0:
+                        raise PublicMarketDataError("Public market-data response deadline exceeded.")
+                    try:
+                        raw = await asyncio.wait_for(ws.recv(), timeout=remaining)
+                    except asyncio.TimeoutError as exc:
+                        raise PublicMarketDataError("Public market-data response deadline exceeded.") from exc
                     try:
                         message = json.loads(raw)
                     except json.JSONDecodeError as exc:
@@ -188,8 +300,7 @@ class DerivPublicMarketDataClient:
                     if not isinstance(message, dict):
                         raise PublicMarketDataError("The public WebSocket must return a JSON object.")
                     if message.get("error"):
-                        error = message["error"]
-                        raise PublicMarketDataError(f"Deriv public API error {error.get('code', 'unknown')}: {error.get('message', error)}")
+                        raise PublicMarketDataError(_format_api_error(message["error"], "Deriv public"))
                     if message.get("req_id") not in (None, req_id):
                         continue
                     if expected_msg_type and message.get("msg_type") != expected_msg_type:
@@ -215,24 +326,47 @@ class DerivPublicMarketDataClient:
 
     async def ticks_history(self, *, underlying_symbol: str, start_epoch: int, end_epoch: int,
                             granularity_seconds: int, style: str = "candles", count: int = 5000) -> dict[str, Any]:
-        if not underlying_symbol or start_epoch < 0 or end_epoch < start_epoch:
-            raise PublicMarketDataError("Invalid history symbol or epoch bounds.")
-        if style not in ("candles", "ticks") or not 1 <= count <= 5000:
-            raise PublicMarketDataError("Invalid style/count; count must be between 1 and 5000.")
+        if (
+            isinstance(start_epoch, bool) or not isinstance(start_epoch, int)
+            or isinstance(end_epoch, bool) or not isinstance(end_epoch, int)
+            or not 0 <= start_epoch <= 9999999999
+            or not 0 <= end_epoch <= 9999999999
+            or end_epoch < start_epoch
+        ):
+            raise PublicMarketDataError("History start/end must be integer epochs from 0 to 9999999999 with end >= start.")
+        if not isinstance(underlying_symbol, str) or not underlying_symbol:
+            raise PublicMarketDataError("History symbol must be a non-empty string.")
+        if style not in ("candles", "ticks"):
+            raise PublicMarketDataError("History style must be 'candles' or 'ticks'.")
+        if isinstance(count, bool) or not isinstance(count, int) or not 1 <= count <= 5000:
+            raise PublicMarketDataError("History count must be an integer between 1 and 5000.")
         payload: dict[str, Any] = {
             "ticks_history": underlying_symbol, "start": int(start_epoch), "end": str(int(end_epoch)),
             "style": style, "count": int(count),
         }
         if style == "candles":
-            if granularity_seconds <= 0:
-                raise PublicMarketDataError("Candle granularity must be positive.")
-            payload["granularity"] = int(granularity_seconds)
+            if isinstance(granularity_seconds, bool) or not isinstance(granularity_seconds, int) or granularity_seconds not in SUPPORTED_CANDLE_GRANULARITIES:
+                allowed = ", ".join(str(value) for value in sorted(SUPPORTED_CANDLE_GRANULARITIES))
+                raise PublicMarketDataError(f"Candle granularity must be one of: {allowed}.")
+            payload["granularity"] = granularity_seconds
         return await self.request(payload, expected_msg_type="candles" if style == "candles" else "history")
 
     async def stream_ticks(self, *, underlying_symbol: str, max_reconnects: int = 5,
                            initial_backoff_seconds: float = 1.0) -> AsyncIterator[dict[str, Any]]:
-        if not underlying_symbol or max_reconnects < 0 or initial_backoff_seconds <= 0:
-            raise PublicMarketDataError("Invalid stream/reconnect parameters.")
+        if not _valid_symbol(underlying_symbol):
+            raise PublicMarketDataError("Stream symbol must match the 2-30 character ASCII word pattern.")
+        if isinstance(max_reconnects, bool) or not isinstance(max_reconnects, int) or not 0 <= max_reconnects <= 100:
+            raise PublicMarketDataError("Reconnect count must be an integer from 0 to 100.")
+        if isinstance(initial_backoff_seconds, bool) or not isinstance(initial_backoff_seconds, (int, float)):
+            raise PublicMarketDataError("Reconnect backoff must be finite and positive.")
+        try:
+            backoff_seconds = float(initial_backoff_seconds)
+        except (OverflowError, TypeError, ValueError) as exc:
+            raise PublicMarketDataError("Reconnect backoff must be finite and positive.") from exc
+        if not math.isfinite(backoff_seconds) or backoff_seconds <= 0:
+            raise PublicMarketDataError("Reconnect backoff must be finite and positive.")
+        stream_request = {"ticks": underlying_symbol, "subscribe": 1}
+        validate_public_payload(stream_request)
         failures = 0
         while True:
             try:
@@ -240,7 +374,7 @@ class DerivPublicMarketDataClient:
                     self.endpoint, open_timeout=self.connect_timeout, close_timeout=3,
                     ping_interval=20, ping_timeout=20, max_size=8 * 1024 * 1024,
                 ) as ws:
-                    await ws.send(json.dumps({"ticks": underlying_symbol, "subscribe": 1, "req_id": self._next_id()}))
+                    await ws.send(json.dumps({**stream_request, "req_id": self._next_id()}))
                     async for raw in ws:
                         try:
                             message = json.loads(raw)
@@ -249,20 +383,14 @@ class DerivPublicMarketDataClient:
                         if not isinstance(message, dict):
                             raise PublicMarketDataError("Tick stream message is not an object.")
                         if message.get("error"):
-                            error = message["error"]
-                            raise PublicMarketDataError(f"Deriv tick stream error {error.get('code', 'unknown')}: {error.get('message', error)}")
+                            raise PublicMarketDataError(_format_api_error(message["error"], "Deriv tick stream"))
                         if message.get("msg_type") != "tick":
                             continue
-                        tick = message.get("tick")
-                        if not isinstance(tick, dict):
+                        if message.get("msg_type") != "tick":
                             continue
-                        if "quote" not in tick or "epoch" not in tick:
-                            raise PublicMarketDataError("Tick observation requires quote and epoch for research use.")
-                        quote, epoch_f = float(tick["quote"]), float(tick["epoch"])
-                        if not math.isfinite(quote) or quote <= 0 or not math.isfinite(epoch_f) or int(epoch_f) != epoch_f:
-                            raise PublicMarketDataError("Tick quote/epoch is invalid.")
+                        clean_tick = validate_tick_response(message, requested_symbol=underlying_symbol)
                         yield {"msg_type": "tick", "underlying_symbol_requested": underlying_symbol,
-                               "epoch": int(epoch_f), "quote": quote, "raw": message}
+                               **clean_tick, "raw": message}
                 failures += 1
             except asyncio.CancelledError:
                 raise
@@ -270,4 +398,4 @@ class DerivPublicMarketDataClient:
                 failures += 1
             if failures > max_reconnects:
                 raise PublicMarketDataError(f"Tick stream exceeded max reconnect count ({max_reconnects}).")
-            await asyncio.sleep(min(initial_backoff_seconds * (2 ** (failures - 1)), 30.0))
+            await asyncio.sleep(min(backoff_seconds * (2 ** (failures - 1)), 30.0))
