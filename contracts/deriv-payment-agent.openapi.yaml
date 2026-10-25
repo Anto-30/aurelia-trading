@@ -23,7 +23,7 @@ x-aurelia-upstream-source:
   git_commit: 54e353807146d31f58291693243cbbf671de7bce
   source_blob_sha: b785658de90b1c8010629f90b81c9441fa119f74
   sha256: 8a2655d9b9713f65296035ba02f8cf6f281ab95fcf454dd996b763a53506682f
-  content_bytes: 241091
+  content_bytes: 241565
   captured_date_utc: "2026-10-25"
   scope: Payment Agent REST paths and referenced schemas from the versioned release snapshot
   direct_live_endpoint_identity_verified: false
