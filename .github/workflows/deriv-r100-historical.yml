@@ -4,11 +4,7 @@ on:
   pull_request:
     branches: ["main"]
     paths:
-      - "SYSTEM_DIRECTIVE.md"
       - "tools/fetch_r100_historical.py"
-      - "tools/reconcile_mt5.py"
-      - "docs/AURELIA_EMPIRICAL_GATE_STATUS_2026-10-25.md"
-      - ".github/workflows/deriv-r100-historical.yml"
   workflow_dispatch:
 
 permissions:
