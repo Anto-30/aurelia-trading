@@ -1,21 +1,33 @@
 openapi: 3.1.0
 info:
   title: AURELIA Deriv Payment Agent REST Contract
-  version: 0.1.0
+  version: 0.2.0
   description: |
-    Specification-only contract distilled from the Deriv Payment Agent documentation
-    supplied on 2026-10-25. Reconcile against the current official upstream file at
-    https://api.derivws.com/data/production-openapi.json and pin its SHA-256 before
-    generating runtime clients. The directory-list success envelope remains provisional
-    because its complete schema was not included in the supplied excerpt.
+    Safety-constrained AURELIA contract reconciled against the versioned official
+    Deriv API schemas release production_v20260901_0. The exact source snapshot is
+    pinned in x-aurelia-upstream-source below. Equality with the live endpoint
+    https://api.derivws.com/data/production-openapi.json has not been verified;
+    fetch and hash that endpoint before generating a runtime client.
 
-    SAFETY: default AURELIA mode is TEST_ONLY. This file authorizes no external request.
-    Unit tests must use fake HTTP transport; no real-money transfer, withdrawal, or
-    verification-code dispatch is allowed. No separate Deriv test payment base URL was
-    established, so the production API hostname must not be treated as a sandbox.
+    SAFETY: default AURELIA mode is TEST_ONLY. This specification grants no external
+    request permission. Tests must use fake HTTP transport; no real-money transfer,
+    withdrawal, client privacy mutation, or verification-code dispatch is allowed.
+    The production API hostname is not a sandbox.
 servers:
   - url: https://api.derivws.com
-    description: Documented REST host; not a sandbox.
+    description: Official host for the production API; not a sandbox.
+x-aurelia-upstream-source:
+  source_url: https://raw.githubusercontent.com/deriv-com/deriv-api-schemas/production_v20260901_0/schemas/rest-api-openapi.json
+  repository: deriv-com/deriv-api-schemas
+  release_tag: production_v20260901_0
+  git_commit: 54e353807146d31f58291693243cbbf671de7bce
+  source_blob_sha: b785658de90b1c8010629f90b81c9441fa119f74
+  sha256: 8a2655d9b9713f65296035ba02f8cf6f281ab95fcf454dd996b763a53506682f
+  content_bytes: 241091
+  captured_date_utc: "2026-10-25"
+  scope: Payment Agent REST paths and referenced schemas from the versioned release snapshot
+  direct_live_endpoint_identity_verified: false
+  note: SHA-256 is computed over the exact UTF-8 content fetched from the pinned release URL; do not treat it as proof of identity with the live production-openapi.json endpoint.
 tags:
   - name: Agent discovery
   - name: Client settings
@@ -73,7 +85,7 @@ paths:
       operationId: listPaymentAgents
       tags: [Agent discovery]
       summary: List agents for a currency
-      description: Exhaust pagination before treating the directory result as complete. Pin the exact upstream success schema before runtime generation.
+      description: Official paginated array of payment agents. The schema is matched to the pinned versioned source snapshot; live endpoint identity remains unverified.
       security:
         - BearerAuth: []
       parameters:
@@ -89,17 +101,18 @@ paths:
         - name: page
           in: query
           required: false
-          schema: { type: integer, minimum: 1 }
+          schema: { type: integer, minimum: 1, default: 1 }
         - name: per_page
           in: query
           required: false
-          schema: { type: integer, minimum: 1 }
+          schema: { type: integer, minimum: 1, default: 25 }
       responses:
         '200':
-          description: Paginated agent directory; payload shape is provisional.
+          description: Paginated list of payment agents matching the supplied filters.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DirectoryEnvelope' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '500': { $ref: '#/components/responses/ServerError' }
@@ -115,7 +128,7 @@ paths:
         - name: id
           in: path
           required: true
-          schema: { type: string, pattern: '^(?:me|[0-9]+)$' }
+          schema: { type: string, pattern: '^(?:[1-9]\\d*|me)$' }
       responses:
         '200':
           description: Full profile returned.
@@ -353,7 +366,7 @@ components:
   schemas:
     Currency:
       type: string
-      pattern: '^[A-Z0-9]{2,20}$'
+      pattern: '^[A-Z_]{1,18}$'
     Amount:
       type: string
       pattern: '^(?:0|[1-9]\d{0,13})(?:\.\d{1,18})?$'
@@ -375,9 +388,8 @@ components:
       type: object
       required: [status, code]
       properties:
-        status: { type: integer, minimum: 400, maximum: 599 }
+        status: { type: integer }
         code: { type: string }
-        message: { type: string }
         detail:
           type: object
           properties:
@@ -386,9 +398,9 @@ components:
       additionalProperties: true
     ErrorEnvelope:
       type: object
-      required: [errors, metadata]
+      required: [data, errors, metadata]
       properties:
-        data: { type: object, additionalProperties: true }
+        data: { type: object, description: Always empty on error., additionalProperties: true }
         errors: { type: array, items: { $ref: '#/components/schemas/ApiError' } }
         metadata: { $ref: '#/components/schemas/Metadata' }
       additionalProperties: true
@@ -405,7 +417,7 @@ components:
               items: { type: string, pattern: '^[a-z]{2}$' }
             available_currencies:
               type: array
-              items: { type: string }
+              items: { $ref: '#/components/schemas/Currency' }
           additionalProperties: true
         errors: { type: array, items: { $ref: '#/components/schemas/ApiError' } }
         metadata: { $ref: '#/components/schemas/Metadata' }
@@ -570,20 +582,34 @@ components:
         errors: { type: array, items: { $ref: '#/components/schemas/ApiError' } }
         metadata: { $ref: '#/components/schemas/Metadata' }
       additionalProperties: true
+    PaymentAgentListItem:
+      type: object
+      required: [id]
+      properties:
+        id: { type: integer }
+        created_at: { type: integer, description: Epoch timestamp in milliseconds. }
+        is_listed: { type: boolean }
+        name: { type: [string, 'null'] }
+        nickname: { type: [string, 'null'] }
+        information: { type: [string, 'null'] }
+        email: { type: [string, 'null'] }
+        phone_numbers: { type: [array, 'null'], items: { type: string } }
+        payment_methods: { type: [array, 'null'], items: { type: string } }
+        countries: { type: [array, 'null'], items: { type: string } }
+        urls: { type: [array, 'null'], items: { type: string } }
+        deposit_commission: { type: [number, 'null'] }
+        withdrawal_commission: { type: [number, 'null'] }
+        withdrawal_minimum: { type: [string, 'null'] }
+        withdrawal_maximum: { type: [string, 'null'] }
+      additionalProperties: true
     DirectoryEnvelope:
-      description: Provisional response shape; reconcile with pinned official upstream OpenAPI before client generation.
-      oneOf:
-        - type: object
-          required: [data, errors, metadata]
-          properties:
-            data: { type: object, additionalProperties: true }
-            errors: { type: array, items: { $ref: '#/components/schemas/ApiError' } }
-            metadata: { $ref: '#/components/schemas/Metadata' }
-          additionalProperties: true
-        - type: object
-          required: [data, errors, metadata]
-          properties:
-            data: { type: array, items: { type: object, additionalProperties: true } }
-            errors: { type: array, items: { $ref: '#/components/schemas/ApiError' } }
-            metadata: { $ref: '#/components/schemas/Metadata' }
-          additionalProperties: true
+      type: object
+      required: [data, errors, metadata]
+      properties:
+        data:
+          type: array
+          description: Payment agent list items sorted by agent ID ascending.
+          items: { $ref: '#/components/schemas/PaymentAgentListItem' }
+        errors: { type: array, items: { $ref: '#/components/schemas/ApiError' } }
+        metadata: { $ref: '#/components/schemas/Metadata' }
+      additionalProperties: true
