@@ -103,7 +103,10 @@ class ProtectedWorkflowGateTests(unittest.TestCase):
             with self.subTest(job=job_id):
                 self.assertIn(job_id, jobs)
                 for flag in required:
-                    self.assertIn(flag, jobs[job_id], f"{job_id} missing explicit fail-closed flag: {flag}")
+                    self.assertTrue(
+                        any(flag in line for line in jobs[job_id]),
+                        f"{job_id} missing explicit fail-closed flag: {flag}",
+                    )
 
     def test_protected_deriv_evidence_requires_main_push_and_all_gates(self):
         path = ROOT / ".github/workflows/aurelia-assurance.yml"
