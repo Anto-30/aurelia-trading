@@ -1,3 +1,4 @@
+import hashlib
 import json
 import tempfile
 import unittest
@@ -20,6 +21,12 @@ class FakeResponse:
 
     def read(self):
         return self._payload
+
+
+def git_blob_sha(path: Path) -> str:
+    raw = path.read_bytes()
+    header = b"blob " + str(len(raw)).encode("ascii") + b"\0"
+    return hashlib.sha1(header + raw).hexdigest()
 
 
 def write_lock(path: Path, *, mode="VERIFY_ONLY", live="BLOCKED", authorized="false", enabled="false"):
@@ -46,7 +53,17 @@ class DerivOtpRetryAndModeTests(unittest.TestCase):
         self.lock_patch = patch.object(deriv_session, "LIVE_LOCK_PATH", self.lock_path)
         self.lock_patch.start()
         self.addCleanup(self.lock_patch.stop)
+        self.hash_patch = patch.object(
+            deriv_session, "EXPECTED_LIVE_LOCK_BLOB_SHA", git_blob_sha(self.lock_path)
+        )
+        self.hash_patch.start()
+        self.addCleanup(self.hash_patch.stop)
         self.addCleanup(self.temp.cleanup)
+
+    def write_test_lock(self, **kwargs) -> None:
+        write_lock(self.lock_path, **kwargs)
+        # Semantic mutation tests explicitly attest to their fixture hash.
+        deriv_session.EXPECTED_LIVE_LOCK_BLOB_SHA = git_blob_sha(self.lock_path)
 
     def test_transient_network_drops_retry_with_bounded_exponential_backoff(self):
         calls = []
@@ -102,7 +119,7 @@ class DerivOtpRetryAndModeTests(unittest.TestCase):
         self.assertNotIn("api.derivws.com", str(caught.exception))
 
     def test_non_verify_only_mode_makes_no_authenticated_rest_call(self):
-        write_lock(self.lock_path, mode="BLOCKED")
+        self.write_test_lock(mode="BLOCKED")
         with patch.dict("os.environ", {"DERIV_AUTH_MODE": "pat"}), patch.object(
             deriv_session, "urlopen"
         ) as mocked_urlopen:
@@ -119,6 +136,7 @@ class DerivOtpRetryAndModeTests(unittest.TestCase):
 
     def test_unreadable_or_incomplete_lock_makes_no_authenticated_rest_call(self):
         self.lock_path.write_text("schema: aurelia.live_lock.v1\n", encoding="utf-8")
+        deriv_session.EXPECTED_LIVE_LOCK_BLOB_SHA = git_blob_sha(self.lock_path)
         with patch.object(deriv_session, "urlopen") as mocked_urlopen:
             with self.assertRaisesRegex(deriv_session.DerivSessionError, "LIVE_LOCK_STATE_UNKNOWN"):
                 deriv_session.get_authenticated_ws_url(
@@ -128,8 +146,25 @@ class DerivOtpRetryAndModeTests(unittest.TestCase):
                 )
         mocked_urlopen.assert_not_called()
 
+    def test_modified_lock_blob_is_rejected_even_if_required_flags_look_safe(self):
+        # A comment-only change preserves visible flags but invalidates the exact canonical Git blob identity.
+        self.lock_path.write_text(
+            self.lock_path.read_text(encoding="utf-8") + "# unapproved modification\n",
+            encoding="utf-8",
+        )
+        with patch.object(deriv_session, "urlopen") as mocked_urlopen:
+            with self.assertRaisesRegex(
+                deriv_session.DerivSessionError, "LIVE_LOCK_BLOB_SHA_MISMATCH"
+            ):
+                deriv_session.get_authenticated_ws_url(
+                    "VRTC12345",
+                    bearer_token="fixture-token-never-real",
+                    app_id="fixture-app-id",
+                )
+        mocked_urlopen.assert_not_called()
+
     def test_final_authorization_must_remain_false(self):
-        write_lock(self.lock_path, authorized="true")
+        self.write_test_lock(authorized="true")
         with patch.object(deriv_session, "urlopen") as mocked_urlopen:
             with self.assertRaisesRegex(deriv_session.DerivSessionError, "LIVE_LOCK_NOT_FAIL_CLOSED"):
                 deriv_session.get_authenticated_ws_url(
