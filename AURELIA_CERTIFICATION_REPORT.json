@@ -1,6 +1,6 @@
 {
   "schema_version": "aurelia.certification-report.v1",
-  "generated_at_utc": "2026-10-25T17:46:00Z",
+  "generated_at_utc": "2026-10-25T17:48:00Z",
   "repository": "Anto-30/aurelia-trading",
   "assessed_main_commit": "d04564aca0648201feff0326fe9af0fbcee92e94",
   "overall_status": "BLOCKED",
@@ -81,14 +81,22 @@
           "id": 40205761464,
           "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40205761464",
           "conclusion": "failure",
-          "finding": "The 20-candidate scanner run ended with SCAN_INCOMPLETE_BLOCKED for every candidate; scanner invocation was subsequently corrected."
+          "finding": "20 candidate scans ended SCAN_INCOMPLETE_BLOCKED at the Semgrep invocation stage; this run is not evidence of clean sources."
         },
         {
           "type": "github_actions_run",
           "id": 40217946001,
           "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40217946001",
-          "conclusion": "queued",
-          "finding": "Revised scanner run after explicit entrypoint correction; results were not yet available at report generation."
+          "conclusion": "in_progress_at_last_check",
+          "finding": "The runner remained in the image-pull/smoke-test preparation stage; no findings report is available."
+        },
+        {
+          "type": "github_actions_run",
+          "id": 40218136417,
+          "url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40218136417",
+          "conclusion": "in_progress_at_last_check",
+          "head_sha": "7d3387dca8bd313cf1127906cb637e649b5d6497",
+          "finding": "Newest workflow revision corrects the scanner entrypoint smoke tests and workflow concurrency expression; scan results are not yet available."
         }
       ],
       "blocker": "No completed clean source-level scan or independent human disposition exists. No candidate is approved. Two repositories without top-level license files are excluded."
