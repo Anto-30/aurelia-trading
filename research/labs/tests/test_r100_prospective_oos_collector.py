@@ -244,6 +244,61 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertEqual(len(state["pending"]), 0)
         self.assertEqual(len(state["observations"]), 1)
 
+    def test_collector_reconnects_after_public_transport_reader_failure(self):
+        import research.r100_prospective_oos_collector as collector
+        from runtime.adapters.deriv_ws import DerivTransportError
+
+        class FakeTransport:
+            def __init__(self, *args, **kwargs):
+                self.connect_calls = 0
+                self.subscribe_calls = 0
+                self.closed = False
+
+            async def connect(self):
+                self.connect_calls += 1
+
+            def subscribe(self, key, payload):
+                self.subscribe_calls += 1
+                attempt = self.subscribe_calls
+
+                async def stream():
+                    if attempt == 1:
+                        yield {
+                            "msg_type": "tick",
+                            "tick": {
+                                "symbol": "R_100",
+                                "epoch": int(datetime.now(timezone.utc).timestamp()),
+                                "quote": "100.0",
+                            },
+                        }
+                        raise DerivTransportError("{'code': 'TRANSPORT_READER_FAILED'}")
+                    await asyncio.Future()
+
+                return stream()
+
+            async def request(self, payload):
+                return {"proposal": {"ask_price": 1.0, "payout": 1.95, "id": "fake"}}
+
+            async def close(self):
+                self.closed = True
+
+        with tempfile.TemporaryDirectory() as tmp:
+            state_path = Path(tmp) / "aurelia_r100_state.json"
+            fake = FakeTransport()
+            with (
+                patch.object(collector, "STATE_PATH", state_path),
+                patch.object(collector, "COLLECTION_SECONDS", 0.05),
+                patch.object(collector, "DerivWebSocketTransport", return_value=fake),
+                patch.object(collector.asyncio, "sleep", new=AsyncMock()),
+            ):
+                state = initial_state()
+                asyncio.run(collector.collect_once(state))
+
+            self.assertGreaterEqual(fake.connect_calls, 2)
+            self.assertGreaterEqual(fake.subscribe_calls, 2)
+            self.assertTrue(fake.closed)
+            self.assertGreaterEqual(len(state.get("transport_reconnect_events", [])), 1)
+
     def test_failed_collection_preserves_state_and_emits_non_authorizing_report(self):
         import research.r100_prospective_oos_collector as collector
 
