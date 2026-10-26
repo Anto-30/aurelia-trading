@@ -103,6 +103,13 @@ class ProtectedWorkflowSourceGuardTests(unittest.TestCase):
         self.assertIn("if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}", block[runtime_tests:])
         self.assertIn("if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}", block[assurance_tests:])
 
+    def test_scheduled_public_probe_cannot_cancel_manual_protected_run(self):
+        workflow = (ROOT / ".github" / "workflows" / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
+        self.assertIn('cron: "*/15 * * * *"', workflow)
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("group: aurelia-free-runtime-${{ github.event_name }}", workflow)
+        self.assertIn("cancel-in-progress: true", workflow)
+
     def test_deriv_public_and_research_workflows_remain_secret_free(self):
         for path in (
             ".github/workflows/r100-prospective-oos.yml",
