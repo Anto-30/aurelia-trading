@@ -28,6 +28,94 @@ class TestDerivAdapterContract(unittest.TestCase):
   rows=asyncio.run(a.active_symbols())
   self.assertEqual(rows[0]["symbol"],"1HZ100V")
   self.assertEqual(rows[0]["underlying_symbol"],"1HZ100V")
+
+    def test_proposal_rejects_legacy_payload_fields_before_transport(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from runtime.adapters.deriv_adapter import DerivProtocolError
+
+        async def check(extra):
+            adapter = DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/public")
+            adapter.request = AsyncMock(return_value={"proposal": {"id": "fixture-proposal"}})
+            params = {
+                "contract_type": "CALL",
+                "currency": "USD",
+                "underlying_symbol": "R_100",
+                **extra,
+            }
+            with self.assertRaisesRegex(DerivProtocolError, "LEGACY_DERIV_REQUEST_FIELD"):
+                await adapter.request_proposal(params)
+            adapter.request.assert_not_awaited()
+
+        asyncio.run(check({"symbol": "R_100"}))
+        asyncio.run(check({"loginid": "VRTC-FIXTURE"}))
+
+    def test_proposal_response_requires_new_api_object(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from runtime.adapters.deriv_adapter import DerivProtocolError
+
+        async def run():
+            adapter = DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/public")
+            adapter.request = AsyncMock(return_value={"msg_type": "proposal"})
+            with self.assertRaisesRegex(DerivProtocolError, "PROPOSAL_OBJECT_MISSING_FROM_BROKER"):
+                await adapter.request_proposal({
+                    "contract_type": "CALL",
+                    "currency": "USD",
+                    "underlying_symbol": "R_100",
+                })
+
+        asyncio.run(run())
+
+    def test_buy_rejects_nonfinite_or_negative_price_before_transport(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from runtime.adapters.deriv_adapter import DerivProtocolError
+
+        async def check(stake):
+            adapter = DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/demo")
+            adapter.authorized = True
+            adapter.request = AsyncMock(return_value={
+                "buy": {"transaction_id": "fixture-transaction", "contract_id": 123}
+            })
+            with self.assertRaisesRegex(DerivProtocolError, "ORDER_PRICE_INVALID"):
+                await adapter.submit_authorized_order({
+                    "proposal_id": "fixture-proposal",
+                    "stake": stake,
+                })
+            adapter.request.assert_not_awaited()
+
+        for invalid in (-0.01, float("nan"), float("inf"), True, None, "not-a-price"):
+            asyncio.run(check(invalid))
+
+    def test_buy_uses_new_api_price_without_legacy_identity_fields(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from runtime.core.models import BrokerOutcome
+
+        async def run():
+            adapter = DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/demo")
+            adapter.authorized = True
+            adapter.request = AsyncMock(return_value={
+                "buy": {"transaction_id": "fixture-transaction", "contract_id": 123}
+            })
+            result = await adapter.submit_authorized_order({
+                "proposal_id": "fixture-proposal",
+                "stake": 1.25,
+                "loginid": "MUST_NOT_BE_SENT",
+                "symbol": "MUST_NOT_BE_SENT",
+            })
+            self.assertEqual(result.outcome, BrokerOutcome.ACCEPTED)
+            adapter.request.assert_awaited_once_with({
+                "buy": "fixture-proposal",
+                "price": 1.25,
+            })
+            sent = adapter.request.await_args.args[0]
+            self.assertNotIn("loginid", sent)
+            self.assertNotIn("symbol", sent)
+
+        asyncio.run(run())
+
 if __name__=="__main__":unittest.main()
 
 
