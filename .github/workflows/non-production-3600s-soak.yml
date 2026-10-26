@@ -109,7 +109,26 @@ jobs:
         run: |
           set -euo pipefail
 
+          observations="/tmp/aurelia-soak-observations.ndjson"
+          mkdir -p evidence /tmp/aurelia
+          rm -f evidence/soak_3600s.json aurelia-3600s-soak-evidence.json "$observations"
+          : > "$observations"
+
+          health_filter='
+            (.critical_unknowns // []) as $unknowns
+            | if ($unknowns | type) != "array" then false
+              else
+                (.liveness == true) and
+                (.capital_can_open_new_exposure == false) and
+                (.state == "CAPITAL_PROTECTED" or .state == "SELF_CHECK" or .state == "BOOT") and
+                all($unknowns[]; . == "CONTINUOUS_RUNTIME_UNAVAILABLE") and
+                ((.status == "HEALTHY" and ($unknowns | length) == 0) or
+                 (.status == "DEGRADED" and $unknowns == ["CONTINUOUS_RUNTIME_UNAVAILABLE"]))
+              end
+          '
+
           start_epoch="$(date +%s)"
+          start_iso="$(date -u -d "@$start_epoch" '+%Y-%m-%dT%H:%M:%SZ')"
           end_epoch=$((start_epoch + SOAK_SECONDS))
           checks=0
           restarts=0
@@ -123,79 +142,151 @@ jobs:
 
             if ! curl --fail --silent --show-error http://127.0.0.1:18081/health >/tmp/aurelia-health.json; then
               failures=$((failures + 1))
-              echo "HEALTH_CHECK_FAILED elapsed=${elapsed}s"
+              echo "HEALTH_CHECK_FAILED elapsed=$elapsed"
               cat /tmp/aurelia-health.json 2>/dev/null || true
               docker logs aurelia-non-production-soak 2>&1 | tail -100 || true
               exit 1
             fi
 
-            jq -e '
-              (.liveness == true) and
-              (.capital_can_open_new_exposure == false) and
-              (.state == "CAPITAL_PROTECTED" or .state == "SELF_CHECK" or .state == "BOOT")
-            ' /tmp/aurelia-health.json >/dev/null
+            if ! jq -e "$health_filter" /tmp/aurelia-health.json >/dev/null; then
+              failures=$((failures + 1))
+              echo "HEALTH_INVARIANT_FAILED elapsed=$elapsed"
+              cat /tmp/aurelia-health.json
+              docker logs aurelia-non-production-soak 2>&1 | tail -100 || true
+              exit 1
+            fi
+
+            jq -c --argjson elapsed "$elapsed" --arg sample_kind "interval" '
+              {
+                elapsed_seconds: $elapsed,
+                sample_kind: $sample_kind,
+                status: .status,
+                state: .state,
+                liveness: .liveness,
+                capital_can_open_new_exposure: .capital_can_open_new_exposure,
+                critical_unknowns: (.critical_unknowns // [])
+              }
+            ' /tmp/aurelia-health.json >> "$observations"
 
             if [ "$now" -ge "$next_restart" ] && [ "$now" -lt "$end_epoch" ]; then
-              echo "CONTROLLED_RESTART elapsed=${elapsed}s"
+              echo "CONTROLLED_RESTART elapsed=$elapsed"
               docker restart aurelia-non-production-soak >/tmp/aurelia-restart.log
               restarts=$((restarts + 1))
-              sleep 10
+              recovered=false
 
-              if ! curl --fail --silent --show-error --retry 10 --retry-delay 1 http://127.0.0.1:18081/health >/tmp/aurelia-post-restart-health.json; then
-                echo "POST_RESTART_HEALTH_FAILED elapsed=${elapsed}s"
+              for attempt in $(seq 1 15); do
+                if curl --fail --silent --show-error http://127.0.0.1:18081/health >/tmp/aurelia-post-restart-health.json 2>/dev/null; then
+                  if jq -e "$health_filter" /tmp/aurelia-post-restart-health.json >/dev/null; then
+                    post_elapsed=$(( $(date +%s) - start_epoch ))
+                    jq -c --argjson elapsed "$post_elapsed" --arg sample_kind "post_restart" '
+                      {
+                        elapsed_seconds: $elapsed,
+                        sample_kind: $sample_kind,
+                        status: .status,
+                        state: .state,
+                        liveness: .liveness,
+                        capital_can_open_new_exposure: .capital_can_open_new_exposure,
+                        critical_unknowns: (.critical_unknowns // [])
+                      }
+                    ' /tmp/aurelia-post-restart-health.json >> "$observations"
+                    recovered=true
+                    break
+                  fi
+                fi
+                sleep 1
+              done
+
+              if [ "$recovered" != "true" ]; then
+                echo "POST_RESTART_HEALTH_OR_INVARIANT_FAILED elapsed=$elapsed"
+                cat /tmp/aurelia-post-restart-health.json 2>/dev/null || true
                 docker logs aurelia-non-production-soak 2>&1 | tail -100 || true
                 exit 1
               fi
-
-              jq -e '
-                (.liveness == true) and
-                (.capital_can_open_new_exposure == false)
-              ' /tmp/aurelia-post-restart-health.json >/dev/null
 
               next_restart=$((next_restart + 900))
             fi
 
             if [ $((checks % 60)) -eq 0 ]; then
-              echo "SOAK_PROGRESS elapsed=${elapsed}s checks=${checks} restarts=${restarts}"
+              echo "SOAK_PROGRESS elapsed=$elapsed checks=$checks restarts=$restarts"
             fi
 
             sleep 5
           done
 
           final_epoch="$(date +%s)"
+          end_iso="$(date -u -d "@$final_epoch" '+%Y-%m-%dT%H:%M:%SZ')"
           duration=$((final_epoch - start_epoch))
-
           source_commit="$GITHUB_SHA"
           runtime_image_id="$(docker image inspect aurelia-non-production-soak --format "{{.Id}}")"
-
-          jq -n \
-            --arg source_commit "$source_commit" \
-            --arg runtime_image_id "$runtime_image_id" \
-            --argjson duration "$duration" \
-            --argjson checks "$checks" \
-            --argjson restarts "$restarts" \
-            --argjson failures "$failures" \
-            '{
-              source_commit: $source_commit,
-              runtime_image_id: $runtime_image_id,
-              evidence_type: "NON_PRODUCTION_3600S_CONTROL_PATH_SOAK",
-              classification: "SIMULATION_VERIFIED",
-              duration_seconds: $duration,
-              target_seconds: 3600,
-              health_checks: $checks,
-              controlled_restarts: $restarts,
-              health_check_failures: $failures,
-              authenticated_deriv_session: false,
-              real_broker_transaction: false,
-              real_capital_movement: false,
-              final_execution_authorization: false,
-              live_execution: "BLOCKED",
-              capital_can_open_new_exposure: false
-            }' > aurelia-3600s-soak-evidence.json
+          runtime_instance_id="$(docker inspect aurelia-non-production-soak --format "{{.Id}}")"
+          config_hash="$( (sha256sum config/LIVE_LOCK.yaml .github/workflows/non-production-3600s-soak.yml) | sha256sum | awk '{print $1}')"
+          deployment_id="github-actions:$GITHUB_RUN_ID:$GITHUB_RUN_ATTEMPT"
 
           test "$duration" -ge 3600
           test "$failures" -eq 0
+          test "$restarts" -ge 3
 
+          python -m assurance.nonproduction_soak_evidence \
+            --observations "$observations" \
+            --out evidence/soak_3600s.json \
+            --source-commit "$source_commit" \
+            --runtime-image-id "$runtime_image_id" \
+            --runtime-instance-id "$runtime_instance_id" \
+            --deployment-id "$deployment_id" \
+            --config-hash "$config_hash" \
+            --started-at "$start_iso" \
+            --ended-at "$end_iso" \
+            --controlled-restarts "$restarts"
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from assurance.certification_evidence import validate_evidence_file
+
+          status, detail = validate_evidence_file(Path.cwd(), "evidence/soak_3600s.json")
+          print(f"SOAK_EVIDENCE_VALIDATION={status}:{detail}")
+          if status != "PASS":
+              raise SystemExit(1)
+
+          record = json.loads(Path("evidence/soak_3600s.json").read_text(encoding="utf-8"))
+          summary = {
+              "source_commit": record["source_commit"],
+              "runtime_image_id": record["runtime_image_id"],
+              "runtime_instance_id": record["runtime_instance_id"],
+              "deployment_id": record["deployment_id"],
+              "evidence_type": record["evidence_type"],
+              "classification": record["classification"],
+              "duration_seconds": record["duration_seconds"],
+              "target_seconds": record["target_seconds"],
+              "actual_elapsed_seconds": record["actual_elapsed_seconds"],
+              "continuous": record["continuous"],
+              "health_checks": record["health_checks"],
+              "controlled_restarts": record["controlled_restarts"],
+              "health_check_failures": record["health_check_failures"],
+              "invariant_violations": record["invariant_violations"],
+              "silent_degradations": record["silent_degradations"],
+              "known_expected_degradation_samples": record["known_expected_degradation_samples"],
+              "known_expected_unknowns": record["known_expected_unknowns"],
+              "capital_authority_escapes": record["capital_authority_escapes"],
+              "unresolved_unknown_states": record["unresolved_unknown_states"],
+              "authenticated_deriv_session": record["authenticated_deriv_session"],
+              "real_broker_transaction": record["real_broker_transaction"],
+              "real_capital_movement": record["real_capital_movement"],
+              "orders_submitted": record["orders_submitted"],
+              "final_execution_authorization": record["final_execution_authorization"],
+              "live_execution": record["live_execution"],
+              "capital_can_open_new_exposure": record["capital_can_open_new_exposure"],
+              "evidence_record_hash": record["record_hash"],
+              "evidence_path": "evidence/soak_3600s.json"
+          }
+          Path("aurelia-3600s-soak-evidence.json").write_text(
+              json.dumps(summary, sort_keys=True, indent=2) + "\\n",
+              encoding="utf-8",
+          )
+          print("NONPRODUCTION_SOAK_EVIDENCE=SIMULATION_VERIFIED")
+          print("FINAL_EXECUTION_AUTHORIZATION=false")
+          print("LIVE_EXECUTION=BLOCKED")
+          PY
       - name: Assert capital protection
         if: always()
         run: |
@@ -214,18 +305,20 @@ jobs:
 
       - name: Upload non-production evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: aurelia-non-production-3600s-soak-evidence
+          name: aurelia-non-production-3600s-soak-evidence-${{ github.run_id }}
           path: |
             aurelia-3600s-soak-evidence.json
+            evidence/soak_3600s.json
+            /tmp/aurelia-soak-observations.ndjson
             aurelia-runtime.log
             aurelia-runtime-inspect.json
             /tmp/aurelia-source-identity.env
             /tmp/aurelia-startup-health.json
             /tmp/aurelia-startup-health.err
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 30
  config/LIVE_LOCK.yaml
           grep -Eq '^FINAL_EXECUTION_AUTHORIZATION:[[:space:]]*false
         run: docker build --tag aurelia-non-production-soak .
