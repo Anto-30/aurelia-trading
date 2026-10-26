@@ -6,6 +6,7 @@ on:
     paths:
       - "config/external_candidate_audit_manifest.json"
       - "tools/audit_external_candidates.py"
+      - "tests/test_external_candidate_audit.py"
       - ".github/workflows/external-candidate-static-audit.yml"
   workflow_dispatch:
 
@@ -45,9 +46,10 @@ jobs:
 
       - name: Smoke test isolated scanner command lines
         run: |
-          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/dev/null --tmpfs /tmp:rw,nosuid,nodev,size=512m --tmpfs /root/.semgrep:rw,nosuid,nodev,size=16m --entrypoint semgrep semgrep/semgrep:1.182.0 --version
-          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/dev/null --tmpfs /tmp:rw,nosuid,nodev,size=512m --tmpfs /root/.semgrep:rw,nosuid,nodev,size=16m --entrypoint semgrep semgrep/semgrep:1.182.0 scan --help >/dev/null
-          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/dev/null --tmpfs /tmp:rw,nosuid,nodev,size=512m --entrypoint trivy aquasec/trivy:0.76.1 --version
+          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig --tmpfs /tmp:rw,nosuid,nodev,size=512m --tmpfs /root/.semgrep:rw,nosuid,nodev,size=16m --entrypoint semgrep semgrep/semgrep:1.182.0 --version
+          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig --tmpfs /tmp:rw,nosuid,nodev,size=512m --entrypoint sh semgrep/semgrep:1.182.0 -c 'git config --global --add safe.directory "*" && test "$(git config --global --get-all safe.directory)" = "*"'
+          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig --tmpfs /tmp:rw,nosuid,nodev,size=512m --tmpfs /root/.semgrep:rw,nosuid,nodev,size=16m --entrypoint semgrep semgrep/semgrep:1.182.0 scan --help >/dev/null
+          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig --tmpfs /tmp:rw,nosuid,nodev,size=512m --entrypoint trivy aquasec/trivy:0.76.1 --version
 
       - name: Validate audit harness syntax
         run: |
@@ -67,6 +69,9 @@ jobs:
           print("PINNED_CANDIDATES=24")
           PY
 
+      - name: Run static-audit harness regression tests
+        run: python -m unittest discover -s tests -p "test_external_candidate_audit.py" -v
+
       - name: Run isolated source and dependency scans
         run: |
           python tools/audit_external_candidates.py \
@@ -80,5 +85,5 @@ jobs:
         with:
           name: external-candidate-static-audit
           path: evidence/external-candidate-audit/
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 30
