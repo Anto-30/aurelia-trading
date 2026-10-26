@@ -9,7 +9,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: aurelia-non-production-soak-${{ github.sha }}
+  # Serialize one-hour evidence captures across source SHAs; preserve active runs.
+  group: aurelia-non-production-soak
   cancel-in-progress: false
 
 jobs:
