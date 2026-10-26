@@ -1,11 +1,21 @@
 name: AURELIA External Repository Sync Integrity
 
 on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "config/external_repo_federation.json"
+      - "skills/external-repo-federation/**"
+      - "tools/external_repo_sync.py"
+      - "tests/test_external_repo_sync.py"
+      - ".github/workflows/external-repo-sync.yml"
   push:
     branches: ["main"]
     paths:
       - "config/external_repo_federation.json"
       - "skills/external-repo-federation/**"
+      - "tools/external_repo_sync.py"
+      - "tests/test_external_repo_sync.py"
       - ".github/workflows/external-repo-sync.yml"
   schedule:
     - cron: "41 3 * * 1"
@@ -17,9 +27,11 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Validate federation policy and source count
         run: |
           python - <<'PY'
@@ -39,41 +51,15 @@ jobs:
           print("EXTERNAL_REPO_POLICY=PASS")
           print("EXTERNAL_REPO_COUNT=%d" % len(repos))
           PY
+      - name: Run external repository sync regression tests
+        run: python -m unittest discover -s tests -p "test_external_repo_sync.py" -v
       - name: Sync public repository heads
-        run: |
-          set -euo pipefail
-          python - <<'PY' > /tmp/external-repo-sync.json
-          import concurrent.futures, json, subprocess
-          from pathlib import Path
-          p=json.loads(Path("config/external_repo_federation.json").read_text())
-          def check(r):
-              try:
-                  head=subprocess.check_output(["git","ls-remote",r["source_url"],"HEAD"],text=True,timeout=20).strip()
-                  sha=head.split()[0] if head else None
-                  return {"repo":r["repo"],"reachable":bool(sha),"head_commit":sha}
-              except Exception as e:
-                  return {"repo":r["repo"],"reachable":False,"error":type(e).__name__}
-          with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
-              out=list(pool.map(check,p["repositories"]))
-          print(json.dumps({"schema":"aurelia.external_repo_sync.v1","repositories":out},indent=2))
-          PY
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          p=json.loads(Path("config/external_repo_federation.json").read_text())
-          x=json.load(open("/tmp/external-repo-sync.json"))
-          bad=[r for r in x["repositories"] if not r.get("reachable")]
-          unresolved=[r["repo"] for r in p["repositories"] if r.get("head_commit") == "SYNC_REQUIRED"]
-          print("EXTERNAL_REPO_REACHABLE=%d/%d"%(len(x["repositories"])-len(bad),len(x["repositories"])))
-          print("EXTERNAL_REPO_PINNED=%d/%d"%(len(p["repositories"])-len(unresolved),len(p["repositories"])))
-          print("EXTERNAL_REPO_UNRESOLVED_PIN_COUNT=%d"%len(unresolved))
-          if bad:
-              print("UNREACHABLE=", [r["repo"] for r in bad])
-              raise SystemExit(1)
-          PY
+        run: python tools/external_repo_sync.py
       - name: Upload sync snapshot
+        if: always() && hashFiles('/tmp/external-repo-sync.json') != ''
         uses: actions/upload-artifact@v4
         with:
           name: aurelia-external-repo-sync-${{ github.run_id }}
           path: /tmp/external-repo-sync.json
+          if-no-files-found: error
           retention-days: 30
