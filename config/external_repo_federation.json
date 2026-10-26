@@ -4170,6 +4170,9 @@
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/NetroIndonesia/freebuff2api",
       "head_commit": "4894d7db6157c97f3037dc7d79ae0c2571762f8e",
+      "sync_status": "QUARANTINED_UNAVAILABLE",
+      "sync_status_verified_at": "2026-10-26",
+      "sync_status_reason": "GitHub API returned 404 and git ls-remote reported repository not found on 2026-10-26; retained as historical reference, excluded from active sync until independently re-verified.",
       "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
       "capital_authority": false
     },
@@ -4343,6 +4346,9 @@
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/0xgetz/freebuff-9router",
       "head_commit": "ec5e698816d86b4db1d970e03d10350bcc15d966",
+      "sync_status": "QUARANTINED_UNAVAILABLE",
+      "sync_status_verified_at": "2026-10-26",
+      "sync_status_reason": "GitHub API returned 404 and git ls-remote reported repository not found on 2026-10-26; retained as historical reference, excluded from active sync until independently re-verified.",
       "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
       "capital_authority": false
     },
