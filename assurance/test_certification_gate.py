@@ -9,7 +9,7 @@ from assurance.certification_evidence import (
     REQUIRED_RUNTIME_MARKERS,
     validate_evidence_bundle,
 )
-from assurance.certification_gate import _overall_status
+from assurance.certification_gate import _overall_status, build_report
 from assurance.evidence_writer import payload_sha256
 
 
@@ -214,6 +214,24 @@ class CertificationEvidenceTest(unittest.TestCase):
             {"name": "LIVE_EXECUTION", "status": "BLOCKED", "detail": ""},
         ]
         self.assertEqual(_overall_status(result), "READY_FOR_CAPITAL_REVIEW")
+
+
+class CertificationReportSchemaTest(unittest.TestCase):
+    def test_versioned_report_preserves_blockers_and_never_authorizes_live(self):
+        results = [
+            {"name": "ASSURANCE_DOCUMENTS", "status": "PASS", "detail": "present"},
+            {"name": "PRODUCTION_EVIDENCE", "status": "BLOCKED", "detail": "required evidence absent"},
+            {"name": "LIVE_EXECUTION", "status": "BLOCKED", "detail": "not authorized"},
+        ]
+        report = build_report(results)
+
+        self.assertEqual(report["schema"], "aurelia.certification-report.v1")
+        self.assertEqual(report["repository"], "Anto-30/aurelia-trading")
+        self.assertEqual(report["certification_result"], "NOT_READY")
+        self.assertIs(report["final_execution_authorization"], False)
+        self.assertEqual(report["live_execution"], "BLOCKED")
+        self.assertEqual(report["results"], results)
+        self.assertTrue(all({"name", "status", "detail"} <= set(item) for item in report["results"]))
 
 
 if __name__ == "__main__":
