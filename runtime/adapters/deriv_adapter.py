@@ -77,6 +77,8 @@ class DerivAdapter:
         self._validate_environment_url(self.ws_url)
         if not self.expected_currency:
             raise DerivProtocolError("EXPECTED_ACCOUNT_CURRENCY_REQUIRED")
+        if not self.expected_loginid:
+            raise DerivProtocolError("EXPECTED_ACCOUNT_ID_REQUIRED")
         try:
             self.transport = DerivWebSocketTransport(
                 self.ws_url,
