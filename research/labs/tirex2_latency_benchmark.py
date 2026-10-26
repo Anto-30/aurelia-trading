@@ -155,7 +155,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--latency-budget-ms", type=float, default=None,
                         help="Pre-registered p99 budget; if omitted no PASS/FAIL verdict is issued")
     parser.add_argument("--model-id", default="NX-AI/TiRex-2")
-    parser.add_argument("--revision", default=None, help="Immutable Hugging Face commit SHA recommended for reproducibility")
+    parser.add_argument("--revision", default=None, help="Full 40-character Hugging Face model commit SHA required for a p99 PASS")
     parser.add_argument("--compile", action="store_true", help="Include compilation settings; first-call time is reported separately")
     parser.add_argument("--expected-interval-seconds", type=float, default=60.0,
                         help="Set 900 for 15-minute bars; use 0 to disable strict interval checks")
