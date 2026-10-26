@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from runtime.adapters.deriv_ws import DerivWebSocketTransport
+from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
 from runtime.strategy.autonomous_signal_engine import AutonomousSignalHunter
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
@@ -153,6 +153,7 @@ def initial_state() -> dict[str, Any]:
         "last_run_started_at_utc": None,
         "last_run_completed_at_utc": None,
         "last_price": None,
+        "transport_reconnect_events": [],
     }
 
 def load_state(path: Path) -> dict[str, Any]:
@@ -542,6 +543,8 @@ async def collect_once(state: dict[str, Any]) -> None:
     stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
     iterator = stream.__aiter__()
     deadline = asyncio.get_running_loop().time() + COLLECTION_SECONDS
+    reconnect_attempts = 0
+    state.setdefault("transport_reconnect_events", [])
     try:
         while asyncio.get_running_loop().time() < deadline:
             remaining = deadline - asyncio.get_running_loop().time()
@@ -549,6 +552,23 @@ async def collect_once(state: dict[str, Any]) -> None:
                 message = await asyncio.wait_for(iterator.__anext__(), timeout=max(1.0, remaining))
             except asyncio.TimeoutError:
                 break
+            except DerivTransportError as exc:
+                # Recover only the known transport-reader failure. API validation,
+                # subscription, and request errors must remain visible and fail closed.
+                if "TRANSPORT_READER_FAILED" not in str(exc) or reconnect_attempts >= 5:
+                    raise
+                reconnect_attempts += 1
+                state["transport_reconnect_events"].append({
+                    "recorded_at_utc": iso(utc_now()),
+                    "attempt": reconnect_attempts,
+                    "error_type": type(exc).__name__,
+                    "error_code": "TRANSPORT_READER_FAILED",
+                })
+                await asyncio.sleep(min(2 ** (reconnect_attempts - 1), 15))
+                await transport.connect()
+                stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
+                iterator = stream.__aiter__()
+                continue
             tick = message.get("tick") or {}
             try:
                 quote = float(tick["quote"])
@@ -610,6 +630,7 @@ async def main() -> int:
         save_state(STATE_PATH, state)
         report = evaluation(state)
         report["collection_status"] = "FAILED_RETRYABLE"
+        report["transport_reconnect_count"] = len(state.get("transport_reconnect_events", []))
         report["collection_error_type"] = type(exc).__name__
         report_path.write_text(
             json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
@@ -628,6 +649,7 @@ async def main() -> int:
     state.pop("last_run_error_at_utc", None)
     report = evaluation(state)
     report["collection_status"] = "PASS"
+    report["transport_reconnect_count"] = len(state.get("transport_reconnect_events", []))
     save_state(STATE_PATH, state)
     report_path.write_text(
         json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),

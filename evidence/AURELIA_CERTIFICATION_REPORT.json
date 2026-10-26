@@ -1,0 +1,244 @@
+{
+  "schema": "aurelia.certification.report.v1",
+  "status": "NOT_READY",
+  "generated_date_utc": "2026-10-25",
+  "purpose": "Fail-closed evidence inventory for independent human review. This is not an authorization or certification pass.",
+  "immutable_controls": {
+    "LIVE_EXECUTION": "BLOCKED",
+    "FINAL_EXECUTION_AUTHORIZATION": false,
+    "capital_plane_mode": "VERIFY_ONLY",
+    "research_capital_authority": false,
+    "config_live_lock_modified": false
+  },
+  "decisions": {
+    "live_trading_authorized": false,
+    "report_is_passing_certification": false,
+    "strategy_eligibility_decided": false,
+    "external_candidates_promoted": false,
+    "human_approval_bypassed": false
+  },
+  "data_gate": {
+    "symbol": "R_100",
+    "granularity_seconds": 60,
+    "requested_start_epoch_inclusive": 1666310400,
+    "requested_start_utc": "2022-10-21T00:00:00Z",
+    "requested_end_epoch_inclusive": 1729468800,
+    "requested_end_utc": "2024-10-21T00:00:00Z",
+    "historical_probe_status": "BLOCKED",
+    "local_probe": {
+      "status": "BLOCKED",
+      "reason": "DNS resolution failed before a connection to Deriv; no API response was observed"
+    },
+    "remote_probe_runs": [
+      {
+        "run_id": 40203287647,
+        "status": "BLOCKED",
+        "reason": "API returned InputValidationFailed because subscribe=0 was rejected (server said subscribe must be 1)",
+        "verified_candle_data": false
+      },
+      {
+        "run_id": 40203440157,
+        "status": "BLOCKED",
+        "reason": "Explicit 2022 start/end epochs were echoed, but returned candle timestamps were 2026-10-25; strict bounds gate rejected the response",
+        "returned_epochs": [
+          1792939020,
+          1792939080,
+          1792939140,
+          1792939200,
+          1792939260
+        ],
+        "artifact_name": "r100-historical-provenance-40203440157",
+        "artifact_size_bytes": 1138,
+        "artifact_archive_sha256": "681e20c9722d40a9f8a396c309b7f506a22d609438dd75405cd6a60b26ad71a7"
+      },
+      {
+        "run_id": 40203549962,
+        "status": "BLOCKED",
+        "reason": "Explicit 2022 start/end epochs were echoed, but returned candle timestamps were 2026-10-25; strict bounds gate rejected the response",
+        "returned_epochs": [
+          1792939140,
+          1792939200,
+          1792939260,
+          1792939320,
+          1792939380
+        ],
+        "artifact_name": "r100-historical-provenance-40203549962",
+        "artifact_size_bytes": 1130,
+        "artifact_archive_sha256": "0979466ca000fa0ddfcf37cb2207aafc07439b97a9242df4db28abf7b9b8d6b2"
+      },
+      {
+        "run_id": 40203560468,
+        "status": "BLOCKED",
+        "reason": "Explicit 2022 start/end epochs were echoed, but returned candle timestamps were 2026-10-25; strict bounds gate rejected the response",
+        "returned_epochs": [
+          1792939140,
+          1792939200,
+          1792939260,
+          1792939320,
+          1792939380
+        ],
+        "artifact_name": "r100-historical-provenance-40203560468",
+        "artifact_size_bytes": 1130,
+        "artifact_archive_sha256": "1ea3be2afcc6b4f6220d565921716d6720328ad0edb47c56206568fb2f2adcc1"
+      }
+    ],
+    "verified_csv_exists": false,
+    "full_raw_jsonl_exists": false,
+    "verification_manifest_exists": false,
+    "csv_sha256": null,
+    "raw_jsonl_sha256": null,
+    "full_capture_attempted": false,
+    "next_action": "Historical capture remains stopped: three remote requests echoed 2022 bounds but returned 2026 candles. The historical workflow is manual-dispatch-only until independently clarified."
+  },
+  "mt5_gate": {
+    "status": "BLOCKED",
+    "required_file": "mt5_bars.csv",
+    "file_present_in_current_conversation": false,
+    "reconciliation_executed": false,
+    "required_rows": 1440,
+    "required_missing_extra_timestamps": 0,
+    "required_ohlc_tolerance": "0.0",
+    "report_sha256": null
+  },
+  "cost_model_gate": {
+    "status": "BLOCKED",
+    "source_required": "Observed Deriv statement or profit_table cash flows",
+    "source_evidence_present": false,
+    "config_cost_model_written": false,
+    "assumed_costs_used": false,
+    "cost_model_sha256": null
+  },
+  "gates": [
+    {
+      "id": 1,
+      "name": "Broker lifecycle",
+      "status": "BLOCKED",
+      "reason": "No authenticated read-only broker lifecycle evidence was generated. This research task did not generate a real-account OTP/session.",
+      "evidence": []
+    },
+    {
+      "id": 2,
+      "name": "Recovery matrix",
+      "status": "PARTIAL",
+      "reason": "A synthetic localhost-only recovery harness has been added and a CI run is pending. No authenticated Deriv recovery, real OTP renewal, or broker trade duplication test is performed.",
+      "evidence": [
+        {
+          "run_id": 40205832922,
+          "run_url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40205832922",
+          "status": "PENDING",
+          "scope": "Localhost mock transport failures only; no broker account, credentials, OTP, orders or network access to Deriv."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "3600-second non-production soak",
+      "status": "FAILED",
+      "reason": "The first public non-production soak run ended after 120.442s instead of 3600s. The WebSocket closed unexpectedly with ConnectionClosedError: no close frame received or sent. The result fails the gate; it is not a completed soak.",
+      "evidence": [
+        {
+          "run_id": 40205187176,
+          "run_url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40205187176",
+          "artifact_id": 12603666975,
+          "artifact_name": "public-deriv-soak-3600s",
+          "artifact_archive_sha256": "7b3420a3483d8d8fa8b47f46002a4dcb5a5cd10796fd19fb409c7d4197425393",
+          "report_sha256": "8abe42ab9c31d069012142fbbdd053f5fc70684a90b262a14edccbf60f072b3f",
+          "event_log_sha256": "e6606df08f34a46b7296658006c485cc398319eba4423c57b993b3e510f5acbf",
+          "actual_duration_seconds": 120.442,
+          "ticks_received": 61,
+          "messages_received": 61,
+          "disconnect_or_protocol_failure_count": 1,
+          "failure": "ConnectionClosedError: no close frame received or sent",
+          "rss_growth_bytes": 4837376,
+          "order_or_trade_requests_sent": 0,
+          "authenticated": false
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Prospective out-of-sample",
+      "status": "BLOCKED",
+      "reason": "No verified R_100 historical dataset exists because remote probes returned candles outside the requested 2022 bounds.",
+      "evidence": []
+    },
+    {
+      "id": 5,
+      "name": "Calibration freeze",
+      "status": "BLOCKED",
+      "reason": "No OOS run exists to lock or hash; strategy parameters have not been certified as frozen against an executed test.",
+      "evidence": []
+    },
+    {
+      "id": 6,
+      "name": "Execution economics",
+      "status": "BLOCKED",
+      "reason": "No source-bound Deriv statement/profit_table cash flows were supplied to reconcile theoretical gross and realized net PnL.",
+      "evidence": []
+    },
+    {
+      "id": 7,
+      "name": "Security audit",
+      "status": "BLOCKED",
+      "reason": "The latest candidate SAST run has not completed successfully. Earlier runs were blocked by scanner CLI and sandbox setup issues; no candidate-level security conclusions may be inferred from those runs. The latest corrected scan is pending.",
+      "evidence": [
+        {
+          "run_id": 40205761464,
+          "run_url": "https://github.com/Anto-30/aurelia-trading/actions/runs/40205761464",
+          "status": "PENDING",
+          "candidates_total": 20,
+          "scans_complete": null
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Deployment isolation",
+      "status": "PARTIAL",
+      "reason": "PR-safe Assurance and protected read-only verification have been separated in an earlier tested PR branch; a full IaC demo/real isolation review and independent deployment sign-off remain outstanding.",
+      "evidence": [
+        {
+          "run_id": 40202044626,
+          "status": "PASS",
+          "scope": "PR-safe code tests and fail-closed release gate; protected verification job was skipped on pull_request as intended"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Strategy eligibility",
+      "status": "BLOCKED",
+      "reason": "No frozen baseline was run because verified data and source-derived cost inputs are absent. Profit Factor and net expectancy have not been evaluated.",
+      "kill_rule": {
+        "reject_if_profit_factor_below": 1.15,
+        "reject_if_net_expectancy_at_or_below": 0,
+        "executed": false,
+        "verdict": "NOT_EVALUATED"
+      },
+      "evidence": []
+    }
+  ],
+  "external_dependencies": {
+    "pinned_candidates_total": 29,
+    "blocked_candidates": 9,
+    "unreviewed_candidates": 20,
+    "independent_human_signoff_present": false,
+    "excluded_unlicensed_sources": [
+      "composio-community/awesome-codex-skills",
+      "cline/prompts"
+    ],
+    "approved_dependency_list_exists": true,
+    "approved_dependency_list_sha256": null,
+    "approved_dependency_list_status": "NO_CANDIDATES_APPROVED"
+  },
+  "required_human_actions": [
+    "Independently clarify why the public Deriv endpoint returns current candles despite echoing historical start/end bounds; do not re-run capture until reviewed.",
+    "Provide mt5_bars.csv only if an MT5 comparison is still needed; otherwise document that MT5 is not used as a ground-truth source.",
+    "Supply source-bound statement/profit_table cash flows through an approved read-only evidence path before calibrating costs.",
+    "Review completed static audit findings once the scanner harness produces a successful report; all candidates remain unapproved.",
+    "Perform and hash the recovery matrix, 3600-second public non-production soak, frozen OOS/calibration run, cost reconciliation, security and deployment gates.",
+    "Name or configure an independent code owner/security reviewer. No CODEOWNERS mapping or independent review has been recorded.",
+    "Sign the final certification separately after all nine gates have genuine evidence."
+  ],
+  "report_hash_policy": "The report's own SHA-256 must be computed from the saved artifact bytes after writing; this JSON intentionally does not guess or embed its own digest."
+}
