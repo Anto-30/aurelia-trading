@@ -316,6 +316,11 @@ def trivy_database_args() -> list[str]:
     return args
 
 
+def semgrep_coverage_status(errors: list[Any]) -> str:
+    """Do not label a partial Semgrep analysis complete."""
+    return "COMPLETED" if not errors else "PARTIAL_BLOCKED"
+
+
 def sanitize_semgrep(raw_report: dict[str, Any]) -> dict[str, Any]:
     safe_findings = []
     severity_counts: Counter[str] = Counter()
@@ -336,8 +341,10 @@ def sanitize_semgrep(raw_report: dict[str, Any]) -> dict[str, Any]:
         })
     safe_findings.sort(key=lambda x: (x["severity"], x["path"], x["start_line"] or 0, x["rule_id"]))
     errors = raw_report.get("errors") or []
+    coverage_status = semgrep_coverage_status(errors)
     return {
-        "status": "COMPLETED",
+        "status": coverage_status,
+        "coverage_status": coverage_status,
         "ruleset_names": ["p/default", "p/secrets"],
         "scanner_version": raw_report.get("version"),
         "findings_count": len(safe_findings),
@@ -557,6 +564,7 @@ def main() -> int:
     results: list[dict[str, Any]] = []
     started_at = utc_now()
     failed_scans = 0
+    partial_scans = 0
 
     for index, candidate in enumerate(candidates, start=1):
         repository = candidate["repository"]
@@ -607,9 +615,14 @@ def main() -> int:
                 json.dumps(trivy_report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
 
-            result["scanner_status"] = {"semgrep": "COMPLETED", "trivy": "COMPLETED"}
+            result["scanner_status"] = {
+                "semgrep": semgrep_report["status"],
+                "semgrep_error_count": semgrep_report["scanner_error_count"],
+                "trivy": "COMPLETED",
+            }
             result["finding_counts"] = {
                 "semgrep": semgrep_report["findings_count"],
+                "semgrep_scanner_errors": semgrep_report["scanner_error_count"],
                 "trivy_total": trivy_report["findings_count"],
                 "trivy_by_kind": trivy_report["finding_counts_by_kind"],
                 "trivy_by_severity": trivy_report["severity_counts"],
@@ -622,6 +635,10 @@ def main() -> int:
                 "sbom": "sbom.cdx.json",
                 "sbom_sha256": sha256_file(candidate_out / "sbom.cdx.json"),
             }
+            if semgrep_report["status"] != "COMPLETED":
+                # Keep the useful Trivy/Semgrep reports, but explicitly prevent false full-coverage claims.
+                status = "SCAN_COMPLETE_WITH_COVERAGE_LIMITATIONS_HUMAN_REVIEW_REQUIRED"
+                partial_scans += 1
         except Exception as exc:
             failed_scans += 1
             status = "SCAN_INCOMPLETE_BLOCKED"
@@ -663,7 +680,12 @@ def main() -> int:
 
     finished_at = utc_now()
     completed = sum(1 for result in results if result["status"] == "SCAN_COMPLETE_HUMAN_REVIEW_REQUIRED")
-    overall_status = "AUDIT_COMPLETE_HUMAN_REVIEW_REQUIRED" if failed_scans == 0 else "AUDIT_INCOMPLETE_BLOCKED"
+    overall_status = (
+        "AUDIT_INCOMPLETE_BLOCKED" if failed_scans
+        else "AUDIT_COMPLETE_WITH_COVERAGE_LIMITATIONS_HUMAN_REVIEW_REQUIRED"
+        if partial_scans
+        else "AUDIT_COMPLETE_HUMAN_REVIEW_REQUIRED"
+    )
     report = {
         "schema": "aurelia.external_candidate_audit_report.v1",
         "status": overall_status,
@@ -675,6 +697,7 @@ def main() -> int:
         "candidate_count": len(candidates),
         "candidate_scans_complete": completed,
         "candidate_scans_blocked": failed_scans,
+        "candidate_scans_partial": partial_scans,
         "tool_images": tool_images,
         "execution_policy": {
             "candidate_dependencies_installed": False,
@@ -699,6 +722,7 @@ def main() -> int:
         "",
         "Candidates: " + str(len(candidates)),
         "Scans complete: " + str(completed),
+        "Scans with coverage limitations: " + str(partial_scans),
         "Scans blocked/incomplete: " + str(failed_scans),
         "Candidate dependencies installed: no",
         "Candidate code/builds/tests executed: no",
@@ -730,7 +754,7 @@ def main() -> int:
         "",
         "## Required human disposition",
         "",
-        "All candidates remain UNREVIEWED. Findings require manual triage, context validation, dependency/license review and independent security sign-off before any promotion. A zero-finding static report does not prove absence of vulnerabilities.",
+        "No candidate is approved. Intake-BLOCKED candidates remain blocked; all other candidates remain UNREVIEWED. Partial Semgrep coverage is recorded as a limitation, not a clean scan. Findings require manual triage, context validation, dependency/license review and independent security sign-off before any promotion. A zero-finding static report does not prove absence of vulnerabilities.",
     ])
     report_md = args.output_dir / "audit-summary.md"
     report_md.write_text("\n".join(md) + "\n", encoding="utf-8")
@@ -753,6 +777,7 @@ def main() -> int:
     print("AUDIT_RESULT=" + overall_status)
     print("CANDIDATES_TOTAL=" + str(len(candidates)))
     print("SCANS_COMPLETE=" + str(completed))
+    print("SCANS_PARTIAL=" + str(partial_scans))
     print("SCANS_BLOCKED=" + str(failed_scans))
     print("AUDIT_SUMMARY_SHA256=" + sha256_file(report_json))
     print("AUDIT_MARKDOWN_SHA256=" + sha256_file(report_md))
