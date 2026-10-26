@@ -1,12 +1,12 @@
-# External Repository Intake — 2026-10-25
+# External Repository Intake — 2026-10-25 / 2026-10-26
 
 ## Status
 
-This is a controlled intake proposal for 33 repositories supplied for AURELIA engineering evaluation. Registration is not a security approval, installation, dependency pin, or production integration.
+This is a controlled intake proposal for 56 repositories supplied for AURELIA engineering evaluation. The 2026-10-26 batch contains 23 distinct repository references (the repeated Crypto-Signal URL was deduplicated); 21 registry records were added and two existing records were refreshed as intake candidates. Registration is not a security approval, installation, dependency pin, or production integration.
 
-- Intake candidates: 33
-- Newly added registry records: 33
-- Candidate head revisions: 33/33 pinned to the observed default-branch commit snapshot queried on 2026-10-25. The exact commit links and author dates are recorded in the pin manifest below. This is source provenance only, not a security approval.
+- Intake candidates: 56
+- Newly added registry records across the PR: 54 (33 initial records plus 21 new records); 2 existing registry records refreshed as candidates
+- Candidate head revisions: 56/56 pinned to exact commit SHAs. The initial 33 were captured on 2026-10-25; the 23 additional distinct references were re-checked on 2026-10-26. Exact commit links and UTC author dates are recorded below. This is source provenance only, not a security approval.
 - Runtime installation: none performed by this change.
 - Capital/execution authority: none.
 - `config/LIVE_LOCK.yaml` is unchanged and remains fail-closed.
@@ -118,3 +118,36 @@ Pinning establishes provenance only. It does not establish license compatibility
 ## Completion criteria
 
 Intake is complete only when every candidate has an exact commit SHA, verified source URL, license disposition, security/test evidence, owner/reviewer, and a recorded acceptance/rejection decision. The sync workflow's head snapshot alone is not a security approval. Production use requires a separate reviewed change and existing AURELIA release gates.
+
+
+## Additional intake batch — 2026-10-26
+
+The following 23 distinct references were added to the review set. SHA values and dates are GitHub's observed default-branch latest commit metadata; this is source provenance, not security clearance. Two records already existed in the registry and were refreshed instead of duplicated.
+
+| Repository | Branch | Pinned commit | Author date (UTC) | License metadata | Status |
+|---|---|---|---|---|---|
+| Adamant-im/adamant-tradebot | dev | [9f81feaab1404961a764ddbecc6cc225c94e0b10](https://github.com/Adamant-im/adamant-tradebot/commit/9f81feaab1404961a764ddbecc6cc225c94e0b10) | 2026-08-02 | NOASSERTION | BLOCKED |
+| Mintplex-Labs/anythingllm-docs | main | [bc510c6d4692c8b09945c331ccb470e6efa74b1a](https://github.com/Mintplex-Labs/anythingllm-docs/commit/bc510c6d4692c8b09945c331ccb470e6efa74b1a) | 2026-10-26 | MIT | UNREVIEWED |
+| hackobi/AI-Scalpel-Trading-Bot | master | [30eed4130d4808a25a5be6a0ee6cf42e3f19bc22](https://github.com/hackobi/AI-Scalpel-Trading-Bot/commit/30eed4130d4808a25a5be6a0ee6cf42e3f19bc22) | 2023-08-24 | GPL-3.0 | BLOCKED |
+| dsmsmj/vercel-labs-agent-skills | main | [ac6a79af08f6d32c34ee03c829824990f3de0a6d](https://github.com/dsmsmj/vercel-labs-agent-skills/commit/ac6a79af08f6d32c34ee03c829824990f3de0a6d) | 2026-01-18 | NOASSERTION | BLOCKED |
+| minhlucvan/agent-browser-mcp | main | [638b7093f47df42ac4688ae9ebcbca7470bb6c98](https://github.com/minhlucvan/agent-browser-mcp/commit/638b7093f47df42ac4688ae9ebcbca7470bb6c98) | 2026-05-23 | NOASSERTION | BLOCKED |
+| Qian-Anton/GitStudy | main | [fbf2e88f5d7b46b7631336443c9b5aac808df2d5](https://github.com/Qian-Anton/GitStudy/commit/fbf2e88f5d7b46b7631336443c9b5aac808df2d5) | 2026-05-09 | NOASSERTION | BLOCKED |
+| kevincm89/https-github.com-vercel-labs-skills | claude/vibrant-pasteur-hvbJE | [075c5d438165f6bd877f936a4b6c3286f79eec95](https://github.com/kevincm89/https-github.com-vercel-labs-skills/commit/075c5d438165f6bd877f936a4b6c3286f79eec95) | 2026-05-23 | NOASSERTION | BLOCKED |
+| koreainvestment/open-trading-api | main | [cd63caee6aeb90553d506b15ab6866cfad23beda](https://github.com/koreainvestment/open-trading-api/commit/cd63caee6aeb90553d506b15ab6866cfad23beda) | 2026-10-23 | NOASSERTION | BLOCKED |
+| onchain-trading-bot/.github | main | [d777aaf6e032dddcbc3ce68846b65bc23f12a3e5](https://github.com/onchain-trading-bot/.github/commit/d777aaf6e032dddcbc3ce68846b65bc23f12a3e5) | 2026-10-23 | NOASSERTION | BLOCKED |
+| starwiz-7/StalkStock | main | [7f3034a52c63ec9117f45d03e9ad64d98bee4d1d](https://github.com/starwiz-7/StalkStock/commit/7f3034a52c63ec9117f45d03e9ad64d98bee4d1d) | 2021-09-01 | GPL-3.0 | BLOCKED |
+| Options-Visualizer/Options-Visualizer.github.io | source | [d275ba222638f92747f3434599f8d51bac76405b](https://github.com/Options-Visualizer/Options-Visualizer.github.io/commit/d275ba222638f92747f3434599f8d51bac76405b) | 2020-09-02 | NOASSERTION | BLOCKED |
+| traderwillhu/market_dashboard | main | [5740a1523f2d8caac25072bc7b675ed6ff258716](https://github.com/traderwillhu/market_dashboard/commit/5740a1523f2d8caac25072bc7b675ed6ff258716) | 2026-03-10 | NOASSERTION | BLOCKED |
+| df-tools-bn/.github | main | [3c35faf4e84e681d24d0cd3a5915bc7822d8ff60](https://github.com/df-tools-bn/.github/commit/3c35faf4e84e681d24d0cd3a5915bc7822d8ff60) | 2026-10-23 | NOASSERTION | BLOCKED |
+| learn-crypto-trading/learn-crypto-trading.github.io | master | [1ed31e8751c2e3789ce1f2b098fab0599ccd4532](https://github.com/learn-crypto-trading/learn-crypto-trading.github.io/commit/1ed31e8751c2e3789ce1f2b098fab0599ccd4532) | 2023-02-24 | CC0-1.0 | UNREVIEWED |
+| TradingGoose/TradingGoose.github.io | main | [c9ee488499fd0c7f98f5ece6a4680ac2fc11011a](https://github.com/TradingGoose/TradingGoose.github.io/commit/c9ee488499fd0c7f98f5ece6a4680ac2fc11011a) | 2026-04-22 | AGPL-3.0 | BLOCKED |
+| TradingAgents-AI/TradingAgents-AI.github.io | main | [d007e8858fbc64844dab2a6c1786fe2cc2355729](https://github.com/TradingAgents-AI/TradingAgents-AI.github.io/commit/d007e8858fbc64844dab2a6c1786fe2cc2355729) | 2025-07-05 | NOASSERTION | BLOCKED |
+| CryptoSignal/Crypto-Signal | master | [7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec](https://github.com/CryptoSignal/Crypto-Signal/commit/7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec) | 2022-08-09 | MIT | BLOCKED |
+| twentyhq/twenty | main | [3ffa71331e1d4f120c42abcdbc933ccf51b93fcb](https://github.com/twentyhq/twenty/commit/3ffa71331e1d4f120c42abcdbc933ccf51b93fcb) | 2026-10-26 | NOASSERTION | BLOCKED |
+| zurb/twentytwenty | master | [a7b4057817bb098f554c5626a19c3d5ae14b280b](https://github.com/zurb/twentytwenty/commit/a7b4057817bb098f554c5626a19c3d5ae14b280b) | 2018-11-27 | ISC | UNREVIEWED |
+| aiwebarchitects/hyperliquid_free_trading_bot | main | [149f53bbd992602c68295e0cb41bd4834d13e9c6](https://github.com/aiwebarchitects/hyperliquid_free_trading_bot/commit/149f53bbd992602c68295e0cb41bd4834d13e9c6) | 2025-10-15 | Apache-2.0 | BLOCKED |
+| Cryptotrademate/cryptotrademate-trading-bot | main | [33ca3ad65221ec699d07aa5c071dc2114430ed97](https://github.com/Cryptotrademate/cryptotrademate-trading-bot/commit/33ca3ad65221ec699d07aa5c071dc2114430ed97) | 2025-01-22 | MIT | BLOCKED |
+| asba-IA/Github-Mev-Bot | main | [5b7a9f2c8552f6dfc9f259aea214bd6e2efc5e95](https://github.com/asba-IA/Github-Mev-Bot/commit/5b7a9f2c8552f6dfc9f259aea214bd6e2efc5e95) | 2025-04-26 | NOASSERTION | BLOCKED |
+| CMZ33/Github-Mev-Bot | master | [38a67f0aa34b01a10e22ceab752aac6900de58dd](https://github.com/CMZ33/Github-Mev-Bot/commit/38a67f0aa34b01a10e22ceab752aac6900de58dd) | 2025-03-24 | MIT | BLOCKED |
+
+Licensing note: NOASSERTION means GitHub metadata returned no recognized SPDX identifier; it does not prove a license file is absent. Candidates so marked remain blocked where shown until actual license terms are reviewed. Repeated CryptoSignal/Crypto-Signal input was recorded once. No candidate code, scripts, skills, dependencies, or broker integrations were installed or executed.
