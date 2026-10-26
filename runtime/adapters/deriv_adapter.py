@@ -344,16 +344,17 @@ class DerivAdapter:
         if not proposal_id:
             raise DerivProtocolError("ORDER_REQUIRES_BROKER_PROPOSAL_ID")
         price = payload.get("stake")
-        if (
-            isinstance(price, bool)
-            or not isinstance(price, (int, float))
-            or not math.isfinite(float(price))
-            or float(price) < 0
-        ):
+        if isinstance(price, bool) or not isinstance(price, (int, float)):
+            raise DerivProtocolError("BUY_PRICE_INVALID")
+        try:
+            numeric_price = float(price)
+        except (OverflowError, TypeError, ValueError) as exc:
+            raise DerivProtocolError("BUY_PRICE_INVALID") from exc
+        if not math.isfinite(numeric_price) or numeric_price < 0:
             raise DerivProtocolError("BUY_PRICE_INVALID")
         try:
             reply = await self.request(
-                {"buy": str(proposal_id), "price": float(price)}
+                {"buy": str(proposal_id), "price": numeric_price}
             )
         except Exception:
             return BrokerResult(
