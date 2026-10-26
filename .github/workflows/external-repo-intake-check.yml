@@ -103,6 +103,7 @@ jobs:
               "TradingGoose/TradingGoose.github.io",
               "twentyhq/twenty",
               "x1xhlol/system-prompts-and-models-of-ai-tools",
+          }
           for name in required_blocked:
               assert by_name[name]["intake_status"] == "BLOCKED", f"required blocker was removed: {name}"
           for item in repos:
