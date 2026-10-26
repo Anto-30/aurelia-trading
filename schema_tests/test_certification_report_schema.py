@@ -31,6 +31,7 @@ def pending_report():
             "live_execution": "BLOCKED",
             "final_authorization": False,
             "capital_plane_mode": "VERIFY_ONLY",
+            "research_capital_authority": False,
         },
         "final_disposition": {
             "overall_status": "NOT_READY",
@@ -124,6 +125,11 @@ class CertificationReportSchemaTests(unittest.TestCase):
     def test_non_fail_closed_safety_state_is_rejected(self):
         report = pending_report()
         report["safety_state"]["final_authorization"] = True
+        self.assertTrue(list(self.validator.iter_errors(report)))
+
+    def test_research_capital_authority_must_remain_disabled(self):
+        report = pending_report()
+        report["safety_state"]["research_capital_authority"] = True
         self.assertTrue(list(self.validator.iter_errors(report)))
 
 
