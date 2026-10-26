@@ -56,8 +56,16 @@ class IdempotencyStore:
     def _save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.path.with_suffix(self.path.suffix + ".tmp")
+        # Snapshot is atomically replaced after every state transition. Keep
+        # key order deterministic, but avoid pretty-printing the growing registry
+        # on every write: the full 3,600-cycle control-path exercise otherwise
+        # spends most of its time serializing whitespace and rewriting bytes.
         tmp.write_text(
-            json.dumps({k: asdict(v) for k, v in self._records.items()}, sort_keys=True, indent=2) + "\n",
+            json.dumps(
+                {k: asdict(v) for k, v in self._records.items()},
+                sort_keys=True,
+                separators=(",", ":"),
+            ) + "\n",
             encoding="utf-8",
         )
         os.replace(tmp, self.path)

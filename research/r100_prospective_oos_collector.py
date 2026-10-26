@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from runtime.adapters.deriv_ws import DerivWebSocketTransport
+from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
 from runtime.strategy.autonomous_signal_engine import AutonomousSignalHunter
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
@@ -34,6 +34,10 @@ CALIBRATION_MIN_BUCKETS = 3
 CALIBRATION_MIN_BUCKET_SAMPLES = 10
 CALIBRATION_MAX_RELIABILITY_GAP = 0.05
 LEGACY_DEFAULT_COLLECTION_SECONDS = 540
+MAX_TRANSPORT_RECONNECTS = 5
+TRANSPORT_RECONNECT_BACKOFF_BASE_SECONDS = 1.0
+TRANSPORT_RECONNECT_BACKOFF_MAX_SECONDS = 10.0
+TICK_IDLE_TIMEOUT_SECONDS = 30.0
 
 @dataclass(frozen=True)
 class PendingSignal:
@@ -150,6 +154,7 @@ def initial_state() -> dict[str, Any]:
         "observations": [],
         "pending": [],
         "quote_observations": [],
+        "transport_events": [],
         "last_run_started_at_utc": None,
         "last_run_completed_at_utc": None,
         "last_price": None,
@@ -482,10 +487,12 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         and not state["pending"]
     )
     state["manifest"]["sealed"] = bool(campaign_complete)
+    transport_events = list(state.get("transport_events", []))
     archive_hash = canonical_hash({
         "manifest": state["manifest"],
         "observations": rows,
         "quote_observations": state["quote_observations"],
+        "transport_events": transport_events,
     })
     return {
         "schema": "aurelia.r100.prospective_oos.report.v1",
@@ -515,6 +522,11 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
             "reason": "Public proposal quotes establish quoted stake/payout terms, but do not prove fill, realized slippage, fees or net live expectancy.",
         },
         "qualification_status": qualification_status,
+        "transport_health": {
+            "recorded_events": len(transport_events),
+            "reconnected_events": sum(1 for event in transport_events if event.get("status") == "RECONNECTED"),
+            "latest_event": transport_events[-1] if transport_events else None,
+        },
         "strategy_live_eligible": False,
         "execution_authorized": False,
         "capital_authority": False,
@@ -527,6 +539,7 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
 async def collect_once(state: dict[str, Any]) -> None:
     start = utc_now()
     state["last_run_started_at_utc"] = iso(start)
+    state.setdefault("transport_events", [])
 
     transport = DerivWebSocketTransport(PUBLIC_WS_URL, timeout_seconds=10.0)
     campaign_end = datetime.fromisoformat(
@@ -539,62 +552,156 @@ async def collect_once(state: dict[str, Any]) -> None:
         cooldown_seconds=30.0,
     )
     await transport.connect()
-    stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
-    iterator = stream.__aiter__()
     deadline = asyncio.get_running_loop().time() + COLLECTION_SECONDS
+    ticks_received = 0
+    reconnects = 0
+
     try:
         while asyncio.get_running_loop().time() < deadline:
-            remaining = deadline - asyncio.get_running_loop().time()
+            stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
+            iterator = stream.__aiter__()
+            reached_deadline = False
             try:
-                message = await asyncio.wait_for(iterator.__anext__(), timeout=max(1.0, remaining))
-            except asyncio.TimeoutError:
-                break
-            tick = message.get("tick") or {}
-            try:
-                quote = float(tick["quote"])
-                epoch = int(tick["epoch"])
-            except (KeyError, TypeError, ValueError):
-                continue
-            received_at = datetime.fromtimestamp(epoch, tz=timezone.utc)
-            prior_pending = len(state["pending"])
-            observe_tick(
-                hunter=hunter,
-                state=state,
-                quote=quote,
-                received_at=received_at,
-                emit_candidate=received_at < campaign_end,
-            )
-            if len(state["pending"]) > prior_pending:
-                new_signal = state["pending"][-1]
+                while asyncio.get_running_loop().time() < deadline:
+                    remaining = deadline - asyncio.get_running_loop().time()
+                    wait_seconds = min(TICK_IDLE_TIMEOUT_SECONDS, max(0.001, remaining))
+                    try:
+                        message = await asyncio.wait_for(
+                            iterator.__anext__(),
+                            timeout=wait_seconds,
+                        )
+                    except asyncio.TimeoutError as exc:
+                        if remaining > TICK_IDLE_TIMEOUT_SECONDS:
+                            raise DerivTransportError(
+                                "TICK_STREAM_IDLE_TIMEOUT",
+                                code="TICK_STREAM_IDLE_TIMEOUT",
+                                failure_type="TimeoutError",
+                            ) from exc
+                        reached_deadline = True
+                        break
+                    except StopAsyncIteration as exc:
+                        raise DerivTransportError(
+                            "BROKER_STREAM_ENDED",
+                            code="BROKER_STREAM_ENDED",
+                            failure_type="StopAsyncIteration",
+                        ) from exc
+
+                    tick = message.get("tick") or {}
+                    try:
+                        quote = float(tick["quote"])
+                        epoch = int(tick["epoch"])
+                    except (KeyError, TypeError, ValueError, OverflowError):
+                        continue
+                    if not math.isfinite(quote) or quote <= 0 or epoch <= 0:
+                        continue
+                    ticks_received += 1
+                    received_at = datetime.fromtimestamp(epoch, tz=timezone.utc)
+                    prior_pending = len(state["pending"])
+                    observe_tick(
+                        hunter=hunter,
+                        state=state,
+                        quote=quote,
+                        received_at=received_at,
+                        emit_candidate=received_at < campaign_end,
+                    )
+                    if len(state["pending"]) > prior_pending:
+                        new_signal = state["pending"][-1]
+                        try:
+                            proposal = await transport.request({
+                                "proposal": 1,
+                                "amount": 1.0,
+                                "basis": "stake",
+                                "contract_type": new_signal["direction"],
+                                "currency": CURRENCY,
+                                "duration": HORIZON_TICKS,
+                                "duration_unit": "t",
+                                "underlying_symbol": SYMBOL,
+                            })
+                            proposal_payload = proposal.get("proposal") or {}
+                            state["quote_observations"].append({
+                                "signal_id": new_signal["signal_id"],
+                                "captured_at_utc": iso(received_at),
+                                "ask_price": proposal_payload.get("ask_price"),
+                                "payout": proposal_payload.get("payout"),
+                                "proposal_id": proposal_payload.get("id"),
+                                "quote_status": "OBSERVED",
+                            })
+                        except Exception as exc:
+                            state["quote_observations"].append({
+                                "signal_id": new_signal["signal_id"],
+                                "captured_at_utc": iso(received_at),
+                                "quote_status": "UNAVAILABLE",
+                                "error_type": type(exc).__name__,
+                                "error_code": getattr(exc, "code", None),
+                                "error_cause_type": getattr(exc, "failure_type", None),
+                            })
+            except DerivTransportError as exc:
+                code = getattr(exc, "code", None)
+                failure_type = getattr(exc, "failure_type", None)
+                retryable = code in {
+                    "TRANSPORT_READER_FAILED",
+                    "BROKER_STREAM_ENDED",
+                    "TICK_STREAM_IDLE_TIMEOUT",
+                }
+                if not retryable:
+                    raise
+                event = {
+                    "occurred_at_utc": iso(utc_now()),
+                    "code": code,
+                    "failure_type": failure_type,
+                    "attempt": reconnects + 1,
+                    "status": "RECONNECTING",
+                    "backoff_seconds": 0.0,
+                }
+                if reconnects >= MAX_TRANSPORT_RECONNECTS:
+                    event["status"] = "RETRY_BUDGET_EXHAUSTED"
+                    state["transport_events"].append(event)
+                    state["transport_events"] = state["transport_events"][-100:]
+                    raise
+                reconnects += 1
+                delay = min(
+                    TRANSPORT_RECONNECT_BACKOFF_BASE_SECONDS * (2 ** (reconnects - 1)),
+                    TRANSPORT_RECONNECT_BACKOFF_MAX_SECONDS,
+                )
+                event["attempt"] = reconnects
+                event["backoff_seconds"] = delay
+                if deadline - asyncio.get_running_loop().time() <= delay:
+                    event["status"] = "RECONNECT_DEADLINE_EXCEEDED"
+                    state["transport_events"].append(event)
+                    state["transport_events"] = state["transport_events"][-100:]
+                    raise
+                state["transport_events"].append(event)
+                state["transport_events"] = state["transport_events"][-100:]
+                # Close the failed subscription before replacing its socket so
+                # the generator cannot send an old forget ID on the new socket.
                 try:
-                    proposal = await transport.request({
-                        "proposal": 1,
-                        "amount": 1.0,
-                        "basis": "stake",
-                        "contract_type": new_signal["direction"],
-                        "currency": CURRENCY,
-                        "duration": HORIZON_TICKS,
-                        "duration_unit": "t",
-                        "underlying_symbol": SYMBOL,
-                    })
-                    proposal_payload = proposal.get("proposal") or {}
-                    state["quote_observations"].append({
-                        "signal_id": new_signal["signal_id"],
-                        "captured_at_utc": iso(received_at),
-                        "ask_price": proposal_payload.get("ask_price"),
-                        "payout": proposal_payload.get("payout"),
-                        "proposal_id": proposal_payload.get("id"),
-                        "quote_status": "OBSERVED",
-                    })
-                except Exception as exc:
-                    state["quote_observations"].append({
-                        "signal_id": new_signal["signal_id"],
-                        "captured_at_utc": iso(received_at),
-                        "quote_status": "UNAVAILABLE",
-                        "error_type": type(exc).__name__,
-                    })
+                    await stream.aclose()
+                except Exception:
+                    pass
+                await transport.close()
+                await asyncio.sleep(delay)
+                await transport.connect()
+                event["status"] = "RECONNECTED"
+                continue
+            finally:
+                try:
+                    await stream.aclose()
+                except Exception:
+                    pass
+
+            if reached_deadline or asyncio.get_running_loop().time() >= deadline:
+                break
+            # The inner loop only ends naturally when the collection deadline
+            # has expired. Do not create a tight loop if a consumer returns.
+            break
     finally:
         await transport.close()
+
+    if ticks_received == 0:
+        raise DerivTransportError(
+            "R100_NO_TICKS_RECEIVED",
+            code="R100_NO_TICKS_RECEIVED",
+        )
     state["last_run_completed_at_utc"] = iso(utc_now())
 
 async def main() -> int:
@@ -607,10 +714,22 @@ async def main() -> int:
         # failure so a scheduled retry can resume the frozen campaign.
         state["last_run_error_type"] = type(exc).__name__
         state["last_run_error_at_utc"] = iso(utc_now())
+        error_code = getattr(exc, "code", None)
+        error_cause_type = getattr(exc, "failure_type", None)
+        if isinstance(error_code, str) and error_code:
+            state["last_run_error_code"] = error_code
+        else:
+            state.pop("last_run_error_code", None)
+        if isinstance(error_cause_type, str) and error_cause_type:
+            state["last_run_error_cause_type"] = error_cause_type
+        else:
+            state.pop("last_run_error_cause_type", None)
         save_state(STATE_PATH, state)
         report = evaluation(state)
         report["collection_status"] = "FAILED_RETRYABLE"
         report["collection_error_type"] = type(exc).__name__
+        report["collection_error_code"] = error_code
+        report["collection_error_cause_type"] = error_cause_type
         report_path.write_text(
             json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
             encoding="utf-8",
@@ -618,6 +737,8 @@ async def main() -> int:
         print(json.dumps({
             "R100_PROSPECTIVE_COLLECTION": "RETRYABLE_FAILURE",
             "ERROR_TYPE": type(exc).__name__,
+            "ERROR_CODE": error_code,
+            "ERROR_CAUSE_TYPE": error_cause_type,
             "OBSERVATIONS_PRESERVED": report["observations_total"],
             "EXECUTION_AUTHORIZED": False,
             "CAPITAL_AUTHORITY": False,
@@ -626,6 +747,8 @@ async def main() -> int:
 
     state.pop("last_run_error_type", None)
     state.pop("last_run_error_at_utc", None)
+    state.pop("last_run_error_code", None)
+    state.pop("last_run_error_cause_type", None)
     report = evaluation(state)
     report["collection_status"] = "PASS"
     save_state(STATE_PATH, state)

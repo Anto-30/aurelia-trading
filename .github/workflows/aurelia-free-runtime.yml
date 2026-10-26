@@ -11,7 +11,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: aurelia-free-runtime
+  # Scheduled probes must never cancel a manually approved credential-bearing run.
+  # Keep overlapping runs isolated by event type while still deduplicating each type.
+  group: aurelia-free-runtime-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
@@ -27,8 +29,8 @@ jobs:
       AURELIA_AGENT_PERFORMANCE_PATH: "/tmp/aurelia/agent-performance.json"
       DERIV_ENVIRONMENT: "real"
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: Install runtime
@@ -36,8 +38,10 @@ jobs:
       - name: Run free public-market runtime probe
         run: python scripts/verify_deriv_public_transport.py
       - name: Run runtime tests
+        if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
         run: python -m unittest discover -s tests -p "test_*.py" -v
       - name: Run assurance tests
+        if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
         run: python -m unittest discover -s assurance -p "test_*.py" -v
       - name: Report accepted trade count
         if: always()
@@ -55,7 +59,7 @@ jobs:
           echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
       - name: Upload runtime journal
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: aurelia-runtime-journal-${{ github.run_id }}
           path: /tmp/aurelia/
@@ -63,6 +67,8 @@ jobs:
           retention-days: 7
 
   authenticated-deriv-evidence:
+    # Protected production jobs need explicit human approval; never enqueue them from the recurring public worker.
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
     # Load production-scoped Actions secrets for authenticated verification only.
     environment: production
     runs-on: ubuntu-latest
@@ -82,8 +88,8 @@ jobs:
       DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
       DERIV_ENVIRONMENT: "real"
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - run: pip install -r requirements.txt
@@ -104,7 +110,7 @@ jobs:
         run: python scripts/verify_deriv_broker_evidence.py
       - name: Upload authenticated evidence
         if: always() && env.DERIV_AUTH_CONFIGURED == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: deriv-authenticated-evidence-${{ github.run_id }}
           path: |
@@ -114,6 +120,8 @@ jobs:
           retention-days: 7
 
   deriv-lifecycle-verify-only:
+    # Protected lifecycle evidence is manual-only for the same reason as authenticated session evidence.
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
     # Authenticated broker lifecycle verification: proposal + control-chain only.
     # This job must never submit a buy transaction or grant capital authority.
     environment:
@@ -136,8 +144,8 @@ jobs:
       DERIV_VERIFY_PROBABILITY: "0.60"
       DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - run: pip install -r requirements.txt
@@ -155,7 +163,7 @@ jobs:
         run: python scripts/verify_deriv_transaction_lifecycle.py
       - name: Upload verify-only lifecycle evidence
         if: always() && env.DERIV_AUTH_CONFIGURED == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: deriv-transaction-lifecycle-verify-only-${{ github.run_id }}
           path: artifacts/deriv_transaction_lifecycle.json
@@ -163,6 +171,9 @@ jobs:
           retention-days: 7
 
   whatsapp-alert-smoke:
+    # This sends a real message; keep it on the reviewed, protected production environment.
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
+    environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -179,8 +190,8 @@ jobs:
       TWILIO_CONTENT_SID: ${{ secrets.TWILIO_CONTENT_SID }}
       TWILIO_HTTP_TIMEOUT_SECONDS: "8"
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - run: pip install -r requirements.txt

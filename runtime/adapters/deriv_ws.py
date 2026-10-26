@@ -9,7 +9,22 @@ from websockets.asyncio.client import ClientConnection, connect
 
 
 class DerivTransportError(RuntimeError):
-    pass
+    """Transport error with safe, structured diagnostics.
+
+    The code and failure_type fields intentionally contain stable identifiers
+    only; raw exception text is not forwarded because it may expose connection details.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str | None = None,
+        failure_type: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.code = code
+        self.failure_type = failure_type
 
 
 @dataclass
@@ -61,10 +76,13 @@ class DerivWebSocketTransport:
         self._reader_task = asyncio.create_task(self._reader_loop())
 
     async def _reader_loop(self) -> None:
-        assert self.ws is not None
+        # Bind this reader to the socket it was created for. A stale reader
+        # must never clear a replacement connection established during recovery.
+        ws = self.ws
+        assert ws is not None
         try:
             while True:
-                raw = await self.ws.recv()
+                raw = await ws.recv()
                 message = json.loads(raw)
                 request_id = message.get("req_id")
                 if isinstance(request_id, int) and request_id in self._pending:
@@ -85,13 +103,33 @@ class DerivWebSocketTransport:
         except asyncio.CancelledError:
             raise
         except Exception as exc:
-            self._fail_pending(exc)
+            # Preserve a safe diagnostic category, but not the raw exception
+            # text: transport exceptions can include URLs or request details.
+            failure_type = type(exc).__name__
+            failure = DerivTransportError(
+                "TRANSPORT_READER_FAILED",
+                code="TRANSPORT_READER_FAILED",
+                failure_type=failure_type,
+            )
+            self._fail_pending(failure)
             for subscription in self._subscriptions.values():
                 subscription.queue.put_nowait(
-                    {"error": {"code": "TRANSPORT_READER_FAILED"}}
+                    {
+                        "error": {
+                            "code": failure.code,
+                            "failure_type": failure.failure_type,
+                        }
+                    }
                 )
         finally:
-            self.ws = None
+            if self.ws is ws:
+                self.ws = None
+            # Release the failed/cancelled socket even if self.ws now points
+            # at a replacement. close() is idempotent for WebSocket clients.
+            try:
+                await ws.close()
+            except Exception:
+                pass
 
     def _fail_pending(self, exc: Exception) -> None:
         for future in self._pending.values():
@@ -162,7 +200,17 @@ class DerivWebSocketTransport:
             while True:
                 message = await subscription.queue.get()
                 if "error" in message:
-                    raise DerivTransportError(str(message["error"]))
+                    error = message["error"]
+                    if isinstance(error, dict):
+                        code = error.get("code")
+                        failure_type = error.get("failure_type")
+                        if code == "TRANSPORT_READER_FAILED" and failure_type:
+                            raise DerivTransportError(
+                                f"{code}:{failure_type}",
+                                code=str(code),
+                                failure_type=str(failure_type),
+                            )
+                    raise DerivTransportError(str(error))
                 yield message
         finally:
             if self.ws is not None and subscription.request_id is not None:
