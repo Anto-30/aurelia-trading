@@ -259,6 +259,11 @@ def couple_windows(
     if sample_count < 1:
         raise ValueError("sample_count must be positive")
     eligible = {sid: pool for sid, pool in pools.items() if pool.window_count > 0}
+    if not eligible:
+        raise ValueError(
+            "no eligible windows in this split; provide longer contiguous histories "
+            "or reduce context_length/horizon"
+        )
     split_names = {pool.split for pool in eligible.values()}
     if len(split_names) != 1:
         raise ValueError("coupling pool must contain exactly one split")
