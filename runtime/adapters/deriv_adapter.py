@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import os
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator
@@ -21,9 +22,31 @@ from runtime.core.models import (
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
 
+LEGACY_PROPOSAL_REQUEST_FIELDS = frozenset({
+    "symbol",
+    "loginid",
+    "barrier_range",
+    "product_type",
+    "date_start",
+    "trade_risk_profile",
+    "trading_period_start",
+})
+
 
 class DerivProtocolError(RuntimeError):
     pass
+
+
+def _required_response_object(
+    reply: dict[str, Any],
+    field: str,
+    error_code: str,
+) -> dict[str, Any]:
+    """Require a New API response object rather than silently treating absence as empty."""
+    value = reply.get(field)
+    if not isinstance(value, dict):
+        raise DerivProtocolError(error_code)
+    return value
 
 
 class DerivAdapter:
@@ -218,7 +241,10 @@ class DerivAdapter:
     async def get_balance(self) -> CapitalSnapshot:
         if not self.account:
             raise DerivProtocolError("ACCOUNT_NOT_VERIFIED")
-        result = (await self.request({"balance": 1})).get("balance") or {}
+        reply = await self.request({"balance": 1})
+        result = _required_response_object(
+            reply, "balance", "BALANCE_RESPONSE_OBJECT_MISSING"
+        )
         amount = float(result["balance"])
         currency = str(result.get("currency") or self.account.currency)
         loginid = str(result.get("loginid") or self.account.loginid)
@@ -236,9 +262,11 @@ class DerivAdapter:
         )
 
     async def active_symbols(self) -> list[dict[str, Any]]:
-        rows = list(
-            (await self.request({"active_symbols": "brief"})).get("active_symbols") or []
-        )
+        reply = await self.request({"active_symbols": "brief"})
+        rows_value = reply.get("active_symbols")
+        if not isinstance(rows_value, list):
+            raise DerivProtocolError("ACTIVE_SYMBOLS_RESPONSE_INVALID")
+        rows = list(rows_value)
         # The current Options API renamed the legacy `symbol` response field
         # to `underlying_symbol`. Normalize once at the broker boundary so
         # older internal consumers remain stable without sending legacy fields
@@ -276,7 +304,9 @@ class DerivAdapter:
             raise DerivProtocolError("BROKER_SESSION_NOT_VERIFIED")
         key = "balance"
         async for message in self.transport.subscribe(key, {"balance": 1}):
-            result = message.get("balance") or {}
+            result = message.get("balance")
+            if not isinstance(result, dict):
+                raise DerivProtocolError("BALANCE_SUBSCRIPTION_OBJECT_MISSING")
             loginid = str(result.get("loginid") or self.account.loginid)
             currency = str(result.get("currency") or self.account.currency)
             if loginid != self.account.loginid or currency != self.account.currency:
@@ -302,15 +332,23 @@ class DerivAdapter:
                 yield dict(transaction)
 
     async def request_proposal(self, parameters: dict[str, Any]) -> str:
+        legacy_fields = sorted(LEGACY_PROPOSAL_REQUEST_FIELDS.intersection(parameters))
+        if legacy_fields:
+            raise DerivProtocolError(
+                "LEGACY_DERIV_REQUEST_FIELD:" + ",".join(legacy_fields)
+            )
+        if "proposal" in parameters or "req_id" in parameters:
+            raise DerivProtocolError("PROPOSAL_PARAMETERS_RESERVED_FIELD")
         required = ("contract_type", "currency", "underlying_symbol")
         missing = [key for key in required if not parameters.get(key)]
         if missing:
             raise DerivProtocolError(
                 "PROPOSAL_PARAMETERS_MISSING:" + ",".join(missing)
             )
-        proposal = (
-            await self.request({"proposal": 1, **parameters})
-        ).get("proposal") or {}
+        reply = await self.request({"proposal": 1, **parameters})
+        proposal = _required_response_object(
+            reply, "proposal", "PROPOSAL_OBJECT_MISSING_FROM_BROKER"
+        )
         proposal_id = str(proposal.get("id") or "")
         if not proposal_id:
             raise DerivProtocolError("PROPOSAL_ID_MISSING_FROM_BROKER")
@@ -320,11 +358,19 @@ class DerivAdapter:
         if not self.authorized:
             raise DerivProtocolError("BROKER_SESSION_NOT_AUTHORIZED")
         proposal_id = payload.get("proposal_id")
-        if not proposal_id:
+        if not isinstance(proposal_id, (str, int)) or not str(proposal_id).strip():
             raise DerivProtocolError("ORDER_REQUIRES_BROKER_PROPOSAL_ID")
+        stake = payload.get("stake")
+        if (
+            isinstance(stake, bool)
+            or not isinstance(stake, (int, float))
+            or not math.isfinite(float(stake))
+            or float(stake) < 0
+        ):
+            raise DerivProtocolError("ORDER_PRICE_INVALID")
         try:
             reply = await self.request(
-                {"buy": str(proposal_id), "price": payload["stake"]}
+                {"buy": str(proposal_id), "price": stake}
             )
         except Exception:
             return BrokerResult(
@@ -332,7 +378,13 @@ class DerivAdapter:
                 "unknown",
                 raw_class="SUBMISSION_RESPONSE_UNKNOWN",
             )
-        buy = reply.get("buy") or {}
+        buy = reply.get("buy")
+        if not isinstance(buy, dict):
+            return BrokerResult(
+                BrokerOutcome.UNKNOWN,
+                "unknown",
+                raw_class="BUY_RESPONSE_OBJECT_MISSING",
+            )
         transaction_id = str(buy.get("transaction_id") or "") or None
         contract_id = str(buy.get("contract_id") or "") or None
         # A capital-moving acceptance is not considered fully known until
@@ -399,11 +451,21 @@ class DerivAdapter:
         reply = await self.request(
             {"proposal_open_contract": 1, "contract_id": int(contract_id)}
         )
-        return dict(reply.get("proposal_open_contract") or {})
+        return _required_response_object(
+            reply,
+            "proposal_open_contract",
+            "PROPOSAL_OPEN_CONTRACT_RESPONSE_OBJECT_MISSING",
+        )
 
     async def portfolio(self) -> list[dict[str, Any]]:
         reply = await self.request({"portfolio": 1})
-        return list(reply.get("portfolio", {}).get("contracts") or [])
+        portfolio = _required_response_object(
+            reply, "portfolio", "PORTFOLIO_RESPONSE_OBJECT_MISSING"
+        )
+        contracts = portfolio.get("contracts")
+        if not isinstance(contracts, list):
+            raise DerivProtocolError("PORTFOLIO_CONTRACTS_RESPONSE_INVALID")
+        return list(contracts)
 
     async def statement(
         self,
@@ -432,8 +494,13 @@ class DerivAdapter:
         if date_to is not None:
             payload["date_to"] = int(date_to)
         reply = await self.request(payload)
-        statement = reply.get("statement") or {}
-        return list(statement.get("transactions") or [])
+        statement = _required_response_object(
+            reply, "statement", "STATEMENT_RESPONSE_OBJECT_MISSING"
+        )
+        transactions = statement.get("transactions")
+        if not isinstance(transactions, list):
+            raise DerivProtocolError("STATEMENT_TRANSACTIONS_RESPONSE_INVALID")
+        return list(transactions)
 
     async def close(self) -> None:
         if self.transport is not None:
