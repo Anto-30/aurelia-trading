@@ -26,11 +26,11 @@ The TiRex-2 extra is optional. Install with: pip install '.[tirex2]'. The checkp
 
 For univariate 1-minute bars:
 
-    python -m research.labs.tirex2_latency_benchmark --csv /path/to/prices.csv --symbols R_100 --context-length 128 --prediction-length 1 --device cpu --warmup 10 --runs 100 --revision IMMUTABLE_HF_COMMIT_SHA --latency-budget-ms PRE_REGISTERED_P99_BUDGET_MS --expected-interval-seconds 60
+    python -m research.labs.tirex2_latency_benchmark --csv /path/to/prices.csv --symbols R_100 --context-length 128 --prediction-length 1 --device cpu --warmup 10 --runs 1000 --revision FULL_40_CHARACTER_MODEL_COMMIT_SHA --latency-budget-ms PRE_REGISTERED_P99_BUDGET_MS --expected-interval-seconds 60
 
 For 15-minute bars, set the interval to 900. Multi-series stress testing can select comma-separated symbols only when the latest contexts align exactly; the benchmark will not fabricate timestamps. Such a run measures multivariate inference cost, not whether those symbols should be used as live covariates.
 
-The report separates CSV/context preparation, model loading, input construction, the first forecast call (which may include initialization/compilation), and warmed p50/p95/p99/max latency. A budget verdict is based on p99 only; without a frozen budget, status is NOT_EVALUATED_NO_FROZEN_BUDGET. Measurements include input-object construction and local model forecasting, but exclude Deriv networking, strategy logic, Layer 6, and broker execution. They are not end-to-end trading latency.
+The report separates CSV/context preparation, model loading, input construction, the first forecast call (which may include initialization/compilation), and warmed p50/p95/p99/max latency. A p99 PASS/FAIL verdict is issued only when a positive budget is supplied, `--revision` is a full 40-character hexadecimal commit SHA, and at least 1,000 warmed measurements are collected. Short smoke runs remain usable for diagnostics but return `NOT_EVALUATED_INSUFFICIENT_SAMPLES`; an unpinned or mutable model revision returns `NOT_EVALUATED_UNPINNED_MODEL_REVISION`. Without a frozen budget, status is `NOT_EVALUATED_NO_FROZEN_BUDGET`. Measurements include input-object construction and local model forecasting, but exclude Deriv networking, strategy logic, Layer 6, and broker execution. They are not end-to-end trading latency.
 
 ## Gates before any Layer 9 proposal
 
