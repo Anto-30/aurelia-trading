@@ -78,7 +78,7 @@ jobs:
           import json
           from pathlib import Path
           report = json.loads(Path("/tmp/aurelia-semgrep-smoke/scan/result.json").read_text())
-          assert any(result.get("check_id") == "aurelia-smoke-no-eval" for result in report.get("results", []))
+          assert any(result.get("check_id", "").endswith("aurelia-smoke-no-eval") for result in report.get("results", [])), report.get("results", [])
           assert not report.get("errors"), "Semgrep returned scanner errors"
           print("SEMGREP_READ_ONLY_SOURCE_SMOKE=PASS")
           PY
