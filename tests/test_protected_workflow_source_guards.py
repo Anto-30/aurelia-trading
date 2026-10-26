@@ -48,9 +48,11 @@ def _job_block(path: str, job_name: str) -> str:
     end = len(lines)
     for index in range(start + 1, len(lines)):
         line = lines[index]
-        # GitHub Actions job keys are exactly two spaces indented. Stop at the
-        # next job without depending on regex character-class edge cases for '-'.
-        if line.startswith("  ") and not line.startswith("    ") and line.endswith(":"):
+        stripped = line.strip()
+        indent = len(line) - len(line.lstrip(" "))
+        # Normalize trailing whitespace, then stop only at an un-commented,
+        # two-space-indented YAML key (the next GitHub Actions job).
+        if indent == 2 and not stripped.startswith("#") and re.fullmatch(r"[A-Za-z0-9_-]+:", stripped):
             end = index
             break
     return "\n".join(lines[start:end])
