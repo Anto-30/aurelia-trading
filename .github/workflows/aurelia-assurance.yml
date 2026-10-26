@@ -48,7 +48,7 @@ jobs:
 
       - name: Upload public Deriv transport evidence
         if: always() && hashFiles('artifacts/deriv_public_transport.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: deriv-public-transport-evidence
           path: artifacts/deriv_public_transport.json
@@ -87,7 +87,7 @@ jobs:
         run: python -m assurance.certification_gate --json-out artifacts/certification-report.json
       - name: Upload versioned certification report
         if: always() && hashFiles('artifacts/certification-report.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: aurelia-certification-report-v1
           path: artifacts/certification-report.json
@@ -142,7 +142,7 @@ jobs:
       
       - name: Upload Deriv authentication prerequisite evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: deriv-auth-prerequisites
           path: artifacts/deriv_auth_prerequisites.json
@@ -191,7 +191,7 @@ jobs:
       
       - name: Upload authenticated broker account evidence
         if: always() && hashFiles('artifacts/deriv_broker_account_evidence.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: deriv-broker-account-read-only
           path: artifacts/deriv_broker_account_evidence.json
@@ -199,7 +199,7 @@ jobs:
       
       - name: Upload authenticated verify-only lifecycle evidence
         if: always() && hashFiles('artifacts/deriv_transaction_lifecycle.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: deriv-transaction-lifecycle-verify-only
           path: artifacts/deriv_transaction_lifecycle.json
@@ -213,7 +213,7 @@ jobs:
       
       - name: Upload authenticated Deriv evidence
         if: always() && hashFiles('artifacts/deriv_authenticated_session.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: deriv-authenticated-session
           path: artifacts/deriv_authenticated_session.json
