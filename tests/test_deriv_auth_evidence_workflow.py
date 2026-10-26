@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "deriv-auth-evidence.yml"
 
 
-def test_scheduled_deriv_verifier_loads_production_environment_secrets() -> None:
+def test_manual_deriv_verifier_loads_production_environment_secrets_on_main() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
 
     assert "environment: production" in workflow
@@ -21,13 +21,13 @@ def test_scheduled_deriv_verifier_loads_production_environment_secrets() -> None
     assert "secrets.DERIV_EXPECTED_CURRENCY || 'USD'" not in workflow
 
 
-def test_scheduled_workflow_generates_read_only_broker_account_evidence() -> None:
+def test_manual_workflow_generates_read_only_broker_account_evidence() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
     assert "python scripts/verify_deriv_broker_evidence.py" in workflow
     assert "artifacts/deriv_broker_account_evidence.json" in workflow
 
 
-def test_scheduled_deriv_verifier_keeps_capital_authority_blocked() -> None:
+def test_manual_deriv_verifier_keeps_capital_authority_blocked() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
 
     assert 'FINAL_EXECUTION_AUTHORIZATION: "false"' in workflow
