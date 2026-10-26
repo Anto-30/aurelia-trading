@@ -15,7 +15,21 @@ from tools.audit_external_candidates import (
     trivy_database_args,
     trivy_offline_scan_flags,
     prepare_trivy_databases,
+    write_json_report,
 )
+
+
+class JsonReportSerializationTests(unittest.TestCase):
+    def test_json_reports_are_strictly_parseable_and_end_with_a_real_newline(self):
+        expected = {"status": "PARTIAL_BLOCKED", "message": "line one\nline two"}
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "nested" / "semgrep_findings.json"
+            write_json_report(output, expected)
+            raw = output.read_bytes()
+
+        self.assertTrue(raw.endswith(b"\n"))
+        self.assertFalse(raw.endswith(b"\\n"))
+        self.assertEqual(json.loads(raw), expected)
 
 
 class AuditExitCodeTests(unittest.TestCase):
@@ -188,6 +202,10 @@ class AuditDockerEnvironmentTests(unittest.TestCase):
                 )
 
         self.assertEqual(result["status"], "READY")
+        self.assertEqual(
+            (scratch / "trivy-preflight-source" / "Dockerfile").read_text(encoding="utf-8"),
+            "FROM scratch\n",
+        )
         self.assertEqual(result["candidate_source_mounted"], False)
         self.assertEqual(result["java_db_policy"], "ON_DEMAND_FOR_JAR_CONTAINING_CANDIDATES")
         self.assertEqual(run.call_count, 2)

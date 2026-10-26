@@ -60,6 +60,15 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def write_json_report(path: Path, report: Any) -> None:
+    """Write a parseable JSON artifact with an actual newline terminator."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def safe_env() -> dict[str, str]:
     result = {key: value for key, value in os.environ.items() if key in SAFE_ENV_KEYS}
     result["GIT_CONFIG_NOSYSTEM"] = "1"
@@ -71,7 +80,7 @@ def safe_env() -> dict[str, str]:
 
 
 def safe_tool_failure_class(stderr: str, stdout: str) -> str:
-    text = ((stderr or "") + "\\n" + (stdout or "")).lower()
+    text = ((stderr or "") + "\n" + (stdout or "")).lower()
     patterns = [
         (("failed to download vulnerability db", "failed to download vulnerability database",
           "unable to download vulnerability db", "failed to fetch vulnerability db",
@@ -366,7 +375,7 @@ def prepare_trivy_databases(
     scratch_dir.mkdir(parents=True, exist_ok=True)
     empty_source = scratch_dir / "trivy-preflight-source"
     empty_source.mkdir(parents=True, exist_ok=True)
-    (empty_source / "Dockerfile").write_text("FROM scratch\\n", encoding="utf-8")
+    (empty_source / "Dockerfile").write_text("FROM scratch\n", encoding="utf-8")
     preflight_report = scratch_dir / "trivy-preflight.json"
     try:
         command = docker_common_args(
@@ -819,9 +828,7 @@ def main() -> int:
             phase = "semgrep"
             semgrep_report = run_semgrep(clone_dir, scratch_dir, cache_dir, args.semgrep_image)
             semgrep_out = candidate_out / "semgrep_findings.json"
-            semgrep_out.write_text(
-                json.dumps(semgrep_report, indent=2, sort_keys=True) + "\\n", encoding="utf-8"
-            )
+            write_json_report(semgrep_out, semgrep_report)
 
             java_archives = metadata.get("java_archive_paths") or []
             skip_files: list[str] = []
@@ -854,9 +861,7 @@ def main() -> int:
                 skip_files=skip_files,
             )
             trivy_out = candidate_out / "trivy_findings.json"
-            trivy_out.write_text(
-                json.dumps(trivy_report, indent=2, sort_keys=True) + "\\n", encoding="utf-8"
-            )
+            write_json_report(trivy_out, trivy_report)
 
             result["scanner_status"] = {
                 "semgrep": semgrep_report["status"],
