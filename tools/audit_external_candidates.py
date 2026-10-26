@@ -295,7 +295,7 @@ def docker_common_args(
         "--tmpfs", "/tmp:rw,nosuid,nodev,size=512m",
         # Some Semgrep/Git builds resolve user state through /root despite HOME/GIT_CONFIG overrides.
         # Make only this ephemeral state writable; the container root and source remain read-only.
-        "--tmpfs", "/root:rw,nosuid,nodev,size=128m",
+        "--tmpfs", f"/root:rw,nosuid,nodev,size=128m,uid={os.getuid()},gid={os.getgid()},mode=700",
         "-v", str(repo_dir.resolve()) + ":/src:ro",
         "-v", str(scratch_dir.resolve()) + ":/scan:rw",
         "-v", str(cache_dir.resolve()) + ":/root/.cache:rw",
