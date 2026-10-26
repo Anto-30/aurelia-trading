@@ -1,8 +1,8 @@
 name: AURELIA Non-Production 3600s Soak
 
+# This one-hour simulation soak is explicit/manual to avoid spawning a new
+# hour-long runner on every main push. Dispatch only for a reviewed main SHA.
 on:
-  push:
-    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -14,6 +14,7 @@ concurrency:
 
 jobs:
   soak:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 75
     env:
