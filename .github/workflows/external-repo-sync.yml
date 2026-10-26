@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Validate federation policy and source count
         run: |
           python - <<'PY'
@@ -36,8 +38,12 @@ jobs:
           assert all(x.get("mode") in {"RESEARCH_ONLY","SANDBOX_ONLY","TOOLCHAIN_ONLY","REFERENCE_ONLY"} for x in repos)
           assert all(x.get("source_url", "").startswith("https://github.com/") for x in repos)
           assert all(x.get("capital_authority", False) is False for x in repos)
+          unavailable=[x for x in repos if x.get("source_availability") == "UNAVAILABLE"]
+          assert all(x.get("mode") == "REFERENCE_ONLY" for x in unavailable), "only reference-only entries may be declared unavailable"
+          assert all(x.get("source_availability_checked_at_utc") and x.get("source_availability_reason") for x in unavailable)
           print("EXTERNAL_REPO_POLICY=PASS")
           print("EXTERNAL_REPO_COUNT=%d" % len(repos))
+          print("EXPLICIT_UNAVAILABLE_REFERENCE_ONLY=%d" % len(unavailable))
           PY
       - name: Sync public repository heads
         run: |
@@ -59,17 +65,48 @@ jobs:
           PY
           python - <<'PY'
           import json
+          from datetime import datetime, timezone
           from pathlib import Path
-          p=json.loads(Path("config/external_repo_federation.json").read_text())
-          x=json.load(open("/tmp/external-repo-sync.json"))
-          bad=[r for r in x["repositories"] if not r.get("reachable")]
-          unresolved=[r["repo"] for r in p["repositories"] if r.get("head_commit") == "SYNC_REQUIRED"]
-          print("EXTERNAL_REPO_REACHABLE=%d/%d"%(len(x["repositories"])-len(bad),len(x["repositories"])))
-          print("EXTERNAL_REPO_PINNED=%d/%d"%(len(p["repositories"])-len(unresolved),len(p["repositories"])))
-          print("EXTERNAL_REPO_UNRESOLVED_PIN_COUNT=%d"%len(unresolved))
+          registry=json.loads(Path("config/external_repo_federation.json").read_text())
+          report_path=Path("/tmp/external-repo-sync.json")
+          report=json.loads(report_path.read_text())
+          metadata={item["repo"]:item for item in registry["repositories"]}
+          unavailable={name for name,item in metadata.items() if item.get("source_availability") == "UNAVAILABLE"}
+          for result in report["repositories"]:
+              source=metadata[result["repo"]]
+              if result.get("reachable"):
+                  result["status"]="REACHABLE"
+                  if result["repo"] in unavailable:
+                      result["status"]="REAPPEARED_REVIEW_PIN_REQUIRED"
+              elif result["repo"] in unavailable and source.get("mode") == "REFERENCE_ONLY":
+                  result["status"]="UNAVAILABLE_REFERENCE_ONLY"
+                  result["source_availability_checked_at_utc"]=source["source_availability_checked_at_utc"]
+                  result["source_availability_reason"]=source["source_availability_reason"]
+              else:
+                  result["status"]="UNEXPECTED_UNREACHABLE"
+          bad=[r for r in report["repositories"] if r["status"] == "UNEXPECTED_UNREACHABLE"]
+          report["generated_at_utc"]=datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
+          report["explicit_unavailable_reference_only_count"]=sum(r["status"] == "UNAVAILABLE_REFERENCE_ONLY" for r in report["repositories"])
+          report["reappeared_reference_only_count"]=sum(r["status"] == "REAPPEARED_REVIEW_PIN_REQUIRED" for r in report["repositories"])
+          report["unexpected_unreachable_count"]=len(bad)
+          report["status"]="BLOCKED" if bad else ("PARTIAL_REFERENCE_ONLY_SOURCES_UNAVAILABLE" if report["explicit_unavailable_reference_only_count"] else "PASS")
+          report_path.write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
+          total=len(report["repositories"])
+          reachable=sum(bool(r.get("reachable")) for r in report["repositories"])
+          unresolved=[r["repo"] for r in registry["repositories"] if r.get("head_commit") == "SYNC_REQUIRED"]
+          print(f"EXTERNAL_REPO_REACHABLE={reachable}/{total}")
+          print(f"EXTERNAL_REPO_PINNED={total-len(unresolved)}/{total}")
+          print(f"EXTERNAL_REPO_UNRESOLVED_PIN_COUNT={len(unresolved)}")
+          print(f"EXPLICIT_UNAVAILABLE_REFERENCE_ONLY={report['explicit_unavailable_reference_only_count']}")
+          print(f"REAPPEARED_REFERENCE_ONLY_REQUIRES_REPIN_REVIEW={report['reappeared_reference_only_count']}")
+          print(f"EXTERNAL_REPO_SYNC_REPORT_STATUS={report['status']}")
           if bad:
-              print("UNREACHABLE=", [r["repo"] for r in bad])
+              print("UNEXPECTED_UNREACHABLE=", [r["repo"] for r in bad])
               raise SystemExit(1)
+          if report["explicit_unavailable_reference_only_count"]:
+              print("SYNC_CHECK=PASS_WITH_EXPLICIT_UNAVAILABLE_REFERENCE_ONLY_EXCEPTIONS")
+          else:
+              print("SYNC_CHECK=PASS")
           PY
       - name: Upload sync snapshot
         uses: actions/upload-artifact@v4
