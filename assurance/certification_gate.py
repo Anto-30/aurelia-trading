@@ -84,6 +84,18 @@ def overall(results: list[dict]) -> str:
     return "READY_FOR_CAPITAL_REVIEW" if not blocking else "NOT_READY"
 
 
+def build_report(results: list[dict]) -> dict:
+    """Build a versioned certification report without granting execution authority."""
+    return {
+        "schema": "aurelia.certification-report.v1",
+        "repository": "Anto-30/aurelia-trading",
+        "certification_result": overall(results),
+        "final_execution_authorization": False,
+        "live_execution": "BLOCKED",
+        "results": results,
+    }
+
+
 # Backward-compatible name used by the existing assurance test suite.
 _overall_status = overall
 
@@ -107,17 +119,7 @@ def main() -> int:
         output = root / args.json_out
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(
-            json.dumps(
-                {
-                    "repository": "Anto-30/aurelia-trading",
-                    "certification_result": status,
-                    "final_execution_authorization": False,
-                    "live_execution": "BLOCKED",
-                    "results": results,
-                },
-                indent=2,
-                sort_keys=True,
-            ) + "\n",
+            json.dumps(build_report(results), indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
         print(f"CERTIFICATION_REPORT={output}")
