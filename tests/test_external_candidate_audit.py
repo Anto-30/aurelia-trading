@@ -152,19 +152,46 @@ class AuditDockerEnvironmentTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "READY")
         self.assertEqual(result["candidate_source_mounted"], False)
-        self.assertEqual(run.call_count, 3)
+        self.assertEqual(result["java_db_policy"], "ON_DEMAND_FOR_JAR_CONTAINING_CANDIDATES")
+        self.assertEqual(run.call_count, 2)
         commands = [call.args[0] for call in run.call_args_list]
         self.assertIn("--download-db-only", commands[0])
-        self.assertIn("--download-java-db-only", commands[1])
+        self.assertNotIn("--download-java-db-only", commands[0])
         self.assertEqual(commands[0][commands[0].index("--network") + 1], "host")
         self.assertEqual(commands[1][commands[1].index("--network") + 1], "host")
-        self.assertEqual(commands[2][commands[2].index("--network") + 1], "host")
         self.assertFalse(any("/src:ro" in arg for arg in commands[0]))
-        self.assertFalse(any("/src:ro" in arg for arg in commands[1]))
-        self.assertTrue(any("trivy-preflight-source" in arg for arg in commands[2]))
+        self.assertTrue(any("trivy-preflight-source" in arg for arg in commands[1]))
         self.assertLess(commands[0].index("image"), commands[0].index("--db-repository"))
-        self.assertLess(commands[1].index("image"), commands[1].index("--java-db-repository"))
-        self.assertLess(commands[2].index("fs"), commands[2].index("--checks-bundle-repository"))
+        self.assertLess(commands[1].index("fs"), commands[1].index("--checks-bundle-repository"))
+
+    def test_java_archive_detection_is_case_insensitive_and_deterministic(self):
+        from tools.audit_external_candidates import find_java_archives
+        self.assertEqual(
+            find_java_archives(["a/one.jar", "b/TWO.JAR", "c/not-a-jar.txt", "a/one.jar"]),
+            ["a/one.jar", "a/one.jar", "b/TWO.JAR"],
+        )
+
+    def test_java_db_preflight_is_targeted_and_does_not_mount_candidate_source(self):
+        from unittest.mock import patch
+        from tools.audit_external_candidates import prepare_trivy_java_database
+        with tempfile.TemporaryDirectory() as tmp:
+            scratch = Path(tmp) / "scratch"
+            cache = Path(tmp) / "cache"
+            cache.mkdir()
+            with patch("tools.audit_external_candidates.run_command") as run:
+                result = prepare_trivy_java_database(scratch, cache, "aquasec/trivy:0.76.1")
+        self.assertEqual(result["status"], "READY")
+        self.assertEqual(run.call_count, 1)
+        command = run.call_args.args[0]
+        self.assertLess(command.index("image"), command.index("--java-db-repository"))
+        self.assertIn("--download-java-db-only", command)
+        self.assertEqual(command[command.index("--network") + 1], "host")
+        self.assertFalse(any("/src:ro" in arg for arg in command))
+
+    def test_trivy_skip_file_flags_are_repeated_for_each_unavailable_jar(self):
+        skip_files = ["/src/a.jar", "/src/b.jar"]
+        flags = [item for path in skip_files for item in ("--skip-files", path)]
+        self.assertEqual(flags, ["--skip-files", "/src/a.jar", "--skip-files", "/src/b.jar"])
 
     def test_git_global_config_uses_writable_container_tmpfs(self):
         args = docker_common_args(

@@ -178,6 +178,11 @@ def docker_image_digests(image: str) -> dict[str, Any]:
         return {"image": image, "inspection_status": "BLOCKED", "error_type": type(exc).__name__}
 
 
+def find_java_archives(paths: list[str]) -> list[str]:
+    """Return pinned repository-relative JAR paths for targeted Java DB coverage."""
+    return sorted(safe_relative(path) for path in paths if str(path).lower().endswith(".jar"))
+
+
 def git_fetch_candidate(candidate: dict[str, Any], clone_dir: Path) -> dict[str, Any]:
     repo = str(candidate["repository"])
     sha = str(candidate["commit_sha"])
@@ -268,6 +273,8 @@ def git_fetch_candidate(candidate: dict[str, Any], clone_dir: Path) -> dict[str,
         "fetch_method": fetch_method,
         "pin_verified": True,
         "file_count": len(tree),
+        "java_archive_paths": find_java_archives(tree),
+        "java_archive_count": len(find_java_archives(tree)),
         "root_file_names": sorted(root_names)[:500],
         "root_license_file_names": licenses,
         "dependency_manifest_paths": manifests[:2000],
@@ -340,45 +347,45 @@ def trivy_offline_scan_flags() -> list[str]:
     return ["--skip-db-update", "--skip-java-db-update", "--skip-check-update"]
 
 
+def _trivy_repository_args(repositories: tuple[str, ...], option: str) -> list[str]:
+    return [item for repository in repositories for item in (option, repository)]
+
+
+def trivy_checks_bundle_args() -> list[str]:
+    return ["--checks-bundle-repository", TRIVY_CHECKS_BUNDLE_REPOSITORY]
+
+
 def prepare_trivy_databases(
     scratch_dir: Path, cache_dir: Path, image: str
 ) -> dict[str, Any]:
-    """Populate trusted Trivy databases before a candidate source is mounted."""
+    """Prepare the vulnerability DB and checks bundle before mounting a candidate source.
+
+    The Java index DB is only required to inspect JARs without Maven coordinates. It is
+    prepared separately only for pinned candidates that actually contain JAR files.
+    """
     scratch_dir.mkdir(parents=True, exist_ok=True)
     empty_source = scratch_dir / "trivy-preflight-source"
     empty_source.mkdir(parents=True, exist_ok=True)
-    (empty_source / "Dockerfile").write_text("FROM scratch\n", encoding="utf-8")
+    (empty_source / "Dockerfile").write_text("FROM scratch\\n", encoding="utf-8")
     preflight_report = scratch_dir / "trivy-preflight.json"
     try:
-        downloaded: list[str] = []
-        for flag, label, repositories, repository_flag in (
-            ("--download-db-only", "vulnerability_database", TRIVY_DB_REPOSITORIES, "--db-repository"),
-            ("--download-java-db-only", "java_database", TRIVY_JAVA_DB_REPOSITORIES, "--java-db-repository"),
-        ):
-            database_args = [
-                item
-                for repository in repositories
-                for item in (repository_flag, repository)
-            ]
-            # Database options are scoped to the image subcommand; keep this preflight source-free.
-            command = docker_common_args(
-                image, "trivy", None, scratch_dir, cache_dir, network="host"
-            ) + [
-                "image",
-                *database_args,
-                "--cache-dir", "/root/.cache/trivy",
-                flag,
-            ]
-            run_command(command, timeout=900)
-            downloaded.append(label)
+        command = docker_common_args(
+            image, "trivy", None, scratch_dir, cache_dir, network="host"
+        ) + [
+            "image",
+            *_trivy_repository_args(TRIVY_DB_REPOSITORIES, "--db-repository"),
+            "--cache-dir", "/root/.cache/trivy",
+            "--download-db-only",
+        ]
+        run_command(command, timeout=900)
 
-        # Trigger the checks-bundle path once against a locally generated empty fixture.
-        # No external candidate source is mounted, parsed, or executed in this host-network phase.
+        # Checks bundle is tested once on an empty, locally generated fixture.
+        # No external candidate source is mounted, parsed, or executed here.
         command = docker_common_args(
             image, "trivy", empty_source, scratch_dir, cache_dir, network="host"
         ) + [
             "fs",
-            *trivy_database_args(),
+            *trivy_checks_bundle_args(),
             "--cache-dir", "/root/.cache/trivy",
             "--scanners", "misconfig",
             "--format", "json", "--output", "/scan/trivy-preflight.json", "/src",
@@ -386,14 +393,36 @@ def prepare_trivy_databases(
         run_command(command, timeout=300)
         return {
             "status": "READY",
-            "databases_downloaded": downloaded,
+            "databases_downloaded": ["vulnerability_database"],
             "checks_preflight": "COMPLETED",
+            "java_db_policy": "ON_DEMAND_FOR_JAR_CONTAINING_CANDIDATES",
             "candidate_source_mounted": False,
         }
     finally:
         if preflight_report.exists():
             preflight_report.unlink()
         shutil.rmtree(empty_source, ignore_errors=True)
+
+
+def prepare_trivy_java_database(
+    scratch_dir: Path, cache_dir: Path, image: str
+) -> dict[str, Any]:
+    """Fetch Java's index database in an isolated command with no candidate source mounted."""
+    scratch_dir.mkdir(parents=True, exist_ok=True)
+    command = docker_common_args(
+        image, "trivy", None, scratch_dir, cache_dir, network="host"
+    ) + [
+        "image",
+        *_trivy_repository_args(TRIVY_JAVA_DB_REPOSITORIES, "--java-db-repository"),
+        "--cache-dir", "/root/.cache/trivy",
+        "--download-java-db-only",
+    ]
+    run_command(command, timeout=900)
+    return {
+        "status": "READY",
+        "database": "java_index_database",
+        "candidate_source_mounted": False,
+    }
 
 
 def semgrep_coverage_status(errors: list[Any]) -> str:
@@ -579,14 +608,16 @@ def run_semgrep(
 
 def run_trivy(
     repo_dir: Path, candidate_out: Path, scratch_dir: Path,
-    cache_dir: Path, image: str
+    cache_dir: Path, image: str, *, skip_files: list[str] | None = None
 ) -> dict[str, Any]:
     raw_path = scratch_dir / "trivy.raw.json"
     sbom_path = candidate_out / "sbom.cdx.json"
+    skip_file_flags = [item for path in (skip_files or []) for item in ("--skip-files", path)]
     command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir, network="none") + [
         "fs", *trivy_database_args(), "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,misconfig,secret,license",
         *trivy_offline_scan_flags(),
+        *skip_file_flags,
         "--format", "json", "--output", "/scan/trivy.raw.json", "/src",
     ]
     try:
@@ -606,6 +637,7 @@ def run_trivy(
         "fs", *trivy_database_args(), "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,license",
         *trivy_offline_scan_flags(),
+        *skip_file_flags,
         "--format", "cyclonedx", "--output", "/scan/sbom.cdx.json", "/src",
     ]
     scratch_sbom = scratch_dir / "sbom.cdx.json"
@@ -617,6 +649,7 @@ def run_trivy(
         sanitized["sbom_path"] = str(sbom_path.name)
         sanitized["sbom_sha256"] = sha256_file(sbom_path)
         sanitized["sbom_status"] = "GENERATED"
+        sanitized["skipped_files"] = list(skip_files or [])
     finally:
         if scratch_sbom.exists():
             scratch_sbom.unlink()
@@ -763,21 +796,50 @@ def main() -> int:
             semgrep_report = run_semgrep(clone_dir, scratch_dir, cache_dir, args.semgrep_image)
             semgrep_out = candidate_out / "semgrep_findings.json"
             semgrep_out.write_text(
-                json.dumps(semgrep_report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+                json.dumps(semgrep_report, indent=2, sort_keys=True) + "\\n", encoding="utf-8"
             )
+
+            java_archives = metadata.get("java_archive_paths") or []
+            skip_files: list[str] = []
+            java_archive_status = "NOT_REQUIRED_NO_JAR_FILES"
+            java_archive_error_code = None
+            if java_archives:
+                phase = "trivy_java_database"
+                try:
+                    prepare_trivy_java_database(scratch_dir, cache_dir, args.trivy_image)
+                    java_archive_status = "COMPLETED"
+                except Exception as exc:
+                    # Exclude only these JAR paths and still scan the rest of the candidate.
+                    # Mark this candidate partial; never present it as a clean/full scan.
+                    java_archive_status = "PARTIAL_BLOCKED"
+                    safe_code = getattr(exc, "safe_tool_failure_class", None)
+                    if not isinstance(safe_code, str) or not re.fullmatch(r"[A-Z][A-Z0-9_]{2,80}", safe_code):
+                        safe_code = "TRIVY_JAVA_DB_FETCH_FAILED"
+                    java_archive_error_code = safe_code
+                    skip_files = ["/src/" + path.lstrip("/") for path in java_archives]
+                    result["coverage_limitations"] = {
+                        "java_archive_scan": "PARTIAL_BLOCKED",
+                        "java_archive_error_code": java_archive_error_code,
+                        "java_archive_paths_skipped": java_archives,
+                        "java_db_failure_does_not_block_other_candidates": True,
+                    }
+
             phase = "trivy"
             trivy_report = run_trivy(
-                clone_dir, candidate_out, scratch_dir, cache_dir, args.trivy_image
+                clone_dir, candidate_out, scratch_dir, cache_dir, args.trivy_image,
+                skip_files=skip_files,
             )
             trivy_out = candidate_out / "trivy_findings.json"
             trivy_out.write_text(
-                json.dumps(trivy_report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+                json.dumps(trivy_report, indent=2, sort_keys=True) + "\\n", encoding="utf-8"
             )
 
             result["scanner_status"] = {
                 "semgrep": semgrep_report["status"],
                 "semgrep_error_count": semgrep_report["scanner_error_count"],
                 "trivy": "COMPLETED",
+                "java_archive_scan": java_archive_status,
+                "java_archive_error_code": java_archive_error_code,
             }
             result["finding_counts"] = {
                 "semgrep": semgrep_report["findings_count"],
@@ -794,8 +856,8 @@ def main() -> int:
                 "sbom": "sbom.cdx.json",
                 "sbom_sha256": sha256_file(candidate_out / "sbom.cdx.json"),
             }
-            if semgrep_report["status"] != "COMPLETED":
-                # Keep the useful Trivy/Semgrep reports, but explicitly prevent false full-coverage claims.
+            if semgrep_report["status"] != "COMPLETED" or java_archive_status == "PARTIAL_BLOCKED":
+                # Keep useful reports while explicitly preventing false full-coverage claims.
                 status = "SCAN_COMPLETE_WITH_COVERAGE_LIMITATIONS_HUMAN_REVIEW_REQUIRED"
                 partial_scans += 1
         except Exception as exc:
