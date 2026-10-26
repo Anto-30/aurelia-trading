@@ -50,6 +50,34 @@ class SemgrepCoverageTests(unittest.TestCase):
         self.assertEqual(report["severity_counts"], {"ERROR": 1})
         self.assertEqual(report["findings"][0]["severity"], "ERROR")
 
+    def test_semgrep_severity_priority_and_fallback_are_counted_per_finding(self):
+        report = sanitize_semgrep({
+            "version": "test",
+            "results": [
+                {
+                    "check_id": "error-rule",
+                    "extra": {"severity": "ERROR", "metadata": {"severity": "INFO"}},
+                    "path": "src/a.py",
+                    "start": {"line": 1},
+                    "end": {"line": 1},
+                },
+                {
+                    "check_id": "fallback-rule",
+                    "extra": {"metadata": {"severity": "WARNING"}},
+                    "path": "src/b.py",
+                    "start": {"line": 2},
+                    "end": {"line": 2},
+                },
+            ],
+            "errors": [],
+        })
+        self.assertEqual(report["severity_counts"], {"ERROR": 1, "WARNING": 1})
+        self.assertEqual(report["findings_count"], 2)
+        self.assertEqual(
+            [finding["severity"] for finding in report["findings"]],
+            ["ERROR", "WARNING"],
+        )
+
     def test_semgrep_report_surfaces_coverage_limitation_without_raw_error_text(self):
         report = sanitize_semgrep({
             "version": "test",
