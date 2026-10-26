@@ -55,6 +55,57 @@ class FakeTransport:
 
 class DerivTransportDiagnosticsTests(unittest.TestCase):
 
+    def test_application_heartbeat_sends_ping_and_requires_ping_response(self):
+        async def run():
+            transport = DerivWebSocketTransport(
+                "wss://api.derivws.com/trading/v1/options/ws/public"
+            )
+            with (
+                patch(
+                    "runtime.adapters.deriv_ws.asyncio.sleep",
+                    side_effect=[None, asyncio.CancelledError()],
+                ),
+                patch.object(
+                    transport,
+                    "request",
+                    new=AsyncMock(return_value={"msg_type": "ping", "req_id": 1}),
+                ) as request,
+            ):
+                with self.assertRaises(asyncio.CancelledError):
+                    await transport._heartbeat_loop()
+            request.assert_awaited_once_with({"ping": 1})
+
+        asyncio.run(run())
+
+    def test_invalid_application_ping_response_closes_socket(self):
+        async def run():
+            class CloseableSocket:
+                def __init__(self):
+                    self.closed = False
+
+                async def close(self):
+                    self.closed = True
+
+            transport = DerivWebSocketTransport(
+                "wss://api.derivws.com/trading/v1/options/ws/public"
+            )
+            socket = CloseableSocket()
+            transport.ws = socket
+            with (
+                patch("runtime.adapters.deriv_ws.asyncio.sleep", new=AsyncMock()),
+                patch.object(
+                    transport,
+                    "request",
+                    new=AsyncMock(return_value={"msg_type": "pong"}),
+                ),
+            ):
+                task = asyncio.create_task(transport._heartbeat_loop())
+                await asyncio.wait_for(task, timeout=0.2)
+            self.assertTrue(socket.closed)
+
+        asyncio.run(run())
+
+
     def test_connect_starts_application_level_keepalive_task(self):
         async def run():
             class IdleSocket:

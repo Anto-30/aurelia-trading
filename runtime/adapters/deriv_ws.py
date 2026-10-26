@@ -45,14 +45,19 @@ class DerivWebSocketTransport:
         *,
         timeout_seconds: float = 10.0,
         ping_interval: float = 20.0,
+        application_ping_interval_seconds: float = 30.0,
     ):
         if not url:
             raise DerivTransportError("DERIV_WS_URL_MISSING")
+        if timeout_seconds <= 0 or ping_interval <= 0 or application_ping_interval_seconds <= 0:
+            raise DerivTransportError("DERIV_TRANSPORT_TIMEOUTS_MUST_BE_POSITIVE")
         self.url = url
         self.timeout_seconds = timeout_seconds
         self.ping_interval = ping_interval
+        self.application_ping_interval_seconds = application_ping_interval_seconds
         self.ws: ClientConnection | None = None
         self._reader_task: asyncio.Task[None] | None = None
+        self._heartbeat_task: asyncio.Task[None] | None = None
         self._request_id = 0
         self._pending: dict[int, asyncio.Future[dict[str, Any]]] = {}
         self._subscriptions: dict[str, Subscription] = {}
@@ -70,6 +75,36 @@ class DerivWebSocketTransport:
             max_size=2_000_000,
         )
         self._reader_task = asyncio.create_task(self._reader_loop())
+        self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+
+    async def _heartbeat_loop(self) -> None:
+        """Maintain the Deriv application session with correlated JSON ping/pong messages.
+
+        WebSocket protocol ping frames remain enabled separately. Deriv also recommends
+        application-level JSON ping messages for connections that intermediaries may
+        close after inactivity.
+        """
+        while self.ws is not None:
+            await asyncio.sleep(self.application_ping_interval_seconds)
+            if self.ws is None:
+                return
+            try:
+                response = await self.request({"ping": 1})
+                if response.get("msg_type") != "ping":
+                    raise DerivTransportError("APPLICATION_PING_RESPONSE_INVALID")
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                # A heartbeat failure is a transport failure, not a signal to continue
+                # collecting potentially stale state. Closing the socket makes the
+                # single reader publish its bounded, sanitized failure.
+                ws = self.ws
+                if ws is not None:
+                    try:
+                        await ws.close()
+                    except Exception:
+                        pass
+                return
 
     async def _reader_loop(self) -> None:
         assert self.ws is not None
@@ -238,6 +273,15 @@ class DerivWebSocketTransport:
             )
 
     async def close(self) -> None:
+        heartbeat = self._heartbeat_task
+        self._heartbeat_task = None
+        if heartbeat is not None:
+            heartbeat.cancel()
+            try:
+                await heartbeat
+            except asyncio.CancelledError:
+                pass
+
         reader = self._reader_task
         self._reader_task = None
         if reader is not None:
