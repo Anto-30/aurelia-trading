@@ -120,6 +120,17 @@ class CertificationReportSchemaTests(unittest.TestCase):
             gate["sast_findings"],
         )
 
+    def test_soak_gate_accepts_exact_fractional_measured_duration(self):
+        report = pending_report()
+        report["gate_3_soak_test_3600s"] = {
+            "status": "PASS",
+            "duration_seconds": 3600.032,
+            "peak_memory_mb": 31.21484375,
+            "ws_disconnects": 0,
+            "evidence_log_hash": "753b46e1820dfa8ae10377f2424c5f6705af7a675db1a2fe9a16e6d937b560fb",
+        }
+        self.validator.validate(report)
+
     def test_pass_without_evidence_hash_is_rejected(self):
         report = pending_report()
         report["gate_1_broker_lifecycle"] = {

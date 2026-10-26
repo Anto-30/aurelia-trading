@@ -137,7 +137,7 @@
       "$ref": "#/$defs/gate",
       "properties": {
         "duration_seconds": {
-          "type": "integer",
+          "type": "number",
           "minimum": 0
         },
         "peak_memory_mb": {
