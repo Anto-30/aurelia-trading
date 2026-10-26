@@ -609,15 +609,6 @@ async def collect_once(state: dict[str, Any]) -> None:
                         "duration_unit": "t",
                         "underlying_symbol": SYMBOL,
                     })
-                    proposal_payload = proposal.get("proposal") or {}
-                    state["quote_observations"].append({
-                        "signal_id": new_signal["signal_id"],
-                        "captured_at_utc": iso(received_at),
-                        "ask_price": proposal_payload.get("ask_price"),
-                        "payout": proposal_payload.get("payout"),
-                        "proposal_id": proposal_payload.get("id"),
-                        "quote_status": "OBSERVED",
-                    })
                 except Exception as exc:
                     state["quote_observations"].append({
                         "signal_id": new_signal["signal_id"],
@@ -625,6 +616,24 @@ async def collect_once(state: dict[str, Any]) -> None:
                         "quote_status": "UNAVAILABLE",
                         "error_type": type(exc).__name__,
                     })
+                    continue
+
+                # New API success envelopes must include a proposal object and proposal ID.
+                # Other fields (including ask_price/payout) may be absent in this API version.
+                proposal_payload = proposal.get("proposal")
+                if not isinstance(proposal_payload, dict) or not proposal_payload.get("id"):
+                    raise DerivTransportError(
+                        "DERIV_NEW_API_PROPOSAL_RESPONSE_INVALID",
+                        code="DERIV_NEW_API_PROPOSAL_RESPONSE_INVALID",
+                    )
+                state["quote_observations"].append({
+                    "signal_id": new_signal["signal_id"],
+                    "captured_at_utc": iso(received_at),
+                    "ask_price": proposal_payload.get("ask_price"),
+                    "payout": proposal_payload.get("payout"),
+                    "proposal_id": proposal_payload["id"],
+                    "quote_status": "OBSERVED",
+                })
     finally:
         await transport.close()
     state["last_run_reconnect_attempts"] = reconnect_attempts
