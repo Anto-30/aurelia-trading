@@ -9,6 +9,7 @@ broker credentials, authorizes capital, or upgrades the record to production.
 import argparse
 import hashlib
 import json
+import math
 import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -52,9 +53,15 @@ def _required_text(value: Any, field: str) -> str:
     return value.strip()
 
 
-def _validate_observation(row: dict[str, Any], index: int) -> tuple[int, bool]:
+def _validate_observation(row: dict[str, Any], index: int) -> tuple[float, bool]:
     elapsed = row.get("elapsed_seconds")
-    if isinstance(elapsed, bool) or not isinstance(elapsed, int) or elapsed < 0:
+    if isinstance(elapsed, bool) or not isinstance(elapsed, (int, float)):
+        raise ValueError(f"OBSERVATION_{index}_ELAPSED_SECONDS_INVALID")
+    try:
+        elapsed_seconds = float(elapsed)
+    except (OverflowError, ValueError) as exc:
+        raise ValueError(f"OBSERVATION_{index}_ELAPSED_SECONDS_INVALID") from exc
+    if not math.isfinite(elapsed_seconds) or elapsed_seconds < 0:
         raise ValueError(f"OBSERVATION_{index}_ELAPSED_SECONDS_INVALID")
 
     if row.get("liveness") is not True:
@@ -80,7 +87,7 @@ def _validate_observation(row: dict[str, Any], index: int) -> tuple[int, bool]:
     else:
         raise ValueError(f"OBSERVATION_{index}_STATUS_NOT_HEALTHY_OR_EXPECTED_DEGRADED")
 
-    return elapsed, status == "DEGRADED"
+    return elapsed_seconds, status == "DEGRADED"
 
 
 def write_nonproduction_soak_evidence(
@@ -133,7 +140,7 @@ def write_nonproduction_soak_evidence(
     if len(lines) < MIN_HEALTH_SAMPLES:
         raise ValueError("SOAK_HEALTH_SAMPLE_COUNT_BELOW_600")
 
-    elapsed_values: list[int] = []
+    elapsed_values: list[float] = []
     degraded_samples = 0
     expected_unknowns: set[str] = set()
     for index, line in enumerate(lines, start=1):
