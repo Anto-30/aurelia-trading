@@ -483,10 +483,10 @@ def safe_semgrep_error_extensions(error: Any) -> list[str]:
         if isinstance(value, dict):
             for key, child in value.items():
                 if key == "path" and isinstance(child, str):
-                    normalized = child.replace("\\\\", "/")
+                    normalized = child.replace("\\", "/")
                     if normalized.startswith("/src/") or normalized.startswith("src/"):
                         suffix = Path(safe_relative(normalized)).suffix.lower()
-                        if re.fullmatch(r"\\.[a-z0-9]{1,10}", suffix):
+                        if re.fullmatch(r"\.[a-z0-9]{1,10}", suffix):
                             found.add(suffix)
                 elif isinstance(child, (dict, list)):
                     pending.append(child)
