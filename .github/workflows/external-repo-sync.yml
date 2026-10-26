@@ -7,6 +7,11 @@ on:
       - "config/external_repo_federation.json"
       - "skills/external-repo-federation/**"
       - ".github/workflows/external-repo-sync.yml"
+  pull_request:
+    paths:
+      - "config/external_repo_federation.json"
+      - "skills/external-repo-federation/**"
+      - ".github/workflows/external-repo-sync.yml"
   schedule:
     - cron: "41 3 * * 1"
   workflow_dispatch:
