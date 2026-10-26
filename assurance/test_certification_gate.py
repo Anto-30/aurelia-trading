@@ -233,6 +233,23 @@ class CertificationReportSchemaTest(unittest.TestCase):
         self.assertEqual(report["results"], results)
         self.assertTrue(all({"name", "status", "detail"} <= set(item) for item in report["results"]))
 
+        # Keep the emitted report and the checked-in JSON Schema in lockstep
+        # without adding a runtime schema-validation dependency.
+        schema_path = Path(__file__).resolve().parents[1] / "schemas" / "aurelia.certification-report.v1.schema.json"
+        report_schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        properties = report_schema["properties"]
+        self.assertEqual(report_schema["$id"], report["schema"])
+        self.assertEqual(set(report_schema["required"]), set(report))
+        self.assertEqual(properties["schema"]["const"], report["schema"])
+        self.assertEqual(properties["repository"]["const"], report["repository"])
+        self.assertIs(properties["final_execution_authorization"]["const"], False)
+        self.assertEqual(properties["live_execution"]["const"], "BLOCKED")
+        self.assertIn(report["certification_result"], properties["certification_result"]["enum"])
+        result_schema = properties["results"]["items"]
+        for item in report["results"]:
+            self.assertEqual(set(item), set(result_schema["required"]))
+            self.assertIn(item["status"], result_schema["properties"]["status"]["enum"])
+
 
 if __name__ == "__main__":
     unittest.main()
