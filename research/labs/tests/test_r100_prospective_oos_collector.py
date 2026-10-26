@@ -302,6 +302,78 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
             self.assertFalse(report["execution_authorized"])
             self.assertFalse(report["capital_authority"])
 
+    def test_collect_once_recovers_from_bounded_public_feed_disconnect(self):
+        import research.r100_prospective_oos_collector as collector
+        from runtime.adapters.deriv_ws import DerivTransportError
+
+        class NoSignalHunter:
+            def __init__(self, **kwargs):
+                pass
+
+            def observe(self, **kwargs):
+                return None
+
+        class FakeTransport:
+            instance = None
+
+            def __init__(self, url, *, timeout_seconds):
+                self.url = url
+                self.timeout_seconds = timeout_seconds
+                self.connect_calls = 0
+                self.close_calls = 0
+                self.subscribe_calls = 0
+                FakeTransport.instance = self
+
+            async def connect(self):
+                self.connect_calls += 1
+
+            async def close(self):
+                self.close_calls += 1
+
+            async def request(self, payload):
+                raise AssertionError("NoSignalHunter must prevent proposal requests in this test")
+
+            def subscribe(self, key, payload):
+                self.subscribe_calls += 1
+                call = self.subscribe_calls
+
+                async def interrupted_stream():
+                    raise DerivTransportError(
+                        "TRANSPORT_READER_FAILED:ConnectionResetError",
+                        code="TRANSPORT_READER_FAILED",
+                        failure_type="ConnectionResetError",
+                    )
+                    yield {}
+
+                async def healthy_stream():
+                    yield {"msg_type": "tick", "tick": {"quote": 100.25, "epoch": 1800000000}}
+                    await asyncio.Future()
+
+                return interrupted_stream() if call == 1 else healthy_stream()
+
+        state = initial_state()
+        with (
+            patch.object(collector, "COLLECTION_SECONDS", 0.05),
+            patch.object(collector, "TRANSPORT_RECONNECT_BACKOFF_BASE_SECONDS", 0.001),
+            patch.object(collector, "AutonomousSignalHunter", NoSignalHunter),
+            patch.object(collector, "DerivWebSocketTransport", FakeTransport),
+        ):
+            asyncio.run(collector.collect_once(state))
+
+        transport = FakeTransport.instance
+        self.assertEqual(transport.connect_calls, 2)
+        self.assertEqual(transport.subscribe_calls, 2)
+        self.assertEqual(len(state["transport_events"]), 1)
+        self.assertEqual(state["transport_events"][0]["code"], "TRANSPORT_READER_FAILED")
+        self.assertEqual(state["transport_events"][0]["failure_type"], "ConnectionResetError")
+        self.assertEqual(state["transport_events"][0]["status"], "RECONNECTED")
+        self.assertEqual(state["last_price"], 100.25)
+        report = evaluation(state)
+        self.assertEqual(report["transport_health"]["recorded_events"], 1)
+        self.assertEqual(report["transport_health"]["reconnected_events"], 1)
+        self.assertFalse(report["execution_authorized"])
+        self.assertFalse(report["strategy_live_eligible"])
+
     def test_horizon_is_positive(self):
         self.assertGreater(HORIZON_TICKS, 0)
 
