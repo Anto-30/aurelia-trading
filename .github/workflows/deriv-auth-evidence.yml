@@ -15,9 +15,8 @@ concurrency:
 
 jobs:
   verify:
-    # This workflow must opt into the same protected environment as the other
-    # Deriv verification workflows; environment-scoped secrets are unavailable
-    # to jobs that omit this declaration.
+    # Only execute credential-bearing verification from the reviewed canonical branch.
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
     environment: production
     runs-on: ubuntu-latest
     env:
