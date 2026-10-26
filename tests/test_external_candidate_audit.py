@@ -22,7 +22,12 @@ class AuditDockerEnvironmentTests(unittest.TestCase):
         self.assertIn("GIT_CONFIG_GLOBAL=/tmp/.gitconfig", env_values)
         self.assertIn("GIT_CONFIG_NOSYSTEM=1", env_values)
         self.assertIn("GIT_TERMINAL_PROMPT=0", env_values)
+        self.assertIn("XDG_CONFIG_HOME=/tmp/.config", env_values)
+        self.assertIn("XDG_CACHE_HOME=/tmp/.cache", env_values)
         self.assertIn("/tmp:rw,nosuid,nodev,size=512m", tmpfs_values)
+        # A writable temporary home is needed by Semgrep builds that use /root directly.
+        self.assertIn("/root:rw,nosuid,nodev,size=128m", tmpfs_values)
+        self.assertNotIn("/root/.semgrep:rw,nosuid,nodev,size=16m", tmpfs_values)
 
 
 if __name__ == "__main__":

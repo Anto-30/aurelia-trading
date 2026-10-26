@@ -264,6 +264,8 @@ def docker_common_args(
         "-e", "GIT_CONFIG_GLOBAL=/tmp/.gitconfig",
         "-e", "GIT_CONFIG_NOSYSTEM=1",
         "-e", "GIT_TERMINAL_PROMPT=0",
+        "-e", "XDG_CONFIG_HOME=/tmp/.config",
+        "-e", "XDG_CACHE_HOME=/tmp/.cache",
         "--read-only",
         "--cap-drop=ALL",
         "--security-opt=no-new-privileges",
@@ -271,7 +273,9 @@ def docker_common_args(
         "--memory=4g",
         "--entrypoint", entrypoint,
         "--tmpfs", "/tmp:rw,nosuid,nodev,size=512m",
-        "--tmpfs", "/root/.semgrep:rw,nosuid,nodev,size=16m",
+        # Some Semgrep/Git builds resolve user state through /root despite HOME/GIT_CONFIG overrides.
+        # Make only this ephemeral state writable; the container root and source remain read-only.
+        "--tmpfs", "/root:rw,nosuid,nodev,size=128m",
         "-v", str(repo_dir.resolve()) + ":/src:ro",
         "-v", str(scratch_dir.resolve()) + ":/scan:rw",
         "-v", str(cache_dir.resolve()) + ":/root/.cache:rw",

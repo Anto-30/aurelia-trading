@@ -46,11 +46,49 @@ jobs:
           docker image inspect --format='{{json .RepoDigests}}' aquasec/trivy:0.76.1 > /tmp/trivy-image-digest.json
 
       - name: Smoke test isolated scanner command lines
+        shell: bash
         run: |
-          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig --tmpfs /tmp:rw,nosuid,nodev,size=512m --tmpfs /root/.semgrep:rw,nosuid,nodev,size=16m --entrypoint semgrep semgrep/semgrep:1.182.0 --version
-          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig --tmpfs /tmp:rw,nosuid,nodev,size=512m --entrypoint sh semgrep/semgrep:1.182.0 -c 'git config --global --add safe.directory "*" && test "$(git config --global --get-all safe.directory)" = "*"'
-          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig --tmpfs /tmp:rw,nosuid,nodev,size=512m --tmpfs /root/.semgrep:rw,nosuid,nodev,size=16m --entrypoint semgrep semgrep/semgrep:1.182.0 scan --help >/dev/null
-          docker run --rm --network none --read-only --cap-drop=ALL --security-opt=no-new-privileges -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig --tmpfs /tmp:rw,nosuid,nodev,size=512m --entrypoint trivy aquasec/trivy:0.76.1 --version
+          set -euo pipefail
+          smoke_root=/tmp/aurelia-semgrep-smoke
+          mkdir -p "$smoke_root/src" "$smoke_root/scan"
+          printf 'eval(input())\n' > "$smoke_root/src/smoke.py"
+          cat > "$smoke_root/scan/rules.yml" <<'YAML'
+          rules:
+            - id: aurelia-smoke-no-eval
+              languages: [python]
+              message: local scanner smoke test
+              severity: ERROR
+              pattern: eval(...)
+          YAML
+          # Reproduce the real read-only Git worktree path using only a harmless local fixture.
+          git -C "$smoke_root/src" init --quiet
+          docker run --rm --network none --read-only --cap-drop=ALL \
+            --security-opt=no-new-privileges --pids-limit=128 --memory=1g \
+            --tmpfs /tmp:rw,nosuid,nodev,size=128m \
+            --tmpfs /root:rw,nosuid,nodev,size=128m \
+            -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig \
+            -e GIT_CONFIG_NOSYSTEM=1 -e GIT_TERMINAL_PROMPT=0 \
+            -e XDG_CONFIG_HOME=/tmp/.config -e XDG_CACHE_HOME=/tmp/.cache \
+            -v "$smoke_root/src:/src:ro" -v "$smoke_root/scan:/scan:rw" \
+            --entrypoint semgrep semgrep/semgrep:1.182.0 \
+            scan --metrics=off --config /scan/rules.yml --json \
+              --output /scan/result.json --exclude .git /src
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("/tmp/aurelia-semgrep-smoke/scan/result.json").read_text())
+          assert any(result.get("check_id") == "aurelia-smoke-no-eval" for result in report.get("results", []))
+          assert not report.get("errors"), "Semgrep returned scanner errors"
+          print("SEMGREP_READ_ONLY_SOURCE_SMOKE=PASS")
+          PY
+          docker run --rm --network none --read-only --cap-drop=ALL \
+            --security-opt=no-new-privileges --pids-limit=128 --memory=1g \
+            --tmpfs /tmp:rw,nosuid,nodev,size=128m \
+            --tmpfs /root:rw,nosuid,nodev,size=128m \
+            -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig \
+            -e GIT_CONFIG_NOSYSTEM=1 -e XDG_CONFIG_HOME=/tmp/.config \
+            -e XDG_CACHE_HOME=/tmp/.cache \
+            --entrypoint trivy aquasec/trivy:0.76.1 --version
 
       - name: Validate audit harness syntax
         run: |
