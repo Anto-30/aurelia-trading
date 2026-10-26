@@ -196,16 +196,21 @@ class AuditDockerEnvironmentTests(unittest.TestCase):
             scratch = Path(tmp) / "scratch"
             cache = Path(tmp) / "cache"
             cache.mkdir()
+            observed_dockerfiles = []
+
+            def capture_dockerfile(*_args, **_kwargs):
+                dockerfile = scratch / "trivy-preflight-source" / "Dockerfile"
+                if dockerfile.exists():
+                    observed_dockerfiles.append(dockerfile.read_text(encoding="utf-8"))
+
             with patch("tools.audit_external_candidates.run_command") as run:
+                run.side_effect = capture_dockerfile
                 result = prepare_trivy_databases(
                     scratch, cache, "aquasec/trivy:0.76.1"
                 )
 
         self.assertEqual(result["status"], "READY")
-        self.assertEqual(
-            (scratch / "trivy-preflight-source" / "Dockerfile").read_text(encoding="utf-8"),
-            "FROM scratch\n",
-        )
+        self.assertEqual(observed_dockerfiles, ["FROM scratch\n", "FROM scratch\n"])
         self.assertEqual(result["candidate_source_mounted"], False)
         self.assertEqual(result["java_db_policy"], "ON_DEMAND_FOR_JAR_CONTAINING_CANDIDATES")
         self.assertEqual(run.call_count, 2)
