@@ -293,12 +293,12 @@
         "sast_findings": {
           "type": "integer",
           "minimum": 0,
-          "description": "Semgrep findings across p/default and p/secrets; finding instances are not deduplicated or human-confirmed."
+          "description": "Semgrep finding instances from p/default and p/secrets; counts are not deduplicated and require manual triage."
         },
         "secret_scan_findings": {
           "type": "integer",
           "minimum": 0,
-          "description": "Trivy secret-detection finding instances; they are not necessarily confirmed credential leaks and require manual triage."
+          "description": "Trivy secret-detection instances; these are not confirmed credential exposures and require manual triage."
         },
         "vulnerability_findings": {
           "type": "integer",
@@ -348,7 +348,7 @@
         "semgrep_scanner_errors": {
           "type": "integer",
           "minimum": 0,
-          "description": "Semgrep parser, timeout, or matching error records reported by the scanner."
+          "description": "Semgrep parser, matching, syntax or timeout error records in this run; any non-zero count means that candidate scan coverage is partial."
         },
         "scan_candidate_count": {
           "type": "integer",
@@ -372,6 +372,32 @@
         },
         "audit_artifact_zip_sha256": {
           "$ref": "#/$defs/hash"
+        },
+        "semgrep_partial_candidate_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of candidate scans with Semgrep scanner error records."
+        },
+        "trivy_secret_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy secret-detection finding instances; not confirmed credential exposures."
+        },
+        "semgrep_error_severity_findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "semgrep_warning_severity_findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "semgrep_info_severity_findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "semgrep_unknown_severity_findings": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "allOf": [
