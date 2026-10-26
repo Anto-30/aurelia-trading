@@ -121,7 +121,16 @@ class CertificationEvidenceTest(unittest.TestCase):
         for marker in REQUIRED_RUNTIME_MARKERS:
             self._write(root, marker, "runtime")
         for relative in REQUIRED_EVIDENCE_FILES:
-            self._write(root, relative, json.dumps(self._passing_record()))
+            record = self._passing_record()
+            if relative == "evidence/soak_3600s.json":
+                record["environment"] = "production"
+                record["provenance"]["origin"] = "runtime"
+                record["provenance"]["deployment_id"] = "DEPLOY-TEST"
+                record["classification"] = "PRODUCTION_VERIFIED"
+                record["record_hash"] = payload_sha256(
+                    {key: value for key, value in record.items() if key != "record_hash"}
+                )
+            self._write(root, relative, json.dumps(record))
 
     def test_missing_bundle_blocks(self):
         with tempfile.TemporaryDirectory() as d:
@@ -146,6 +155,24 @@ class CertificationEvidenceTest(unittest.TestCase):
             status, detail = validate_evidence_bundle(root)
             self.assertEqual(status, "BLOCKED")
             self.assertIn("repository-tracked", detail)
+
+    def test_ci_soak_simulation_cannot_satisfy_production_soak_gate(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            path = root / "evidence/soak_3600s.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record["environment"] = "ci"
+            record["provenance"]["origin"] = "ci"
+            record["classification"] = "SIMULATION_VERIFIED"
+            record["record_hash"] = payload_sha256(
+                {key: value for key, value in record.items() if key != "record_hash"}
+            )
+            path.write_text(json.dumps(record), encoding="utf-8")
+
+            status, detail = validate_evidence_bundle(root)
+            self.assertEqual(status, "BLOCKED")
+            self.assertIn("production/runtime soak", detail)
 
     def test_incomplete_domain_proof_blocks(self):
         with tempfile.TemporaryDirectory() as d:
