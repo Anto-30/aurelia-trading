@@ -84,7 +84,15 @@ jobs:
       - name: Run repository certification gate
         id: certification
         continue-on-error: true
-        run: python -m assurance.certification_gate
+        run: python -m assurance.certification_gate --json-out artifacts/certification-report.json
+      - name: Upload versioned certification report
+        if: always() && hashFiles('artifacts/certification-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-certification-report-v1
+          path: artifacts/certification-report.json
+          if-no-files-found: error
+
       - name: Preserve fail-closed certification semantics
         if: always()
         run: |
