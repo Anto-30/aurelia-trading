@@ -66,6 +66,18 @@ class TestDerivAdapterContract(unittest.TestCase):
      asyncio.run(a.submit_authorized_order({"proposal_id":"safe-test-proposal","stake":price}))
     a.request.assert_not_awaited()
 
+
+ def test_buy_rejects_integer_price_that_overflows_float_conversion(self):
+  import asyncio
+  from unittest.mock import AsyncMock
+  from runtime.adapters.deriv_adapter import DerivProtocolError
+  a=DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/real")
+  a.authorized=True
+  a.request=AsyncMock()
+  with self.assertRaisesRegex(DerivProtocolError,"BUY_PRICE_INVALID"):
+   asyncio.run(a.submit_authorized_order({"proposal_id":"safe-test-proposal","stake":10**400}))
+  a.request.assert_not_awaited()
+
 if __name__=="__main__":unittest.main()
 
 
