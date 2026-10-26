@@ -47,6 +47,7 @@ jobs:
 
       - name: Smoke test isolated scanner command lines
         shell: bash
+        timeout-minutes: 5
         run: |
           set -euo pipefail
           smoke_root=/tmp/aurelia-semgrep-smoke
@@ -62,7 +63,7 @@ jobs:
           YAML
           # Reproduce the real read-only Git worktree path using only a harmless local fixture.
           git -C "$smoke_root/src" init --quiet
-          docker run --rm --network none --read-only --cap-drop=ALL \
+          timeout --foreground --kill-after=10s 120s docker run --rm --network none --read-only --cap-drop=ALL \
             --security-opt=no-new-privileges --pids-limit=128 --memory=1g \
             --user "$(id -u):$(id -g)" \
             --tmpfs /tmp:rw,nosuid,nodev,size=128m \
@@ -82,7 +83,7 @@ jobs:
           assert not report.get("errors"), "Semgrep returned scanner errors"
           print("SEMGREP_READ_ONLY_SOURCE_SMOKE=PASS")
           PY
-          docker run --rm --network none --read-only --cap-drop=ALL \
+          timeout --foreground --kill-after=10s 30s docker run --rm --network none --read-only --cap-drop=ALL \
             --security-opt=no-new-privileges --pids-limit=128 --memory=1g \
             --user "$(id -u):$(id -g)" \
             --tmpfs /tmp:rw,nosuid,nodev,size=128m \
