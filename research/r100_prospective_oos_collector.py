@@ -487,10 +487,12 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         and not state["pending"]
     )
     state["manifest"]["sealed"] = bool(campaign_complete)
+    transport_events = list(state.get("transport_events", []))
     archive_hash = canonical_hash({
         "manifest": state["manifest"],
         "observations": rows,
         "quote_observations": state["quote_observations"],
+        "transport_events": transport_events,
     })
     return {
         "schema": "aurelia.r100.prospective_oos.report.v1",
@@ -520,6 +522,11 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
             "reason": "Public proposal quotes establish quoted stake/payout terms, but do not prove fill, realized slippage, fees or net live expectancy.",
         },
         "qualification_status": qualification_status,
+        "transport_health": {
+            "recorded_events": len(transport_events),
+            "reconnected_events": sum(1 for event in transport_events if event.get("status") == "RECONNECTED"),
+            "latest_event": transport_events[-1] if transport_events else None,
+        },
         "strategy_live_eligible": False,
         "execution_authorized": False,
         "capital_authority": False,
