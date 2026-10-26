@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import os
+from urllib.parse import parse_qs, urlsplit
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
@@ -76,9 +77,9 @@ class DerivAdapter:
         timeout_seconds: float = 10.0,
     ):
         self.ws_url = ws_url or os.getenv("DERIV_WS_URL", "")
-        self.auth_token = (
-            auth_token if auth_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
-        )
+        # PAT/Bearer tokens are for REST OTP issuance only. Never retain or send
+        # them over the authenticated WebSocket; the one-use OTP binds that session.
+        self.auth_token = ""
         self.expected_loginid = (
             expected_loginid or get_optional_secret("DERIV_EXPECTED_LOGINID")
         )
@@ -112,6 +113,10 @@ class DerivAdapter:
         self._validate_environment_url(self.ws_url)
         if not self.expected_currency:
             raise DerivProtocolError("EXPECTED_ACCOUNT_CURRENCY_REQUIRED")
+        query = parse_qs(urlsplit(self.ws_url).query, keep_blank_values=True)
+        otp_values = query.get("otp", [])
+        if len(otp_values) != 1 or not otp_values[0].strip():
+            raise DerivProtocolError("DERIV_OTP_URL_REQUIRED")
         try:
             self.transport = DerivWebSocketTransport(
                 self.ws_url,
@@ -119,12 +124,10 @@ class DerivAdapter:
             )
             await self.transport.connect()
 
-            if self.auth_token:
-                reply = await self._tracked_request("authorize", {"authorize": self.auth_token})
-                identity_payload = reply.get("authorize") or {}
-            else:
-                reply = await self._tracked_request("balance", {"balance": 1})
-                identity_payload = reply.get("balance") or {}
+            # Authentication is already bound to the one-use OTP URL. New API
+            # WebSocket requests must not send legacy authorize/loginid payloads.
+            reply = await self._tracked_request("balance", {"balance": 1})
+            identity_payload = reply.get("balance") or {}
 
             loginid = str(
                 identity_payload.get("loginid")
