@@ -47,11 +47,35 @@ def summarize_latencies(values: Iterable[float]) -> dict[str, float | int]:
     }
 
 
-def latency_verdict(summary: dict[str, float | int], budget_ms: float | None) -> str:
+MIN_P99_SAMPLE_COUNT = 1000
+
+
+def is_immutable_commit_sha(revision: str | None) -> bool:
+    """Return true only for a full 40-character hexadecimal model commit SHA."""
+    if revision is None or len(revision) != 40:
+        return False
+    try:
+        int(revision, 16)
+    except ValueError:
+        return False
+    return True
+
+
+def latency_verdict(
+    summary: dict[str, float | int],
+    budget_ms: float | None,
+    *,
+    model_revision_pinned: bool = False,
+) -> str:
+    """Fail closed when latency evidence lacks a frozen budget, SHA pin, or sample count."""
     if budget_ms is None:
         return "NOT_EVALUATED_NO_FROZEN_BUDGET"
     if not math.isfinite(budget_ms) or budget_ms <= 0:
         raise ValueError("latency budget must be positive and finite")
+    if not model_revision_pinned:
+        return "NOT_EVALUATED_UNPINNED_MODEL_REVISION"
+    if int(summary.get("count", 0)) < MIN_P99_SAMPLE_COUNT:
+        return "NOT_EVALUATED_INSUFFICIENT_SAMPLES"
     return "PASS" if float(summary["p99_ms"]) <= budget_ms else "FAIL"
 
 
@@ -127,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--prediction-length", type=int, default=1)
     parser.add_argument("--device", choices=("cpu", "cuda", "mps"), default="cpu")
     parser.add_argument("--warmup", type=int, default=10)
-    parser.add_argument("--runs", type=int, default=100)
+    parser.add_argument("--runs", type=int, default=MIN_P99_SAMPLE_COUNT)
     parser.add_argument("--latency-budget-ms", type=float, default=None,
                         help="Pre-registered p99 budget; if omitted no PASS/FAIL verdict is issued")
     parser.add_argument("--model-id", default="NX-AI/TiRex-2")
@@ -201,6 +225,8 @@ def main(argv: list[str] | None = None) -> int:
         "created_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "model_id": args.model_id,
         "model_revision": args.revision or "UNPINNED_MUTABLE_DEFAULT",
+        "model_revision_is_immutable_commit_sha": is_immutable_commit_sha(args.revision),
+        "minimum_warmed_samples_for_p99_verdict": MIN_P99_SAMPLE_COUNT,
         "device": args.device,
         "compile_enabled": args.compile,
         "symbols": symbols,
@@ -218,7 +244,11 @@ def main(argv: list[str] | None = None) -> int:
         "warmed_runs": args.runs,
         "warmed_end_to_end_latency": summary,
         "latency_budget_ms": args.latency_budget_ms,
-        "latency_verdict_based_on_p99": latency_verdict(summary, args.latency_budget_ms),
+        "latency_verdict_based_on_p99": latency_verdict(
+            summary,
+            args.latency_budget_ms,
+            model_revision_pinned=is_immutable_commit_sha(args.revision),
+        ),
         "hardware": _hardware_metadata(torch, args.device),
         "measurement_scope": "input-object-construction plus local model forecast; excludes Deriv network/API, strategy, Layer 6, and broker latency",
         "broker_calls": 0,
