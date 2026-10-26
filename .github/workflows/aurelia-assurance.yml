@@ -15,8 +15,8 @@ jobs:
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: Install runtime dependencies
@@ -48,7 +48,7 @@ jobs:
 
       - name: Upload public Deriv transport evidence
         if: always() && hashFiles('artifacts/deriv_public_transport.json') != ''
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: deriv-public-transport-evidence
           path: artifacts/deriv_public_transport.json
@@ -67,7 +67,7 @@ jobs:
 
       - name: Upload current readiness report
         if: always() && hashFiles('artifacts/AURELIA_READINESS.current.json') != ''
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: aurelia-readiness-${{ github.run_id }}
           path: artifacts/AURELIA_READINESS.current.json
@@ -96,7 +96,7 @@ jobs:
         run: python -m assurance.certification_gate --json-out artifacts/certification-report.json
       - name: Upload versioned certification report
         if: always() && hashFiles('artifacts/certification-report.json') != ''
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: aurelia-certification-report-v1
           path: artifacts/certification-report.json
@@ -125,7 +125,7 @@ jobs:
   # Production-scoped credentials are isolated from normal PR/code validation.
   # This job only runs from trusted pushes to main and performs read-only/VERIFY_ONLY checks.
   deriv-verify-only:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true'
     environment: production
     runs-on: ubuntu-latest
     permissions:
@@ -135,8 +135,8 @@ jobs:
       DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
       DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: Install runtime dependencies
@@ -151,7 +151,7 @@ jobs:
       
       - name: Upload Deriv authentication prerequisite evidence
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: deriv-auth-prerequisites
           path: artifacts/deriv_auth_prerequisites.json
@@ -200,7 +200,7 @@ jobs:
       
       - name: Upload authenticated broker account evidence
         if: always() && hashFiles('artifacts/deriv_broker_account_evidence.json') != ''
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: deriv-broker-account-read-only
           path: artifacts/deriv_broker_account_evidence.json
@@ -208,7 +208,7 @@ jobs:
       
       - name: Upload authenticated verify-only lifecycle evidence
         if: always() && hashFiles('artifacts/deriv_transaction_lifecycle.json') != ''
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: deriv-transaction-lifecycle-verify-only
           path: artifacts/deriv_transaction_lifecycle.json
@@ -222,7 +222,7 @@ jobs:
       
       - name: Upload authenticated Deriv evidence
         if: always() && hashFiles('artifacts/deriv_authenticated_session.json') != ''
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: deriv-authenticated-session
           path: artifacts/deriv_authenticated_session.json
