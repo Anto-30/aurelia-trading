@@ -402,6 +402,11 @@
         "semgrep_unknown_severity_findings": {
           "type": "integer",
           "minimum": 0
+        },
+        "semgrep_medium_severity_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Semgrep finding instances whose normalized reported severity is MEDIUM."
         }
       },
       "allOf": [

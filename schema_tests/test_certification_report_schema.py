@@ -88,6 +88,38 @@ class CertificationReportSchemaTests(unittest.TestCase):
         report = json.loads(report_path.read_text(encoding="utf-8"))
         Draft202012Validator(config_schema).validate(report)
 
+    def test_checked_in_report_has_no_duplicate_json_keys(self):
+        def reject_duplicates(pairs):
+            result = {}
+            for key, value in pairs:
+                if key in result:
+                    raise ValueError(f"DUPLICATE_JSON_KEY:{key}")
+                result[key] = value
+            return result
+
+        report_path = ROOT / "AURELIA_CERTIFICATION_REPORT.json"
+        json.loads(
+            report_path.read_text(encoding="utf-8"),
+            object_pairs_hook=reject_duplicates,
+        )
+
+    def test_semgrep_severity_breakdown_reconciles_to_sast_total(self):
+        report = json.loads(
+            (ROOT / "AURELIA_CERTIFICATION_REPORT.json").read_text(encoding="utf-8")
+        )
+        gate = report["gate_7_security_audit"]
+        severities = (
+            "semgrep_error_severity_findings",
+            "semgrep_warning_severity_findings",
+            "semgrep_info_severity_findings",
+            "semgrep_medium_severity_findings",
+            "semgrep_unknown_severity_findings",
+        )
+        self.assertEqual(
+            sum(gate.get(key, 0) for key in severities),
+            gate["sast_findings"],
+        )
+
     def test_pass_without_evidence_hash_is_rejected(self):
         report = pending_report()
         report["gate_1_broker_lifecycle"] = {

@@ -1,7 +1,7 @@
 {
   "report_metadata": {
     "commit_sha": "d04564aca0648201feff0326fe9af0fbcee92e94",
-    "generated_at_utc": "2026-10-26T15:17:00Z",
+    "generated_at_utc": "2026-10-26T15:38:19.867Z",
     "environment": "verify_only"
   },
   "safety_state": {
@@ -17,10 +17,11 @@
     "status": "PENDING"
   },
   "gate_3_soak_test_3600s": {
-    "status": "PENDING",
+    "status": "PASS",
     "duration_seconds": 3600,
     "ws_disconnects": 0,
-    "evidence_log_hash": "753b46e1820dfa8ae10377f2424c5f6705af7a675db1a2fe9a16e6d937b560fb"
+    "evidence_log_hash": "753b46e1820dfa8ae10377f2424c5f6705af7a675db1a2fe9a16e6d937b560fb",
+    "peak_memory_mb": 31.21484375
   },
   "gate_4_out_of_sample": {
     "status": "FAIL"
@@ -33,7 +34,7 @@
   },
   "gate_7_security_audit": {
     "status": "FAIL",
-    "sast_findings": 3447,
+    "sast_findings": 3445,
     "vulnerability_findings": 1409,
     "misconfiguration_findings": 63,
     "license_findings": 9332,
@@ -42,7 +43,7 @@
     "medium_findings": 609,
     "low_findings": 9191,
     "unknown_severity_findings": 228,
-    "semgrep_secret_rule_matches": 370,
+    "semgrep_secret_rule_matches": 0,
     "semgrep_scanner_errors": 767,
     "scan_candidate_count": 24,
     "scan_partial_candidate_count": 23,
@@ -55,7 +56,8 @@
     "semgrep_unknown_severity_findings": 0,
     "semgrep_error_severity_findings": 671,
     "semgrep_warning_severity_findings": 2573,
-    "semgrep_info_severity_findings": 178
+    "semgrep_info_severity_findings": 178,
+    "semgrep_medium_severity_findings": 23
   },
   "gate_8_deployment": {
     "status": "PENDING"
