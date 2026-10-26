@@ -1,0 +1,40 @@
+name: AURELIA R100 Transport Regression
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "runtime/adapters/deriv_ws.py"
+      - "research/r100_prospective_oos_collector.py"
+      - "research/labs/tests/test_r100_prospective_oos_collector.py"
+      - "tests/test_deriv_ws_transport_diagnostics.py"
+      - ".github/workflows/r100-transport-regression.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-r100-transport-regression-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  transport-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: requirements.txt
+      - name: Install only runtime dependency pins
+        run: python -m pip install -r requirements.txt
+      - name: Compile changed runtime and research modules
+        run: python -m py_compile runtime/adapters/deriv_ws.py research/r100_prospective_oos_collector.py tests/test_deriv_ws_transport_diagnostics.py
+      - name: Test WebSocket failure diagnostics and bounded reconnect
+        run: python -m unittest discover -s tests -p "test_deriv_ws_transport_diagnostics.py" -v
+      - name: Test prospective collector invariants
+        run: python -m unittest discover -s research/labs/tests -p "test_r100_prospective_oos_collector.py" -v
