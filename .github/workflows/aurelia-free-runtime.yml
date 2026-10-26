@@ -68,7 +68,7 @@ jobs:
 
   authenticated-deriv-evidence:
     # Protected production jobs need explicit human approval; never enqueue them from the recurring public worker.
-    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
     # Load production-scoped Actions secrets for authenticated verification only.
     environment: production
     runs-on: ubuntu-latest
@@ -121,7 +121,7 @@ jobs:
 
   deriv-lifecycle-verify-only:
     # Protected lifecycle evidence is manual-only for the same reason as authenticated session evidence.
-    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
     # Authenticated broker lifecycle verification: proposal + control-chain only.
     # This job must never submit a buy transaction or grant capital authority.
     environment:
@@ -172,7 +172,7 @@ jobs:
 
   whatsapp-alert-smoke:
     # This sends a real message; keep it as an explicit, reviewed manual smoke test.
-    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
