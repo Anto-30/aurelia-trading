@@ -327,7 +327,8 @@ def sanitize_semgrep(raw_report: dict[str, Any]) -> dict[str, Any]:
     for item in raw_report.get("results") or []:
         extra = item.get("extra") or {}
         metadata = extra.get("metadata") or {}
-        severity = str(metadata.get("severity") or "UNKNOWN").upper()
+        # Semgrep's JSON result severity is on `extra.severity`; rule metadata may not duplicate it.
+        severity = str(extra.get("severity") or metadata.get("severity") or "UNKNOWN").upper()
         severity_counts[severity] += 1
         safe_findings.append({
             "rule_id": str(item.get("check_id") or "UNKNOWN")[:500],
