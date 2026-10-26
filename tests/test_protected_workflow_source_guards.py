@@ -7,6 +7,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+REQUIRED_CREDENTIAL_GATES = (
+    "AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true'",
+    "AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true'",
+    "AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true'",
+)
+
 
 # Job-level conditions are deliberate defense in depth. Environment reviewers
 # must still approve protected jobs; these assertions prevent a future workflow
@@ -65,6 +71,12 @@ class ProtectedWorkflowSourceGuardTests(unittest.TestCase):
                 with self.subTest(path=path, job=job_name):
                     block = _job_block(path, job_name)
                     self.assertIn(guard, block)
+                    for gate in REQUIRED_CREDENTIAL_GATES:
+                        self.assertIn(
+                            gate,
+                            block,
+                            msg=f"missing owner verification gate {gate!r} in {path}:{job_name}",
+                        )
                     secret_binding_index = block.find("${{ secrets.")
                     self.assertGreaterEqual(
                         secret_binding_index,
@@ -85,9 +97,12 @@ class ProtectedWorkflowSourceGuardTests(unittest.TestCase):
     def test_whatsapp_smoke_is_main_only_without_assuming_production_environment(self):
         block = _job_block(".github/workflows/aurelia-free-runtime.yml", "whatsapp-alert-smoke")
         self.assertIn(
-            "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}",
+            "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}",
             block,
         )
+        for gate in REQUIRED_CREDENTIAL_GATES:
+            self.assertIn(gate, block)
+        self.assertIn("environment: production", block)
 
     def test_general_assurance_job_has_no_production_environment_or_secrets(self):
         block = _job_block(".github/workflows/aurelia-assurance.yml", "assurance")
