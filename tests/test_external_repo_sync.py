@@ -30,7 +30,7 @@ class ExternalRepositorySyncTests(unittest.TestCase):
         self.assertIsNone(result["git_probe_error"])
         sleep.assert_not_called()
 
-    @patch("tools.external_repo_sync.urllib.request.urlopen")
+    @patch("tools.external_repo_sync.urlopen")
     @patch("tools.external_repo_sync.time.sleep")
     @patch("tools.external_repo_sync.subprocess.run")
     def test_public_rest_fallback_recovers_git_repository_not_found(self, run_git, sleep, urlopen):
@@ -49,7 +49,7 @@ class ExternalRepositorySyncTests(unittest.TestCase):
         sleep.assert_not_called()
         self.assertEqual(urlopen.call_count, 1)
 
-    @patch("tools.external_repo_sync.urllib.request.urlopen")
+    @patch("tools.external_repo_sync.urlopen")
     @patch("tools.external_repo_sync.time.sleep")
     @patch("tools.external_repo_sync.subprocess.run")
     def test_transient_git_failure_is_retried_before_rest_fallback(self, run_git, sleep, urlopen):
@@ -72,7 +72,7 @@ class ExternalRepositorySyncTests(unittest.TestCase):
         self.assertEqual(result["error"], "INVALID_REPOSITORY_SOURCE")
         run_git.assert_not_called()
 
-    @patch("tools.external_repo_sync.urllib.request.urlopen")
+    @patch("tools.external_repo_sync.urlopen")
     @patch("tools.external_repo_sync.subprocess.run")
     def test_rest_404_remains_a_blocking_failure(self, run_git, urlopen):
         run_git.return_value = subprocess.CompletedProcess(
