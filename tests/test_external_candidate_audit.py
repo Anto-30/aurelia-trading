@@ -93,6 +93,22 @@ class SemgrepCoverageTests(unittest.TestCase):
         self.assertEqual(report["scanner_error_count"], 1)
         self.assertNotIn("sensitive raw diagnostic", str(report))
 
+    def test_semgrep_nested_error_type_does_not_leak_source_paths(self):
+        report = sanitize_semgrep({
+            "version": "test",
+            "results": [],
+            "errors": [{
+                "level": "warn",
+                "code": 3,
+                "type": ["PartialParsing", [{"path": "/src/private/workflow.yml", "line": 4}]],
+                "message": "raw parser message",
+            }],
+        })
+        self.assertEqual(report["status"], "PARTIAL_BLOCKED")
+        self.assertEqual(report["scanner_errors"][0]["type"], "PartialParsing")
+        self.assertNotIn("/src/private/workflow.yml", json.dumps(report))
+        self.assertNotIn("raw parser message", json.dumps(report))
+
 
 class AuditDockerEnvironmentTests(unittest.TestCase):
     def test_git_global_config_uses_writable_container_tmpfs(self):
