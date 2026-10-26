@@ -125,7 +125,7 @@ jobs:
 
           observations="/tmp/aurelia-soak-observations.ndjson"
           mkdir -p evidence /tmp/aurelia
-          rm -f evidence/soak_3600s.json aurelia-3600s-soak-evidence.json "$observations"
+          rm -f evidence/nonproduction_soak_3600s.json aurelia-3600s-soak-evidence.json "$observations"
           : > "$observations"
 
           health_filter='
@@ -249,7 +249,7 @@ jobs:
 
           python -m assurance.nonproduction_soak_evidence \
             --observations "$observations" \
-            --out evidence/soak_3600s.json \
+            --out evidence/nonproduction_soak_3600s.json \
             --source-commit "$source_commit" \
             --runtime-image-id "$runtime_image_id" \
             --runtime-instance-id "$runtime_instance_id" \
@@ -264,12 +264,12 @@ jobs:
           from pathlib import Path
           from assurance.certification_evidence import validate_evidence_file
 
-          status, detail = validate_evidence_file(Path.cwd(), "evidence/soak_3600s.json")
+          status, detail = validate_evidence_file(Path.cwd(), "evidence/nonproduction_soak_3600s.json")
           print(f"SOAK_EVIDENCE_VALIDATION={status}:{detail}")
           if status != "PASS":
               raise SystemExit(1)
 
-          record = json.loads(Path("evidence/soak_3600s.json").read_text(encoding="utf-8"))
+          record = json.loads(Path("evidence/nonproduction_soak_3600s.json").read_text(encoding="utf-8"))
           summary = {
               "source_commit": record["source_commit"],
               "runtime_image_id": record["runtime_image_id"],
@@ -298,7 +298,7 @@ jobs:
               "live_execution": record["live_execution"],
               "capital_can_open_new_exposure": record["capital_can_open_new_exposure"],
               "evidence_record_hash": record["record_hash"],
-              "evidence_path": "evidence/soak_3600s.json"
+              "evidence_path": "evidence/nonproduction_soak_3600s.json"
           }
           Path("aurelia-3600s-soak-evidence.json").write_text(
               json.dumps(summary, sort_keys=True, indent=2) + chr(10),
@@ -332,7 +332,7 @@ jobs:
           name: aurelia-non-production-3600s-soak-evidence
           path: |
             aurelia-3600s-soak-evidence.json
-            evidence/soak_3600s.json
+            evidence/nonproduction_soak_3600s.json
             /tmp/aurelia-soak-observations.ndjson
             aurelia-runtime.log
             aurelia-runtime-inspect.json
