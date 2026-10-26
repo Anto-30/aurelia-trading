@@ -86,10 +86,20 @@ class DerivWebSocketTransport:
             raise
         except Exception as exc:
             self._fail_pending(exc)
+            # Surface only safe exception metadata. The raw exception text may
+            # contain server-provided content and must not enter logs or reports.
+            failure: dict[str, Any] = {
+                "code": "TRANSPORT_READER_FAILED",
+                "cause_type": type(exc).__name__,
+            }
+            close_code = getattr(exc, "code", None)
+            if isinstance(close_code, int):
+                failure["close_code"] = close_code
+            error_number = getattr(exc, "errno", None)
+            if isinstance(error_number, int):
+                failure["errno"] = error_number
             for subscription in self._subscriptions.values():
-                subscription.queue.put_nowait(
-                    {"error": {"code": "TRANSPORT_READER_FAILED"}}
-                )
+                subscription.queue.put_nowait({"error": dict(failure)})
         finally:
             self.ws = None
 
