@@ -65,7 +65,7 @@ class TestDerivAdapterContract(unittest.IsolatedAsyncioTestCase):
         adapter.request = AsyncMock(return_value={
             "buy": {"transaction_id": "fixture-transaction", "contract_id": 123}
         })
-        for invalid in (-0.01, float("nan"), float("inf"), True, None, "not-a-price"):
+        for invalid in (-0.01, float("nan"), float("inf"), True, None, "not-a-price", 10**1000):
             with self.subTest(invalid=repr(invalid)):
                 adapter.request.reset_mock()
                 with self.assertRaisesRegex(DerivProtocolError, "ORDER_PRICE_INVALID"):
@@ -74,6 +74,23 @@ class TestDerivAdapterContract(unittest.IsolatedAsyncioTestCase):
                         "stake": invalid,
                     })
                 adapter.request.assert_not_awaited()
+
+    async def test_buy_accepts_zero_price_at_api_boundary(self):
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/demo"
+        )
+        adapter.authorized = True
+        adapter.request = AsyncMock(return_value={
+            "buy": {"transaction_id": "fixture-transaction", "contract_id": 123}
+        })
+        await adapter.submit_authorized_order({
+            "proposal_id": "fixture-proposal",
+            "stake": 0,
+        })
+        adapter.request.assert_awaited_once_with({
+            "buy": "fixture-proposal",
+            "price": 0,
+        })
 
     async def test_buy_uses_new_api_price_without_legacy_identity_fields(self):
         adapter = DerivAdapter(

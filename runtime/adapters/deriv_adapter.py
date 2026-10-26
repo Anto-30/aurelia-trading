@@ -49,6 +49,19 @@ def _required_response_object(
     return value
 
 
+def _validate_nonnegative_order_price(value: Any, error_code: str) -> int | float:
+    """Validate numeric order price without allowing bools, NaN, infinity or overflow."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise DerivProtocolError(error_code)
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise DerivProtocolError(error_code) from exc
+    if not math.isfinite(numeric) or numeric < 0:
+        raise DerivProtocolError(error_code)
+    return value
+
+
 class DerivAdapter:
     """Transport-only Deriv Options API boundary for AURELIA."""
 
@@ -360,14 +373,9 @@ class DerivAdapter:
         proposal_id = payload.get("proposal_id")
         if not isinstance(proposal_id, (str, int)) or not str(proposal_id).strip():
             raise DerivProtocolError("ORDER_REQUIRES_BROKER_PROPOSAL_ID")
-        stake = payload.get("stake")
-        if (
-            isinstance(stake, bool)
-            or not isinstance(stake, (int, float))
-            or not math.isfinite(float(stake))
-            or float(stake) < 0
-        ):
-            raise DerivProtocolError("ORDER_PRICE_INVALID")
+        stake = _validate_nonnegative_order_price(
+            payload.get("stake"), "ORDER_PRICE_INVALID"
+        )
         try:
             reply = await self.request(
                 {"buy": str(proposal_id), "price": stake}
