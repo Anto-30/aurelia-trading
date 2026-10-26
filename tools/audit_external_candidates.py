@@ -321,6 +321,11 @@ def semgrep_coverage_status(errors: list[Any]) -> str:
     return "COMPLETED" if not errors else "PARTIAL_BLOCKED"
 
 
+def audit_exit_code(*, failed_scans: int, partial_scans: int) -> int:
+    """Return success only when all candidate scans complete without coverage errors."""
+    return 0 if failed_scans == 0 and partial_scans == 0 else 2
+
+
 def sanitize_semgrep(raw_report: dict[str, Any]) -> dict[str, Any]:
     safe_findings = []
     severity_counts: Counter[str] = Counter()
@@ -783,7 +788,7 @@ def main() -> int:
     print("AUDIT_SUMMARY_SHA256=" + sha256_file(report_json))
     print("AUDIT_MARKDOWN_SHA256=" + sha256_file(report_md))
     print("ARTIFACT_HASH_MANIFEST_SHA256=" + sha256_file(hashes_path))
-    return 0 if failed_scans == 0 else 2
+    return audit_exit_code(failed_scans=failed_scans, partial_scans=partial_scans)
 
 
 if __name__ == "__main__":
