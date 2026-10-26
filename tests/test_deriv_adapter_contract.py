@@ -186,7 +186,7 @@ class TestDerivAdapterContract(unittest.IsolatedAsyncioTestCase):
         transport = type("FakeTransport", (), {
             "connect": AsyncMock(),
             "request": AsyncMock(return_value={
-                "authorize": {"loginid": "CRREAL"}
+                "balance": {"balance": 100.0, "loginid": "CRREAL"}
             }),
             "close": AsyncMock(),
         })()
