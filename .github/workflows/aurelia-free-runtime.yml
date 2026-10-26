@@ -171,8 +171,9 @@ jobs:
           retention-days: 7
 
   whatsapp-alert-smoke:
-    # This sends a real message; keep it as an explicit, reviewed manual smoke test.
+    # This sends a real message; keep it on the reviewed, protected production environment.
     if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}
+    environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
