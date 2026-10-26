@@ -115,6 +115,63 @@ class TestDerivAdapterContract(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("loginid", sent)
         self.assertNotIn("symbol", sent)
 
+    async def test_otp_bound_connection_uses_balance_without_legacy_authorize(self):
+        transport = type("FakeTransport", (), {
+            "connect": AsyncMock(),
+            "request": AsyncMock(return_value={
+                "balance": {
+                    "balance": 100.0,
+                    "currency": "USD",
+                    "loginid": "CR123",
+                }
+            }),
+            "close": AsyncMock(),
+        })()
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real?otp=FIXTURE_ONLY",
+            auth_token="FIXTURE_PAT_MUST_NOT_BE_SENT_OVER_WEBSOCKET",
+            expected_loginid="CR123",
+            expected_currency="USD",
+        )
+        with patch(
+            "runtime.adapters.deriv_adapter.DerivWebSocketTransport",
+            return_value=transport,
+        ):
+            account = await adapter.connect()
+
+        self.assertEqual(account.loginid, "CR123")
+        self.assertEqual(account.currency, "USD")
+        transport.request.assert_awaited_once_with({"balance": 1, "req_id": 1})
+
+    async def test_authenticated_endpoint_without_otp_fails_before_connect(self):
+        transport = type("FakeTransport", (), {
+            "connect": AsyncMock(),
+            "request": AsyncMock(return_value={
+                "balance": {
+                    "balance": 100.0,
+                    "currency": "USD",
+                    "loginid": "CR123",
+                }
+            }),
+            "close": AsyncMock(),
+        })()
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+            auth_token="",
+            expected_loginid="CR123",
+            expected_currency="USD",
+        )
+        with patch(
+            "runtime.adapters.deriv_adapter.DerivWebSocketTransport",
+            return_value=transport,
+        ) as factory:
+            with self.assertRaisesRegex(
+                DerivProtocolError, "DERIV_OTP_URL_REQUIRED"
+            ):
+                await adapter.connect()
+        factory.assert_not_called()
+        transport.connect.assert_not_awaited()
+
     async def test_authenticated_connect_requires_explicit_expected_currency(self):
         adapter = DerivAdapter(
             ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
