@@ -7,6 +7,11 @@ on:
       - "config/external_repo_federation.json"
       - "skills/external-repo-federation/**"
       - ".github/workflows/external-repo-sync.yml"
+  pull_request:
+    paths:
+      - "config/external_repo_federation.json"
+      - "skills/external-repo-federation/**"
+      - ".github/workflows/external-repo-sync.yml"
   schedule:
     - cron: "41 3 * * 1"
   workflow_dispatch:
@@ -36,8 +41,16 @@ jobs:
           assert all(x.get("mode") in {"RESEARCH_ONLY","SANDBOX_ONLY","TOOLCHAIN_ONLY","REFERENCE_ONLY"} for x in repos)
           assert all(x.get("source_url", "").startswith("https://github.com/") for x in repos)
           assert all(x.get("capital_authority", False) is False for x in repos)
+          allowed_sync_status = {"ACTIVE", "QUARANTINED_UNAVAILABLE"}
+          assert all(x.get("sync_status", "ACTIVE") in allowed_sync_status for x in repos)
+          assert all(
+              bool(x.get("sync_status_reason")) and bool(x.get("sync_status_verified_at"))
+              for x in repos if x.get("sync_status") == "QUARANTINED_UNAVAILABLE"
+          )
           print("EXTERNAL_REPO_POLICY=PASS")
           print("EXTERNAL_REPO_COUNT=%d" % len(repos))
+          print("EXTERNAL_REPO_ACTIVE_COUNT=%d" % sum(x.get("sync_status", "ACTIVE") == "ACTIVE" for x in repos))
+          print("EXTERNAL_REPO_QUARANTINED_COUNT=%d" % sum(x.get("sync_status") == "QUARANTINED_UNAVAILABLE" for x in repos))
           PY
       - name: Sync public repository heads
         run: |
@@ -46,6 +59,8 @@ jobs:
           import concurrent.futures, json, subprocess
           from pathlib import Path
           p=json.loads(Path("config/external_repo_federation.json").read_text())
+          active=[r for r in p["repositories"] if r.get("sync_status", "ACTIVE") == "ACTIVE"]
+          quarantined=[r for r in p["repositories"] if r.get("sync_status") == "QUARANTINED_UNAVAILABLE"]
           def check(r):
               try:
                   head=subprocess.check_output(["git","ls-remote",r["source_url"],"HEAD"],text=True,timeout=20).strip()
@@ -54,25 +69,41 @@ jobs:
               except Exception as e:
                   return {"repo":r["repo"],"reachable":False,"error":type(e).__name__}
           with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
-              out=list(pool.map(check,p["repositories"]))
-          print(json.dumps({"schema":"aurelia.external_repo_sync.v1","repositories":out},indent=2))
+              out=list(pool.map(check,active))
+          out.extend({
+              "repo": r["repo"],
+              "reachable": None,
+              "status": "QUARANTINED_UNAVAILABLE",
+              "reason": r["sync_status_reason"],
+              "last_known_head_commit": r.get("head_commit"),
+              "verified_at": r.get("sync_status_verified_at"),
+          } for r in quarantined)
+          print(json.dumps({
+              "schema":"aurelia.external_repo_sync.v1",
+              "active_repository_count":len(active),
+              "quarantined_repository_count":len(quarantined),
+              "repositories":out
+          },indent=2))
           PY
           python - <<'PY'
           import json
           from pathlib import Path
           p=json.loads(Path("config/external_repo_federation.json").read_text())
           x=json.load(open("/tmp/external-repo-sync.json"))
-          bad=[r for r in x["repositories"] if not r.get("reachable")]
-          unresolved=[r["repo"] for r in p["repositories"] if r.get("head_commit") == "SYNC_REQUIRED"]
-          print("EXTERNAL_REPO_REACHABLE=%d/%d"%(len(x["repositories"])-len(bad),len(x["repositories"])))
-          print("EXTERNAL_REPO_PINNED=%d/%d"%(len(p["repositories"])-len(unresolved),len(p["repositories"])))
-          print("EXTERNAL_REPO_UNRESOLVED_PIN_COUNT=%d"%len(unresolved))
+          bad=[r for r in x["repositories"] if r.get("status") != "QUARANTINED_UNAVAILABLE" and not r.get("reachable")]
+          active=[r for r in p["repositories"] if r.get("sync_status", "ACTIVE") == "ACTIVE"]
+          unresolved=[r["repo"] for r in active if r.get("head_commit") == "SYNC_REQUIRED"]
+          active_results=[r for r in x["repositories"] if r.get("status") != "QUARANTINED_UNAVAILABLE"]
+          print("EXTERNAL_REPO_ACTIVE_REACHABLE=%d/%d"%(sum(bool(r.get("reachable")) for r in active_results),len(active_results)))
+          print("EXTERNAL_REPO_QUARANTINED_COUNT=%d"%sum(r.get("status") == "QUARANTINED_UNAVAILABLE" for r in x["repositories"]))
+          print("EXTERNAL_REPO_ACTIVE_PINNED=%d/%d"%(len(active)-len(unresolved),len(active)))
+          print("EXTERNAL_REPO_ACTIVE_UNRESOLVED_PIN_COUNT=%d"%len(unresolved))
           if bad:
-              print("UNREACHABLE=", [r["repo"] for r in bad])
+              print("ACTIVE_UNREACHABLE=", [r["repo"] for r in bad])
               raise SystemExit(1)
           PY
       - name: Upload sync snapshot
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: aurelia-external-repo-sync-${{ github.run_id }}
           path: /tmp/external-repo-sync.json
