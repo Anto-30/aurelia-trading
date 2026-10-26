@@ -9,7 +9,7 @@ from assurance.certification_evidence import (
     REQUIRED_RUNTIME_MARKERS,
     validate_evidence_bundle,
 )
-from assurance.certification_gate import _overall_status, build_report
+from assurance.certification_gate import _overall_status, build_report, evaluate_repository
 from assurance.evidence_writer import payload_sha256
 
 
@@ -249,6 +249,33 @@ class CertificationReportSchemaTest(unittest.TestCase):
         for item in report["results"]:
             self.assertEqual(set(item), set(result_schema["required"]))
             self.assertIn(item["status"], result_schema["properties"]["status"]["enum"])
+
+
+class CurrentRepositoryCertificationSchemaTest(unittest.TestCase):
+    def test_real_repository_report_matches_canonical_schema_contract(self):
+        root = Path(__file__).resolve().parents[1]
+        report = build_report(evaluate_repository(root))
+        schema_path = root / "schemas" / "aurelia.certification-report.v1.schema.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(set(schema["required"]), set(report))
+        properties = schema["properties"]
+        self.assertEqual(properties["schema"]["const"], report["schema"])
+        self.assertEqual(properties["repository"]["const"], report["repository"])
+        self.assertIs(report["final_execution_authorization"], False)
+        self.assertIs(properties["final_execution_authorization"]["const"], False)
+        self.assertEqual(report["live_execution"], "BLOCKED")
+        self.assertEqual(properties["live_execution"]["const"], "BLOCKED")
+        self.assertIn(report["certification_result"], properties["certification_result"]["enum"])
+
+        item_schema = properties["results"]["items"]
+        self.assertGreaterEqual(len(report["results"]), item_schema.get("minItems", 0))
+        for item in report["results"]:
+            self.assertEqual(set(item_schema["required"]), set(item))
+            self.assertIn(item["status"], item_schema["properties"]["status"]["enum"])
+            self.assertIsInstance(item["name"], str)
+            self.assertTrue(item["name"])
+            self.assertIsInstance(item["detail"], str)
 
 
 if __name__ == "__main__":
