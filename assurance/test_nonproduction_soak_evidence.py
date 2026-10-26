@@ -47,11 +47,11 @@ def _write_observations(path: Path, *, fault: str | None = None) -> None:
 class NonProductionSoakEvidenceTests(unittest.TestCase):
     def test_one_hour_soak_is_manual_only_on_main(self):
         workflow = (ROOT / ".github" / "workflows" / "non-production-3600s-soak.yml").read_text(encoding="utf-8")
-        self.assertIn("on:\\n  workflow_dispatch:\\n", workflow)
+        self.assertIn("on:\n  workflow_dispatch:\n", workflow)
         self.assertIn("if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}", workflow)
         triggers = workflow.split("permissions:", 1)[0]
-        self.assertNotIn("\\n  push:", triggers)
-        self.assertNotIn("\\n  schedule:", triggers)
+        self.assertNotIn("\n  push:", triggers)
+        self.assertNotIn("\n  schedule:", triggers)
 
     def _write(self, root: Path, *, duration_seconds: int = 3600, fault: str | None = None) -> Path:
         observations = root / "observations.ndjson"
