@@ -9,6 +9,17 @@ class TestDerivAdapterContract(unittest.TestCase):
   from runtime.adapters.deriv_adapter import DerivProtocolError
   a=DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/real",expected_currency="")
   with self.assertRaisesRegex(DerivProtocolError,"EXPECTED_ACCOUNT_CURRENCY_REQUIRED"):asyncio.run(a.connect())
+ def test_authenticated_connect_requires_expected_account_id_before_transport(self):
+  import asyncio
+  from unittest.mock import patch
+  from runtime.adapters.deriv_adapter import DerivProtocolError
+  with patch("runtime.adapters.deriv_adapter.get_optional_secret",return_value=""):
+   a=DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/real",expected_currency="USD")
+   with patch("runtime.adapters.deriv_adapter.DerivWebSocketTransport") as transport_factory:
+    with self.assertRaisesRegex(DerivProtocolError,"EXPECTED_ACCOUNT_ID_REQUIRED"):
+     asyncio.run(a.connect())
+    transport_factory.assert_not_called()
+
  def test_missing_broker_currency_fails_closed(self):
   import asyncio
   from types import SimpleNamespace
