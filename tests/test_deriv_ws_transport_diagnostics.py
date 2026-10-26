@@ -60,6 +60,8 @@ class DerivTransportDiagnosticsTests(unittest.TestCase):
             transport = DerivWebSocketTransport(
                 "wss://api.derivws.com/trading/v1/options/ws/public"
             )
+            # Mark the transport connected so the heartbeat loop performs one ping.
+            transport.ws = object()
             with (
                 patch(
                     "runtime.adapters.deriv_ws.asyncio.sleep",
