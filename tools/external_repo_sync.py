@@ -17,6 +17,10 @@ from urllib.request import Request, urlopen
 
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+UNAVAILABLE_REFERENCE_ONLY = {
+    "NetroIndonesia/freebuff2api": "The public GitHub REST repository endpoint returned HTTP 404 on 2026-10-26. Retain the last known pin for provenance only; do not install or execute. Re-enable sync only after independent URL and commit verification.",
+    "0xgetz/freebuff-9router": "The public GitHub REST repository endpoint returned HTTP 404 on 2026-10-26. Retain the last known pin for provenance only; do not install or execute. Re-enable sync only after independent URL and commit verification.",
+}
 
 
 def _validate_source(record: dict[str, Any]) -> tuple[str, str] | None:
@@ -86,6 +90,34 @@ def check_repository(record: dict[str, Any], *, git_timeout: int = 20) -> dict[s
             "error": "INVALID_REPOSITORY_SOURCE",
         }
     repo, source_url = validated
+    if record.get("sync_enabled") is False:
+        expected_reason = UNAVAILABLE_REFERENCE_ONLY.get(repo)
+        if (
+            record.get("mode") != "REFERENCE_ONLY"
+            or not expected_reason
+            or record.get("sync_exemption_reason") != expected_reason
+            or not record.get("sync_exemption_observed_at_utc")
+        ):
+            return {
+                "repo": repo,
+                "reachable": False,
+                "error": "INVALID_REFERENCE_ONLY_EXEMPTION",
+            }
+        # Deliberately not reported as reachable: retain for provenance but
+        # exclude from the active sync denominator pending manual revalidation.
+        return {
+            "repo": repo,
+            "reachable": False,
+            "exempted": True,
+            "status": "REFERENCE_ONLY_UNAVAILABLE",
+            "reason": expected_reason,
+        }
+    if repo in UNAVAILABLE_REFERENCE_ONLY:
+        return {
+            "repo": repo,
+            "reachable": False,
+            "error": "REFERENCE_ONLY_EXEMPTION_MUST_BE_EXPLICIT",
+        }
     git_error = "GIT_PROBE_NONZERO"
 
     # A hard repository-not-found response is not retried through Git; it falls
@@ -175,16 +207,25 @@ def main() -> int:
         json.dumps(output, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    failed = [row for row in results if not row.get("reachable")]
+    exempted = [row for row in results if row.get("exempted") is True]
+    active_results = [row for row in results if row.get("exempted") is not True]
+    failed = [row for row in active_results if not row.get("reachable")]
     unresolved = [
         row for row in repositories
         if row.get("head_commit") == "SYNC_REQUIRED"
     ]
-    print(f"EXTERNAL_REPO_REACHABLE={len(results) - len(failed)}/{len(results)}")
+    print(f"EXTERNAL_REPO_REACHABLE={len(active_results) - len(failed)}/{len(active_results)} active")
+    print(f"EXTERNAL_REPO_TOTAL={len(repositories)}")
+    print(f"EXTERNAL_REPO_REFERENCE_ONLY_EXEMPTIONS={len(exempted)}")
     print(f"EXTERNAL_REPO_PINNED={len(repositories) - len(unresolved)}/{len(repositories)}")
     print(f"EXTERNAL_REPO_UNRESOLVED_PIN_COUNT={len(unresolved)}")
     fallback_count = sum(row.get("reachability_method") == "github_public_rest_fallback" for row in results)
     print(f"EXTERNAL_REPO_REST_FALLBACKS={fallback_count}")
+    if exempted:
+        print("EXEMPTED_REFERENCE_ONLY=" + json.dumps([
+            {"repo": row["repo"], "status": row["status"], "reason": row["reason"]}
+            for row in exempted
+        ], sort_keys=True))
     if failed:
         # Print names and classified error codes only; never echo raw upstream responses.
         print("UNREACHABLE_REPOSITORIES=" + json.dumps([
@@ -193,7 +234,7 @@ def main() -> int:
         ], sort_keys=True))
         print("EXTERNAL_REPO_SYNC=BLOCKED")
         return 1
-    print("EXTERNAL_REPO_SYNC=PASS")
+    print("EXTERNAL_REPO_SYNC=" + ("PASS_WITH_EXPLICIT_REFERENCE_EXEMPTIONS" if exempted else "PASS"))
     return 0
 
 

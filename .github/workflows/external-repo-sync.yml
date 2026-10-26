@@ -48,7 +48,11 @@ jobs:
           assert all(x.get("mode") in {"RESEARCH_ONLY","SANDBOX_ONLY","TOOLCHAIN_ONLY","REFERENCE_ONLY"} for x in repos)
           assert all(x.get("source_url", "").startswith("https://github.com/") for x in repos)
           assert all(x.get("capital_authority", False) is False for x in repos)
+          exemptions = {x["repo"] for x in repos if x.get("sync_enabled") is False}
+          assert exemptions == {"NetroIndonesia/freebuff2api", "0xgetz/freebuff-9router"}
+          assert all(x.get("mode") == "REFERENCE_ONLY" and x.get("sync_exemption_reason") for x in repos if x.get("repo") in exemptions)
           print("EXTERNAL_REPO_POLICY=PASS")
+          print("EXTERNAL_REPO_REFERENCE_ONLY_EXEMPTIONS=%d" % len(exemptions))
           print("EXTERNAL_REPO_COUNT=%d" % len(repos))
           PY
       - name: Run external repository sync regression tests

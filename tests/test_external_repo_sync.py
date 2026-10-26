@@ -84,5 +84,41 @@ class ExternalRepositorySyncTests(unittest.TestCase):
         self.assertEqual(result["error"], "REST_API_HTTP_404")
 
 
+
+    @patch("tools.external_repo_sync.subprocess.run")
+    def test_unavailable_reference_only_source_is_exempted_but_not_counted_reachable(self, run_git):
+        record = {
+            "repo": "NetroIndonesia/freebuff2api",
+            "source_url": "https://github.com/NetroIndonesia/freebuff2api",
+            "mode": "REFERENCE_ONLY",
+            "sync_enabled": False,
+            "sync_exemption_reason": (
+                "The public GitHub REST repository endpoint returned HTTP 404 on 2026-10-26. "
+                "Retain the last known pin for provenance only; do not install or execute. "
+                "Re-enable sync only after independent URL and commit verification."
+            ),
+            "sync_exemption_observed_at_utc": "2026-10-26T09:40:04Z",
+        }
+        result = check_repository(record)
+        self.assertFalse(result["reachable"])
+        self.assertTrue(result["exempted"])
+        self.assertEqual(result["status"], "REFERENCE_ONLY_UNAVAILABLE")
+        run_git.assert_not_called()
+
+    @patch("tools.external_repo_sync.subprocess.run")
+    def test_unknown_or_unapproved_exemption_remains_blocked(self, run_git):
+        record = {
+            "repo": "owner/project",
+            "source_url": "https://github.com/owner/project",
+            "mode": "REFERENCE_ONLY",
+            "sync_enabled": False,
+            "sync_exemption_reason": "please skip",
+            "sync_exemption_observed_at_utc": "2026-10-26T00:00:00Z",
+        }
+        result = check_repository(record)
+        self.assertFalse(result["reachable"])
+        self.assertEqual(result["error"], "INVALID_REFERENCE_ONLY_EXEMPTION")
+        run_git.assert_not_called()
+
 if __name__ == "__main__":
     unittest.main()
