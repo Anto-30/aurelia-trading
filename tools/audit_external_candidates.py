@@ -460,7 +460,7 @@ def semgrep_error_type_counts(errors: list[Any]) -> list[dict[str, Any]]:
         raw_code = item.get("code")
         if type(raw_code) is int:
             code: int | str = raw_code
-        elif isinstance(raw_code, str) and re.fullmatch(r"\\d{1,6}", raw_code):
+        elif isinstance(raw_code, str) and re.fullmatch(r"\d{1,6}", raw_code):
             code = int(raw_code)
         else:
             code = "UNKNOWN"
