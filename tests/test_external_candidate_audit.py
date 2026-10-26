@@ -162,6 +162,9 @@ class AuditDockerEnvironmentTests(unittest.TestCase):
         self.assertFalse(any("/src:ro" in arg for arg in commands[0]))
         self.assertFalse(any("/src:ro" in arg for arg in commands[1]))
         self.assertTrue(any("trivy-preflight-source" in arg for arg in commands[2]))
+        self.assertLess(commands[0].index("image"), commands[0].index("--db-repository"))
+        self.assertLess(commands[1].index("image"), commands[1].index("--java-db-repository"))
+        self.assertLess(commands[2].index("fs"), commands[2].index("--checks-bundle-repository"))
 
     def test_git_global_config_uses_writable_container_tmpfs(self):
         args = docker_common_args(
