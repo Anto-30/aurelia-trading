@@ -11,7 +11,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: aurelia-free-runtime
+  # Scheduled probes must never cancel a manually approved credential-bearing run.
+  # Keep overlapping runs isolated by event type while still deduplicating each type.
+  group: aurelia-free-runtime-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
