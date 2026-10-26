@@ -4,7 +4,7 @@ import os
 import unittest
 from pathlib import Path
 
-from tools.audit_external_candidates import docker_common_args, safe_tool_failure_class
+from tools.audit_external_candidates import docker_common_args, safe_tool_failure_class, trivy_database_args
 
 
 class AuditDockerEnvironmentTests(unittest.TestCase):
@@ -47,6 +47,31 @@ class AuditDockerEnvironmentTests(unittest.TestCase):
             safe_tool_failure_class("failed to download checks bundle: registry request failed", ""),
             "TRIVY_CHECKS_BUNDLE_FETCH_FAILED",
         )
+
+    def test_trivy_uses_official_vulnerability_database_fallbacks(self):
+        args = trivy_database_args()
+        repositories = [args[i + 1] for i, item in enumerate(args[:-1]) if item == "--db-repository"]
+        self.assertEqual(
+            repositories,
+            [
+                "public.ecr.aws/aquasecurity/trivy-db",
+                "mirror.gcr.io/aquasec/trivy-db",
+                "ghcr.io/aquasecurity/trivy-db",
+                "aquasec/trivy-db",
+            ],
+        )
+
+    def test_trivy_uses_official_java_database_fallbacks_and_checks_bundle(self):
+        args = trivy_database_args()
+        java_repositories = [
+            args[i + 1] for i, item in enumerate(args[:-1]) if item == "--java-db-repository"
+        ]
+        self.assertEqual(len(java_repositories), 4)
+        self.assertEqual(
+            java_repositories[0], "public.ecr.aws/aquasecurity/trivy-java-db"
+        )
+        checks_index = args.index("--checks-bundle-repository")
+        self.assertEqual(args[checks_index + 1], "public.ecr.aws/aquasecurity/trivy-checks")
 
 
 if __name__ == "__main__":
