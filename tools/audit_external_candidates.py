@@ -326,6 +326,23 @@ def audit_exit_code(*, failed_scans: int, partial_scans: int) -> int:
     return 0 if failed_scans == 0 and partial_scans == 0 else 2
 
 
+def safe_semgrep_error_type(error: Any) -> str:
+    """Keep scanner error classifications scalar; Semgrep may nest source paths in its type field."""
+    if not isinstance(error, dict):
+        return "UNKNOWN"
+    raw_type = error.get("type")
+    if isinstance(raw_type, str):
+        return raw_type[:120]
+    if isinstance(raw_type, list):
+        # PartialParsing and some parser diagnostics include nested source ranges and paths.
+        # Retain only the top-level label and never serialize nested structures.
+        for value in raw_type:
+            if isinstance(value, str):
+                return value[:120]
+        return "UNKNOWN"
+    return "UNKNOWN"
+
+
 def sanitize_semgrep(raw_report: dict[str, Any]) -> dict[str, Any]:
     safe_findings = []
     severity_counts: Counter[str] = Counter()
@@ -361,7 +378,7 @@ def sanitize_semgrep(raw_report: dict[str, Any]) -> dict[str, Any]:
         # Raw error messages are omitted to prevent source excerpts or sensitive data leaking.
         "scanner_errors": [
             {
-                "type": (error.get("type") if isinstance(error, dict) else "UNKNOWN"),
+                "type": safe_semgrep_error_type(error),
                 "code": (error.get("code") if isinstance(error, dict) else None),
                 "level": (error.get("level") if isinstance(error, dict) else None),
             }
