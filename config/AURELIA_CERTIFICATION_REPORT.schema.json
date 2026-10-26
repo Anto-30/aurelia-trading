@@ -52,7 +52,8 @@
       "required": [
         "live_execution",
         "final_authorization",
-        "capital_plane_mode"
+        "capital_plane_mode",
+        "research_capital_authority"
       ],
       "properties": {
         "live_execution": {
@@ -63,6 +64,9 @@
         },
         "capital_plane_mode": {
           "const": "VERIFY_ONLY"
+        },
+        "research_capital_authority": {
+          "const": false
         }
       }
     },
