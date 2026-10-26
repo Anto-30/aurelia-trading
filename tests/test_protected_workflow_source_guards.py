@@ -19,26 +19,27 @@ REQUIRED_CREDENTIAL_GATES = (
 # edit from accidentally exposing production credentials to a non-main ref.
 PROTECTED_JOBS = {
     ".github/workflows/aurelia-assurance.yml": {
-        "deriv-verify-only": "if: github.event_name == 'push' && github.ref == 'refs/heads/main'",
+        "deriv-verify-only": "if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true'",
     },
     ".github/workflows/aurelia-free-runtime.yml": {
-        "authenticated-deriv-evidence": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}",
-        "deriv-lifecycle-verify-only": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}",
+        "authenticated-deriv-evidence": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}",
+        "deriv-lifecycle-verify-only": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}",
+        "whatsapp-alert-smoke": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}",
     },
     ".github/workflows/deriv-auth-evidence.yml": {
-        "verify": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}",
+        "verify": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}",
     },
     ".github/workflows/deriv-session-verification.yml": {
-        "verify": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}",
+        "verify": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}",
     },
     ".github/workflows/deriv-verify-only-lifecycle.yml": {
-        "verify-only": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}",
+        "verify-only": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}",
     },
     ".github/workflows/self-hosted-runtime-deploy.yml": {
-        "deploy": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}",
+        "deploy": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}",
     },
     ".github/workflows/secret-presence-report.yml": {
-        "report": "if: ${{ github.ref == 'refs/heads/main' }}",
+        "report": "if: ${{ github.ref == 'refs/heads/main' && vars.AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true' && vars.AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true' && vars.AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true' }}",
     },
 }
 
