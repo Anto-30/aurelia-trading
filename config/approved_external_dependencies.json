@@ -1,0 +1,22 @@
+{
+  "schema": "aurelia.approved_external_dependencies.v1",
+  "status": "NO_CANDIDATES_APPROVED",
+  "generated_date_utc": "2026-10-25",
+  "approved_count": 0,
+  "approved_dependencies": [],
+  "policy": {
+    "default_external_execution": "DENY_BY_DEFAULT",
+    "capital_authority": false,
+    "secret_reading": false,
+    "production_deployment_authority": false,
+    "broker_order_authority": false,
+    "approval_required": "Independent human security/engineering sign-off tied to exact commit SHA and license finding",
+    "zero_findings_is_not_approval": true
+  },
+  "exclusion_references": [
+    "config/excluded_external_candidates.json",
+    "excluded/README.md"
+  ],
+  "audit_manifest": "config/external_candidate_audit_manifest.json",
+  "note": "Empty by design: no candidate has completed the required source/dependency audit and received independent human approval."
+}

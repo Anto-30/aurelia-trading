@@ -1,0 +1,270 @@
+{
+  "schema": "aurelia.external_candidate_audit.v1",
+  "generated_at_utc": "2026-10-25",
+  "purpose": "Point-in-time security/dependency audit manifest for 24 pinned external candidates, including candidates already BLOCKED from adoption. This is not an approved dependency list.",
+  "execution_policy": {
+    "install_candidate_dependencies": false,
+    "execute_candidate_code": false,
+    "run_candidate_builds": false,
+    "run_candidate_tests": false,
+    "initialize_submodules": false,
+    "use_repository_credentials": false,
+    "use_broker_credentials": false,
+    "network_scope": "public GitHub clone/fetch and pinned scanner rule databases only",
+    "findings_disposition": "HUMAN_REVIEW_REQUIRED",
+    "promotion_authority": "independent human reviewer only"
+  },
+  "scanner_plan": {
+    "semgrep_image": "semgrep/semgrep:1.182.0",
+    "trivy_image": "aquasec/trivy:0.76.1",
+    "scans": [
+      "SAST p/default",
+      "secret detection p/secrets",
+      "Trivy filesystem vulnerability/configuration/license/secret scan",
+      "CycloneDX SBOM"
+    ],
+    "raw_scanner_output": "never uploaded; sanitize secret-bearing finding details before artifact creation"
+  },
+  "candidates": [
+    {
+      "repository": "iOfficeAI/OfficeCLI",
+      "commit_sha": "5e3e26278753be846b4b0b2fb0387f42d911553a",
+      "default_branch": "main",
+      "expected_license": "Apache-2.0",
+      "scope_note": "Office document read/edit/automation tool; treat document parsing and macro/formula handling as untrusted input.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/iOfficeAI/OfficeCLI",
+      "pin_source": "https://github.com/iOfficeAI/OfficeCLI/commit/5e3e26278753be846b4b0b2fb0387f42d911553a"
+    },
+    {
+      "repository": "Jia-Ethan/codex-keysmith",
+      "commit_sha": "cfcd96eb727c324ee8649170c43aaa632ff53cb3",
+      "default_branch": "main",
+      "expected_license": "MIT",
+      "scope_note": "Codex instruction deployment and hooks; inspect hook execution, ownership manifests and instruction mutation paths.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/Jia-Ethan/codex-keysmith",
+      "pin_source": "https://github.com/Jia-Ethan/codex-keysmith/commit/cfcd96eb727c324ee8649170c43aaa632ff53cb3"
+    },
+    {
+      "repository": "Loongphy/codex-auth",
+      "commit_sha": "a83059701ee54c4c8f91aa030810b97bd35e254b",
+      "default_branch": "main",
+      "expected_license": "MIT",
+      "scope_note": "Account/session switching tool; do not test with real credentials or export/import actual auth material.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/Loongphy/codex-auth",
+      "pin_source": "https://github.com/Loongphy/codex-auth/commit/a83059701ee54c4c8f91aa030810b97bd35e254b"
+    },
+    {
+      "repository": "openai/codex-security",
+      "commit_sha": "796fa130e92787085ab36aa4313d8c4bd9414560",
+      "default_branch": "main",
+      "expected_license": "Apache-2.0",
+      "scope_note": "Security scanner/SDK; scanner results are advisory until reproducible and reviewed.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/openai/codex-security",
+      "pin_source": "https://github.com/openai/codex-security/commit/796fa130e92787085ab36aa4313d8c4bd9414560"
+    },
+    {
+      "repository": "OpenHands/OpenHands",
+      "commit_sha": "b7fdc6c312039a0b840fdcd34a5c23ca7e65c218",
+      "default_branch": "main",
+      "expected_license": "MIT",
+      "scope_note": "Agent Canvas application; inspect backend authority, sandbox and automation boundaries.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/OpenHands/OpenHands",
+      "pin_source": "https://github.com/OpenHands/OpenHands/commit/b7fdc6c312039a0b840fdcd34a5c23ca7e65c218"
+    },
+    {
+      "repository": "OpenHands/software-agent-sdk",
+      "commit_sha": "d2ee0cdea60825608c2f8906eb54e1d4d264fb42",
+      "default_branch": "main",
+      "expected_license": "MIT",
+      "scope_note": "Agent SDK; review tool execution, workspace isolation, dependency graph and unsafe deserialization.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/OpenHands/software-agent-sdk",
+      "pin_source": "https://github.com/OpenHands/software-agent-sdk/commit/d2ee0cdea60825608c2f8906eb54e1d4d264fb42"
+    },
+    {
+      "repository": "OpenHands/extensions",
+      "commit_sha": "1ea389f96e44a7f1db8969b25ec460d02e8fcf09",
+      "default_branch": "main",
+      "expected_license": "MIT",
+      "scope_note": "Untrusted extension/skill registry; no extension activation or code execution is permitted during audit.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/OpenHands/extensions",
+      "pin_source": "https://github.com/OpenHands/extensions/commit/1ea389f96e44a7f1db8969b25ec460d02e8fcf09"
+    },
+    {
+      "repository": "OpenHands/OpenHands-CLI",
+      "commit_sha": "283c6ac3610f4299f405f7389f65766dcb83e12a",
+      "default_branch": "main",
+      "expected_license": "MIT",
+      "scope_note": "Agent CLI; review workspace writes, shell/tool invocation and dependency lockfiles.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/OpenHands/OpenHands-CLI",
+      "pin_source": "https://github.com/OpenHands/OpenHands-CLI/commit/283c6ac3610f4299f405f7389f65766dcb83e12a"
+    },
+    {
+      "repository": "OpenHands/automation",
+      "commit_sha": "2c110703bbe91e4113a57adc1fa64a912ac7f4f8",
+      "default_branch": "main",
+      "expected_license": "MIT",
+      "scope_note": "Beta webhook/scheduler automation service; review webhook auth, tenant and sandbox lifecycle controls.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/OpenHands/automation",
+      "pin_source": "https://github.com/OpenHands/automation/commit/2c110703bbe91e4113a57adc1fa64a912ac7f4f8"
+    },
+    {
+      "repository": "cline/cline",
+      "commit_sha": "40c5d99031fe1128189c5b52e40638d2b7787754",
+      "default_branch": "main",
+      "expected_license": "Apache-2.0",
+      "scope_note": "Coding agent; review tool approval, arbitrary command execution, secrets, workspace and MCP boundaries.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/cline/cline",
+      "pin_source": "https://github.com/cline/cline/commit/40c5d99031fe1128189c5b52e40638d2b7787754"
+    },
+    {
+      "repository": "decolua/9router",
+      "commit_sha": "f39d8f07481ae8518e93175f0ecaaafa61573c6c",
+      "default_branch": "master",
+      "expected_license": "MIT",
+      "scope_note": "Multi-provider LLM router; high risk for credentials, network exposure, browser/runtime downloads and proxy routing.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/decolua/9router",
+      "pin_source": "https://github.com/decolua/9router/commit/f39d8f07481ae8518e93175f0ecaaafa61573c6c"
+    },
+    {
+      "repository": "aaif-goose/goose",
+      "commit_sha": "2b17adc33a7176e701c2fef9578a5fc5834ea89a",
+      "default_branch": "main",
+      "expected_license": "Apache-2.0",
+      "scope_note": "Extensible AI agent; review extension and shell/tool execution trust boundaries.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/aaif-goose/goose",
+      "pin_source": "https://github.com/aaif-goose/goose/commit/2b17adc33a7176e701c2fef9578a5fc5834ea89a"
+    },
+    {
+      "repository": "pressly/goose",
+      "commit_sha": "0aa9878439d23c25b62634b9cb9306a007d326d4",
+      "default_branch": "main",
+      "expected_license": "MIT",
+      "scope_note": "Database migration utility, not the AI agent; likely exclude from AURELIA runtime unless a concrete engineering need is approved.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/pressly/goose",
+      "pin_source": "https://github.com/pressly/goose/commit/0aa9878439d23c25b62634b9cb9306a007d326d4"
+    },
+    {
+      "repository": "gooseworks-ai/goose-skills",
+      "commit_sha": "6d5d5f160c623613d7eb682b6a467beb165cc2a4",
+      "default_branch": "main",
+      "expected_license": "MIT",
+      "scope_note": "Growth/GTM skills and data APIs; treat prompts, scraping routines, hooks and external integrations as untrusted.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/gooseworks-ai/goose-skills",
+      "pin_source": "https://github.com/gooseworks-ai/goose-skills/commit/6d5d5f160c623613d7eb682b6a467beb165cc2a4"
+    },
+    {
+      "repository": "mz-automation/libiec61850",
+      "commit_sha": "6e265c54af66ea686453b6d31c4dcce1cf7ad2bd",
+      "default_branch": "v1.6_develop",
+      "expected_license": "GPL-3.0",
+      "scope_note": "IEC 61850 industrial communications library, unrelated to coding-agent runtime; GPL-3.0 requires legal/license compatibility review.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/mz-automation/libiec61850",
+      "pin_source": "https://github.com/mz-automation/libiec61850/commit/6e265c54af66ea686453b6d31c4dcce1cf7ad2bd"
+    },
+    {
+      "repository": "tag1consulting/goose",
+      "commit_sha": "7bf83ae35a6c3acc666c5a5ea38332ddeb0735d9",
+      "default_branch": "main",
+      "expected_license": "Apache-2.0",
+      "scope_note": "Load-testing framework, not the AI agent; likely exclude from AURELIA runtime unless an explicit test use is approved.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/tag1consulting/goose",
+      "pin_source": "https://github.com/tag1consulting/goose/commit/7bf83ae35a6c3acc666c5a5ea38332ddeb0735d9"
+    },
+    {
+      "repository": "Aider-AI/aider",
+      "commit_sha": "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+      "default_branch": "main",
+      "expected_license": "Apache-2.0",
+      "scope_note": "AI pair-programming agent; inspect command execution, git writes, API key handling and dependency pinning.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/Aider-AI/aider",
+      "pin_source": "https://github.com/Aider-AI/aider/commit/5dc9490bb35f9729ef2c95d00a19ccd30c26339c"
+    },
+    {
+      "repository": "hotovo/aider-desk",
+      "commit_sha": "438e8710fa5f89a9509ce8d4b1c6f314a801b779",
+      "default_branch": "main",
+      "expected_license": "Apache-2.0",
+      "scope_note": "AI software-engineering platform; review agent orchestration and remote execution boundaries.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/hotovo/aider-desk",
+      "pin_source": "https://github.com/hotovo/aider-desk/commit/438e8710fa5f89a9509ce8d4b1c6f314a801b779"
+    },
+    {
+      "repository": "aide/aide",
+      "commit_sha": "db923656149ea64bee63f7e45275322a20c7dbe3",
+      "default_branch": "master",
+      "expected_license": "GPL-2.0",
+      "scope_note": "Repository identity is generic and needs human relevance confirmation; GPL-2.0 compatibility requires review.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/aide/aide",
+      "pin_source": "https://github.com/aide/aide/commit/db923656149ea64bee63f7e45275322a20c7dbe3"
+    },
+    {
+      "repository": "iamfakeguru/agent-md",
+      "commit_sha": "65c6a8e8ca1b2aa3a84fde5b1ea20f1abbbf063f",
+      "default_branch": "main",
+      "expected_license": "MIT",
+      "scope_note": "Agent directive library; instructions are untrusted and must not receive authority over risk, capital or release controls.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/iamfakeguru/agent-md",
+      "pin_source": "https://github.com/iamfakeguru/agent-md/commit/65c6a8e8ca1b2aa3a84fde5b1ea20f1abbbf063f"
+    },
+    {
+      "repository": "Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance",
+      "commit_sha": "6cd9f639ac7f9d914d556738ca3aeeef53618146",
+      "default_branch": "master",
+      "expected_license": "MIT",
+      "scope_note": "BLOCKED intake: legacy exchange trading bot; inspect stale API usage, BinanceKeys.py credential handling, network/order calls, dependency state and secret leakage. Static scan only; never run or connect to credentials.",
+      "intake_status": "BLOCKED",
+      "source_url": "https://github.com/Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance",
+      "pin_source": "https://github.com/Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance/commit/6cd9f639ac7f9d914d556738ca3aeeef53618146"
+    },
+    {
+      "repository": "x1xhlol/system-prompts-and-models-of-ai-tools",
+      "commit_sha": "162db92f54d717d8ebd12292e155aeef32bb4b3c",
+      "default_branch": "main",
+      "expected_license": "GPL-3.0",
+      "scope_note": "BLOCKED intake: third-party AI tool prompt/internal artifact collection. Inspect source provenance, license claims, secret-like content and prompt-injection risks. Never import as trusted system instructions.",
+      "intake_status": "BLOCKED",
+      "source_url": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools",
+      "pin_source": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools/commit/162db92f54d717d8ebd12292e155aeef32bb4b3c"
+    },
+    {
+      "repository": "elder-plinius/CL4R1T4S",
+      "commit_sha": "a4d3da04e63324e794a65500c3e41994fc4ab02e",
+      "default_branch": "main",
+      "expected_license": "AGPL-3.0-only",
+      "scope_note": "BLOCKED intake: third-party AI tool prompt collection under AGPL-3.0. Inspect provenance/license boundaries and prompt-injection risks; never treat collected prompts as trusted instructions.",
+      "intake_status": "BLOCKED",
+      "source_url": "https://github.com/elder-plinius/CL4R1T4S",
+      "pin_source": "https://github.com/elder-plinius/CL4R1T4S/commit/a4d3da04e63324e794a65500c3e41994fc4ab02e"
+    },
+    {
+      "repository": "dyad-sh/dyad",
+      "commit_sha": "1be2b4b6d2c70a4550db7b96e26fc75c50bf5bc0",
+      "default_branch": "main",
+      "expected_license": "Apache-2.0 mixed with FSL-1.1-ALv2 in src/pro",
+      "scope_note": "UNREVIEWED intake: local AI app builder with mixed license. Inspect Electron/sandbox, generated-code handling, MCP consent, filesystem write boundaries and secrets; do not vendor src/pro without path-specific license review.",
+      "intake_status": "UNREVIEWED",
+      "source_url": "https://github.com/dyad-sh/dyad",
+      "pin_source": "https://github.com/dyad-sh/dyad/commit/1be2b4b6d2c70a4550db7b96e26fc75c50bf5bc0"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "aurelia.excluded_external_candidates.v1",
+  "status": "EXCLUDED_FROM_APPROVED_DEPENDENCY_GRAPH",
+  "policy": "These repositories are retained only as audit/governance references. Do not fetch, vendor, install or execute their contents as dependencies. Reconsider only through a new license-qualified review.",
+  "candidates": [
+    {
+      "repository": "composio-community/awesome-codex-skills",
+      "source_url": "https://github.com/composio-community/awesome-codex-skills",
+      "pinned_commit_sha": "0930e1373789d2eda449039f7ac154b33031de89",
+      "reason": "No top-level LICENSE file was found during repository inspection; individual skill directories may also have separate terms. Do not bulk install, copy or redistribute."
+    },
+    {
+      "repository": "cline/prompts",
+      "source_url": "https://github.com/cline/prompts",
+      "pinned_commit_sha": "2fc3b77a8fe39553ac424bfc7cdc9883e4a21e1f",
+      "reason": "No top-level LICENSE file was found during repository inspection. Prompt content is untrusted and excluded from any approved runtime or instruction graph."
+    }
+  ],
+  "runtime_dependency_edges": [],
+  "installation_permitted": false,
+  "execution_permitted": false,
+  "redistribution_permitted": false,
+  "reentry_requires": "Verified rights for the exact content, source-level review, isolated testing, and independent human approval."
+}

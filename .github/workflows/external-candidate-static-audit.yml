@@ -1,0 +1,131 @@
+name: External Candidate Static Audit
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "config/external_candidate_audit_manifest.json"
+      - "tools/audit_external_candidates.py"
+      - "tests/test_external_candidate_audit.py"
+      - ".github/workflows/external-candidate-static-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: external-candidate-audit-${{ github.ref }}
+  # New commits invalidate old scan evidence; cancel stale scans to free the single audit slot.
+  cancel-in-progress: true
+
+jobs:
+  static-audit:
+    name: Isolated SAST and dependency/license inventory
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    permissions:
+      contents: read
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout audit harness only
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Pull version-tagged scanner images
+        run: |
+          docker pull semgrep/semgrep:1.182.0
+          docker pull aquasec/trivy:0.76.1
+          docker image inspect --format='{{json .RepoDigests}}' semgrep/semgrep:1.182.0 > /tmp/semgrep-image-digest.json
+          docker image inspect --format='{{json .RepoDigests}}' aquasec/trivy:0.76.1 > /tmp/trivy-image-digest.json
+
+      - name: Smoke test isolated scanner command lines
+        shell: bash
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          smoke_root=/tmp/aurelia-semgrep-smoke
+          mkdir -p "$smoke_root/src" "$smoke_root/scan"
+          printf 'eval(input())\n' > "$smoke_root/src/smoke.py"
+          cat > "$smoke_root/scan/rules.yml" <<'YAML'
+          rules:
+            - id: aurelia-smoke-no-eval
+              languages: [python]
+              message: local scanner smoke test
+              severity: ERROR
+              pattern: eval(...)
+          YAML
+          # Reproduce the real read-only Git worktree path using only a harmless local fixture.
+          git -C "$smoke_root/src" init --quiet
+          timeout --foreground --kill-after=10s 120s docker run --rm --network none --read-only --cap-drop=ALL \
+            --security-opt=no-new-privileges --pids-limit=128 --memory=1g \
+            --user "$(id -u):$(id -g)" \
+            --tmpfs /tmp:rw,nosuid,nodev,size=128m \
+            --tmpfs /root:rw,nosuid,nodev,size=128m \
+            -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig \
+            -e GIT_CONFIG_NOSYSTEM=1 -e GIT_TERMINAL_PROMPT=0 \
+            -e XDG_CONFIG_HOME=/tmp/.config -e XDG_CACHE_HOME=/tmp/.cache \
+            -v "$smoke_root/src:/src:ro" -v "$smoke_root/scan:/scan:rw" \
+            --entrypoint semgrep semgrep/semgrep:1.182.0 \
+            scan --metrics=off --config /scan/rules.yml --json \
+              --output /scan/result.json --exclude .git /src
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("/tmp/aurelia-semgrep-smoke/scan/result.json").read_text())
+          assert any(result.get("check_id", "").endswith("aurelia-smoke-no-eval") for result in report.get("results", [])), report.get("results", [])
+          assert not report.get("errors"), "Semgrep returned scanner errors"
+          print("SEMGREP_READ_ONLY_SOURCE_SMOKE=PASS")
+          PY
+          timeout --foreground --kill-after=10s 30s docker run --rm --network none --read-only --cap-drop=ALL \
+            --security-opt=no-new-privileges --pids-limit=128 --memory=1g \
+            --user "$(id -u):$(id -g)" \
+            --tmpfs /tmp:rw,nosuid,nodev,size=128m \
+            --tmpfs /root:rw,nosuid,nodev,size=128m \
+            -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig \
+            -e GIT_CONFIG_NOSYSTEM=1 -e XDG_CONFIG_HOME=/tmp/.config \
+            -e XDG_CACHE_HOME=/tmp/.cache \
+            --entrypoint trivy aquasec/trivy:0.76.1 --version
+
+      - name: Validate audit harness syntax
+        run: |
+          python -m py_compile tools/audit_external_candidates.py
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+          data = json.loads(Path("config/external_candidate_audit_manifest.json").read_text())
+          assert data["schema"] == "aurelia.external_candidate_audit.v1"
+          candidates = data["candidates"]
+          assert len(candidates) == 24
+          assert len({item["repository"] for item in candidates}) == 24
+          assert all(re.fullmatch(r"[0-9a-f]{40}", item["commit_sha"]) for item in candidates)
+          assert all(item["intake_status"] in {"UNREVIEWED", "BLOCKED"} for item in candidates)
+          print("MANIFEST_VALIDATION=PASS")
+          print("PINNED_CANDIDATES=24")
+          PY
+
+      - name: Run static-audit harness regression tests
+        run: python -m unittest discover -s tests -p "test_external_candidate_audit.py" -v
+
+      - name: Run isolated source and dependency scans
+        run: |
+          python tools/audit_external_candidates.py \
+            --manifest config/external_candidate_audit_manifest.json \
+            --output-dir evidence/external-candidate-audit \
+            --scratch-dir /tmp/aurelia-external-candidate-audit
+
+      - name: Preserve sanitized audit reports, SBOMs and SHA-256 manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-candidate-static-audit
+          path: evidence/external-candidate-audit/
+          if-no-files-found: error
+          retention-days: 30
