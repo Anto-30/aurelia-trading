@@ -62,7 +62,7 @@ class NonProductionSoakEvidenceTests(unittest.TestCase):
         observations = root / "observations.ndjson"
         _write_observations(observations, fault=fault)
         started, ended = _timestamps(duration_seconds)
-        output = root / "evidence" / "soak_3600s.json"
+        output = root / "evidence" / "nonproduction_soak_3600s.json"
         write_nonproduction_soak_evidence(
             observations_path=observations,
             output_path=output,
@@ -97,13 +97,13 @@ class NonProductionSoakEvidenceTests(unittest.TestCase):
             self.assertEqual(evidence["known_expected_unknowns"], [EXPECTED_UNKNOWN])
             self.assertFalse(evidence["final_execution_authorization"])
             self.assertEqual(evidence["live_execution"], "BLOCKED")
-            status, detail = validate_evidence_file(Path(d), "evidence/soak_3600s.json")
+            status, detail = validate_evidence_file(Path(d), "evidence/nonproduction_soak_3600s.json")
             self.assertEqual(status, "PASS", detail)
 
     def test_accepts_subsecond_monotonic_observation_timestamps(self):
         with tempfile.TemporaryDirectory() as d:
             output = self._write(Path(d), fault="subsecond")
-            status, detail = validate_evidence_file(Path(d), "evidence/soak_3600s.json")
+            status, detail = validate_evidence_file(Path(d), "evidence/nonproduction_soak_3600s.json")
             self.assertEqual(status, "PASS", detail)
             record = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual(record["health_checks"], 720)
