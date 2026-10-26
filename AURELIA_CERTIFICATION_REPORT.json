@@ -1,7 +1,7 @@
 {
   "report_metadata": {
     "commit_sha": "d04564aca0648201feff0326fe9af0fbcee92e94",
-    "generated_at_utc": "2026-10-26T12:41:47.329Z",
+    "generated_at_utc": "2026-10-26T13:00:05.628Z",
     "environment": "verify_only"
   },
   "safety_state": {
@@ -31,7 +31,25 @@
     "status": "PENDING"
   },
   "gate_7_security_audit": {
-    "status": "FAIL"
+    "status": "FAIL",
+    "evidence_log_hash": "61bc76574c2c03a1652bdcdde0f5605cd66cf614d447dc6ab34ed03d68ffb967",
+    "sast_findings": 3447,
+    "vulnerability_findings": 1409,
+    "misconfiguration_findings": 63,
+    "license_findings": 9332,
+    "critical_findings": 87,
+    "high_findings": 696,
+    "medium_findings": 609,
+    "low_findings": 9191,
+    "unknown_severity_findings": 228,
+    "semgrep_secret_rule_matches": 370,
+    "semgrep_scanner_errors": 762,
+    "scan_candidate_count": 24,
+    "scan_partial_candidate_count": 23,
+    "audit_run_id": 40324113490,
+    "audit_summary_sha256": "962789c0aa901e8e18240a676fa073fd846c0e742a58734ad70bb46f4e8cd47e",
+    "audit_manifest_sha256": "6f15f2095f811e06672516293c2f290fc85f2e4320b830efd8bed8e19b545692",
+    "audit_artifact_zip_sha256": "61bc76574c2c03a1652bdcdde0f5605cd66cf614d447dc6ab34ed03d68ffb967"
   },
   "gate_8_deployment": {
     "status": "PENDING"
