@@ -60,10 +60,10 @@ jobs:
       - name: Sync public repository heads
         run: python tools/external_repo_sync.py
       - name: Upload sync snapshot
-        if: always() && hashFiles('/tmp/external-repo-sync.json') != ''
+        if: always() && hashFiles('evidence/external-repo-sync.json') != ''
         uses: actions/upload-artifact@v4
         with:
           name: aurelia-external-repo-sync-${{ github.run_id }}
-          path: /tmp/external-repo-sync.json
+          path: evidence/external-repo-sync.json
           if-no-files-found: error
           retention-days: 30

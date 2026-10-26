@@ -43,6 +43,8 @@ def _validate_source(record: dict[str, Any]) -> tuple[str, str] | None:
 
 def _classify_git_failure(stderr: str) -> str:
     text = (stderr or "").lower()
+    if "returned error: 404" in text or "http 404" in text:
+        return "GIT_HTTP_404"
     if "repository not found" in text or "not found" in text:
         return "REMOTE_REPOSITORY_NOT_FOUND"
     if "could not resolve host" in text or "temporary failure in name resolution" in text:
@@ -203,10 +205,11 @@ def main() -> int:
         "schema": "aurelia.external_repo_sync.v1",
         "repositories": results,
     }
-    Path("/tmp/external-repo-sync.json").write_text(
-        json.dumps(output, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    snapshot = json.dumps(output, indent=2, sort_keys=True) + "\n"
+    Path("/tmp/external-repo-sync.json").write_text(snapshot, encoding="utf-8")
+    evidence_path = Path("evidence/external-repo-sync.json")
+    evidence_path.parent.mkdir(parents=True, exist_ok=True)
+    evidence_path.write_text(snapshot, encoding="utf-8")
     exempted = [row for row in results if row.get("exempted") is True]
     active_results = [row for row in results if row.get("exempted") is not True]
     failed = [row for row in active_results if not row.get("reachable")]
