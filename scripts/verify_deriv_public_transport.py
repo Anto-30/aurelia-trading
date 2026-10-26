@@ -81,9 +81,11 @@ async def probe_public_transport(
             "tick_probe_latency_ms": (time.perf_counter_ns() - started) / 1_000_000,
         }
     finally:
-        if stream is not None:
-            await stream.aclose()
-        await transport.close()
+        try:
+            if stream is not None:
+                await stream.aclose()
+        finally:
+            await transport.close()
 
 
 async def main() -> int:
