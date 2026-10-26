@@ -26,7 +26,7 @@ jobs:
           import re
           from pathlib import Path
 
-          expected = set("iOfficeAI/OfficeCLI Jia-Ethan/codex-keysmith Loongphy/codex-auth ryfineZ/codex-session-patcher openai/codex-security qxcnm/Codex-Manager composio-community/awesome-codex-skills router-for-me/CLIProxyAPI OpenHands/OpenHands OpenHands/software-agent-sdk OpenHands/extensions OpenHands/OpenHands-CLI OpenHands/automation OpenHands/openhands-aci OpenHands/OpenHands-Cloud cline/cline cline/prompts decolua/9router aaif-goose/goose pressly/goose b-nnett/goose gooseworks-ai/goose-skills mz-automation/libiec61850 tag1consulting/goose Aider-AI/aider hotovo/aider-desk coder/agentapi aide/aide iamfakeguru/agent-md Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance x1xhlol/system-prompts-and-models-of-ai-tools elder-plinius/CL4R1T4S dyad-sh/dyad".split())
+          expected = set("aaif-goose/goose Adamant-im/adamant-tradebot aide/aide Aider-AI/aider aiwebarchitects/hyperliquid_free_trading_bot asba-IA/Github-Mev-Bot b-nnett/goose cline/cline cline/prompts CMZ33/Github-Mev-Bot coder/agentapi composio-community/awesome-codex-skills CryptoSignal/Crypto-Signal Cryptotrademate/cryptotrademate-trading-bot decolua/9router df-tools-bn/.github dsmsmj/vercel-labs-agent-skills dyad-sh/dyad elder-plinius/CL4R1T4S gooseworks-ai/goose-skills hackobi/AI-Scalpel-Trading-Bot hotovo/aider-desk iamfakeguru/agent-md iOfficeAI/OfficeCLI Jia-Ethan/codex-keysmith kevincm89/https-github.com-vercel-labs-skills koreainvestment/open-trading-api learn-crypto-trading/learn-crypto-trading.github.io Loongphy/codex-auth minhlucvan/agent-browser-mcp Mintplex-Labs/anythingllm-docs mz-automation/libiec61850 onchain-trading-bot/.github openai/codex-security OpenHands/automation OpenHands/extensions OpenHands/OpenHands OpenHands/openhands-aci OpenHands/OpenHands-CLI OpenHands/OpenHands-Cloud OpenHands/software-agent-sdk Options-Visualizer/Options-Visualizer.github.io pressly/goose Qian-Anton/GitStudy qxcnm/Codex-Manager Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance router-for-me/CLIProxyAPI ryfineZ/codex-session-patcher starwiz-7/StalkStock tag1consulting/goose traderwillhu/market_dashboard TradingAgents-AI/TradingAgents-AI.github.io TradingGoose/TradingGoose.github.io twentyhq/twenty x1xhlol/system-prompts-and-models-of-ai-tools zurb/twentytwenty".split())
           registry = json.loads(Path("config/external_repo_federation.json").read_text())
           lock_lines = {line.strip() for line in Path("config/LIVE_LOCK.yaml").read_text().splitlines()}
           required_lock_lines = {
@@ -56,6 +56,7 @@ jobs:
               assert item.get("capital_authority", False) is False, f"capital authority must remain false: {name}"
 
           missing = sorted(expected - set(by_name))
+          assert len(expected) == 56, f"expected intake candidate count must be 56, got {len(expected)}"
           assert not missing, f"expected candidate(s) absent: {missing}"
           assert expected <= set(by_name), "one or more expected intake candidates are absent"
           for name in expected:
@@ -70,19 +71,38 @@ jobs:
               assert item.get("intake_status") in {"UNREVIEWED", "BLOCKED"}, f"candidate cannot be promoted by intake PR: {name}"
 
           required_blocked = {
-              "ryfineZ/codex-session-patcher",
+              "Adamant-im/adamant-tradebot",
+              "aiwebarchitects/hyperliquid_free_trading_bot",
+              "asba-IA/Github-Mev-Bot",
+              "b-nnett/goose",
+              "cline/prompts",
+              "CMZ33/Github-Mev-Bot",
+              "coder/agentapi",
               "composio-community/awesome-codex-skills",
+              "CryptoSignal/Crypto-Signal",
+              "Cryptotrademate/cryptotrademate-trading-bot",
+              "df-tools-bn/.github",
+              "dsmsmj/vercel-labs-agent-skills",
+              "elder-plinius/CL4R1T4S",
+              "hackobi/AI-Scalpel-Trading-Bot",
+              "kevincm89/https-github.com-vercel-labs-skills",
+              "koreainvestment/open-trading-api",
+              "minhlucvan/agent-browser-mcp",
+              "onchain-trading-bot/.github",
               "OpenHands/openhands-aci",
               "OpenHands/OpenHands-Cloud",
-              "cline/prompts",
-              "b-nnett/goose",
-              "coder/agentapi",
+              "Options-Visualizer/Options-Visualizer.github.io",
+              "Qian-Anton/GitStudy",
               "qxcnm/Codex-Manager",
-              "router-for-me/CLIProxyAPI",
               "Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance",
+              "router-for-me/CLIProxyAPI",
+              "ryfineZ/codex-session-patcher",
+              "starwiz-7/StalkStock",
+              "traderwillhu/market_dashboard",
+              "TradingAgents-AI/TradingAgents-AI.github.io",
+              "TradingGoose/TradingGoose.github.io",
+              "twentyhq/twenty",
               "x1xhlol/system-prompts-and-models-of-ai-tools",
-              "elder-plinius/CL4R1T4S",
-          }
           for name in required_blocked:
               assert by_name[name]["intake_status"] == "BLOCKED", f"required blocker was removed: {name}"
           for item in repos:
