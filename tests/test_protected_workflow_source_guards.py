@@ -39,14 +39,19 @@ PROTECTED_JOBS = {
 
 
 def _job_block(path: str, job_name: str) -> str:
-    workflow = (ROOT / path).read_text(encoding="utf-8")
-    match = re.search(
-        rf"(?ms)^  {re.escape(job_name)}:\\n(.*?)(?=^  [A-Za-z0-9_-]+:\\n|\\Z)",
-        workflow,
-    )
-    if match is None:
-        raise AssertionError(f"job {job_name!r} not found in {path}")
-    return match.group(1)
+    lines = (ROOT / path).read_text(encoding="utf-8").splitlines()
+    header = f"  {job_name}:"
+    try:
+        start = lines.index(header)
+    except ValueError as exc:
+        raise AssertionError(f"job {job_name!r} not found in {path}") from exc
+
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        if re.fullmatch(r"  [A-Za-z0-9_-]+:", lines[index]):
+            end = index
+            break
+    return "\n".join(lines[start:end])
 
 
 class ProtectedWorkflowSourceGuardTests(unittest.TestCase):
@@ -63,7 +68,7 @@ class ProtectedWorkflowSourceGuardTests(unittest.TestCase):
                     )
                     self.assertTrue(
                         "environment: production" in block
-                        or re.search(r"environment:\\n\\s+name: production", block),
+                        or re.search(r"environment:\n\s+name: production", block),
                         msg=f"expected protected production environment on {path}:{job_name}",
                     )
 
