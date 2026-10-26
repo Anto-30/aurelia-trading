@@ -18,6 +18,8 @@ permissions:
 jobs:
   verify:
     # Credentials may be stored as production environment-scoped Actions secrets.
+    # Never execute this credential-bearing workflow from unreviewed branch code.
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
     environment: production
     runs-on: ubuntu-latest
     env:
