@@ -76,10 +76,13 @@ class DerivWebSocketTransport:
         self._reader_task = asyncio.create_task(self._reader_loop())
 
     async def _reader_loop(self) -> None:
-        assert self.ws is not None
+        # Bind this reader to the socket it was created for. A stale reader
+        # must never clear a replacement connection established during recovery.
+        ws = self.ws
+        assert ws is not None
         try:
             while True:
-                raw = await self.ws.recv()
+                raw = await ws.recv()
                 message = json.loads(raw)
                 request_id = message.get("req_id")
                 if isinstance(request_id, int) and request_id in self._pending:
@@ -119,7 +122,14 @@ class DerivWebSocketTransport:
                     }
                 )
         finally:
-            self.ws = None
+            if self.ws is ws:
+                self.ws = None
+            # Release the failed/cancelled socket even if self.ws now points
+            # at a replacement. close() is idempotent for WebSocket clients.
+            try:
+                await ws.close()
+            except Exception:
+                pass
 
     def _fail_pending(self, exc: Exception) -> None:
         for future in self._pending.values():
