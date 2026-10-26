@@ -1,0 +1,729 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Anto-30/aurelia-trading/blob/main/schemas/aurelia_certification_report.schema.json",
+  "title": "AURELIA Certification Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_metadata",
+    "safety_state",
+    "gate_1_broker_lifecycle",
+    "gate_2_recovery_matrix",
+    "gate_3_soak_test_3600s",
+    "gate_4_out_of_sample",
+    "gate_5_calibration",
+    "gate_6_execution_economics",
+    "gate_7_security_audit",
+    "gate_8_deployment",
+    "gate_9_strategy_eligibility",
+    "final_disposition"
+  ],
+  "properties": {
+    "report_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commit_sha",
+        "generated_at_utc",
+        "environment"
+      ],
+      "properties": {
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "generated_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "demo",
+            "paper",
+            "verify_only"
+          ]
+        }
+      }
+    },
+    "safety_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "live_execution",
+        "final_authorization",
+        "capital_plane_mode",
+        "research_capital_authority"
+      ],
+      "properties": {
+        "live_execution": {
+          "const": "BLOCKED"
+        },
+        "final_authorization": {
+          "const": false
+        },
+        "capital_plane_mode": {
+          "const": "VERIFY_ONLY"
+        },
+        "research_capital_authority": {
+          "const": false
+        }
+      }
+    },
+    "gate_1_broker_lifecycle": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "otp_latency_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "otp_latency_ms"
+            ]
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "gate_2_recovery_matrix": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "simulated_drops": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "successful_reconnects": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "simulated_drops",
+              "successful_reconnects"
+            ]
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "gate_3_soak_test_3600s": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "duration_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "peak_memory_mb": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ws_disconnects": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "duration_seconds",
+              "peak_memory_mb",
+              "ws_disconnects"
+            ],
+            "properties": {
+              "duration_seconds": {
+                "minimum": 3600
+              }
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "gate_4_out_of_sample": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "dataset_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "parameter_lock_hash": {
+          "$ref": "#/$defs/hash"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "dataset_hash",
+              "parameter_lock_hash"
+            ]
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "gate_5_calibration": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "config_hash_pre": {
+          "$ref": "#/$defs/hash"
+        },
+        "config_hash_post": {
+          "$ref": "#/$defs/hash"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "config_hash_pre",
+              "config_hash_post"
+            ],
+            "properties": {
+              "config_hash_pre": {
+                "$ref": "#/$defs/hash"
+              },
+              "config_hash_post": {
+                "$ref": "#/$defs/hash"
+              }
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false,
+      "description": "PASS requires both configuration hashes; reviewer must verify config_hash_pre equals config_hash_post."
+    },
+    "gate_6_execution_economics": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "known_fees_total": {
+          "type": "number"
+        },
+        "residual_tolerance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "actual_residual": {
+          "type": "number"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "known_fees_total",
+              "residual_tolerance",
+              "actual_residual"
+            ],
+            "properties": {
+              "actual_residual": {}
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false,
+      "description": "PASS requires reconciled values; reviewer must verify absolute(actual_residual) <= residual_tolerance."
+    },
+    "gate_7_security_audit": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "sast_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Semgrep finding instances from p/default and p/secrets; counts are not deduplicated and require manual triage."
+        },
+        "secret_scan_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy secret-detection instances; these are not confirmed credential exposures and require manual triage."
+        },
+        "vulnerability_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy vulnerability finding instances; not deduplicated across repositories or dependency paths."
+        },
+        "misconfiguration_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy misconfiguration finding instances."
+        },
+        "license_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy license detection instances; compatibility requires legal/manual review."
+        },
+        "critical_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy findings with CRITICAL severity across all finding types."
+        },
+        "high_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy findings with HIGH severity across all finding types."
+        },
+        "medium_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy findings with MEDIUM severity across all finding types."
+        },
+        "low_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy findings with LOW severity across all finding types."
+        },
+        "unknown_severity_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy findings whose severity was UNKNOWN."
+        },
+        "semgrep_secret_rule_matches": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Semgrep generic.secrets rule matches; these are finding instances, not confirmed secret values."
+        },
+        "semgrep_scanner_errors": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Semgrep parser, matching, syntax or timeout error records in this run; any non-zero count means that candidate scan coverage is partial."
+        },
+        "scan_candidate_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of pinned candidates included in this run."
+        },
+        "scan_partial_candidate_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Candidates with one or more Semgrep scanner errors; such candidates do not have full Semgrep coverage."
+        },
+        "audit_run_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "audit_summary_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "audit_manifest_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "audit_artifact_zip_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "semgrep_partial_candidate_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of candidate scans with Semgrep scanner error records."
+        },
+        "trivy_secret_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy secret-detection finding instances; not confirmed credential exposures."
+        },
+        "semgrep_error_severity_findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "semgrep_warning_severity_findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "semgrep_info_severity_findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "semgrep_unknown_severity_findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "semgrep_medium_severity_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Semgrep finding instances whose normalized reported severity is MEDIUM."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "sast_findings",
+              "secret_scan_findings"
+            ],
+            "properties": {
+              "sast_findings": {
+                "const": 0
+              },
+              "secret_scan_findings": {
+                "const": 0
+              }
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "gate_8_deployment": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "iac_validation_hash": {
+          "$ref": "#/$defs/hash"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "iac_validation_hash"
+            ]
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "gate_9_strategy_eligibility": {
+      "$ref": "#/$defs/gate",
+      "properties": {
+        "profit_factor": {
+          "type": "number",
+          "minimum": 0
+        },
+        "net_expectancy": {
+          "type": "number"
+        },
+        "kill_rule_triggered": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "profit_factor",
+              "net_expectancy",
+              "kill_rule_triggered"
+            ],
+            "properties": {
+              "profit_factor": {
+                "minimum": 1.15
+              },
+              "net_expectancy": {
+                "exclusiveMinimum": 0
+              },
+              "kill_rule_triggered": {
+                "const": false
+              }
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "final_disposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overall_status",
+        "human_review_required",
+        "human_reviewer_signature"
+      ],
+      "properties": {
+        "overall_status": {
+          "type": "string",
+          "enum": [
+            "NOT_READY",
+            "PENDING_HUMAN_REVIEW",
+            "CERTIFIED"
+          ]
+        },
+        "human_review_required": {
+          "const": true
+        },
+        "human_reviewer_signature": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "overall_status": {
+                "const": "CERTIFIED"
+              }
+            },
+            "required": [
+              "overall_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "human_reviewer_signature": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "gate": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "FAIL",
+            "PENDING"
+          ]
+        },
+        "evidence_log_hash": {
+          "$ref": "#/$defs/hash"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "evidence_log_hash"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "final_disposition": {
+            "properties": {
+              "overall_status": {
+                "const": "CERTIFIED"
+              }
+            },
+            "required": [
+              "overall_status"
+            ]
+          }
+        },
+        "required": [
+          "final_disposition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "gate_1_broker_lifecycle": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "gate_2_recovery_matrix": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "gate_3_soak_test_3600s": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "gate_4_out_of_sample": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "gate_5_calibration": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "gate_6_execution_economics": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "gate_7_security_audit": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "gate_8_deployment": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "gate_9_strategy_eligibility": {
+            "properties": {
+              "status": {
+                "const": "PASS"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$comment": "Schema validation checks report structure and hash formatting only. Certification tooling must independently recompute SHA-256 from each evidence log and compare it to evidence_log_hash; a 64-character string alone is not proof. CERTIFIED additionally requires every gate PASS and a non-empty human reviewer signature."
+}

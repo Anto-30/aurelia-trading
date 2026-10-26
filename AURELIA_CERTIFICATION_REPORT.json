@@ -1,0 +1,73 @@
+{
+  "report_metadata": {
+    "commit_sha": "d04564aca0648201feff0326fe9af0fbcee92e94",
+    "generated_at_utc": "2026-10-26T18:54:00Z",
+    "environment": "verify_only"
+  },
+  "safety_state": {
+    "live_execution": "BLOCKED",
+    "final_authorization": false,
+    "capital_plane_mode": "VERIFY_ONLY",
+    "research_capital_authority": false
+  },
+  "gate_1_broker_lifecycle": {
+    "status": "PENDING"
+  },
+  "gate_2_recovery_matrix": {
+    "status": "PENDING"
+  },
+  "gate_3_soak_test_3600s": {
+    "status": "PASS",
+    "duration_seconds": 3600.032,
+    "ws_disconnects": 0,
+    "evidence_log_hash": "753b46e1820dfa8ae10377f2424c5f6705af7a675db1a2fe9a16e6d937b560fb",
+    "peak_memory_mb": 31.21484375
+  },
+  "gate_4_out_of_sample": {
+    "status": "FAIL"
+  },
+  "gate_5_calibration": {
+    "status": "PENDING"
+  },
+  "gate_6_execution_economics": {
+    "status": "PENDING"
+  },
+  "gate_7_security_audit": {
+    "status": "FAIL",
+    "sast_findings": 3447,
+    "vulnerability_findings": 1409,
+    "misconfiguration_findings": 63,
+    "license_findings": 9332,
+    "critical_findings": 87,
+    "high_findings": 696,
+    "medium_findings": 609,
+    "low_findings": 9191,
+    "unknown_severity_findings": 228,
+    "semgrep_secret_rule_matches": 0,
+    "semgrep_scanner_errors": 765,
+    "scan_candidate_count": 24,
+    "scan_partial_candidate_count": 23,
+    "audit_run_id": 40376366859,
+    "audit_summary_sha256": "c175a6407099439cec740d2782de677542f7f6ddc94dbe37f80a239ac490356b",
+    "audit_manifest_sha256": "6f15f2095f811e06672516293c2f290fc85f2e4320b830efd8bed8e19b545692",
+    "audit_artifact_zip_sha256": "34af64b7db8d169418902285b9604e4fd16cd47ac14fd6bc640e140ef8edd00a",
+    "secret_scan_findings": 7,
+    "semgrep_partial_candidate_count": 23,
+    "semgrep_unknown_severity_findings": 0,
+    "semgrep_error_severity_findings": 671,
+    "semgrep_warning_severity_findings": 2575,
+    "semgrep_info_severity_findings": 178,
+    "semgrep_medium_severity_findings": 23
+  },
+  "gate_8_deployment": {
+    "status": "PENDING"
+  },
+  "gate_9_strategy_eligibility": {
+    "status": "PENDING"
+  },
+  "final_disposition": {
+    "overall_status": "NOT_READY",
+    "human_review_required": true,
+    "human_reviewer_signature": null
+  }
+}

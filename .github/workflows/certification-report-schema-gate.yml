@@ -1,0 +1,39 @@
+name: Certification Report Schema Gate
+
+on:
+  pull_request:
+    paths:
+      - "schemas/aurelia_certification_report.schema.json"
+      - "config/AURELIA_CERTIFICATION_REPORT.schema.json"
+      - "AURELIA_CERTIFICATION_REPORT.json"
+      - "schema_tests/test_certification_report_schema.py"
+      - ".github/workflows/certification-report-schema-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: certification-schema-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  schema-and-negative-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout source without persisted credentials
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97d
+        with:
+          python-version: "3.13"
+
+      - name: Install pinned schema validator
+        run: python -m pip install --disable-pip-version-check --no-input jsonschema==4.23.0
+
+      - name: Validate schema and fail-closed test cases
+        run: python -m unittest discover -s schema_tests -p 'test_certification_report_schema.py' -v
