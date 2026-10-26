@@ -1,7 +1,7 @@
 {
   "report_metadata": {
     "commit_sha": "d04564aca0648201feff0326fe9af0fbcee92e94",
-    "generated_at_utc": "2026-10-26T15:42:49.341Z",
+    "generated_at_utc": "2026-10-26T18:54:00Z",
     "environment": "verify_only"
   },
   "safety_state": {
@@ -34,7 +34,7 @@
   },
   "gate_7_security_audit": {
     "status": "FAIL",
-    "sast_findings": 3445,
+    "sast_findings": 3447,
     "vulnerability_findings": 1409,
     "misconfiguration_findings": 63,
     "license_findings": 9332,
@@ -44,18 +44,18 @@
     "low_findings": 9191,
     "unknown_severity_findings": 228,
     "semgrep_secret_rule_matches": 0,
-    "semgrep_scanner_errors": 767,
+    "semgrep_scanner_errors": 765,
     "scan_candidate_count": 24,
     "scan_partial_candidate_count": 23,
-    "audit_run_id": 40339568264,
-    "audit_summary_sha256": "c1ee135596216ecca6e8d804bbd5128a71e60e86a279901687459e233d0d0a28",
+    "audit_run_id": 40376366859,
+    "audit_summary_sha256": "c175a6407099439cec740d2782de677542f7f6ddc94dbe37f80a239ac490356b",
     "audit_manifest_sha256": "6f15f2095f811e06672516293c2f290fc85f2e4320b830efd8bed8e19b545692",
-    "audit_artifact_zip_sha256": "b3f2e6da815640f195d5c0812300fc931d352e821be1ff7338bb1f7f52f79ad0",
+    "audit_artifact_zip_sha256": "34af64b7db8d169418902285b9604e4fd16cd47ac14fd6bc640e140ef8edd00a",
     "secret_scan_findings": 7,
     "semgrep_partial_candidate_count": 23,
     "semgrep_unknown_severity_findings": 0,
     "semgrep_error_severity_findings": 671,
-    "semgrep_warning_severity_findings": 2573,
+    "semgrep_warning_severity_findings": 2575,
     "semgrep_info_severity_findings": 178,
     "semgrep_medium_severity_findings": 23
   },
