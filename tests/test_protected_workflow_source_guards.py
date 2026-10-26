@@ -18,7 +18,6 @@ PROTECTED_JOBS = {
     ".github/workflows/aurelia-free-runtime.yml": {
         "authenticated-deriv-evidence": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}",
         "deriv-lifecycle-verify-only": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}",
-        "whatsapp-alert-smoke": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}",
     },
     ".github/workflows/deriv-auth-evidence.yml": {
         "verify": "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}",
@@ -48,7 +47,10 @@ def _job_block(path: str, job_name: str) -> str:
 
     end = len(lines)
     for index in range(start + 1, len(lines)):
-        if re.fullmatch(r"  [A-Za-z0-9_-]+:", lines[index]):
+        line = lines[index]
+        # GitHub Actions job keys are exactly two spaces indented. Stop at the
+        # next job without depending on regex character-class edge cases for '-'.
+        if line.startswith("  ") and not line.startswith("    ") and line.endswith(":"):
             end = index
             break
     return "\n".join(lines[start:end])
@@ -61,16 +63,29 @@ class ProtectedWorkflowSourceGuardTests(unittest.TestCase):
                 with self.subTest(path=path, job=job_name):
                     block = _job_block(path, job_name)
                     self.assertIn(guard, block)
+                    secret_binding_index = block.find("${{ secrets.")
+                    self.assertGreaterEqual(
+                        secret_binding_index,
+                        0,
+                        msg=f"expected an explicit secret binding in {path}:{job_name}",
+                    )
                     self.assertLess(
                         block.index(guard),
-                        block.find("secrets."),
-                        msg=f"source-ref guard must appear before secret bindings in {path}:{job_name}",
+                        secret_binding_index,
+                        msg=f"source-ref guard must precede secret bindings in {path}:{job_name}",
                     )
                     self.assertTrue(
                         "environment: production" in block
                         or re.search(r"environment:\n\s+name: production", block),
                         msg=f"expected protected production environment on {path}:{job_name}",
                     )
+
+    def test_whatsapp_smoke_is_main_only_without_assuming_production_environment(self):
+        block = _job_block(".github/workflows/aurelia-free-runtime.yml", "whatsapp-alert-smoke")
+        self.assertIn(
+            "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}",
+            block,
+        )
 
     def test_general_assurance_job_has_no_production_environment_or_secrets(self):
         block = _job_block(".github/workflows/aurelia-assurance.yml", "assurance")
