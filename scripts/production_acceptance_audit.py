@@ -151,7 +151,7 @@ def main() -> int:
         return 1
 
     print("AURELIA_PRODUCTION_ACCEPTANCE=AUDIT_PASS")
-    print("PROBABILITY_POLICY_RANGE=0.50..0.75")
+    print("PROBABILITY_POLICY_RANGE=0.55..0.75")
     print("CAPITAL_MOVEMENT_PERMITTED=false")
     print("FINAL_EXECUTION_AUTHORIZATION=false")
     print("LIVE_EXECUTION=BLOCKED")
