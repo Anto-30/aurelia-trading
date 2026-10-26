@@ -31,6 +31,8 @@ jobs:
           bash -n scripts/provision_deriv_github_secrets.sh
       - name: Run research-plane tests
         run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
+      - name: Run focused non-production soak evidence contract tests
+        run: python -m unittest assurance.test_nonproduction_soak_evidence -v
       - name: Run assurance tests
         run: python -m unittest discover -s assurance -p 'test_*.py' -v
       - name: Run runtime tests
