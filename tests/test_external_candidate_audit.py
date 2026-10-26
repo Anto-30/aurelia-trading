@@ -29,6 +29,15 @@ class SemgrepCoverageTests(unittest.TestCase):
             "PARTIAL_BLOCKED",
         )
 
+    def test_semgrep_severity_is_read_from_result_not_only_rule_metadata(self):
+        report = sanitize_semgrep({
+            "version": "test",
+            "results": [{"check_id": "test-rule", "extra": {"severity": "ERROR", "metadata": {}}, "path": "x.py", "start": {"line": 1}, "end": {"line": 1}}],
+            "errors": [],
+        })
+        self.assertEqual(report["severity_counts"], {"ERROR": 1})
+        self.assertEqual(report["findings"][0]["severity"], "ERROR")
+
     def test_semgrep_report_surfaces_coverage_limitation_without_raw_error_text(self):
         report = sanitize_semgrep({
             "version": "test",
