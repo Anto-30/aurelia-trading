@@ -92,7 +92,9 @@ class ProtectedWorkflowSourceGuardTests(unittest.TestCase):
     def test_general_assurance_job_has_no_production_environment_or_secrets(self):
         block = _job_block(".github/workflows/aurelia-assurance.yml", "assurance")
         self.assertNotIn("environment: production", block)
-        self.assertNotIn("secrets.", block)
+        # Ignore filenames such as provision_deriv_github_secrets.sh; check
+        # actual GitHub Actions expressions rather than the substring in prose.
+        self.assertNotIn("${{ secrets.", block)
 
     def test_periodic_public_runtime_probe_does_not_run_full_test_suites(self):
         block = _job_block(".github/workflows/aurelia-free-runtime.yml", "runtime-probe")
