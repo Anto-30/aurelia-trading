@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/Anto-30/aurelia-trading/blob/main/schemas/aurelia_certification_report.schema.json",
+  "$id": "https://github.com/Anto-30/aurelia-trading/blob/main/config/AURELIA_CERTIFICATION_REPORT.schema.json",
   "title": "AURELIA Certification Report",
   "type": "object",
   "additionalProperties": false,
