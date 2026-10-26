@@ -328,8 +328,8 @@ def trivy_database_args() -> list[str]:
         args.extend(["--db-repository", repository])
     for repository in TRIVY_JAVA_DB_REPOSITORIES:
         args.extend(["--java-db-repository", repository])
-    # Trivy accepts a single checks-bundle registry. AWS ECR Public is the primary mirror;
-    # if it is unavailable, the scan fails closed instead of silently skipping IaC checks.
+    # Trivy accepts a single checks-bundle registry. The GCR mirror is configured explicitly;
+    # the pinned scanner binary also carries an embedded fallback bundle.
     args.extend(["--checks-bundle-repository", TRIVY_CHECKS_BUNDLE_REPOSITORY])
     return args
 
@@ -351,14 +351,23 @@ def prepare_trivy_databases(
     preflight_report = scratch_dir / "trivy-preflight.json"
     try:
         downloaded: list[str] = []
-        for flag, label in (
-            ("--download-db-only", "vulnerability_database"),
-            ("--download-java-db-only", "java_database"),
+        for flag, label, repositories, repository_flag in (
+            ("--download-db-only", "vulnerability_database", TRIVY_DB_REPOSITORIES, "--db-repository"),
+            ("--download-java-db-only", "java_database", TRIVY_JAVA_DB_REPOSITORIES, "--java-db-repository"),
         ):
+            database_args = [
+                item
+                for repository in repositories
+                for item in (repository_flag, repository)
+            ]
+            # Database options are scoped to the image subcommand; keep this preflight source-free.
             command = docker_common_args(
                 image, "trivy", None, scratch_dir, cache_dir, network="host"
-            ) + trivy_database_args() + [
-                "image", "--cache-dir", "/root/.cache/trivy", flag
+            ) + [
+                "image",
+                *database_args,
+                "--cache-dir", "/root/.cache/trivy",
+                flag,
             ]
             run_command(command, timeout=900)
             downloaded.append(label)
@@ -367,8 +376,10 @@ def prepare_trivy_databases(
         # No external candidate source is mounted, parsed, or executed in this host-network phase.
         command = docker_common_args(
             image, "trivy", empty_source, scratch_dir, cache_dir, network="host"
-        ) + trivy_database_args() + [
-            "fs", "--cache-dir", "/root/.cache/trivy",
+        ) + [
+            "fs",
+            *trivy_database_args(),
+            "--cache-dir", "/root/.cache/trivy",
             "--scanners", "misconfig",
             "--format", "json", "--output", "/scan/trivy-preflight.json", "/src",
         ]
@@ -572,8 +583,8 @@ def run_trivy(
 ) -> dict[str, Any]:
     raw_path = scratch_dir / "trivy.raw.json"
     sbom_path = candidate_out / "sbom.cdx.json"
-    command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir, network="none") + trivy_database_args() + [
-        "fs", "--cache-dir", "/root/.cache/trivy",
+    command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir, network="none") + [
+        "fs", *trivy_database_args(), "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,misconfig,secret,license",
         *trivy_offline_scan_flags(),
         "--format", "json", "--output", "/scan/trivy.raw.json", "/src",
@@ -591,8 +602,8 @@ def run_trivy(
             raw_path.unlink()
 
     # Write an SBOM containing package/license metadata; do not include the secret scan output.
-    sbom_command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir, network="none") + trivy_database_args() + [
-        "fs", "--cache-dir", "/root/.cache/trivy",
+    sbom_command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir, network="none") + [
+        "fs", *trivy_database_args(), "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,license",
         *trivy_offline_scan_flags(),
         "--format", "cyclonedx", "--output", "/scan/sbom.cdx.json", "/src",
