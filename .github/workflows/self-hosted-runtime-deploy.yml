@@ -21,6 +21,8 @@ concurrency:
 
 jobs:
   deploy:
+    # Deployment code and production secrets are restricted to the reviewed canonical branch.
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
     environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 20
