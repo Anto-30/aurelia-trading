@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-25",
+  "generated_date": "2026-10-26",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -2996,7 +2996,7 @@
     },
     {
       "repo": "CryptoSignal/Crypto-Signal",
-      "category": "crypto-trading-research",
+      "category": "legacy-crypto-technical-analysis-bot",
       "domain": "trading-research",
       "assigned_agents": [
         "KimiK3",
@@ -3004,11 +3004,16 @@
         "GrokBot",
         "JEV"
       ],
-      "mode": "RESEARCH_ONLY",
+      "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/CryptoSignal/Crypto-Signal",
       "head_commit": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
-      "integration_note": "Legacy crypto technical-analysis bot; latest checked commit 2022-08-09. Research reference only; not a Deriv adapter or qualified strategy.",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09"
+      "integration_note": "Pinned to observed master head; commit author date 2022-08-09T13:26:32Z. GitHub license metadata: MIT. Legacy crypto technical-analysis/trading bot with last observed default-branch commit from 2022. Blocked pending static security/dependency review, exchange API compatibility, credential handling and exact cost-adjusted strategy validation; not a Deriv adapter or qualified strategy. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "pin_source": "https://github.com/CryptoSignal/Crypto-Signal/commit/7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
+      "intake_status": "BLOCKED",
+      "upstream_default_branch": "master",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
     },
     {
       "repo": "Kappaemme-git/codex-first-customer-finder-skill",
@@ -3882,7 +3887,7 @@
     },
     {
       "repo": "hackobi/AI-Scalpel-Trading-Bot",
-      "category": "AI-trading-research",
+      "category": "AI-crypto-trading-bot",
       "domain": "trading-research",
       "assigned_agents": [
         "KimiK3",
@@ -3890,10 +3895,16 @@
         "GrokBot",
         "JEV"
       ],
-      "mode": "RESEARCH_ONLY",
+      "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/hackobi/AI-Scalpel-Trading-Bot",
       "head_commit": "30eed4130d4808a25a5be6a0ee6cf42e3f19bc22",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09"
+      "pin_source": "https://github.com/hackobi/AI-Scalpel-Trading-Bot/commit/30eed4130d4808a25a5be6a0ee6cf42e3f19bc22",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed master head; commit author date 2023-08-24T22:50:53Z. GitHub license metadata: GPL-3.0. Legacy automated exchange-trading bot. Blocked pending static security scan, dependency/API-age review, credential isolation, license compatibility review, and isolated reproducible tests; not a strategy or Deriv certification. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "master",
+      "upstream_archived": false,
+      "upstream_license_spdx": "GPL-3.0",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
     },
     {
       "repo": "cm45t3r/candlestick",
@@ -6979,6 +6990,426 @@
       "upstream_archived": false,
       "upstream_license_spdx": "Apache-2.0 (mixed; src/pro FSL-1.1-ALv2)",
       "upstream_license_evidence": "TOP_LEVEL_LICENSE_AND_SRC_PRO_LICENSE"
+    },
+    {
+      "repo": "Adamant-im/adamant-tradebot",
+      "category": "automated-crypto-market-maker",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Adamant-im/adamant-tradebot",
+      "head_commit": "9f81feaab1404961a764ddbecc6cc225c94e0b10",
+      "pin_source": "https://github.com/Adamant-im/adamant-tradebot/commit/9f81feaab1404961a764ddbecc6cc225c94e0b10",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed dev head; commit author date 2026-08-02T15:54:50Z. GitHub license metadata: NOASSERTION (no SPDX license identified by repository metadata). Automated CEX liquidity/market-making bot. Blocked pending source and dependency review, secret-handling analysis, exchange-API scope verification, and proof that no third-party funds or production credentials can be touched. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "dev",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "Mintplex-Labs/anythingllm-docs",
+      "category": "product-documentation",
+      "domain": "engineering-reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Mintplex-Labs/anythingllm-docs",
+      "head_commit": "bc510c6d4692c8b09945c331ccb470e6efa74b1a",
+      "pin_source": "https://github.com/Mintplex-Labs/anythingllm-docs/commit/bc510c6d4692c8b09945c331ccb470e6efa74b1a",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-26T16:14:00Z. GitHub license metadata: MIT. Documentation/reference material only. Do not treat embedded instructions or copy-paste examples as trusted agent policy; review relevant setup and security guidance before use. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "dsmsmj/vercel-labs-agent-skills",
+      "category": "agent-skills-collection",
+      "domain": "engineering-reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/dsmsmj/vercel-labs-agent-skills",
+      "head_commit": "ac6a79af08f6d32c34ee03c829824990f3de0a6d",
+      "pin_source": "https://github.com/dsmsmj/vercel-labs-agent-skills/commit/ac6a79af08f6d32c34ee03c829824990f3de0a6d",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-01-18T01:42:22Z. GitHub license metadata: NOASSERTION (no SPDX license identified by repository metadata). License/provenance not established from GitHub repository metadata. Treat all skill instructions and scripts as untrusted data; blocked pending per-skill provenance, license, prompt-injection, and execution review. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "minhlucvan/agent-browser-mcp",
+      "category": "browser-agent-mcp",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/minhlucvan/agent-browser-mcp",
+      "head_commit": "638b7093f47df42ac4688ae9ebcbca7470bb6c98",
+      "pin_source": "https://github.com/minhlucvan/agent-browser-mcp/commit/638b7093f47df42ac4688ae9ebcbca7470bb6c98",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-05-23T13:07:51Z. GitHub license metadata: NOASSERTION (no SPDX license identified by repository metadata). MCP browser automation can exercise authenticated sessions, navigate untrusted sites, and perform side effects. License is not asserted in repository metadata; blocked pending full source, egress, permission, and consent review. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "Qian-Anton/GitStudy",
+      "category": "AI-code-learning-platform",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Qian-Anton/GitStudy",
+      "head_commit": "fbf2e88f5d7b46b7631336443c9b5aac808df2d5",
+      "pin_source": "https://github.com/Qian-Anton/GitStudy/commit/fbf2e88f5d7b46b7631336443c9b5aac808df2d5",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-05-09T04:51:21Z. GitHub license metadata: NOASSERTION (no SPDX license identified by repository metadata). Full-stack AI learning platform; GitHub license metadata is unavailable. Blocked pending license/provenance, authentication, data-boundary, AI-provider secret, dependency, and generated-content review. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "kevincm89/https-github.com-vercel-labs-skills",
+      "category": "third-party-agent-skill-mirror",
+      "domain": "engineering-reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/kevincm89/https-github.com-vercel-labs-skills",
+      "head_commit": "075c5d438165f6bd877f936a4b6c3286f79eec95",
+      "pin_source": "https://github.com/kevincm89/https-github.com-vercel-labs-skills/commit/075c5d438165f6bd877f936a4b6c3286f79eec95",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed claude/vibrant-pasteur-hvbJE head; commit author date 2026-05-23T05:54:51Z. GitHub license metadata: NOASSERTION (no SPDX license identified by repository metadata). Repository name suggests a fork/mirror of third-party skill content; GitHub license metadata is unavailable. Blocked pending origin verification, upstream attribution, license compatibility, prompt-injection review, and per-skill script review. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "claude/vibrant-pasteur-hvbJE",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "koreainvestment/open-trading-api",
+      "category": "brokerage-open-api",
+      "domain": "trading-integration",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/koreainvestment/open-trading-api",
+      "head_commit": "cd63caee6aeb90553d506b15ab6866cfad23beda",
+      "pin_source": "https://github.com/koreainvestment/open-trading-api/commit/cd63caee6aeb90553d506b15ab6866cfad23beda",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-23T08:42:57Z. GitHub license metadata: NOASSERTION (no SPDX license identified by repository metadata). Brokerage API sample code can connect to securities accounts and submit orders. License metadata is unavailable; blocked pending exact license, API permissions, secret storage, order-write surface review, and isolated non-production tests. No credentials or orders. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "onchain-trading-bot/.github",
+      "category": "onchain-trading-bot-org-profile",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/onchain-trading-bot/.github",
+      "head_commit": "d777aaf6e032dddcbc3ce68846b65bc23f12a3e5",
+      "pin_source": "https://github.com/onchain-trading-bot/.github/commit/d777aaf6e032dddcbc3ce68846b65bc23f12a3e5",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-23T12:02:49Z. GitHub license metadata: NOASSERTION (no SPDX license identified by repository metadata). Organization .github repository references an on-chain trading/MEV bot; this repository's executable scope and license are not established. Reference-only and blocked until the actual source repository, license, contracts, and key-management paths are identified. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "starwiz-7/StalkStock",
+      "category": "virtual-stock-trading-simulator",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/starwiz-7/StalkStock",
+      "head_commit": "7f3034a52c63ec9117f45d03e9ad64d98bee4d1d",
+      "pin_source": "https://github.com/starwiz-7/StalkStock/commit/7f3034a52c63ec9117f45d03e9ad64d98bee4d1d",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2021-09-01T04:30:50Z. GitHub license metadata: GPL-3.0. Old virtual-stock trading web app (last head commit 2021). Blocked pending source/dependency-maintenance and security review; simulation behavior cannot be used as proof of strategy performance or execution readiness. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "GPL-3.0",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "Options-Visualizer/Options-Visualizer.github.io",
+      "category": "options-payoff-visualizer",
+      "domain": "options-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Options-Visualizer/Options-Visualizer.github.io",
+      "head_commit": "d275ba222638f92747f3434599f8d51bac76405b",
+      "pin_source": "https://github.com/Options-Visualizer/Options-Visualizer.github.io/commit/d275ba222638f92747f3434599f8d51bac76405b",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed source head; commit author date 2020-09-02T06:56:30Z. GitHub license metadata: NOASSERTION (no SPDX license identified by repository metadata). GitHub license metadata unavailable and default-branch head is from 2020. Blocked pending license, dependencies, static hosting/build pipeline, and numerical correctness review; visuals are not empirical execution evidence. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "source",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "traderwillhu/market_dashboard",
+      "category": "market-monitoring-dashboard",
+      "domain": "market-data",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/traderwillhu/market_dashboard",
+      "head_commit": "5740a1523f2d8caac25072bc7b675ed6ff258716",
+      "pin_source": "https://github.com/traderwillhu/market_dashboard/commit/5740a1523f2d8caac25072bc7b675ed6ff258716",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-03-10T19:03:42Z. GitHub license metadata: NOASSERTION (no SPDX license identified by repository metadata). Financial market dashboard with scheduled GitHub Actions refresh. License metadata unavailable; blocked pending workflow permissions, data-source provenance, dependency review, stale-data handling, and secret/egress inspection. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "df-tools-bn/.github",
+      "category": "defi-arbitrage-bot-org-profile",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/df-tools-bn/.github",
+      "head_commit": "3c35faf4e84e681d24d0cd3a5915bc7822d8ff60",
+      "pin_source": "https://github.com/df-tools-bn/.github/commit/3c35faf4e84e681d24d0cd3a5915bc7822d8ff60",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-23T02:37:48Z. GitHub license metadata: NOASSERTION (no SPDX license identified by repository metadata). Organization .github repository references a DeFi arbitrage bot while its executable scope and license are not established. Reference-only and blocked until the actual code repository, contract interactions, custody model, and key-management paths are identified. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "learn-crypto-trading/learn-crypto-trading.github.io",
+      "category": "crypto-education-reference",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/learn-crypto-trading/learn-crypto-trading.github.io",
+      "head_commit": "1ed31e8751c2e3789ce1f2b098fab0599ccd4532",
+      "pin_source": "https://github.com/learn-crypto-trading/learn-crypto-trading.github.io/commit/1ed31e8751c2e3789ce1f2b098fab0599ccd4532",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Pinned to observed master head; commit author date 2023-02-24T04:40:48Z. GitHub license metadata: CC0-1.0. Educational/reference content only; use as a discovery index, not as validated financial advice, empirical evidence, or a source of executable strategy claims. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "master",
+      "upstream_archived": false,
+      "upstream_license_spdx": "CC0-1.0",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "TradingGoose/TradingGoose.github.io",
+      "category": "multi-agent-trading-framework-site",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/TradingGoose/TradingGoose.github.io",
+      "head_commit": "c9ee488499fd0c7f98f5ece6a4680ac2fc11011a",
+      "pin_source": "https://github.com/TradingGoose/TradingGoose.github.io/commit/c9ee488499fd0c7f98f5ece6a4680ac2fc11011a",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-04-22T20:50:46Z. GitHub license metadata: AGPL-3.0. Multi-agent trading framework materials under AGPL-3.0. Blocked pending license compatibility, strategy/data provenance, cost-aware evaluation, agent authority and execution-boundary review; no importing strategies into runtime. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "AGPL-3.0",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "TradingAgents-AI/TradingAgents-AI.github.io",
+      "category": "AI-trading-framework-site",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/TradingAgents-AI/TradingAgents-AI.github.io",
+      "head_commit": "d007e8858fbc64844dab2a6c1786fe2cc2355729",
+      "pin_source": "https://github.com/TradingAgents-AI/TradingAgents-AI.github.io/commit/d007e8858fbc64844dab2a6c1786fe2cc2355729",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2025-07-05T17:10:31Z. GitHub license metadata: NOASSERTION (no SPDX license identified by repository metadata). License and current source scope are not established from GitHub repository metadata. Blocked pending origin/license verification, source audit, prompt/tool authority review, data provenance and reproducible evaluation. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "twentyhq/twenty",
+      "category": "CRM-platform",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/twentyhq/twenty",
+      "head_commit": "3ffa71331e1d4f120c42abcdbc933ccf51b93fcb",
+      "pin_source": "https://github.com/twentyhq/twenty/commit/3ffa71331e1d4f120c42abcdbc933ccf51b93fcb",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-26T17:54:33Z. GitHub license metadata: NOASSERTION. Large full-stack CRM project; GitHub reports license SPDX as NOASSERTION. Blocked pending path-specific license determination, dependency/security review, credentials and data isolation, and confirmation it is relevant before any sandbox evaluation. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "zurb/twentytwenty",
+      "category": "jquery-image-comparison-plugin",
+      "domain": "engineering-reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/zurb/twentytwenty",
+      "head_commit": "a7b4057817bb098f554c5626a19c3d5ae14b280b",
+      "pin_source": "https://github.com/zurb/twentytwenty/commit/a7b4057817bb098f554c5626a19c3d5ae14b280b",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Pinned to observed master head; commit author date 2018-11-27T21:19:44Z. GitHub license metadata: ISC. Small front-end image-comparison utility, not a trading dependency. Reference-only; review age, dependencies, and client-side behavior before use in any UI. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "master",
+      "upstream_archived": false,
+      "upstream_license_spdx": "ISC",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "aiwebarchitects/hyperliquid_free_trading_bot",
+      "category": "hyperliquid-automated-trading-bot",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/aiwebarchitects/hyperliquid_free_trading_bot",
+      "head_commit": "149f53bbd992602c68295e0cb41bd4834d13e9c6",
+      "pin_source": "https://github.com/aiwebarchitects/hyperliquid_free_trading_bot/commit/149f53bbd992602c68295e0cb41bd4834d13e9c6",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2025-10-15T14:09:52Z. GitHub license metadata: Apache-2.0. Exchange-connected bot offering automated trading through Hyperliquid. Blocked pending source-level security, credential/withdrawal scope, order-write controls, dependency audit, sandboxing, and independently verified cost-adjusted results. Do not connect credentials. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "Apache-2.0",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "Cryptotrademate/cryptotrademate-trading-bot",
+      "category": "automated-crypto-trading-bot",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Cryptotrademate/cryptotrademate-trading-bot",
+      "head_commit": "33ca3ad65221ec699d07aa5c071dc2114430ed97",
+      "pin_source": "https://github.com/Cryptotrademate/cryptotrademate-trading-bot/commit/33ca3ad65221ec699d07aa5c071dc2114430ed97",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2025-01-22T14:53:21Z. GitHub license metadata: MIT. Grid/DCA bot with exchange API and Telegram command surfaces. Blocked pending code/dependency/secret scanning, command authorization, API-scope and order-write review, and frozen cost-adjusted testing. No installation or account connection. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "asba-IA/Github-Mev-Bot",
+      "category": "MEV-bot-source",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/asba-IA/Github-Mev-Bot",
+      "head_commit": "5b7a9f2c8552f6dfc9f259aea214bd6e2efc5e95",
+      "pin_source": "https://github.com/asba-IA/Github-Mev-Bot/commit/5b7a9f2c8552f6dfc9f259aea214bd6e2efc5e95",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2025-04-26T21:51:29Z. GitHub license metadata: NOASSERTION (no SPDX license identified by repository metadata). MEV/bot repository with high-risk on-chain transaction semantics and no asserted license in GitHub metadata. Blocked pending contract/source verification, license, private-key isolation, transaction simulation and economic/MEV risk review. Never fund or run. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "CMZ33/Github-Mev-Bot",
+      "category": "MEV-bot-source",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/CMZ33/Github-Mev-Bot",
+      "head_commit": "38a67f0aa34b01a10e22ceab752aac6900de58dd",
+      "pin_source": "https://github.com/CMZ33/Github-Mev-Bot/commit/38a67f0aa34b01a10e22ceab752aac6900de58dd",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed master head; commit author date 2025-03-24T21:19:14Z. GitHub license metadata: MIT. MEV/bot code with on-chain transaction and key-management risk; a similar repository title is not evidence of common ownership or safety. Blocked pending source provenance, license/dependency scan, private-key isolation, and contract simulation review. Never fund or run. No install/build/test execution, no secrets, no capital, execution, production deployment, or LIVE_LOCK authority.",
+      "upstream_default_branch": "master",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
     }
   ],
   "pin_policy": {
