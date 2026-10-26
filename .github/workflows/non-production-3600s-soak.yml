@@ -140,17 +140,21 @@ jobs:
               end
           '
 
-          start_epoch="$(date +%s)"
-          start_iso="$(date -u -d "@$start_epoch" '+%Y-%m-%dT%H:%M:%SZ')"
-          end_epoch=$((start_epoch + SOAK_SECONDS))
+          iso_from_ns() {
+            python -c 'from datetime import datetime, timezone; import sys; ns = int(sys.argv[1]); dt = datetime.fromtimestamp(ns // 1000000000, timezone.utc).replace(microsecond=(ns % 1000000000) // 1000); print(dt.isoformat(timespec="microseconds").replace("+00:00", "Z"))' "$1"
+          }
+          start_ns="$(date +%s%N)"
+          start_iso="$(iso_from_ns "$start_ns")"
+          end_ns=$((start_ns + SOAK_SECONDS * 1000000000))
           checks=0
           restarts=0
           failures=0
-          next_restart=$((start_epoch + 900))
+          next_restart_ns=$((start_ns + 900 * 1000000000))
 
-          while [ "$(date +%s)" -lt "$end_epoch" ]; do
-            now="$(date +%s)"
-            elapsed=$((now - start_epoch))
+          while [ "$(date +%s%N)" -lt "$end_ns" ]; do
+            now_ns="$(date +%s%N)"
+            elapsed_ms=$(((now_ns - start_ns) / 1000000))
+            elapsed="$(awk -v milliseconds="$elapsed_ms" 'BEGIN { printf "%.3f", milliseconds / 1000 }')"
             checks=$((checks + 1))
 
             if ! curl --fail --silent --show-error http://127.0.0.1:18081/health >/tmp/aurelia-health.json; then
@@ -181,7 +185,7 @@ jobs:
               }
             ' /tmp/aurelia-health.json >> "$observations"
 
-            if [ "$now" -ge "$next_restart" ] && [ "$now" -lt "$end_epoch" ]; then
+            if [ "$now_ns" -ge "$next_restart_ns" ] && [ "$now_ns" -lt "$end_ns" ]; then
               echo "CONTROLLED_RESTART elapsed=$elapsed"
               docker restart aurelia-non-production-soak >/tmp/aurelia-restart.log
               restarts=$((restarts + 1))
@@ -190,7 +194,9 @@ jobs:
               for attempt in $(seq 1 15); do
                 if curl --fail --silent --show-error http://127.0.0.1:18081/health >/tmp/aurelia-post-restart-health.json 2>/dev/null; then
                   if jq -e "$health_filter" /tmp/aurelia-post-restart-health.json >/dev/null; then
-                    post_elapsed=$(( $(date +%s) - start_epoch ))
+                    post_now_ns="$(date +%s%N)"
+                    post_elapsed_ms=$(((post_now_ns - start_ns) / 1000000))
+                    post_elapsed="$(awk -v milliseconds="$post_elapsed_ms" 'BEGIN { printf "%.3f", milliseconds / 1000 }')"
                     jq -c --argjson elapsed "$post_elapsed" --arg sample_kind "post_restart" '
                       {
                         elapsed_seconds: $elapsed,
@@ -216,7 +222,7 @@ jobs:
                 exit 1
               fi
 
-              next_restart=$((next_restart + 900))
+              next_restart_ns=$((next_restart_ns + 900 * 1000000000))
             fi
 
             if [ $((checks % 60)) -eq 0 ]; then
@@ -226,9 +232,10 @@ jobs:
             sleep 5
           done
 
-          final_epoch="$(date +%s)"
-          end_iso="$(date -u -d "@$final_epoch" '+%Y-%m-%dT%H:%M:%SZ')"
-          duration=$((final_epoch - start_epoch))
+          final_ns="$(date +%s%N)"
+          end_iso="$(iso_from_ns "$final_ns")"
+          duration_ns=$((final_ns - start_ns))
+          duration=$((duration_ns / 1000000000))
           source_commit="$GITHUB_SHA"
           runtime_image_id="$(docker image inspect aurelia-non-production-soak --format "{{.Id}}")"
           runtime_instance_id="$(docker inspect aurelia-non-production-soak --format "{{.Id}}")"
