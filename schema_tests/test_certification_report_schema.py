@@ -65,13 +65,21 @@ class CertificationReportSchemaTests(unittest.TestCase):
     def test_config_schema_mirror_matches_canonical_schema(self):
         config_schema_path = ROOT / "config" / "AURELIA_CERTIFICATION_REPORT.schema.json"
         config_schema = json.loads(config_schema_path.read_text(encoding="utf-8"))
+        Draft202012Validator.check_schema(config_schema)
+
+        # The two schema copies have path-specific IDs; every other schema rule must match.
+        canonical_for_compare = dict(self.schema)
+        config_for_compare = dict(config_schema)
+        canonical_for_compare.pop("$id", None)
+        config_for_compare.pop("$id", None)
         self.assertEqual(
-            config_schema,
-            self.schema,
+            config_for_compare,
+            canonical_for_compare,
             "config schema must mirror the canonical report schema; divergent report shapes are unsafe",
         )
         report_path = ROOT / "AURELIA_CERTIFICATION_REPORT.json"
-        self.validator.validate(json.loads(report_path.read_text(encoding="utf-8")))
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        Draft202012Validator(config_schema).validate(report)
 
     def test_pass_without_evidence_hash_is_rejected(self):
         report = pending_report()
