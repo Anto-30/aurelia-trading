@@ -54,6 +54,41 @@ class FakeTransport:
 
 
 class DerivTransportDiagnosticsTests(unittest.TestCase):
+
+    def test_connect_starts_application_level_keepalive_task(self):
+        async def run():
+            class IdleSocket:
+                def __init__(self):
+                    self.closed = False
+                    self.release = asyncio.Event()
+
+                async def recv(self):
+                    await self.release.wait()
+                    return "{}"
+
+                async def send(self, _message):
+                    return None
+
+                async def close(self):
+                    self.closed = True
+                    self.release.set()
+
+            socket = IdleSocket()
+            transport = DerivWebSocketTransport(
+                "wss://api.derivws.com/trading/v1/options/ws/public"
+            )
+            with patch(
+                "runtime.adapters.deriv_ws.connect",
+                new=AsyncMock(return_value=socket),
+            ):
+                await transport.connect()
+                self.assertIsNotNone(
+                    getattr(transport, "_heartbeat_task", None),
+                    "public transport must start an application-level Deriv ping loop",
+                )
+                await transport.close()
+
+        asyncio.run(run())
     def test_reader_failure_preserves_safe_cause_type_without_raw_error_text(self):
         async def run():
             transport = DerivWebSocketTransport("wss://example.invalid/public")
