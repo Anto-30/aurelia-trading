@@ -4171,7 +4171,10 @@
       "source_url": "https://github.com/NetroIndonesia/freebuff2api",
       "head_commit": "4894d7db6157c97f3037dc7d79ae0c2571762f8e",
       "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
-      "capital_authority": false
+      "capital_authority": false,
+      "sync_enabled": false,
+      "sync_exemption_reason": "The public GitHub REST repository endpoint returned HTTP 404 on 2026-10-26. Retain the last known pin for provenance only; do not install or execute. Re-enable sync only after independent URL and commit verification.",
+      "sync_exemption_observed_at_utc": "2026-10-26T09:40:04Z"
     },
     {
       "repo": "XxxXTeam/freebuff2api",
@@ -4344,7 +4347,10 @@
       "source_url": "https://github.com/0xgetz/freebuff-9router",
       "head_commit": "ec5e698816d86b4db1d970e03d10350bcc15d966",
       "pin_source": "github_api_default_branch_commit_checked_2026-10-09",
-      "capital_authority": false
+      "capital_authority": false,
+      "sync_enabled": false,
+      "sync_exemption_reason": "The public GitHub REST repository endpoint returned HTTP 404 on 2026-10-26. Retain the last known pin for provenance only; do not install or execute. Re-enable sync only after independent URL and commit verification.",
+      "sync_exemption_observed_at_utc": "2026-10-26T09:40:04Z"
     },
     {
       "repo": "aminkalantari842-ui/global-intelligence-os",
