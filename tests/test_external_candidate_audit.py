@@ -4,7 +4,7 @@ import os
 import unittest
 from pathlib import Path
 
-from tools.audit_external_candidates import docker_common_args
+from tools.audit_external_candidates import docker_common_args, safe_tool_failure_class
 
 
 class AuditDockerEnvironmentTests(unittest.TestCase):
@@ -34,6 +34,19 @@ class AuditDockerEnvironmentTests(unittest.TestCase):
             tmpfs_values,
         )
         self.assertNotIn("/root/.semgrep:rw,nosuid,nodev,size=16m", tmpfs_values)
+
+    def test_trivy_database_fetch_failures_have_a_specific_safe_code(self):
+        # The scanner must identify the failing security-database layer without exposing raw diagnostics.
+        self.assertEqual(
+            safe_tool_failure_class("failed to download vulnerability db: context deadline exceeded", ""),
+            "TRIVY_VULNERABILITY_DB_FETCH_FAILED",
+        )
+
+    def test_trivy_checks_bundle_fetch_failures_have_a_specific_safe_code(self):
+        self.assertEqual(
+            safe_tool_failure_class("failed to download checks bundle: registry request failed", ""),
+            "TRIVY_CHECKS_BUNDLE_FETCH_FAILED",
+        )
 
 
 if __name__ == "__main__":
