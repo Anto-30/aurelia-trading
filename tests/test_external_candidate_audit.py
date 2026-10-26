@@ -214,7 +214,6 @@ class AuditDockerEnvironmentTests(unittest.TestCase):
         self.assertEqual(
             repositories,
             [
-                "public.ecr.aws/aquasecurity/trivy-db",
                 "mirror.gcr.io/aquasec/trivy-db",
                 "ghcr.io/aquasecurity/trivy-db",
                 "aquasec/trivy-db",
@@ -226,12 +225,12 @@ class AuditDockerEnvironmentTests(unittest.TestCase):
         java_repositories = [
             args[i + 1] for i, item in enumerate(args[:-1]) if item == "--java-db-repository"
         ]
-        self.assertEqual(len(java_repositories), 4)
+        self.assertEqual(len(java_repositories), 3)
         self.assertEqual(
-            java_repositories[0], "public.ecr.aws/aquasecurity/trivy-java-db"
+            java_repositories[0], "mirror.gcr.io/aquasec/trivy-java-db"
         )
         checks_index = args.index("--checks-bundle-repository")
-        self.assertEqual(args[checks_index + 1], "public.ecr.aws/aquasecurity/trivy-checks")
+        self.assertEqual(args[checks_index + 1], "mirror.gcr.io/aquasec/trivy-checks")
 
 
 if __name__ == "__main__":
