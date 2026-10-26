@@ -2,11 +2,11 @@
 
 ## Status
 
-This is a controlled intake proposal for 56 repositories supplied for AURELIA engineering evaluation. The 2026-10-26 batch contains 23 distinct repository references (the repeated Crypto-Signal URL was deduplicated); 21 registry records were added and two existing records were refreshed as intake candidates. Registration is not a security approval, installation, dependency pin, or production integration.
+This is a controlled intake proposal for 81 repositories supplied for AURELIA engineering evaluation. The two 2026-10-26 batches contain 48 distinct repository references (the repeated Crypto-Signal URL in the earlier batch was deduplicated); 46 registry records were added across those batches and two existing records were refreshed as intake candidates. Registration is not a security approval, installation, dependency pin, or production integration.
 
-- Intake candidates: 56
-- Newly added registry records across the PR: 54 (33 initial records plus 21 new records); 2 existing registry records refreshed as candidates
-- Candidate head revisions: 56/56 pinned to exact commit SHAs. The initial 33 were captured on 2026-10-25; the 23 additional distinct references were re-checked on 2026-10-26. Exact commit links and UTC author dates are recorded below. This is source provenance only, not a security approval.
+- Intake candidates: 81 (56 BLOCKED; 25 UNREVIEWED)
+- Newly added registry records across the PR: 79 (33 initial records, 21 from the first 2026-10-26 batch, and 25 from the new batch); 2 existing registry records refreshed as candidates
+- Candidate head revisions: 81/81 pinned to exact commit SHAs. The initial 33 were captured on 2026-10-25; 48 additional distinct references were checked on 2026-10-26. Exact commit links and UTC author dates are recorded below. This is source provenance only, not a security approval.
 - Runtime installation: none performed by this change.
 - Capital/execution authority: none.
 - `config/LIVE_LOCK.yaml` is unchanged and remains fail-closed.
@@ -151,3 +151,38 @@ The following 23 distinct references were added to the review set. SHA values an
 | CMZ33/Github-Mev-Bot | master | [38a67f0aa34b01a10e22ceab752aac6900de58dd](https://github.com/CMZ33/Github-Mev-Bot/commit/38a67f0aa34b01a10e22ceab752aac6900de58dd) | 2025-03-24 | MIT | BLOCKED |
 
 Licensing note: NOASSERTION means GitHub metadata returned no recognized SPDX identifier; it does not prove a license file is absent. Candidates so marked remain blocked where shown until actual license terms are reviewed. Repeated CryptoSignal/Crypto-Signal input was recorded once. No candidate code, scripts, skills, dependencies, or broker integrations were installed or executed.
+
+
+## Additional intake batch — 2026-10-26 (agent/mobile and trading projects)
+
+This batch contains 25 distinct repositories. Default branches, latest commit SHAs and commit-author dates were retrieved through GitHub's public API. The license column records GitHub repository metadata, not a legal determination. All candidates are reference-only. Twenty-four are BLOCKED pending the repository-specific reviews captured in the registry; `didi/Hummer` remains UNREVIEWED because it is a general mobile framework and still requires source/dependency review. No code was installed or executed, no agent/device/call gateway was connected, and no credentials were supplied.
+
+| Repository | Branch | Pinned commit | Author date (UTC) | GitHub license metadata | Intake status |
+|---|---|---|---|---|---|
+| Haehnchen/crypto-trading-bot | master | [cb9563344a20ea7ac89ff214d350f141d1521219](https://github.com/Haehnchen/crypto-trading-bot/commit/cb9563344a20ea7ac89ff214d350f141d1521219) | 2026-08-02 | MIT | BLOCKED |
+| HenWorks/Hermes-agent-android-PC-companion-app | main | [bcae80000db4f3a372664357b08eb2150651ca1c](https://github.com/HenWorks/Hermes-agent-android-PC-companion-app/commit/bcae80000db4f3a372664357b08eb2150651ca1c) | 2026-09-04 | AGPL-3.0 | BLOCKED |
+| didi/Hummer | master | [ba0d5be2054f00a1014877c81f34f093ca7486b0](https://github.com/didi/Hummer/commit/ba0d5be2054f00a1014877c81f34f093ca7486b0) | 2025-10-29 | Apache-2.0 | UNREVIEWED |
+| sidinsearch/AgentCall | main | [9c80cfe99707861869016227cb5e8f19683adc75](https://github.com/sidinsearch/AgentCall/commit/9c80cfe99707861869016227cb5e8f19683adc75) | 2026-08-02 | AGPL-3.0 | BLOCKED |
+| sesori-ai/sesori_apps_monorepo | main | [9cc801c2903f33a8772d16c358624518cc2ef483](https://github.com/sesori-ai/sesori_apps_monorepo/commit/9cc801c2903f33a8772d16c358624518cc2ef483) | 2026-10-26 | NOASSERTION | BLOCKED |
+| l3ad3r1/Hermes-Agent-Android | main | [a08497b979d6241387bc15cde7c57279d0b2cc10](https://github.com/l3ad3r1/Hermes-Agent-Android/commit/a08497b979d6241387bc15cde7c57279d0b2cc10) | 2026-10-07 | MIT | BLOCKED |
+| Binair-Dev/HermesAgentMobile | main | [b68f921d9ba2f75344356b607157260564c8fad6](https://github.com/Binair-Dev/HermesAgentMobile/commit/b68f921d9ba2f75344356b607157260564c8fad6) | 2026-04-10 | MIT | BLOCKED |
+| amirghm/hermes-agent-mobile | main | [4a9cf07702bab44a191d7bd6ee3bd387edef467a](https://github.com/amirghm/hermes-agent-mobile/commit/4a9cf07702bab44a191d7bd6ee3bd387edef467a) | 2026-06-30 | NOASSERTION | BLOCKED |
+| xP3ta/hermes-console | main | [f80fae7239e88234e3d62ac1eebbf96d68f00803](https://github.com/xP3ta/hermes-console/commit/f80fae7239e88234e3d62ac1eebbf96d68f00803) | 2026-10-25 | GPL-3.0 | BLOCKED |
+| sesaloy/hermes-mobile | main | [5181095a0878b37adc2ccb63710b42f2fba2719a](https://github.com/sesaloy/hermes-mobile/commit/5181095a0878b37adc2ccb63710b42f2fba2719a) | 2026-07-14 | MIT | BLOCKED |
+| marshallrichards/ClawPhone | main | [b224a589b06ee8de27bc57dde3f3695359d1f60c](https://github.com/marshallrichards/ClawPhone/commit/b224a589b06ee8de27bc57dde3f3695359d1f60c) | 2026-05-25 | NOASSERTION | BLOCKED |
+| jeromeleeqy-hash/Hermes-Android | main | [65aedfa629403f70f907c3b6387b27ef498ae57b](https://github.com/jeromeleeqy-hash/Hermes-Android/commit/65aedfa629403f70f907c3b6387b27ef498ae57b) | 2026-10-05 | NOASSERTION | BLOCKED |
+| unsupportedpastels/mercury | main | [cc634c922b8a171e4c500a5851a3ca6e740d7fe6](https://github.com/unsupportedpastels/mercury/commit/cc634c922b8a171e4c500a5851a3ca6e740d7fe6) | 2026-09-20 | MIT | BLOCKED |
+| omarqaterge/hermes-mobile-app | main | [c8688096f74c8b01b1a49b7dbf9123eb98f7c717](https://github.com/omarqaterge/hermes-mobile-app/commit/c8688096f74c8b01b1a49b7dbf9123eb98f7c717) | 2026-10-26 | MIT | BLOCKED |
+| adebnar/hermes-android | main | [9f08f39ed2b9fc7cb29a551b1d9b695a409fdb7a](https://github.com/adebnar/hermes-android/commit/9f08f39ed2b9fc7cb29a551b1d9b695a409fdb7a) | 2026-07-20 | GPL-3.0 | BLOCKED |
+| getpaseo/paseo | main | [65ce4b590a09106372c555cb7322f6da73b9d419](https://github.com/getpaseo/paseo/commit/65ce4b590a09106372c555cb7322f6da73b9d419) | 2026-10-26 | NOASSERTION | BLOCKED |
+| reactnativecn/react-native-update | master | [4620119b37d40e16f51a119bd2d613e12a316cd4](https://github.com/reactnativecn/react-native-update/commit/4620119b37d40e16f51a119bd2d613e12a316cd4) | 2026-10-21 | NOASSERTION | BLOCKED |
+| hermes-webui/hermes-android | main | [9c35a2fd0cf0fbf8f688dc283e86a3cae1258c2f](https://github.com/hermes-webui/hermes-android/commit/9c35a2fd0cf0fbf8f688dc283e86a3cae1258c2f) | 2026-10-25 | NOASSERTION | BLOCKED |
+| Hy4ri/hermes-mobile | main | [f03426df599d36b003b10ce29516434e591aef82](https://github.com/Hy4ri/hermes-mobile/commit/f03426df599d36b003b10ce29516434e591aef82) | 2026-10-26 | Apache-2.0 | BLOCKED |
+| Giton22/herald | master | [687d80e3e6b6bbf2199086ff1d780b07e57bc88c](https://github.com/Giton22/herald/commit/687d80e3e6b6bbf2199086ff1d780b07e57bc88c) | 2026-10-24 | MIT | BLOCKED |
+| AbuZar-Ansarii/Hermes-Agent-On-Android | main | [4d2427c2d6dc6a7683ec9c9d4efab9114abe17cc](https://github.com/AbuZar-Ansarii/Hermes-Agent-On-Android/commit/4d2427c2d6dc6a7683ec9c9d4efab9114abe17cc) | 2026-08-13 | NOASSERTION | BLOCKED |
+| Xiaofei-it/Hermes | master | [262039098b407f40f8298e6bbb3ca173a9fe2322](https://github.com/Xiaofei-it/Hermes/commit/262039098b407f40f8298e6bbb3ca173a9fe2322) | 2017-05-05 | NOASSERTION | BLOCKED |
+| rusty4444/hermes-android | main | [3f26dd528224e21bc6ae3efcc5dc18912efb7f52](https://github.com/rusty4444/hermes-android/commit/3f26dd528224e21bc6ae3efcc5dc18912efb7f52) | 2026-10-26 | MIT | BLOCKED |
+| Codename-11/hermes-relay | main | [da782a8d74eb6631ea2f097b3cc69c6452ec33de](https://github.com/Codename-11/hermes-relay/commit/da782a8d74eb6631ea2f097b3cc69c6452ec33de) | 2026-10-20 | MIT | BLOCKED |
+| cogwheel0/conduit | main | [0f5c598aebaab02779b4bdbdb050e8e040ba2e9b](https://github.com/cogwheel0/conduit/commit/0f5c598aebaab02779b4bdbdb050e8e040ba2e9b) | 2026-10-26 | GPL-3.0 | BLOCKED |
+
+**Security focus:** the mobile/agent clients, remote-control bridges, and orchestrators are not interchangeable with trusted integrations. They remain blocked pending source/provenance, credential storage, agent tool/side-effect scope, network/TLS, permission, subprocess, data privacy, and license review. The crypto trading bot remains blocked pending exchange API permission, secret handling, order-write and cost-adjusted test review. `NOASSERTION` is a metadata signal and does not prove that a license file is absent. No candidate has been approved for installation, runtime use, broker access or capital authority.
