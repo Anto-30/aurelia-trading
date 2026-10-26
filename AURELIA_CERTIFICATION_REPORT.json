@@ -1,13 +1,14 @@
 {
   "report_metadata": {
     "commit_sha": "d04564aca0648201feff0326fe9af0fbcee92e94",
-    "generated_at_utc": "2026-10-26T14:19:00Z",
+    "generated_at_utc": "2026-10-26T14:58:00Z",
     "environment": "verify_only"
   },
   "safety_state": {
     "live_execution": "BLOCKED",
     "final_authorization": false,
-    "capital_plane_mode": "VERIFY_ONLY"
+    "capital_plane_mode": "VERIFY_ONLY",
+    "research_capital_authority": false
   },
   "gate_1_broker_lifecycle": {
     "status": "PENDING"
