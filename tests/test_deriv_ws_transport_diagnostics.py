@@ -182,5 +182,64 @@ class DerivTransportDiagnosticsTests(unittest.TestCase):
         asyncio.run(run())
 
 
+    def test_successful_proposal_response_without_required_object_is_rejected(self):
+        class SingleTickStream:
+            def __init__(self):
+                self.sent = False
+
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                if not self.sent:
+                    self.sent = True
+                    return {"tick": {"quote": 100.0, "epoch": int(collector.utc_now().timestamp())}}
+                await asyncio.Future()
+
+        class InvalidProposalTransport:
+            instances = []
+
+            def __init__(self, url, *, timeout_seconds=10.0):
+                self.url = url
+                self.closed = False
+                self.__class__.instances.append(self)
+
+            async def connect(self):
+                return None
+
+            def subscribe(self, key, payload):
+                return SingleTickStream()
+
+            async def request(self, payload):
+                # HTTP/WebSocket success envelope, but the New API-required proposal object is absent.
+                return {"msg_type": "proposal", "req_id": 2}
+
+            async def close(self):
+                self.closed = True
+
+        async def run():
+            InvalidProposalTransport.instances.clear()
+            state = collector.initial_state()
+
+            def emit_signal(*, state, **_kwargs):
+                if not state["pending"]:
+                    state["pending"].append({"signal_id": "signal-1", "direction": "CALL"})
+
+            with (
+                patch.object(collector, "DerivWebSocketTransport", InvalidProposalTransport),
+                patch.object(collector, "COLLECTION_SECONDS", 1),
+                patch.object(collector, "observe_tick", side_effect=emit_signal),
+            ):
+                with self.assertRaisesRegex(
+                    DerivTransportError, "DERIV_NEW_API_PROPOSAL_RESPONSE_INVALID"
+                ):
+                    await collector.collect_once(state)
+
+            self.assertTrue(InvalidProposalTransport.instances[0].closed)
+            self.assertEqual(state["quote_observations"], [])
+
+        asyncio.run(run())
+
+
 if __name__ == "__main__":
     unittest.main()
