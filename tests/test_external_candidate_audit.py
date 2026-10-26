@@ -12,6 +12,8 @@ from tools.audit_external_candidates import (
     semgrep_coverage_status,
     sanitize_semgrep,
     trivy_database_args,
+    trivy_offline_scan_flags,
+    prepare_trivy_databases,
 )
 
 
@@ -112,6 +114,54 @@ class SemgrepCoverageTests(unittest.TestCase):
 
 
 class AuditDockerEnvironmentTests(unittest.TestCase):
+    def test_trivy_scan_uses_only_cached_databases_and_rules(self):
+        self.assertEqual(
+            trivy_offline_scan_flags(),
+            ["--skip-db-update", "--skip-java-db-update", "--skip-check-update"],
+        )
+
+    def test_scanner_network_mode_is_explicit_and_preflight_can_omit_candidate_mount(self):
+        common = dict(
+            image="aquasec/trivy:0.76.1",
+            entrypoint="trivy",
+            repo_dir=None,
+            scratch_dir=Path("/tmp/aurelia-scan"),
+            cache_dir=Path("/tmp/aurelia-cache"),
+        )
+        host_args = docker_common_args(**common, network="host")
+        self.assertEqual(host_args[host_args.index("--network") + 1], "host")
+        self.assertFalse(any("/src:ro" in arg for arg in host_args))
+        offline_args = docker_common_args(**common, network="none")
+        self.assertEqual(offline_args[offline_args.index("--network") + 1], "none")
+        with self.assertRaisesRegex(ValueError, "INVALID_SCANNER_NETWORK_MODE"):
+            docker_common_args(**common, network="invalid")
+
+    def test_trivy_preflight_downloads_db_and_checks_without_candidate_source(self):
+        from unittest.mock import patch
+        from tools.audit_external_candidates import prepare_trivy_databases
+
+        with tempfile.TemporaryDirectory() as tmp:
+            scratch = Path(tmp) / "scratch"
+            cache = Path(tmp) / "cache"
+            cache.mkdir()
+            with patch("tools.audit_external_candidates.run_command") as run:
+                result = prepare_trivy_databases(
+                    scratch, cache, "aquasec/trivy:0.76.1"
+                )
+
+        self.assertEqual(result["status"], "READY")
+        self.assertEqual(result["candidate_source_mounted"], False)
+        self.assertEqual(run.call_count, 3)
+        commands = [call.args[0] for call in run.call_args_list]
+        self.assertIn("--download-db-only", commands[0])
+        self.assertIn("--download-java-db-only", commands[1])
+        self.assertEqual(commands[0][commands[0].index("--network") + 1], "host")
+        self.assertEqual(commands[1][commands[1].index("--network") + 1], "host")
+        self.assertEqual(commands[2][commands[2].index("--network") + 1], "host")
+        self.assertFalse(any("/src:ro" in arg for arg in commands[0]))
+        self.assertFalse(any("/src:ro" in arg for arg in commands[1]))
+        self.assertTrue(any("trivy-preflight-source" in arg for arg in commands[2]))
+
     def test_git_global_config_uses_writable_container_tmpfs(self):
         args = docker_common_args(
             "semgrep/semgrep:1.182.0",
