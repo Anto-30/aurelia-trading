@@ -1,33 +1,225 @@
+from __future__ import annotations
+
 import unittest
-from runtime.adapters.deriv_adapter import DerivAdapter
-class TestDerivAdapterContract(unittest.TestCase):
- def test_missing_url_fails_closed(self):self.assertEqual(DerivAdapter(ws_url="").ws_url,"")
- def test_secret_not_in_fingerprint(self):a=DerivAdapter(ws_url="wss://example.invalid",auth_token="SECRET",expected_loginid="CR123");self.assertNotIn("SECRET",a.connection_fingerprint)
- def test_proposal_id_required_by_executor_contract(self):self.assertTrue("ORDER_REQUIRES_BROKER_PROPOSAL_ID" in "ORDER_REQUIRES_BROKER_PROPOSAL_ID")
- def test_authenticated_connect_requires_explicit_expected_currency(self):
-  import asyncio
-  from runtime.adapters.deriv_adapter import DerivProtocolError
-  a=DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/real",expected_currency="")
-  with self.assertRaisesRegex(DerivProtocolError,"EXPECTED_ACCOUNT_CURRENCY_REQUIRED"):asyncio.run(a.connect())
- def test_missing_broker_currency_fails_closed(self):
-  import asyncio
-  from types import SimpleNamespace
-  from unittest.mock import AsyncMock, patch
-  from runtime.adapters.deriv_adapter import DerivProtocolError
-  transport=SimpleNamespace(connect=AsyncMock(),request=AsyncMock(return_value={"authorize":{"loginid":"CRREAL"}}),close=AsyncMock())
-  a=DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/real",auth_token="TOKEN",expected_loginid="CRREAL",expected_currency="USD")
-  with patch("runtime.adapters.deriv_adapter.DerivWebSocketTransport",return_value=transport):
-   with self.assertRaisesRegex(DerivProtocolError,"ACCOUNT_CURRENCY_UNVERIFIED"):asyncio.run(a.connect())
-  transport.close.assert_awaited_once()
- def test_unknown_is_explicit_result_type(self):from runtime.core.models import BrokerOutcome;self.assertEqual(BrokerOutcome.UNKNOWN.value,"UNKNOWN")
- def test_current_deriv_underlying_symbol_is_normalized_for_internal_consumers(self):
-  from unittest.mock import AsyncMock
-  a=DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/real")
-  a.request=AsyncMock(return_value={"active_symbols":[{"underlying_symbol":"1HZ100V"}]})
-  import asyncio
-  rows=asyncio.run(a.active_symbols())
-  self.assertEqual(rows[0]["symbol"],"1HZ100V")
-  self.assertEqual(rows[0]["underlying_symbol"],"1HZ100V")
-if __name__=="__main__":unittest.main()
+from unittest.mock import AsyncMock, patch
+
+from runtime.adapters.deriv_adapter import DerivAdapter, DerivProtocolError
+from runtime.core.models import BrokerOutcome
 
 
+class TestDerivAdapterContract(unittest.IsolatedAsyncioTestCase):
+    def test_missing_url_fails_closed(self):
+        self.assertEqual(DerivAdapter(ws_url="").ws_url, "")
+
+    def test_secret_not_in_fingerprint(self):
+        adapter = DerivAdapter(
+            ws_url="wss://example.invalid",
+            auth_token="SECRET",
+            expected_loginid="CR123",
+        )
+        self.assertNotIn("SECRET", adapter.connection_fingerprint)
+
+    async def test_proposal_rejects_legacy_payload_fields_before_transport(self):
+        for legacy_field, legacy_value in (
+            ("symbol", "R_100"),
+            ("loginid", "VRTC-FIXTURE"),
+        ):
+            with self.subTest(legacy_field=legacy_field):
+                adapter = DerivAdapter(
+                    ws_url="wss://api.derivws.com/trading/v1/options/ws/public"
+                )
+                adapter.request = AsyncMock(
+                    return_value={"proposal": {"id": "fixture-proposal"}}
+                )
+                parameters = {
+                    "contract_type": "CALL",
+                    "currency": "USD",
+                    "underlying_symbol": "R_100",
+                    legacy_field: legacy_value,
+                }
+                with self.assertRaisesRegex(
+                    DerivProtocolError, "LEGACY_DERIV_REQUEST_FIELD"
+                ):
+                    await adapter.request_proposal(parameters)
+                adapter.request.assert_not_awaited()
+
+    async def test_proposal_response_requires_new_api_object(self):
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/public"
+        )
+        adapter.request = AsyncMock(return_value={"msg_type": "proposal"})
+        with self.assertRaisesRegex(
+            DerivProtocolError, "PROPOSAL_OBJECT_MISSING_FROM_BROKER"
+        ):
+            await adapter.request_proposal({
+                "contract_type": "CALL",
+                "currency": "USD",
+                "underlying_symbol": "R_100",
+            })
+
+    async def test_buy_rejects_nonfinite_or_negative_price_before_transport(self):
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/demo"
+        )
+        adapter.authorized = True
+        adapter.request = AsyncMock(return_value={
+            "buy": {"transaction_id": "fixture-transaction", "contract_id": 123}
+        })
+        for invalid in (-0.01, float("nan"), float("inf"), True, None, "not-a-price", 10**1000):
+            with self.subTest(invalid=repr(invalid)):
+                adapter.request.reset_mock()
+                with self.assertRaisesRegex(DerivProtocolError, "ORDER_PRICE_INVALID"):
+                    await adapter.submit_authorized_order({
+                        "proposal_id": "fixture-proposal",
+                        "stake": invalid,
+                    })
+                adapter.request.assert_not_awaited()
+
+    async def test_buy_accepts_zero_price_at_api_boundary(self):
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/demo"
+        )
+        adapter.authorized = True
+        adapter.request = AsyncMock(return_value={
+            "buy": {"transaction_id": "fixture-transaction", "contract_id": 123}
+        })
+        await adapter.submit_authorized_order({
+            "proposal_id": "fixture-proposal",
+            "stake": 0,
+        })
+        adapter.request.assert_awaited_once_with({
+            "buy": "fixture-proposal",
+            "price": 0,
+        })
+
+    async def test_buy_uses_new_api_price_without_legacy_identity_fields(self):
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/demo"
+        )
+        adapter.authorized = True
+        adapter.request = AsyncMock(return_value={
+            "buy": {"transaction_id": "fixture-transaction", "contract_id": 123}
+        })
+        result = await adapter.submit_authorized_order({
+            "proposal_id": "fixture-proposal",
+            "stake": 1.25,
+            "loginid": "MUST_NOT_BE_SENT",
+            "symbol": "MUST_NOT_BE_SENT",
+        })
+        self.assertEqual(result.outcome, BrokerOutcome.ACCEPTED)
+        adapter.request.assert_awaited_once_with({
+            "buy": "fixture-proposal",
+            "price": 1.25,
+        })
+        sent = adapter.request.await_args.args[0]
+        self.assertNotIn("loginid", sent)
+        self.assertNotIn("symbol", sent)
+
+    async def test_otp_bound_connection_uses_balance_without_legacy_authorize(self):
+        transport = type("FakeTransport", (), {
+            "connect": AsyncMock(),
+            "request": AsyncMock(return_value={
+                "balance": {
+                    "balance": 100.0,
+                    "currency": "USD",
+                    "loginid": "CR123",
+                }
+            }),
+            "close": AsyncMock(),
+        })()
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real?otp=FIXTURE_ONLY",
+            auth_token="FIXTURE_PAT_MUST_NOT_BE_SENT_OVER_WEBSOCKET",
+            expected_loginid="CR123",
+            expected_currency="USD",
+        )
+        with patch(
+            "runtime.adapters.deriv_adapter.DerivWebSocketTransport",
+            return_value=transport,
+        ):
+            account = await adapter.connect()
+
+        self.assertEqual(account.loginid, "CR123")
+        self.assertEqual(account.currency, "USD")
+        transport.request.assert_awaited_once_with({"balance": 1, "req_id": 1})
+
+    async def test_authenticated_endpoint_without_otp_fails_before_connect(self):
+        transport = type("FakeTransport", (), {
+            "connect": AsyncMock(),
+            "request": AsyncMock(return_value={
+                "balance": {
+                    "balance": 100.0,
+                    "currency": "USD",
+                    "loginid": "CR123",
+                }
+            }),
+            "close": AsyncMock(),
+        })()
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+            auth_token="",
+            expected_loginid="CR123",
+            expected_currency="USD",
+        )
+        with patch(
+            "runtime.adapters.deriv_adapter.DerivWebSocketTransport",
+            return_value=transport,
+        ) as factory:
+            with self.assertRaisesRegex(
+                DerivProtocolError, "DERIV_OTP_URL_REQUIRED"
+            ):
+                await adapter.connect()
+        factory.assert_not_called()
+        transport.connect.assert_not_awaited()
+
+    async def test_authenticated_connect_requires_explicit_expected_currency(self):
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+            expected_currency="",
+        )
+        with self.assertRaisesRegex(
+            DerivProtocolError, "EXPECTED_ACCOUNT_CURRENCY_REQUIRED"
+        ):
+            await adapter.connect()
+
+    async def test_missing_broker_currency_fails_closed(self):
+        transport = type("FakeTransport", (), {
+            "connect": AsyncMock(),
+            "request": AsyncMock(return_value={
+                "balance": {"balance": 100.0, "loginid": "CRREAL"}
+            }),
+            "close": AsyncMock(),
+        })()
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real?otp=FIXTURE_ONLY",
+            auth_token="FIXTURE_ONLY_TOKEN",
+            expected_loginid="CRREAL",
+            expected_currency="USD",
+        )
+        with patch(
+            "runtime.adapters.deriv_adapter.DerivWebSocketTransport",
+            return_value=transport,
+        ):
+            with self.assertRaisesRegex(
+                DerivProtocolError, "ACCOUNT_CURRENCY_UNVERIFIED"
+            ):
+                await adapter.connect()
+        transport.close.assert_awaited_once()
+
+    def test_unknown_is_explicit_result_type(self):
+        self.assertEqual(BrokerOutcome.UNKNOWN.value, "UNKNOWN")
+
+    async def test_current_underlying_symbol_is_normalized_for_internal_consumers(self):
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real"
+        )
+        adapter.request = AsyncMock(return_value={
+            "active_symbols": [{"underlying_symbol": "1HZ100V"}]
+        })
+        rows = await adapter.active_symbols()
+        self.assertEqual(rows[0]["symbol"], "1HZ100V")
+        self.assertEqual(rows[0]["underlying_symbol"], "1HZ100V")
+
+
+if __name__ == "__main__":
+    unittest.main()
