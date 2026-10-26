@@ -7410,6 +7410,506 @@
       "upstream_archived": false,
       "upstream_license_spdx": "MIT",
       "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "Haehnchen/crypto-trading-bot",
+      "category": "automated-crypto-trading-bot",
+      "domain": "trading-research",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Haehnchen/crypto-trading-bot",
+      "head_commit": "cb9563344a20ea7ac89ff214d350f141d1521219",
+      "pin_source": "https://github.com/Haehnchen/crypto-trading-bot/commit/cb9563344a20ea7ac89ff214d350f141d1521219",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed master head; commit author date 2026-08-02T09:15:51Z. GitHub license metadata: MIT. Exchange-connected automated trading bot supporting centralized exchanges. Blocked pending source/dependency/secret audit, API permission and order-write analysis, withdrawal/key boundary review, and reproducible cost-adjusted testing. No exchange credentials, installation, or execution. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "master",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "HenWorks/Hermes-agent-android-PC-companion-app",
+      "category": "hermes-agent-pc-mobile-bridge",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/HenWorks/Hermes-agent-android-PC-companion-app",
+      "head_commit": "bcae80000db4f3a372664357b08eb2150651ca1c",
+      "pin_source": "https://github.com/HenWorks/Hermes-agent-android-PC-companion-app/commit/bcae80000db4f3a372664357b08eb2150651ca1c",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-09-04T06:48:48Z. GitHub license metadata: AGPL-3.0. Paired phone/PC agent companion permits task execution on a computer and conversation handoff. Blocked pending pairing/authentication protocol review, trust revocation, cryptographic implementation, PC command execution, network exposure, and AGPL compatibility. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "AGPL-3.0",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "didi/Hummer",
+      "category": "cross-platform-mobile-framework",
+      "domain": "engineering-reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/didi/Hummer",
+      "head_commit": "ba0d5be2054f00a1014877c81f34f093ca7486b0",
+      "pin_source": "https://github.com/didi/Hummer/commit/ba0d5be2054f00a1014877c81f34f093ca7486b0",
+      "intake_status": "UNREVIEWED",
+      "integration_note": "Pinned to observed master head; commit author date 2025-10-29T06:43:43Z. GitHub license metadata: Apache-2.0. General cross-platform mobile development framework, not a trading dependency. Reference-only pending maintenance, dependency, native bridge, build-pipeline and license review before any use. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "master",
+      "upstream_archived": false,
+      "upstream_license_spdx": "Apache-2.0",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "sidinsearch/AgentCall",
+      "category": "phone-call-agent-gateway",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/sidinsearch/AgentCall",
+      "head_commit": "9c80cfe99707861869016227cb5e8f19683adc75",
+      "pin_source": "https://github.com/sidinsearch/AgentCall/commit/9c80cfe99707861869016227cb5e8f19683adc75",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-08-02T16:48:06Z. GitHub license metadata: AGPL-3.0. Phone-call/cellular gateway that connects AI agents to Android, Windows or Linux endpoints. Blocked pending review of call initiation authority, phone permissions, remote command surfaces, consent, auditability, private data and AGPL compatibility. No calls or device actions. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "AGPL-3.0",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "sesori-ai/sesori_apps_monorepo",
+      "category": "mobile-multi-agent-orchestrator",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/sesori-ai/sesori_apps_monorepo",
+      "head_commit": "9cc801c2903f33a8772d16c358624518cc2ef483",
+      "pin_source": "https://github.com/sesori-ai/sesori_apps_monorepo/commit/9cc801c2903f33a8772d16c358624518cc2ef483",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-26T17:42:58Z. GitHub license metadata: NOASSERTION. Mobile application/bridge for driving multiple coding-agent sessions. License metadata is NOASSERTION; blocked pending actual license review, provider-token storage, local/remote command authority, session isolation, prompt injection, bridge network exposure and permission boundaries. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "l3ad3r1/Hermes-Agent-Android",
+      "category": "hermes-agent-android-client",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/l3ad3r1/Hermes-Agent-Android",
+      "head_commit": "a08497b979d6241387bc15cde7c57279d0b2cc10",
+      "pin_source": "https://github.com/l3ad3r1/Hermes-Agent-Android/commit/a08497b979d6241387bc15cde7c57279d0b2cc10",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-07T07:56:40Z. GitHub license metadata: MIT. Unofficial Hermes Agent Android client. Blocked pending inspection of upstream identity, access-token handling, local storage, gateway authentication, network/TLS enforcement, agent tool permissions and build dependencies. No agent endpoint connection. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "Binair-Dev/HermesAgentMobile",
+      "category": "hermes-agent-mobile-gateway",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Binair-Dev/HermesAgentMobile",
+      "head_commit": "b68f921d9ba2f75344356b607157260564c8fad6",
+      "pin_source": "https://github.com/Binair-Dev/HermesAgentMobile/commit/b68f921d9ba2f75344356b607157260564c8fad6",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-04-10T21:34:46Z. GitHub license metadata: MIT. Standalone mobile gateway/client for Hermes Agent. Blocked pending credential lifecycle, authentication, local service exposure, egress controls, agent command/side-effect boundaries, source provenance and dependency review. No gateway or agent was started. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "amirghm/hermes-agent-mobile",
+      "category": "hermes-agent-mobile-installer",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/amirghm/hermes-agent-mobile",
+      "head_commit": "4a9cf07702bab44a191d7bd6ee3bd387edef467a",
+      "pin_source": "https://github.com/amirghm/hermes-agent-mobile/commit/4a9cf07702bab44a191d7bd6ee3bd387edef467a",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-06-30T09:30:57Z. GitHub license metadata: NOASSERTION. Mobile installer/assistant for Hermes Agent. License metadata is NOASSERTION; blocked pending source/license verification, shell/bootstrap script review, package integrity, permission scope and secret persistence analysis. Do not run one-line installers or connect credentials. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "xP3ta/hermes-console",
+      "category": "hermes-agent-console",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/xP3ta/hermes-console",
+      "head_commit": "f80fae7239e88234e3d62ac1eebbf96d68f00803",
+      "pin_source": "https://github.com/xP3ta/hermes-console/commit/f80fae7239e88234e3d62ac1eebbf96d68f00803",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-25T14:28:58Z. GitHub license metadata: GPL-3.0. Native Android console exposes agent tasks, cron, models and an SSH terminal. Blocked pending SSH key/token storage, local/remote command authority, gateway authentication, network policy, app supply-chain review and GPL-3.0 compatibility. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "GPL-3.0",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "sesaloy/hermes-mobile",
+      "category": "hermes-agent-local-mobile-runtime",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/sesaloy/hermes-mobile",
+      "head_commit": "5181095a0878b37adc2ccb63710b42f2fba2719a",
+      "pin_source": "https://github.com/sesaloy/hermes-mobile/commit/5181095a0878b37adc2ccb63710b42f2fba2719a",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-07-14T02:18:56Z. GitHub license metadata: MIT. ARM64 Android app intended to run Hermes Agent locally. Blocked pending Termux/bootstrap scripts, package provenance, dependency and token storage review, shell permissions, local API exposure and task execution boundaries. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "marshallrichards/ClawPhone",
+      "category": "agent-on-android-scripts",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/marshallrichards/ClawPhone",
+      "head_commit": "b224a589b06ee8de27bc57dde3f3695359d1f60c",
+      "pin_source": "https://github.com/marshallrichards/ClawPhone/commit/b224a589b06ee8de27bc57dde3f3695359d1f60c",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-05-25T03:10:22Z. GitHub license metadata: NOASSERTION. Scripts and configuration tweaks to run multiple agents on Android. License metadata is NOASSERTION; blocked pending provenance, shell/install hook review, permissions, downloaded binaries, credential handling and command execution audit. Do not execute scripts. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "jeromeleeqy-hash/Hermes-Android",
+      "category": "hermes-agent-android-client",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/jeromeleeqy-hash/Hermes-Android",
+      "head_commit": "65aedfa629403f70f907c3b6387b27ef498ae57b",
+      "pin_source": "https://github.com/jeromeleeqy-hash/Hermes-Android/commit/65aedfa629403f70f907c3b6387b27ef498ae57b",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-05T11:43:57Z. GitHub license metadata: NOASSERTION. Android client for a self-hosted Hermes gateway. License metadata is NOASSERTION; blocked pending license discovery, gateway authentication, credential storage, network/TLS and local-device permission review. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "unsupportedpastels/mercury",
+      "category": "multi-platform-hermes-agent-client",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/unsupportedpastels/mercury",
+      "head_commit": "cc634c922b8a171e4c500a5851a3ca6e740d7fe6",
+      "pin_source": "https://github.com/unsupportedpastels/mercury/commit/cc634c922b8a171e4c500a5851a3ca6e740d7fe6",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-09-20T19:46:40Z. GitHub license metadata: MIT. Unofficial Android/iOS Hermes companion client. Blocked pending review of endpoint restrictions, transport/TLS and cleartext handling, authentication/token storage, agent command scope and dependency supply chain. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "omarqaterge/hermes-mobile-app",
+      "category": "hermes-agent-on-device-mobile-app",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/omarqaterge/hermes-mobile-app",
+      "head_commit": "c8688096f74c8b01b1a49b7dbf9123eb98f7c717",
+      "pin_source": "https://github.com/omarqaterge/hermes-mobile-app/commit/c8688096f74c8b01b1a49b7dbf9123eb98f7c717",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-26T01:54:02Z. GitHub license metadata: MIT. Native Android app running Hermes Agent through Termux. Blocked pending shell/bootstrap review, package provenance, local-device permissions, credential storage, background service exposure and agent tool authority. No device setup or agent launch. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "adebnar/hermes-android",
+      "category": "hermes-agent-android-client",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/adebnar/hermes-android",
+      "head_commit": "9f08f39ed2b9fc7cb29a551b1d9b695a409fdb7a",
+      "pin_source": "https://github.com/adebnar/hermes-android/commit/9f08f39ed2b9fc7cb29a551b1d9b695a409fdb7a",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-07-20T20:56:13Z. GitHub license metadata: GPL-3.0. Android client for Hermes gateway with session/model/cron/usage management. Blocked pending access-token handling, gateway authorization, remote side effects, transport security, audit logs and GPL-3.0 compatibility. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "GPL-3.0",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "getpaseo/paseo",
+      "category": "multi-agent-orchestrator",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/getpaseo/paseo",
+      "head_commit": "65ce4b590a09106372c555cb7322f6da73b9d419",
+      "pin_source": "https://github.com/getpaseo/paseo/commit/65ce4b590a09106372c555cb7322f6da73b9d419",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-26T17:54:25Z. GitHub license metadata: NOASSERTION. Desktop/mobile orchestration of multiple coding agents. License metadata is NOASSERTION; blocked pending license/provenance, subprocess and filesystem boundaries, provider-secret handling, MCP/browser/tool permission scope and isolation from AURELIA release/capital authority. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "reactnativecn/react-native-update",
+      "category": "react-native-ota-update-framework",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/reactnativecn/react-native-update",
+      "head_commit": "4620119b37d40e16f51a119bd2d613e12a316cd4",
+      "pin_source": "https://github.com/reactnativecn/react-native-update/commit/4620119b37d40e16f51a119bd2d613e12a316cd4",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed master head; commit author date 2026-10-21T04:51:01Z. GitHub license metadata: NOASSERTION. Over-the-air application updater with diff patches, rollout controls and crash rollback. License metadata is NOASSERTION; blocked pending code-signing/update-server trust, rollback authenticity, package integrity, build and release workflow review. OTA code can change deployed app behavior; do not integrate or run updates. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "master",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "hermes-webui/hermes-android",
+      "category": "hermes-agent-android-client",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/hermes-webui/hermes-android",
+      "head_commit": "9c35a2fd0cf0fbf8f688dc283e86a3cae1258c2f",
+      "pin_source": "https://github.com/hermes-webui/hermes-android/commit/9c35a2fd0cf0fbf8f688dc283e86a3cae1258c2f",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-25T22:32:52Z. GitHub license metadata: NOASSERTION. Android client for Hermes. License metadata is NOASSERTION; blocked pending license and provenance, authentication/token protection, gateway permissions, network security and agent-side-effect boundaries. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "Hy4ri/hermes-mobile",
+      "category": "hermes-agent-android-client",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Hy4ri/hermes-mobile",
+      "head_commit": "f03426df599d36b003b10ce29516434e591aef82",
+      "pin_source": "https://github.com/Hy4ri/hermes-mobile/commit/f03426df599d36b003b10ce29516434e591aef82",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-26T08:43:47Z. GitHub license metadata: Apache-2.0. Native Android client for Hermes Agent. Blocked pending credentials, gateway authentication, data retention, egress/network security, agent operation authorization and dependency/source review. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "Apache-2.0",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "Giton22/herald",
+      "category": "hermes-agent-android-client",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Giton22/herald",
+      "head_commit": "687d80e3e6b6bbf2199086ff1d780b07e57bc88c",
+      "pin_source": "https://github.com/Giton22/herald/commit/687d80e3e6b6bbf2199086ff1d780b07e57bc88c",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed master head; commit author date 2026-10-24T23:49:28Z. GitHub license metadata: MIT. Unofficial Android client for Hermes Agent. Blocked pending upstream provenance, gateway session handling, token storage, networking/security checks, agent tool scopes and dependency review. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "master",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "AbuZar-Ansarii/Hermes-Agent-On-Android",
+      "category": "hermes-agent-termux-installer",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/AbuZar-Ansarii/Hermes-Agent-On-Android",
+      "head_commit": "4d2427c2d6dc6a7683ec9c9d4efab9114abe17cc",
+      "pin_source": "https://github.com/AbuZar-Ansarii/Hermes-Agent-On-Android/commit/4d2427c2d6dc6a7683ec9c9d4efab9114abe17cc",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-08-13T17:10:02Z. GitHub license metadata: NOASSERTION. Termux-based Hermes Agent installation guide/installer. License metadata is NOASSERTION; blocked pending inspection of one-line install commands, remote scripts, binary/package provenance, secrets and Android permission scope. Do not execute installation instructions. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "Xiaofei-it/Hermes",
+      "category": "android-ipc-library",
+      "domain": "engineering-reference",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Xiaofei-it/Hermes",
+      "head_commit": "262039098b407f40f8298e6bbb3ca173a9fe2322",
+      "pin_source": "https://github.com/Xiaofei-it/Hermes/commit/262039098b407f40f8298e6bbb3ca173a9fe2322",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed master head; commit author date 2017-05-05T03:49:05Z. GitHub license metadata: NOASSERTION. Legacy Android inter-process communication library (latest observed default-branch commit from 2017). License metadata is NOASSERTION; blocked pending actual license verification, maintenance/compatibility assessment and dependency security review. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "master",
+      "upstream_archived": false,
+      "upstream_license_spdx": "NOASSERTION",
+      "upstream_license_evidence": "GITHUB_REPOSITORY_LICENSE_METADATA_NOASSERTION"
+    },
+    {
+      "repo": "rusty4444/hermes-android",
+      "category": "hermes-agent-android-client",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/rusty4444/hermes-android",
+      "head_commit": "3f26dd528224e21bc6ae3efcc5dc18912efb7f52",
+      "pin_source": "https://github.com/rusty4444/hermes-android/commit/3f26dd528224e21bc6ae3efcc5dc18912efb7f52",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-26T06:41:38Z. GitHub license metadata: MIT. Android client for Hermes sessions over local Wi-Fi or Tailscale. Blocked pending gateway authentication, network exposure, device trust, credential storage, agent operation permissions and dependency/source review. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "Codename-11/hermes-relay",
+      "category": "hermes-agent-mobile-relay",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Codename-11/hermes-relay",
+      "head_commit": "da782a8d74eb6631ea2f097b3cc69c6452ec33de",
+      "pin_source": "https://github.com/Codename-11/hermes-relay/commit/da782a8d74eb6631ea2f097b3cc69c6452ec33de",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-20T21:33:56Z. GitHub license metadata: MIT. Mobile relay/client offering chat, voice and control for Hermes. Blocked pending remote-control authorization, microphone/audio data privacy, gateway token storage, transport hardening and agent tool/side-effect review. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "MIT",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
+    },
+    {
+      "repo": "cogwheel0/conduit",
+      "category": "multi-provider-ai-mobile-client",
+      "domain": "engineering-tooling",
+      "assigned_agents": [
+        "ChatGPT",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/cogwheel0/conduit",
+      "head_commit": "0f5c598aebaab02779b4bdbdb050e8e040ba2e9b",
+      "pin_source": "https://github.com/cogwheel0/conduit/commit/0f5c598aebaab02779b4bdbdb050e8e040ba2e9b",
+      "intake_status": "BLOCKED",
+      "integration_note": "Pinned to observed main head; commit author date 2026-10-26T17:40:46Z. GitHub license metadata: GPL-3.0. Native iOS/Android client for Open WebUI, OpenAI-compatible endpoints, Ollama and Hermes agents. Blocked pending endpoint/token storage, self-hosted gateway trust, prompt/content privacy, agent command permissions and GPL-3.0 compatibility. No candidate code, install/build/test, agent session, device action, provider credential or broker integration was run. No secret, capital, execution, production deployment or LIVE_LOCK authority.",
+      "upstream_default_branch": "main",
+      "upstream_archived": false,
+      "upstream_license_spdx": "GPL-3.0",
+      "upstream_license_evidence": "GITHUB_LICENSE_METADATA"
     }
   ],
   "pin_policy": {
