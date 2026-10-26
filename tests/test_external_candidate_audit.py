@@ -1,5 +1,6 @@
 """Regression tests for isolated external-candidate scanner configuration."""
 
+import os
 import unittest
 from pathlib import Path
 
@@ -28,7 +29,10 @@ class AuditDockerEnvironmentTests(unittest.TestCase):
         self.assertIn("XDG_CACHE_HOME=/tmp/.cache", env_values)
         self.assertIn("/tmp:rw,nosuid,nodev,size=512m", tmpfs_values)
         # A writable temporary home is needed by Semgrep builds that use /root directly.
-        self.assertIn("/root:rw,nosuid,nodev,size=128m", tmpfs_values)
+        self.assertIn(
+            f"/root:rw,nosuid,nodev,size=128m,uid={os.getuid()},gid={os.getgid()},mode=700",
+            tmpfs_values,
+        )
         self.assertNotIn("/root/.semgrep:rw,nosuid,nodev,size=16m", tmpfs_values)
 
 
