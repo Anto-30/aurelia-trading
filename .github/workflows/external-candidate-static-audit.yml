@@ -15,7 +15,8 @@ permissions:
 
 concurrency:
   group: external-candidate-audit-${{ github.ref }}
-  cancel-in-progress: false
+  # New commits invalidate old scan evidence; cancel stale scans to free the single audit slot.
+  cancel-in-progress: true
 
 jobs:
   static-audit:
