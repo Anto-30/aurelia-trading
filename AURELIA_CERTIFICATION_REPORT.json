@@ -1,7 +1,7 @@
 {
   "report_metadata": {
     "commit_sha": "d04564aca0648201feff0326fe9af0fbcee92e94",
-    "generated_at_utc": "2026-10-26T11:18:24Z",
+    "generated_at_utc": "2026-10-26T12:41:47.329Z",
     "environment": "verify_only"
   },
   "safety_state": {
@@ -16,7 +16,10 @@
     "status": "PENDING"
   },
   "gate_3_soak_test_3600s": {
-    "status": "FAIL"
+    "status": "PENDING",
+    "duration_seconds": 3600,
+    "ws_disconnects": 0,
+    "evidence_log_hash": "753b46e1820dfa8ae10377f2424c5f6705af7a675db1a2fe9a16e6d937b560fb"
   },
   "gate_4_out_of_sample": {
     "status": "FAIL"
