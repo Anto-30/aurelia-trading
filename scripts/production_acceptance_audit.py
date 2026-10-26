@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_FILES = (
     "config/LIVE_LOCK.yaml",
+    "docs/AURELIA_STAKE_POLICY_2026-10-10.md",
     "AURELIA_SOURCE_OF_TRUTH.json",
     "README.md",
     "assurance/aurelia_invariants.py",
@@ -97,6 +98,7 @@ def main() -> int:
         source_min = re.search(r'(?m)^\s*"probability_min"\s*:\s*([0-9.]+)\s*,\s*$', source_of_truth)
         source_max = re.search(r'(?m)^\s*"probability_max"\s*:\s*([0-9.]+)\s*,\s*$', source_of_truth)
         readme = read("README.md")
+        stake_policy = read("docs/AURELIA_STAKE_POLICY_2026-10-10.md")
         invariants = read("assurance/aurelia_invariants.py")
         authority = read("runtime/core/authority.py")
         research = read("research/r100_prospective_oos_collector.py")
@@ -116,6 +118,8 @@ def main() -> int:
             failures.append("PROBABILITY_POLICY_RANGE_MISMATCH_EXPECTED_0.55_TO_0.75")
         if "hard probability band is **55%–75%**" not in readme:
             failures.append("README_PROBABILITY_POLICY_RANGE_MISMATCH")
+        if "inclusive range **55% to 75%**" not in stake_policy:
+            failures.append("STAKE_POLICY_PROBABILITY_RANGE_MISMATCH")
         if "from .probability_policy import MAX_PROBABILITY, MIN_PROBABILITY, probability_is_valid" not in authority:
             failures.append("AUTHORITY_NOT_USING_CANONICAL_PROBABILITY_POLICY")
         if "from runtime.core.probability_policy import probability_is_valid as _probability_is_valid" not in invariants:
