@@ -274,11 +274,19 @@ def git_fetch_candidate(candidate: dict[str, Any], clone_dir: Path) -> dict[str,
 
 
 def docker_common_args(
-    image: str, entrypoint: str, repo_dir: Path, scratch_dir: Path, cache_dir: Path
+    image: str,
+    entrypoint: str,
+    repo_dir: Path | None,
+    scratch_dir: Path,
+    cache_dir: Path,
+    *,
+    network: str = "bridge",
 ) -> list[str]:
-    return [
+    if network not in {"bridge", "host", "none"}:
+        raise ValueError("INVALID_SCANNER_NETWORK_MODE")
+    args = [
         "docker", "run", "--rm",
-        "--network", "bridge",
+        "--network", network,
         "--user", f"{os.getuid()}:{os.getgid()}",
         "-e", "HOME=/tmp",
         "-e", "GIT_CONFIG_GLOBAL=/tmp/.gitconfig",
@@ -293,15 +301,18 @@ def docker_common_args(
         "--memory=4g",
         "--entrypoint", entrypoint,
         "--tmpfs", "/tmp:rw,nosuid,nodev,size=512m",
-        # Some Semgrep/Git builds resolve user state through /root despite HOME/GIT_CONFIG overrides.
-        # Make only this ephemeral state writable; the container root and source remain read-only.
+        # Some scanner builds resolve user state through /root despite HOME/GIT_CONFIG overrides.
+        # Only ephemeral scanner state is writable; scanner image and candidate source stay read-only.
         "--tmpfs", f"/root:rw,nosuid,nodev,size=128m,uid={os.getuid()},gid={os.getgid()},mode=700",
-        "-v", str(repo_dir.resolve()) + ":/src:ro",
+    ]
+    if repo_dir is not None:
+        args.extend(["-v", str(repo_dir.resolve()) + ":/src:ro"])
+    args.extend([
         "-v", str(scratch_dir.resolve()) + ":/scan:rw",
         "-v", str(cache_dir.resolve()) + ":/root/.cache:rw",
         image,
-    ]
-
+    ])
+    return args
 
 def trivy_database_args() -> list[str]:
     """Use ordered official registry mirrors with fallback rather than a single default registry."""
@@ -314,6 +325,57 @@ def trivy_database_args() -> list[str]:
     # if it is unavailable, the scan fails closed instead of silently skipping IaC checks.
     args.extend(["--checks-bundle-repository", TRIVY_CHECKS_BUNDLE_REPOSITORY])
     return args
+
+
+
+def trivy_offline_scan_flags() -> list[str]:
+    """Require cached databases and prevent candidate scans from opening network access."""
+    return ["--skip-db-update", "--skip-java-db-update", "--skip-check-update"]
+
+
+def prepare_trivy_databases(
+    scratch_dir: Path, cache_dir: Path, image: str
+) -> dict[str, Any]:
+    """Populate trusted Trivy databases before a candidate source is mounted."""
+    scratch_dir.mkdir(parents=True, exist_ok=True)
+    empty_source = scratch_dir / "trivy-preflight-source"
+    empty_source.mkdir(parents=True, exist_ok=True)
+    (empty_source / "Dockerfile").write_text("FROM scratch\n", encoding="utf-8")
+    preflight_report = scratch_dir / "trivy-preflight.json"
+    try:
+        downloaded: list[str] = []
+        for flag, label in (
+            ("--download-db-only", "vulnerability_database"),
+            ("--download-java-db-only", "java_database"),
+        ):
+            command = docker_common_args(
+                image, "trivy", None, scratch_dir, cache_dir, network="host"
+            ) + trivy_database_args() + [
+                "image", "--cache-dir", "/root/.cache/trivy", flag
+            ]
+            run_command(command, timeout=900)
+            downloaded.append(label)
+
+        # Trigger the checks-bundle path once against a locally generated empty fixture.
+        # No external candidate source is mounted, parsed, or executed in this host-network phase.
+        command = docker_common_args(
+            image, "trivy", empty_source, scratch_dir, cache_dir, network="host"
+        ) + trivy_database_args() + [
+            "fs", "--cache-dir", "/root/.cache/trivy",
+            "--scanners", "misconfig",
+            "--format", "json", "--output", "/scan/trivy-preflight.json", "/src",
+        ]
+        run_command(command, timeout=300)
+        return {
+            "status": "READY",
+            "databases_downloaded": downloaded,
+            "checks_preflight": "COMPLETED",
+            "candidate_source_mounted": False,
+        }
+    finally:
+        if preflight_report.exists():
+            preflight_report.unlink()
+        shutil.rmtree(empty_source, ignore_errors=True)
 
 
 def semgrep_coverage_status(errors: list[Any]) -> str:
@@ -503,9 +565,10 @@ def run_trivy(
 ) -> dict[str, Any]:
     raw_path = scratch_dir / "trivy.raw.json"
     sbom_path = candidate_out / "sbom.cdx.json"
-    command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir) + trivy_database_args() + [
+    command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir, network="none") + trivy_database_args() + [
         "fs", "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,misconfig,secret,license",
+        *trivy_offline_scan_flags(),
         "--format", "json", "--output", "/scan/trivy.raw.json", "/src",
     ]
     try:
@@ -521,9 +584,10 @@ def run_trivy(
             raw_path.unlink()
 
     # Write an SBOM containing package/license metadata; do not include the secret scan output.
-    sbom_command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir) + trivy_database_args() + [
+    sbom_command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir, network="none") + trivy_database_args() + [
         "fs", "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,license",
+        *trivy_offline_scan_flags(),
         "--format", "cyclonedx", "--output", "/scan/sbom.cdx.json", "/src",
     ]
     scratch_sbom = scratch_dir / "sbom.cdx.json"
@@ -584,6 +648,58 @@ def main() -> int:
         "semgrep": docker_image_digests(args.semgrep_image),
         "trivy": docker_image_digests(args.trivy_image),
     }
+    try:
+        trivy_preflight = prepare_trivy_databases(args.scratch_dir, cache_dir, args.trivy_image)
+        print("TRIVY_PREFLIGHT=READY")
+    except Exception as exc:
+        # Do not multiply a shared database/registry outage across all candidate scans.
+        message = str(exc)
+        error_code = message if re.fullmatch(r"[A-Z][A-Z0-9_]{2,80}", message) else "TRIVY_PREFLIGHT_FAILED"
+        print("AUDIT_RESULT=BLOCKED")
+        print("AUDIT_REASON=TRIVY_DATABASE_PREFLIGHT_FAILED")
+        print("AUDIT_ERROR_CODE=" + error_code)
+        preflight_report = {
+            "schema": "aurelia.external_candidate_audit_report.v1",
+            "status": "AUDIT_PREFLIGHT_BLOCKED",
+            "review_status": "HUMAN_REVIEW_REQUIRED",
+            "promotion_approved": False,
+            "created_at_utc": utc_now(),
+            "completed_at_utc": utc_now(),
+            "source_manifest_sha256": sha256_file(args.manifest),
+            "candidate_count": len(candidates),
+            "candidate_scans_complete": 0,
+            "candidate_scans_blocked": len(candidates),
+            "candidate_scans_partial": 0,
+            "preflight": {
+                "status": "BLOCKED",
+                "stage": "trivy_database_and_checks",
+                "safe_error_code": error_code,
+                "candidate_code_executed": False,
+                "candidate_dependencies_installed": False,
+            },
+            "tool_images": tool_images,
+            "execution_policy": {
+                "candidate_dependencies_installed": False,
+                "candidate_code_executed": False,
+                "candidate_builds_run": False,
+                "candidate_tests_run": False,
+                "git_submodules_initialized": False,
+                "raw_scanner_reports_uploaded": False,
+                "secret_values_in_reports": False,
+            },
+            "candidates": [],
+        }
+        (args.output_dir / "audit-summary.json").write_text(
+            json.dumps(preflight_report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        (args.output_dir / "audit-summary.md").write_text(
+            "# External Candidate Static Audit Summary\n\n"
+            "Status: AUDIT_PREFLIGHT_BLOCKED\n\n"
+            "The trusted Trivy database/check preflight could not complete. "
+            "No candidate source scan was started; no clean scan is claimed.\n",
+            encoding="utf-8",
+        )
+        return 2
     results: list[dict[str, Any]] = []
     started_at = utc_now()
     failed_scans = 0
