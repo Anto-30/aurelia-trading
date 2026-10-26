@@ -76,11 +76,15 @@ def safe_tool_failure_class(stderr: str, stdout: str) -> str:
     text = ((stderr or "") + "\\n" + (stdout or "")).lower()
     patterns = [
         (("failed to download vulnerability db", "failed to download vulnerability database",
-          "unable to download vulnerability db"), "TRIVY_VULNERABILITY_DB_FETCH_FAILED"),
+          "unable to download vulnerability db", "failed to fetch vulnerability db",
+          "failed to fetch the vulnerability database", "failed to fetch vulnerability database"),
+         "TRIVY_VULNERABILITY_DB_FETCH_FAILED"),
         (("failed to download checks bundle", "unable to download checks bundle",
           "checks bundle download failed"), "TRIVY_CHECKS_BUNDLE_FETCH_FAILED"),
         (("failed to download java db", "failed to download Java DB",
-          "unable to download java db"), "TRIVY_JAVA_DB_FETCH_FAILED"),
+          "unable to download java db", "failed to fetch java db",
+          "failed to fetch the java database", "failed to fetch java database"),
+         "TRIVY_JAVA_DB_FETCH_FAILED"),
         (("no such option", "unrecognized option", "unknown option"), "CLI_OPTION_ERROR"),
         (("usage:", "invalid choice", "unrecognized arguments"), "CLI_ARGUMENT_ERROR"),
         (("could not resolve", "failed to fetch", "failed to download", "connection refused",
@@ -134,13 +138,18 @@ def run_command(
                 if match:
                     print("SAFE_TOOL_CLI_HINT=" + match.group(0)[:160])
                     break
-        print("SAFE_TOOL_FAILURE_CLASS=" + safe_tool_failure_class(process.stderr, process.stdout))
-        raise RuntimeError(
+        failure_class = safe_tool_failure_class(process.stderr, process.stdout)
+        print("SAFE_TOOL_FAILURE_CLASS=" + failure_class)
+        failure = RuntimeError(
             "COMMAND_FAILED:"
             + Path(command[0]).name
             + ":exit="
             + str(process.returncode)
         )
+        # Keep the full failure detail private while allowing the preflight report
+        # to record a safe, machine-readable reason.
+        setattr(failure, "safe_tool_failure_class", failure_class)
+        raise failure
     return process
 
 
@@ -654,7 +663,9 @@ def main() -> int:
     except Exception as exc:
         # Do not multiply a shared database/registry outage across all candidate scans.
         message = str(exc)
-        error_code = message if re.fullmatch(r"[A-Z][A-Z0-9_]{2,80}", message) else "TRIVY_PREFLIGHT_FAILED"
+        error_code = getattr(exc, "safe_tool_failure_class", None)
+        if not isinstance(error_code, str) or not re.fullmatch(r"[A-Z][A-Z0-9_]{2,80}", error_code):
+            error_code = message if re.fullmatch(r"[A-Z][A-Z0-9_]{2,80}", message) else "TRIVY_PREFLIGHT_FAILED"
         print("AUDIT_RESULT=BLOCKED")
         print("AUDIT_REASON=TRIVY_DATABASE_PREFLIGHT_FAILED")
         print("AUDIT_ERROR_CODE=" + error_code)
