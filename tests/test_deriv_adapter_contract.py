@@ -3,7 +3,16 @@ from runtime.adapters.deriv_adapter import DerivAdapter
 class TestDerivAdapterContract(unittest.TestCase):
  def test_missing_url_fails_closed(self):self.assertEqual(DerivAdapter(ws_url="").ws_url,"")
  def test_secret_not_in_fingerprint(self):a=DerivAdapter(ws_url="wss://example.invalid",auth_token="SECRET",expected_loginid="CR123");self.assertNotIn("SECRET",a.connection_fingerprint)
- def test_proposal_id_required_by_executor_contract(self):self.assertTrue("ORDER_REQUIRES_BROKER_PROPOSAL_ID" in "ORDER_REQUIRES_BROKER_PROPOSAL_ID")
+ def test_proposal_id_required_by_executor_contract(self):
+  import asyncio
+  from unittest.mock import AsyncMock
+  from runtime.adapters.deriv_adapter import DerivProtocolError
+  a=DerivAdapter(ws_url="wss://api.derivws.com/trading/v1/options/ws/real")
+  a.authorized=True
+  a.request=AsyncMock()
+  with self.assertRaisesRegex(DerivProtocolError,"ORDER_REQUIRES_BROKER_PROPOSAL_ID"):
+   asyncio.run(a.submit_authorized_order({"stake":1.0}))
+  a.request.assert_not_awaited()
  def test_authenticated_connect_requires_explicit_expected_currency(self):
   import asyncio
   from runtime.adapters.deriv_adapter import DerivProtocolError
