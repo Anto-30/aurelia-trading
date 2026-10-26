@@ -14,9 +14,8 @@ from .models import (
     utc_now,
 )
 from .stake_sizing import size_stake_for_balance
+from .probability_policy import MAX_PROBABILITY, MIN_PROBABILITY, probability_is_valid
 
-MIN_PROBABILITY = 0.50
-MAX_PROBABILITY = 0.75
 STARTING_STAKE = 1.00
 EXECUTION_MINIMUM_STAKE = 1.00
 
@@ -25,16 +24,6 @@ EXECUTION_MINIMUM_STAKE = 1.00
 class GateResult:
     allowed: bool
     reason_codes: tuple[str, ...]
-
-
-def probability_is_valid(probability: float) -> bool:
-    if isinstance(probability, bool) or not isinstance(probability, (int, float)):
-        return False
-    try:
-        value = float(probability)
-    except (TypeError, ValueError, OverflowError):
-        return False
-    return isfinite(value) and MIN_PROBABILITY <= value <= MAX_PROBABILITY
 
 
 def decision_economics_gate(decision: Decision) -> tuple[bool, str, float | None]:

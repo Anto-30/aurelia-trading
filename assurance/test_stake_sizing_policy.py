@@ -46,11 +46,13 @@ class StakeSizingPolicyTests(unittest.TestCase):
         self.assertFalse(size_stake_for_balance(100, maximum_risk_fraction=10**10000).allowed)
         self.assertFalse(size_stake_for_balance(100, minimum_stake=10**10000).allowed)
 
-    def test_probability_band_is_50_to_75_percent_without_clipping(self):
-        self.assertEqual(MIN_PROBABILITY, 0.50)
+    def test_probability_band_is_55_to_75_percent_without_clipping(self):
+        self.assertEqual(MIN_PROBABILITY, 0.55)
         self.assertEqual(MAX_PROBABILITY, 0.75)
-        self.assertTrue(probability_is_valid(0.50))
+        self.assertFalse(probability_is_valid(0.50))
+        self.assertTrue(probability_is_valid(0.55))
         self.assertTrue(probability_is_valid(0.75))
+        self.assertFalse(probability_is_valid(0.549999))
         self.assertFalse(probability_is_valid(0.4999))
         self.assertFalse(probability_is_valid(0.7501))
         self.assertFalse(probability_is_valid(float("nan")))

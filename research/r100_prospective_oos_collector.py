@@ -18,6 +18,10 @@ from typing import Any
 
 from runtime.adapters.deriv_ws import DerivWebSocketTransport
 from runtime.strategy.autonomous_signal_engine import AutonomousSignalHunter
+from runtime.core.probability_policy import (
+    MAX_PROBABILITY as MAX_TRADE_PROBABILITY,
+    MIN_PROBABILITY as MIN_TRADE_PROBABILITY,
+)
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
 SYMBOL = "R_100"
@@ -28,8 +32,6 @@ REGIME = "ALL_MARKET"
 COLLECTION_SECONDS = int(os.getenv("AURELIA_R100_COLLECTION_SECONDS", "540"))
 HORIZON_TICKS = int(os.getenv("AURELIA_R100_HORIZON_TICKS", "10"))
 STATE_PATH = Path(os.getenv("AURELIA_R100_STATE_PATH", ".research_state/aurelia_r100_state.json"))
-MIN_TRADE_PROBABILITY = 0.55
-MAX_TRADE_PROBABILITY = 0.75
 CALIBRATION_MIN_BUCKETS = 3
 CALIBRATION_MIN_BUCKET_SAMPLES = 10
 CALIBRATION_MAX_RELIABILITY_GAP = 0.05
