@@ -1,7 +1,7 @@
 name: AURELIA Assurance
 on:
   push:
-    branches: ["**"]
+    branches: ["main"]
   pull_request:
 permissions:
   contents: read
@@ -64,6 +64,15 @@ jobs:
           set -e
           test "$status" -eq 2
           echo "READINESS_EXPECTED_BLOCKED=true"
+
+      - name: Upload current readiness report
+        if: always() && hashFiles('artifacts/AURELIA_READINESS.current.json') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: aurelia-readiness-${{ github.run_id }}
+          path: artifacts/AURELIA_READINESS.current.json
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Verify clean worker health endpoint
         env:
