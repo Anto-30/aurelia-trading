@@ -10,6 +10,7 @@ from assurance.certification_evidence import validate_evidence_file
 from assurance.nonproduction_soak_evidence import write_nonproduction_soak_evidence
 
 
+ROOT = Path(__file__).resolve().parents[1]
 UTC = timezone.utc
 EXPECTED_UNKNOWN = "CONTINUOUS_RUNTIME_UNAVAILABLE"
 
