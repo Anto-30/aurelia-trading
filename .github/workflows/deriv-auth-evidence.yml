@@ -1,8 +1,8 @@
 name: AURELIA Deriv Verify-Only Evidence
 
 # Authenticated evidence requires approval of the protected production environment.
-# Run manually when a reviewer is available; scheduled runs otherwise remain waiting
-# and are cancelled by the next concurrency event without producing evidence.
+# This workflow is intentionally manual-only so protected jobs are dispatched when a
+# reviewer is available; timed runs cannot bypass environment approval.
 on:
   workflow_dispatch:
 
