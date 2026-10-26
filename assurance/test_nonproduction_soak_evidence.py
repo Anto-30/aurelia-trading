@@ -37,6 +37,8 @@ def _write_observations(path: Path, *, fault: str | None = None) -> None:
             row["capital_can_open_new_exposure"] = True
         elif fault == "silent_degradation" and elapsed == 150:
             row["critical_unknowns"] = []
+        elif fault == "subsecond" and elapsed == 150:
+            row["elapsed_seconds"] = 150.125
         rows.append(row)
     path.write_text(
         "".join(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n" for row in rows),
@@ -94,6 +96,14 @@ class NonProductionSoakEvidenceTests(unittest.TestCase):
             self.assertEqual(evidence["live_execution"], "BLOCKED")
             status, detail = validate_evidence_file(Path(d), "evidence/soak_3600s.json")
             self.assertEqual(status, "PASS", detail)
+
+    def test_accepts_subsecond_monotonic_observation_timestamps(self):
+        with tempfile.TemporaryDirectory() as d:
+            output = self._write(Path(d), fault="subsecond")
+            status, detail = validate_evidence_file(Path(d), "evidence/soak_3600s.json")
+            self.assertEqual(status, "PASS", detail)
+            record = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(record["health_checks"], 720)
 
     def test_unexpected_unknown_state_prevents_evidence_emission(self):
         with tempfile.TemporaryDirectory() as d:
