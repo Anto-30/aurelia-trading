@@ -436,20 +436,43 @@ def audit_exit_code(*, failed_scans: int, partial_scans: int) -> int:
 
 
 def safe_semgrep_error_type(error: Any) -> str:
-    """Keep scanner error classifications scalar; Semgrep may nest source paths in its type field."""
+    """Return a bounded scanner error label, never a nested source path or diagnostic."""
     if not isinstance(error, dict):
         return "UNKNOWN"
     raw_type = error.get("type")
-    if isinstance(raw_type, str):
-        return raw_type[:120]
-    if isinstance(raw_type, list):
-        # PartialParsing and some parser diagnostics include nested source ranges and paths.
-        # Retain only the top-level label and never serialize nested structures.
-        for value in raw_type:
-            if isinstance(value, str):
-                return value[:120]
+    values = [raw_type] if isinstance(raw_type, str) else raw_type if isinstance(raw_type, list) else []
+    label = next((value for value in values if isinstance(value, str)), "")
+    if not label:
         return "UNKNOWN"
-    return "UNKNOWN"
+    # Semgrep errors may nest paths in the type field. Allow only compact enum-like
+    # labels so a malformed upstream field cannot leak paths or source-bearing text.
+    if re.fullmatch(r"[A-Za-z][A-Za-z0-9_.-]{0,119}", label):
+        return label
+    return "OTHER"
+
+
+def semgrep_error_type_counts(errors: list[Any]) -> list[dict[str, Any]]:
+    """Aggregate scanner-error classes without disclosing raw messages or source locations."""
+    counts: Counter[tuple[str, int | str, str]] = Counter()
+    for error in errors:
+        item = error if isinstance(error, dict) else {}
+        error_type = safe_semgrep_error_type(item)
+        raw_code = item.get("code")
+        if type(raw_code) is int:
+            code: int | str = raw_code
+        elif isinstance(raw_code, str) and re.fullmatch(r"\\d{1,6}", raw_code):
+            code = int(raw_code)
+        else:
+            code = "UNKNOWN"
+        raw_level = item.get("level")
+        level = raw_level.lower() if isinstance(raw_level, str) and raw_level.lower() in {"error", "warn", "info"} else "unknown"
+        counts[(error_type, code, level)] += 1
+    return [
+        {"type": error_type, "code": code, "level": level, "count": count}
+        for (error_type, code, level), count in sorted(
+            counts.items(), key=lambda entry: (entry[0][0], str(entry[0][1]), entry[0][2])
+        )
+    ]
 
 
 def sanitize_semgrep(raw_report: dict[str, Any]) -> dict[str, Any]:
@@ -484,6 +507,7 @@ def sanitize_semgrep(raw_report: dict[str, Any]) -> dict[str, Any]:
         "findings": safe_findings[:10000],
         "findings_truncated": len(safe_findings) > 10000,
         "scanner_error_count": len(errors),
+        "scanner_error_type_counts": semgrep_error_type_counts(errors),
         # Raw error messages are omitted to prevent source excerpts or sensitive data leaking.
         "scanner_errors": [
             {
@@ -837,6 +861,7 @@ def main() -> int:
             result["scanner_status"] = {
                 "semgrep": semgrep_report["status"],
                 "semgrep_error_count": semgrep_report["scanner_error_count"],
+                "semgrep_error_type_counts": semgrep_report["scanner_error_type_counts"],
                 "trivy": "COMPLETED",
                 "java_archive_scan": java_archive_status,
                 "java_archive_error_code": java_archive_error_code,
@@ -897,6 +922,12 @@ def main() -> int:
                 + str(result.get("finding_counts", {}).get("semgrep", "NA"))
                 + " TRIVY_COUNT="
                 + str(result.get("finding_counts", {}).get("trivy_total", "NA"))
+                + " SEMGREP_ERROR_TYPES="
+                + json.dumps(
+                    result.get("scanner_status", {}).get("semgrep_error_type_counts", []),
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
             )
 
     finished_at = utc_now()
