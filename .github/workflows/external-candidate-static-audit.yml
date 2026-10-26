@@ -64,6 +64,7 @@ jobs:
           git -C "$smoke_root/src" init --quiet
           docker run --rm --network none --read-only --cap-drop=ALL \
             --security-opt=no-new-privileges --pids-limit=128 --memory=1g \
+            --user "$(id -u):$(id -g)" \
             --tmpfs /tmp:rw,nosuid,nodev,size=128m \
             --tmpfs /root:rw,nosuid,nodev,size=128m \
             -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig \
@@ -83,6 +84,7 @@ jobs:
           PY
           docker run --rm --network none --read-only --cap-drop=ALL \
             --security-opt=no-new-privileges --pids-limit=128 --memory=1g \
+            --user "$(id -u):$(id -g)" \
             --tmpfs /tmp:rw,nosuid,nodev,size=128m \
             --tmpfs /root:rw,nosuid,nodev,size=128m \
             -e HOME=/tmp -e GIT_CONFIG_GLOBAL=/tmp/.gitconfig \

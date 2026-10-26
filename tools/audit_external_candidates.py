@@ -260,6 +260,7 @@ def docker_common_args(
     return [
         "docker", "run", "--rm",
         "--network", "bridge",
+        "--user", f"{os.getuid()}:{os.getgid()}",
         "-e", "HOME=/tmp",
         "-e", "GIT_CONFIG_GLOBAL=/tmp/.gitconfig",
         "-e", "GIT_CONFIG_NOSYSTEM=1",

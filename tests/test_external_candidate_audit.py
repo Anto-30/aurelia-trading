@@ -18,6 +18,8 @@ class AuditDockerEnvironmentTests(unittest.TestCase):
         env_values = [args[index + 1] for index, value in enumerate(args[:-1]) if value == "-e"]
         tmpfs_values = [args[index + 1] for index, value in enumerate(args[:-1]) if value == "--tmpfs"]
 
+        user_index = args.index("--user")
+        self.assertRegex(args[user_index + 1], r"^\d+:\d+$")
         self.assertIn("HOME=/tmp", env_values)
         self.assertIn("GIT_CONFIG_GLOBAL=/tmp/.gitconfig", env_values)
         self.assertIn("GIT_CONFIG_NOSYSTEM=1", env_values)
