@@ -62,6 +62,17 @@ class CertificationReportSchemaTests(unittest.TestCase):
         report = json.loads(report_path.read_text(encoding="utf-8"))
         self.validator.validate(report)
 
+    def test_config_schema_mirror_matches_canonical_schema(self):
+        config_schema_path = ROOT / "config" / "AURELIA_CERTIFICATION_REPORT.schema.json"
+        config_schema = json.loads(config_schema_path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            config_schema,
+            self.schema,
+            "config schema must mirror the canonical report schema; divergent report shapes are unsafe",
+        )
+        report_path = ROOT / "AURELIA_CERTIFICATION_REPORT.json"
+        self.validator.validate(json.loads(report_path.read_text(encoding="utf-8")))
+
     def test_pass_without_evidence_hash_is_rejected(self):
         report = pending_report()
         report["gate_1_broker_lifecycle"] = {
