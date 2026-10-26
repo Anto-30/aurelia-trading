@@ -5,12 +5,24 @@ import unittest
 from pathlib import Path
 
 from tools.audit_external_candidates import (
+    audit_exit_code,
     docker_common_args,
     safe_tool_failure_class,
     semgrep_coverage_status,
     sanitize_semgrep,
     trivy_database_args,
 )
+
+
+class AuditExitCodeTests(unittest.TestCase):
+    def test_clean_complete_scan_returns_zero(self):
+        self.assertEqual(audit_exit_code(failed_scans=0, partial_scans=0), 0)
+
+    def test_partial_coverage_fails_the_ci_gate(self):
+        self.assertNotEqual(audit_exit_code(failed_scans=0, partial_scans=1), 0)
+
+    def test_failed_scan_fails_the_ci_gate(self):
+        self.assertNotEqual(audit_exit_code(failed_scans=1, partial_scans=0), 0)
 
 
 class SemgrepCoverageTests(unittest.TestCase):
