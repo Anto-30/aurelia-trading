@@ -19,6 +19,19 @@ from typing import Any
 
 DEFAULT_SEMGREP_IMAGE = "semgrep/semgrep:1.182.0"
 DEFAULT_TRIVY_IMAGE = "aquasec/trivy:0.76.1"
+TRIVY_DB_REPOSITORIES = (
+    "public.ecr.aws/aquasecurity/trivy-db",
+    "mirror.gcr.io/aquasec/trivy-db",
+    "ghcr.io/aquasecurity/trivy-db",
+    "aquasec/trivy-db",
+)
+TRIVY_JAVA_DB_REPOSITORIES = (
+    "public.ecr.aws/aquasecurity/trivy-java-db",
+    "mirror.gcr.io/aquasec/trivy-java-db",
+    "ghcr.io/aquasecurity/trivy-java-db",
+    "aquasec/trivy-java-db",
+)
+TRIVY_CHECKS_BUNDLE_REPOSITORY = "public.ecr.aws/aquasecurity/trivy-checks"
 SAFE_ENV_KEYS = {
     "PATH", "HOME", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL",
     "DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG", "DOCKER_TLS_VERIFY",
@@ -62,6 +75,12 @@ def safe_env() -> dict[str, str]:
 def safe_tool_failure_class(stderr: str, stdout: str) -> str:
     text = ((stderr or "") + "\\n" + (stdout or "")).lower()
     patterns = [
+        (("failed to download vulnerability db", "failed to download vulnerability database",
+          "unable to download vulnerability db"), "TRIVY_VULNERABILITY_DB_FETCH_FAILED"),
+        (("failed to download checks bundle", "unable to download checks bundle",
+          "checks bundle download failed"), "TRIVY_CHECKS_BUNDLE_FETCH_FAILED"),
+        (("failed to download java db", "failed to download Java DB",
+          "unable to download java db"), "TRIVY_JAVA_DB_FETCH_FAILED"),
         (("no such option", "unrecognized option", "unknown option"), "CLI_OPTION_ERROR"),
         (("usage:", "invalid choice", "unrecognized arguments"), "CLI_ARGUMENT_ERROR"),
         (("could not resolve", "failed to fetch", "failed to download", "connection refused",
@@ -284,6 +303,19 @@ def docker_common_args(
     ]
 
 
+def trivy_database_args() -> list[str]:
+    """Use ordered official registry mirrors with fallback rather than a single default registry."""
+    args: list[str] = []
+    for repository in TRIVY_DB_REPOSITORIES:
+        args.extend(["--db-repository", repository])
+    for repository in TRIVY_JAVA_DB_REPOSITORIES:
+        args.extend(["--java-db-repository", repository])
+    # Trivy accepts a single checks-bundle registry. AWS ECR Public is the primary mirror;
+    # if it is unavailable, the scan fails closed instead of silently skipping IaC checks.
+    args.extend(["--checks-bundle-repository", TRIVY_CHECKS_BUNDLE_REPOSITORY])
+    return args
+
+
 def sanitize_semgrep(raw_report: dict[str, Any]) -> dict[str, Any]:
     safe_findings = []
     severity_counts: Counter[str] = Counter()
@@ -441,7 +473,7 @@ def run_trivy(
 ) -> dict[str, Any]:
     raw_path = scratch_dir / "trivy.raw.json"
     sbom_path = candidate_out / "sbom.cdx.json"
-    command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir) + [
+    command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir) + trivy_database_args() + [
         "fs", "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,misconfig,secret,license",
         "--format", "json", "--output", "/scan/trivy.raw.json", "/src",
@@ -459,7 +491,7 @@ def run_trivy(
             raw_path.unlink()
 
     # Write an SBOM containing package/license metadata; do not include the secret scan output.
-    sbom_command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir) + [
+    sbom_command = docker_common_args(image, "trivy", repo_dir, scratch_dir, cache_dir) + trivy_database_args() + [
         "fs", "--cache-dir", "/root/.cache/trivy",
         "--scanners", "vuln,license",
         "--format", "cyclonedx", "--output", "/scan/sbom.cdx.json", "/src",
