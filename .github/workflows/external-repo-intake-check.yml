@@ -26,7 +26,7 @@ jobs:
           import re
           from pathlib import Path
 
-          expected = set("aaif-goose/goose Adamant-im/adamant-tradebot aide/aide Aider-AI/aider aiwebarchitects/hyperliquid_free_trading_bot asba-IA/Github-Mev-Bot b-nnett/goose cline/cline cline/prompts CMZ33/Github-Mev-Bot coder/agentapi composio-community/awesome-codex-skills CryptoSignal/Crypto-Signal Cryptotrademate/cryptotrademate-trading-bot decolua/9router df-tools-bn/.github dsmsmj/vercel-labs-agent-skills dyad-sh/dyad elder-plinius/CL4R1T4S gooseworks-ai/goose-skills hackobi/AI-Scalpel-Trading-Bot hotovo/aider-desk iamfakeguru/agent-md iOfficeAI/OfficeCLI Jia-Ethan/codex-keysmith kevincm89/https-github.com-vercel-labs-skills koreainvestment/open-trading-api learn-crypto-trading/learn-crypto-trading.github.io Loongphy/codex-auth minhlucvan/agent-browser-mcp Mintplex-Labs/anythingllm-docs mz-automation/libiec61850 onchain-trading-bot/.github openai/codex-security OpenHands/automation OpenHands/extensions OpenHands/OpenHands OpenHands/openhands-aci OpenHands/OpenHands-CLI OpenHands/OpenHands-Cloud OpenHands/software-agent-sdk Options-Visualizer/Options-Visualizer.github.io pressly/goose Qian-Anton/GitStudy qxcnm/Codex-Manager Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance router-for-me/CLIProxyAPI ryfineZ/codex-session-patcher starwiz-7/StalkStock tag1consulting/goose traderwillhu/market_dashboard TradingAgents-AI/TradingAgents-AI.github.io TradingGoose/TradingGoose.github.io twentyhq/twenty x1xhlol/system-prompts-and-models-of-ai-tools zurb/twentytwenty".split())
+          expected = set("aaif-goose/goose AbuZar-Ansarii/Hermes-Agent-On-Android Adamant-im/adamant-tradebot adebnar/hermes-android aide/aide Aider-AI/aider aiwebarchitects/hyperliquid_free_trading_bot amirghm/hermes-agent-mobile asba-IA/Github-Mev-Bot b-nnett/goose Binair-Dev/HermesAgentMobile cline/cline cline/prompts CMZ33/Github-Mev-Bot Codename-11/hermes-relay coder/agentapi cogwheel0/conduit composio-community/awesome-codex-skills CryptoSignal/Crypto-Signal Cryptotrademate/cryptotrademate-trading-bot decolua/9router df-tools-bn/.github didi/Hummer dsmsmj/vercel-labs-agent-skills dyad-sh/dyad elder-plinius/CL4R1T4S getpaseo/paseo Giton22/herald gooseworks-ai/goose-skills hackobi/AI-Scalpel-Trading-Bot Haehnchen/crypto-trading-bot HenWorks/Hermes-agent-android-PC-companion-app hermes-webui/hermes-android hotovo/aider-desk Hy4ri/hermes-mobile iamfakeguru/agent-md iOfficeAI/OfficeCLI jeromeleeqy-hash/Hermes-Android Jia-Ethan/codex-keysmith kevincm89/https-github.com-vercel-labs-skills koreainvestment/open-trading-api l3ad3r1/Hermes-Agent-Android learn-crypto-trading/learn-crypto-trading.github.io Loongphy/codex-auth marshallrichards/ClawPhone minhlucvan/agent-browser-mcp Mintplex-Labs/anythingllm-docs mz-automation/libiec61850 omarqaterge/hermes-mobile-app onchain-trading-bot/.github openai/codex-security OpenHands/automation OpenHands/extensions OpenHands/OpenHands OpenHands/openhands-aci OpenHands/OpenHands-CLI OpenHands/OpenHands-Cloud OpenHands/software-agent-sdk Options-Visualizer/Options-Visualizer.github.io pressly/goose Qian-Anton/GitStudy qxcnm/Codex-Manager reactnativecn/react-native-update Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance router-for-me/CLIProxyAPI rusty4444/hermes-android ryfineZ/codex-session-patcher sesaloy/hermes-mobile sesori-ai/sesori_apps_monorepo sidinsearch/AgentCall starwiz-7/StalkStock tag1consulting/goose traderwillhu/market_dashboard TradingAgents-AI/TradingAgents-AI.github.io TradingGoose/TradingGoose.github.io twentyhq/twenty unsupportedpastels/mercury x1xhlol/system-prompts-and-models-of-ai-tools Xiaofei-it/Hermes xP3ta/hermes-console zurb/twentytwenty".split())
           registry = json.loads(Path("config/external_repo_federation.json").read_text())
           lock_lines = {line.strip() for line in Path("config/LIVE_LOCK.yaml").read_text().splitlines()}
           required_lock_lines = {
@@ -56,7 +56,7 @@ jobs:
               assert item.get("capital_authority", False) is False, f"capital authority must remain false: {name}"
 
           missing = sorted(expected - set(by_name))
-          assert len(expected) == 56, f"expected intake candidate count must be 56, got {len(expected)}"
+          assert len(expected) == 81, f"expected intake candidate count must be 81, got {len(expected)}"
           assert not missing, f"expected candidate(s) absent: {missing}"
           assert expected <= set(by_name), "one or more expected intake candidates are absent"
           for name in expected:
@@ -71,38 +71,62 @@ jobs:
               assert item.get("intake_status") in {"UNREVIEWED", "BLOCKED"}, f"candidate cannot be promoted by intake PR: {name}"
 
           required_blocked = {
+              "AbuZar-Ansarii/Hermes-Agent-On-Android",
               "Adamant-im/adamant-tradebot",
+              "adebnar/hermes-android",
               "aiwebarchitects/hyperliquid_free_trading_bot",
+              "amirghm/hermes-agent-mobile",
               "asba-IA/Github-Mev-Bot",
               "b-nnett/goose",
+              "Binair-Dev/HermesAgentMobile",
               "cline/prompts",
               "CMZ33/Github-Mev-Bot",
+              "Codename-11/hermes-relay",
               "coder/agentapi",
+              "cogwheel0/conduit",
               "composio-community/awesome-codex-skills",
               "CryptoSignal/Crypto-Signal",
               "Cryptotrademate/cryptotrademate-trading-bot",
               "df-tools-bn/.github",
               "dsmsmj/vercel-labs-agent-skills",
               "elder-plinius/CL4R1T4S",
+              "getpaseo/paseo",
+              "Giton22/herald",
               "hackobi/AI-Scalpel-Trading-Bot",
+              "Haehnchen/crypto-trading-bot",
+              "HenWorks/Hermes-agent-android-PC-companion-app",
+              "hermes-webui/hermes-android",
+              "Hy4ri/hermes-mobile",
+              "jeromeleeqy-hash/Hermes-Android",
               "kevincm89/https-github.com-vercel-labs-skills",
               "koreainvestment/open-trading-api",
+              "l3ad3r1/Hermes-Agent-Android",
+              "marshallrichards/ClawPhone",
               "minhlucvan/agent-browser-mcp",
+              "omarqaterge/hermes-mobile-app",
               "onchain-trading-bot/.github",
               "OpenHands/openhands-aci",
               "OpenHands/OpenHands-Cloud",
               "Options-Visualizer/Options-Visualizer.github.io",
               "Qian-Anton/GitStudy",
               "qxcnm/Codex-Manager",
+              "reactnativecn/react-native-update",
               "Roibal/Cryptocurrency-Trading-Bots-Python-Beginner-Advance",
               "router-for-me/CLIProxyAPI",
+              "rusty4444/hermes-android",
               "ryfineZ/codex-session-patcher",
+              "sesaloy/hermes-mobile",
+              "sesori-ai/sesori_apps_monorepo",
+              "sidinsearch/AgentCall",
               "starwiz-7/StalkStock",
               "traderwillhu/market_dashboard",
               "TradingAgents-AI/TradingAgents-AI.github.io",
               "TradingGoose/TradingGoose.github.io",
               "twentyhq/twenty",
+              "unsupportedpastels/mercury",
               "x1xhlol/system-prompts-and-models-of-ai-tools",
+              "Xiaofei-it/Hermes",
+              "xP3ta/hermes-console",
           }
           for name in required_blocked:
               assert by_name[name]["intake_status"] == "BLOCKED", f"required blocker was removed: {name}"
@@ -121,10 +145,18 @@ jobs:
           assert by_name["x1xhlol/system-prompts-and-models-of-ai-tools"]["intake_status"] == "BLOCKED"
           assert by_name["elder-plinius/CL4R1T4S"]["intake_status"] == "BLOCKED"
           assert "FSL-1.1-ALv2" in by_name["dyad-sh/dyad"]["upstream_license_spdx"]
+          assert by_name["Haehnchen/crypto-trading-bot"]["intake_status"] == "BLOCKED"
+          assert by_name["HenWorks/Hermes-agent-android-PC-companion-app"]["intake_status"] == "BLOCKED"
+          assert by_name["didi/Hummer"]["intake_status"] == "UNREVIEWED"
+          assert by_name["sidinsearch/AgentCall"]["intake_status"] == "BLOCKED"
+          assert by_name["sesori-ai/sesori_apps_monorepo"]["intake_status"] == "BLOCKED"
+          assert by_name["reactnativecn/react-native-update"]["intake_status"] == "BLOCKED"
+          assert by_name["getpaseo/paseo"]["upstream_license_spdx"] == "NOASSERTION"
 
           print("INTAKE_POLICY=PASS")
           print(f"REGISTRY_RECORDS={len(repos)}")
           print(f"CANDIDATES_PINNED={len(expected)}/{len(expected)}")
+          assert len(required_blocked) == 56, f"expected 56 required blockers, got {len(required_blocked)}"
           print(f"CANDIDATES_BLOCKED={len(required_blocked)}")
           print("LIVE_LOCK=FAIL_CLOSED")
           PY
