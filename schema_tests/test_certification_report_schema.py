@@ -52,6 +52,12 @@ class CertificationReportSchemaTests(unittest.TestCase):
     def test_config_schema_matches_canonical_schema(self):
         config_schema = json.loads(CONFIG_SCHEMA_PATH.read_text(encoding="utf-8"))
         canonical_schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+        Draft202012Validator.check_schema(config_schema)
+        # Each copy must have a resolvable path-specific ID; all rules must match.
+        config_id = config_schema.pop("$id", None)
+        canonical_id = canonical_schema.pop("$id", None)
+        self.assertTrue(config_id and config_id.endswith("/config/AURELIA_CERTIFICATION_REPORT.schema.json"))
+        self.assertTrue(canonical_id and canonical_id.endswith("/schemas/aurelia_certification_report.schema.json"))
         self.assertEqual(config_schema, canonical_schema)
 
     def test_all_pending_report_is_valid_without_fabricated_evidence_hashes(self):
