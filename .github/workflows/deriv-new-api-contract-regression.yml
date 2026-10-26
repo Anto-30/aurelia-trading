@@ -1,6 +1,12 @@
 name: Deriv New API Contract Regression
 
 on:
+  push:
+    branches: ["**"]
+    paths:
+      - "runtime/adapters/deriv_adapter.py"
+      - "tests/test_deriv_adapter_contract.py"
+      - ".github/workflows/deriv-new-api-contract-regression.yml"
   pull_request:
     paths:
       - "runtime/adapters/deriv_adapter.py"
