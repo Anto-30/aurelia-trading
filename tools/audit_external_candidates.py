@@ -453,11 +453,53 @@ def safe_semgrep_error_type(error: Any) -> str:
     label = next((value for value in values if isinstance(value, str)), "")
     if not label:
         return "UNKNOWN"
-    # Semgrep errors may nest paths in the type field. Allow only compact enum-like
-    # labels so a malformed upstream field cannot leak paths or source-bearing text.
+    # Semgrep currently emits a small set of documented scanner error labels with
+    # spaces. Preserve those exact labels; reject arbitrary strings and nested paths.
+    known_labels = {
+        "PartialParsing",
+        "Internal matching error",
+        "Syntax error",
+        "Other syntax error",
+        "Lexical error",
+        "Timeout",
+    }
+    if label in known_labels:
+        return label
     if re.fullmatch(r"[A-Za-z][A-Za-z0-9_.-]{0,119}", label):
         return label
     return "OTHER"
+
+
+def safe_semgrep_error_extensions(error: Any) -> list[str]:
+    """Collect only source-relative file extensions from nested Semgrep error locations."""
+    if not isinstance(error, dict):
+        return []
+    found: set[str] = set()
+    pending: list[Any] = [error.get("type"), error.get("path")]
+    visited = 0
+    while pending and visited < 500:
+        value = pending.pop()
+        visited += 1
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if key == "path" and isinstance(child, str):
+                    normalized = child.replace("\\\\", "/")
+                    if normalized.startswith("/src/") or normalized.startswith("src/"):
+                        suffix = Path(safe_relative(normalized)).suffix.lower()
+                        if re.fullmatch(r"\\.[a-z0-9]{1,10}", suffix):
+                            found.add(suffix)
+                elif isinstance(child, (dict, list)):
+                    pending.append(child)
+        elif isinstance(value, list):
+            pending.extend(value[:100])
+    return sorted(found)[:16]
+
+
+def semgrep_error_extension_counts(errors: list[Any]) -> list[dict[str, Any]]:
+    counts: Counter[str] = Counter()
+    for error in errors:
+        counts.update(safe_semgrep_error_extensions(error))
+    return [{"extension": ext, "count": counts[ext]} for ext in sorted(counts)]
 
 
 def semgrep_error_type_counts(errors: list[Any]) -> list[dict[str, Any]]:
@@ -517,12 +559,14 @@ def sanitize_semgrep(raw_report: dict[str, Any]) -> dict[str, Any]:
         "findings_truncated": len(safe_findings) > 10000,
         "scanner_error_count": len(errors),
         "scanner_error_type_counts": semgrep_error_type_counts(errors),
-        # Raw error messages are omitted to prevent source excerpts or sensitive data leaking.
+        "scanner_error_extension_counts": semgrep_error_extension_counts(errors),
+        # Raw messages and paths are omitted. Only bounded file extensions are preserved.
         "scanner_errors": [
             {
                 "type": safe_semgrep_error_type(error),
                 "code": (error.get("code") if isinstance(error, dict) else None),
                 "level": (error.get("level") if isinstance(error, dict) else None),
+                "path_extensions": safe_semgrep_error_extensions(error),
             }
             for error in errors[:200]
         ],
@@ -867,6 +911,7 @@ def main() -> int:
                 "semgrep": semgrep_report["status"],
                 "semgrep_error_count": semgrep_report["scanner_error_count"],
                 "semgrep_error_type_counts": semgrep_report["scanner_error_type_counts"],
+                "semgrep_error_extension_counts": semgrep_report["scanner_error_extension_counts"],
                 "trivy": "COMPLETED",
                 "java_archive_scan": java_archive_status,
                 "java_archive_error_code": java_archive_error_code,
@@ -930,6 +975,12 @@ def main() -> int:
                 + " SEMGREP_ERROR_TYPES="
                 + json.dumps(
                     result.get("scanner_status", {}).get("semgrep_error_type_counts", []),
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                + " SEMGREP_ERROR_EXTENSIONS="
+                + json.dumps(
+                    result.get("scanner_status", {}).get("semgrep_error_extension_counts", []),
                     sort_keys=True,
                     separators=(",", ":"),
                 )

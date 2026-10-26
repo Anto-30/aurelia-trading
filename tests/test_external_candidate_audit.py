@@ -119,7 +119,7 @@ class SemgrepCoverageTests(unittest.TestCase):
                 {
                     "level": "warn",
                     "code": 3,
-                    "type": ["PartialParsing", [{"path": "/src/private/a.py", "line": 2}]],
+                    "type": ["PartialParsing", [{"path": "/src/private/a.md", "line": 2}]],
                     "message": "private parser detail",
                 },
                 {
@@ -134,15 +134,34 @@ class SemgrepCoverageTests(unittest.TestCase):
                     "type": "Timeout",
                     "message": "private timeout detail",
                 },
+                {
+                    "level": "warn",
+                    "code": 2,
+                    "type": "Internal matching error",
+                    "message": "private matching diagnostic",
+                },
+                {
+                    "level": "warn",
+                    "code": 3,
+                    "type": "Syntax error",
+                    "message": "private syntax diagnostic",
+                },
             ],
         })
         self.assertEqual(
             report["scanner_error_type_counts"],
             [
+                {"type": "Internal matching error", "code": 2, "level": "warn", "count": 1},
                 {"type": "PartialParsing", "code": 3, "level": "warn", "count": 2},
+                {"type": "Syntax error", "code": 3, "level": "warn", "count": 1},
                 {"type": "Timeout", "code": 2, "level": "warn", "count": 1},
             ],
         )
+        self.assertEqual(
+            report["scanner_error_extension_counts"],
+            [{"extension": ".md", "count": 1}, {"extension": ".py", "count": 1}],
+        )
+        self.assertEqual(report["scanner_errors"][0]["path_extensions"], [".md"])
         serialized = json.dumps(report)
         self.assertNotIn("/src/private", serialized)
         self.assertNotIn("private parser detail", serialized)
