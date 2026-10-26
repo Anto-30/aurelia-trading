@@ -592,6 +592,8 @@ async def collect_once(state: dict[str, Any]) -> None:
                         "captured_at_utc": iso(received_at),
                         "quote_status": "UNAVAILABLE",
                         "error_type": type(exc).__name__,
+                        "error_code": getattr(exc, "code", None),
+                        "error_cause_type": getattr(exc, "failure_type", None),
                     })
     finally:
         await transport.close()
@@ -607,10 +609,22 @@ async def main() -> int:
         # failure so a scheduled retry can resume the frozen campaign.
         state["last_run_error_type"] = type(exc).__name__
         state["last_run_error_at_utc"] = iso(utc_now())
+        error_code = getattr(exc, "code", None)
+        error_cause_type = getattr(exc, "failure_type", None)
+        if isinstance(error_code, str) and error_code:
+            state["last_run_error_code"] = error_code
+        else:
+            state.pop("last_run_error_code", None)
+        if isinstance(error_cause_type, str) and error_cause_type:
+            state["last_run_error_cause_type"] = error_cause_type
+        else:
+            state.pop("last_run_error_cause_type", None)
         save_state(STATE_PATH, state)
         report = evaluation(state)
         report["collection_status"] = "FAILED_RETRYABLE"
         report["collection_error_type"] = type(exc).__name__
+        report["collection_error_code"] = error_code
+        report["collection_error_cause_type"] = error_cause_type
         report_path.write_text(
             json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
             encoding="utf-8",
@@ -618,6 +632,8 @@ async def main() -> int:
         print(json.dumps({
             "R100_PROSPECTIVE_COLLECTION": "RETRYABLE_FAILURE",
             "ERROR_TYPE": type(exc).__name__,
+            "ERROR_CODE": error_code,
+            "ERROR_CAUSE_TYPE": error_cause_type,
             "OBSERVATIONS_PRESERVED": report["observations_total"],
             "EXECUTION_AUTHORIZED": False,
             "CAPITAL_AUTHORITY": False,
@@ -626,6 +642,8 @@ async def main() -> int:
 
     state.pop("last_run_error_type", None)
     state.pop("last_run_error_at_utc", None)
+    state.pop("last_run_error_code", None)
+    state.pop("last_run_error_cause_type", None)
     report = evaluation(state)
     report["collection_status"] = "PASS"
     save_state(STATE_PATH, state)
