@@ -15,6 +15,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_FILES = (
     "config/LIVE_LOCK.yaml",
+    "docs/AURELIA_STAKE_POLICY_2026-10-10.md",
+    "AURELIA_SOURCE_OF_TRUTH.json",
+    "README.md",
+    "assurance/aurelia_invariants.py",
+    "research/r100_prospective_oos_collector.py",
+    "runtime/core/probability_policy.py",
+    "runtime/strategy/autonomous_signal_engine.py",
     "docs/AURELIA_PRODUCTION_STANDARD.yaml",
     "docs/AURELIA_TEST_ORACLE_MATRIX.yaml",
     "docs/PRODUCTION_READINESS.md",
@@ -84,23 +91,46 @@ def main() -> int:
             re.search(r"(?m)^[ \t]+maximum:\s*([0-9.]+)\s*$", probability_policy.group("body"))
             if probability_policy else None
         )
-        authority = read("runtime/core/authority.py")
-        runtime_min = re.search(r"(?m)^MIN_PROBABILITY\s*=\s*([0-9.]+)\s*$", authority)
-        runtime_max = re.search(r"(?m)^MAX_PROBABILITY\s*=\s*([0-9.]+)\s*$", authority)
+        canonical_policy = read("runtime/core/probability_policy.py")
+        runtime_min = re.search(r"(?m)^MIN_PROBABILITY\s*=\s*([0-9.]+)\s*$", canonical_policy)
+        runtime_max = re.search(r"(?m)^MAX_PROBABILITY\s*=\s*([0-9.]+)\s*$", canonical_policy)
+        source_of_truth = read("AURELIA_SOURCE_OF_TRUTH.json")
+        source_min = re.search(r'(?m)^\s*"probability_min"\s*:\s*([0-9.]+)\s*,\s*$', source_of_truth)
+        source_max = re.search(r'(?m)^\s*"probability_max"\s*:\s*([0-9.]+)\s*,\s*$', source_of_truth)
         readme = read("README.md")
+        stake_policy = read("docs/AURELIA_STAKE_POLICY_2026-10-10.md")
+        invariants = read("assurance/aurelia_invariants.py")
+        authority = read("runtime/core/authority.py")
+        research = read("research/r100_prospective_oos_collector.py")
+        signal_engine = read("runtime/strategy/autonomous_signal_engine.py")
         try:
             policy_values = (
                 float(documented_min.group(1)) if documented_min else None,
                 float(documented_max.group(1)) if documented_max else None,
                 float(runtime_min.group(1)) if runtime_min else None,
                 float(runtime_max.group(1)) if runtime_max else None,
+                float(source_min.group(1)) if source_min else None,
+                float(source_max.group(1)) if source_max else None,
             )
         except (TypeError, ValueError):
-            policy_values = (None, None, None, None)
-        if policy_values != (0.50, 0.75, 0.50, 0.75):
-            failures.append("PROBABILITY_POLICY_RANGE_MISMATCH_EXPECTED_0.50_TO_0.75")
-        if "hard probability band is **50%–75%**" not in readme:
+            policy_values = (None, None, None, None, None, None)
+        if policy_values != (0.55, 0.75, 0.55, 0.75, 0.55, 0.75):
+            failures.append("PROBABILITY_POLICY_RANGE_MISMATCH_EXPECTED_0.55_TO_0.75")
+        if "hard probability band is **55%–75%**" not in readme:
             failures.append("README_PROBABILITY_POLICY_RANGE_MISMATCH")
+        if "inclusive range **55% to 75%**" not in stake_policy:
+            failures.append("STAKE_POLICY_PROBABILITY_RANGE_MISMATCH")
+        if "from .probability_policy import MAX_PROBABILITY, MIN_PROBABILITY, probability_is_valid" not in authority:
+            failures.append("AUTHORITY_NOT_USING_CANONICAL_PROBABILITY_POLICY")
+        if "from runtime.core.probability_policy import probability_is_valid as _probability_is_valid" not in invariants:
+            failures.append("ASSURANCE_NOT_USING_CANONICAL_PROBABILITY_POLICY")
+        if not (
+            "MIN_PROBABILITY as MIN_TRADE_PROBABILITY" in research
+            and "MAX_PROBABILITY as MAX_TRADE_PROBABILITY" in research
+        ):
+            failures.append("RESEARCH_NOT_USING_CANONICAL_PROBABILITY_POLICY")
+        if "from runtime.core.probability_policy import MIN_PROBABILITY, MAX_PROBABILITY" not in signal_engine:
+            failures.append("SIGNAL_ENGINE_NOT_USING_CANONICAL_PROBABILITY_POLICY")
 
     # Scan text files for obvious credential material. This is deliberately
     # conservative: false positives are reported for human review rather than
@@ -125,7 +155,7 @@ def main() -> int:
         return 1
 
     print("AURELIA_PRODUCTION_ACCEPTANCE=AUDIT_PASS")
-    print("PROBABILITY_POLICY_RANGE=0.50..0.75")
+    print("PROBABILITY_POLICY_RANGE=0.55..0.75")
     print("CAPITAL_MOVEMENT_PERMITTED=false")
     print("FINAL_EXECUTION_AUTHORIZATION=false")
     print("LIVE_EXECUTION=BLOCKED")

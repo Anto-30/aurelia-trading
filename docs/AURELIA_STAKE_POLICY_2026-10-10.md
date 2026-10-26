@@ -2,7 +2,7 @@
 
 ## Probability threshold
 
-A live candidate's estimated trade probability must be within the inclusive range **50% to 75%**. Values outside the range are rejected, never clipped. The numeric band is only one gate: probability must also be calibrated, fresh, and free of unresolved drift, and the trade must have positive expected value after execution costs, slippage, and quote costs. A 50% probability is not inherently profitable.
+A live candidate's estimated trade probability must be within the inclusive range **55% to 75%**. Values outside the range are rejected, never clipped. The numeric band is only one gate: probability must also be calibrated, fresh, and free of unresolved drift, and the trade must have positive expected value after execution costs, slippage, and quote costs. Meeting the minimum probability is not itself evidence of profitability.
 
 ## Balance-scaled stake
 

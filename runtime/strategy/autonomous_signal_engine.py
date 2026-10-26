@@ -15,6 +15,8 @@ from datetime import datetime, timezone
 from math import isfinite, log, sqrt
 from typing import Any
 
+from runtime.core.probability_policy import MIN_PROBABILITY, MAX_PROBABILITY
+
 
 @dataclass(frozen=True)
 class SignalCandidate:
@@ -85,8 +87,8 @@ class AutonomousSignalHunter:
         direction = "CALL" if score > 0 else "PUT"
         # This is intentionally an uncalibrated research confidence. It is
         # never presented to the capital plane as a calibrated probability.
-        probability = 0.55 + 0.20 * (abs(score) / 4.0)
-        if not 0.55 <= probability <= 0.75:
+        probability = MIN_PROBABILITY + (MAX_PROBABILITY - MIN_PROBABILITY) * (abs(score) / 4.0)
+        if not MIN_PROBABILITY <= probability <= MAX_PROBABILITY:
             return None
         candidate = SignalCandidate(
             symbol=symbol,
