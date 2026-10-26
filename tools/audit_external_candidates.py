@@ -20,18 +20,16 @@ from typing import Any
 DEFAULT_SEMGREP_IMAGE = "semgrep/semgrep:1.182.0"
 DEFAULT_TRIVY_IMAGE = "aquasec/trivy:0.76.1"
 TRIVY_DB_REPOSITORIES = (
-    "public.ecr.aws/aquasecurity/trivy-db",
     "mirror.gcr.io/aquasec/trivy-db",
     "ghcr.io/aquasecurity/trivy-db",
     "aquasec/trivy-db",
 )
 TRIVY_JAVA_DB_REPOSITORIES = (
-    "public.ecr.aws/aquasecurity/trivy-java-db",
     "mirror.gcr.io/aquasec/trivy-java-db",
     "ghcr.io/aquasecurity/trivy-java-db",
     "aquasec/trivy-java-db",
 )
-TRIVY_CHECKS_BUNDLE_REPOSITORY = "public.ecr.aws/aquasecurity/trivy-checks"
+TRIVY_CHECKS_BUNDLE_REPOSITORY = "mirror.gcr.io/aquasec/trivy-checks"
 SAFE_ENV_KEYS = {
     "PATH", "HOME", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL",
     "DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG", "DOCKER_TLS_VERIFY",
