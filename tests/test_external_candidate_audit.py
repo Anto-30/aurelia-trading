@@ -190,11 +190,16 @@ class AuditDockerEnvironmentTests(unittest.TestCase):
         self.assertNotIn("/root/.semgrep:rw,nosuid,nodev,size=16m", tmpfs_values)
 
     def test_trivy_database_fetch_failures_have_a_specific_safe_code(self):
-        # The scanner must identify the failing security-database layer without exposing raw diagnostics.
-        self.assertEqual(
-            safe_tool_failure_class("failed to download vulnerability db: context deadline exceeded", ""),
-            "TRIVY_VULNERABILITY_DB_FETCH_FAILED",
-        )
+        # Identify the security-database layer without exposing raw diagnostics.
+        for diagnostic in (
+            "failed to download vulnerability db: context deadline exceeded",
+            "failed to fetch vulnerability database: remote registry unavailable",
+        ):
+            with self.subTest(diagnostic=diagnostic):
+                self.assertEqual(
+                    safe_tool_failure_class(diagnostic, ""),
+                    "TRIVY_VULNERABILITY_DB_FETCH_FAILED",
+                )
 
     def test_trivy_checks_bundle_fetch_failures_have_a_specific_safe_code(self):
         self.assertEqual(
