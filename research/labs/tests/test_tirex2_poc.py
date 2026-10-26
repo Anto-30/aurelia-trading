@@ -6,7 +6,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from research.labs.tirex2_latency_benchmark import latency_verdict, percentile_ms, summarize_latencies
+from research.labs.tirex2_latency_benchmark import (
+    is_immutable_commit_sha,
+    latency_verdict,
+    percentile_ms,
+    summarize_latencies,
+)
 from research.labs.tirex2_synthetic_coupling import (
     SPLITS,
     build_window_pools,
@@ -133,14 +138,40 @@ class TiRex2SyntheticCouplingTests(unittest.TestCase):
 
 
 class TiRex2LatencyMetricTests(unittest.TestCase):
-    def test_percentile_and_latency_budget(self):
-        values = list(range(1, 101))
-        summary = summarize_latencies(values)
-        self.assertEqual(percentile_ms(values, 0.99), 99.0)
-        self.assertEqual(summary["max_ms"], 100.0)
-        self.assertEqual(latency_verdict(summary, 99.0), "PASS")
-        self.assertEqual(latency_verdict(summary, 98.0), "FAIL")
-        self.assertEqual(latency_verdict(summary, None), "NOT_EVALUATED_NO_FROZEN_BUDGET")
+    def test_p99_verdict_requires_immutable_revision_and_1000_samples(self):
+        smoke_summary = summarize_latencies(list(range(1, 101)))
+        self.assertEqual(percentile_ms(list(range(1, 101)), 0.99), 99.0)
+        self.assertEqual(smoke_summary["max_ms"], 100.0)
+        self.assertEqual(
+            latency_verdict(smoke_summary, 99.0, model_revision_pinned=True),
+            "NOT_EVALUATED_INSUFFICIENT_SAMPLES",
+        )
+
+        summary = summarize_latencies(list(range(1, 1001)))
+        self.assertEqual(percentile_ms(list(range(1, 1001)), 0.99), 990.0)
+        self.assertEqual(
+            latency_verdict(summary, 990.0, model_revision_pinned=True),
+            "PASS",
+        )
+        self.assertEqual(
+            latency_verdict(summary, 989.0, model_revision_pinned=True),
+            "FAIL",
+        )
+        self.assertEqual(
+            latency_verdict(summary, 990.0, model_revision_pinned=False),
+            "NOT_EVALUATED_UNPINNED_MODEL_REVISION",
+        )
+        self.assertEqual(
+            latency_verdict(summary, None, model_revision_pinned=True),
+            "NOT_EVALUATED_NO_FROZEN_BUDGET",
+        )
+
+    def test_only_full_hex_commit_sha_counts_as_immutable_model_revision(self):
+        self.assertTrue(is_immutable_commit_sha("a" * 40))
+        self.assertFalse(is_immutable_commit_sha(None))
+        self.assertFalse(is_immutable_commit_sha("main"))
+        self.assertFalse(is_immutable_commit_sha("a" * 39))
+        self.assertFalse(is_immutable_commit_sha("g" * 40))
 
     def test_invalid_latency_samples_rejected(self):
         with self.assertRaises(ValueError):
