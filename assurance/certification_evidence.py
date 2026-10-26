@@ -215,10 +215,17 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
         return ok, "valid" if ok else "recovery matrix evidence incomplete"
 
     if name == "soak_3600s.json":
+        # This is a production release artifact. A CI simulation, even if a full
+        # 3600-second run succeeded, cannot satisfy the production soak gate.
+        # _provenance_valid also requires environment=production to originate
+        # from the deployed runtime and include a deployment ID.
         ok = (
-            isinstance(record.get("duration_seconds"), int)
+            record.get("environment") == "production"
+            and isinstance(record.get("duration_seconds"), int)
+            and not isinstance(record.get("duration_seconds"), bool)
             and record["duration_seconds"] >= 3600
             and isinstance(record.get("actual_elapsed_seconds"), (int, float))
+            and not isinstance(record.get("actual_elapsed_seconds"), bool)
             and record["actual_elapsed_seconds"] >= 3600
             and record.get("continuous") is True
             and record.get("execution_mode") == "VERIFY_ONLY"
@@ -229,7 +236,39 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
             and record.get("capital_authority_escapes") == 0
             and record.get("unresolved_unknown_states") == 0
         )
-        return ok, "valid" if ok else "genuine 3600-second soak evidence incomplete"
+        return ok, "valid" if ok else "genuine 3600-second production/runtime soak evidence incomplete"
+
+    if name == "nonproduction_soak_3600s.json":
+        # Non-production evidence is useful for engineering validation but is
+        # deliberately kept out of REQUIRED_EVIDENCE_FILES and release readiness.
+        ok = (
+            record.get("environment") == "ci"
+            and record.get("classification") == "SIMULATION_VERIFIED"
+            and record.get("execution_mode") == "VERIFY_ONLY"
+            and isinstance(record.get("duration_seconds"), int)
+            and not isinstance(record.get("duration_seconds"), bool)
+            and record["duration_seconds"] >= 3600
+            and isinstance(record.get("actual_elapsed_seconds"), (int, float))
+            and not isinstance(record.get("actual_elapsed_seconds"), bool)
+            and record["actual_elapsed_seconds"] >= 3600
+            and record.get("continuous") is True
+            and _non_empty_string(record, "deployment_id")
+            and _non_empty_string(record, "runtime_instance_id")
+            and record.get("invariant_violations") == 0
+            and record.get("silent_degradations") == 0
+            and record.get("capital_authority_escapes") == 0
+            and record.get("unresolved_unknown_states") == 0
+            and record.get("authenticated_deriv_session") is False
+            and record.get("real_broker_transaction") is False
+            and record.get("real_capital_movement") is False
+            and record.get("orders_submitted") == 0
+            and record.get("final_execution_authorization") is False
+            and record.get("live_execution") == "BLOCKED"
+            and record.get("capital_can_open_new_exposure") is False
+            and _non_empty_string(record, "observation_ledger_sha256")
+            and record.get("observation_ledger_sha256") == record.get("data_hash")
+        )
+        return ok, "valid" if ok else "non-production 3600-second soak evidence incomplete"
 
     if name == "prospective_oos.json":
         ok = (
