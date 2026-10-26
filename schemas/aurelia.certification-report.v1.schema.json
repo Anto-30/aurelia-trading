@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aurelia.certification-report.v1",
+  "title": "AURELIA Certification Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "repository",
+    "certification_result",
+    "final_execution_authorization",
+    "live_execution",
+    "results"
+  ],
+  "properties": {
+    "schema": {
+      "const": "aurelia.certification-report.v1"
+    },
+    "repository": {
+      "const": "Anto-30/aurelia-trading"
+    },
+    "certification_result": {
+      "type": "string",
+      "enum": [
+        "READY_FOR_CAPITAL_REVIEW",
+        "NOT_READY"
+      ]
+    },
+    "final_execution_authorization": {
+      "const": false
+    },
+    "live_execution": {
+      "const": "BLOCKED"
+    },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "status",
+          "detail"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "FAIL",
+              "BLOCKED"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

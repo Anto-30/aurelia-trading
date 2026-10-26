@@ -10,6 +10,7 @@ dependencies = ["websockets>=17.1,<18"]
 
 [project.optional-dependencies]
 ml = ["torch>=2.6,<3"]
+tirex2 = ["torch>=2.8,<3", "tirex-2==0.4.0"]
 
 [tool.setuptools.packages.find]
 include = ["runtime*", "research*"]
