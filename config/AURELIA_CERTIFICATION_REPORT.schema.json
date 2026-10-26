@@ -292,11 +292,86 @@
       "properties": {
         "sast_findings": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "description": "Semgrep findings across p/default and p/secrets; finding instances are not deduplicated or human-confirmed."
         },
         "secret_scan_findings": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "description": "Trivy secret-detection finding instances; they are not necessarily confirmed credential leaks and require manual triage."
+        },
+        "vulnerability_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy vulnerability finding instances; not deduplicated across repositories or dependency paths."
+        },
+        "misconfiguration_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy misconfiguration finding instances."
+        },
+        "license_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy license detection instances; compatibility requires legal/manual review."
+        },
+        "critical_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy findings with CRITICAL severity across all finding types."
+        },
+        "high_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy findings with HIGH severity across all finding types."
+        },
+        "medium_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy findings with MEDIUM severity across all finding types."
+        },
+        "low_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy findings with LOW severity across all finding types."
+        },
+        "unknown_severity_findings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Trivy findings whose severity was UNKNOWN."
+        },
+        "semgrep_secret_rule_matches": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Semgrep generic.secrets rule matches; these are finding instances, not confirmed secret values."
+        },
+        "semgrep_scanner_errors": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Semgrep parser, timeout, or matching error records reported by the scanner."
+        },
+        "scan_candidate_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of pinned candidates included in this run."
+        },
+        "scan_partial_candidate_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Candidates with one or more Semgrep scanner errors; such candidates do not have full Semgrep coverage."
+        },
+        "audit_run_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "audit_summary_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "audit_manifest_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "audit_artifact_zip_sha256": {
+          "$ref": "#/$defs/hash"
         }
       },
       "allOf": [
