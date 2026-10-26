@@ -346,7 +346,7 @@ def write_artifacts(
         "n_variates": n_variates,
         "seed": seed,
         "expected_interval_seconds": expected_interval_seconds,
-        "source_series_count": len({sid for split in pools.values() for sid in split}),
+        "eligible_series_count": len({sid for split in pools.values() for sid in split}),
         "available_windows_per_split": {
             split: {sid: pool.window_count for sid, pool in sorted(pools[split].items())}
             for split in SPLITS
