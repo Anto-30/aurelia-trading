@@ -6,6 +6,7 @@ from jsonschema import Draft202012Validator
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schemas" / "aurelia_certification_report.schema.json"
+CONFIG_SCHEMA_PATH = ROOT / "config" / "AURELIA_CERTIFICATION_REPORT.schema.json"
 
 
 def pending_report():
@@ -47,6 +48,11 @@ class CertificationReportSchemaTests(unittest.TestCase):
         cls.schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
         Draft202012Validator.check_schema(cls.schema)
         cls.validator = Draft202012Validator(cls.schema)
+
+    def test_config_schema_matches_canonical_schema(self):
+        config_schema = json.loads(CONFIG_SCHEMA_PATH.read_text(encoding="utf-8"))
+        canonical_schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(config_schema, canonical_schema)
 
     def test_all_pending_report_is_valid_without_fabricated_evidence_hashes(self):
         self.validator.validate(pending_report())
