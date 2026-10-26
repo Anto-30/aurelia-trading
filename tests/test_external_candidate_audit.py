@@ -1,5 +1,6 @@
 """Regression tests for isolated external-candidate scanner configuration."""
 
+import json
 import os
 import unittest
 from pathlib import Path
