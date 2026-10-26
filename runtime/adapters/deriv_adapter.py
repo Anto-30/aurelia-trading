@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import math
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
@@ -76,6 +77,8 @@ class DerivAdapter:
         self._validate_environment_url(self.ws_url)
         if not self.expected_currency:
             raise DerivProtocolError("EXPECTED_ACCOUNT_CURRENCY_REQUIRED")
+        if not self.expected_loginid:
+            raise DerivProtocolError("EXPECTED_ACCOUNT_ID_REQUIRED")
         try:
             self.transport = DerivWebSocketTransport(
                 self.ws_url,
@@ -302,16 +305,36 @@ class DerivAdapter:
                 yield dict(transaction)
 
     async def request_proposal(self, parameters: dict[str, Any]) -> str:
+        legacy_fields = [key for key in ("loginid", "symbol") if key in parameters]
+        if legacy_fields:
+            raise DerivProtocolError(
+                "LEGACY_PROPOSAL_FIELD_FORBIDDEN:" + ",".join(legacy_fields)
+            )
         required = ("contract_type", "currency", "underlying_symbol")
         missing = [key for key in required if not parameters.get(key)]
         if missing:
             raise DerivProtocolError(
                 "PROPOSAL_PARAMETERS_MISSING:" + ",".join(missing)
             )
-        proposal = (
-            await self.request({"proposal": 1, **parameters})
-        ).get("proposal") or {}
-        proposal_id = str(proposal.get("id") or "")
+
+        reply = await self.request({"proposal": 1, **parameters})
+        if "error" in reply:
+            raise DerivProtocolError("PROPOSAL_REQUEST_REJECTED")
+        try:
+            # The New Options API successful-response schema requires this object.
+            # Do not replace a malformed response with an empty default object.
+            proposal = reply["proposal"]
+        except KeyError as exc:
+            raise DerivProtocolError("PROPOSAL_RESPONSE_MALFORMED") from exc
+        if not isinstance(proposal, dict):
+            raise DerivProtocolError("PROPOSAL_RESPONSE_MALFORMED")
+        try:
+            raw_proposal_id = proposal["id"]
+        except KeyError as exc:
+            raise DerivProtocolError("PROPOSAL_ID_MISSING_FROM_BROKER") from exc
+        if raw_proposal_id is None or isinstance(raw_proposal_id, bool):
+            raise DerivProtocolError("PROPOSAL_ID_MISSING_FROM_BROKER")
+        proposal_id = str(raw_proposal_id).strip()
         if not proposal_id:
             raise DerivProtocolError("PROPOSAL_ID_MISSING_FROM_BROKER")
         return proposal_id
@@ -322,9 +345,18 @@ class DerivAdapter:
         proposal_id = payload.get("proposal_id")
         if not proposal_id:
             raise DerivProtocolError("ORDER_REQUIRES_BROKER_PROPOSAL_ID")
+        price = payload.get("stake")
+        if isinstance(price, bool) or not isinstance(price, (int, float)):
+            raise DerivProtocolError("BUY_PRICE_INVALID")
+        try:
+            numeric_price = float(price)
+        except (OverflowError, TypeError, ValueError) as exc:
+            raise DerivProtocolError("BUY_PRICE_INVALID") from exc
+        if not math.isfinite(numeric_price) or numeric_price < 0:
+            raise DerivProtocolError("BUY_PRICE_INVALID")
         try:
             reply = await self.request(
-                {"buy": str(proposal_id), "price": payload["stake"]}
+                {"buy": str(proposal_id), "price": numeric_price}
             )
         except Exception:
             return BrokerResult(
