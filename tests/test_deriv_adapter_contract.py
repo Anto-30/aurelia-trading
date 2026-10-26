@@ -191,7 +191,7 @@ class TestDerivAdapterContract(unittest.IsolatedAsyncioTestCase):
             "close": AsyncMock(),
         })()
         adapter = DerivAdapter(
-            ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real?otp=FIXTURE_ONLY",
             auth_token="FIXTURE_ONLY_TOKEN",
             expected_loginid="CRREAL",
             expected_currency="USD",
