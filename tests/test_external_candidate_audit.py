@@ -97,6 +97,43 @@ class SemgrepCoverageTests(unittest.TestCase):
         self.assertEqual(report["scanner_error_count"], 1)
         self.assertNotIn("sensitive raw diagnostic", str(report))
 
+    def test_semgrep_error_type_counts_are_aggregated_without_raw_diagnostics(self):
+        report = sanitize_semgrep({
+            "version": "test",
+            "results": [],
+            "errors": [
+                {
+                    "level": "warn",
+                    "code": 3,
+                    "type": ["PartialParsing", [{"path": "/src/private/a.py", "line": 2}]],
+                    "message": "private parser detail",
+                },
+                {
+                    "level": "warn",
+                    "code": 3,
+                    "type": ["PartialParsing", [{"path": "/src/private/b.py", "line": 8}]],
+                    "message": "another private parser detail",
+                },
+                {
+                    "level": "warn",
+                    "code": 2,
+                    "type": "Timeout",
+                    "message": "private timeout detail",
+                },
+            ],
+        })
+        self.assertEqual(
+            report["scanner_error_type_counts"],
+            [
+                {"type": "PartialParsing", "code": 3, "level": "warn", "count": 2},
+                {"type": "Timeout", "code": 2, "level": "warn", "count": 1},
+            ],
+        )
+        serialized = json.dumps(report)
+        self.assertNotIn("/src/private", serialized)
+        self.assertNotIn("private parser detail", serialized)
+        self.assertNotIn("private timeout detail", serialized)
+
     def test_semgrep_nested_error_type_does_not_leak_source_paths(self):
         report = sanitize_semgrep({
             "version": "test",
