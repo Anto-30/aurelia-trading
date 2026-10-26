@@ -53,6 +53,7 @@ class NonProductionSoakEvidenceTests(unittest.TestCase):
         self.assertIn("on:\n  workflow_dispatch:\n", workflow)
         self.assertIn("if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}", workflow)
         self.assertIn("cancel-in-progress: false", workflow)
+        self.assertIn("group: aurelia-non-production-soak", workflow)
         triggers = workflow.split("permissions:", 1)[0]
         self.assertNotIn("\n  push:", triggers)
         self.assertNotIn("\n  schedule:", triggers)
