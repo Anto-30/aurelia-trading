@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from runtime.adapters.deriv_ws import DerivWebSocketTransport
+from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
 from runtime.strategy.autonomous_signal_engine import AutonomousSignalHunter
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
@@ -34,6 +34,8 @@ CALIBRATION_MIN_BUCKETS = 3
 CALIBRATION_MIN_BUCKET_SAMPLES = 10
 CALIBRATION_MAX_RELIABILITY_GAP = 0.05
 LEGACY_DEFAULT_COLLECTION_SECONDS = 540
+MAX_STREAM_RECONNECTS = 3
+STREAM_RECONNECT_BACKOFF_SECONDS = (1, 2, 4)
 
 @dataclass(frozen=True)
 class PendingSignal:
@@ -490,6 +492,10 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
     return {
         "schema": "aurelia.r100.prospective_oos.report.v1",
         "experiment_id": manifest["experiment_id"],
+        "collection_transport": {
+            "reconnect_attempts": int(state.get("last_run_reconnect_attempts", 0)),
+            "events": list(state.get("last_run_transport_events") or [])[:32],
+        },
         "strategy_id": STRATEGY_ID,
         "strategy_version": STRATEGY_VERSION,
         "symbol": SYMBOL,
@@ -527,6 +533,8 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
 async def collect_once(state: dict[str, Any]) -> None:
     start = utc_now()
     state["last_run_started_at_utc"] = iso(start)
+    state["last_run_transport_events"] = []
+    reconnect_attempts = 0
 
     transport = DerivWebSocketTransport(PUBLIC_WS_URL, timeout_seconds=10.0)
     campaign_end = datetime.fromisoformat(
@@ -546,9 +554,33 @@ async def collect_once(state: dict[str, Any]) -> None:
         while asyncio.get_running_loop().time() < deadline:
             remaining = deadline - asyncio.get_running_loop().time()
             try:
-                message = await asyncio.wait_for(iterator.__anext__(), timeout=max(1.0, remaining))
+                message = await asyncio.wait_for(
+                    iterator.__anext__(), timeout=max(1.0, remaining)
+                )
             except asyncio.TimeoutError:
                 break
+            except DerivTransportError as exc:
+                # Only retry the transport's explicitly classified reader failure.
+                # Protocol/API errors remain terminal and are not reinterpreted.
+                if exc.code != "TRANSPORT_READER_FAILED" or reconnect_attempts >= MAX_STREAM_RECONNECTS:
+                    raise
+                backoff = STREAM_RECONNECT_BACKOFF_SECONDS[reconnect_attempts]
+                state["last_run_transport_events"].append({
+                    "observed_at_utc": iso(utc_now()),
+                    "event": "STREAM_READER_FAILED",
+                    "cause_type": exc.cause_type or "UNKNOWN",
+                    "reconnect_attempt": reconnect_attempts + 1,
+                    "backoff_seconds": backoff,
+                })
+                await transport.close()
+                reconnect_attempts += 1
+                await asyncio.sleep(backoff)
+                transport = DerivWebSocketTransport(PUBLIC_WS_URL, timeout_seconds=10.0)
+                await transport.connect()
+                stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
+                iterator = stream.__aiter__()
+                continue
+
             tick = message.get("tick") or {}
             try:
                 quote = float(tick["quote"])
@@ -595,6 +627,7 @@ async def collect_once(state: dict[str, Any]) -> None:
                     })
     finally:
         await transport.close()
+    state["last_run_reconnect_attempts"] = reconnect_attempts
     state["last_run_completed_at_utc"] = iso(utc_now())
 
 async def main() -> int:
@@ -606,11 +639,15 @@ async def main() -> int:
         # Persist all observations already collected before a transport/API
         # failure so a scheduled retry can resume the frozen campaign.
         state["last_run_error_type"] = type(exc).__name__
+        state["last_run_error_code"] = getattr(exc, "code", None)
+        state["last_run_error_cause_type"] = getattr(exc, "cause_type", None)
         state["last_run_error_at_utc"] = iso(utc_now())
         save_state(STATE_PATH, state)
         report = evaluation(state)
         report["collection_status"] = "FAILED_RETRYABLE"
         report["collection_error_type"] = type(exc).__name__
+        report["collection_error_code"] = getattr(exc, "code", None)
+        report["collection_error_cause_type"] = getattr(exc, "cause_type", None)
         report_path.write_text(
             json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
             encoding="utf-8",
@@ -618,6 +655,8 @@ async def main() -> int:
         print(json.dumps({
             "R100_PROSPECTIVE_COLLECTION": "RETRYABLE_FAILURE",
             "ERROR_TYPE": type(exc).__name__,
+            "ERROR_CODE": getattr(exc, "code", None),
+            "ERROR_CAUSE_TYPE": getattr(exc, "cause_type", None),
             "OBSERVATIONS_PRESERVED": report["observations_total"],
             "EXECUTION_AUTHORIZED": False,
             "CAPITAL_AUTHORITY": False,
@@ -625,6 +664,8 @@ async def main() -> int:
         raise
 
     state.pop("last_run_error_type", None)
+    state.pop("last_run_error_code", None)
+    state.pop("last_run_error_cause_type", None)
     state.pop("last_run_error_at_utc", None)
     report = evaluation(state)
     report["collection_status"] = "PASS"

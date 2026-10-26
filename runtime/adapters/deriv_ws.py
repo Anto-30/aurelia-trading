@@ -9,7 +9,18 @@ from websockets.asyncio.client import ClientConnection, connect
 
 
 class DerivTransportError(RuntimeError):
-    pass
+    """Sanitized transport error with optional machine-readable diagnostics."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str | None = None,
+        cause_type: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.code = code
+        self.cause_type = cause_type
 
 
 @dataclass
@@ -86,10 +97,18 @@ class DerivWebSocketTransport:
             raise
         except Exception as exc:
             self._fail_pending(exc)
+            # Preserve the exception class and a protocol close code, but never
+            # forward raw exception text, URLs, headers or possible credential data.
+            failure: dict[str, Any] = {
+                "code": "TRANSPORT_READER_FAILED",
+                "cause_type": type(exc).__name__,
+            }
+            received_close = getattr(exc, "rcvd", None)
+            close_code = getattr(received_close, "code", None)
+            if isinstance(close_code, int) and 1000 <= close_code <= 4999:
+                failure["websocket_close_code"] = close_code
             for subscription in self._subscriptions.values():
-                subscription.queue.put_nowait(
-                    {"error": {"code": "TRANSPORT_READER_FAILED"}}
-                )
+                subscription.queue.put_nowait({"error": dict(failure)})
         finally:
             self.ws = None
 
@@ -162,7 +181,14 @@ class DerivWebSocketTransport:
             while True:
                 message = await subscription.queue.get()
                 if "error" in message:
-                    raise DerivTransportError(str(message["error"]))
+                    error = message["error"]
+                    if isinstance(error, dict) and error.get("code") == "TRANSPORT_READER_FAILED":
+                        raise DerivTransportError(
+                            "TRANSPORT_READER_FAILED",
+                            code="TRANSPORT_READER_FAILED",
+                            cause_type=str(error.get("cause_type") or "UNKNOWN"),
+                        )
+                    raise DerivTransportError(str(error))
                 yield message
         finally:
             if self.ws is not None and subscription.request_id is not None:
