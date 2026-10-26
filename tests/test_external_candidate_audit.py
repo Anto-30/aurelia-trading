@@ -4,7 +4,45 @@ import os
 import unittest
 from pathlib import Path
 
-from tools.audit_external_candidates import docker_common_args, safe_tool_failure_class, trivy_database_args
+from tools.audit_external_candidates import (
+    docker_common_args,
+    safe_tool_failure_class,
+    semgrep_coverage_status,
+    sanitize_semgrep,
+    trivy_database_args,
+)
+
+
+class SemgrepCoverageTests(unittest.TestCase):
+    def test_no_scanner_errors_is_complete(self):
+        self.assertEqual(semgrep_coverage_status([]), "COMPLETED")
+
+    def test_partial_parsing_warning_is_not_reported_complete(self):
+        self.assertEqual(
+            semgrep_coverage_status([{"level": "warn", "type": "PartialParsing", "code": 3}]),
+            "PARTIAL_BLOCKED",
+        )
+
+    def test_scanner_timeout_is_not_reported_complete(self):
+        self.assertEqual(
+            semgrep_coverage_status([{"level": "warn", "type": "Timeout", "code": 2}]),
+            "PARTIAL_BLOCKED",
+        )
+
+    def test_semgrep_report_surfaces_coverage_limitation_without_raw_error_text(self):
+        report = sanitize_semgrep({
+            "version": "test",
+            "results": [],
+            "errors": [{
+                "level": "warn",
+                "code": 2,
+                "type": "Timeout",
+                "message": "sensitive raw diagnostic",
+            }],
+        })
+        self.assertEqual(report["status"], "PARTIAL_BLOCKED")
+        self.assertEqual(report["scanner_error_count"], 1)
+        self.assertNotIn("sensitive raw diagnostic", str(report))
 
 
 class AuditDockerEnvironmentTests(unittest.TestCase):
