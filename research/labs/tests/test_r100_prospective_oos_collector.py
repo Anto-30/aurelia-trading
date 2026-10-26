@@ -271,6 +271,37 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
             self.assertFalse(report["execution_authorized"])
             self.assertFalse(report["capital_authority"])
 
+    def test_failed_collection_preserves_safe_transport_diagnostics(self):
+        import research.r100_prospective_oos_collector as collector
+
+        class SafeTransportFailure(RuntimeError):
+            code = "TRANSPORT_READER_FAILED"
+            failure_type = "ConnectionResetError"
+
+        with tempfile.TemporaryDirectory() as tmp:
+            state_path = Path(tmp) / "aurelia_r100_state.json"
+            with (
+                patch.object(collector, "STATE_PATH", state_path),
+                patch.object(
+                    collector,
+                    "collect_once",
+                    new=AsyncMock(side_effect=SafeTransportFailure("TRANSPORT_READER_FAILED:ConnectionResetError")),
+                ),
+            ):
+                with self.assertRaisesRegex(SafeTransportFailure, "TRANSPORT_READER_FAILED"):
+                    asyncio.run(collector.main())
+
+            persisted = json.loads(state_path.read_text(encoding="utf-8"))
+            report = json.loads(
+                state_path.with_name("aurelia_r100_report.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(persisted["last_run_error_code"], "TRANSPORT_READER_FAILED")
+            self.assertEqual(persisted["last_run_error_cause_type"], "ConnectionResetError")
+            self.assertEqual(report["collection_error_code"], "TRANSPORT_READER_FAILED")
+            self.assertEqual(report["collection_error_cause_type"], "ConnectionResetError")
+            self.assertFalse(report["execution_authorized"])
+            self.assertFalse(report["capital_authority"])
+
     def test_horizon_is_positive(self):
         self.assertGreater(HORIZON_TICKS, 0)
 
