@@ -25,6 +25,8 @@ SAMPLE_INTERVAL_SECONDS = 60
 MESSAGE_TIMEOUT_SECONDS = 30
 MAX_SILENT_SECONDS = 120
 MAX_RSS_GROWTH_BYTES = 64 * 1024 * 1024
+PING_INTERVAL_SECONDS = 30
+PING_RESPONSE_TIMEOUT_SECONDS = 10
 
 
 def utc_now() -> str:
@@ -71,6 +73,24 @@ def parse_quote(value: Any) -> Decimal:
     return quote
 
 
+def build_application_ping_payload(req_id: int) -> dict[str, int]:
+    """Build a Deriv application-level heartbeat with a unique request id."""
+    if isinstance(req_id, bool) or not isinstance(req_id, int) or req_id <= 0:
+        raise ValueError("INVALID_APPLICATION_PING_REQ_ID")
+    return {"ping": 1, "req_id": req_id}
+
+
+def is_application_ping_response(message: Any, expected_req_id: int) -> bool:
+    """Return true only for a successful ping response correlated to this request."""
+    return (
+        isinstance(message, dict)
+        and message.get("msg_type") == "ping"
+        and message.get("req_id") == expected_req_id
+        and not message.get("error")
+        and not message.get("errors")
+    )
+
+
 async def run_soak(duration_seconds: int, output_dir: Path) -> dict[str, Any]:
     if output_dir.exists() and any(output_dir.iterdir()):
         raise RuntimeError("OUTPUT_DIR_NOT_EMPTY")
@@ -94,6 +114,13 @@ async def run_soak(duration_seconds: int, output_dir: Path) -> dict[str, Any]:
     last_rss = first_rss
     peak_rss = first_rss
     started = False
+    next_ping_at: float | None = None
+    pending_ping_req_id: int | None = None
+    pending_ping_sent_mono: float | None = None
+    next_ping_req_id = REQ_ID + 1
+    application_pings_sent = 0
+    application_pings_received = 0
+    application_ping_rtt_seconds: list[float] = []
 
     def event(event_type: str, **fields: Any) -> None:
         row = {
@@ -140,6 +167,8 @@ async def run_soak(duration_seconds: int, output_dir: Path) -> dict[str, Any]:
             authenticated=False,
             orders_permitted=False,
             subscribe=1,
+            application_ping_interval_seconds=PING_INTERVAL_SECONDS,
+            application_ping_response_timeout_seconds=PING_RESPONSE_TIMEOUT_SECONDS,
         )
         async with websockets.connect(
             URL,
@@ -158,16 +187,46 @@ async def run_soak(duration_seconds: int, output_dir: Path) -> dict[str, Any]:
                 "req_id": REQ_ID,
             }, separators=(",", ":"), sort_keys=True))
             last_sample_at = connected_mono
+            next_ping_at = connected_mono + PING_INTERVAL_SECONDS
 
             while True:
                 now = time.monotonic()
                 if now >= deadline:
                     break
-                timeout = min(MESSAGE_TIMEOUT_SECONDS, max(0.1, deadline - now))
+                if (
+                    pending_ping_sent_mono is not None
+                    and now - pending_ping_sent_mono >= PING_RESPONSE_TIMEOUT_SECONDS
+                ):
+                    raise RuntimeError("APPLICATION_PING_RESPONSE_TIMEOUT")
+                if next_ping_at is not None and pending_ping_req_id is None and now >= next_ping_at:
+                    pending_ping_req_id = next_ping_req_id
+                    pending_ping_sent_mono = now
+                    await ws.send(json.dumps(
+                        build_application_ping_payload(pending_ping_req_id),
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    ))
+                    application_pings_sent += 1
+                    event("application_ping_sent", req_id=pending_ping_req_id)
+                    next_ping_req_id += 1
+                    next_ping_at = now + PING_INTERVAL_SECONDS
+
+                now = time.monotonic()
+                receive_deadlines = [deadline, now + MESSAGE_TIMEOUT_SECONDS]
+                if pending_ping_sent_mono is not None:
+                    receive_deadlines.append(pending_ping_sent_mono + PING_RESPONSE_TIMEOUT_SECONDS)
+                elif next_ping_at is not None:
+                    receive_deadlines.append(next_ping_at)
+                timeout = max(0.1, min(receive_deadlines) - now)
                 try:
                     raw = await asyncio.wait_for(ws.recv(), timeout=timeout)
                 except asyncio.TimeoutError:
                     now = time.monotonic()
+                    if (
+                        pending_ping_sent_mono is not None
+                        and now - pending_ping_sent_mono >= PING_RESPONSE_TIMEOUT_SECONDS
+                    ):
+                        raise RuntimeError("APPLICATION_PING_RESPONSE_TIMEOUT")
                     silence = now - (last_message_mono or connected_mono)
                     if silence >= MAX_SILENT_SECONDS:
                         raise RuntimeError("SILENT_WEBSOCKET_EXCEEDED_THRESHOLD")
@@ -191,6 +250,22 @@ async def run_soak(duration_seconds: int, output_dir: Path) -> dict[str, Any]:
                     raise RuntimeError("API_ERROR:" + re.sub(r"[^A-Za-z0-9_.-]", "_", str(code or "UNKNOWN"))[:100])
 
                 msg_type = message.get("msg_type")
+                if (
+                    pending_ping_req_id is not None
+                    and is_application_ping_response(message, pending_ping_req_id)
+                ):
+                    assert pending_ping_sent_mono is not None
+                    rtt = round(received_mono - pending_ping_sent_mono, 6)
+                    application_pings_received += 1
+                    application_ping_rtt_seconds.append(rtt)
+                    event(
+                        "application_ping_response",
+                        req_id=pending_ping_req_id,
+                        round_trip_seconds=rtt,
+                    )
+                    pending_ping_req_id = None
+                    pending_ping_sent_mono = None
+                    continue
                 if msg_type != "tick":
                     non_tick_message_count += 1
                     event(
@@ -260,10 +335,16 @@ async def run_soak(duration_seconds: int, output_dir: Path) -> dict[str, Any]:
     duration_pass = actual_duration >= duration_seconds
     data_pass = tick_count > 0 and subscription_id is not None
     memory_pass = rss_growth is not None and rss_growth <= MAX_RSS_GROWTH_BYTES
+    ping_round_trips_pass = (
+        application_pings_sent > 0
+        and application_pings_sent == application_pings_received
+        and pending_ping_req_id is None
+    )
     pass_conditions = {
         "duration_met": duration_pass,
         "no_disconnect_or_protocol_failure": no_connection_failure,
         "ticks_received": data_pass,
+        "application_ping_round_trips_complete": ping_round_trips_pass,
         "memory_rss_growth_within_threshold": memory_pass,
         "max_silence_within_threshold": (
             last_message_mono is not None
@@ -286,6 +367,11 @@ async def run_soak(duration_seconds: int, output_dir: Path) -> dict[str, Any]:
         "messages_received": message_count,
         "ticks_received": tick_count,
         "non_tick_messages": non_tick_message_count,
+        "application_pings_sent": application_pings_sent,
+        "application_pings_received": application_pings_received,
+        "application_ping_rtt_seconds": application_ping_rtt_seconds,
+        "application_ping_interval_seconds": PING_INTERVAL_SECONDS,
+        "application_ping_response_timeout_seconds": PING_RESPONSE_TIMEOUT_SECONDS,
         "last_tick_epoch": last_tick_epoch,
         "subscription_id_received": subscription_id is not None,
         "disconnect_or_protocol_failures": failures,
@@ -298,7 +384,8 @@ async def run_soak(duration_seconds: int, output_dir: Path) -> dict[str, Any]:
         "max_silence_threshold_seconds": MAX_SILENT_SECONDS,
         "pass_conditions": pass_conditions,
         "interpretation": (
-            "PASS means no instability was observed under this bounded public-feed test; "
+            "PASS means no instability was observed under this bounded public-feed test, including a successful "
+            "application-level ping/pong check every 30 seconds; "
             "it does not mathematically prove absence of all memory leaks or satisfy authenticated broker-lifecycle certification."
         ),
         "event_log_path": str(events_path),
