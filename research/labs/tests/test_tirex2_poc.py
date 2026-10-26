@@ -118,6 +118,15 @@ class TiRex2SyntheticCouplingTests(unittest.TestCase):
             self.assertEqual(manifest["promotion_status"], "RESEARCH_ONLY_NOT_LAYER9_INTEGRATED")
             self.assertEqual(manifest["samples_per_split"], {"train": 2, "validation": 2, "test": 2})
 
+    def test_short_history_reports_no_eligible_windows(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "short.csv"
+            self.make_csv(path, count=3)
+            series = load_series_csv(path, expected_interval_seconds=60)
+            pools, _ = build_window_pools(series, context_length=128, horizon=1)
+            with self.assertRaisesRegex(ValueError, "no eligible windows in this split"):
+                couple_windows(pools["train"], n_variates=3, sample_count=1)
+
     def test_coupling_fails_if_not_enough_distinct_series(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "prices.csv"
