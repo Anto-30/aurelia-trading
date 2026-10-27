@@ -167,6 +167,42 @@ async def test_worker_nonzero_exit_marks_task_failed_not_claimed(tmp_path):
         await supervisor.stop()
 
 
+
+@pytest.mark.asyncio
+async def test_worker_environment_excludes_broker_tokens_but_passes_own_provider_key(tmp_path):
+    broker_token = "broker-token-never-to-be-inherited-4827"
+    provider_key = "claude-provider-key-marker-93725"
+    code = (
+        "import json,sys,os; t=json.load(sys.stdin); "
+        "print(json.dumps({'schema':'aurelia.agent_task_response.v1',"
+        "'task_id':t['task']['task_id'],'status':'COMPLETED',"
+        "'result':{'broker_token_present':'DERIV_AUTH_TOKEN' in os.environ,"
+        "'provider_key_present':bool(os.getenv('ANTHROPIC_API_KEY'))}}))"
+    )
+    env = dict(os.environ)
+    env["AURELIA_AGENT_CLAUDECODE_COMMAND"] = shlex.join([sys.executable, "-c", code])
+    env["AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND"] = shlex.join([sys.executable, "-c", "pass"])
+    env["DERIV_AUTH_TOKEN"] = broker_token
+    env["ANTHROPIC_API_KEY"] = provider_key
+    federation = make_federation(tmp_path)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING", payload={}, correlation_id="worker-env-boundary-test",
+        assigned_agent="ClaudeCode",
+    )
+    supervisor = AgentWorkerSupervisor(
+        federation, agents=("ClaudeCode",), interval_seconds=0.05, env=env,
+        task_timeout_seconds=1.0,
+    )
+    supervisor.start()
+    try:
+        row = await wait_for_task_status(federation, task.task_id, "COMPLETED")
+        assert row["result"]["broker_token_present"] is False
+        assert row["result"]["provider_key_present"] is True
+        assert broker_token not in json.dumps(row)
+        assert provider_key not in json.dumps(row)
+    finally:
+        await supervisor.stop()
+
 @pytest.mark.asyncio
 async def test_worker_timeout_marks_task_failed_and_kills_child(tmp_path):
     env = dict(os.environ)
@@ -192,21 +228,16 @@ async def test_worker_timeout_marks_task_failed_and_kills_child(tmp_path):
 @pytest.mark.asyncio
 async def test_worker_redacts_configured_secret_values_from_task_results(tmp_path):
     secret = "sentinel-secret-value-9382"
-    response_json = json.dumps({
-        "schema": "aurelia.agent_task_response.v1",
-        "task_id": "placeholder",
-        "status": "COMPLETED",
-        "result": {"note": secret},
-    })
     code = (
-        "import json,sys; t=json.load(sys.stdin); r=json.loads("
-        + repr(response_json)
-        + "); r['task_id']=t['task']['task_id']; print(json.dumps(r))"
+        "import json,sys,os; t=json.load(sys.stdin); "
+        "print(json.dumps({'schema':'aurelia.agent_task_response.v1',"
+        "'task_id':t['task']['task_id'],'status':'COMPLETED',"
+        "'result':{'note':os.getenv('ANTHROPIC_API_KEY')}}))"
     )
     env = dict(os.environ)
     env["AURELIA_AGENT_CLAUDECODE_COMMAND"] = shlex.join([sys.executable, "-c", code])
     env["AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND"] = shlex.join([sys.executable, "-c", "pass"])
-    env["DEEPSEEK_API_KEY"] = secret
+    env["ANTHROPIC_API_KEY"] = secret
     federation = make_federation(tmp_path)
     task = await federation.enqueue_task(
         task_type="ENGINEERING", payload={}, correlation_id="worker-redaction-test",
