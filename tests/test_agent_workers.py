@@ -138,7 +138,7 @@ async def test_configured_worker_processes_task_and_records_structured_result(tm
         assert any(
             item.get("message_type") == "WORKER_ACK"
             and item.get("payload", {}).get("task_id") == task.task_id
-            for item in federation.messages_for("AURELIA")
+            for item in federation.messages_for("ClaudeCode")
         )
     finally:
         await supervisor.stop()
