@@ -27,16 +27,22 @@ class BacktestConfig:
     quantity: float
     commission_per_side: float
     slippage_bps: float
+    spread_points: float = 0.0
+    slippage_points: float = 0.0
 
     def __post_init__(self) -> None:
         values = (self.initial_capital, self.quantity,
-                  self.commission_per_side, self.slippage_bps)
+                  self.commission_per_side, self.slippage_bps,
+                  self.spread_points, self.slippage_points)
         if not all(math.isfinite(float(v)) for v in values):
             raise ValueError("backtest configuration values must be finite")
         if self.initial_capital <= 0 or self.quantity <= 0:
             raise ValueError("initial_capital and quantity must be positive")
-        if self.commission_per_side < 0 or self.slippage_bps < 0:
-            raise ValueError("commission and slippage must be non-negative")
+        if any(value < 0 for value in (
+            self.commission_per_side, self.slippage_bps,
+            self.spread_points, self.slippage_points
+        )):
+            raise ValueError("commission, spread and slippage must be non-negative")
 
 
 @dataclass(frozen=True)
@@ -47,11 +53,64 @@ class BacktestResult:
     metrics: dict[str, float | int | None]
 
 
-def _slipped(price: float, direction: str, *, entry: bool, bps: float) -> float:
-    """Apply adverse execution slippage to a buy/sell implied by trade direction."""
-    slip = price * bps / 10_000.0
+def _slipped(
+    price: float,
+    direction: str,
+    *,
+    entry: bool,
+    bps: float,
+    slippage_points: float = 0.0,
+    spread_points: float = 0.0,
+) -> float:
+    """Apply adverse slippage and half-spread on each side of a midpoint-price bar."""
+    impact = price * bps / 10_000.0 + slippage_points + spread_points / 2.0
     is_buy = (direction == "long" and entry) or (direction == "short" and not entry)
-    return price + slip if is_buy else price - slip
+    return price + impact if is_buy else price - impact
+
+
+def load_verified_cost_config(config_path: str, resolution: str) -> dict[str, float | str]:
+    """Load explicit costs; unknown or unverified profile blocks qualification."""
+    try:
+        import yaml
+    except ImportError as exc:
+        raise RuntimeError("PyYAML is required to load config/costs.yaml") from exc
+    with open(config_path, "r", encoding="utf-8") as stream:
+        document = yaml.safe_load(stream)
+    if not isinstance(document, dict) or document.get("schema_version") != 1:
+        raise ValueError("COST_CONFIG_SCHEMA_UNSUPPORTED")
+    if document.get("instrument") != "R_100":
+        raise ValueError("COST_CONFIG_INSTRUMENT_MISMATCH")
+    profile = document.get("resolutions", {}).get(resolution)
+    if not isinstance(profile, dict):
+        raise ValueError(f"COST_PROFILE_MISSING:{resolution}")
+    required = ("spread_points", "slippage_points", "commission_per_unit_usd")
+    values: dict[str, float] = {}
+    for key in required:
+        raw = profile.get(key)
+        if raw is None:
+            raise ValueError(f"COST_INPUT_UNKNOWN:{resolution}:{key}")
+        try:
+            value = float(raw)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"COST_INPUT_INVALID:{resolution}:{key}") from exc
+        if not math.isfinite(value) or value < 0:
+            raise ValueError(f"COST_INPUT_INVALID:{resolution}:{key}")
+        values[key] = value
+    if profile.get("verified") is not True:
+        raise ValueError(f"COST_PROFILE_UNVERIFIED:{resolution}")
+    if not str(profile.get("source") or "").strip():
+        raise ValueError(f"COST_SOURCE_MISSING:{resolution}")
+    try:
+        observed = datetime.fromisoformat(str(profile.get("observed_at_utc")).replace("Z", "+00:00"))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"COST_TIMESTAMP_INVALID:{resolution}") from exc
+    if observed.tzinfo is None or observed.utcoffset() is None:
+        raise ValueError(f"COST_TIMESTAMP_MUST_BE_TIMEZONE_AWARE:{resolution}")
+    age = (datetime.now(observed.tzinfo) - observed).total_seconds()
+    if age < 0 or age > 86400:
+        raise ValueError(f"COST_PROFILE_STALE_OR_FUTURE:{resolution}")
+    values["source"] = str(profile["source"])
+    return values
 
 
 def _valid_series(raw_bars: Iterable[OHLCBar]) -> list[OHLCBar]:
@@ -103,7 +162,10 @@ def run_backtest(
             rejection_ledger.append({"confirmation_index": signal.confirmation_index, "reason": "ENTRY_PRICE_MISMATCH"})
             continue
         raw_entry = entry_bar.open
-        entry = _slipped(raw_entry, signal.direction, entry=True, bps=config.slippage_bps)
+        entry = _slipped(
+            raw_entry, signal.direction, entry=True, bps=config.slippage_bps,
+            slippage_points=config.slippage_points, spread_points=config.spread_points,
+        )
         stop = signal.stop_price
         target = signal.target_price
         if signal.direction == "long" and not (stop < entry < target):
@@ -145,14 +207,23 @@ def run_backtest(
             exit_reason = "END_OF_DATA"
 
         assert raw_exit is not None
-        exit_price = _slipped(raw_exit, signal.direction, entry=False, bps=config.slippage_bps)
-        gross_pnl = (
+        exit_price = _slipped(
+            raw_exit, signal.direction, entry=False, bps=config.slippage_bps,
+            slippage_points=config.slippage_points, spread_points=config.spread_points,
+        )
+        raw_gross_pnl = (
+            (raw_exit - raw_entry) * config.quantity
+            if signal.direction == "long"
+            else (raw_entry - raw_exit) * config.quantity
+        )
+        after_price_costs_pnl = (
             (exit_price - entry) * config.quantity
             if signal.direction == "long"
             else (entry - exit_price) * config.quantity
         )
-        commission = 2.0 * config.commission_per_side
-        net_pnl = gross_pnl - commission
+        execution_cost = raw_gross_pnl - after_price_costs_pnl
+        commission = 2.0 * config.commission_per_side * config.quantity
+        net_pnl = after_price_costs_pnl - commission
         risk_per_unit = abs(entry - stop)
         risk_cash = risk_per_unit * config.quantity
         r_multiple = net_pnl / risk_cash if risk_cash > 0 else 0.0
@@ -172,7 +243,9 @@ def run_backtest(
             "exit_price": exit_price,
             "exit_reason": exit_reason,
             "quantity": config.quantity,
-            "gross_pnl": gross_pnl,
+            "gross_pnl": raw_gross_pnl,
+            "execution_cost": execution_cost,
+            "pnl_after_price_costs": after_price_costs_pnl,
             "commission": commission,
             "net_pnl": net_pnl,
             "r_multiple": r_multiple,
@@ -193,6 +266,7 @@ def run_backtest(
         "max_drawdown": max_drawdown,
         "net_pnl": sum(pnls),
         "ending_equity": equity,
+        "execution_cost_paid": sum(float(t["execution_cost"]) for t in trade_ledger),
         "commission_paid": sum(float(t["commission"]) for t in trade_ledger),
         "average_r_multiple": (
             sum(float(t["r_multiple"]) for t in trade_ledger) / len(trade_ledger)
