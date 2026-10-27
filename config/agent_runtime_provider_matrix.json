@@ -1,7 +1,7 @@
 {
   "schema": "aurelia.agent_runtime_provider_matrix.v1",
   "generated_date": "2026-10-28",
-  "purpose": "Describe locally launchable advisory agent runtimes and the evidence required to call them available. Inventory membership, a binary, or a credential marker alone is not proof of an authenticated provider session.",
+  "purpose": "Describe locally launchable advisory agent runtimes and the evidence required to call them available. Inventory membership, a binary, or a credential marker alone is not proof of an authenticated provider session. Skill URIs now resolve to entries in config/agent_skill_inventory.json; catalog membership is not proof those skills are injected into a local subprocess.",
   "global_controls": {
     "secret_values_must_never_be_printed": true,
     "external_runtime_capital_authority": false,
@@ -32,18 +32,19 @@
         "CLAUDE_CODE_OAUTH_TOKEN"
       ],
       "assigned_skills": [
-        "aurelia-continuity",
-        "aurelia-federated-repair",
-        "aurelia-evidence-reconciliation",
-        "ci-diagnostics",
-        "evidence-inspection",
-        "research-intelligence",
-        "browser-e2e",
-        "security-review"
+        "skills://plugins/superpowers/systematic-debugging",
+        "skills://plugins/superpowers/test-driven-development",
+        "skills://plugins/superpowers/verification-before-completion",
+        "skills://plugins/superpowers/requesting-code-review",
+        "skills://plugins/superpowers/receiving-code-review",
+        "skills://plugins/coderabbit/code-review",
+        "skills://plugins/mcp-precheck/mcp-precheck"
       ],
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
-      "note": "CLI OAuth may be stored outside environment variables; no authentication is inferred from missing or present environment markers."
+      "note": "CLI OAuth may be stored outside environment variables; no authentication is inferred from missing or present environment markers.",
+      "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
     },
     {
       "name": "KimiK3",
@@ -60,15 +61,17 @@
         "KIMI_API_KEY"
       ],
       "assigned_skills": [
-        "aurelia-continuity",
-        "aurelia-evidence-reconciliation",
-        "ci-diagnostics",
-        "research-intelligence",
-        "security-review"
+        "skills://plugins/data-analytics/analyze-data-quality",
+        "skills://plugins/data-analytics/validate-data",
+        "skills://plugins/data-analytics/product-business-analysis",
+        "skills://plugins/data-analytics/metric-diagnostics",
+        "skills://plugins/superpowers/verification-before-completion"
       ],
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
-      "note": "Executable name and API-key marker are discovery hints only; configure a trusted adapter and readiness check."
+      "note": "Executable name and API-key marker are discovery hints only; configure a trusted adapter and readiness check.",
+      "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
     },
     {
       "name": "GrokBot",
@@ -81,15 +84,17 @@
         "XAI_API_KEY"
       ],
       "assigned_skills": [
-        "aurelia-continuity",
-        "aurelia-evidence-reconciliation",
-        "ci-diagnostics",
-        "research-intelligence",
-        "security-review"
+        "skills://plugins/superpowers/brainstorming",
+        "skills://plugins/superpowers/dispatching-parallel-agents",
+        "skills://plugins/superpowers/executing-plans",
+        "skills://plugins/data-analytics/build-report",
+        "skills://plugins/data-analytics/validate-data"
       ],
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
-      "note": "No universal local GrokBot CLI is assumed; use an explicitly configured adapter."
+      "note": "No universal local GrokBot CLI is assumed; use an explicitly configured adapter.",
+      "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
     },
     {
       "name": "GoogleAgentSkills",
@@ -105,15 +110,16 @@
         "GOOGLE_API_KEY"
       ],
       "assigned_skills": [
-        "aurelia-continuity",
-        "aurelia-evidence-reconciliation",
-        "ci-diagnostics",
-        "research-intelligence",
-        "security-review"
+        "skills://plugins/data-analytics/analyze-data-quality",
+        "skills://plugins/data-analytics/validate-data",
+        "skills://plugins/superpowers/systematic-debugging",
+        "skills://plugins/superpowers/verification-before-completion"
       ],
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
-      "note": "A Gemini CLI, if installed, is not by itself proof of this registered agent or provider readiness."
+      "note": "A Gemini CLI, if installed, is not by itself proof of this registered agent or provider readiness.",
+      "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
     },
     {
       "name": "GLM",
@@ -130,15 +136,16 @@
         "ZHIPU_API_KEY"
       ],
       "assigned_skills": [
-        "aurelia-continuity",
-        "aurelia-evidence-reconciliation",
-        "ci-diagnostics",
-        "research-intelligence",
-        "security-review"
+        "skills://plugins/superpowers/systematic-debugging",
+        "skills://plugins/superpowers/verification-before-completion",
+        "skills://plugins/data-analytics/analyze-data-quality",
+        "skills://plugins/data-analytics/validate-data"
       ],
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
-      "note": "Executable candidates are discovery hints only; configure an explicit adapter and readiness check."
+      "note": "Executable candidates are discovery hints only; configure an explicit adapter and readiness check.",
+      "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
     },
     {
       "name": "PlaywrightCLI",
@@ -151,15 +158,15 @@
       "healthcheck_env": "AURELIA_AGENT_PLAYWRIGHTCLI_HEALTHCHECK_COMMAND",
       "credential_env_any": [],
       "assigned_skills": [
-        "aurelia-continuity",
-        "browser-e2e",
-        "ci-diagnostics",
-        "evidence-inspection",
-        "security-review"
+        "skills://plugins/vercel/agent-browser",
+        "skills://plugins/vercel/agent-browser-verify",
+        "skills://plugins/superpowers/verification-before-completion"
       ],
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
-      "note": "Installing a browser CLI does not grant access to a browser session or authenticated account."
+      "note": "Installing a browser CLI does not grant access to a browser session or authenticated account.",
+      "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
     },
     {
       "name": "JEV",
@@ -170,15 +177,17 @@
       "healthcheck_env": "AURELIA_AGENT_JEV_HEALTHCHECK_COMMAND",
       "credential_env_any": [],
       "assigned_skills": [
-        "aurelia-continuity",
-        "aurelia-evidence-reconciliation",
-        "ci-diagnostics",
-        "research-intelligence",
-        "security-review"
+        "skills://plugins/coderabbit/code-review",
+        "skills://plugins/superpowers/requesting-code-review",
+        "skills://plugins/superpowers/receiving-code-review",
+        "skills://plugins/superpowers/verification-before-completion",
+        "skills://plugins/data-analytics/validate-data"
       ],
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
-      "note": "No local JEV runtime binary is assumed; configure a trusted adapter only after its identity and task protocol are verified."
+      "note": "No local JEV runtime binary is assumed; configure a trusted adapter only after its identity and task protocol are verified.",
+      "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
     },
     {
       "name": "DeepSeekHarness",
@@ -197,15 +206,16 @@
         "LITELLM_API_KEY"
       ],
       "assigned_skills": [
-        "aurelia-continuity",
-        "aurelia-evidence-reconciliation",
-        "ci-diagnostics",
-        "research-intelligence",
-        "security-review"
+        "skills://plugins/superpowers/systematic-debugging",
+        "skills://plugins/superpowers/test-driven-development",
+        "skills://plugins/superpowers/verification-before-completion",
+        "skills://plugins/data-analytics/analyze-data-quality"
       ],
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
-      "note": "There is no assumed universal DeepSeek harness CLI; use a pinned, trusted adapter and a provider-specific readiness command."
+      "note": "There is no assumed universal DeepSeek harness CLI; use a pinned, trusted adapter and a provider-specific readiness command.",
+      "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
     },
     {
       "name": "HermesAgent",
@@ -225,15 +235,16 @@
         "OPENAI_API_KEY"
       ],
       "assigned_skills": [
-        "aurelia-continuity",
-        "aurelia-evidence-reconciliation",
-        "ci-diagnostics",
-        "research-intelligence",
-        "security-review"
+        "skills://plugins/superpowers/systematic-debugging",
+        "skills://plugins/superpowers/test-driven-development",
+        "skills://plugins/superpowers/verification-before-completion",
+        "skills://plugins/data-analytics/validate-data"
       ],
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
-      "note": "Pin the exact Hermes distribution and provider adapter; credentials may be configured in a separate backend and are not inferred from a generic key marker."
+      "note": "Pin the exact Hermes distribution and provider adapter; credentials may be configured in a separate backend and are not inferred from a generic key marker.",
+      "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
     }
   ],
   "runtime_protocol": {
