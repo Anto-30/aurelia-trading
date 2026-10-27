@@ -44,7 +44,7 @@ class BacktestResult:
     trade_ledger: tuple[dict[str, object], ...]
     rejection_ledger: tuple[dict[str, object], ...]
     equity_curve: tuple[float, ...]
-    metrics: dict[str, float | int]
+    metrics: dict[str, float | int | None]
 
 
 def _slipped(price: float, direction: str, *, entry: bool, bps: float) -> float:
@@ -183,7 +183,7 @@ def run_backtest(
         "rejected_signals": len(rejection_ledger),
         "win_rate": len(wins) / len(pnls) if pnls else 0.0,
         "expectancy_per_trade": sum(pnls) / len(pnls) if pnls else 0.0,
-        "profit_factor": gross_profit / gross_loss if gross_loss > 0 else (math.inf if gross_profit > 0 else 0.0),
+        "profit_factor": gross_profit / gross_loss if gross_loss > 0 else (None if gross_profit > 0 else 0.0),
         "max_drawdown": max_drawdown,
         "net_pnl": sum(pnls),
         "ending_equity": equity,
