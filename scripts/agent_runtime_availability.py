@@ -52,15 +52,55 @@ def _skill_presence(
     *,
     repo_root: Path,
     skill_roots: list[str],
-) -> tuple[list[str], list[str]]:
-    found: list[str] = []
-    missing: list[str] = []
-    for name in skill_names:
-        if any((repo_root / root / name).is_dir() for root in skill_roots):
-            found.append(name)
+) -> dict[str, list[str]]:
+    """Separate canonical system-catalog registration from local worker loading.
+
+    The global skill inventory describes skills available to this assistant/plugin
+    environment. It does not automatically install/inject those skills into a
+    local Claude, DeepSeek or Hermes process. A local bundle counts as loaded
+    only when a folder with the canonical final URI component exists in one of
+    the configured local skill roots.
+    """
+    inventory_path = repo_root / "config" / "agent_skill_inventory.json"
+    try:
+        inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, json.JSONDecodeError):
+        return {
+            "catalog_available": [],
+            "catalog_missing": list(skill_names),
+            "local_loaded": [],
+            "local_not_loaded": list(skill_names),
+        }
+    if inventory.get("schema") != "aurelia.agent_skill_inventory.v1":
+        return {
+            "catalog_available": [],
+            "catalog_missing": list(skill_names),
+            "local_loaded": [],
+            "local_not_loaded": list(skill_names),
+        }
+    items = inventory.get("items", [])
+    catalog_uris = {
+        str(item.get("uri"))
+        for item in items
+        if isinstance(item, dict) and str(item.get("uri", "")).strip()
+    }
+    available = [uri for uri in skill_names if uri in catalog_uris]
+    missing = [uri for uri in skill_names if uri not in catalog_uris]
+    loaded: list[str] = []
+    not_loaded: list[str] = []
+    for uri in available:
+        slug = uri.rstrip("/").rsplit("/", 1)[-1]
+        if any((repo_root / root / slug).is_dir() for root in skill_roots):
+            loaded.append(uri)
         else:
-            missing.append(name)
-    return found, missing
+            not_loaded.append(uri)
+    not_loaded.extend(missing)
+    return {
+        "catalog_available": available,
+        "catalog_missing": missing,
+        "local_loaded": loaded,
+        "local_not_loaded": not_loaded,
+    }
 
 
 def _release_status(lock_path: Path) -> dict[str, object]:
@@ -171,7 +211,7 @@ def build_availability_report(
         else:
             status = "RUNTIME_AND_CREDENTIAL_MISSING"
 
-        local_skills, missing_skills = _skill_presence(
+        skill_status = _skill_presence(
             [str(item) for item in spec.get("assigned_skills", spec.get("skills", []))],
             repo_root=project_root,
             skill_roots=skill_roots,
@@ -189,8 +229,11 @@ def build_availability_report(
             "provider_session": "NOT_INDEPENDENTLY_VERIFIED" if lease_is_active else "UNKNOWN",
             "credential_env_present": credential_env_names,
             "assigned_skills": [str(item) for item in spec.get("assigned_skills", spec.get("skills", []))],
-            "local_skills_available": local_skills,
-            "local_skills_missing": missing_skills,
+            "canonical_skill_catalog_available": skill_status["catalog_available"],
+            "canonical_skill_catalog_missing": skill_status["catalog_missing"],
+            "local_skills_loaded": skill_status["local_loaded"],
+            "local_skills_not_loaded": skill_status["local_not_loaded"],
+            "skill_bridge_status": str(spec.get("skill_bridge_status", "NOT_BRIDGED_TO_LOCAL_WORKER")),
             "assigned_plugins": [str(item) for item in spec.get("plugins", [])],
             "plugin_connection_status": str(spec.get("plugin_connection_status", "NOT_BRIDGED_TO_LOCAL_WORKER")),
             "capital_authority": False,
