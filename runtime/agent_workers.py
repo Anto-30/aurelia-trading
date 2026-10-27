@@ -5,7 +5,7 @@ import os
 import shlex
 import subprocess
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, Mapping
 
 from runtime.agent_federation import PersistentAgentFederation
 
@@ -40,8 +40,10 @@ class AgentWorkerSupervisor:
         agents: Iterable[str],
         interval_seconds: float = 10.0,
         healthcheck_timeout_seconds: float = 5.0,
+        env: Mapping[str, str] | None = None,
     ) -> None:
         self.federation = federation
+        self.environment = dict(os.environ if env is None else env)
         self.agents = tuple(sorted(set(agents)))
         self.interval_seconds = max(0.1, float(interval_seconds))
         self.healthcheck_timeout_seconds = max(0.5, float(healthcheck_timeout_seconds))
@@ -58,9 +60,8 @@ class AgentWorkerSupervisor:
     def _healthcheck_env_name(cls, agent: str) -> str:
         return cls._env_name(agent).removesuffix("_COMMAND") + "_HEALTHCHECK_COMMAND"
 
-    @staticmethod
-    def _parse_command(env_name: str) -> list[str] | None:
-        raw = os.getenv(env_name, "").strip()
+    def _parse_command(self, env_name: str) -> list[str] | None:
+        raw = str(self.environment.get(env_name, "")).strip()
         if not raw:
             return None
         try:
@@ -69,13 +70,11 @@ class AgentWorkerSupervisor:
             return None
         return command or None
 
-    @classmethod
-    def _command(cls, agent: str) -> list[str] | None:
-        return cls._parse_command(cls._env_name(agent))
+    def _command(self, agent: str) -> list[str] | None:
+        return self._parse_command(self._env_name(agent))
 
-    @classmethod
-    def _healthcheck_command(cls, agent: str) -> list[str] | None:
-        return cls._parse_command(cls._healthcheck_env_name(agent))
+    def _healthcheck_command(self, agent: str) -> list[str] | None:
+        return self._parse_command(self._healthcheck_env_name(agent))
 
     async def _run_healthcheck(self, command: list[str]) -> bool:
         """Run an output-suppressed, bounded readiness command."""
@@ -150,7 +149,7 @@ class AgentWorkerSupervisor:
 
             worker_id = f"{worker_id_base}:r{restart_count}"
             try:
-                worker_env = os.environ.copy()
+                worker_env = dict(self.environment)
                 worker_env.update({
                     "AURELIA_AGENT_ID": spec.agent,
                     "AURELIA_AGENT_WORKER_PROTOCOL": "PERSISTENT_FEDERATION_JSON_V1",
