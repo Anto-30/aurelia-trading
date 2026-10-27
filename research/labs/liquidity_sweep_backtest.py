@@ -98,6 +98,12 @@ def load_verified_cost_config(config_path: str, resolution: str) -> dict[str, fl
         raise ValueError("BAR_PRICE_BASIS_NOT_MIDPOINT")
     if document.get("economics_verified") is not True:
         raise ValueError("CONTRACT_ECONOMICS_NOT_VERIFIED")
+    try:
+        slippage_multiplier = float(document.get("max_slippage_sensitivity_multiplier"))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("MAX_SLIPPAGE_SENSITIVITY_MULTIPLIER_INVALID") from exc
+    if not math.isfinite(slippage_multiplier) or slippage_multiplier < 1.0:
+        raise ValueError("MAX_SLIPPAGE_SENSITIVITY_MULTIPLIER_INVALID")
     if not str(document.get("contract_type") or "").strip():
         raise ValueError("CONTRACT_TYPE_MISSING")
     try:
@@ -156,6 +162,7 @@ def load_verified_cost_config(config_path: str, resolution: str) -> dict[str, fl
         raise ValueError(f"COST_PROFILE_STALE_OR_FUTURE:{resolution}")
     values["source"] = str(profile["source"])
     values["cost_config_sha256"] = config_sha256
+    values["max_slippage_sensitivity_multiplier"] = slippage_multiplier
     values["usd_per_point_per_unit"] = usd_per_point
     values["contract_type"] = str(document["contract_type"])
     values["pnl_model"] = str(document["pnl_model"])
