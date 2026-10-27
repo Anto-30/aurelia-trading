@@ -30,8 +30,48 @@ from runtime.strategy.research_supervisor import build_research_signal_superviso
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AGENTS = (
     "ClaudeCode", "KimiK3", "GrokBot", "GoogleAgentSkills",
-    "GLM", "PlaywrightCLI", "AURELIA",
+    "GLM", "PlaywrightCLI", "JEV", "DeepSeekHarness", "HermesAgent", "AURELIA",
 )
+
+
+def load_runtime_agent_roster(root: Path = ROOT) -> tuple[str, ...]:
+    """Load the single canonical process-managed worker roster.
+
+    ChatGPT is a current-conversation supervisor, Dev requires an authorized
+    connected host, and AURELIA is the deterministic control plane rather than
+    a model subprocess. The first two must never be spawned as local workers;
+    AURELIA is included only for federation routing/heartbeats.
+    """
+    provider_path = root / "config" / "agent_runtime_provider_matrix.json"
+    capability_path = root / "config" / "agent_capability_matrix.json"
+    try:
+        provider_matrix = json.loads(provider_path.read_text(encoding="utf-8"))
+        capability_matrix = json.loads(capability_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        raise RuntimeError("AGENT_RUNTIME_ROSTER_CONFIG_UNREADABLE") from exc
+
+    if provider_matrix.get("schema") != "aurelia.agent_runtime_provider_matrix.v1":
+        raise RuntimeError("AGENT_RUNTIME_PROVIDER_MATRIX_SCHEMA_INVALID")
+    roster = provider_matrix.get("runtime_managed_agent_roster")
+    runtime_specs = provider_matrix.get("runtimes")
+    non_worker_roles = provider_matrix.get("non_worker_roles", {})
+    if not isinstance(roster, list) or not roster or not isinstance(runtime_specs, list):
+        raise RuntimeError("AGENT_RUNTIME_ROSTER_MISSING")
+    if any(not isinstance(name, str) or not name.strip() for name in roster):
+        raise RuntimeError("AGENT_RUNTIME_ROSTER_INVALID")
+    if len(set(roster)) != len(roster):
+        raise RuntimeError("AGENT_RUNTIME_ROSTER_DUPLICATE")
+    if set(roster) & {"AURELIA", "ChatGPT", "Dev"}:
+        raise RuntimeError("NON_WORKER_ROLE_INCLUDED_IN_RUNTIME_ROSTER")
+    spec_names = [str(spec.get("name", "")) for spec in runtime_specs if isinstance(spec, dict)]
+    if len(spec_names) != len(runtime_specs) or set(spec_names) != set(roster) or len(spec_names) != len(set(spec_names)):
+        raise RuntimeError("AGENT_RUNTIME_ROSTER_PROFILE_MISMATCH")
+    if not isinstance(non_worker_roles, dict) or not {"AURELIA", "ChatGPT", "Dev"}.issubset(non_worker_roles):
+        raise RuntimeError("AGENT_NON_WORKER_ROLE_BOUNDARY_MISSING")
+    registered_agents = capability_matrix.get("agents", {})
+    if not isinstance(registered_agents, dict) or not set(roster).issubset(registered_agents):
+        raise RuntimeError("AGENT_RUNTIME_ROSTER_NOT_REGISTERED_IN_CAPABILITY_MATRIX")
+    return tuple(sorted(set(roster) | {"AURELIA"}))
 
 
 def resolve_runtime_symbols(
@@ -136,16 +176,7 @@ async def start_continuous_runtime(
             lease_seconds=float(os.getenv("AURELIA_AGENT_LEASE_SECONDS", "45")),
             performance_path=os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/var/lib/aurelia/agent-performance.json"),
         )
-    agents = DEFAULT_AGENTS
-    matrix_path = ROOT / "config" / "agent_capability_matrix.json"
-    if matrix_path.exists():
-        try:
-            matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
-            configured = tuple(sorted((matrix.get("agents") or {}).keys()))
-            if configured:
-                agents = tuple(sorted(set(configured) | {"AURELIA"}))
-        except (OSError, ValueError, json.JSONDecodeError):
-            pass
+    agents = load_runtime_agent_roster(ROOT)
     if federation_supervisor is None:
         federation_supervisor = AgentFederationSupervisor(
             federation,
