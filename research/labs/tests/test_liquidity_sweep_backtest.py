@@ -25,31 +25,31 @@ def signal(entry_index=2):
 class CostAwareBacktestTests(unittest.TestCase):
     def test_target_exit_charges_commission(self):
         bars = make_bars([(100,101,99,100), (100,102,99,100), (100,102,99,100), (100,111,99,108)])
-        result = run_backtest(bars, [signal()], BacktestConfig(1000, 1, 0.5, 0))
+        result = run_backtest(bars, [signal()], BacktestConfig(1000, 1, 0.5, 0, 1.0))
         self.assertEqual(result.metrics["total_trades"], 1)
         self.assertEqual(result.trade_ledger[0]["exit_reason"], "TARGET")
         self.assertAlmostEqual(result.trade_ledger[0]["net_pnl"], 9.0)
 
     def test_stop_wins_when_stop_and_target_touch_same_bar(self):
         bars = make_bars([(100,101,99,100), (100,102,99,100), (100,102,99,100), (100,111,94,100)])
-        result = run_backtest(bars, [signal()], BacktestConfig(1000, 1, 0, 0))
+        result = run_backtest(bars, [signal()], BacktestConfig(1000, 1, 0, 0, 1.0))
         self.assertEqual(result.trade_ledger[0]["exit_reason"], "STOP")
         self.assertAlmostEqual(result.trade_ledger[0]["net_pnl"], -5.0)
 
     def test_gap_through_stop_uses_open_price(self):
         bars = make_bars([(100,101,99,100), (100,102,99,100), (100,102,99,100), (90,91,89,90)])
-        result = run_backtest(bars, [signal()], BacktestConfig(1000, 1, 0, 0))
+        result = run_backtest(bars, [signal()], BacktestConfig(1000, 1, 0, 0, 1.0))
         self.assertAlmostEqual(result.trade_ledger[0]["exit_price"], 90.0)
 
     def test_overlapping_signal_rejected(self):
         bars = make_bars([(100,101,99,100), (100,102,99,100), (100,102,99,100), (100,111,99,108), (108,109,107,108)])
-        result = run_backtest(bars, [signal(2), signal(3)], BacktestConfig(1000, 1, 0, 0))
+        result = run_backtest(bars, [signal(2), signal(3)], BacktestConfig(1000, 1, 0, 0, 1.0))
         self.assertEqual(result.metrics["total_trades"], 1)
         self.assertEqual(result.rejection_ledger[0]["reason"], "OVERLAPPING_POSITION")
 
     def test_walk_forward_folds_are_chronological(self):
         bars = make_bars([(100,101,99,100)] * 7)
-        folds = run_walk_forward(bars, lambda train, test: [], BacktestConfig(1000,1,0,0),
+        folds = run_walk_forward(bars, lambda train, test: [], BacktestConfig(1000,1,0,0,1.0),
                                  train_window=3, test_window=2)
         self.assertEqual(len(folds), 2)
         self.assertLess(folds[0]["test_end"], folds[1]["test_start"])
@@ -62,7 +62,7 @@ class CostAwareBacktestTests(unittest.TestCase):
         ])
         result = run_backtest(
             bars, [signal()], BacktestConfig(
-                1000, 2, 0.5, 0, spread_points=2, slippage_points=1
+                1000, 2, 0.5, 0, 1.0, spread_points=2, slippage_points=1
             )
         )
         trade = result.trade_ledger[0]
@@ -85,12 +85,21 @@ class CostAwareBacktestTests(unittest.TestCase):
                 "schema_version: 1",
                 "instrument: R_100",
                 "status: VERIFIED_SOURCE_BACKED_COSTS",
+                "pnl_model: LINEAR_INDEX_POINT_VALUE",
+                "bar_price_basis: MIDPOINT",
+                'contract_type: "test linear contract"',
+                "usd_per_point_per_unit: 1.0",
+                "economics_verified: true",
+                'economics_source: "test contract spec"',
+                f'economics_observed_at_utc: "{observed}"',
                 "resolutions:",
                 '  "1m":',
                 "    spread_points: 1.0",
                 "    slippage_points: 1.5",
                 "    commission_per_unit_usd_per_side: 0.1",
                 "    verified: true",
+                "    spread_status: VERIFIED_MEASURED",
+                "    commission_status: VERIFIED_MEASURED",
                 '    source: "source-backed paper quote capture"',
                 f'    observed_at_utc: "{observed}"',
                 "    slippage_status: VERIFIED_MEASURED",
@@ -102,7 +111,7 @@ class CostAwareBacktestTests(unittest.TestCase):
 
     def test_invalid_configuration_rejected(self):
         with self.assertRaises(ValueError):
-            BacktestConfig(1000, 0, 0, 0)
+            BacktestConfig(1000, 0, 0, 0, 1.0)
 
 
 if __name__ == "__main__":
