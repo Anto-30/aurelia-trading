@@ -91,11 +91,11 @@ def _run_prompt(prompt: str, timeout_seconds: float) -> tuple[bool, str, str]:
         "--provider", provider,
         "--model", model,
         "--toolsets", "",
+        "--max-turns", "1",
         "--quiet",
         "--query-file", "-",
     ]
     runtime_env = dict(os.environ)
-    runtime_env["HERMES_MAX_ITERATIONS"] = "1"
     try:
         completed = subprocess.run(
             command,
@@ -108,7 +108,7 @@ def _run_prompt(prompt: str, timeout_seconds: float) -> tuple[bool, str, str]:
             errors="replace",
             timeout=timeout_seconds,
             check=False,
-            env=runtime_env,
+            env=dict(os.environ),
         )
     except subprocess.TimeoutExpired:
         return False, "", "HERMES_REQUEST_TIMEOUT"
