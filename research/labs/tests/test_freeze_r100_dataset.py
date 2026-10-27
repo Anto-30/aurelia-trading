@@ -81,6 +81,26 @@ class FreezeR100DatasetTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "ONE_MINUTE_GAP_OR_DUPLICATE"):
                 read_validate_1m_csv(missing_time_csv)
 
+
+    def test_manifest_verification_rejects_modified_frozen_snapshot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            raw = root / "raw.csv"
+            start = datetime(2026, 1, 1, 0, 1, tzinfo=timezone.utc)
+            times = [(start + timedelta(minutes=i)).isoformat().replace("+00:00", "Z")
+                     for i in range(30)]
+            write_csv(raw, times)
+            frozen = root / "frozen"
+            freeze_r100_dual_resolution(
+                str(raw), source="test fixture", description="tamper test",
+                timestamp_role="close", manifest_dir=str(frozen),
+            )
+            snapshot = frozen / "r100_1m.csv"
+            snapshot.chmod(0o644)
+            snapshot.write_text(snapshot.read_text(encoding="utf-8") + "\\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "SEALED_DATASET_HASH_MISMATCH:1m"):
+                verify_manifest(frozen / "r100_dual_resolution_manifest.json")
+
     def test_aggregation_drops_incomplete_edge_bucket(self):
         start = datetime(2026, 1, 1, 0, 2, tzinfo=timezone.utc)
         rows = []
