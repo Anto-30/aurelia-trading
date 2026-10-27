@@ -173,7 +173,7 @@ class AgentPerformanceEvaluator:
 
     def __init__(self, ledger: AgentPerformanceLedger, *, evidence_root: str | Path | None = None) -> None:
         self.ledger = ledger
-        self.evidence_root = Path(evidence_root or os.getenv("AURELIA_EVIDENCE_ROOT", "/var/lib/aurelia/evidence"))
+        self.evidence_root = Path(evidence_root or os.getenv("AURELIA_EVIDENCE_ROOT", "/tmp/aurelia/evidence"))
 
     def _resolve_evidence(self, ref: str) -> Path | None:
         if not ref or ref == "MISSING":
