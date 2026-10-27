@@ -180,13 +180,13 @@ def _write_csv_exclusive(path: Path, rows: list[dict[str, Any]]) -> None:
         os.fsync(stream.fileno())
 
 
-def _file_record(path: Path, rows: list[dict[str, Any]], *, timestamp_role: str) -> dict[str, Any]:
+def _file_record(path: Path, materialized_path: Path, rows: list[dict[str, Any]], *, timestamp_role: str) -> dict[str, Any]:
     stamps = [row["datetime"] for row in rows]
     return {
         "path": str(path.as_posix()),
         "file_name": path.name,
-        "sha256": sha256_file(path),
-        "file_size_bytes": path.stat().st_size,
+        "sha256": sha256_file(materialized_path),
+        "file_size_bytes": materialized_path.stat().st_size,
         "row_count": len(rows),
         "start_time_utc": stamps[0],
         "end_time_utc": stamps[-1],
@@ -230,6 +230,7 @@ def freeze_r100_dual_resolution(
 
     raw_hash_before = sha256_file(raw_path)
     temp_dir = Path(tempfile.mkdtemp(prefix=".r100-freeze-", dir=out_dir))
+    created_paths: list[Path] = []
     try:
         temp_1m = temp_dir / one_minute_path.name
         temp_15m = temp_dir / fifteen_minute_path.name
@@ -261,8 +262,8 @@ def freeze_r100_dual_resolution(
                 "resolution_15m_aggregated_from_same_1m_source": True,
             },
             "datasets": {
-                "1m": _file_record(one_minute_path, rows_1m, timestamp_role=timestamp_role),
-                "15m": _file_record(fifteen_minute_path, rows_15m, timestamp_role="aggregated_from_1m"),
+                "1m": _file_record(one_minute_path, temp_1m, rows_1m, timestamp_role=timestamp_role),
+                "15m": _file_record(fifteen_minute_path, temp_15m, rows_15m, timestamp_role="aggregated_from_1m"),
             },
             "status": "SEALED",
             "qualification_allowed": False,
@@ -281,14 +282,16 @@ def freeze_r100_dual_resolution(
             if final.exists():
                 raise FileExistsError(f"FROZEN_OUTPUT_ALREADY_EXISTS:{final}")
             os.link(temp, final)
+            created_paths.append(final)
             os.chmod(final, 0o444)
         if manifest_path.exists():
             raise FileExistsError(f"FROZEN_OUTPUT_ALREADY_EXISTS:{manifest_path}")
         os.link(temp_manifest, manifest_path)
+        created_paths.append(manifest_path)
         os.chmod(manifest_path, 0o444)
         return manifest
     except Exception:
-        for destination in destinations:
+        for destination in created_paths:
             try:
                 destination.unlink()
             except FileNotFoundError:
