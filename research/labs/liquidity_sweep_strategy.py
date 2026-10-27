@@ -7,7 +7,7 @@ This module is deliberately independent of runtime execution components.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 from typing import Iterable, Mapping, Sequence
 
@@ -73,6 +73,54 @@ def _confirmed_pivot(bars: Sequence[OHLCBar], pivot_index: int, window: int, kin
     if kind == "high":
         return all(bars[pivot_index].high > b.high for b in (*left, *right))
     return all(bars[pivot_index].low < b.low for b in (*left, *right))
+
+
+
+
+
+def resample_1m_to_15m(
+    raw_bars: Iterable[OHLCBar | Mapping[str, object]],
+) -> list[OHLCBar]:
+    """Aggregate complete 1m close-timestamp bars into 15m OHLC bars.
+
+    Only exact, gap-free buckets of fifteen unique 1m candles are emitted.
+    A label is the 15m candle close time. No volume field is inferred or used,
+    which is intentional for Deriv synthetic indices.
+    """
+    bars = [_parse_bar(item) for item in raw_bars]
+    times = [datetime.fromisoformat(b.timestamp_utc.replace("Z", "+00:00")) for b in bars]
+    if any(a >= b for a, b in zip(times, times[1:])):
+        raise ValueError("bar timestamps must be strictly increasing")
+
+    buckets: dict[datetime, list[tuple[datetime, OHLCBar]]] = {}
+    for stamp, bar in zip(times, bars):
+        if stamp.second != 0 or stamp.microsecond != 0:
+            raise ValueError("1m candle-close timestamps must align to whole minutes")
+        midnight = stamp.replace(hour=0, minute=0, second=0, microsecond=0)
+        minute_of_day = stamp.hour * 60 + stamp.minute
+        end_minute = ((minute_of_day + 14) // 15) * 15
+        bucket_end = midnight + timedelta(minutes=end_minute)
+        buckets.setdefault(bucket_end, []).append((stamp, bar))
+
+    completed: list[OHLCBar] = []
+    one_minute = timedelta(minutes=1)
+    for bucket_end in sorted(buckets):
+        values = sorted(buckets[bucket_end], key=lambda item: item[0])
+        required = [bucket_end - one_minute * offset for offset in range(14, -1, -1)]
+        actual_times = [stamp for stamp, _ in values]
+        if actual_times != required:
+            # A partial or gappy 15m window is not a completed context candle.
+            continue
+        candle_values = [bar for _, bar in values]
+        label = bucket_end.isoformat().replace("+00:00", "Z")
+        completed.append(OHLCBar(
+            timestamp_utc=label,
+            open=candle_values[0].open,
+            high=max(bar.high for bar in candle_values),
+            low=min(bar.low for bar in candle_values),
+            close=candle_values[-1].close,
+        ))
+    return completed
 
 
 def _context_direction(
