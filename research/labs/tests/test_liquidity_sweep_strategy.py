@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime, timedelta, timezone
 
 from research.labs.liquidity_sweep_strategy import (
     OHLCBar, generate_research_signals, _parse_bar,
@@ -6,8 +7,21 @@ from research.labs.liquidity_sweep_strategy import (
 
 
 def bars_from_rows(rows):
+    start = datetime(2026, 1, 1, 2, 0, tzinfo=timezone.utc)
     return [
-        OHLCBar(f"2026-01-01T00:{i:02d}:00Z", o, h, l, c)
+        OHLCBar((start + timedelta(minutes=i)).isoformat().replace("+00:00", "Z"), o, h, l, c)
+        for i, (o, h, l, c) in enumerate(rows)
+    ]
+
+
+def bullish_context():
+    rows = [
+        (2, 3, 2, 2.5), (3, 5, 3, 4), (4, 4, 1, 2),
+        (3, 6, 3, 5), (5, 5, 2, 4), (7, 8, 5, 7), (6, 6, 3, 4),
+    ]
+    start = datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc)
+    return [
+        OHLCBar((start + timedelta(minutes=15 * i)).isoformat().replace("+00:00", "Z"), o, h, l, c)
         for i, (o, h, l, c) in enumerate(rows)
     ]
 
@@ -62,7 +76,9 @@ class LiquiditySweepStrategyTests(unittest.TestCase):
             (13, 14, 12, 13),  # 8: trailing bar for sufficient input
         ]
         bars = bars_from_rows(rows)
-        signals = generate_research_signals(bars, pivot_window=1, reward_risk=2.0)
+        signals = generate_research_signals(
+            bars, context_bars_15m=bullish_context(), pivot_window=1, reward_risk=2.0
+        )
         self.assertTrue(any(s.direction == "long" for s in signals))
         signal = next(s for s in signals if s.direction == "long")
         self.assertEqual(signal.sweep_index, 3)
@@ -71,6 +87,40 @@ class LiquiditySweepStrategyTests(unittest.TestCase):
         self.assertEqual(signal.entry_index, 7)
         self.assertEqual(signal.entry_price, 13)
         self.assertGreater(signal.target_price, signal.entry_price)
+
+
+    def test_sufficient_input_requires_completed_15m_context(self):
+        rows = [
+            (10, 11, 9, 10), (9, 10, 8, 9), (9, 10, 9, 9),
+            (9, 10, 7, 9), (10, 12, 10, 11), (11, 11, 10, 10),
+            (11, 13, 10, 13), (13, 14, 12, 13), (13, 14, 12, 13),
+        ]
+        with self.assertRaisesRegex(ValueError, "context_bars_15m are required"):
+            generate_research_signals(bars_from_rows(rows), pivot_window=1)
+
+    def test_short_unsorted_input_is_still_rejected(self):
+        rows = [
+            {"timestamp_utc": "2026-01-01T00:01:00Z", "open": 1, "high": 2, "low": 0, "close": 1},
+            {"timestamp_utc": "2026-01-01T00:00:00Z", "open": 1, "high": 2, "low": 0, "close": 1},
+        ]
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            generate_research_signals(rows, pivot_window=1)
+
+    def test_future_15m_context_cannot_authorize_candidate(self):
+        rows = [
+            (10, 11, 9, 10), (9, 10, 8, 9), (9, 10, 9, 9),
+            (9, 10, 7, 9), (10, 12, 10, 11), (11, 11, 10, 10),
+            (11, 13, 10, 13), (13, 14, 12, 13), (13, 14, 12, 13),
+        ]
+        future = [
+            OHLCBar("2026-01-02T00:00:00Z", 1, 2, 0, 1),
+            OHLCBar("2026-01-02T00:15:00Z", 1, 3, 0, 2),
+            OHLCBar("2026-01-02T00:30:00Z", 2, 4, 1, 3),
+        ]
+        self.assertEqual(
+            generate_research_signals(bars_from_rows(rows), context_bars_15m=future,
+                                       pivot_window=1), []
+        )
 
     def test_reward_risk_must_be_preregistered(self):
         with self.assertRaisesRegex(ValueError, "reward_risk"):
