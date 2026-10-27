@@ -54,13 +54,27 @@ async def run_worker_probe(
         supervisor.start()
         try:
             deadline = asyncio.get_running_loop().time() + max(0.1, timeout_seconds)
-            expected_active = {
-                str(spec["name"]) for spec in specs
-                if str(runtime_env.get(str(spec["command_env"]), "")).strip()
-                and str(runtime_env.get(str(spec["healthcheck_env"]), "")).strip()
-            }
             while asyncio.get_running_loop().time() < deadline:
-                if expected_active.issubset(set(federation.active_agents())):
+                active_now = set(federation.active_agents())
+                statuses_ready = True
+                for spec in specs:
+                    name = str(spec["name"])
+                    command_configured = bool(str(runtime_env.get(str(spec["command_env"]), "")).strip())
+                    healthcheck_configured = bool(str(runtime_env.get(str(spec["healthcheck_env"]), "")).strip())
+                    expected_reason = (
+                        "WORKER_COMMAND_MISSING" if not command_configured else
+                        "WORKER_HEALTHCHECK_COMMAND_MISSING" if not healthcheck_configured else None
+                    )
+                    if expected_reason is not None:
+                        has_blocked_status = any(
+                            row.get("message_type") == "CONNECTOR_REQUIRED"
+                            and (row.get("payload") or {}).get("reason") == expected_reason
+                            for row in federation.messages_for(name, limit=100)
+                        )
+                        statuses_ready = statuses_ready and has_blocked_status and name not in active_now
+                    else:
+                        statuses_ready = statuses_ready and name in active_now
+                if statuses_ready:
                     break
                 await asyncio.sleep(0.1)
 
