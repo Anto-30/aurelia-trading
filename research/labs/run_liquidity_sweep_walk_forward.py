@@ -127,7 +127,7 @@ def main() -> int:
     config = BacktestConfig(
         initial_capital=args.initial_capital,
         quantity=args.quantity,
-        commission_per_side=float(cost["commission_per_unit_usd"]),
+        commission_per_side=float(cost["commission_per_unit_usd_per_side"]),
         slippage_bps=0.0,
         spread_points=float(cost["spread_points"]),
         slippage_points=float(cost["slippage_points"]),
