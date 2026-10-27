@@ -101,6 +101,7 @@ AURELIA_IDEMPOTENCY_PATH=/tmp/aurelia/idempotency.json
 AURELIA_FENCE_PATH=/tmp/aurelia/executor-fence.txt
 AURELIA_EXECUTION_JOURNAL_PATH=/tmp/aurelia/execution-events.ndjson
 AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json
+AURELIA_WORKER_HOME_ROOT=/tmp/aurelia-agent-homes
 EOF
   sudo chmod 600 "$ENV_FILE"
 else
@@ -125,6 +126,7 @@ AURELIA_IDEMPOTENCY_PATH=/tmp/aurelia/idempotency.json
 AURELIA_FENCE_PATH=/tmp/aurelia/executor-fence.txt
 AURELIA_EXECUTION_JOURNAL_PATH=/tmp/aurelia/execution-events.ndjson
 AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json
+AURELIA_WORKER_HOME_ROOT=/tmp/aurelia-agent-homes
 EOF
   sudo chmod 600 "$ENV_FILE"
 fi
@@ -133,7 +135,11 @@ fi
 # mounted persistent data directory and must never silently fall back to
 # an ephemeral container filesystem.
 sudo sed -i '/^AURELIA_KILL_SWITCH_STATE_PATH=/d' "$ENV_FILE"
-printf '%s\n' 'AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json' | sudo tee -a "$ENV_FILE" >/dev/null
+sudo sed -i '/^AURELIA_WORKER_HOME_ROOT=/d' "$ENV_FILE"
+printf '%s\n' \
+  'AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json' \
+  'AURELIA_WORKER_HOME_ROOT=/tmp/aurelia-agent-homes' \
+  | sudo tee -a "$ENV_FILE" >/dev/null
 sudo chmod 600 "$ENV_FILE"
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
@@ -255,6 +261,7 @@ sudo docker run --detach \
   --env AURELIA_RUN_ONCE=false \
   --env AURELIA_CONTINUOUS_RUNTIME=true \
   --env AURELIA_AGENT_WORKERS=true \
+  --env AURELIA_WORKER_HOME_ROOT=/tmp/aurelia-agent-homes \
   --env AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json \
   --env AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json \
   --env AURELIA_DERIV_LIFECYCLE_EVIDENCE_PATH=/tmp/aurelia/deriv_transaction_lifecycle.json \
