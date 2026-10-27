@@ -98,6 +98,118 @@ async def test_supervisor_uses_injected_environment_without_global_mutation(tmp_
     finally:
         await supervisor.stop()
 
+
+async def wait_for_task_status(federation, task_id, status, *, attempts=40):
+    for _ in range(attempts):
+        rows = federation._load_tasks()
+        task = next((row for row in rows if row.get("task_id") == task_id), None)
+        if task and task.get("status") == status:
+            return task
+        await asyncio.sleep(0.05)
+    raise AssertionError(f"Task {task_id} did not reach {status}: {federation._load_tasks()}")
+
+
+@pytest.mark.asyncio
+async def test_configured_worker_processes_task_and_records_structured_result(tmp_path):
+    code = "import json,sys; t=json.load(sys.stdin); print(json.dumps({'status':'COMPLETED','result':{'task_id':t['task_id'],'answer':'ok'}}))"
+    env = dict(os.environ)
+    env["AURELIA_AGENT_CLAUDECODE_COMMAND"] = shlex.join([sys.executable, "-c", code])
+    env["AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND"] = shlex.join([sys.executable, "-c", "pass"])
+    federation = make_federation(tmp_path)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING",
+        payload={"instruction":"return a structured result"},
+        correlation_id="worker-result-test",
+        assigned_agent="ClaudeCode",
+    )
+    supervisor = AgentWorkerSupervisor(
+        federation, agents=("ClaudeCode",), interval_seconds=0.05, env=env,
+        task_timeout_seconds=1.0,
+    )
+    supervisor.start()
+    try:
+        row = await wait_for_task_status(federation, task.task_id, "COMPLETED")
+        assert row["result"] == {"task_id": task.task_id, "answer": "ok"}
+        assert "ClaudeCode" in federation.active_agents()
+        assert any(
+            item.get("message_type") == "WORKER_ACK"
+            and item.get("payload", {}).get("task_id") == task.task_id
+            for item in federation.messages_for("AURELIA")
+        )
+    finally:
+        await supervisor.stop()
+
+
+@pytest.mark.asyncio
+async def test_worker_nonzero_exit_marks_task_failed_not_claimed(tmp_path):
+    env = dict(os.environ)
+    env["AURELIA_AGENT_CLAUDECODE_COMMAND"] = shlex.join([sys.executable, "-c", "import sys; sys.exit(7)"])
+    env["AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND"] = shlex.join([sys.executable, "-c", "pass"])
+    federation = make_federation(tmp_path)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING", payload={}, correlation_id="worker-fail-test",
+        assigned_agent="ClaudeCode",
+    )
+    supervisor = AgentWorkerSupervisor(
+        federation, agents=("ClaudeCode",), interval_seconds=0.05, env=env,
+        task_timeout_seconds=1.0,
+    )
+    supervisor.start()
+    try:
+        row = await wait_for_task_status(federation, task.task_id, "FAILED")
+        assert row["result"]["error_code"] == "WORKER_COMMAND_EXITED_NONZERO"
+        assert row["result"]["return_code"] == 7
+    finally:
+        await supervisor.stop()
+
+
+@pytest.mark.asyncio
+async def test_worker_timeout_marks_task_failed_and_kills_child(tmp_path):
+    env = dict(os.environ)
+    env["AURELIA_AGENT_CLAUDECODE_COMMAND"] = shlex.join([sys.executable, "-c", "import time; time.sleep(5)"])
+    env["AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND"] = shlex.join([sys.executable, "-c", "pass"])
+    federation = make_federation(tmp_path)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING", payload={}, correlation_id="worker-timeout-test",
+        assigned_agent="ClaudeCode",
+    )
+    supervisor = AgentWorkerSupervisor(
+        federation, agents=("ClaudeCode",), interval_seconds=0.05, env=env,
+        task_timeout_seconds=0.1,
+    )
+    supervisor.start()
+    try:
+        row = await wait_for_task_status(federation, task.task_id, "FAILED")
+        assert row["result"]["error_code"] == "WORKER_COMMAND_TIMEOUT"
+    finally:
+        await supervisor.stop()
+
+
+@pytest.mark.asyncio
+async def test_worker_redacts_configured_secret_values_from_task_results(tmp_path):
+    secret = "sentinel-secret-value-9382"
+    code = f"import json; print(json.dumps({{'status':'COMPLETED','result':{{'note':{secret!r}}}}))"
+    env = dict(os.environ)
+    env["AURELIA_AGENT_CLAUDECODE_COMMAND"] = shlex.join([sys.executable, "-c", code])
+    env["AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND"] = shlex.join([sys.executable, "-c", "pass"])
+    env["DEEPSEEK_API_KEY"] = secret
+    federation = make_federation(tmp_path)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING", payload={}, correlation_id="worker-redaction-test",
+        assigned_agent="ClaudeCode",
+    )
+    supervisor = AgentWorkerSupervisor(
+        federation, agents=("ClaudeCode",), interval_seconds=0.05, env=env,
+        task_timeout_seconds=1.0,
+    )
+    supervisor.start()
+    try:
+        row = await wait_for_task_status(federation, task.task_id, "COMPLETED")
+        assert secret not in json.dumps(row)
+        assert row["result"]["note"] == "[REDACTED]"
+    finally:
+        await supervisor.stop()
+
 @pytest.mark.asyncio
 async def test_failed_readiness_probe_revokes_agent_lease(tmp_path, monkeypatch):
     monkeypatch.setenv("AURELIA_AGENT_CLAUDECODE_COMMAND", "python -c 'import time; time.sleep(2)'")
