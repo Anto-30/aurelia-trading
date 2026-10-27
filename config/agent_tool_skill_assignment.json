@@ -372,6 +372,34 @@
         "SANDBOX_ONLY"
       ],
       "guard": "INACTIVE until authorized device connection and runtime identity validation. Once connected, no production-secret access or capital authority."
+    },
+    {
+      "task": "deepseek-harness-runtime-and-auth-readiness",
+      "primary": "DeepSeekHarness",
+      "reviewers": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "skills": [
+        "evidence-reconciliation",
+        "security-review",
+        "ci-diagnostics"
+      ],
+      "plugins": []
+    },
+    {
+      "task": "hermes-agent-runtime-and-auth-readiness",
+      "primary": "HermesAgent",
+      "reviewers": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "skills": [
+        "evidence-reconciliation",
+        "security-review",
+        "ci-diagnostics"
+      ],
+      "plugins": []
     }
   ],
   "agents": {
@@ -622,6 +650,48 @@
       "can_mutate_live_lock": false,
       "capital_authority": false,
       "activation_gate": "Connect an authorized device and validate its identity before use."
+    },
+    "DeepSeekHarness": {
+      "status": "NOT_CONFIGURED",
+      "role": "DeepSeek harness adapter for structured non-capital research and engineering tasks",
+      "tools": [
+        "configured local worker adapter",
+        "persistent federation task queue",
+        "operator-defined readiness probe",
+        "structured JSON task protocol"
+      ],
+      "skills": [
+        "aurelia-continuity",
+        "evidence-reconciliation",
+        "security-review",
+        "ci-diagnostics",
+        "research-intelligence"
+      ],
+      "plugins": [],
+      "can_mutate_live_lock": false,
+      "capital_authority": false,
+      "activation_gate": "Configure AURELIA_AGENT_DEEPSEEKHARNESS_COMMAND and AURELIA_AGENT_DEEPSEEKHARNESS_HEALTHCHECK_COMMAND through the secure runtime environment; confirm a pinned adapter and readiness check."
+    },
+    "HermesAgent": {
+      "status": "NOT_CONFIGURED",
+      "role": "Hermes agent runtime adapter for structured non-capital task execution",
+      "tools": [
+        "configured local worker adapter",
+        "persistent federation task queue",
+        "operator-defined readiness probe",
+        "structured JSON task protocol"
+      ],
+      "skills": [
+        "aurelia-continuity",
+        "evidence-reconciliation",
+        "security-review",
+        "ci-diagnostics",
+        "research-intelligence"
+      ],
+      "plugins": [],
+      "can_mutate_live_lock": false,
+      "capital_authority": false,
+      "activation_gate": "Configure AURELIA_AGENT_HERMESAGENT_COMMAND and AURELIA_AGENT_HERMESAGENT_HEALTHCHECK_COMMAND through the secure runtime environment; confirm a pinned adapter and readiness check."
     }
   },
   "plugin_policy": {
