@@ -75,9 +75,51 @@ def _confirmed_pivot(bars: Sequence[OHLCBar], pivot_index: int, window: int, kin
     return all(bars[pivot_index].low < b.low for b in (*left, *right))
 
 
+def _context_direction(
+    raw_context_bars: Sequence[OHLCBar],
+    before_time: datetime,
+    pivot_window: int,
+) -> str | None:
+    """Return a strict 15m market-structure bias using bars closed before signal time.
+
+    Bias is bullish only when the latest two confirmed 15m swing highs and
+    swing lows are both rising; bearish only when both are falling. Otherwise
+    the context is neutral and a candidate is rejected.
+    """
+    available: list[OHLCBar] = []
+    for bar in raw_context_bars:
+        stamp = datetime.fromisoformat(bar.timestamp_utc.replace("Z", "+00:00"))
+        if stamp < before_time:
+            available.append(bar)
+        else:
+            break
+    if len(available) < 2 * pivot_window + 1:
+        return None
+
+    context_highs: list[float] = []
+    context_lows: list[float] = []
+    for idx in range(pivot_window, len(available) - pivot_window):
+        if _confirmed_pivot(available, idx, pivot_window, "high"):
+            context_highs.append(available[idx].high)
+        if _confirmed_pivot(available, idx, pivot_window, "low"):
+            context_lows.append(available[idx].low)
+    if len(context_highs) < 2 or len(context_lows) < 2:
+        return None
+    high_rising = context_highs[-1] > context_highs[-2]
+    low_rising = context_lows[-1] > context_lows[-2]
+    high_falling = context_highs[-1] < context_highs[-2]
+    low_falling = context_lows[-1] < context_lows[-2]
+    if high_rising and low_rising:
+        return "long"
+    if high_falling and low_falling:
+        return "short"
+    return None
+
+
 def generate_research_signals(
     raw_bars: Iterable[OHLCBar | Mapping[str, object]],
     *,
+    context_bars_15m: Iterable[OHLCBar | Mapping[str, object]] | None = None,
     pivot_window: int = 2,
     reclaim_window: int = 3,
     reward_risk: float = 2.0,
@@ -86,9 +128,15 @@ def generate_research_signals(
     """Generate long/short research candidates from completed OHLC bars.
 
     Pivots are usable only after their right-side confirmation bars complete.
+    Each candidate must agree with a directional 15m structure bias computed
+    only from context candles whose timestamps are strictly earlier than the
+    1m confirmation candle. Neutral or insufficient context rejects the signal.
     Confirmation is followed by entry at the next bar's open. Signals are
     research records only; costs, stake sizing, probability gates and execution
     authorization must be handled separately by existing AURELIA controls.
+
+    Timestamps on both series represent candle-close times in ISO-8601 UTC (or
+    another explicit timezone). Input series must be strictly chronological.
     """
     if isinstance(pivot_window, bool) or not isinstance(pivot_window, int) or pivot_window < 1:
         raise ValueError("pivot_window must be a positive integer")
@@ -100,18 +148,22 @@ def generate_research_signals(
         raise ValueError("stop_buffer must be finite and non-negative")
 
     bars = [_parse_bar(x) for x in raw_bars]
-    if len(bars) < 2 * pivot_window + 3:
-        return []
     parsed_times = [datetime.fromisoformat(b.timestamp_utc.replace("Z", "+00:00")) for b in bars]
     if any(a >= b for a, b in zip(parsed_times, parsed_times[1:])):
         raise ValueError("bar timestamps must be strictly increasing")
+    if len(bars) < 2 * pivot_window + 3:
+        return []
+    if context_bars_15m is None:
+        raise ValueError("completed context_bars_15m are required; missing context fails closed")
+    context_bars = [_parse_bar(x) for x in context_bars_15m]
+    context_times = [datetime.fromisoformat(b.timestamp_utc.replace("Z", "+00:00")) for b in context_bars]
+    if any(a >= b for a, b in zip(context_times, context_times[1:])):
+        raise ValueError("15m context timestamps must be strictly increasing")
 
     highs: list[tuple[int, float]] = []
     lows: list[tuple[int, float]] = []
     pending: dict[str, dict[str, float | int]] = {}
     signals: list[ResearchSignal] = []
-    last_emitted: dict[str, int] = {"long": -1, "short": -1}
-
     # i is the currently completed candle. A pivot at i-window only becomes
     # knowable now, after all required right-side bars have closed.
     for i in range(pivot_window * 2, len(bars) - 1):
@@ -141,7 +193,6 @@ def generate_research_signals(
                     signals.append(ResearchSignal("long", int(setup["sweep_index"]),
                         int(setup["reclaim_index"]), i, entry_index, entry, stop,
                         entry + reward_risk * risk, float(setup["swept_level"]), reward_risk))
-                    last_emitted["long"] = i
                 pending.pop("long", None)
 
         if "short" in pending and lows:
@@ -156,7 +207,6 @@ def generate_research_signals(
                     signals.append(ResearchSignal("short", int(setup["sweep_index"]),
                         int(setup["reclaim_index"]), i, entry_index, entry, stop,
                         entry - reward_risk * risk, float(setup["swept_level"]), reward_risk))
-                    last_emitted["short"] = i
                 pending.pop("short", None)
 
         # A sweep/reclaim must use a previously confirmed pivot.
@@ -171,4 +221,10 @@ def generate_research_signals(
                 pending["short"] = {"sweep_index": i, "reclaim_index": i,
                                     "sweep_extreme": bar.high, "swept_level": level}
 
-    return signals
+    # A post-generation gate keeps candidate detection independent from
+    # context calculation while enforcing a strict point-in-time context check.
+    return [
+        signal for signal in signals
+        if _context_direction(context_bars, parsed_times[signal.confirmation_index], pivot_window)
+        == signal.direction
+    ]
