@@ -289,7 +289,7 @@ async def start_continuous_runtime(
         maximum_transactions=999,
     )
     daily_risk_guard = PersistentDailyRiskGuard(
-        os.getenv("AURELIA_DAILY_RISK_PATH", "/var/lib/aurelia/daily-risk.json"),
+        os.getenv("AURELIA_DAILY_RISK_PATH", "/tmp/aurelia/daily-risk.json"),
         max_daily_drawdown_pct=float(os.getenv("AURELIA_MAX_DAILY_DRAWDOWN_PCT", "0.03")),
         max_consecutive_losses=int(os.getenv("AURELIA_MAX_CONSECUTIVE_LOSSES", "3")),
         max_balance_age_seconds=float(os.getenv("AURELIA_MAX_BALANCE_AGE_SECONDS", "15")),
