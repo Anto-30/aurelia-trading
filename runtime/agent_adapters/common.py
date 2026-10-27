@@ -12,6 +12,24 @@ REQUEST_SCHEMA = "aurelia.agent_task_request.v1"
 RESPONSE_SCHEMA = "aurelia.agent_task_response.v1"
 
 
+def validate_request_object(raw_request: Any) -> dict[str, Any]:
+    if not isinstance(raw_request, dict) or raw_request.get("schema") != REQUEST_SCHEMA:
+        raise ValueError("WORKER_REQUEST_SCHEMA_INVALID")
+    if raw_request.get("protocol") != "STDIO_JSON_TASK_V1":
+        raise ValueError("WORKER_REQUEST_PROTOCOL_INVALID")
+    task = raw_request.get("task")
+    if not isinstance(task, dict) or not str(task.get("task_id", "")).strip():
+        raise ValueError("WORKER_TASK_ID_MISSING")
+    policy = raw_request.get("policy")
+    if not isinstance(policy, dict) or policy.get("capital_authority") is not False:
+        raise ValueError("WORKER_CAPITAL_BOUNDARY_MISSING")
+    if policy.get("live_order_submission") is not False:
+        raise ValueError("WORKER_LIVE_ORDER_BOUNDARY_MISSING")
+    if policy.get("live_lock_mutation") is not False:
+        raise ValueError("WORKER_LIVE_LOCK_BOUNDARY_MISSING")
+    return raw_request
+
+
 def read_request() -> dict[str, Any]:
     raw = sys.stdin.buffer.read(MAX_REQUEST_BYTES + 1)
     if len(raw) > MAX_REQUEST_BYTES:
@@ -20,21 +38,7 @@ def read_request() -> dict[str, Any]:
         request = json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError("WORKER_REQUEST_INVALID_JSON") from exc
-    if not isinstance(request, dict) or request.get("schema") != REQUEST_SCHEMA:
-        raise ValueError("WORKER_REQUEST_SCHEMA_INVALID")
-    if request.get("protocol") != "STDIO_JSON_TASK_V1":
-        raise ValueError("WORKER_REQUEST_PROTOCOL_INVALID")
-    task = request.get("task")
-    if not isinstance(task, dict) or not str(task.get("task_id", "")).strip():
-        raise ValueError("WORKER_TASK_ID_MISSING")
-    policy = request.get("policy")
-    if not isinstance(policy, dict) or policy.get("capital_authority") is not False:
-        raise ValueError("WORKER_CAPITAL_BOUNDARY_MISSING")
-    if policy.get("live_order_submission") is not False:
-        raise ValueError("WORKER_LIVE_ORDER_BOUNDARY_MISSING")
-    if policy.get("live_lock_mutation") is not False:
-        raise ValueError("WORKER_LIVE_LOCK_BOUNDARY_MISSING")
-    return request
+    return validate_request_object(request)
 
 
 def render_prompt(request: dict[str, Any], *, agent_name: str, provider_name: str) -> str:
