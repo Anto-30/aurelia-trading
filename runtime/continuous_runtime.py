@@ -318,7 +318,7 @@ async def start_continuous_runtime(
         max_trade_risk_pct=float(os.getenv("AURELIA_MAX_TRADE_RISK_PCT", "0.01")),
         kill_switch_state_path=os.getenv(
             "AURELIA_KILL_SWITCH_STATE_PATH",
-            "/var/lib/aurelia/kill-switch-state.json",
+            "/tmp/aurelia/kill-switch-state.json",
         ),
         operator_reset_path=os.getenv(
             "AURELIA_OPERATOR_RESET_PATH",
