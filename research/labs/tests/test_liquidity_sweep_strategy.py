@@ -49,6 +49,29 @@ class LiquiditySweepStrategyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "strictly increasing"):
             generate_research_signals(rows, pivot_window=1)
 
+    def test_confirmed_sweep_and_structure_break_emits_next_bar_entry(self):
+        rows = [
+            (10, 11, 9, 10),   # 0
+            (9, 10, 8, 9),     # 1: pivot low
+            (9, 10, 9, 9),     # 2: pivot low becomes confirmed
+            (9, 10, 7, 9),     # 3: sweep below 8 and reclaim
+            (10, 12, 10, 11),  # 4: future pivot high
+            (11, 11, 10, 10),  # 5: pivot high becomes confirmed
+            (11, 13, 10, 13),  # 6: structural close above 12
+            (13, 14, 12, 13),  # 7: next-bar entry at open 13
+            (13, 14, 12, 13),  # 8: trailing bar for sufficient input
+        ]
+        bars = bars_from_rows(rows)
+        signals = generate_research_signals(bars, pivot_window=1, reward_risk=2.0)
+        self.assertTrue(any(s.direction == "long" for s in signals))
+        signal = next(s for s in signals if s.direction == "long")
+        self.assertEqual(signal.sweep_index, 3)
+        self.assertEqual(signal.reclaim_index, 3)
+        self.assertEqual(signal.confirmation_index, 6)
+        self.assertEqual(signal.entry_index, 7)
+        self.assertEqual(signal.entry_price, 13)
+        self.assertGreater(signal.target_price, signal.entry_price)
+
     def test_reward_risk_must_be_preregistered(self):
         with self.assertRaisesRegex(ValueError, "reward_risk"):
             generate_research_signals([], reward_risk=2.5)
