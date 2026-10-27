@@ -140,9 +140,8 @@ def test_hermes_adapter_requires_provider_model_key_and_disables_toolsets(monkey
     assert "--ignore-user-config" in command
     assert "--ignore-rules" in command
     assert command[command.index("--toolsets") + 1] == ""
-    assert "--max-turns" not in command
+    assert command[command.index("--max-turns") + 1] == "1"
     assert command[command.index("--provider") + 1] == "deepseek"
-    assert kwargs["env"]["HERMES_MAX_ITERATIONS"] == "1"
     assert command[command.index("--model") + 1] == "deepseek-chat"
     assert kwargs["stderr"] == subprocess.DEVNULL
     assert "test-hermes-secret" not in str(command)
