@@ -41,10 +41,10 @@ resolutions:
     slippage_status: ASSUMED_SCENARIO_NOT_MEASURED
     commission_status: UNKNOWN
 
-max_slippage_multiplier: 2.0
+max_slippage_sensitivity_multiplier: 2.0
 notes:
   - Do not assume zero spread or zero commission when values are unknown.
   - Confirm whether the actual contract charges commission per unit before populating commission_per_unit_usd_per_side; this field is USD per research unit per side.
   - Verify contract_type, pnl_model, bar_price_basis and usd_per_point_per_unit from contract-specific documentation/quotes before combining point P&L with USD equity.
   - Record the broker quote, contract type, source URL/reference, capture timestamp, units, and independent verification before setting verified true and status to VERIFIED_SOURCE_BACKED_COSTS.
-  - Current scenario settings are not a verified cost profile and cannot qualify a strategy.
+  - max_slippage_sensitivity_multiplier is a research sensitivity parameter, not a live circuit breaker.\n  - Current scenario settings are not a verified cost profile and cannot qualify a strategy.
