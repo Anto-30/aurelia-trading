@@ -8,7 +8,10 @@
     "live_order_submission": false,
     "live_lock_mutation": false,
     "readiness_requires_worker_command_and_successful_healthcheck": true,
-    "provider_authentication_claim_requires_provider_specific_healthcheck": true
+    "provider_authentication_claim_requires_provider_specific_healthcheck": true,
+    "runtime_default_adapters_are_text_only": true,
+    "provider_specific_credentials_only": true,
+    "model_workers_run_as_dedicated_nonroot_uids": true
   },
   "default_lease_file": "/tmp/aurelia/agent-federation-leases.json",
   "local_skill_roots": [
@@ -44,7 +47,21 @@
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
       "note": "CLI OAuth may be stored outside environment variables; no authentication is inferred from missing or present environment markers.",
       "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
-      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME",
+      "adapter_script": "runtime/agent_adapters/claude_code.py",
+      "default_adapter_enabled": true,
+      "credential_env_pass_list": [
+        "ANTHROPIC_API_KEY"
+      ],
+      "runtime_env_allowlist": [
+        "AURELIA_CLAUDE_CLI"
+      ],
+      "sandbox_uid": 10011,
+      "sandbox_gid": 10011,
+      "expected_cli_version": "2.1.312",
+      "healthcheck_interval_seconds": 300,
+      "healthcheck_timeout_seconds": 50,
+      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID"
     },
     {
       "name": "KimiK3",
@@ -71,7 +88,8 @@
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
       "note": "Executable name and API-key marker are discovery hints only; configure a trusted adapter and readiness check.",
       "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
-      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME",
+      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID"
     },
     {
       "name": "GrokBot",
@@ -94,7 +112,8 @@
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
       "note": "No universal local GrokBot CLI is assumed; use an explicitly configured adapter.",
       "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
-      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME",
+      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID"
     },
     {
       "name": "GoogleAgentSkills",
@@ -119,7 +138,8 @@
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
       "note": "A Gemini CLI, if installed, is not by itself proof of this registered agent or provider readiness.",
       "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
-      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME",
+      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID"
     },
     {
       "name": "GLM",
@@ -145,7 +165,8 @@
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
       "note": "Executable candidates are discovery hints only; configure an explicit adapter and readiness check.",
       "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
-      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME",
+      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID"
     },
     {
       "name": "PlaywrightCLI",
@@ -166,7 +187,8 @@
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
       "note": "Installing a browser CLI does not grant access to a browser session or authenticated account.",
       "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
-      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME",
+      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID"
     },
     {
       "name": "JEV",
@@ -187,7 +209,8 @@
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
       "note": "No local JEV runtime binary is assumed; configure a trusted adapter only after its identity and task protocol are verified.",
       "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
-      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME",
+      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID"
     },
     {
       "name": "DeepSeekHarness",
@@ -215,7 +238,21 @@
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
       "note": "There is no assumed universal DeepSeek harness CLI; use a pinned, trusted adapter and a provider-specific readiness command.",
       "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
-      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME",
+      "adapter_script": "runtime/agent_adapters/deepseek_harness.py",
+      "default_adapter_enabled": true,
+      "credential_env_pass_list": [
+        "DEEPSEEK_API_KEY"
+      ],
+      "runtime_env_allowlist": [
+        "AURELIA_DSH_CLI"
+      ],
+      "sandbox_uid": 10018,
+      "sandbox_gid": 10018,
+      "expected_cli_version": "0.2.1-rc.2",
+      "healthcheck_interval_seconds": 300,
+      "healthcheck_timeout_seconds": 55,
+      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID"
     },
     {
       "name": "HermesAgent",
@@ -244,7 +281,44 @@
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
       "note": "Pin the exact Hermes distribution and provider adapter; credentials may be configured in a separate backend and are not inferred from a generic key marker.",
       "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
-      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
+      "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME",
+      "adapter_script": "runtime/agent_adapters/hermes_agent.py",
+      "default_adapter_enabled": true,
+      "credential_env_by_provider": {
+        "deepseek": [
+          "DEEPSEEK_API_KEY"
+        ],
+        "openrouter": [
+          "OPENROUTER_API_KEY"
+        ],
+        "anthropic": [
+          "ANTHROPIC_API_KEY"
+        ],
+        "openai-api": [
+          "OPENAI_API_KEY"
+        ],
+        "gemini": [
+          "GEMINI_API_KEY"
+        ],
+        "xai": [
+          "XAI_API_KEY"
+        ],
+        "zai": [
+          "ZAI_API_KEY"
+        ]
+      },
+      "provider_env": "AURELIA_HERMES_PROVIDER",
+      "runtime_env_allowlist": [
+        "AURELIA_HERMES_CLI",
+        "AURELIA_HERMES_PROVIDER",
+        "AURELIA_HERMES_MODEL"
+      ],
+      "sandbox_uid": 10019,
+      "sandbox_gid": 10019,
+      "expected_cli_version": "v0.22.5",
+      "healthcheck_interval_seconds": 300,
+      "healthcheck_timeout_seconds": 55,
+      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID"
     }
   ],
   "runtime_protocol": {
@@ -255,8 +329,8 @@
       "AURELIA_AGENT_FEDERATION_JOURNAL_PATH",
       "AURELIA_AGENT_FEDERATION_LEASE_PATH"
     ],
-    "command_contract": "Trusted local adapter process that consumes the federation task/journal paths and acknowledges task outcomes.",
-    "healthcheck_contract": "A bounded, non-interactive command that exits 0 only when the relevant worker/provider is ready; output is discarded.",
+    "command_contract": "Use configured trusted local command if supplied; otherwise use the profile's built-in adapter_script when default_adapter_enabled=true. One-shot stdin/stdout JSON; all adapters must enforce capital boundary and output schema.",
+    "healthcheck_contract": "Provider-specific healthcheck command if configured; otherwise built-in adapter --healthcheck for enabled built-in adapters. A model call is required, bounded by profile timeout. A passing check only proves a recent minimal model request.",
     "healthcheck_timeout_seconds": 5,
     "result": "A running process with a passing operator-defined healthcheck creates a worker lease; this does not independently certify model identity or task correctness."
   },
