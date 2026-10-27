@@ -10,6 +10,7 @@ ENV_DIR="/etc/aurelia"
 ENV_FILE="$ENV_DIR/aurelia.env"
 LIVE_SECRET_FILE="$ENV_DIR/aurelia-live-secrets.env"
 READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"
+AGENT_PROVIDER_SECRET_FILE="$ENV_DIR/aurelia-agent-provider-secrets.env"
 DATA_DIR="/var/lib/aurelia"
 IMAGE="aurelia-runtime:$SHA"
 CONTAINER="aurelia-runtime"
@@ -142,6 +143,20 @@ printf '%s\n' \
   | sudo tee -a "$ENV_FILE" >/dev/null
 sudo chmod 600 "$ENV_FILE"
 
+# Optional provider-only secrets for advisory model agents. This is separate
+# from Deriv/broker credentials. The validator rejects broker tokens, arbitrary
+# runtime commands, duplicate keys, symlinks and loose file permissions.
+AGENT_PROVIDER_SECRET_ENV_ARGS=()
+if [ -e "$AGENT_PROVIDER_SECRET_FILE" ] || [ -L "$AGENT_PROVIDER_SECRET_FILE" ]; then
+  if [ -L "$AGENT_PROVIDER_SECRET_FILE" ] || [ ! -f "$AGENT_PROVIDER_SECRET_FILE" ]; then
+    echo "AURELIA_AGENT_PROVIDER_SECRETS_BLOCKED=FILE_MUST_BE_REGULAR_NON_SYMLINK"
+    exit 2
+  fi
+  sudo chmod 600 "$AGENT_PROVIDER_SECRET_FILE"
+  sudo python3 "$RELEASE_DIR/scripts/deploy/validate_agent_provider_secrets.py" "$AGENT_PROVIDER_SECRET_FILE"
+  AGENT_PROVIDER_SECRET_ENV_ARGS+=(--env-file "$AGENT_PROVIDER_SECRET_FILE")
+fi
+
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   test -f "$LIVE_SECRET_FILE" || {
     echo "AURELIA_HOST_BLOCKED=MISSING_RUNTIME_SECRET_STORE"
@@ -253,7 +268,7 @@ sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 sudo docker run --detach \
   --name "$CONTAINER" \
   --restart unless-stopped \
-  --env-file "$ENV_FILE" "${SECRET_ENV_ARGS[@]}" \
+  --env-file "$ENV_FILE" "${SECRET_ENV_ARGS[@]}" "${AGENT_PROVIDER_SECRET_ENV_ARGS[@]}" \
   --env AURELIA_DEPLOYMENT_MODE="$DEPLOYMENT_MODE" \
   --env AURELIA_AUTONOMOUS_LOOP="$AUTONOMOUS_LOOP" \
   --env AURELIA_VERIFY_DERIV_AUTH="$VERIFY_DERIV_AUTH" \
