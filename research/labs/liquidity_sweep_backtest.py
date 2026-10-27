@@ -76,7 +76,7 @@ def load_verified_cost_config(config_path: str, resolution: str) -> dict[str, fl
         import yaml
     except ImportError as exc:
         raise RuntimeError("PyYAML is required to load config/costs.yaml") from exc
-    raw_config = open(config_path, "rb").read()
+    raw_config = __import__("pathlib").Path(config_path).read_bytes()
     config_sha256 = hashlib.sha256(raw_config).hexdigest()
     try:
         document = yaml.safe_load(raw_config.decode("utf-8"))
