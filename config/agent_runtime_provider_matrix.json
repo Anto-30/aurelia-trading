@@ -1,0 +1,117 @@
+{
+  "schema": "aurelia.agent_runtime_provider_matrix.v1",
+  "generated_date": "2026-10-28",
+  "purpose": "Describe locally launchable advisory agent runtimes and the evidence required to call them available. Inventory membership, a binary, or a credential marker alone is not proof of an authenticated provider session.",
+  "global_controls": {
+    "secret_values_must_never_be_printed": true,
+    "external_runtime_capital_authority": false,
+    "live_order_submission": false,
+    "live_lock_mutation": false,
+    "readiness_requires_worker_command_and_successful_healthcheck": true,
+    "provider_authentication_claim_requires_provider_specific_healthcheck": false
+  },
+  "default_lease_file": "/tmp/aurelia/agent-federation-leases.json",
+  "local_skill_roots": [
+    ".agents/skills",
+    ".claude/skills"
+  ],
+  "runtimes": [
+    {
+      "name": "ClaudeCode",
+      "worker_agent": "ClaudeCode",
+      "role": "Engineering and repair CLI runtime",
+      "executable_candidates": [
+        "claude",
+        "claude-code"
+      ],
+      "command_env": "AURELIA_AGENT_CLAUDECODE_COMMAND",
+      "healthcheck_env": "AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND",
+      "credential_env_any": [
+        "ANTHROPIC_API_KEY",
+        "ANTHROPIC_AUTH_TOKEN",
+        "CLAUDE_CODE_OAUTH_TOKEN"
+      ],
+      "assigned_skills": [
+        "aurelia-continuity",
+        "aurelia-federated-repair",
+        "aurelia-evidence-reconciliation",
+        "ci-diagnostics",
+        "evidence-inspection",
+        "research-intelligence",
+        "browser-e2e",
+        "security-review"
+      ],
+      "plugins": [],
+      "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
+      "note": "CLI OAuth may be stored outside environment variables; no authentication is inferred from missing or present environment markers."
+    },
+    {
+      "name": "DeepSeekHarness",
+      "worker_agent": "DeepSeekHarness",
+      "role": "Configurable DeepSeek-compatible research/engineering harness",
+      "executable_candidates": [
+        "dsh",
+        "deepseek-harness",
+        "deepseek-code"
+      ],
+      "command_env": "AURELIA_AGENT_DEEPSEEKHARNESS_COMMAND",
+      "healthcheck_env": "AURELIA_AGENT_DEEPSEEKHARNESS_HEALTHCHECK_COMMAND",
+      "credential_env_any": [
+        "DEEPSEEK_API_KEY",
+        "OPENROUTER_API_KEY",
+        "LITELLM_API_KEY"
+      ],
+      "assigned_skills": [
+        "aurelia-continuity",
+        "aurelia-evidence-reconciliation",
+        "ci-diagnostics",
+        "research-intelligence",
+        "security-review"
+      ],
+      "plugins": [],
+      "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
+      "note": "There is no assumed universal DeepSeek harness CLI; use a pinned, trusted adapter and a provider-specific readiness command."
+    },
+    {
+      "name": "HermesAgent",
+      "worker_agent": "HermesAgent",
+      "role": "Configurable Hermes agent runtime",
+      "executable_candidates": [
+        "hermes",
+        "hermes-agent"
+      ],
+      "command_env": "AURELIA_AGENT_HERMESAGENT_COMMAND",
+      "healthcheck_env": "AURELIA_AGENT_HERMESAGENT_HEALTHCHECK_COMMAND",
+      "credential_env_any": [
+        "HERMES_API_KEY",
+        "OPENROUTER_API_KEY",
+        "DEEPSEEK_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "assigned_skills": [
+        "aurelia-continuity",
+        "aurelia-evidence-reconciliation",
+        "ci-diagnostics",
+        "research-intelligence",
+        "security-review"
+      ],
+      "plugins": [],
+      "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
+      "note": "Pin the exact Hermes distribution and provider adapter; credentials may be configured in a separate backend and are not inferred from a generic key marker."
+    }
+  ],
+  "runtime_protocol": {
+    "version": "PERSISTENT_FEDERATION_JSON_V1",
+    "environment": [
+      "AURELIA_AGENT_ID",
+      "AURELIA_AGENT_FEDERATION_TASK_PATH",
+      "AURELIA_AGENT_FEDERATION_JOURNAL_PATH",
+      "AURELIA_AGENT_FEDERATION_LEASE_PATH"
+    ],
+    "command_contract": "Trusted local adapter process that consumes the federation task/journal paths and acknowledges task outcomes.",
+    "healthcheck_contract": "A bounded, non-interactive command that exits 0 only when the relevant worker/provider is ready; output is discarded.",
+    "healthcheck_timeout_seconds": 5,
+    "result": "A running process with a passing operator-defined healthcheck creates a worker lease; this does not independently certify model identity or task correctness."
+  }
+}
