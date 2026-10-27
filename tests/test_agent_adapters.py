@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import subprocess
+import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -158,6 +160,42 @@ def test_hermes_adapter_blocks_unknown_provider_or_missing_model(monkeypatch):
     assert error == "HERMES_PROVIDER_AND_MODEL_REQUIRED"
 
 
+
+@pytest.mark.parametrize(
+    "relative_script",
+    [
+        "runtime/agent_adapters/claude_code.py",
+        "runtime/agent_adapters/deepseek_harness.py",
+        "runtime/agent_adapters/hermes_agent.py",
+    ],
+)
+def test_adapter_is_directly_executable_from_isolated_working_directory(tmp_path, relative_script):
+    root = Path(__file__).resolve().parents[1]
+    adapter = root / relative_script
+    env = {"PATH": os.environ.get("PATH", ""), "HOME": str(tmp_path)}
+    for key in (
+        "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN",
+        "DEEPSEEK_API_KEY", "OPENROUTER_API_KEY", "HERMES_API_KEY",
+        "OPENAI_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "ZAI_API_KEY",
+        "AURELIA_CLAUDE_CLI", "AURELIA_DSH_CLI", "AURELIA_HERMES_CLI",
+        "AURELIA_HERMES_PROVIDER", "AURELIA_HERMES_MODEL",
+    ):
+        env.pop(key, None)
+    result = subprocess.run(
+        [sys.executable, str(adapter), "--healthcheck"],
+        cwd=tmp_path,
+        env=env,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        timeout=10,
+        check=False,
+    )
+    assert result.returncode != 0  # prerequisites absent; must fail closed
+    assert "ModuleNotFoundError" not in result.stderr
+    assert "Traceback" not in result.stderr
+    assert "ANTHROPIC_API_KEY" not in result.stdout
 def test_emit_response_uses_required_json_envelope(capsys):
     common.emit_response(
         task_id="task-123", status="COMPLETED",
