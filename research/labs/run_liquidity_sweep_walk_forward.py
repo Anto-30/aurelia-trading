@@ -187,12 +187,24 @@ def main() -> int:
         reward_risk=args.reward_risk,
         stop_buffer=args.stop_buffer,
     )
+    train_bars = args.train_window_days * 1440
+    test_bars = args.test_window_days * 1440
     folds = run_walk_forward(
-        one_minute,
-        factory,
+        one_minute, factory, config,
+        train_window=train_bars, test_window=test_bars,
+    )
+
+    # The configured multiplier is a research stress case only, not a live
+    # circuit breaker. It checks whether results survive worse slippage.
+    slippage_multiplier = float(cost["max_slippage_sensitivity_multiplier"])
+    stressed_config = replace(
         config,
-        train_window=args.train_window_days * 1440,
-        test_window=args.test_window_days * 1440,
+        slippage_bps=config.slippage_bps * slippage_multiplier,
+        slippage_points=config.slippage_points * slippage_multiplier,
+    )
+    stressed_folds = run_walk_forward(
+        one_minute, factory, stressed_config,
+        train_window=train_bars, test_window=test_bars,
     )
 
     output = {
@@ -229,6 +241,7 @@ def main() -> int:
             "usd_per_point_per_unit": cost["usd_per_point_per_unit"],
             "economics_source": cost["economics_source"],
             "bar_price_basis": "MIDPOINT",
+            "max_slippage_sensitivity_multiplier": slippage_multiplier,
         },
         "execution_model": {
             "quantity": args.quantity,
@@ -240,6 +253,19 @@ def main() -> int:
         },
         "fold_count": len(folds),
         "folds": folds,
+        "slippage_sensitivity": {
+            "multiplier": slippage_multiplier,
+            "purpose": "research stress scenario only; not a live circuit breaker",
+            "fold_count": len(stressed_folds),
+            "fold_metrics": [
+                {
+                    "test_start": fold["test_start"],
+                    "test_end": fold["test_end"],
+                    "metrics": fold["metrics"],
+                }
+                for fold in stressed_folds
+            ],
+        },
         "promotion_blockers": [
             "Results are research-only and are not independent out-of-sample qualification.",
             "Prospective paper reconciliation and independent human review are still required.",
