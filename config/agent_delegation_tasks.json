@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_delegation_tasks.v1",
-  "generated": "2026-10-11",
+  "generated": "2026-10-28",
   "orchestrator": "ClaudeCode",
   "purpose": "One explicit delegated engineering/verification task per registered agent role. Unconnected or non-persistent roles may be assigned or blocked, while runtime execution proof remains false until attributable lifecycle evidence exists.",
   "execution_proof_policy": {
@@ -19,7 +19,7 @@
       "objective": "Repair and certify the agent delegation proof chain, including inventory validation and continuity evidence.",
       "acceptance_criteria": [
         "inventory validator passes",
-        "all ten agents have exactly one task",
+        "all twelve registered agents have exactly one task",
         "delegation evidence is attributable"
       ],
       "evidence_path": "artifacts/agent-delegation/claudecode.json",
@@ -50,7 +50,7 @@
       "status": "assigned",
       "objective": "Coordinate the federated task queue and identify any blocked or unassigned agent work.",
       "acceptance_criteria": [
-        "all ten tasks visible",
+        "all twelve registered tasks visible",
         "blocked work explicitly reported",
         "results routed back to ClaudeCode"
       ],
@@ -172,7 +172,43 @@
         "required_event": "subagent.started",
         "execution_proof": false
       }
+    },
+    {
+      "task_id": "AGT-DEEPSEEK-001",
+      "agent": "DeepSeekHarness",
+      "status": "blocked",
+      "objective": "Establish a pinned, trusted DeepSeek-compatible harness adapter and verify command, readiness, authentication and structured task-response behavior without exposing credentials.",
+      "acceptance_criteria": [
+        "pinned adapter identity and version recorded",
+        "worker command and readiness probe verified",
+        "no active lease is emitted when the provider is unavailable",
+        "secret values never appear in reports or logs",
+        "no capital authority or order submission"
+      ],
+      "evidence_path": "reports/agent-runtime/deepseek-harness-readiness.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
+    },
+    {
+      "task_id": "AGT-HERMES-001",
+      "agent": "HermesAgent",
+      "status": "blocked",
+      "objective": "Establish a pinned Hermes agent runtime and verify command, readiness, provider configuration and structured federation task-response behavior without exposing credentials.",
+      "acceptance_criteria": [
+        "exact Hermes distribution and version pinned",
+        "worker command and readiness probe verified",
+        "no active lease is emitted when the runtime/provider is unavailable",
+        "secret values never appear in reports or logs",
+        "no capital authority or order submission"
+      ],
+      "evidence_path": "reports/agent-runtime/hermes-agent-readiness.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      }
     }
   ],
-  "revision": 3
+  "revision": 4
 }
