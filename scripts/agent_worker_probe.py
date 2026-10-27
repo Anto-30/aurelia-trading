@@ -41,6 +41,12 @@ async def run_worker_probe(
 
     with tempfile.TemporaryDirectory(prefix="aurelia-agent-probe-") as tmp:
         root = Path(tmp)
+        provider_preflight = build_availability_report(
+            MATRIX, env=runtime_env, lease_path=root / "leases.json", repo_root=ROOT
+        )
+        preflight_by_name = {
+            str(item["name"]): item for item in provider_preflight["runtimes"]
+        }
         federation = PersistentAgentFederation(
             journal_path=root / "journal.ndjson",
             lease_path=root / "leases.json",
@@ -63,21 +69,26 @@ async def run_worker_probe(
                 statuses_ready = True
                 for spec in specs:
                     name = str(spec["name"])
+                    preflight = preflight_by_name[name]
                     command_configured = bool(str(runtime_env.get(str(spec["command_env"]), "")).strip())
                     healthcheck_configured = bool(str(runtime_env.get(str(spec["healthcheck_env"]), "")).strip())
-                    expected_reason = (
-                        "WORKER_COMMAND_MISSING" if not command_configured else
-                        "WORKER_HEALTHCHECK_COMMAND_MISSING" if not healthcheck_configured else None
+                    builtin_blocked = (
+                        bool(preflight.get("builtin_adapter_available"))
+                        and bool(preflight.get("missing_prerequisites"))
                     )
-                    if expected_reason is not None:
-                        has_blocked_status = any(
-                            row.get("message_type") == "CONNECTOR_REQUIRED"
-                            and (row.get("payload") or {}).get("reason") == expected_reason
-                            for row in federation.messages_for(name, limit=100)
-                        )
-                        statuses_ready = statuses_ready and has_blocked_status and name not in active_now
+                    if name in active_now:
+                        continue
+                    messages = federation.messages_for(name, limit=100)
+                    has_blocked = any(row.get("message_type") == "CONNECTOR_REQUIRED" for row in messages)
+                    has_unhealthy = any(row.get("message_type") == "CONNECTOR_UNHEALTHY" for row in messages)
+                    if builtin_blocked:
+                        statuses_ready = statuses_ready and has_unhealthy
+                    elif not command_configured and not preflight.get("builtin_adapter_available"):
+                        statuses_ready = statuses_ready and has_blocked
+                    elif command_configured and not healthcheck_configured:
+                        statuses_ready = statuses_ready and has_blocked
                     else:
-                        statuses_ready = statuses_ready and name in active_now
+                        statuses_ready = False
                 if statuses_ready:
                     break
                 await asyncio.sleep(0.1)
@@ -86,30 +97,38 @@ async def run_worker_probe(
             failures: list[str] = []
             for spec in specs:
                 name = str(spec["name"])
-                command_configured = bool(str(runtime_env.get(str(spec["command_env"]), "")).strip())
-                healthcheck_configured = bool(str(runtime_env.get(str(spec["healthcheck_env"]), "")).strip())
+                command_raw = bool(str(runtime_env.get(str(spec["command_env"]), "")).strip())
+                healthcheck_raw = bool(str(runtime_env.get(str(spec["healthcheck_env"]), "")).strip())
+                preflight = preflight_by_name[name]
+                builtin_available = bool(preflight.get("builtin_adapter_available"))
+                command_configured = command_raw or builtin_available
+                healthcheck_configured = healthcheck_raw or builtin_available
                 active = name in federation.active_agents()
                 messages = federation.messages_for(name, limit=100)
-                reason = (
-                    "WORKER_COMMAND_MISSING" if not command_configured else
-                    "WORKER_HEALTHCHECK_COMMAND_MISSING" if not healthcheck_configured else None
-                )
-                if reason is not None:
-                    blocked_reported = any(
-                        row.get("message_type") == "CONNECTOR_REQUIRED"
-                        and (row.get("payload") or {}).get("reason") == reason
-                        for row in messages
-                    )
-                    status = "BLOCKED_CONFIG"
-                    if active:
-                        failures.append(f"{name}:UNEXPECTED_ACTIVE_WITHOUT_READINESS_CONFIG")
-                    if not blocked_reported:
-                        failures.append(f"{name}:MISSING_BLOCKED_STATUS:{reason}")
-                elif active:
+                connector_required = any(row.get("message_type") == "CONNECTOR_REQUIRED" for row in messages)
+                connector_unhealthy = any(row.get("message_type") == "CONNECTOR_UNHEALTHY" for row in messages)
+
+                if active:
                     status = "WORKER_HEALTHCHECK_LEASE_ACTIVE"
+                elif builtin_available and preflight.get("missing_prerequisites"):
+                    status = "BLOCKED_PROVIDER_PREREQUISITES"
+                    # Missing CLI/key/provider-selection is an honest block, not
+                    # a failed liveness assertion unless strict active mode was asked.
+                    if not connector_unhealthy:
+                        failures.append(f"{name}:MISSING_PROVIDER_BLOCK_STATUS")
+                elif not command_configured:
+                    status = "BLOCKED_CONFIG"
+                    if not connector_required:
+                        failures.append(f"{name}:MISSING_BLOCKED_STATUS:WORKER_COMMAND_MISSING")
+                elif not healthcheck_configured:
+                    status = "BLOCKED_CONFIG"
+                    if not connector_required:
+                        failures.append(f"{name}:MISSING_BLOCKED_STATUS:WORKER_HEALTHCHECK_COMMAND_MISSING")
+                elif connector_unhealthy:
+                    status = "HEALTHCHECK_FAILED"
+                    failures.append(f"{name}:{status}")
                 else:
-                    unhealthy = any(row.get("message_type") == "CONNECTOR_UNHEALTHY" for row in messages)
-                    status = "HEALTHCHECK_FAILED" if unhealthy else "CONFIGURED_NOT_ACTIVE"
+                    status = "CONFIGURED_NOT_ACTIVE"
                     failures.append(f"{name}:{status}")
                 if require_active and not active:
                     failures.append(f"{name}:ACTIVE_WORKER_REQUIRED")
@@ -118,6 +137,10 @@ async def run_worker_probe(
                     "status": status,
                     "worker_command_configured": command_configured,
                     "healthcheck_command_configured": healthcheck_configured,
+                    "explicit_worker_command_configured": command_raw,
+                    "explicit_healthcheck_command_configured": healthcheck_raw,
+                    "builtin_adapter_available": builtin_available,
+                    "missing_prerequisites": preflight.get("missing_prerequisites", []),
                     "worker_lease_active": active,
                     "provider_session": "NOT_INDEPENDENTLY_VERIFIED" if active else "UNKNOWN",
                     "capital_authority": False,
