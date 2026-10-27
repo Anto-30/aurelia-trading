@@ -20,7 +20,13 @@ async def test_unconfigured_roster_reports_blocked_not_active_and_preserves_envi
     assert report["status"] == "PASS"
     assert report["active_worker_count"] == 0
     assert report["runtime_count"] == 9
-    assert all(row["status"] == "BLOCKED_CONFIG" for row in report["runtimes"])
+    statuses = {row["name"]: row["status"] for row in report["runtimes"]}
+    assert statuses["ClaudeCode"] == "BLOCKED_PROVIDER_PREREQUISITES"
+    assert statuses["DeepSeekHarness"] == "BLOCKED_PROVIDER_PREREQUISITES"
+    assert statuses["HermesAgent"] == "BLOCKED_PROVIDER_PREREQUISITES"
+    assert all(statuses[name] == "BLOCKED_CONFIG" for name in (
+        "KimiK3", "GrokBot", "GoogleAgentSkills", "GLM", "PlaywrightCLI", "JEV"
+    ))
     assert "this-marker-must-not-appear-in-reports" not in str(report)
     assert dict(os.environ) == before
 
