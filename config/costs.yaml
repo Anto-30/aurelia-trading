@@ -1,0 +1,35 @@
+schema_version: 1
+instrument: R_100
+currency: USD
+price_unit: index_points
+status: UNVERIFIED_COST_ASSUMPTIONS
+qualification_allowed: false
+
+# These slippage values are scenario assumptions supplied for sensitivity testing.
+# They are not broker measurements and must not be represented as observed costs.
+# spread_points and commission_per_unit_usd remain null until supported by a
+# current source/contract quote. Null is UNKNOWN, not zero.
+resolutions:
+  "1m":
+    spread_points: null
+    slippage_points: 1.5
+    commission_per_unit_usd: null
+    verified: false
+    source: null
+    observed_at_utc: null
+    slippage_status: ASSUMED_SCENARIO_NOT_MEASURED
+  "15m":
+    spread_points: null
+    slippage_points: 3.0
+    commission_per_unit_usd: null
+    verified: false
+    source: null
+    observed_at_utc: null
+    slippage_status: ASSUMED_SCENARIO_NOT_MEASURED
+
+max_slippage_multiplier: 2.0
+notes:
+  - Do not assume zero spread or zero commission when values are unknown.
+  - Confirm whether the instrument/contract actually charges commission per unit before populating commission_per_unit_usd.
+  - Record the broker quote, contract type, source URL/reference, capture timestamp, units, and independent verification before setting verified true.
+  - Current scenario settings are not a verified cost profile and cannot qualify a strategy.
