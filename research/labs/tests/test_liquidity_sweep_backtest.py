@@ -81,7 +81,7 @@ class CostAwareBacktestTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             config = Path(directory) / "costs.yaml"
             observed = datetime.now(timezone.utc).isoformat()
-            config.write_text("\\n".join([
+            config.write_text("\n".join([
                 "schema_version: 1",
                 "instrument: R_100",
                 "status: VERIFIED_SOURCE_BACKED_COSTS",
@@ -94,7 +94,7 @@ class CostAwareBacktestTests(unittest.TestCase):
                 '    source: "source-backed paper quote capture"',
                 f'    observed_at_utc: "{observed}"',
                 "    slippage_status: VERIFIED_MEASURED",
-            ]) + "\\n", encoding="utf-8")
+            ]) + "\n", encoding="utf-8")
             loaded = load_verified_cost_config(str(config), "1m")
             self.assertEqual(loaded["spread_points"], 1.0)
             self.assertEqual(loaded["slippage_points"], 1.5)
