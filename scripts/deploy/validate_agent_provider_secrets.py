@@ -46,7 +46,7 @@ def validate_provider_secret_file(path: str | Path) -> dict[str, object]:
         raise ValueError("AGENT_PROVIDER_SECRET_FILE_MUST_NOT_BE_SYMLINK")
     if not stat.S_ISREG(info.st_mode):
         raise ValueError("AGENT_PROVIDER_SECRET_FILE_MUST_BE_REGULAR_FILE")
-    if stat.S_IMODE(info.st_mode) & 0o077:
+    if stat.S_IMODE(info.st_mode) != 0o600:
         raise ValueError("AGENT_PROVIDER_SECRET_FILE_PERMISSIONS_MUST_BE_0600")
 
     try:
