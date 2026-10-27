@@ -8,7 +8,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-from dataclasses import asdict, replace
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Sequence
@@ -132,6 +132,7 @@ def main() -> int:
         quantity=args.quantity,
         commission_per_side=float(cost["commission_per_unit_usd_per_side"]),
         slippage_bps=0.0,
+        usd_per_point_per_unit=float(cost["usd_per_point_per_unit"]),
         spread_points=float(cost["spread_points"]),
         slippage_points=float(cost["slippage_points"]),
     )
@@ -176,6 +177,11 @@ def main() -> int:
             "slippage_points_per_side": config.slippage_points,
             "commission_per_unit_usd_per_side": config.commission_per_side,
             "cost_source": cost["source"],
+            "contract_type": cost["contract_type"],
+            "pnl_model": cost["pnl_model"],
+            "usd_per_point_per_unit": cost["usd_per_point_per_unit"],
+            "economics_source": cost["economics_source"],
+            "bar_price_basis": "MIDPOINT",
         },
         "execution_model": {
             "quantity": args.quantity,
