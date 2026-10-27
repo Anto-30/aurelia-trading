@@ -40,7 +40,7 @@ def _cli_version(cli: str) -> tuple[bool, str]:
         version = subprocess.run(
             [cli, "--version"],
             cwd=str(Path.home()),
-            input=prompt,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             text=True,
@@ -75,7 +75,7 @@ def _run_prompt(prompt: str, timeout_seconds: float) -> tuple[bool, str, str]:
                 "-",
             ],
             cwd=str(Path.home()),
-            stdin=subprocess.DEVNULL,
+            input=prompt,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             text=True,
