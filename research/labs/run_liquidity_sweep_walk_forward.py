@@ -69,7 +69,10 @@ def fold_signal_factory(context_15m: Sequence[OHLCBar], *, pivot_window: int, re
         )
         local: list[ResearchSignal] = []
         for signal in candidates:
-            if signal.confirmation_index < offset or signal.entry_index < offset:
+            # Require the full setup and confirmation to be inside the test fold.
+            # This keeps fold-local indices valid and avoids importing a setup
+            # selected in the calibration window into the scored window.
+            if signal.sweep_index < offset or signal.confirmation_index < offset:
                 continue
             if signal.entry_index >= len(combined):
                 continue
