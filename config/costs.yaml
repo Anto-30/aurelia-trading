@@ -13,7 +13,7 @@ resolutions:
   "1m":
     spread_points: null
     slippage_points: 1.5
-    commission_per_unit_usd: null
+    commission_per_unit_usd_per_side: null
     verified: false
     source: null
     observed_at_utc: null
@@ -30,6 +30,6 @@ resolutions:
 max_slippage_multiplier: 2.0
 notes:
   - Do not assume zero spread or zero commission when values are unknown.
-  - Confirm whether the instrument/contract actually charges commission per unit before populating commission_per_unit_usd.
-  - Record the broker quote, contract type, source URL/reference, capture timestamp, units, and independent verification before setting verified true.
+  - Confirm whether the instrument/contract actually charges commission per unit before populating commission_per_unit_usd_per_side; this field is USD per research unit per side.
+  - Record the broker quote, contract type, source URL/reference, capture timestamp, units, and independent verification before setting verified true and status to VERIFIED_SOURCE_BACKED_COSTS.
   - Current scenario settings are not a verified cost profile and cannot qualify a strategy.
