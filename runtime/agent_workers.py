@@ -128,7 +128,7 @@ class AgentWorkerSupervisor:
         }
 
         home_root = Path(
-            str(self.environment.get("AURELIA_WORKER_HOME_ROOT", "/tmp/aurelia/agent-homes"))
+            str(self.environment.get("AURELIA_WORKER_HOME_ROOT", self.federation.lease_path.parent / "agent-homes"))
         ).expanduser()
         if not home_root.is_absolute():
             raise ValueError("AURELIA_WORKER_HOME_ROOT_MUST_BE_ABSOLUTE")
@@ -481,12 +481,10 @@ class AgentWorkerSupervisor:
                 continue
 
             worker_id = f"{worker_id_base}:r{restart_count}"
-            worker_env: dict[str, str] = {}
+            status_published = False
+            in_flight_task: AgentTask | None = None
+            task_runner: asyncio.Task[dict[str, Any]] | None = None
             try:
-                worker_env = self._worker_environment(spec.agent, worker_id=worker_id)
-                status_published = False
-                in_flight_task: AgentTask | None = None
-                task_runner: asyncio.Task[dict[str, Any]] | None = None
                 while self._running:
                     health_env = self._worker_environment(
                         spec.agent, worker_id=worker_id, healthcheck_only=True
@@ -586,7 +584,6 @@ class AgentWorkerSupervisor:
                     if task_runner is None:
                         task = await self.federation.claim_task(spec.agent)
                         if task is not None:
-                            safe_task_payload = self._redact(task.as_payload())
                             await self.federation.publish(
                                 sender="AURELIA",
                                 recipients=(spec.agent,),
