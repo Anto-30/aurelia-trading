@@ -274,9 +274,12 @@ class AgentWorkerSupervisor:
             return result
         return value
 
-    async def _run_healthcheck(self, command: list[str], *, env: dict[str, str]) -> bool:
+    async def _run_healthcheck(
+        self, command: list[str], *, env: dict[str, str], timeout_seconds: float | None = None
+    ) -> bool:
         """Run a bounded, output-suppressed provider readiness command."""
         process = None
+        timeout = self.healthcheck_timeout_seconds if timeout_seconds is None else max(0.5, float(timeout_seconds))
         try:
             uid, gid = self._subprocess_identity(env.get("AURELIA_AGENT_ID", ""))
             process = await asyncio.create_subprocess_exec(
@@ -291,7 +294,7 @@ class AgentWorkerSupervisor:
                 extra_groups=() if uid is not None else None,
             )
             return_code = await asyncio.wait_for(
-                process.wait(), timeout=self.healthcheck_timeout_seconds
+                process.wait(), timeout=timeout
             )
             return return_code == 0
         except asyncio.CancelledError:
@@ -559,49 +562,51 @@ class AgentWorkerSupervisor:
             healthcheck_raw = str(self.environment.get(spec.healthcheck_env, "")).strip()
             command = self._command(spec.agent)
             healthcheck = self._healthcheck_command(spec.agent)
-            if not command_raw:
-                await self._publish_connector_required(spec.agent, "WORKER_COMMAND_MISSING")
-                try:
-                    await asyncio.sleep(restart_delay)
-                except asyncio.CancelledError:
-                    raise
-                continue
             if command is None:
-                await self._publish_connector_required(spec.agent, "WORKER_COMMAND_INVALID")
-                try:
-                    await asyncio.sleep(restart_delay)
-                except asyncio.CancelledError:
-                    raise
-                continue
-            if not healthcheck_raw:
-                await self._publish_connector_required(
-                    spec.agent, "WORKER_HEALTHCHECK_COMMAND_MISSING"
-                )
+                reason = "WORKER_COMMAND_INVALID" if command_raw else "WORKER_COMMAND_MISSING"
+                await self._publish_connector_required(spec.agent, reason)
                 try:
                     await asyncio.sleep(restart_delay)
                 except asyncio.CancelledError:
                     raise
                 continue
             if healthcheck is None:
-                await self._publish_connector_required(
-                    spec.agent, "WORKER_HEALTHCHECK_COMMAND_INVALID"
+                reason = (
+                    "WORKER_HEALTHCHECK_COMMAND_INVALID"
+                    if healthcheck_raw else "WORKER_HEALTHCHECK_COMMAND_MISSING"
                 )
+                await self._publish_connector_required(spec.agent, reason)
                 try:
                     await asyncio.sleep(restart_delay)
                 except asyncio.CancelledError:
                     raise
                 continue
 
+            profile = self._runtime_specs.get(spec.agent, {})
+            built_in_adapter = not command_raw and profile.get("default_adapter_enabled") is True
+            healthcheck_interval = (
+                max(1.0, float(profile.get("healthcheck_interval_seconds", 300)))
+                if built_in_adapter else self.interval_seconds
+            )
+            healthcheck_timeout = (
+                max(0.5, float(profile.get("healthcheck_timeout_seconds", 55)))
+                if built_in_adapter else self.healthcheck_timeout_seconds
+            )
             worker_id = f"{worker_id_base}:r{restart_count}"
             status_published = False
             in_flight_task: AgentTask | None = None
             task_runner: asyncio.Task[dict[str, Any]] | None = None
+            last_healthcheck_at = 0.0
             try:
                 while self._running:
-                    health_env = self._worker_environment(
-                        spec.agent, worker_id=worker_id, healthcheck_only=True
-                    )
-                    if not await self._run_healthcheck(healthcheck, env=health_env):
+                    now = asyncio.get_running_loop().time()
+                    if last_healthcheck_at == 0.0 or now - last_healthcheck_at >= healthcheck_interval:
+                        health_env = self._worker_environment(
+                            spec.agent, worker_id=worker_id, healthcheck_only=True
+                        )
+                        if not await self._run_healthcheck(
+                            healthcheck, env=health_env, timeout_seconds=healthcheck_timeout
+                        ):
                         if in_flight_task is not None and task_runner is not None:
                             task_runner.cancel()
                             try:
@@ -639,7 +644,8 @@ class AgentWorkerSupervisor:
                             priority=95,
                             requires_response=False,
                         )
-                        break
+                            break
+                        last_healthcheck_at = asyncio.get_running_loop().time()
 
                     if not status_published:
                         await self.federation.publish(
