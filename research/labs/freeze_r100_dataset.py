@@ -250,6 +250,8 @@ def freeze_r100_dual_resolution(
                 "path": str(raw_path.as_posix()),
                 "sha256": raw_hash_before,
                 "file_size_bytes": raw_path.stat().st_size,
+                "created_at_utc": datetime.fromtimestamp(raw_path.stat().st_ctime, timezone.utc).isoformat(),
+                "last_modified_at_utc": datetime.fromtimestamp(raw_path.stat().st_mtime, timezone.utc).isoformat(),
             },
             "validation": {
                 "status": "PASS",
