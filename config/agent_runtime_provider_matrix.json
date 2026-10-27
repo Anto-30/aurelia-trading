@@ -8,7 +8,7 @@
     "live_order_submission": false,
     "live_lock_mutation": false,
     "readiness_requires_worker_command_and_successful_healthcheck": true,
-    "provider_authentication_claim_requires_provider_specific_healthcheck": false
+    "provider_authentication_claim_requires_provider_specific_healthcheck": true
   },
   "default_lease_file": "/tmp/aurelia/agent-federation-leases.json",
   "local_skill_roots": [
@@ -44,6 +44,141 @@
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
       "note": "CLI OAuth may be stored outside environment variables; no authentication is inferred from missing or present environment markers."
+    },
+    {
+      "name": "KimiK3",
+      "worker_agent": "KimiK3",
+      "role": "Advisory quantitative-research worker",
+      "executable_candidates": [
+        "kimi",
+        "kimi-cli"
+      ],
+      "command_env": "AURELIA_AGENT_KIMIK3_COMMAND",
+      "healthcheck_env": "AURELIA_AGENT_KIMIK3_HEALTHCHECK_COMMAND",
+      "credential_env_any": [
+        "MOONSHOT_API_KEY",
+        "KIMI_API_KEY"
+      ],
+      "assigned_skills": [
+        "aurelia-continuity",
+        "aurelia-evidence-reconciliation",
+        "ci-diagnostics",
+        "research-intelligence",
+        "security-review"
+      ],
+      "plugins": [],
+      "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
+      "note": "Executable name and API-key marker are discovery hints only; configure a trusted adapter and readiness check."
+    },
+    {
+      "name": "GrokBot",
+      "worker_agent": "GrokBot",
+      "role": "Advisory orchestration/research worker",
+      "executable_candidates": [],
+      "command_env": "AURELIA_AGENT_GROKBOT_COMMAND",
+      "healthcheck_env": "AURELIA_AGENT_GROKBOT_HEALTHCHECK_COMMAND",
+      "credential_env_any": [
+        "XAI_API_KEY"
+      ],
+      "assigned_skills": [
+        "aurelia-continuity",
+        "aurelia-evidence-reconciliation",
+        "ci-diagnostics",
+        "research-intelligence",
+        "security-review"
+      ],
+      "plugins": [],
+      "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
+      "note": "No universal local GrokBot CLI is assumed; use an explicitly configured adapter."
+    },
+    {
+      "name": "GoogleAgentSkills",
+      "worker_agent": "GoogleAgentSkills",
+      "role": "Advisory security/cloud review worker",
+      "executable_candidates": [
+        "gemini"
+      ],
+      "command_env": "AURELIA_AGENT_GOOGLEAGENTSKILLS_COMMAND",
+      "healthcheck_env": "AURELIA_AGENT_GOOGLEAGENTSKILLS_HEALTHCHECK_COMMAND",
+      "credential_env_any": [
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY"
+      ],
+      "assigned_skills": [
+        "aurelia-continuity",
+        "aurelia-evidence-reconciliation",
+        "ci-diagnostics",
+        "research-intelligence",
+        "security-review"
+      ],
+      "plugins": [],
+      "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
+      "note": "A Gemini CLI, if installed, is not by itself proof of this registered agent or provider readiness."
+    },
+    {
+      "name": "GLM",
+      "worker_agent": "GLM",
+      "role": "Advisory evidence/multimodal worker",
+      "executable_candidates": [
+        "zai",
+        "glm"
+      ],
+      "command_env": "AURELIA_AGENT_GLM_COMMAND",
+      "healthcheck_env": "AURELIA_AGENT_GLM_HEALTHCHECK_COMMAND",
+      "credential_env_any": [
+        "ZAI_API_KEY",
+        "ZHIPU_API_KEY"
+      ],
+      "assigned_skills": [
+        "aurelia-continuity",
+        "aurelia-evidence-reconciliation",
+        "ci-diagnostics",
+        "research-intelligence",
+        "security-review"
+      ],
+      "plugins": [],
+      "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
+      "note": "Executable candidates are discovery hints only; configure an explicit adapter and readiness check."
+    },
+    {
+      "name": "PlaywrightCLI",
+      "worker_agent": "PlaywrightCLI",
+      "role": "Advisory browser/E2E verification worker",
+      "executable_candidates": [
+        "playwright"
+      ],
+      "command_env": "AURELIA_AGENT_PLAYWRIGHTCLI_COMMAND",
+      "healthcheck_env": "AURELIA_AGENT_PLAYWRIGHTCLI_HEALTHCHECK_COMMAND",
+      "credential_env_any": [],
+      "assigned_skills": [
+        "aurelia-continuity",
+        "browser-e2e",
+        "ci-diagnostics",
+        "evidence-inspection",
+        "security-review"
+      ],
+      "plugins": [],
+      "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
+      "note": "Installing a browser CLI does not grant access to a browser session or authenticated account."
+    },
+    {
+      "name": "JEV",
+      "worker_agent": "JEV",
+      "role": "Advisory validation/evidence audit worker",
+      "executable_candidates": [],
+      "command_env": "AURELIA_AGENT_JEV_COMMAND",
+      "healthcheck_env": "AURELIA_AGENT_JEV_HEALTHCHECK_COMMAND",
+      "credential_env_any": [],
+      "assigned_skills": [
+        "aurelia-continuity",
+        "aurelia-evidence-reconciliation",
+        "ci-diagnostics",
+        "research-intelligence",
+        "security-review"
+      ],
+      "plugins": [],
+      "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
+      "note": "No local JEV runtime binary is assumed; configure a trusted adapter only after its identity and task protocol are verified."
     },
     {
       "name": "DeepSeekHarness",
@@ -113,5 +248,21 @@
     "healthcheck_contract": "A bounded, non-interactive command that exits 0 only when the relevant worker/provider is ready; output is discarded.",
     "healthcheck_timeout_seconds": 5,
     "result": "A running process with a passing operator-defined healthcheck creates a worker lease; this does not independently certify model identity or task correctness."
+  },
+  "runtime_managed_agent_roster": [
+    "ClaudeCode",
+    "KimiK3",
+    "GrokBot",
+    "GoogleAgentSkills",
+    "GLM",
+    "PlaywrightCLI",
+    "JEV",
+    "DeepSeekHarness",
+    "HermesAgent"
+  ],
+  "non_worker_roles": {
+    "AURELIA": "Deterministic capital/control plane managed by the canonical runtime; never a model subprocess.",
+    "ChatGPT": "Current conversation supervisory role; no persistent local daemon is created by inventory registration.",
+    "Dev": "NOT_CONNECTED until a user-controlled development host/device is registered and validated."
   }
 }
