@@ -37,7 +37,7 @@ def test_request_rejects_missing_capital_boundary():
     bad = request()
     bad["policy"]["live_order_submission"] = True
     with pytest.raises(ValueError, match="WORKER_LIVE_ORDER_BOUNDARY_MISSING"):
-        common.read_request_from_object(bad)  # helper must validate direct test objects too
+        common.validate_request_object(bad)  # helper must validate direct test objects too
 
 
 def test_rendered_prompt_is_bounded_and_contains_no_tool_authority():
