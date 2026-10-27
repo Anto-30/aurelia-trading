@@ -184,7 +184,7 @@ def run_backtest(
     losses = [pnl for pnl in pnls if pnl < 0]
     gross_profit = sum(wins)
     gross_loss = abs(sum(losses))
-    metrics: dict[str, float | int] = {
+    metrics: dict[str, float | int | None] = {
         "total_trades": len(pnls),
         "rejected_signals": len(rejection_ledger),
         "win_rate": len(wins) / len(pnls) if pnls else 0.0,
