@@ -109,6 +109,23 @@ def test_active_worker_and_healthcheck_are_distinguished_from_auth_proof(tmp_pat
     assert secret_value not in json.dumps(report)
 
 
+
+def test_registered_skill_catalog_is_not_mistaken_for_local_runtime_skill_loading(tmp_path):
+    real_matrix = Path(__file__).resolve().parents[1] / "config" / "agent_runtime_provider_matrix.json"
+    report = build_availability_report(
+        real_matrix,
+        env={},
+        which=lambda _: None,
+        lease_path=tmp_path / "missing-leases.json",
+        repo_root=Path(__file__).resolve().parents[1],
+    )
+    for item in report["runtimes"]:
+        assert item["canonical_skill_catalog_missing"] == []
+        assert item["canonical_skill_catalog_available"] == item["assigned_skills"]
+        assert item["skill_bridge_status"] == "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME"
+        assert item["local_skills_loaded"] == []
+        assert item["local_skills_not_loaded"] == item["assigned_skills"]
+
 def test_expired_lease_never_counts_as_active(tmp_path):
     leases = tmp_path / "leases.json"
     expired = (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat()
