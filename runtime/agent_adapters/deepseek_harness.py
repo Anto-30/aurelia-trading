@@ -5,6 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from runtime.agent_adapters.common import (
     emit_response,
     failure_for_request,
@@ -36,7 +40,7 @@ def _cli_version(cli: str) -> tuple[bool, str]:
         version = subprocess.run(
             [cli, "--version"],
             cwd=str(Path.home()),
-            stdin=subprocess.DEVNULL,
+            input=prompt,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             text=True,
@@ -68,7 +72,7 @@ def _run_prompt(prompt: str, timeout_seconds: float) -> tuple[bool, str, str]:
                 cli, "--profile", "headless",
                 "--permission-mode", "read-only",
                 "--approval-policy", "never",
-                prompt,
+                "-",
             ],
             cwd=str(Path.home()),
             stdin=subprocess.DEVNULL,
