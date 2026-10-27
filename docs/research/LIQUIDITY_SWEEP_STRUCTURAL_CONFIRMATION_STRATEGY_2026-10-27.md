@@ -27,8 +27,10 @@ A confirmed sweep of a previously defined swing level followed by a close back i
 
 ### Context
 1. Calculate swing highs/lows with a fixed, versioned pivot rule. A pivot is not available until the required right-side confirmation candles have completed.
-2. Calculate context from completed 15-minute candles only.
-3. Do not change swing definitions, context windows, or thresholds after viewing the sealed out-of-sample period.
+2. The current prototype requires a separate, already-resampled 15-minute OHLC series. It does not infer or fabricate a 15-minute series from the 1-minute series.
+3. A 1-minute candidate is retained only when the last two confirmed 15-minute swing highs and lows both rise for a long candidate or both fall for a short candidate. Mixed/insufficient context is neutral and rejects the candidate.
+4. Only 15-minute candles with close timestamps strictly earlier than the 1-minute confirmation candle are eligible. A context candle timestamp equal to or after the confirmation time is excluded.
+5. Both series must have strictly increasing, timezone-aware ISO-8601 timestamps representing candle-close times. Do not change swing definitions, context windows, or thresholds after viewing the sealed out-of-sample period.
 
 ### Long candidate
 1. Price crosses below a previously confirmed swing low.
@@ -43,6 +45,14 @@ Apply the exact mirrored conditions: sweep above a confirmed swing high, close b
 
 ### Rejections
 Reject when inputs are stale or incomplete; a pivot is not confirmed; spread/cost inputs are unavailable where required; the entry quote is unavailable; the stop distance is zero/invalid; the required stake cannot be afforded under existing policy; the signal is duplicated; or the probability/calibration/regime gate required by the deployed governance policy is not satisfied. Never force a stake or override canonical risk sizing.
+
+## Current implementation notes
+
+- `research/labs/liquidity_sweep_strategy.py` emits research candidates only and requires caller-supplied 15-minute context.
+- `research/labs/liquidity_sweep_controls.py` tracks expiring candidate setups and rejects future-dated/invalid state. It is not an order manager.
+- `research/labs/liquidity_sweep_backtest.py` uses explicitly supplied fixed quantity, commission-per-side and adverse-slippage basis points. It is a deterministic OHLC approximation, not a broker fill simulator. When stop and target are both touched within a candle, stop is counted first; a stop gapped through is filled at the worse candle open. These assumptions can be pessimistic and do not resolve intrabar path uncertainty.
+- Walk-forward folds use distinct chronological train/test windows. The callback must fit/calibrate from train bars and produce signals indexed locally to the test fold. A successful run does not establish edge without a frozen, source-verified dataset, suitable costs, sufficient sample size, sealed OOS and independent reproduction.
+- Runtime dependencies remain standard-library only for these research modules; pandas/NumPy are not required.
 
 ## Experiment plan
 
