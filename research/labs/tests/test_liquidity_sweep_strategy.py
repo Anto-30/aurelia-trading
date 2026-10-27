@@ -89,6 +89,30 @@ class LiquiditySweepStrategyTests(unittest.TestCase):
         self.assertGreater(signal.target_price, signal.entry_price)
 
 
+
+    def test_confirmed_short_setup_respects_bearish_15m_context(self):
+        original = [
+            (10, 11, 9, 10), (9, 10, 8, 9), (9, 10, 9, 9),
+            (9, 10, 7, 9), (10, 12, 10, 11), (11, 11, 10, 10),
+            (11, 13, 10, 13), (13, 14, 12, 13), (13, 14, 12, 13),
+        ]
+        mirrored = [(30 - o, 30 - low, 30 - high, 30 - close)
+                    for o, high, low, close in original]
+        candles = bars_from_rows(mirrored)
+        bearish = [
+            OHLCBar(bar.timestamp_utc, 30 - bar.open, 30 - bar.low,
+                    30 - bar.high, 30 - bar.close)
+            for bar in bullish_context()
+        ]
+        signals = generate_research_signals(
+            candles, context_bars_15m=bearish, pivot_window=1, reward_risk=2.0
+        )
+        self.assertTrue(any(signal.direction == "short" for signal in signals))
+        signal = next(signal for signal in signals if signal.direction == "short")
+        self.assertEqual(signal.confirmation_index, 6)
+        self.assertEqual(signal.entry_index, 7)
+        self.assertLess(signal.target_price, signal.entry_price)
+
     def test_sufficient_input_requires_completed_15m_context(self):
         rows = [
             (10, 11, 9, 10), (9, 10, 8, 9), (9, 10, 9, 9),
