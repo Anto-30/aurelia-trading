@@ -60,6 +60,8 @@ def test_claude_adapter_disables_every_tool_and_mcp(monkeypatch):
     monkeypatch.setenv("AURELIA_CLAUDE_CLI", "/usr/bin/claude")
     captured = {}
     def run(args, **kwargs):
+        if args[-1] == "--version":
+            return fake_completed(args, stdout="2.1.312")
         captured["args"] = args
         captured["kwargs"] = kwargs
         return fake_completed(args)
@@ -75,7 +77,22 @@ def test_claude_adapter_disables_every_tool_and_mcp(monkeypatch):
     assert "--max-turns" in args and args[args.index("--max-turns") + 1] == "1"
     assert "--no-session-persistence" in args
     assert captured["kwargs"]["stderr"] == subprocess.DEVNULL
+    assert captured["kwargs"]["env"]["DISABLE_AUTOUPDATER"] == "1"
     assert "test-anthropic-secret" not in str(captured["args"])
+
+
+
+def test_claude_adapter_fails_closed_on_unpinned_cli_version(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-secret")
+    monkeypatch.setenv("AURELIA_CLAUDE_CLI", "/usr/bin/claude")
+    monkeypatch.setattr(
+        claude_code.subprocess, "run",
+        lambda args, **kwargs: fake_completed(args, stdout="2.9.999")
+        if args[-1] == "--version" else fake_completed(args),
+    )
+    ok, answer, error = claude_code._run_prompt("advisory", 1)
+    assert not ok and not answer
+    assert error == "CLAUDE_CODE_VERSION_NOT_PINNED"
 
 
 def test_claude_adapter_fails_closed_without_api_key(monkeypatch):
