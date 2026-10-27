@@ -12,32 +12,34 @@ def make_bars(rows):
             for i, row in enumerate(rows)]
 
 
-def signal(entry_index=1):
-    return ResearchSignal("long", 0, 0, entry_index - 1, entry_index, 100, 95, 110, 99, 2.0)
+def signal(entry_index=2):
+    pivot_index = max(0, entry_index - 2)
+    return ResearchSignal("long", pivot_index, pivot_index, entry_index - 1,
+                          entry_index, 100, 95, 110, 99, 2.0)
 
 
 class CostAwareBacktestTests(unittest.TestCase):
     def test_target_exit_charges_commission(self):
-        bars = make_bars([(100,101,99,100), (100,102,99,100), (100,111,99,108), (108,109,107,108)])
+        bars = make_bars([(100,101,99,100), (100,102,99,100), (100,102,99,100), (100,111,99,108)])
         result = run_backtest(bars, [signal()], BacktestConfig(1000, 1, 0.5, 0))
         self.assertEqual(result.metrics["total_trades"], 1)
         self.assertEqual(result.trade_ledger[0]["exit_reason"], "TARGET")
         self.assertAlmostEqual(result.trade_ledger[0]["net_pnl"], 9.0)
 
     def test_stop_wins_when_stop_and_target_touch_same_bar(self):
-        bars = make_bars([(100,101,99,100), (100,102,99,100), (100,111,94,100)])
+        bars = make_bars([(100,101,99,100), (100,102,99,100), (100,102,99,100), (100,111,94,100)])
         result = run_backtest(bars, [signal()], BacktestConfig(1000, 1, 0, 0))
         self.assertEqual(result.trade_ledger[0]["exit_reason"], "STOP")
         self.assertAlmostEqual(result.trade_ledger[0]["net_pnl"], -5.0)
 
     def test_gap_through_stop_uses_open_price(self):
-        bars = make_bars([(100,101,99,100), (100,102,99,100), (90,91,89,90)])
+        bars = make_bars([(100,101,99,100), (100,102,99,100), (100,102,99,100), (90,91,89,90)])
         result = run_backtest(bars, [signal()], BacktestConfig(1000, 1, 0, 0))
         self.assertAlmostEqual(result.trade_ledger[0]["exit_price"], 90.0)
 
     def test_overlapping_signal_rejected(self):
-        bars = make_bars([(100,101,99,100), (100,102,99,100), (100,111,99,108), (108,109,107,108)])
-        result = run_backtest(bars, [signal(1), signal(2)], BacktestConfig(1000, 1, 0, 0))
+        bars = make_bars([(100,101,99,100), (100,102,99,100), (100,102,99,100), (100,111,99,108), (108,109,107,108)])
+        result = run_backtest(bars, [signal(2), signal(3)], BacktestConfig(1000, 1, 0, 0))
         self.assertEqual(result.metrics["total_trades"], 1)
         self.assertEqual(result.rejection_ledger[0]["reason"], "OVERLAPPING_POSITION")
 
