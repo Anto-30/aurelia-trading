@@ -24,15 +24,12 @@
       "worker_agent": "ClaudeCode",
       "role": "Engineering and repair CLI runtime",
       "executable_candidates": [
-        "claude",
-        "claude-code"
+        "claude"
       ],
       "command_env": "AURELIA_AGENT_CLAUDECODE_COMMAND",
       "healthcheck_env": "AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND",
       "credential_env_any": [
-        "ANTHROPIC_API_KEY",
-        "ANTHROPIC_AUTH_TOKEN",
-        "CLAUDE_CODE_OAUTH_TOKEN"
+        "ANTHROPIC_API_KEY"
       ],
       "assigned_skills": [
         "skills://plugins/superpowers/systematic-debugging",
@@ -61,7 +58,11 @@
       "expected_cli_version": "2.1.312",
       "healthcheck_interval_seconds": 300,
       "healthcheck_timeout_seconds": 50,
-      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID"
+      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID",
+      "cli_path_env": "AURELIA_CLAUDE_CLI",
+      "provider_required_env": [
+        "ANTHROPIC_API_KEY"
+      ]
     },
     {
       "name": "KimiK3",
@@ -217,16 +218,12 @@
       "worker_agent": "DeepSeekHarness",
       "role": "Configurable DeepSeek-compatible research/engineering harness",
       "executable_candidates": [
-        "dsh",
-        "deepseek-harness",
-        "deepseek-code"
+        "dsh"
       ],
       "command_env": "AURELIA_AGENT_DEEPSEEKHARNESS_COMMAND",
       "healthcheck_env": "AURELIA_AGENT_DEEPSEEKHARNESS_HEALTHCHECK_COMMAND",
       "credential_env_any": [
-        "DEEPSEEK_API_KEY",
-        "OPENROUTER_API_KEY",
-        "LITELLM_API_KEY"
+        "DEEPSEEK_API_KEY"
       ],
       "assigned_skills": [
         "skills://plugins/superpowers/systematic-debugging",
@@ -252,25 +249,22 @@
       "expected_cli_version": "0.2.1-rc.2",
       "healthcheck_interval_seconds": 300,
       "healthcheck_timeout_seconds": 55,
-      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID"
+      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID",
+      "cli_path_env": "AURELIA_DSH_CLI",
+      "provider_required_env": [
+        "DEEPSEEK_API_KEY"
+      ]
     },
     {
       "name": "HermesAgent",
       "worker_agent": "HermesAgent",
       "role": "Configurable Hermes agent runtime",
       "executable_candidates": [
-        "hermes",
-        "hermes-agent"
+        "hermes"
       ],
       "command_env": "AURELIA_AGENT_HERMESAGENT_COMMAND",
       "healthcheck_env": "AURELIA_AGENT_HERMESAGENT_HEALTHCHECK_COMMAND",
-      "credential_env_any": [
-        "HERMES_API_KEY",
-        "OPENROUTER_API_KEY",
-        "DEEPSEEK_API_KEY",
-        "ANTHROPIC_API_KEY",
-        "OPENAI_API_KEY"
-      ],
+      "credential_env_any": [],
       "assigned_skills": [
         "skills://plugins/superpowers/systematic-debugging",
         "skills://plugins/superpowers/test-driven-development",
@@ -318,7 +312,35 @@
       "expected_cli_version": "v0.22.5",
       "healthcheck_interval_seconds": 300,
       "healthcheck_timeout_seconds": 55,
-      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID"
+      "runtime_process_user": "DEDICATED_NONROOT_AGENT_UID",
+      "cli_path_env": "AURELIA_HERMES_CLI",
+      "provider_required_env_by_provider": {
+        "deepseek": [
+          "DEEPSEEK_API_KEY"
+        ],
+        "openrouter": [
+          "OPENROUTER_API_KEY"
+        ],
+        "anthropic": [
+          "ANTHROPIC_API_KEY"
+        ],
+        "openai-api": [
+          "OPENAI_API_KEY"
+        ],
+        "gemini": [
+          "GEMINI_API_KEY"
+        ],
+        "xai": [
+          "XAI_API_KEY"
+        ],
+        "zai": [
+          "ZAI_API_KEY"
+        ]
+      },
+      "provider_model_envs": [
+        "AURELIA_HERMES_PROVIDER",
+        "AURELIA_HERMES_MODEL"
+      ]
     }
   ],
   "runtime_protocol": {
