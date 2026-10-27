@@ -45,7 +45,9 @@ def test_request_rejects_missing_capital_boundary():
 def test_rendered_prompt_is_bounded_and_contains_no_tool_authority():
     text = common.render_prompt(request(), agent_name="Test", provider_name="TestProvider")
     assert "cannot authorize, place, modify, or cancel broker orders" in text
-    assert "Do not attempt to execute commands, call tools" in text
+    assert "Do not attempt writes, order changes, account actions" in text
+    assert "Claude Code and Hermes have tools disabled" in text
+    assert "DeepSeek Harness uses a read-only permission preset" in text
     assert "Task payload JSON" in text
     with pytest.raises(ValueError, match="WORKER_TASK_PAYLOAD_TOO_LARGE"):
         huge = request()
