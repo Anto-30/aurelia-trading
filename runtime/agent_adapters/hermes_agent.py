@@ -62,7 +62,7 @@ def _version_ok(cli: str) -> bool:
             errors="replace",
             timeout=8,
             check=False,
-            env=dict(os.environ),
+            env=runtime_env,
         )
     except (OSError, subprocess.TimeoutExpired):
         return False
@@ -91,10 +91,11 @@ def _run_prompt(prompt: str, timeout_seconds: float) -> tuple[bool, str, str]:
         "--provider", provider,
         "--model", model,
         "--toolsets", "",
-        "--max-turns", "1",
         "--quiet",
         "--query-file", "-",
     ]
+    runtime_env = dict(os.environ)
+    runtime_env["HERMES_MAX_ITERATIONS"] = "1"
     try:
         completed = subprocess.run(
             command,
