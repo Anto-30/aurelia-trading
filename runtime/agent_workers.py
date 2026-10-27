@@ -174,9 +174,8 @@ class AgentWorkerSupervisor:
         if isinstance(provider_mapping, dict):
             provider = str(self.environment.get(provider_env, "")).strip().lower()
             selected_names = provider_mapping.get(provider, [])
-            if not provider or not isinstance(selected_names, list):
-                raise ValueError("WORKER_PROVIDER_SELECTION_MISSING")
-            credential_names.update(str(item) for item in selected_names)
+            if isinstance(selected_names, list):
+                credential_names.update(str(item) for item in selected_names)
         elif not credential_names:
             # Legacy custom profiles receive at most one configured provider key,
             # never every candidate credential in credential_env_any.
@@ -562,6 +561,8 @@ class AgentWorkerSupervisor:
             healthcheck_raw = str(self.environment.get(spec.healthcheck_env, "")).strip()
             command = self._command(spec.agent)
             healthcheck = self._healthcheck_command(spec.agent)
+            profile = self._runtime_specs.get(spec.agent, {})
+            built_in_adapter = not command_raw and profile.get("default_adapter_enabled") is True
             if command is None:
                 reason = "WORKER_COMMAND_INVALID" if command_raw else "WORKER_COMMAND_MISSING"
                 await self._publish_connector_required(spec.agent, reason)
@@ -582,8 +583,6 @@ class AgentWorkerSupervisor:
                     raise
                 continue
 
-            profile = self._runtime_specs.get(spec.agent, {})
-            built_in_adapter = not command_raw and profile.get("default_adapter_enabled") is True
             healthcheck_interval = (
                 max(1.0, float(profile.get("healthcheck_interval_seconds", 300)))
                 if built_in_adapter else self.interval_seconds
@@ -773,6 +772,13 @@ class AgentWorkerSupervisor:
             if not self._running:
                 break
             restart_count += 1
+            if built_in_adapter:
+                restart_delay = min(
+                    300.0,
+                    max(60.0, self.interval_seconds) * (2 ** min(restart_count, 3)),
+                )
+            else:
+                restart_delay = max(1.0, self.interval_seconds)
             await asyncio.sleep(restart_delay)
 
     def start(self) -> None:
