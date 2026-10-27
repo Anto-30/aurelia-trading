@@ -5,6 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from runtime.agent_adapters.common import (
     emit_response,
     failure_for_request,
@@ -50,7 +54,7 @@ def _version_ok(cli: str) -> bool:
         result = subprocess.run(
             [cli, "--version"],
             cwd=str(Path.home()),
-            stdin=subprocess.DEVNULL,
+            input=prompt,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             text=True,
