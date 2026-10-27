@@ -604,46 +604,47 @@ class AgentWorkerSupervisor:
                         health_env = self._worker_environment(
                             spec.agent, worker_id=worker_id, healthcheck_only=True
                         )
-                        if not await self._run_healthcheck(
+                        healthy = await self._run_healthcheck(
                             healthcheck, env=health_env, timeout_seconds=healthcheck_timeout
-                        ):
-                        if in_flight_task is not None and task_runner is not None:
-                            task_runner.cancel()
-                            try:
-                                await task_runner
-                            except (asyncio.CancelledError, Exception):
-                                pass
-                            await self._publish_task_result(
-                                agent=spec.agent,
-                                task=in_flight_task,
-                                outcome={
-                                    "status": "BLOCKED",
-                                    "result": {
-                                        "error_code": "WORKER_HEALTHCHECK_FAILED_DURING_TASK",
-                                        "task_id": in_flight_task.task_id,
+                        )
+                        if not healthy:
+                            if in_flight_task is not None and task_runner is not None:
+                                task_runner.cancel()
+                                try:
+                                    await task_runner
+                                except (asyncio.CancelledError, Exception):
+                                    pass
+                                await self._publish_task_result(
+                                    agent=spec.agent,
+                                    task=in_flight_task,
+                                    outcome={
+                                        "status": "BLOCKED",
+                                        "result": {
+                                            "error_code": "WORKER_HEALTHCHECK_FAILED_DURING_TASK",
+                                            "task_id": in_flight_task.task_id,
+                                        },
                                     },
-                                },
+                                )
+                                in_flight_task = None
+                                task_runner = None
+                            await self.federation.revoke_lease(
+                                spec.agent, worker_id=worker_id, reason="HEALTHCHECK_FAILED"
                             )
-                            in_flight_task = None
-                            task_runner = None
-                        await self.federation.revoke_lease(
-                            spec.agent, worker_id=worker_id, reason="HEALTHCHECK_FAILED"
-                        )
-                        await self.federation.publish(
-                            sender="AURELIA",
-                            recipients=(spec.agent,),
-                            message_type="CONNECTOR_UNHEALTHY",
-                            payload={
-                                "agent": spec.agent,
-                                "reason": "HEALTHCHECK_FAILED",
-                                "readiness_probe": "FAIL",
-                                "capital_authority": False,
-                                "secret_values_emitted": False,
-                            },
-                            correlation_id=f"healthcheck-failed:{spec.agent}:{restart_count}",
-                            priority=95,
-                            requires_response=False,
-                        )
+                            await self.federation.publish(
+                                sender="AURELIA",
+                                recipients=(spec.agent,),
+                                message_type="CONNECTOR_UNHEALTHY",
+                                payload={
+                                    "agent": spec.agent,
+                                    "reason": "HEALTHCHECK_FAILED",
+                                    "readiness_probe": "FAIL",
+                                    "capital_authority": False,
+                                    "secret_values_emitted": False,
+                                },
+                                correlation_id=f"healthcheck-failed:{spec.agent}:{restart_count}",
+                                priority=95,
+                                requires_response=False,
+                            )
                             break
                         last_healthcheck_at = asyncio.get_running_loop().time()
 
