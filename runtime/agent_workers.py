@@ -5,6 +5,7 @@ import json
 import os
 import re
 import shlex
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping
@@ -96,10 +97,63 @@ class AgentWorkerSupervisor:
         return command or None
 
     def _command(self, agent: str) -> list[str] | None:
-        return self._parse_command(self._env_name(agent))
+        explicit = self._parse_command(self._env_name(agent))
+        if explicit:
+            return explicit
+        profile = self._runtime_specs.get(agent, {})
+        if profile.get("default_adapter_enabled") is True:
+            relative = str(profile.get("adapter_script", "")).strip()
+            adapter = (ROOT / relative).resolve()
+            if relative and adapter.is_file() and ROOT.resolve() in adapter.parents:
+                return [sys.executable, str(adapter)]
+        return None
 
     def _healthcheck_command(self, agent: str) -> list[str] | None:
-        return self._parse_command(self._healthcheck_env_name(agent))
+        explicit = self._parse_command(self._healthcheck_env_name(agent))
+        if explicit:
+            return explicit
+        profile = self._runtime_specs.get(agent, {})
+        if profile.get("default_adapter_enabled") is True:
+            relative = str(profile.get("adapter_script", "")).strip()
+            adapter = (ROOT / relative).resolve()
+            if relative and adapter.is_file() and ROOT.resolve() in adapter.parents:
+                return [sys.executable, str(adapter), "--healthcheck"]
+        return None
+
+    @staticmethod
+    def _subprocess_identity(agent: str) -> tuple[int | None, int | None]:
+        """Run provider CLIs under dedicated non-root UIDs in the production container."""
+        if os.name != "posix" or not hasattr(os, "geteuid") or os.geteuid() != 0:
+            return None, None
+        profile = None
+        try:
+            matrix = json.loads(PROVIDER_MATRIX_PATH.read_text(encoding="utf-8"))
+            profile = next(
+                item for item in matrix.get("runtimes", [])
+                if isinstance(item, dict) and item.get("name") == agent
+            )
+        except (OSError, ValueError, StopIteration, json.JSONDecodeError):
+            profile = None
+        if not isinstance(profile, dict):
+            raise ValueError("AGENT_SANDBOX_PROFILE_MISSING")
+        uid = profile.get("sandbox_uid")
+        gid = profile.get("sandbox_gid")
+        if isinstance(uid, bool) or not isinstance(uid, int) or uid <= 0:
+            raise ValueError("AGENT_SANDBOX_UID_REQUIRED")
+        if isinstance(gid, bool) or not isinstance(gid, int) or gid <= 0:
+            raise ValueError("AGENT_SANDBOX_GID_REQUIRED")
+        try:
+            import grp
+            import pwd
+            account = pwd.getpwuid(uid)
+            group = grp.getgrgid(gid)
+        except (ImportError, KeyError) as exc:
+            raise ValueError("AGENT_SANDBOX_ACCOUNT_MISSING") from exc
+        if account.pw_gid != gid or not account.pw_name.startswith("aurelia-agent-"):
+            raise ValueError("AGENT_SANDBOX_ACCOUNT_MISMATCH")
+        if group.gr_name != account.pw_name:
+            raise ValueError("AGENT_SANDBOX_GROUP_MISMATCH")
+        return uid, gid
 
     def _worker_environment(
         self,
@@ -111,9 +165,25 @@ class AgentWorkerSupervisor:
     ) -> dict[str, str]:
         """Build a minimal worker environment; never copy arbitrary parent secrets."""
         spec = self._runtime_specs.get(agent, {})
-        credential_names = {
-            str(item) for item in spec.get("credential_env_any", [])
-        }
+        credential_names: set[str] = set()
+        pass_list = spec.get("credential_env_pass_list", [])
+        if isinstance(pass_list, list):
+            credential_names.update(str(item) for item in pass_list)
+        provider_mapping = spec.get("credential_env_by_provider")
+        provider_env = str(spec.get("provider_env", "")).strip()
+        if isinstance(provider_mapping, dict):
+            provider = str(self.environment.get(provider_env, "")).strip().lower()
+            selected_names = provider_mapping.get(provider, [])
+            if not provider or not isinstance(selected_names, list):
+                raise ValueError("WORKER_PROVIDER_SELECTION_MISSING")
+            credential_names.update(str(item) for item in selected_names)
+        elif not credential_names:
+            # Legacy custom profiles receive at most one configured provider key,
+            # never every candidate credential in credential_env_any.
+            for candidate in spec.get("credential_env_any", []):
+                if str(self.environment.get(str(candidate), "")).strip():
+                    credential_names.add(str(candidate))
+                    break
         extra_names = {
             str(item) for item in spec.get("runtime_env_allowlist", [])
         }
@@ -128,14 +198,17 @@ class AgentWorkerSupervisor:
         }
 
         home_root = Path(
-            str(self.environment.get("AURELIA_WORKER_HOME_ROOT", self.federation.lease_path.parent / "agent-homes"))
+            str(self.environment.get(
+                "AURELIA_WORKER_HOME_ROOT",
+                self.federation.lease_path.parent / "agent-homes",
+            ))
         ).expanduser()
         if not home_root.is_absolute():
             raise ValueError("AURELIA_WORKER_HOME_ROOT_MUST_BE_ABSOLUTE")
         home_root.mkdir(parents=True, exist_ok=True, mode=0o700)
         if home_root.is_symlink():
             raise ValueError("AURELIA_WORKER_HOME_ROOT_MUST_NOT_BE_SYMLINK")
-        os.chmod(home_root, 0o700)
+        os.chmod(home_root, 0o711 if os.geteuid() == 0 else 0o700)
         safe_agent = "".join(c.lower() if c.isalnum() else "-" for c in agent).strip("-")
         if not safe_agent:
             raise ValueError("AGENT_NAME_INVALID_FOR_WORKER_HOME")
@@ -144,9 +217,14 @@ class AgentWorkerSupervisor:
             raise ValueError("AGENT_WORKER_HOME_MUST_NOT_BE_SYMLINK")
         home.mkdir(parents=True, exist_ok=True, mode=0o700)
         os.chmod(home, 0o700)
+        sandbox_uid, sandbox_gid = self._subprocess_identity(agent)
+        if sandbox_uid is not None and sandbox_gid is not None:
+            os.chown(home, sandbox_uid, sandbox_gid)
         temporary = home / "tmp"
         temporary.mkdir(parents=True, exist_ok=True, mode=0o700)
         os.chmod(temporary, 0o700)
+        if sandbox_uid is not None and sandbox_gid is not None:
+            os.chown(temporary, sandbox_uid, sandbox_gid)
 
         child_env.update({
             "HOME": str(home),
@@ -200,12 +278,17 @@ class AgentWorkerSupervisor:
         """Run a bounded, output-suppressed provider readiness command."""
         process = None
         try:
+            uid, gid = self._subprocess_identity(env.get("AURELIA_AGENT_ID", ""))
             process = await asyncio.create_subprocess_exec(
                 *command,
                 stdin=asyncio.subprocess.DEVNULL,
                 stdout=asyncio.subprocess.DEVNULL,
                 stderr=asyncio.subprocess.DEVNULL,
                 env=env,
+                cwd=env.get("HOME"),
+                user=uid,
+                group=gid,
+                extra_groups=() if uid is not None else None,
             )
             return_code = await asyncio.wait_for(
                 process.wait(), timeout=self.healthcheck_timeout_seconds
@@ -289,12 +372,17 @@ class AgentWorkerSupervisor:
         stdout_task: asyncio.Task[bytes] | None = None
         wait_task: asyncio.Task[int] | None = None
         try:
+            uid, gid = self._subprocess_identity(agent)
             process = await asyncio.create_subprocess_exec(
                 *command,
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.DEVNULL,
                 env=env,
+                cwd=env.get("HOME"),
+                user=uid,
+                group=gid,
+                extra_groups=() if uid is not None else None,
             )
             assert process.stdin is not None and process.stdout is not None
             stdout_task = asyncio.create_task(self._read_bounded_stdout(process.stdout))
