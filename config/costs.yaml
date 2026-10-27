@@ -17,7 +17,7 @@ economics_observed_at_utc: null
 
 # These slippage values are scenario assumptions supplied for sensitivity testing.
 # They are not broker measurements and must not be represented as observed costs.
-# spread_points and commission_per_unit_usd remain null until supported by a
+# spread_points and commission_per_unit_usd_per_side remain null until supported by a
 # current source/contract quote. Null is UNKNOWN, not zero.
 resolutions:
   "1m":
@@ -37,7 +37,9 @@ resolutions:
     verified: false
     source: null
     observed_at_utc: null
+    spread_status: UNKNOWN
     slippage_status: ASSUMED_SCENARIO_NOT_MEASURED
+    commission_status: UNKNOWN
 
 max_slippage_multiplier: 2.0
 notes:
