@@ -1,8 +1,12 @@
 import unittest
+import tempfile
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 from research.labs.liquidity_sweep_strategy import OHLCBar, ResearchSignal
-from research.labs.liquidity_sweep_backtest import BacktestConfig, run_backtest, run_walk_forward
+from research.labs.liquidity_sweep_backtest import (
+    BacktestConfig, run_backtest, run_walk_forward, load_verified_cost_config,
+)
 
 START = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
@@ -49,6 +53,53 @@ class CostAwareBacktestTests(unittest.TestCase):
                                  train_window=3, test_window=2)
         self.assertEqual(len(folds), 2)
         self.assertLess(folds[0]["test_end"], folds[1]["test_start"])
+
+
+    def test_point_costs_are_applied_once_per_side_and_commission_scales_with_quantity(self):
+        bars = make_bars([
+            (100,101,99,100), (100,102,99,100),
+            (100,102,99,100), (100,111,99,108),
+        ])
+        result = run_backtest(
+            bars, [signal()], BacktestConfig(
+                1000, 2, 0.5, 0, spread_points=2, slippage_points=1
+            )
+        )
+        trade = result.trade_ledger[0]
+        self.assertAlmostEqual(trade["gross_pnl"], 20.0)
+        self.assertAlmostEqual(trade["execution_cost"], 8.0)
+        self.assertAlmostEqual(trade["commission"], 2.0)
+        self.assertAlmostEqual(trade["net_pnl"], 10.0)
+
+    def test_unknown_or_unverified_cost_config_fails_closed(self):
+        config = Path(__file__).resolve().parents[3] / "config" / "costs.yaml"
+        with self.assertRaisesRegex(ValueError, "COST_CONFIG_NOT_SOURCE_VERIFIED"):
+            load_verified_cost_config(str(config), "1m")
+
+    def test_verified_cost_loader_requires_all_fields_and_source_timestamp(self):
+        from datetime import datetime, timezone
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "costs.yaml"
+            observed = datetime.now(timezone.utc).isoformat()
+            config.write_text(
+                "schema_version: 1\\n"
+                "instrument: R_100\\n"
+                "status: VERIFIED_SOURCE_BACKED_COSTS\\n"
+                "resolutions:\\n"
+                "  \\\"1m\\\":\\n"
+                "    spread_points: 1.0\\n"
+                "    slippage_points: 1.5\\n"
+                "    commission_per_unit_usd_per_side: 0.1\\n"
+                "    verified: true\\n"
+                "    source: \\\"source-backed paper quote capture\\\"\\n"
+                "    observed_at_utc: \\\"" + observed + "\\\"\\n"
+                "    slippage_status: VERIFIED_MEASURED\\n",
+                encoding="utf-8",
+            )
+            loaded = load_verified_cost_config(str(config), "1m")
+            self.assertEqual(loaded["spread_points"], 1.0)
+            self.assertEqual(loaded["slippage_points"], 1.5)
+            self.assertEqual(loaded["commission_per_unit_usd_per_side"], 0.1)
 
     def test_invalid_configuration_rejected(self):
         with self.assertRaises(ValueError):
