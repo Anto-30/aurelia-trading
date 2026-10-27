@@ -7,7 +7,7 @@ This module is deliberately independent of runtime execution components.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import math
 from typing import Iterable, Mapping, Sequence
 
@@ -88,7 +88,10 @@ def resample_1m_to_15m(
     which is intentional for Deriv synthetic indices.
     """
     bars = [_parse_bar(item) for item in raw_bars]
-    times = [datetime.fromisoformat(b.timestamp_utc.replace("Z", "+00:00")) for b in bars]
+    times = [
+        datetime.fromisoformat(b.timestamp_utc.replace("Z", "+00:00")).astimezone(timezone.utc)
+        for b in bars
+    ]
     if any(a >= b for a, b in zip(times, times[1:])):
         raise ValueError("bar timestamps must be strictly increasing")
 
