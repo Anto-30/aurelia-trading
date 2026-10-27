@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+import hashlib
 import math
 from typing import Iterable, Sequence
 
@@ -75,8 +76,12 @@ def load_verified_cost_config(config_path: str, resolution: str) -> dict[str, fl
         import yaml
     except ImportError as exc:
         raise RuntimeError("PyYAML is required to load config/costs.yaml") from exc
-    with open(config_path, "r", encoding="utf-8") as stream:
-        document = yaml.safe_load(stream)
+    raw_config = open(config_path, "rb").read()
+    config_sha256 = hashlib.sha256(raw_config).hexdigest()
+    try:
+        document = yaml.safe_load(raw_config.decode("utf-8"))
+    except UnicodeDecodeError as exc:
+        raise ValueError("COST_CONFIG_NOT_UTF8") from exc
     if not isinstance(document, dict) or document.get("schema_version") != 1:
         raise ValueError("COST_CONFIG_SCHEMA_UNSUPPORTED")
     if document.get("instrument") != "R_100":
@@ -146,6 +151,7 @@ def load_verified_cost_config(config_path: str, resolution: str) -> dict[str, fl
     if age < 0 or age > 86400:
         raise ValueError(f"COST_PROFILE_STALE_OR_FUTURE:{resolution}")
     values["source"] = str(profile["source"])
+    values["cost_config_sha256"] = config_sha256
     values["usd_per_point_per_unit"] = usd_per_point
     values["contract_type"] = str(document["contract_type"])
     values["pnl_model"] = str(document["pnl_model"])
