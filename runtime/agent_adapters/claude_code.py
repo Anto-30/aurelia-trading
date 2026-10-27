@@ -60,7 +60,7 @@ def _version_ok(cli: str) -> bool:
             errors="replace",
             timeout=8,
             check=False,
-            env=runtime_env,
+            env=dict(os.environ),
         )
     except (OSError, subprocess.TimeoutExpired):
         return False
@@ -90,7 +90,7 @@ def _run_prompt(prompt: str, timeout_seconds: float) -> tuple[bool, str, str]:
             errors="replace",
             timeout=timeout_seconds,
             check=False,
-            env=dict(os.environ),
+            env=runtime_env,
         )
     except subprocess.TimeoutExpired:
         return False, "", "CLAUDE_CODE_REQUEST_TIMEOUT"
