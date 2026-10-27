@@ -175,18 +175,62 @@ def build_availability_report(
         if not name or not worker_agent or not command_env or not healthcheck_env:
             raise ValueError("AGENT_RUNTIME_SPEC_MISSING_REQUIRED_FIELD")
 
-        command_configured = bool(str(source_env.get(command_env, "")).strip())
-        healthcheck_configured = bool(str(source_env.get(healthcheck_env, "")).strip())
-        credential_env_names = [
-            str(key) for key in spec.get("credential_env_any", [])
-            if str(source_env.get(str(key), "")).strip()
-        ]
+        explicit_command_configured = bool(str(source_env.get(command_env, "")).strip())
+        explicit_healthcheck_configured = bool(str(source_env.get(healthcheck_env, "")).strip())
+        adapter_relative = str(spec.get("adapter_script", "")).strip()
+        adapter_path = (project_root / adapter_relative).resolve() if adapter_relative else None
+        builtin_adapter_available = bool(
+            spec.get("default_adapter_enabled") is True
+            and adapter_path is not None
+            and adapter_path.is_file()
+            and project_root.resolve() in adapter_path.parents
+        )
+        command_configured = explicit_command_configured or builtin_adapter_available
+        healthcheck_configured = explicit_healthcheck_configured or builtin_adapter_available
 
+        cli_path_env = str(spec.get("cli_path_env", "")).strip()
+        configured_cli_path = str(source_env.get(cli_path_env, "")).strip() if cli_path_env else ""
         executable_name = None
-        for candidate in spec.get("executable_candidates", []):
-            if find_executable(str(candidate)):
-                executable_name = str(candidate)
-                break
+        if configured_cli_path:
+            candidate_path = Path(configured_cli_path).expanduser()
+            if candidate_path.is_file() and os.access(candidate_path, os.X_OK):
+                executable_name = candidate_path.name
+        if executable_name is None:
+            for candidate in spec.get("executable_candidates", []):
+                if find_executable(str(candidate)):
+                    executable_name = str(candidate)
+                    break
+
+        provider = str(source_env.get(str(spec.get("provider_env", "")), "")).strip().lower() if spec.get("provider_env") else ""
+        provider_credential_map = spec.get("provider_required_env_by_provider")
+        if isinstance(provider_credential_map, dict):
+            expected_credential_names = [
+                str(name) for name in provider_credential_map.get(provider, [])
+            ] if provider else []
+        else:
+            expected_credential_names = [
+                str(name) for name in (
+                    spec.get("provider_required_env")
+                    or spec.get("credential_env_pass_list")
+                    or spec.get("credential_env_any", [])
+                )
+            ]
+        credential_env_names = [
+            name for name in expected_credential_names
+            if str(source_env.get(name, "")).strip()
+        ]
+        missing_prerequisites: list[str] = []
+        if builtin_adapter_available:
+            if executable_name is None:
+                missing_prerequisites.append("CLI_MISSING")
+            if provider_credential_map is not None and not provider:
+                missing_prerequisites.append("HERMES_PROVIDER_NOT_SELECTED")
+            if provider_credential_map is not None and provider and not expected_credential_names:
+                missing_prerequisites.append("HERMES_PROVIDER_UNSUPPORTED")
+            if provider_credential_map is not None and not str(source_env.get("AURELIA_HERMES_MODEL", "")).strip():
+                missing_prerequisites.append("HERMES_MODEL_NOT_SELECTED")
+            if expected_credential_names and not credential_env_names:
+                missing_prerequisites.append("PROVIDER_CREDENTIAL_MISSING")
         lease_is_active, lease_reason = _active_lease(
             lease_file, worker_agent, now=current_time
         )
@@ -196,6 +240,8 @@ def build_availability_report(
                 status = "WORKER_HEALTHCHECK_LEASE_ACTIVE"
             else:
                 status = "INCONSISTENT_ACTIVE_LEASE"
+        elif builtin_adapter_available and missing_prerequisites:
+            status = "BUILTIN_ADAPTER_BLOCKED"
         elif command_configured and not healthcheck_configured:
             status = "BLOCKED_HEALTHCHECK_MISSING"
         elif not command_configured and healthcheck_configured:
@@ -222,8 +268,13 @@ def build_availability_report(
             "status": status,
             "executable_found": executable_name is not None,
             "executable_name": executable_name,
+            "builtin_adapter_available": builtin_adapter_available,
+            "adapter_script": adapter_relative or None,
+            "explicit_worker_command_configured": explicit_command_configured,
+            "explicit_healthcheck_command_configured": explicit_healthcheck_configured,
             "worker_command_configured": command_configured,
             "healthcheck_command_configured": healthcheck_configured,
+            "missing_prerequisites": missing_prerequisites,
             "worker_lease_active": lease_is_active,
             "lease_block_reason": lease_reason,
             "provider_session": "NOT_INDEPENDENTLY_VERIFIED" if lease_is_active else "UNKNOWN",
@@ -257,6 +308,8 @@ def build_availability_report(
             "worker_commands_configured": sum(bool(item["worker_command_configured"]) for item in report_items),
             "healthcheck_commands_configured": sum(bool(item["healthcheck_command_configured"]) for item in report_items),
             "local_executables_found": sum(bool(item["executable_found"]) for item in report_items),
+            "builtin_adapters_available": sum(bool(item["builtin_adapter_available"]) for item in report_items),
+            "provider_prerequisite_blockers": sum(item["status"] == "BUILTIN_ADAPTER_BLOCKED" for item in report_items),
             "credential_env_markers_present": sum(bool(item["credential_env_present"]) for item in report_items),
             "runtimes_blocked_or_unconfigured": sum(item["status"] != "WORKER_HEALTHCHECK_LEASE_ACTIVE" for item in report_items),
             "plugins_bridged_to_local_workers": sum(item["plugin_connection_status"] == "CONNECTED" for item in report_items),
