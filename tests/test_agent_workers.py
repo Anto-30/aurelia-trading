@@ -115,7 +115,7 @@ async def wait_for_task_status(federation, task_id, status, *, attempts=40):
 
 @pytest.mark.asyncio
 async def test_configured_worker_processes_task_and_records_structured_result(tmp_path):
-    code = "import json,sys; t=json.load(sys.stdin); print(json.dumps({'status':'COMPLETED','result':{'task_id':t['task_id'],'answer':'ok'}}))"
+    code = "import json,sys; t=json.load(sys.stdin); print(json.dumps({'schema':'aurelia.agent_task_response.v1','task_id':t['task']['task_id'],'status':'COMPLETED','result':{'task_id':t['task']['task_id'],'answer':'ok'}}))"
     env = dict(os.environ)
     env["AURELIA_AGENT_CLAUDECODE_COMMAND"] = shlex.join([sys.executable, "-c", code])
     env["AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND"] = shlex.join([sys.executable, "-c", "pass"])
@@ -192,8 +192,17 @@ async def test_worker_timeout_marks_task_failed_and_kills_child(tmp_path):
 @pytest.mark.asyncio
 async def test_worker_redacts_configured_secret_values_from_task_results(tmp_path):
     secret = "sentinel-secret-value-9382"
-    response_json = json.dumps({"status": "COMPLETED", "result": {"note": secret}})
-    code = f"print({response_json!r})"
+    response_json = json.dumps({
+        "schema": "aurelia.agent_task_response.v1",
+        "task_id": "placeholder",
+        "status": "COMPLETED",
+        "result": {"note": secret},
+    })
+    code = (
+        "import json,sys; t=json.load(sys.stdin); r=json.loads("
+        + repr(response_json)
+        + "); r['task_id']=t['task']['task_id']; print(json.dumps(r))"
+    )
     env = dict(os.environ)
     env["AURELIA_AGENT_CLAUDECODE_COMMAND"] = shlex.join([sys.executable, "-c", code])
     env["AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND"] = shlex.join([sys.executable, "-c", "pass"])
