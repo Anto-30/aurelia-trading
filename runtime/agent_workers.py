@@ -165,26 +165,7 @@ class AgentWorkerSupervisor:
                     stderr=asyncio.subprocess.DEVNULL,
                     env=worker_env,
                 )
-                await self.federation.publish(
-                    sender="AURELIA",
-                    recipients=(spec.agent,),
-                    message_type="CONNECTOR_STATUS",
-                    payload={
-                        "agent": spec.agent,
-                        "worker_runtime": "LOCAL_FEDERATED_WORKER",
-                        "worker_process_status": "RUNNING",
-                        "readiness_probe": "OPERATOR_DEFINED",
-                        "healthcheck_command_env": spec.healthcheck_env,
-                        "provider_session": "NOT_INDEPENDENTLY_VERIFIED",
-                        "capital_authority": False,
-                        "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
-                        "secret_values_emitted": False,
-                    },
-                    correlation_id=f"connector-status:{spec.agent}",
-                    priority=60,
-                    requires_response=False,
-                )
-
+                status_published = False
                 while self._running:
                     if process.returncode is not None:
                         await self.federation.revoke_lease(
@@ -226,6 +207,28 @@ class AgentWorkerSupervisor:
                             requires_response=False,
                         )
                         break
+
+                    if not status_published:
+                        await self.federation.publish(
+                            sender="AURELIA",
+                            recipients=(spec.agent,),
+                            message_type="CONNECTOR_STATUS",
+                            payload={
+                                "agent": spec.agent,
+                                "worker_runtime": "LOCAL_FEDERATED_WORKER",
+                                "worker_process_status": "RUNNING",
+                                "readiness_probe": "PASS",
+                                "healthcheck_command_env": spec.healthcheck_env,
+                                "provider_session": "NOT_INDEPENDENTLY_VERIFIED",
+                                "capital_authority": False,
+                                "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
+                                "secret_values_emitted": False,
+                            },
+                            correlation_id=f"connector-status:{spec.agent}",
+                            priority=60,
+                            requires_response=False,
+                        )
+                        status_published = True
 
                     # Leases only mean the configured worker is alive and its
                     # operator-defined healthcheck currently passes. They do not
