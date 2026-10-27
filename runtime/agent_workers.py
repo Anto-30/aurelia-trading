@@ -149,7 +149,8 @@ class AgentWorkerSupervisor:
             group = grp.getgrgid(gid)
         except (ImportError, KeyError) as exc:
             raise ValueError("AGENT_SANDBOX_ACCOUNT_MISSING") from exc
-        if account.pw_gid != gid or not account.pw_name.startswith("aurelia-agent-"):
+        expected_user = str(profile.get("sandbox_user", "")).strip()
+        if not expected_user or account.pw_name != expected_user or account.pw_gid != gid:
             raise ValueError("AGENT_SANDBOX_ACCOUNT_MISMATCH")
         if group.gr_name != account.pw_name:
             raise ValueError("AGENT_SANDBOX_GROUP_MISMATCH")
@@ -207,7 +208,7 @@ class AgentWorkerSupervisor:
         home_root.mkdir(parents=True, exist_ok=True, mode=0o700)
         if home_root.is_symlink():
             raise ValueError("AURELIA_WORKER_HOME_ROOT_MUST_NOT_BE_SYMLINK")
-        os.chmod(home_root, 0o711 if os.geteuid() == 0 else 0o700)
+        os.chmod(home_root, 0o711 if os.name == "posix" and hasattr(os, "geteuid") and os.geteuid() == 0 else 0o700)
         safe_agent = "".join(c.lower() if c.isalnum() else "-" for c in agent).strip("-")
         if not safe_agent:
             raise ValueError("AGENT_NAME_INVALID_FOR_WORKER_HOME")
