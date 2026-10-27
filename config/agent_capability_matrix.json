@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_capability_matrix.v2",
-  "principle": "Equip each agent with common safe core plus least-privilege role-specific capabilities. External tools and trading repositories are non-authoritative; capital authority remains exclusively inside AURELIA's deterministic control plane. Freebuff account/API bridge sources are reference/sandbox only and cannot be used to evade upstream access restrictions.",
+  "principle": "Equip each agent with common safe core plus least-privilege role-specific capabilities. External tools and trading repositories are non-authoritative; capital authority remains exclusively inside AURELIA's deterministic control plane. Freebuff account/API bridge sources are reference/sandbox only and cannot be used to evade upstream access restrictions. DeepSeekHarness and HermesAgent are registered as non-capital runtime roles; registration is not evidence of an installed harness, credentials, or active worker.",
   "core_capabilities": [
     "repository_intelligence",
     "git_and_ci",
@@ -265,6 +265,46 @@
       "authority": "non-capital engineering; sandbox only; no production secrets",
       "runtime_status": "NOT_CONNECTED",
       "activation_gate": "Register an authorized Desktop Commander device and validate runtime identity before assigning live tools."
+    },
+    "DeepSeekHarness": {
+      "role": "DeepSeek model/harness worker for advisory research and engineering tasks after an explicit adapter is configured",
+      "skills": [
+        "aurelia-agent-core",
+        "evidence-reconciliation",
+        "security-review",
+        "ci-diagnostics",
+        "research-intelligence"
+      ],
+      "plugins": [],
+      "tools": [
+        "configured local worker adapter",
+        "persistent federation task queue",
+        "operator-defined readiness probe",
+        "structured JSON task protocol"
+      ],
+      "authority": "non-capital advisory runtime; no capital authority",
+      "runtime_status": "NOT_CONFIGURED",
+      "activation_gate": "Configure AURELIA_AGENT_DEEPSEEKHARNESS_COMMAND and AURELIA_AGENT_DEEPSEEKHARNESS_HEALTHCHECK_COMMAND in the secure runtime environment; pin the adapter and verify its readiness contract."
+    },
+    "HermesAgent": {
+      "role": "Hermes agent runtime for advisory task execution after an explicit adapter is configured",
+      "skills": [
+        "aurelia-agent-core",
+        "evidence-reconciliation",
+        "security-review",
+        "ci-diagnostics",
+        "research-intelligence"
+      ],
+      "plugins": [],
+      "tools": [
+        "configured local worker adapter",
+        "persistent federation task queue",
+        "operator-defined readiness probe",
+        "structured JSON task protocol"
+      ],
+      "authority": "non-capital advisory runtime; no capital authority",
+      "runtime_status": "NOT_CONFIGURED",
+      "activation_gate": "Configure AURELIA_AGENT_HERMESAGENT_COMMAND and AURELIA_AGENT_HERMESAGENT_HEALTHCHECK_COMMAND in the secure runtime environment; pin the adapter and verify its readiness contract."
     }
   },
   "forbidden_for_external_agents": [
