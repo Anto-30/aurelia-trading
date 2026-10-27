@@ -15,7 +15,6 @@ from scripts.agent_runtime_availability import build_availability_report
 
 ROOT = Path(__file__).resolve().parents[1]
 MATRIX = ROOT / "config" / "agent_runtime_provider_matrix.json"
-CAPITAL_AUTHORITY = "AURELIA"
 
 
 async def run_worker_probe(
@@ -24,7 +23,7 @@ async def run_worker_probe(
     require_active: bool = False,
     timeout_seconds: float = 5.0,
 ) -> dict[str, object]:
-    source_env = dict(os.environ if env is None else env)
+    runtime_env = dict(os.environ if env is None else env)
     matrix = json.loads(MATRIX.read_text(encoding="utf-8"))
     if matrix.get("schema") != "aurelia.agent_runtime_provider_matrix.v1":
         raise RuntimeError("AGENT_RUNTIME_PROVIDER_MATRIX_SCHEMA_INVALID")
@@ -46,128 +45,93 @@ async def run_worker_probe(
             source_hash="probe",
             lease_seconds=max(10.0, timeout_seconds * 3.0),
         )
-        # Use a throwaway federation store but preserve the actual provider command
-        # and healthcheck configuration from the caller's environment.
-        worker_env = {
-            key: value for key, value in source_env.items()
-            if key.startswith("AURELIA_AGENT_")
-        }
-        original_env = dict(os.environ)
+        supervisor = AgentWorkerSupervisor(
+            federation,
+            agents=tuple(roster),
+            interval_seconds=0.2,
+            env=runtime_env,
+        )
+        supervisor.start()
         try:
-            # The supervisor reads command environment variables directly; apply
-            # only worker-related settings in a controlled, reversible scope.
-            for key in list(os.environ):
-                if key.startswith("AURELIA_AGENT_") and key not in worker_env:
-                    os.environ.pop(key, None)
-            os.environ.update(worker_env)
-            supervisor = AgentWorkerSupervisor(
-                federation, agents=tuple(roster), interval_seconds=0.2,
-            )
-            supervisor.start()
-            try:
-                deadline = asyncio.get_running_loop().time() + max(0.1, timeout_seconds)
-                while asyncio.get_running_loop().time() < deadline:
-                    rows = []
-                    for spec in specs:
-                        name = str(spec["name"])
-                        active = name in federation.active_agents()
-                        rows.append({"name": name, "active": active})
-                    # Wait for configured worker/probe pairs to either acquire
-                    # liveness or report a blocked health status. Unconfigured
-                    # workers are immediately reported as blocked, not "active".
-                    expected = [
-                        name for name in roster
-                        if worker_env.get(f"AURELIA_AGENT_{''.join(c if c.isalnum() else '_' for c in name.upper())}_COMMAND", "").strip()
-                        and worker_env.get(f"AURELIA_AGENT_{''.join(c if c.isalnum() else '_' for c in name.upper())}_HEALTHCHECK_COMMAND", "").strip()
-                    ]
-                    active_expected = {row["name"] for row in rows if row["active"]}
-                    if set(expected).issubset(active_expected):
-                        break
-                    await asyncio.sleep(0.1)
+            deadline = asyncio.get_running_loop().time() + max(0.1, timeout_seconds)
+            expected_active = {
+                str(spec["name"]) for spec in specs
+                if str(runtime_env.get(str(spec["command_env"]), "")).strip()
+                and str(runtime_env.get(str(spec["healthcheck_env"]), "")).strip()
+            }
+            while asyncio.get_running_loop().time() < deadline:
+                if expected_active.issubset(set(federation.active_agents())):
+                    break
+                await asyncio.sleep(0.1)
 
-                reports: list[dict[str, object]] = []
-                failures: list[str] = []
-                for spec in specs:
-                    name = str(spec["name"])
-                    command_env = str(spec["command_env"])
-                    health_env = str(spec["healthcheck_env"])
-                    active = name in federation.active_agents()
-                    messages = federation.messages_for(name, limit=100)
-                    command_configured = bool(worker_env.get(command_env, "").strip())
-                    healthcheck_configured = bool(worker_env.get(health_env, "").strip())
-
-                    required_reason = None
-                    if not command_configured:
-                        required_reason = "WORKER_COMMAND_MISSING"
-                    elif not healthcheck_configured:
-                        required_reason = "WORKER_HEALTHCHECK_COMMAND_MISSING"
-
-                    if required_reason:
-                        reported = any(
-                            row.get("message_type") == "CONNECTOR_REQUIRED"
-                            and (row.get("payload") or {}).get("reason") == required_reason
-                            for row in messages
-                        )
-                        if active:
-                            failures.append(f"{name}:UNEXPECTED_ACTIVE_WITHOUT_READINESS_CONFIG")
-                        if not reported:
-                            failures.append(f"{name}:MISSING_BLOCKED_STATUS:{required_reason}")
-                        status = "BLOCKED_CONFIG"
-                    elif active:
-                        status = "WORKER_HEALTHCHECK_LEASE_ACTIVE"
-                    else:
-                        unhealthy = any(
-                            row.get("message_type") == "CONNECTOR_UNHEALTHY"
-                            for row in messages
-                        )
-                        status = "HEALTHCHECK_FAILED" if unhealthy else "CONFIGURED_NOT_ACTIVE"
-                        failures.append(f"{name}:{status}")
-
-                    reports.append({
-                        "name": name,
-                        "status": status,
-                        "worker_command_configured": command_configured,
-                        "healthcheck_command_configured": healthcheck_configured,
-                        "worker_lease_active": active,
-                        "provider_session": "NOT_INDEPENDENTLY_VERIFIED" if active else "UNKNOWN",
-                        "capital_authority": False,
-                    })
-
-                if require_active:
-                    for row in reports:
-                        if not row["worker_lease_active"]:
-                            failures.append(f"{row['name']}:ACTIVE_WORKER_REQUIRED")
-
-                return {
-                    "schema": "aurelia.agent_worker_probe.v1",
-                    "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-                    "status": "PASS" if not failures else "FAIL",
-                    "strict_active_required": require_active,
+            reports: list[dict[str, object]] = []
+            failures: list[str] = []
+            for spec in specs:
+                name = str(spec["name"])
+                command_configured = bool(str(runtime_env.get(str(spec["command_env"]), "")).strip())
+                healthcheck_configured = bool(str(runtime_env.get(str(spec["healthcheck_env"]), "")).strip())
+                active = name in federation.active_agents()
+                messages = federation.messages_for(name, limit=100)
+                reason = (
+                    "WORKER_COMMAND_MISSING" if not command_configured else
+                    "WORKER_HEALTHCHECK_COMMAND_MISSING" if not healthcheck_configured else None
+                )
+                if reason is not None:
+                    blocked_reported = any(
+                        row.get("message_type") == "CONNECTOR_REQUIRED"
+                        and (row.get("payload") or {}).get("reason") == reason
+                        for row in messages
+                    )
+                    status = "BLOCKED_CONFIG"
+                    if active:
+                        failures.append(f"{name}:UNEXPECTED_ACTIVE_WITHOUT_READINESS_CONFIG")
+                    if not blocked_reported:
+                        failures.append(f"{name}:MISSING_BLOCKED_STATUS:{reason}")
+                elif active:
+                    status = "WORKER_HEALTHCHECK_LEASE_ACTIVE"
+                else:
+                    unhealthy = any(row.get("message_type") == "CONNECTOR_UNHEALTHY" for row in messages)
+                    status = "HEALTHCHECK_FAILED" if unhealthy else "CONFIGURED_NOT_ACTIVE"
+                    failures.append(f"{name}:{status}")
+                if require_active and not active:
+                    failures.append(f"{name}:ACTIVE_WORKER_REQUIRED")
+                reports.append({
+                    "name": name,
+                    "status": status,
+                    "worker_command_configured": command_configured,
+                    "healthcheck_command_configured": healthcheck_configured,
+                    "worker_lease_active": active,
+                    "provider_session": "NOT_INDEPENDENTLY_VERIFIED" if active else "UNKNOWN",
                     "capital_authority": False,
-                    "live_order_submission": False,
-                    "active_worker_count": sum(bool(row["worker_lease_active"]) for row in reports),
-                    "configured_worker_count": sum(bool(row["worker_command_configured"]) for row in reports),
-                    "runtime_count": len(reports),
-                    "runtimes": reports,
-                    "failures": failures,
-                    "notes": [
-                        "BLOCKED_CONFIG is an accurate result for a provider with no configured command or readiness probe; it is not a claim the provider is running.",
-                        "Worker lease means configured process + operator-defined successful healthcheck only; provider identity and task quality require independent evidence.",
-                        "AURELIA is the deterministic capital-plane/control runtime, not a model subprocess.",
-                        "ChatGPT is the current supervisory conversation, not a persistent local worker. Dev requires a separately authorized host.",
-                    ],
-                }
-            finally:
-                await supervisor.stop()
+                })
+
+            return {
+                "schema": "aurelia.agent_worker_probe.v1",
+                "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+                "status": "PASS" if not failures else "FAIL",
+                "strict_active_required": require_active,
+                "capital_authority": False,
+                "live_order_submission": False,
+                "active_worker_count": sum(bool(item["worker_lease_active"]) for item in reports),
+                "configured_worker_count": sum(bool(item["worker_command_configured"]) for item in reports),
+                "runtime_count": len(reports),
+                "runtimes": reports,
+                "failures": failures,
+                "notes": [
+                    "BLOCKED_CONFIG means a provider adapter/readiness command is missing; this is not a running agent.",
+                    "A lease proves only that a configured process is alive and its operator-defined healthcheck passed.",
+                    "Provider identity, authenticated model session, and task quality require separate evidence.",
+                    "AURELIA remains the deterministic control plane; ChatGPT and Dev are not local model-worker processes.",
+                ],
+            }
         finally:
-            os.environ.clear()
-            os.environ.update(original_env)
+            await supervisor.stop()
 
 
 async def main_async() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--require-active", action="store_true",
-                        help="Fail unless all nine configured advisory runtime roles have active healthchecked worker leases.")
+                        help="Fail unless all provider runtimes have active healthchecked worker leases.")
     parser.add_argument("--timeout-seconds", type=float, default=5.0)
     parser.add_argument("--output", default=None)
     args = parser.parse_args()
@@ -177,12 +141,13 @@ async def main_async() -> int:
     )
     rendered = json.dumps(result, indent=2, sort_keys=True) + "\n"
     if args.output:
-        path = Path(args.output)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(rendered, encoding="utf-8")
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(rendered, encoding="utf-8")
     else:
         print(rendered, end="")
-    availability = build_availability_report()
+
+    availability = build_availability_report(env=os.environ)
     print("AGENT_RUNTIME_AVAILABLE=" + str(availability["summary"]["active_worker_leases"]))
     print("AGENT_RUNTIME_CONFIGURED=" + str(availability["summary"]["worker_commands_configured"]))
     print("AGENT_RUNTIME_ROSTER=" + str(availability["summary"]["total_runtimes"]))
