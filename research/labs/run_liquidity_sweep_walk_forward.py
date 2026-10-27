@@ -8,12 +8,14 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import subprocess
+import sys
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Sequence
 
-from research.labs.freeze_r100_dataset import verify_manifest, parse_aware_datetime
+from research.labs.freeze_r100_dataset import verify_manifest, parse_aware_datetime, sha256_file
 from research.labs.liquidity_sweep_strategy import (
     OHLCBar, ResearchSignal, generate_research_signals,
 )
@@ -26,7 +28,19 @@ CAPITAL_AUTHORITY = False
 LIVE_EXECUTION = False
 
 
-def load_sealed_bars(path: Path) -> list[OHLCBar]:
+def load_sealed_bars(
+    path: Path,
+    *,
+    expected_sha256: str,
+    expected_size: int,
+    expected_rows: int,
+) -> list[OHLCBar]:
+    # Verify both before and after parsing to catch stale/corrupt snapshots and
+    # ordinary time-of-check/time-of-use changes between manifest check and load.
+    if not path.is_file():
+        raise FileNotFoundError(f"SEALED_DATASET_MISSING:{path}")
+    if path.stat().st_size != expected_size or sha256_file(path) != expected_sha256:
+        raise ValueError(f"SEALED_DATASET_HASH_OR_SIZE_MISMATCH:{path}")
     bars: list[OHLCBar] = []
     with path.open("r", encoding="utf-8-sig", newline="") as stream:
         reader = csv.DictReader(stream)
@@ -40,8 +54,12 @@ def load_sealed_bars(path: Path) -> list[OHLCBar]:
                 open=float(row["open"]), high=float(row["high"]),
                 low=float(row["low"]), close=float(row["close"]),
             ))
+    if len(bars) != expected_rows:
+        raise ValueError(f"SEALED_DATASET_ROW_COUNT_MISMATCH:{path}")
     if len(bars) < 20:
         raise ValueError(f"DATASET_TOO_SHORT:{path}")
+    if path.stat().st_size != expected_size or sha256_file(path) != expected_sha256:
+        raise ValueError(f"SEALED_DATASET_CHANGED_DURING_LOAD:{path}")
     return bars
 
 
@@ -87,6 +105,16 @@ def fold_signal_factory(context_15m: Sequence[OHLCBar], *, pivot_window: int, re
     return generate
 
 
+def _current_git_commit(repo_root: Path) -> str:
+    try:
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=repo_root,
+            check=True, capture_output=True, text=True, timeout=5,
+        ).stdout.strip()
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError("GIT_COMMIT_UNKNOWN:run from a clean checked-out repository") from exc
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", default="data/frozen/r100_dual_resolution_manifest.json")
@@ -115,8 +143,24 @@ def main() -> int:
 
     # Verified source-backed costs are mandatory for the decision-grade run.
     cost = load_verified_cost_config(args.costs, args.resolution)
-    one_minute = load_sealed_bars(resolve_manifest_dataset(manifest_path, manifest["datasets"]["1m"]))
-    fifteen_minute = load_sealed_bars(resolve_manifest_dataset(manifest_path, manifest["datasets"]["15m"]))
+    one_minute_record = manifest["datasets"]["1m"]
+    fifteen_minute_record = manifest["datasets"]["15m"]
+    one_minute = load_sealed_bars(
+        resolve_manifest_dataset(manifest_path, one_minute_record),
+        expected_sha256=str(one_minute_record["sha256"]),
+        expected_size=int(one_minute_record["file_size_bytes"]),
+        expected_rows=int(one_minute_record["row_count"]),
+    )
+    fifteen_minute = load_sealed_bars(
+        resolve_manifest_dataset(manifest_path, fifteen_minute_record),
+        expected_sha256=str(fifteen_minute_record["sha256"]),
+        expected_size=int(fifteen_minute_record["file_size_bytes"]),
+        expected_rows=int(fifteen_minute_record["row_count"]),
+    )
+    repo_root = Path(__file__).resolve().parents[2]
+    git_commit = _current_git_commit(repo_root)
+    if not git_commit:
+        raise RuntimeError("GIT_COMMIT_UNKNOWN")
     if any(a.timestamp_utc >= b.timestamp_utc for a, b in zip(one_minute, one_minute[1:])):
         raise ValueError("1M_TIMESTAMP_ORDER_INVALID")
     if any(a.timestamp_utc >= b.timestamp_utc for a, b in zip(fifteen_minute, fifteen_minute[1:])):
@@ -154,6 +198,8 @@ def main() -> int:
     output = {
         "schema": "aurelia.liquidity_sweep_walk_forward.v1",
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "git_commit": git_commit,
+        "python_version": sys.version.split()[0],
         "status": "RESEARCH_ONLY_NOT_QUALIFIED",
         "qualification_allowed": False,
         "capital_authority": False,
@@ -171,6 +217,7 @@ def main() -> int:
         },
         "costs": {
             "config_path": args.costs,
+            "config_sha256": cost["cost_config_sha256"],
             "verified": True,
             "resolution": args.resolution,
             "spread_points": config.spread_points,
