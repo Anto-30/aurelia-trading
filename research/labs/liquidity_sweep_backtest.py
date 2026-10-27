@@ -53,7 +53,7 @@ class BacktestResult:
     trade_ledger: tuple[dict[str, object], ...]
     rejection_ledger: tuple[dict[str, object], ...]
     equity_curve: tuple[float, ...]
-    metrics: dict[str, float | int | None]
+    metrics: dict[str, float | int | str | None]
 
 
 def _slipped(
@@ -282,6 +282,9 @@ def run_backtest(
         peak = max(peak, equity)
         drawdown = (peak - equity) / peak if peak > 0 else 0.0
         max_drawdown = max(max_drawdown, drawdown)
+        entry_time = datetime.fromisoformat(entry_bar.timestamp_utc.replace("Z", "+00:00"))
+        exit_time = datetime.fromisoformat(bars[exit_index].timestamp_utc.replace("Z", "+00:00"))
+        duration_minutes = max(0, int((exit_time - entry_time).total_seconds() / 60))
         trade_ledger.append({
             "direction": signal.direction,
             "confirmation_index": signal.confirmation_index,
@@ -292,6 +295,10 @@ def run_backtest(
             "exit_timestamp_utc": bars[exit_index].timestamp_utc,
             "exit_price": exit_price,
             "exit_reason": exit_reason,
+            "duration_minutes": duration_minutes,
+            "price_unit": "index_points",
+            "pnl_currency": "USD",
+            "usd_per_point_per_unit": config.usd_per_point_per_unit,
             "quantity": config.quantity,
             "gross_pnl": raw_gross_pnl,
             "execution_cost": execution_cost,
@@ -314,6 +321,11 @@ def run_backtest(
         "expectancy_per_trade": sum(pnls) / len(pnls) if pnls else 0.0,
         "profit_factor": gross_profit / gross_loss if gross_loss > 0 else (None if gross_profit > 0 else 0.0),
         "max_drawdown": max_drawdown,
+        "drawdown_basis": "REALIZED_EQUITY_AFTER_CLOSED_TRADES_ONLY; excludes intratrade mark-to-market drawdown",
+        "avg_trade_duration_minutes": (
+            sum(int(trade["duration_minutes"]) for trade in trade_ledger) / len(trade_ledger)
+            if trade_ledger else 0.0
+        ),
         "net_pnl": sum(pnls),
         "ending_equity": equity,
         "execution_cost_paid": sum(float(t["execution_cost"]) for t in trade_ledger),
