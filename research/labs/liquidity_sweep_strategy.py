@@ -212,6 +212,7 @@ def generate_research_signals(
     lows: list[tuple[int, float]] = []
     pending: dict[str, dict[str, float | int]] = {}
     signals: list[ResearchSignal] = []
+    used_sweep_pivots: dict[str, set[int]] = {"long": set(), "short": set()}
     # i is the currently completed candle. A pivot at i-window only becomes
     # knowable now, after all required right-side bars have closed.
     for i in range(pivot_window * 2, len(bars) - 1):
@@ -260,14 +261,26 @@ def generate_research_signals(
         # A sweep/reclaim must use a previously confirmed pivot.
         if lows:
             level_idx, level = lows[-1]
-            if level_idx < i and bar.low < level and bar.close > level:
+            if (
+                level_idx < i
+                and level_idx not in used_sweep_pivots["long"]
+                and bar.low < level
+                and bar.close > level
+            ):
                 pending["long"] = {"sweep_index": i, "reclaim_index": i,
                                    "sweep_extreme": bar.low, "swept_level": level}
+                used_sweep_pivots["long"].add(level_idx)
         if highs:
             level_idx, level = highs[-1]
-            if level_idx < i and bar.high > level and bar.close < level:
+            if (
+                level_idx < i
+                and level_idx not in used_sweep_pivots["short"]
+                and bar.high > level
+                and bar.close < level
+            ):
                 pending["short"] = {"sweep_index": i, "reclaim_index": i,
                                     "sweep_extreme": bar.high, "swept_level": level}
+                used_sweep_pivots["short"].add(level_idx)
 
     # A post-generation gate keeps candidate detection independent from
     # context calculation while enforcing a strict point-in-time context check.
