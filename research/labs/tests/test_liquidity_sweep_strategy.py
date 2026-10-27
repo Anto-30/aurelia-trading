@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 from research.labs.liquidity_sweep_strategy import (
-    OHLCBar, generate_research_signals, _parse_bar,
+    OHLCBar, generate_research_signals, resample_1m_to_15m, _parse_bar,
 )
 
 
@@ -121,6 +121,31 @@ class LiquiditySweepStrategyTests(unittest.TestCase):
             generate_research_signals(bars_from_rows(rows), context_bars_15m=future,
                                        pivot_window=1), []
         )
+
+
+    def test_resampler_emits_only_complete_gap_free_15m_buckets(self):
+        start = datetime(2026, 1, 1, 0, 1, tzinfo=timezone.utc)
+        minute_bars = [
+            OHLCBar((start + timedelta(minutes=i)).isoformat().replace("+00:00", "Z"),
+                    100 + i, 101 + i, 99 + i, 100.5 + i)
+            for i in range(15)
+        ]
+        result = resample_1m_to_15m(minute_bars)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].timestamp_utc, "2026-01-01T00:15:00Z")
+        self.assertEqual(result[0].open, minute_bars[0].open)
+        self.assertEqual(result[0].close, minute_bars[-1].close)
+        self.assertEqual(result[0].high, max(bar.high for bar in minute_bars))
+        self.assertEqual(result[0].low, min(bar.low for bar in minute_bars))
+
+    def test_resampler_drops_bucket_with_missing_minute(self):
+        start = datetime(2026, 1, 1, 0, 1, tzinfo=timezone.utc)
+        minute_bars = [
+            OHLCBar((start + timedelta(minutes=i)).isoformat().replace("+00:00", "Z"),
+                    100, 101, 99, 100)
+            for i in range(15) if i != 7
+        ]
+        self.assertEqual(resample_1m_to_15m(minute_bars), [])
 
     def test_reward_risk_must_be_preregistered(self):
         with self.assertRaisesRegex(ValueError, "reward_risk"):
