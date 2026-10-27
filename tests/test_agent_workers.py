@@ -289,7 +289,7 @@ async def test_failed_readiness_probe_revokes_an_existing_active_lease(tmp_path)
             await asyncio.sleep(0.05)
         assert "ClaudeCode" not in federation.active_agents()
         assert any(
-            row.get("message_type") == "AGENT_LEASE_REVOKED"
+            row.get("event_type") == "AGENT_LEASE_REVOKED"
             and row.get("payload", {}).get("reason") == "HEALTHCHECK_FAILED"
             for row in federation.journal.read_all()
         )
