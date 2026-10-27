@@ -8,7 +8,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import math
-import os
 from typing import Optional
 
 RESEARCH_ONLY = True
@@ -139,8 +138,6 @@ class LiveExecutionLock:
 
     def __init__(self) -> None:
         self.is_unlocked = False
-        # Deliberately read nothing that could grant execution authority.
-        _ = os.environ.get("LIVE_TRADING_UNLOCKED")
 
     def can_execute(self) -> bool:
         raise PermissionError(
