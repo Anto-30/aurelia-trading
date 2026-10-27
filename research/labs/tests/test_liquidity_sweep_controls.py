@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from datetime import datetime, timedelta, timezone
 
 from research.labs.liquidity_sweep_controls import (
@@ -58,7 +59,8 @@ class SetupControlsTests(unittest.TestCase):
             manager.add_setup(Setup(NOW + timedelta(seconds=1), "LONG", 100, 95, 110), NOW)
 
     def test_live_lock_cannot_be_unlocked_by_environment_flag(self):
-        lock = LiveExecutionLock()
+        with patch.dict("os.environ", {"LIVE_TRADING_UNLOCKED": "true"}):
+            lock = LiveExecutionLock()
         self.assertFalse(lock.is_unlocked)
         with self.assertRaisesRegex(PermissionError, "no capital authority"):
             lock.can_execute()
