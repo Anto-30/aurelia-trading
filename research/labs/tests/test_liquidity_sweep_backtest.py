@@ -85,6 +85,7 @@ class CostAwareBacktestTests(unittest.TestCase):
                 "schema_version: 1",
                 "instrument: R_100",
                 "status: VERIFIED_SOURCE_BACKED_COSTS",
+                "max_slippage_sensitivity_multiplier: 2.0",
                 "pnl_model: LINEAR_INDEX_POINT_VALUE",
                 "bar_price_basis: MIDPOINT",
                 'contract_type: "test linear contract"',
@@ -108,6 +109,7 @@ class CostAwareBacktestTests(unittest.TestCase):
             self.assertEqual(loaded["spread_points"], 1.0)
             self.assertEqual(loaded["slippage_points"], 1.5)
             self.assertEqual(loaded["commission_per_unit_usd_per_side"], 0.1)
+            self.assertEqual(loaded["max_slippage_sensitivity_multiplier"], 2.0)
 
     def test_invalid_configuration_rejected(self):
         with self.assertRaises(ValueError):
