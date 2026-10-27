@@ -73,6 +73,15 @@ def test_rejects_insecure_file_permissions(tmp_path):
         validate_provider_secret_file(path)
 
 
+
+def test_rejects_read_only_mode_when_deployment_contract_requires_exact_0600(tmp_path):
+    path = tmp_path / "agent-provider-secrets.env"
+    path.write_text("ANTHROPIC_API_KEY=marker\n", encoding="utf-8")
+    path.chmod(0o400)
+    with pytest.raises(ValueError, match="AGENT_PROVIDER_SECRET_FILE_PERMISSIONS_MUST_BE_0600"):
+        validate_provider_secret_file(path)
+
+
 @pytest.mark.skipif(not hasattr(os, "symlink"), reason="symlinks unsupported")
 def test_rejects_symlinked_secret_file(tmp_path):
     target = write_secure(tmp_path / "real.env", "ANTHROPIC_API_KEY=marker\n")
