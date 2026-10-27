@@ -42,7 +42,7 @@ class FreezeR100DatasetTests(unittest.TestCase):
             self.assertEqual(manifest["datasets"]["1m"]["row_count"], 45)
             self.assertEqual(manifest["datasets"]["15m"]["row_count"], 3)
             self.assertEqual(verify_manifest(frozen / "r100_dual_resolution_manifest.json")["status"], "SEALED")
-            self.assertEqual(raw.stat().st_mode & 0o222, raw.stat().st_mode & 0o222)
+            self.assertNotEqual(raw.stat().st_mode & 0o222, 0, "raw source must not be chmod-ed read-only")
             self.assertEqual((frozen / "r100_1m.csv").stat().st_mode & 0o222, 0)
             self.assertEqual((frozen / "r100_15m.csv").stat().st_mode & 0o222, 0)
 
