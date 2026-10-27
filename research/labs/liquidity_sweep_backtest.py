@@ -82,8 +82,11 @@ def run_backtest(
         if signal.direction not in ("long", "short"):
             rejection_ledger.append({"confirmation_index": signal.confirmation_index, "reason": "INVALID_DIRECTION"})
             continue
-        if not (0 <= signal.entry_index < len(bars)):
-            rejection_ledger.append({"confirmation_index": signal.confirmation_index, "reason": "ENTRY_INDEX_OUT_OF_RANGE"})
+        if not (
+            0 <= signal.sweep_index <= signal.reclaim_index
+            < signal.confirmation_index < signal.entry_index < len(bars)
+        ):
+            rejection_ledger.append({"confirmation_index": signal.confirmation_index, "reason": "INVALID_SIGNAL_INDEX_ORDER"})
             continue
         if signal.entry_index <= last_exit_index:
             rejection_ledger.append({"confirmation_index": signal.confirmation_index, "reason": "OVERLAPPING_POSITION"})
@@ -94,8 +97,11 @@ def run_backtest(
             rejection_ledger.append({"confirmation_index": signal.confirmation_index, "reason": "NONFINITE_SIGNAL"})
             continue
         entry_bar = bars[signal.entry_index]
-        # Reprice from the supplied bar's actual open; never trust a stale
-        # cached entry price if data and signal ledger differ.
+        # The generator's candidate records the next-bar open. A mismatch
+        # indicates a stale or misaligned signal ledger and must be rejected.
+        if not math.isclose(signal.entry_price, entry_bar.open, rel_tol=0.0, abs_tol=1e-12):
+            rejection_ledger.append({"confirmation_index": signal.confirmation_index, "reason": "ENTRY_PRICE_MISMATCH"})
+            continue
         raw_entry = entry_bar.open
         entry = _slipped(raw_entry, signal.direction, entry=True, bps=config.slippage_bps)
         stop = signal.stop_price
