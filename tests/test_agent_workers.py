@@ -255,6 +255,87 @@ async def test_worker_redacts_configured_secret_values_from_task_results(tmp_pat
     finally:
         await supervisor.stop()
 
+
+@pytest.mark.asyncio
+async def test_failed_readiness_probe_revokes_an_existing_active_lease(tmp_path):
+    marker = tmp_path / "provider-ready"
+    marker.write_text("ready", encoding="utf-8")
+    health_code = (
+        "import pathlib,sys; "
+        "sys.exit(0 if pathlib.Path(" + repr(str(marker)) + ").exists() else 9)"
+    )
+    env = dict(os.environ)
+    env["AURELIA_AGENT_CLAUDECODE_COMMAND"] = shlex.join([sys.executable, "-c", "pass"])
+    env["AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND"] = shlex.join([sys.executable, "-c", health_code])
+    federation = make_federation(tmp_path)
+    supervisor = AgentWorkerSupervisor(
+        federation, agents=("ClaudeCode",), interval_seconds=0.05, env=env,
+        healthcheck_timeout_seconds=1.0,
+    )
+    supervisor.start()
+    try:
+        for _ in range(40):
+            if "ClaudeCode" in federation.active_agents():
+                break
+            await asyncio.sleep(0.025)
+        assert "ClaudeCode" in federation.active_agents()
+        marker.unlink()
+        for _ in range(40):
+            if "ClaudeCode" not in federation.active_agents() and any(
+                row.get("message_type") == "CONNECTOR_UNHEALTHY"
+                for row in federation.messages_for("ClaudeCode")
+            ):
+                break
+            await asyncio.sleep(0.05)
+        assert "ClaudeCode" not in federation.active_agents()
+        assert any(
+            row.get("message_type") == "AGENT_LEASE_REVOKED"
+            and row.get("payload", {}).get("reason") == "HEALTHCHECK_FAILED"
+            for row in federation.journal.read_all()
+        )
+    finally:
+        await supervisor.stop()
+
+
+@pytest.mark.asyncio
+async def test_stopping_supervisor_kills_inflight_task_adapter(tmp_path):
+    marker = tmp_path / "adapter-finished"
+    code = (
+        "import json,sys,time,pathlib; t=json.load(sys.stdin); time.sleep(0.8); "
+        "pathlib.Path(" + repr(str(marker)) + ").write_text('done'); "
+        "print(json.dumps({'schema':'aurelia.agent_task_response.v1',"
+        "'task_id':t['task']['task_id'],'status':'COMPLETED','result':{}}))"
+    )
+    env = dict(os.environ)
+    env["AURELIA_AGENT_CLAUDECODE_COMMAND"] = shlex.join([sys.executable, "-c", code])
+    env["AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND"] = shlex.join([sys.executable, "-c", "pass"])
+    federation = make_federation(tmp_path)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING", payload={}, correlation_id="cancel-inflight-adapter",
+        assigned_agent="ClaudeCode",
+    )
+    supervisor = AgentWorkerSupervisor(
+        federation, agents=("ClaudeCode",), interval_seconds=0.025, env=env,
+        task_timeout_seconds=3.0,
+    )
+    supervisor.start()
+    try:
+        claimed = False
+        for _ in range(40):
+            rows = federation._load_tasks()
+            task_row = next(row for row in rows if row["task_id"] == task.task_id)
+            if task_row["status"] == "CLAIMED":
+                claimed = True
+                break
+            await asyncio.sleep(0.025)
+        assert claimed
+        await asyncio.sleep(0.05)
+    finally:
+        await supervisor.stop()
+    await asyncio.sleep(0.9)
+    assert not marker.exists(), "Cancelled adapter process continued running after supervisor stop"
+    assert next(row for row in federation._load_tasks() if row["task_id"] == task.task_id)["status"] == "CLAIMED"
+
 @pytest.mark.asyncio
 async def test_failed_readiness_probe_revokes_agent_lease(tmp_path, monkeypatch):
     monkeypatch.setenv("AURELIA_AGENT_CLAUDECODE_COMMAND", "python -c 'import time; time.sleep(2)'")
