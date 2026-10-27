@@ -68,7 +68,10 @@ def _slipped(
     """Apply adverse slippage and half-spread on each side of a midpoint-price bar."""
     impact = price * bps / 10_000.0 + slippage_points + spread_points / 2.0
     is_buy = (direction == "long" and entry) or (direction == "short" and not entry)
-    return price + impact if is_buy else price - impact
+    adjusted = price + impact if is_buy else price - impact
+    if not math.isfinite(adjusted) or adjusted <= 0:
+        raise ValueError("NON_POSITIVE_PRICE_AFTER_EXECUTION_COSTS")
+    return adjusted
 
 
 def load_verified_cost_config(config_path: str, resolution: str) -> dict[str, float | str]:
