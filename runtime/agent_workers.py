@@ -211,6 +211,11 @@ class AgentWorkerSupervisor:
                 process.wait(), timeout=self.healthcheck_timeout_seconds
             )
             return return_code == 0
+        except asyncio.CancelledError:
+            if process is not None and process.returncode is None:
+                process.kill()
+                await process.wait()
+            raise
         except (OSError, ValueError, asyncio.TimeoutError):
             if process is not None and process.returncode is None:
                 process.kill()
@@ -301,6 +306,16 @@ class AgentWorkerSupervisor:
                 asyncio.gather(stdout_task, wait_task),
                 timeout=self.task_timeout_seconds,
             )
+        except asyncio.CancelledError:
+            if process is not None and process.returncode is None:
+                process.kill()
+                await process.wait()
+            pending = [item for item in (stdout_task, wait_task) if item is not None and not item.done()]
+            for item in pending:
+                item.cancel()
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
+            raise
         except asyncio.TimeoutError:
             if process is not None and process.returncode is None:
                 process.kill()
@@ -309,6 +324,9 @@ class AgentWorkerSupervisor:
                 stdout_task.cancel()
             if wait_task is not None:
                 wait_task.cancel()
+            pending = [item for item in (stdout_task, wait_task) if item is not None and not item.done()]
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
             return {
                 "status": "FAILED",
                 "result": {"error_code": "WORKER_COMMAND_TIMEOUT", "task_id": task.task_id},
@@ -322,6 +340,9 @@ class AgentWorkerSupervisor:
                 stdout_task.cancel()
             if wait_task is not None:
                 wait_task.cancel()
+            pending = [item for item in (stdout_task, wait_task) if item is not None and not item.done()]
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
             error_code = str(exc) if str(exc) == "WORKER_RESPONSE_TOO_LARGE" else "WORKER_REQUEST_WRITE_FAILED"
             return {
                 "status": "FAILED",
@@ -336,6 +357,9 @@ class AgentWorkerSupervisor:
                 stdout_task.cancel()
             if wait_task is not None:
                 wait_task.cancel()
+            pending = [item for item in (stdout_task, wait_task) if item is not None and not item.done()]
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
             return {
                 "status": "FAILED",
                 "result": {"error_code": "WORKER_COMMAND_START_OR_IO_FAILED", "task_id": task.task_id},
