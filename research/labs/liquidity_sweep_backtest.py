@@ -80,10 +80,12 @@ def load_verified_cost_config(config_path: str, resolution: str) -> dict[str, fl
         raise ValueError("COST_CONFIG_SCHEMA_UNSUPPORTED")
     if document.get("instrument") != "R_100":
         raise ValueError("COST_CONFIG_INSTRUMENT_MISMATCH")
+    if document.get("status") != "VERIFIED_SOURCE_BACKED_COSTS":
+        raise ValueError("COST_CONFIG_NOT_SOURCE_VERIFIED")
     profile = document.get("resolutions", {}).get(resolution)
     if not isinstance(profile, dict):
         raise ValueError(f"COST_PROFILE_MISSING:{resolution}")
-    required = ("spread_points", "slippage_points", "commission_per_unit_usd")
+    required = ("spread_points", "slippage_points", "commission_per_unit_usd_per_side")
     values: dict[str, float] = {}
     for key in required:
         raw = profile.get(key)
@@ -98,6 +100,8 @@ def load_verified_cost_config(config_path: str, resolution: str) -> dict[str, fl
         values[key] = value
     if profile.get("verified") is not True:
         raise ValueError(f"COST_PROFILE_UNVERIFIED:{resolution}")
+    if profile.get("slippage_status") not in ("VERIFIED_MEASURED", "VERIFIED_CONTRACT_QUOTE"):
+        raise ValueError(f"COST_SLIPPAGE_NOT_VERIFIED:{resolution}")
     if not str(profile.get("source") or "").strip():
         raise ValueError(f"COST_SOURCE_MISSING:{resolution}")
     try:
