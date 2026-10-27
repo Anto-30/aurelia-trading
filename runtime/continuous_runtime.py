@@ -30,8 +30,48 @@ from runtime.strategy.research_supervisor import build_research_signal_superviso
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AGENTS = (
     "ClaudeCode", "KimiK3", "GrokBot", "GoogleAgentSkills",
-    "GLM", "PlaywrightCLI", "AURELIA",
+    "GLM", "PlaywrightCLI", "JEV", "DeepSeekHarness", "HermesAgent", "AURELIA",
 )
+
+
+def load_runtime_agent_roster(root: Path = ROOT) -> tuple[str, ...]:
+    """Load the single canonical process-managed worker roster.
+
+    ChatGPT is a current-conversation supervisor, Dev requires an authorized
+    connected host, and AURELIA is the deterministic control plane rather than
+    a model subprocess. The first two must never be spawned as local workers;
+    AURELIA is included only for federation routing/heartbeats.
+    """
+    provider_path = root / "config" / "agent_runtime_provider_matrix.json"
+    capability_path = root / "config" / "agent_capability_matrix.json"
+    try:
+        provider_matrix = json.loads(provider_path.read_text(encoding="utf-8"))
+        capability_matrix = json.loads(capability_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        raise RuntimeError("AGENT_RUNTIME_ROSTER_CONFIG_UNREADABLE") from exc
+
+    if provider_matrix.get("schema") != "aurelia.agent_runtime_provider_matrix.v1":
+        raise RuntimeError("AGENT_RUNTIME_PROVIDER_MATRIX_SCHEMA_INVALID")
+    roster = provider_matrix.get("runtime_managed_agent_roster")
+    runtime_specs = provider_matrix.get("runtimes")
+    non_worker_roles = provider_matrix.get("non_worker_roles", {})
+    if not isinstance(roster, list) or not roster or not isinstance(runtime_specs, list):
+        raise RuntimeError("AGENT_RUNTIME_ROSTER_MISSING")
+    if any(not isinstance(name, str) or not name.strip() for name in roster):
+        raise RuntimeError("AGENT_RUNTIME_ROSTER_INVALID")
+    if len(set(roster)) != len(roster):
+        raise RuntimeError("AGENT_RUNTIME_ROSTER_DUPLICATE")
+    if set(roster) & {"AURELIA", "ChatGPT", "Dev"}:
+        raise RuntimeError("NON_WORKER_ROLE_INCLUDED_IN_RUNTIME_ROSTER")
+    spec_names = [str(spec.get("name", "")) for spec in runtime_specs if isinstance(spec, dict)]
+    if len(spec_names) != len(runtime_specs) or set(spec_names) != set(roster) or len(spec_names) != len(set(spec_names)):
+        raise RuntimeError("AGENT_RUNTIME_ROSTER_PROFILE_MISMATCH")
+    if not isinstance(non_worker_roles, dict) or not {"AURELIA", "ChatGPT", "Dev"}.issubset(non_worker_roles):
+        raise RuntimeError("AGENT_NON_WORKER_ROLE_BOUNDARY_MISSING")
+    registered_agents = capability_matrix.get("agents", {})
+    if not isinstance(registered_agents, dict) or not set(roster).issubset(registered_agents):
+        raise RuntimeError("AGENT_RUNTIME_ROSTER_NOT_REGISTERED_IN_CAPABILITY_MATRIX")
+    return tuple(sorted(set(roster) | {"AURELIA"}))
 
 
 def resolve_runtime_symbols(
@@ -134,18 +174,9 @@ async def start_continuous_runtime(
             config_hash=config_hash,
             source_hash=source_hash,
             lease_seconds=float(os.getenv("AURELIA_AGENT_LEASE_SECONDS", "45")),
-            performance_path=os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/var/lib/aurelia/agent-performance.json"),
+            performance_path=os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/tmp/aurelia/agent-performance.json"),
         )
-    agents = DEFAULT_AGENTS
-    matrix_path = ROOT / "config" / "agent_capability_matrix.json"
-    if matrix_path.exists():
-        try:
-            matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
-            configured = tuple(sorted((matrix.get("agents") or {}).keys()))
-            if configured:
-                agents = tuple(sorted(set(configured) | {"AURELIA"}))
-        except (OSError, ValueError, json.JSONDecodeError):
-            pass
+    agents = load_runtime_agent_roster(ROOT)
     if federation_supervisor is None:
         federation_supervisor = AgentFederationSupervisor(
             federation,
@@ -155,7 +186,7 @@ async def start_continuous_runtime(
         )
         federation_supervisor.start()
     performance_ledger = AgentPerformanceLedger(
-        os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/var/lib/aurelia/agent-performance.json"),
+        os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/tmp/aurelia/agent-performance.json"),
         decay_days=float(os.getenv("AURELIA_AGENT_SCORE_DECAY_DAYS", "90")),
     )
     runtime = ContinuousRuntime(federation, federation_supervisor, performance_ledger=performance_ledger)
@@ -258,7 +289,7 @@ async def start_continuous_runtime(
         maximum_transactions=999,
     )
     daily_risk_guard = PersistentDailyRiskGuard(
-        os.getenv("AURELIA_DAILY_RISK_PATH", "/var/lib/aurelia/daily-risk.json"),
+        os.getenv("AURELIA_DAILY_RISK_PATH", "/tmp/aurelia/daily-risk.json"),
         max_daily_drawdown_pct=float(os.getenv("AURELIA_MAX_DAILY_DRAWDOWN_PCT", "0.03")),
         max_consecutive_losses=int(os.getenv("AURELIA_MAX_CONSECUTIVE_LOSSES", "3")),
         max_balance_age_seconds=float(os.getenv("AURELIA_MAX_BALANCE_AGE_SECONDS", "15")),
@@ -287,7 +318,7 @@ async def start_continuous_runtime(
         max_trade_risk_pct=float(os.getenv("AURELIA_MAX_TRADE_RISK_PCT", "0.01")),
         kill_switch_state_path=os.getenv(
             "AURELIA_KILL_SWITCH_STATE_PATH",
-            "/var/lib/aurelia/kill-switch-state.json",
+            "/tmp/aurelia/kill-switch-state.json",
         ),
         operator_reset_path=os.getenv(
             "AURELIA_OPERATOR_RESET_PATH",

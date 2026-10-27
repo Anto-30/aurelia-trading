@@ -124,6 +124,28 @@
       ],
       "runtime_status": "NOT_CONNECTED",
       "activation_gate": "Authorized host must be connected and runtime identity verified before tool execution."
+    },
+    "DeepSeekHarness": {
+      "role": "non-capital DeepSeek harness runtime; available only through a configured and health-checked adapter",
+      "capabilities": [
+        "structured-task-execution",
+        "advisory-research",
+        "provider-readiness",
+        "evidence-return"
+      ],
+      "runtime_status": "NOT_CONFIGURED",
+      "activation_gate": "Configure and verify AURELIA_AGENT_DEEPSEEKHARNESS_COMMAND and AURELIA_AGENT_DEEPSEEKHARNESS_HEALTHCHECK_COMMAND."
+    },
+    "HermesAgent": {
+      "role": "non-capital Hermes agent runtime; available only through a configured and health-checked adapter",
+      "capabilities": [
+        "structured-task-execution",
+        "advisory-research",
+        "provider-readiness",
+        "evidence-return"
+      ],
+      "runtime_status": "NOT_CONFIGURED",
+      "activation_gate": "Configure and verify AURELIA_AGENT_HERMESAGENT_COMMAND and AURELIA_AGENT_HERMESAGENT_HEALTHCHECK_COMMAND."
     }
   },
   "routing_rules": [

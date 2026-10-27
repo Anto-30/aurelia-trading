@@ -16,7 +16,7 @@ from pathlib import Path
 from threading import Thread
 
 from runtime.adapters.deriv_adapter import DerivAdapter
-from runtime.continuous_runtime import start_continuous_runtime
+from runtime.continuous_runtime import load_runtime_agent_roster, start_continuous_runtime
 from assurance.evidence_writer import build_evidence, payload_sha256
 from runtime.core.events import event_envelope, sha256
 from runtime.core.health import (
@@ -463,15 +463,7 @@ async def main() -> None:
     )
     federation_supervisor = AgentFederationSupervisor(
         federation,
-        agents=(
-            "ClaudeCode",
-            "KimiK3",
-            "GrokBot",
-            "GoogleAgentSkills",
-            "GLM",
-            "PlaywrightCLI",
-            "AURELIA",
-        ),
+        agents=load_runtime_agent_roster(ROOT),
         event_queue=federation_queue,
     )
     federation_supervisor.start()

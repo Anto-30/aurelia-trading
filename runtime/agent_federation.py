@@ -372,6 +372,44 @@ class PersistentAgentFederation:
         )
         return lease
 
+
+    async def revoke_lease(
+        self,
+        agent: str,
+        *,
+        reason: str,
+        worker_id: str | None = None,
+    ) -> bool:
+        """Immediately withdraw liveness when a worker/provider probe fails.
+
+        If worker_id is supplied, a stale supervisor cannot revoke a newer
+        worker's lease for the same agent.
+        """
+        if not str(reason).strip():
+            raise ValueError("LEASE_REVOCATION_REASON_REQUIRED")
+        async with self._lock:
+            leases = self._load_leases()
+            current = leases.get(agent)
+            if current is None:
+                return False
+            if worker_id is not None and current.get("worker_id") != worker_id:
+                return False
+            removed = dict(current)
+            del leases[agent]
+            self._save_leases(leases)
+        self._append(
+            "AGENT_LEASE_REVOKED",
+            {
+                "agent": agent,
+                "worker_id": removed.get("worker_id"),
+                "reason": reason,
+                "capital_authority": False,
+            },
+            correlation_id=f"agent:{agent}:lease-revoked",
+        )
+        return True
+
+
     async def register_agents(self, agents: Iterable[str]) -> None:
         """Register the configured roster without creating a liveness lease.
 

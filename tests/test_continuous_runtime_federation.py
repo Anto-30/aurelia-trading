@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 from runtime.agent_federation import AgentFederationSupervisor, PersistentAgentFederation
-from runtime.continuous_runtime import start_continuous_runtime
+from runtime.continuous_runtime import load_runtime_agent_roster, start_continuous_runtime
 from runtime.core.state import RuntimeStateMachine
 
 
@@ -40,6 +40,17 @@ class ContinuousRuntimeFederationTests(unittest.IsolatedAsyncioTestCase):
                 os.environ.clear()
                 os.environ.update(original)
 
+
+
+    def test_runtime_worker_roster_matches_runtime_provider_matrix_and_excludes_nonlocal_roles(self):
+        roster = load_runtime_agent_roster()
+        self.assertIn("AURELIA", roster)
+        self.assertIn("ClaudeCode", roster)
+        self.assertIn("DeepSeekHarness", roster)
+        self.assertIn("HermesAgent", roster)
+        self.assertNotIn("ChatGPT", roster)
+        self.assertNotIn("Dev", roster)
+        self.assertEqual(len(roster), len(set(roster)))
 
     def test_live_mode_requires_explicit_allowlisted_symbols(self):
         from runtime.continuous_runtime import resolve_runtime_symbols

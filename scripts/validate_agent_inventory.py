@@ -15,6 +15,8 @@ AGENTS = {
     "AURELIA",
     "ChatGPT",
     "Dev",
+    "DeepSeekHarness",
+    "HermesAgent",
 }
 
 

@@ -1,0 +1,51 @@
+schema_version: 1
+instrument: R_100
+currency: USD
+price_unit: index_points
+status: UNVERIFIED_COST_ASSUMPTIONS
+qualification_allowed: false
+
+# USD P&L cannot be calculated from price points until the actual contract model
+# and point value are verified. Do not set these fields from an arbitrary guess.
+pnl_model: null
+bar_price_basis: null
+contract_type: null
+usd_per_point_per_unit: null
+economics_verified: false
+economics_source: null
+economics_observed_at_utc: null
+
+# These slippage values are scenario assumptions supplied for sensitivity testing.
+# They are not broker measurements and must not be represented as observed costs.
+# spread_points and commission_per_unit_usd_per_side remain null until supported by a
+# current source/contract quote. Null is UNKNOWN, not zero.
+resolutions:
+  "1m":
+    spread_points: null
+    slippage_points: 1.5
+    commission_per_unit_usd_per_side: null
+    verified: false
+    source: null
+    observed_at_utc: null
+    spread_status: UNKNOWN
+    slippage_status: ASSUMED_SCENARIO_NOT_MEASURED
+    commission_status: UNKNOWN
+  "15m":
+    spread_points: null
+    slippage_points: 3.0
+    commission_per_unit_usd_per_side: null
+    verified: false
+    source: null
+    observed_at_utc: null
+    spread_status: UNKNOWN
+    slippage_status: ASSUMED_SCENARIO_NOT_MEASURED
+    commission_status: UNKNOWN
+
+max_slippage_sensitivity_multiplier: 2.0
+notes:
+  - Do not assume zero spread or zero commission when values are unknown.
+  - Confirm whether the actual contract charges commission per unit before populating commission_per_unit_usd_per_side; this field is USD per research unit per side.
+  - Verify contract_type, pnl_model, bar_price_basis and usd_per_point_per_unit from contract-specific documentation/quotes before combining point P&L with USD equity.
+  - Record the broker quote, contract type, source URL/reference, capture timestamp, units, and independent verification before setting verified true and status to VERIFIED_SOURCE_BACKED_COSTS.
+  - max_slippage_sensitivity_multiplier is a research sensitivity parameter, not a live circuit breaker.
+  - Current scenario settings are not a verified cost profile and cannot qualify a strategy.

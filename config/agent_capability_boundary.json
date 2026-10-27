@@ -170,6 +170,42 @@
         "read_production_secrets"
       ],
       "capital_authority": false
+    },
+    "DeepSeekHarness": {
+      "role": "advisory provider/harness runtime",
+      "may": [
+        "receive_advisory_tasks",
+        "run_noncapital_research",
+        "return_structured_evidence",
+        "report_readiness"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock",
+        "read_production_secrets",
+        "bypass_release_gates"
+      ],
+      "capital_authority": false,
+      "runtime_status": "NOT_CONFIGURED"
+    },
+    "HermesAgent": {
+      "role": "advisory agent runtime",
+      "may": [
+        "receive_advisory_tasks",
+        "run_noncapital_research",
+        "return_structured_evidence",
+        "report_readiness"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock",
+        "read_production_secrets",
+        "bypass_release_gates"
+      ],
+      "capital_authority": false,
+      "runtime_status": "NOT_CONFIGURED"
     }
   },
   "non_negotiables": [

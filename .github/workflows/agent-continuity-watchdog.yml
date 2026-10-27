@@ -35,7 +35,9 @@ jobs:
 
       - name: Verify continuous-agent safety boundary
         run: python scripts/agent_continuity_check.py
-      - name: Probe real federated advisory workers
+      - name: Report local provider and runtime availability without secrets
+        run: python scripts/agent_runtime_availability.py
+      - name: Verify truthful federated worker readiness states
         run: python scripts/agent_worker_probe.py
       - name: Assert capital protection
         run: |

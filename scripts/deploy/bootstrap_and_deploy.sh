@@ -10,6 +10,7 @@ ENV_DIR="/etc/aurelia"
 ENV_FILE="$ENV_DIR/aurelia.env"
 LIVE_SECRET_FILE="$ENV_DIR/aurelia-live-secrets.env"
 READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"
+AGENT_PROVIDER_SECRET_FILE="$ENV_DIR/aurelia-agent-provider-secrets.env"
 DATA_DIR="/var/lib/aurelia"
 IMAGE="aurelia-runtime:$SHA"
 CONTAINER="aurelia-runtime"
@@ -101,6 +102,7 @@ AURELIA_IDEMPOTENCY_PATH=/tmp/aurelia/idempotency.json
 AURELIA_FENCE_PATH=/tmp/aurelia/executor-fence.txt
 AURELIA_EXECUTION_JOURNAL_PATH=/tmp/aurelia/execution-events.ndjson
 AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json
+AURELIA_WORKER_HOME_ROOT=/tmp/aurelia-agent-homes
 EOF
   sudo chmod 600 "$ENV_FILE"
 else
@@ -125,6 +127,7 @@ AURELIA_IDEMPOTENCY_PATH=/tmp/aurelia/idempotency.json
 AURELIA_FENCE_PATH=/tmp/aurelia/executor-fence.txt
 AURELIA_EXECUTION_JOURNAL_PATH=/tmp/aurelia/execution-events.ndjson
 AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json
+AURELIA_WORKER_HOME_ROOT=/tmp/aurelia-agent-homes
 EOF
   sudo chmod 600 "$ENV_FILE"
 fi
@@ -133,8 +136,26 @@ fi
 # mounted persistent data directory and must never silently fall back to
 # an ephemeral container filesystem.
 sudo sed -i '/^AURELIA_KILL_SWITCH_STATE_PATH=/d' "$ENV_FILE"
-printf '%s\n' 'AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json' | sudo tee -a "$ENV_FILE" >/dev/null
+sudo sed -i '/^AURELIA_WORKER_HOME_ROOT=/d' "$ENV_FILE"
+printf '%s\n' \
+  'AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json' \
+  'AURELIA_WORKER_HOME_ROOT=/tmp/aurelia-agent-homes' \
+  | sudo tee -a "$ENV_FILE" >/dev/null
 sudo chmod 600 "$ENV_FILE"
+
+# Optional provider-only secrets for advisory model agents. This is separate
+# from Deriv/broker credentials. The validator rejects broker tokens, arbitrary
+# runtime commands, duplicate keys, symlinks and loose file permissions.
+AGENT_PROVIDER_SECRET_ENV_ARGS=()
+if [ -e "$AGENT_PROVIDER_SECRET_FILE" ] || [ -L "$AGENT_PROVIDER_SECRET_FILE" ]; then
+  if [ -L "$AGENT_PROVIDER_SECRET_FILE" ] || [ ! -f "$AGENT_PROVIDER_SECRET_FILE" ]; then
+    echo "AURELIA_AGENT_PROVIDER_SECRETS_BLOCKED=FILE_MUST_BE_REGULAR_NON_SYMLINK"
+    exit 2
+  fi
+  sudo chmod 600 "$AGENT_PROVIDER_SECRET_FILE"
+  sudo python3 "$RELEASE_DIR/scripts/deploy/validate_agent_provider_secrets.py" "$AGENT_PROVIDER_SECRET_FILE"
+  AGENT_PROVIDER_SECRET_ENV_ARGS+=(--env-file "$AGENT_PROVIDER_SECRET_FILE")
+fi
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   test -f "$LIVE_SECRET_FILE" || {
@@ -247,7 +268,7 @@ sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 sudo docker run --detach \
   --name "$CONTAINER" \
   --restart unless-stopped \
-  --env-file "$ENV_FILE" "${SECRET_ENV_ARGS[@]}" \
+  --env-file "$ENV_FILE" "${SECRET_ENV_ARGS[@]}" "${AGENT_PROVIDER_SECRET_ENV_ARGS[@]}" \
   --env AURELIA_DEPLOYMENT_MODE="$DEPLOYMENT_MODE" \
   --env AURELIA_AUTONOMOUS_LOOP="$AUTONOMOUS_LOOP" \
   --env AURELIA_VERIFY_DERIV_AUTH="$VERIFY_DERIV_AUTH" \
@@ -255,6 +276,7 @@ sudo docker run --detach \
   --env AURELIA_RUN_ONCE=false \
   --env AURELIA_CONTINUOUS_RUNTIME=true \
   --env AURELIA_AGENT_WORKERS=true \
+  --env AURELIA_WORKER_HOME_ROOT=/tmp/aurelia-agent-homes \
   --env AURELIA_READINESS_PATH=/tmp/aurelia/AURELIA_READINESS.json \
   --env AURELIA_DERIV_EVIDENCE_PATH=/tmp/aurelia/deriv_authenticated_session.json \
   --env AURELIA_DERIV_LIFECYCLE_EVIDENCE_PATH=/tmp/aurelia/deriv_transaction_lifecycle.json \
