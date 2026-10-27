@@ -5,15 +5,19 @@ import asyncio
 import json
 import os
 import tempfile
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Mapping
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from runtime.agent_federation import PersistentAgentFederation
 from runtime.agent_workers import AgentWorkerSupervisor
 from scripts.agent_runtime_availability import build_availability_report
 
-ROOT = Path(__file__).resolve().parents[1]
 MATRIX = ROOT / "config" / "agent_runtime_provider_matrix.json"
 
 
