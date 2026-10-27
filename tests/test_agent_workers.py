@@ -188,7 +188,8 @@ async def test_worker_timeout_marks_task_failed_and_kills_child(tmp_path):
 @pytest.mark.asyncio
 async def test_worker_redacts_configured_secret_values_from_task_results(tmp_path):
     secret = "sentinel-secret-value-9382"
-    code = f"import json; print(json.dumps({{'status':'COMPLETED','result':{{'note':{secret!r}}}}))"
+    response_json = json.dumps({"status": "COMPLETED", "result": {"note": secret}})
+    code = f"print({response_json!r})"
     env = dict(os.environ)
     env["AURELIA_AGENT_CLAUDECODE_COMMAND"] = shlex.join([sys.executable, "-c", code])
     env["AURELIA_AGENT_CLAUDECODE_HEALTHCHECK_COMMAND"] = shlex.join([sys.executable, "-c", "pass"])
