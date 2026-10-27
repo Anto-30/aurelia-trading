@@ -174,7 +174,7 @@ async def start_continuous_runtime(
             config_hash=config_hash,
             source_hash=source_hash,
             lease_seconds=float(os.getenv("AURELIA_AGENT_LEASE_SECONDS", "45")),
-            performance_path=os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/var/lib/aurelia/agent-performance.json"),
+            performance_path=os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/tmp/aurelia/agent-performance.json"),
         )
     agents = load_runtime_agent_roster(ROOT)
     if federation_supervisor is None:
@@ -186,7 +186,7 @@ async def start_continuous_runtime(
         )
         federation_supervisor.start()
     performance_ledger = AgentPerformanceLedger(
-        os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/var/lib/aurelia/agent-performance.json"),
+        os.getenv("AURELIA_AGENT_PERFORMANCE_PATH", "/tmp/aurelia/agent-performance.json"),
         decay_days=float(os.getenv("AURELIA_AGENT_SCORE_DECAY_DAYS", "90")),
     )
     runtime = ContinuousRuntime(federation, federation_supervisor, performance_ledger=performance_ledger)
