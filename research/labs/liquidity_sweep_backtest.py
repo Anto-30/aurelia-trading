@@ -27,17 +27,18 @@ class BacktestConfig:
     quantity: float
     commission_per_side: float
     slippage_bps: float
+    usd_per_point_per_unit: float
     spread_points: float = 0.0
     slippage_points: float = 0.0
 
     def __post_init__(self) -> None:
         values = (self.initial_capital, self.quantity,
                   self.commission_per_side, self.slippage_bps,
-                  self.spread_points, self.slippage_points)
+                  self.usd_per_point_per_unit, self.spread_points, self.slippage_points)
         if not all(math.isfinite(float(v)) for v in values):
             raise ValueError("backtest configuration values must be finite")
-        if self.initial_capital <= 0 or self.quantity <= 0:
-            raise ValueError("initial_capital and quantity must be positive")
+        if self.initial_capital <= 0 or self.quantity <= 0 or self.usd_per_point_per_unit <= 0:
+            raise ValueError("initial_capital, quantity and USD-per-point value must be positive")
         if any(value < 0 for value in (
             self.commission_per_side, self.slippage_bps,
             self.spread_points, self.slippage_points
@@ -82,6 +83,34 @@ def load_verified_cost_config(config_path: str, resolution: str) -> dict[str, fl
         raise ValueError("COST_CONFIG_INSTRUMENT_MISMATCH")
     if document.get("status") != "VERIFIED_SOURCE_BACKED_COSTS":
         raise ValueError("COST_CONFIG_NOT_SOURCE_VERIFIED")
+    if document.get("pnl_model") != "LINEAR_INDEX_POINT_VALUE":
+        raise ValueError("COST_PNL_MODEL_NOT_VERIFIED")
+    if document.get("bar_price_basis") != "MIDPOINT":
+        raise ValueError("BAR_PRICE_BASIS_NOT_MIDPOINT")
+    if document.get("economics_verified") is not True:
+        raise ValueError("CONTRACT_ECONOMICS_NOT_VERIFIED")
+    if not str(document.get("contract_type") or "").strip():
+        raise ValueError("CONTRACT_TYPE_MISSING")
+    try:
+        usd_per_point = float(document.get("usd_per_point_per_unit"))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("USD_PER_POINT_VALUE_UNKNOWN_OR_INVALID") from exc
+    if not math.isfinite(usd_per_point) or usd_per_point <= 0:
+        raise ValueError("USD_PER_POINT_VALUE_UNKNOWN_OR_INVALID")
+    economic_source = str(document.get("economics_source") or "").strip()
+    if not economic_source:
+        raise ValueError("CONTRACT_ECONOMICS_SOURCE_MISSING")
+    try:
+        economic_observed = datetime.fromisoformat(
+            str(document.get("economics_observed_at_utc")).replace("Z", "+00:00")
+        )
+    except (TypeError, ValueError) as exc:
+        raise ValueError("CONTRACT_ECONOMICS_TIMESTAMP_INVALID") from exc
+    if economic_observed.tzinfo is None or economic_observed.utcoffset() is None:
+        raise ValueError("CONTRACT_ECONOMICS_TIMESTAMP_MUST_BE_TIMEZONE_AWARE")
+    economic_age = (datetime.now(economic_observed.tzinfo) - economic_observed).total_seconds()
+    if economic_age < 0 or economic_age > 86400:
+        raise ValueError("CONTRACT_ECONOMICS_STALE_OR_FUTURE")
     profile = document.get("resolutions", {}).get(resolution)
     if not isinstance(profile, dict):
         raise ValueError(f"COST_PROFILE_MISSING:{resolution}")
@@ -100,8 +129,11 @@ def load_verified_cost_config(config_path: str, resolution: str) -> dict[str, fl
         values[key] = value
     if profile.get("verified") is not True:
         raise ValueError(f"COST_PROFILE_UNVERIFIED:{resolution}")
-    if profile.get("slippage_status") not in ("VERIFIED_MEASURED", "VERIFIED_CONTRACT_QUOTE"):
-        raise ValueError(f"COST_SLIPPAGE_NOT_VERIFIED:{resolution}")
+    accepted_statuses = ("VERIFIED_MEASURED", "VERIFIED_CONTRACT_QUOTE", "VERIFIED_NO_FEE")
+    for key, label in (("spread_status", "SPREAD"), ("slippage_status", "SLIPPAGE"),
+                       ("commission_status", "COMMISSION")):
+        if profile.get(key) not in accepted_statuses:
+            raise ValueError(f"COST_{label}_NOT_VERIFIED:{resolution}")
     if not str(profile.get("source") or "").strip():
         raise ValueError(f"COST_SOURCE_MISSING:{resolution}")
     try:
@@ -114,6 +146,10 @@ def load_verified_cost_config(config_path: str, resolution: str) -> dict[str, fl
     if age < 0 or age > 86400:
         raise ValueError(f"COST_PROFILE_STALE_OR_FUTURE:{resolution}")
     values["source"] = str(profile["source"])
+    values["usd_per_point_per_unit"] = usd_per_point
+    values["contract_type"] = str(document["contract_type"])
+    values["pnl_model"] = str(document["pnl_model"])
+    values["economics_source"] = economic_source
     return values
 
 
@@ -216,20 +252,20 @@ def run_backtest(
             slippage_points=config.slippage_points, spread_points=config.spread_points,
         )
         raw_gross_pnl = (
-            (raw_exit - raw_entry) * config.quantity
+            (raw_exit - raw_entry) * config.quantity * config.usd_per_point_per_unit
             if signal.direction == "long"
-            else (raw_entry - raw_exit) * config.quantity
+            else (raw_entry - raw_exit) * config.quantity * config.usd_per_point_per_unit
         )
         after_price_costs_pnl = (
-            (exit_price - entry) * config.quantity
+            (exit_price - entry) * config.quantity * config.usd_per_point_per_unit
             if signal.direction == "long"
-            else (entry - exit_price) * config.quantity
+            else (entry - exit_price) * config.quantity * config.usd_per_point_per_unit
         )
         execution_cost = raw_gross_pnl - after_price_costs_pnl
         commission = 2.0 * config.commission_per_side * config.quantity
         net_pnl = after_price_costs_pnl - commission
         risk_per_unit = abs(entry - stop)
-        risk_cash = risk_per_unit * config.quantity
+        risk_cash = risk_per_unit * config.quantity * config.usd_per_point_per_unit
         r_multiple = net_pnl / risk_cash if risk_cash > 0 else 0.0
         equity += net_pnl
         equity_curve.append(equity)
