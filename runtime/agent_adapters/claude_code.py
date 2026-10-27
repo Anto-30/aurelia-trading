@@ -21,6 +21,7 @@ from runtime.agent_adapters.common import (
 PROVIDER = "Claude Code"
 HEALTH_MARKER = "AURELIA_CLAUDE_ADAPTER_HEALTH_OK"
 CLI_ENV = "AURELIA_CLAUDE_CLI"
+PINNED_VERSION = "2.1.312"
 
 
 def _command_args(cli: str, prompt: str) -> list[str]:
@@ -43,15 +44,43 @@ def _command_args(cli: str, prompt: str) -> list[str]:
     ]
 
 
+def _version_ok(cli: str) -> bool:
+    # Refuse to execute an unreviewed CLI version; auto-updates are disabled in
+    # the supervisor-created worker environment. The version pin changes only
+    # through a reviewed configuration/source update.
+    try:
+        result = subprocess.run(
+            [cli, "--version"],
+            cwd=str(Path.home()),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=8,
+            check=False,
+            env=runtime_env,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0 and PINNED_VERSION in (result.stdout or "")
+
+
 def _run_prompt(prompt: str, timeout_seconds: float) -> tuple[bool, str, str]:
     if not os.environ.get("ANTHROPIC_API_KEY", "").strip():
         return False, "", "ANTHROPIC_API_KEY_MISSING"
     cli_candidates = parse_cli_path(CLI_ENV, "claude")
     if not cli_candidates:
         return False, "", "CLAUDE_CODE_CLI_NOT_FOUND"
+    cli = str(cli_candidates[0])
+    if not _version_ok(cli):
+        return False, "", "CLAUDE_CODE_VERSION_NOT_PINNED"
+    runtime_env = dict(os.environ)
+    runtime_env["DISABLE_AUTOUPDATER"] = "1"
     try:
         completed = subprocess.run(
-            _command_args(str(cli_candidates[0]), prompt),
+            _command_args(cli, prompt),
             cwd=str(Path.home()),
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
