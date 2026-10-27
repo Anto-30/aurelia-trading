@@ -241,7 +241,7 @@ def generate_research_signals(
                 entry = bars[entry_index].open
                 stop = float(setup["sweep_extreme"]) - stop_buffer
                 risk = entry - stop
-                if risk > 0 and math.isfinite(risk):
+                if risk > 0 and math.isfinite(risk) and stop > 0 and entry > 0:
                     signals.append(ResearchSignal("long", int(setup["sweep_index"]),
                         int(setup["reclaim_index"]), i, entry_index, entry, stop,
                         entry + reward_risk * risk, float(setup["swept_level"]), reward_risk))
@@ -255,7 +255,7 @@ def generate_research_signals(
                 entry = bars[entry_index].open
                 stop = float(setup["sweep_extreme"]) + stop_buffer
                 risk = stop - entry
-                if risk > 0 and math.isfinite(risk):
+                if risk > 0 and math.isfinite(risk) and target > 0 and entry > 0:
                     signals.append(ResearchSignal("short", int(setup["sweep_index"]),
                         int(setup["reclaim_index"]), i, entry_index, entry, stop,
                         entry - reward_risk * risk, float(setup["swept_level"]), reward_risk))
