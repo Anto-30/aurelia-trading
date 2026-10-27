@@ -9,9 +9,14 @@
     "live_lock_mutation": false,
     "readiness_requires_worker_command_and_successful_healthcheck": true,
     "provider_authentication_claim_requires_provider_specific_healthcheck": true,
-    "runtime_default_adapters_are_text_only": true,
+    "runtime_default_adapters_are_text_only": false,
     "provider_specific_credentials_only": true,
-    "model_workers_run_as_dedicated_nonroot_uids": true
+    "model_workers_run_as_dedicated_nonroot_uids": true,
+    "provider_tool_restrictions": {
+      "ClaudeCode": "BUILTIN_TOOLS_DISABLED_AND_MCP_DISABLED",
+      "DeepSeekHarness": "HEADLESS_NATIVE_TOOLS_WITH_READ_ONLY_PERMISSION_PRESET",
+      "HermesAgent": "SAFE_MODE_AND_EMPTY_TOOLSETS"
+    }
   },
   "default_lease_file": "/tmp/aurelia/agent-federation-leases.json",
   "local_skill_roots": [
@@ -42,7 +47,7 @@
       ],
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
-      "note": "CLI OAuth may be stored outside environment variables; no authentication is inferred from missing or present environment markers.",
+      "note": "Uses Claude Code CLI with --tools empty and MCP configuration disabled. This adapter requires ANTHROPIC_API_KEY; Claude subscription OAuth is not accepted by this API-key-only wrapper.",
       "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
       "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME",
       "adapter_script": "runtime/agent_adapters/claude_code.py",
@@ -252,7 +257,7 @@
       ],
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
-      "note": "There is no assumed universal DeepSeek harness CLI; use a pinned, trusted adapter and a provider-specific readiness command.",
+      "note": "Uses the pinned official dsh headless profile, DSH_PERMISSION_MODE=read-only and --approval-policy never. Native tools may be available but are restricted by the read-only sandbox; it is not a tools-disabled/text-only call.",
       "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
       "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME",
       "adapter_script": "runtime/agent_adapters/deepseek_harness.py",
@@ -293,7 +298,7 @@
       ],
       "plugins": [],
       "plugin_connection_status": "NOT_BRIDGED_TO_LOCAL_WORKER",
-      "note": "Pin the exact Hermes distribution and provider adapter; credentials may be configured in a separate backend and are not inferred from a generic key marker.",
+      "note": "Uses the pinned official Hermes CLI in safe mode with an empty toolset list. Provider/model and the matching provider-specific key must be explicitly selected.",
       "skill_assignment_semantics": "CANONICAL_CATALOG_URI",
       "skill_bridge_status": "CATALOG_ONLY_NOT_LOADED_IN_LOCAL_RUNTIME",
       "adapter_script": "runtime/agent_adapters/hermes_agent.py",
@@ -373,7 +378,7 @@
       "AURELIA_AGENT_FEDERATION_LEASE_PATH"
     ],
     "command_contract": "Use configured trusted local command if supplied; otherwise use the profile's built-in adapter_script when default_adapter_enabled=true. One-shot stdin/stdout JSON; all adapters must enforce capital boundary and output schema.",
-    "healthcheck_contract": "Provider-specific healthcheck command if configured; otherwise built-in adapter --healthcheck for enabled built-in adapters. A model call is required, bounded by profile timeout. A passing check only proves a recent minimal model request.",
+    "healthcheck_contract": "A provider-specific minimal model call is required for enabled built-in adapters. Claude Code disables built-in tools and MCP; DeepSeek Harness uses a read-only sandbox preset; Hermes uses safe mode and an empty toolset list. A passing check only proves the recent minimal model request succeeded.",
     "healthcheck_timeout_seconds": 5,
     "result": "A running process with a passing operator-defined healthcheck creates a worker lease; this does not independently certify model identity or task correctness."
   },
