@@ -85,7 +85,7 @@ class PreFOMCEventStudyTests(unittest.TestCase):
         self.assertEqual(rows[0]["net_return"], "")
 
     def test_summary_is_research_only_and_does_not_claim_p_value(self):
-        rows = [{"status": "OK", "net_return": "0.01"}]
+        rows = [{"status": "OK", "net_return": "0.01", "net_log_return": "0.009950330853"}]
         summary = summarize(rows)
         self.assertTrue(summary["research_only"])
         self.assertFalse(summary["capital_authority"])
