@@ -110,8 +110,10 @@ def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_b
             "entry_close": "",
             "exit_close": "",
             "gross_return": "",
+            "gross_log_return": "",
             "round_trip_cost_bps": round_trip_cost_bps,
             "net_return": "",
+            "net_log_return": "",
             "status": "",
         }
         if not announcement_raw:
@@ -161,17 +163,22 @@ def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_b
 
         entry_ts, entry_price = entry
         exit_ts, exit_price = exit_
-        gross = exit_price / entry_price - 1.0
-        # Transparent proportional round-trip haircut; not a broker-specific fill simulation.
-        cost = round_trip_cost_bps / 10_000.0
-        net = gross - cost
+        gross_log_return = math.log(exit_price / entry_price)
+        # A proportional cost is additive in log-return space. This remains a
+        # flat cost assumption, not a broker-specific fill/spread simulation.
+        cost_log_return = round_trip_cost_bps / 10_000.0
+        net_log_return = gross_log_return - cost_log_return
+        gross_return = math.exp(gross_log_return) - 1.0
+        net_return = math.exp(net_log_return) - 1.0
         base.update({
             "entry_timestamp": entry_ts.isoformat(),
             "exit_timestamp": exit_ts.isoformat(),
             "entry_close": f"{entry_price:.10g}",
             "exit_close": f"{exit_price:.10g}",
-            "gross_return": f"{gross:.10g}",
-            "net_return": f"{net:.10g}",
+            "gross_return": f"{gross_return:.10g}",
+            "gross_log_return": f"{gross_log_return:.10g}",
+            "net_return": f"{net_return:.10g}",
+            "net_log_return": f"{net_log_return:.10g}",
             "status": "OK",
         })
         output.append(base)
@@ -179,10 +186,18 @@ def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_b
 
 def summarize(rows: list[dict]) -> dict:
     valid = [float(r["net_return"]) for r in rows if r["status"] == "OK"]
+    log_valid = [float(r["net_log_return"]) for r in rows if r["status"] == "OK"]
     n = len(valid)
     mean = statistics.fmean(valid) if valid else None
     std = statistics.stdev(valid) if n > 1 else None
     t_stat = mean / (std / math.sqrt(n)) if mean is not None and std and std > 0 else None
+    log_mean = statistics.fmean(log_valid) if log_valid else None
+    log_std = statistics.stdev(log_valid) if n > 1 else None
+    log_t_stat = (
+        log_mean / (log_std / math.sqrt(n))
+        if log_mean is not None and log_std and log_std > 0
+        else None
+    )
     equity = peak = 1.0
     max_drawdown = 0.0
     for ret in valid:
@@ -201,18 +216,23 @@ def summarize(rows: list[dict]) -> dict:
         "events_total": len(rows),
         "events_valid": n,
         "events_excluded": len(rows) - n,
+        "return_basis": "simple_return_with_log_return_fields",
         "mean_net_return": mean,
         "median_net_return": statistics.median(valid) if valid else None,
+        "mean_net_log_return": log_mean,
+        "median_net_log_return": statistics.median(log_valid) if log_valid else None,
         "win_rate": wins / n if n else None,
         "profit_factor": gross_wins / gross_losses if gross_losses else None,
         "compounded_return": equity - 1 if n else None,
         "max_drawdown": max_drawdown if n else None,
         "descriptive_t_stat": t_stat,
+        "descriptive_log_return_t_stat": log_t_stat,
         "p_value": None,
         "p_value_note": "Not computed: use an appropriate small-sample/event-dependence inference procedure; do not treat the descriptive t-statistic as a validated significance test.",
         "exclusions": dict((status, sum(r["status"] == status for r in rows)) for status in sorted({r["status"] for r in rows if r["status"] != "OK"})),
         "limitations": [
-            "Exact reference-minute close sampling is not a fill simulation.",
+            "Exact reference-minute sampling is not a fill simulation.",
+            "Normalize bar timestamp conventions first; a bar-start timestamp paired with its close price is not the same as a price observed at that timestamp.",
             "Cost is a user-specified flat round-trip haircut, not verified historical spread or slippage.",
             "No risk-free adjustment, benchmark adjustment, dividends, or market-impact model is applied.",
             "Announcement timestamp must be independently verified for each event; reference time is 15 minutes before it.",
