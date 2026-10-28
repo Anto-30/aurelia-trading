@@ -26,7 +26,6 @@ import hashlib
 import json
 import math
 import statistics
-from collections import defaultdict
 from datetime import date, datetime, time
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -93,8 +92,11 @@ def exact_close(bars: dict[datetime, float], day: date, at: time) -> tuple[datet
 def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_bps: float) -> list[dict]:
     if not math.isfinite(round_trip_cost_bps) or round_trip_cost_bps < 0:
         raise ValueError("round-trip cost must be finite and non-negative")
-    trading_days = sorted({ts.date() for ts in bars})
-    previous_session = {trading_days[i]: trading_days[i - 1] for i in range(1, len(trading_days))}
+    # A date counts as a usable session only if its exact 14:00 ET reference bar exists.
+    # Partial/incomplete dates must not silently become the "previous session".
+    reference_time = time(14, 0)
+    session_days = sorted({ts.date() for ts in bars if ts.timetz().replace(tzinfo=None) == reference_time})
+    previous_session = {session_days[i]: session_days[i - 1] for i in range(1, len(session_days))}
     output = []
     for event in events:
         d = event["meeting_date"]
@@ -109,14 +111,18 @@ def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_b
             "net_return": "",
             "status": "",
         }
+        exit_ = exact_close(bars, d, reference_time)
+        if exit_ is None:
+            base["status"] = "MISSING_EXACT_1400_BAR"
+            output.append(base)
+            continue
         if d not in previous_session:
             base["status"] = "MISSING_EVENT_SESSION_OR_PRIOR_SESSION"
             output.append(base)
             continue
         entry_day = previous_session[d]
-        entry = exact_close(bars, entry_day, time(14, 0))
-        exit_ = exact_close(bars, d, time(14, 0))
-        if entry is None or exit_ is None:
+        entry = exact_close(bars, entry_day, reference_time)
+        if entry is None:
             base["status"] = "MISSING_EXACT_1400_BAR"
             output.append(base)
             continue
