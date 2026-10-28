@@ -1,3 +1,4 @@
+import math
 import unittest
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
@@ -21,6 +22,7 @@ class PreFOMCEventStudyTests(unittest.TestCase):
         self.assertEqual(rows[0]["entry_timestamp"], ts(prior).isoformat())
         self.assertEqual(rows[0]["exit_timestamp"], ts(meeting).isoformat())
         self.assertAlmostEqual(float(rows[0]["gross_return"]), 0.01)
+        self.assertAlmostEqual(float(rows[0]["gross_log_return"]), math.log(1.01))
 
     def test_cost_haircut_reduces_return(self):
         d1, d2 = date(2026, 10, 27), date(2026, 10, 28)
@@ -43,6 +45,21 @@ class PreFOMCEventStudyTests(unittest.TestCase):
         self.assertEqual(rows[0]["status"], "OK")
         self.assertEqual(rows[0]["entry_timestamp"], ts(prior).isoformat())
         self.assertAlmostEqual(float(rows[0]["gross_return"]), 0.01)
+
+    def test_transaction_cost_is_subtracted_in_log_return_space(self):
+        d1, d2 = date(2026, 10, 27), date(2026, 10, 28)
+        bars = {ts(d1, 13, 45): 100.0, ts(d2, 13, 45): 101.0}
+        event = [{"meeting_date": d2, "announcement_at": "2026-10-28T14:00:00-04:00"}]
+        row = run_study(bars, event, 2.0)[0]
+        self.assertAlmostEqual(float(row["gross_log_return"]), math.log(1.01))
+        self.assertAlmostEqual(float(row["net_log_return"]), math.log(1.01) - 0.0002)
+        self.assertAlmostEqual(float(row["net_return"]), math.exp(math.log(1.01) - 0.0002) - 1.0)
+
+    def test_event_timestamp_must_match_meeting_date(self):
+        d1, d2 = date(2026, 10, 27), date(2026, 10, 28)
+        bars = {ts(d1): 100.0, ts(d2): 101.0}
+        with self.assertRaises(ValueError):
+            run_study(bars, [{"meeting_date": d2, "announcement_at": "2026-10-29T14:00:00-04:00"}], 0.0)
 
     def test_missing_exact_bar_is_excluded_not_interpolated(self):
         d1, d2 = date(2026, 10, 27), date(2026, 10, 28)
