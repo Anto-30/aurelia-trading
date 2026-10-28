@@ -98,6 +98,7 @@ def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_b
     # End 15 minutes before each actual statement timestamp. Statement time
     # changed from 14:15 ET to 14:00 ET during the historical sample.
     output = []
+    previous_session_by_time: dict[time, dict[date, date]] = {}
     for event in events:
         d = event["meeting_date"]
         announcement_raw = str(event.get("announcement_at", "")).strip()
@@ -135,14 +136,16 @@ def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_b
 
         # Infer available sessions only from days with the exact reference
         # minute. Validate the sample against an authoritative exchange calendar.
-        session_days = sorted({
-            ts.date() for ts in bars
-            if ts.timetz().replace(tzinfo=None) == reference_time
-        })
-        previous_session = {
-            session_days[i]: session_days[i - 1]
-            for i in range(1, len(session_days))
-        }
+        if reference_time not in previous_session_by_time:
+            session_days = sorted({
+                ts.date() for ts in bars
+                if ts.timetz().replace(tzinfo=None) == reference_time
+            })
+            previous_session_by_time[reference_time] = {
+                session_days[i]: session_days[i - 1]
+                for i in range(1, len(session_days))
+            }
+        previous_session = previous_session_by_time[reference_time]
 
         exit_ = exact_close(bars, d, reference_time)
         if exit_ is None:
@@ -268,6 +271,7 @@ def main() -> int:
     summary["events_sha256"] = hashlib.sha256(args.events.read_bytes()).hexdigest()
     summary["bar_count"] = len(bars)
     summary["event_file_count"] = len(events)
+    args.summary.parent.mkdir(parents=True, exist_ok=True)
     args.summary.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2, sort_keys=True))
     return 0 if summary["events_valid"] else 2
