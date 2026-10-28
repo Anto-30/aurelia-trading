@@ -30,6 +30,20 @@ class PreFOMCEventStudyTests(unittest.TestCase):
         net = float(run_study(bars, event, 5.0)[0]["net_return"])
         self.assertLess(net, gross)
 
+    def test_partial_intermediate_date_is_not_treated_as_previous_session(self):
+        prior = date(2026, 10, 26)
+        partial = date(2026, 10, 27)
+        meeting = date(2026, 10, 28)
+        bars = {
+            ts(prior): 100.0,
+            ts(partial, 13, 59): 999.0,  # partial session with no 14:00 reference bar
+            ts(meeting): 101.0,
+        }
+        rows = run_study(bars, [{"meeting_date": meeting, "announcement_at": ""}], 0.0)
+        self.assertEqual(rows[0]["status"], "OK")
+        self.assertEqual(rows[0]["entry_timestamp"], ts(prior).isoformat())
+        self.assertAlmostEqual(float(rows[0]["gross_return"]), 0.01)
+
     def test_missing_exact_bar_is_excluded_not_interpolated(self):
         d1, d2 = date(2026, 10, 27), date(2026, 10, 28)
         bars = {ts(d1): 100.0, ts(d2, 14, 1): 101.0}
