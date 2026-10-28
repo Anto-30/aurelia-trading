@@ -71,8 +71,8 @@ def load_events(path: Path) -> list[dict]:
     seen: set[date] = set()
     with path.open(newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
-        if not reader.fieldnames or "meeting_date" not in reader.fieldnames:
-            raise ValueError("events CSV requires meeting_date column")
+        if not reader.fieldnames or not {"meeting_date", "announcement_at"}.issubset(reader.fieldnames):
+            raise ValueError("events CSV requires meeting_date,announcement_at columns")
         for row_num, row in enumerate(reader, start=2):
             meeting_day = date.fromisoformat(row["meeting_date"].strip())
             if meeting_day in seen:
