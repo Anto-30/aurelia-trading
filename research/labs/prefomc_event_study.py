@@ -4,12 +4,14 @@
 Inputs:
   bars.csv: timestamp,close. Timestamps should be ISO-8601; naive values are
             interpreted in America/New_York.
-  fomc_events.csv: meeting_date (YYYY-MM-DD),announcement_at (ISO timestamp,
-                   optional; informational only).
+  fomc_events.csv: meeting_date (YYYY-MM-DD),announcement_at (ISO timestamp, required.
+                   Use the actual policy-statement timestamp in ET or UTC).
 
-The original pre-announcement window is entry at 14:00 ET on the previous
-valid US equity session and exit at 14:00 ET on announcement day. It does NOT
-exit at 14:15 ET, which would include the announcement reaction.
+The window ends 15 minutes before each actual statement timestamp and
+starts at the same clock time on the previous valid US equity session. This
+supports the historical 14:15 ET announcement convention (14:00 reference)
+and later 14:00 ET convention (13:45 reference). Missing event timestamps are
+excluded rather than assumed.
 
 Example:
   python research/labs/prefomc_event_study.py --bars bars.csv --events fomc_events.csv \
@@ -26,7 +28,7 @@ import hashlib
 import json
 import math
 import statistics
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -92,16 +94,17 @@ def exact_close(bars: dict[datetime, float], day: date, at: time) -> tuple[datet
 def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_bps: float) -> list[dict]:
     if not math.isfinite(round_trip_cost_bps) or round_trip_cost_bps < 0:
         raise ValueError("round-trip cost must be finite and non-negative")
-    # A date counts as a usable session only if its exact 14:00 ET reference bar exists.
-    # Partial/incomplete dates must not silently become the "previous session".
-    reference_time = time(14, 0)
-    session_days = sorted({ts.date() for ts in bars if ts.timetz().replace(tzinfo=None) == reference_time})
-    previous_session = {session_days[i]: session_days[i - 1] for i in range(1, len(session_days))}
+
+    # End 15 minutes before each actual statement timestamp. Statement time
+    # changed from 14:15 ET to 14:00 ET during the historical sample.
     output = []
     for event in events:
         d = event["meeting_date"]
+        announcement_raw = str(event.get("announcement_at", "")).strip()
         base = {
             "meeting_date": d.isoformat(),
+            "announcement_timestamp": announcement_raw,
+            "reference_time_et": "",
             "entry_timestamp": "",
             "exit_timestamp": "",
             "entry_close": "",
@@ -111,21 +114,51 @@ def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_b
             "net_return": "",
             "status": "",
         }
+        if not announcement_raw:
+            base["status"] = "MISSING_ANNOUNCEMENT_TIMESTAMP"
+            output.append(base)
+            continue
+
+        announcement = parse_timestamp(announcement_raw)
+        if announcement.date() != d:
+            raise ValueError(
+                f"announcement_at date {announcement.date()} does not match meeting_date {d}"
+            )
+        if announcement.second or announcement.microsecond:
+            raise ValueError("announcement_at must be minute-aligned")
+
+        reference_dt = announcement - timedelta(minutes=15)
+        reference_time = reference_dt.time().replace(tzinfo=None)
+        base["reference_time_et"] = reference_time.isoformat()
+
+        # Infer available sessions only from days with the exact reference
+        # minute. Validate the sample against an authoritative exchange calendar.
+        session_days = sorted({
+            ts.date() for ts in bars
+            if ts.timetz().replace(tzinfo=None) == reference_time
+        })
+        previous_session = {
+            session_days[i]: session_days[i - 1]
+            for i in range(1, len(session_days))
+        }
+
         exit_ = exact_close(bars, d, reference_time)
         if exit_ is None:
-            base["status"] = "MISSING_EXACT_1400_BAR"
+            base["status"] = "MISSING_EXACT_REFERENCE_BAR"
             output.append(base)
             continue
         if d not in previous_session:
             base["status"] = "MISSING_EVENT_SESSION_OR_PRIOR_SESSION"
             output.append(base)
             continue
+
         entry_day = previous_session[d]
         entry = exact_close(bars, entry_day, reference_time)
         if entry is None:
-            base["status"] = "MISSING_EXACT_1400_BAR"
+            base["status"] = "MISSING_EXACT_REFERENCE_BAR"
             output.append(base)
             continue
+
         entry_ts, entry_price = entry
         exit_ts, exit_price = exit_
         gross = exit_price / entry_price - 1.0
@@ -143,7 +176,6 @@ def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_b
         })
         output.append(base)
     return output
-
 
 def summarize(rows: list[dict]) -> dict:
     valid = [float(r["net_return"]) for r in rows if r["status"] == "OK"]
@@ -180,10 +212,11 @@ def summarize(rows: list[dict]) -> dict:
         "p_value_note": "Not computed: use an appropriate small-sample/event-dependence inference procedure; do not treat the descriptive t-statistic as a validated significance test.",
         "exclusions": dict((status, sum(r["status"] == status for r in rows)) for status in sorted({r["status"] for r in rows if r["status"] != "OK"})),
         "limitations": [
-            "Exact 14:00 close sampling is not a fill simulation.",
+            "Exact reference-minute close sampling is not a fill simulation.",
             "Cost is a user-specified flat round-trip haircut, not verified historical spread or slippage.",
             "No risk-free adjustment, benchmark adjustment, dividends, or market-impact model is applied.",
-            "FOMC calendar completeness and data provenance must be independently verified.",
+            "Announcement timestamp must be independently verified for each event; reference time is 15 minutes before it.",
+            "Available sessions are inferred from reference bars; validate against an authoritative US exchange calendar and complete-session data.",
             "This output is not a trade signal or evidence of deployable alpha.",
         ],
     }
@@ -204,8 +237,9 @@ def main() -> int:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0]) if rows else [
-            "meeting_date", "entry_timestamp", "exit_timestamp", "entry_close",
-            "exit_close", "gross_return", "round_trip_cost_bps", "net_return", "status"
+            "meeting_date", "announcement_timestamp", "reference_time_et", "entry_timestamp",
+            "exit_timestamp", "entry_close", "exit_close", "gross_return",
+            "round_trip_cost_bps", "net_return", "status"
         ])
         writer.writeheader()
         writer.writerows(rows)
