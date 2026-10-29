@@ -155,7 +155,6 @@ async def fetch_deriv_candles(
                 "count": MAX_BARS_PER_PAGE,
                 "style": "candles",
                 "granularity": GRANULARITY_SECONDS,
-                "subscribe": 0,
             }
             raw_text, response = await request(request_payload)
             raw_records.append({
