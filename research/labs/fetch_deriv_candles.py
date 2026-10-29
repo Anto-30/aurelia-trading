@@ -267,7 +267,7 @@ async def async_main(args: argparse.Namespace) -> int:
             "live_execution": False,
         }
         (args.output_dir / f"{args.symbol}_1m_failure.json").write_text(
-            json.dumps(failure, indent=2, allow_nan=False) + "\\n", encoding="utf-8"
+            json.dumps(failure, indent=2, allow_nan=False) + "\n", encoding="utf-8"
         )
         print(json.dumps(failure, indent=2, allow_nan=False))
         return 2
