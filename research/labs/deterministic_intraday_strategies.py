@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from math import isfinite, log, sqrt
 from statistics import fmean, median
 from typing import Sequence
@@ -150,6 +150,7 @@ class MSNRConfig:
     max_reclaim_bars: int = 3
     require_volume_pop: bool = False
     volume_pop_multiplier: float = 1.5
+    bar_interval_minutes: int = 1
     allowed_regimes: tuple[str, ...] = ("TRENDING_LOW_VOL", "RANGING_LOW_VOL")
     version: str = "msnr-v1"
 
@@ -162,21 +163,52 @@ class MSNRConfig:
             raise ValueError("MSNR_TICK_PARAMETERS_INVALID")
         if self.require_volume_pop and self.volume_pop_multiplier <= 0:
             raise ValueError("MSNR_VOLUME_MULTIPLIER_INVALID")
+        if (isinstance(self.bar_interval_minutes, bool)
+                or not isinstance(self.bar_interval_minutes, int)
+                or self.bar_interval_minutes <= 0):
+            raise ValueError("MSNR_BAR_INTERVAL_INVALID")
 
 
 def detect_msnr_liquidity_sweep(
     bars: Sequence[StrategyBar], *, config: MSNRConfig,
     regime_config: RegimeConfig = RegimeConfig(),
     volume_source_verified: bool = False,
+    context_15m_bars: Sequence[StrategyBar] | None = None,
+    signal_time_utc: str | None = None,
 ) -> StrategyCandidate | None:
-    """Sweep -> close back inside reference range -> local structure break.
+    """Sweep/reclaim/structure signal using only closed trigger bars.
 
-    Delta/DOM/footprint divergence is not inferred from OHLC. Optional volume-pop
-    gating requires caller-verified volume provenance.
+    ``timestamp_utc`` denotes each candle's open. ``signal_time_utc`` must equal
+    the close of the final supplied trigger candle; a completed, fresh 15-minute
+    context prefix is mandatory. This function does not invent a directional
+    M15 bias rule. Delta/DOM/footprint divergence is not inferred from OHLC.
+    Optional volume-pop gating requires caller-verified volume provenance.
     """
     _validate_bars(bars)
     if config.tick_size is None:
         raise ValueError("MSNR_TICK_SIZE_REQUIRED")
+    # Fail closed: timestamps denote bar-open times. The decision boundary is
+    # the close of the final supplied trigger bar (the next bar's open).
+    if len(bars) == 0 or context_15m_bars is None or len(context_15m_bars) == 0 or not signal_time_utc:
+        return None
+    _validate_bars(context_15m_bars)
+    signal_at = _utc(signal_time_utc)
+    trigger_interval = timedelta(minutes=config.bar_interval_minutes)
+    for left, right in zip(bars, bars[1:]):
+        if _utc(right.timestamp_utc) - _utc(left.timestamp_utc) != trigger_interval:
+            raise ValueError("MSNR_TRIGGER_BAR_INTERVAL_MISMATCH")
+    context_interval = timedelta(minutes=15)
+    for left, right in zip(context_15m_bars, context_15m_bars[1:]):
+        if _utc(right.timestamp_utc) - _utc(left.timestamp_utc) != context_interval:
+            raise ValueError("MSNR_15M_CONTEXT_INTERVAL_MISMATCH")
+    trigger_close = _utc(bars[-1].timestamp_utc) + trigger_interval
+    if signal_at != trigger_close:
+        return None
+    context_close = _utc(context_15m_bars[-1].timestamp_utc) + context_interval
+    context_age = signal_at - context_close
+    if context_age < timedelta(0) or context_age >= context_interval:
+        return None
+
     i = len(bars) - 1
     regime = classify_regime(bars, config=regime_config)
     if regime is None or regime.state not in config.allowed_regimes:
@@ -222,8 +254,9 @@ def detect_msnr_liquidity_sweep(
             stop = sweep.high + config.stop_buffer_ticks * config.tick_size
             evidence = ("LIQUIDITY_HIGH_SWEPT", "RANGE_RECLAIMED", "STRUCTURE_BREAK_CONFIRMED")
         evidence += ("VERIFIED_VOLUME_POP",) if config.require_volume_pop else ("ORDERFLOW_CONFIRMATION_UNAVAILABLE",)
+        evidence += ("M15_CONTEXT_COMPLETED_FRESH",)
         return StrategyCandidate(
-            "MSNR_LIQUIDITY_SWEEP", config.version, side, bars[i].timestamp_utc,
+            "MSNR_LIQUIDITY_SWEEP", config.version, side, signal_at.isoformat(),
             "NEXT_BAR_OPEN_AFTER_SIGNAL", stop, target, "OPPOSING_REFERENCE_RANGE_EDGE",
             regime.state, evidence,
         )
