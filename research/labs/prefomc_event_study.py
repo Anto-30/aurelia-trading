@@ -15,7 +15,7 @@ excluded rather than assumed.
 
 Example:
   python research/labs/prefomc_event_study.py --bars bars.csv --events fomc_events.csv \
-    --round-trip-cost-bps 2 --out results.csv
+    --calendar sessions.csv --round-trip-cost-bps 2 --out results.csv
 
 Data must be sourced, licensed, timestamp-validated and versioned by the
 operator. This script does not fetch data or certify the historical event list.
@@ -85,20 +85,58 @@ def load_events(path: Path) -> list[dict]:
     return sorted(events, key=lambda x: x["meeting_date"])
 
 
+
+def load_sessions(path: Path) -> list[date]:
+    """Load an independently verified US equity-session calendar."""
+    sessions = []
+    seen: set[date] = set()
+    with path.open(newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        if not reader.fieldnames or "session_date" not in reader.fieldnames:
+            raise ValueError("calendar CSV requires session_date column")
+        for row_num, row in enumerate(reader, start=2):
+            raw_date = (row.get("session_date") or "").strip()
+            try:
+                session_day = date.fromisoformat(raw_date)
+            except ValueError as exc:
+                raise ValueError(f"invalid session_date (row {row_num}): {raw_date!r}") from exc
+            if session_day in seen:
+                raise ValueError(f"duplicate session date: {session_day}")
+            seen.add(session_day)
+            sessions.append(session_day)
+    if not sessions:
+        raise ValueError("no sessions loaded from calendar CSV")
+    return sorted(sessions)
+
+
 def exact_close(bars: dict[datetime, float], day: date, at: time) -> tuple[datetime, float] | None:
     ts = datetime.combine(day, at, tzinfo=NY)
     value = bars.get(ts)
     return (ts, value) if value is not None else None
 
 
-def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_bps: float) -> list[dict]:
+def run_study(
+    bars: dict[datetime, float],
+    events: list[dict],
+    round_trip_cost_bps: float,
+    session_dates: list[date],
+) -> list[dict]:
     if not math.isfinite(round_trip_cost_bps) or round_trip_cost_bps < 0:
         raise ValueError("round-trip cost must be finite and non-negative")
 
-    # End 15 minutes before each actual statement timestamp. Statement time
-    # changed from 14:15 ET to 14:00 ET during the historical sample.
+    if len(session_dates) != len(set(session_dates)):
+        raise ValueError("session calendar contains duplicate dates")
+    if session_dates != sorted(session_dates):
+        raise ValueError("session calendar dates must be in ascending order")
+    session_set = set(session_dates)
+    previous_session = {
+        session_dates[i]: session_dates[i - 1]
+        for i in range(1, len(session_dates))
+    }
+
+    # End 15 minutes before each actual statement timestamp. Resolve the prior
+    # date from an independently verified calendar, never from observed bars.
     output = []
-    previous_session_by_time: dict[time, dict[date, date]] = {}
     for event in events:
         d = event["meeting_date"]
         announcement_raw = str(event.get("announcement_at", "")).strip()
@@ -134,22 +172,8 @@ def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_b
         reference_time = reference_dt.time().replace(tzinfo=None)
         base["reference_time_et"] = reference_time.isoformat()
 
-        # Infer available sessions only from days with the exact reference
-        # minute. Validate the sample against an authoritative exchange calendar.
-        if reference_time not in previous_session_by_time:
-            session_days = sorted({
-                ts.date() for ts in bars
-                if ts.timetz().replace(tzinfo=None) == reference_time
-            })
-            previous_session_by_time[reference_time] = {
-                session_days[i]: session_days[i - 1]
-                for i in range(1, len(session_days))
-            }
-        previous_session = previous_session_by_time[reference_time]
-
-        exit_ = exact_close(bars, d, reference_time)
-        if exit_ is None:
-            base["status"] = "MISSING_EXACT_REFERENCE_BAR"
+        if d not in session_set:
+            base["status"] = "EVENT_NOT_IN_SESSION_CALENDAR"
             output.append(base)
             continue
         if d not in previous_session:
@@ -159,7 +183,10 @@ def run_study(bars: dict[datetime, float], events: list[dict], round_trip_cost_b
 
         entry_day = previous_session[d]
         entry = exact_close(bars, entry_day, reference_time)
-        if entry is None:
+        exit_ = exact_close(bars, d, reference_time)
+        if entry is None or exit_ is None:
+            # The official calendar tells us the expected prior session. Never
+            # skip over a missing reference bar and substitute an older date.
             base["status"] = "MISSING_EXACT_REFERENCE_BAR"
             output.append(base)
             continue
@@ -249,6 +276,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bars", required=True, type=Path)
     parser.add_argument("--events", required=True, type=Path)
+    parser.add_argument("--calendar", required=True, type=Path,
+                        help="CSV with session_date from an authoritative US equity calendar")
     parser.add_argument("--round-trip-cost-bps", type=float, default=0.0)
     parser.add_argument("--out", type=Path, default=Path("prefomc_event_results.csv"))
     parser.add_argument("--summary", type=Path, default=Path("prefomc_event_summary.json"))
@@ -256,7 +285,8 @@ def main() -> int:
 
     bars = load_bars(args.bars)
     events = load_events(args.events)
-    rows = run_study(bars, events, args.round_trip_cost_bps)
+    sessions = load_sessions(args.calendar)
+    rows = run_study(bars, events, args.round_trip_cost_bps, sessions)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0]) if rows else [
@@ -269,8 +299,10 @@ def main() -> int:
     summary = summarize(rows)
     summary["bars_sha256"] = hashlib.sha256(args.bars.read_bytes()).hexdigest()
     summary["events_sha256"] = hashlib.sha256(args.events.read_bytes()).hexdigest()
+    summary["calendar_sha256"] = hashlib.sha256(args.calendar.read_bytes()).hexdigest()
     summary["bar_count"] = len(bars)
     summary["event_file_count"] = len(events)
+    summary["session_calendar_count"] = len(sessions)
     args.summary.parent.mkdir(parents=True, exist_ok=True)
     args.summary.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2, sort_keys=True))
