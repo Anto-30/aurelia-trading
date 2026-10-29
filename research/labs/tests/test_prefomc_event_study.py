@@ -1,9 +1,11 @@
 import math
 import unittest
 from datetime import date, datetime
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from zoneinfo import ZoneInfo
 
-from research.labs.prefomc_event_study import run_study, summarize
+from research.labs.prefomc_event_study import load_sessions, run_study, summarize
 
 NY = ZoneInfo("America/New_York")
 
@@ -90,6 +92,28 @@ class PreFOMCEventStudyTests(unittest.TestCase):
         self.assertFalse(summary["capital_authority"])
         self.assertFalse(summary["live_execution"])
         self.assertIsNone(summary["p_value"])
+
+    def test_session_loader_sorts_verified_dates(self):
+        with TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "sessions.csv"
+            path.write_text(
+                "session_date\\n2026-10-28\\n2026-10-27\\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                load_sessions(path),
+                [date(2026, 10, 27), date(2026, 10, 28)],
+            )
+
+    def test_session_loader_rejects_duplicate_dates(self):
+        with TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "sessions.csv"
+            path.write_text(
+                "session_date\\n2026-10-27\\n2026-10-27\\n",
+                encoding="utf-8",
+            )
+            with self.assertRaises(ValueError):
+                load_sessions(path)
 
     def test_cost_cannot_equal_or_exceed_full_notional(self):
         with self.assertRaises(ValueError):
