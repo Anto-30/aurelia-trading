@@ -51,8 +51,8 @@ class PreFOMCEventStudyTests(unittest.TestCase):
         event = [{"meeting_date": d2, "announcement_at": "2026-10-28T14:00:00-04:00"}]
         row = run_study(bars, event, 2.0, [d1, d2])[0]
         self.assertAlmostEqual(float(row["gross_log_return"]), math.log(1.01))
-        self.assertAlmostEqual(float(row["net_log_return"]), math.log(1.01) - 0.0002)
-        self.assertAlmostEqual(float(row["net_return"]), math.exp(math.log(1.01) - 0.0002) - 1.0)
+        self.assertAlmostEqual(float(row["net_log_return"]), math.log(1.01) + math.log1p(-0.0002))
+        self.assertAlmostEqual(float(row["net_return"]), math.exp(math.log(1.01) + math.log1p(-0.0002)) - 1.0)
 
     def test_event_timestamp_must_match_meeting_date(self):
         d1, d2 = date(2026, 10, 27), date(2026, 10, 28)
@@ -90,6 +90,15 @@ class PreFOMCEventStudyTests(unittest.TestCase):
         self.assertFalse(summary["capital_authority"])
         self.assertFalse(summary["live_execution"])
         self.assertIsNone(summary["p_value"])
+
+    def test_cost_cannot_equal_or_exceed_full_notional(self):
+        with self.assertRaises(ValueError):
+            run_study({}, [], 10_000.0, [])
+
+    def test_duplicate_session_dates_fail_closed(self):
+        d1, d2 = date(2026, 10, 27), date(2026, 10, 28)
+        with self.assertRaises(ValueError):
+            run_study({}, [], 0.0, [d1, d2, d2])
 
     def test_cost_must_be_nonnegative(self):
         with self.assertRaises(ValueError):
