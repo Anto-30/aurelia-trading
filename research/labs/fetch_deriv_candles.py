@@ -20,8 +20,8 @@ from typing import Any
 import pandas as pd
 import websockets
 
-WS_URL = "wss://ws.derivws.com/websockets/v3"
-DEFAULT_APP_ID = "1089"  # Deriv documents this ID for testing, not production releases.
+WS_URL = "wss://ws.binaryws.com/websockets/v3"
+DEFAULT_APP_ID = ""  # The current public market-data example works without an app ID.
 DEFAULT_SYMBOL = "1HZ75V"
 GRANULARITY_SECONDS = 60
 MAX_BARS_PER_PAGE = 4000
@@ -101,8 +101,9 @@ async def fetch_deriv_candles(
     all_candles: list[dict[str, Any]] = []
     req_id = 1
 
+    websocket_url = f"{WS_URL}?app_id={app_id}" if app_id else WS_URL
     async with websockets.connect(
-        f"{WS_URL}?app_id={app_id}",
+        websocket_url,
         open_timeout=REQUEST_TIMEOUT_SECONDS,
         close_timeout=5,
         ping_interval=20,
@@ -204,9 +205,9 @@ async def fetch_deriv_candles(
     manifest: dict[str, Any] = {
         "schema": "aurelia.deriv_candles_manifest.v1",
         "source": "Deriv public WebSocket API",
-        "websocket_url": f"{WS_URL}?app_id={app_id}",
+        "websocket_url": websocket_url,
         "authentication_used": False,
-        "app_id_note": "1089 is documented by Deriv for testing; do not use as a production release ID.",
+        "app_id_note": "No app ID is sent by default; an explicit --app-id may be supplied for a registered app.",
         "symbol": symbol,
         "display_name": match.get("display_name"),
         "granularity_seconds": GRANULARITY_SECONDS,
@@ -254,14 +255,21 @@ async def async_main(args: argparse.Namespace) -> int:
         await fetch_deriv_candles(args.symbol, args.app_id, start, end, args.output_dir)
         return 0
     except Exception as exc:
-        print(json.dumps({
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+        failure = {
+            "schema": "aurelia.deriv_candles_failure.v1",
             "status": "ABORTED",
+            "symbol": args.symbol,
             "reason": type(exc).__name__,
             "detail": str(exc),
             "research_only": True,
             "capital_authority": False,
             "live_execution": False,
-        }, indent=2))
+        }
+        (args.output_dir / f"{args.symbol}_1m_failure.json").write_text(
+            json.dumps(failure, indent=2, allow_nan=False) + "\\n", encoding="utf-8"
+        )
+        print(json.dumps(failure, indent=2, allow_nan=False))
         return 2
 
 
