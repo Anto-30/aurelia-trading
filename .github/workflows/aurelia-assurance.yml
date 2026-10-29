@@ -196,3 +196,24 @@ jobs:
           test "$status" -eq 2
           echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
           echo "$output" | grep -q "REASON="
+
+  phase6-research:
+    name: Phase 6 research baseline (isolated, no production secrets)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-research.txt
+      - name: Install isolated research dependencies
+        run: python -m pip install -r requirements-research.txt
+      - name: Compile Phase 6 research code and tests
+        run: python -m py_compile research/labs/phase6_time_filter.py research/labs/phase6_tests/test_phase6_time_filter.py
+      - name: Run Phase 6 deterministic tests
+        env:
+          PYTHONPATH: .
+        run: python -m unittest discover -s research/labs/phase6_tests -p 'test_*.py' -v

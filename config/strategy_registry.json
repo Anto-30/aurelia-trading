@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.strategy_registry.v1",
-  "registry_version": "2026-10-10.1",
+  "registry_version": "2026-10-30.1",
   "capital_authority": false,
   "execution_authority": false,
   "policy": {
@@ -402,6 +402,115 @@
       "rejection_reasons": [
         "Existing strategy identity retained; implementation not verified in canonical main checkout.",
         "No verified qualification evidence"
+      ]
+    },
+    {
+      "strategy_id": "PHASE6_TIME_MOMENTUM",
+      "version": "1.0.0",
+      "implementation_path": "research/labs/phase6_time_filter.py",
+      "implementation_entrypoint": "generate_phase6_signals",
+      "implementation_status": "RESEARCH_ONLY",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [
+        "US_LISTED_EQUITY"
+      ],
+      "verified_instrument_ids": [],
+      "timeframe_status": "1M_BAR_OPEN_TIMESTAMP",
+      "timeframes": [
+        "1m"
+      ],
+      "data_requirements": [
+        "closed_ohlcv_bars",
+        "timezone_aware_timestamps",
+        "bar_open_timestamp_semantics",
+        "minute_continuity_for_0851_to_0905",
+        "explicit_commission_and_slippage"
+      ],
+      "risk_profile": "Per-share historical research metrics only. No capital sizing, capital authority, or order execution. Stop distance is signal-bar True Range; do not promote without the existing Layer 6 policy and verified instrument economics.",
+      "execution_assumptions": [
+        "closed_0850_signal",
+        "next_bar_open_entry",
+        "stop_first_ohlc_approximation",
+        "time_exit_0905_bar_close_actual_0906",
+        "research_only_no_orders"
+      ],
+      "qualification_status": "RESEARCH_ONLY_UNQUALIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "NOT_RUN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "IMPLEMENTED_NOT_STRATEGY_SPECIFIC",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "No NVDA Parquet or verified target-ticker dataset supplied",
+        "No untouched out-of-sample evidence",
+        "No measured execution-cost profile",
+        "08:50 New York is premarket for US equities; premarket liquidity and fills are not verified"
+      ]
+    },
+    {
+      "strategy_id": "PHASE6_PLUS_LAYER9_TIME_MOMENTUM",
+      "version": "1.0.0",
+      "implementation_path": "research/labs/phase6_time_filter.py",
+      "implementation_entrypoint": "generate_phase6_plus_9_signals",
+      "implementation_status": "RESEARCH_ONLY",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [
+        "US_LISTED_EQUITY"
+      ],
+      "verified_instrument_ids": [],
+      "timeframe_status": "1M_BAR_OPEN_TIMESTAMP",
+      "timeframes": [
+        "1m"
+      ],
+      "data_requirements": [
+        "closed_ohlcv_bars",
+        "timezone_aware_timestamps",
+        "bar_open_timestamp_semantics",
+        "verified_volume_provenance",
+        "minute_continuity_for_0851_to_0905",
+        "explicit_commission_and_slippage"
+      ],
+      "risk_profile": "Per-share historical research metrics only. No capital sizing, capital authority, or order execution. Stop distance is 1.5 times Wilder ATR(14) at signal close; do not promote without the existing Layer 6 policy and verified instrument economics.",
+      "execution_assumptions": [
+        "closed_0850_signal",
+        "next_bar_open_entry",
+        "layer9_prior_20_bar_volume_baseline",
+        "layer9_ema200_and_expanding_wilder_atr14",
+        "stop_first_ohlc_approximation",
+        "time_exit_0905_bar_close_actual_0906",
+        "research_only_no_orders"
+      ],
+      "qualification_status": "RESEARCH_ONLY_UNQUALIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "NOT_RUN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "IMPLEMENTED_NOT_STRATEGY_SPECIFIC",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "No NVDA Parquet or verified target-ticker dataset supplied",
+        "No untouched out-of-sample evidence",
+        "No measured execution-cost profile",
+        "08:50 New York is premarket for US equities; premarket liquidity and fills are not verified"
       ]
     }
   ]
