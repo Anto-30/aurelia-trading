@@ -1,23 +1,23 @@
 # Phase 6 / Phase 6+Layer 9 Time-Filter Research Specification
 
-Status: \`RESEARCH_ONLY_UNQUALIFIED\`. This specification is a reproducible hypothesis, not an edge claim.
+Status: `RESEARCH_ONLY_UNQUALIFIED`. This specification is a reproducible hypothesis, not an edge claim.
 
 ## Model definitions
 
-Both models require timezone-aware, minute-aligned OHLC data indexed by each bar's **opening timestamp** and normalized to \`America/New_York\`. The signal is computed only after the bar timestamped 08:50 has closed. Entry uses the next minute bar's open, expected at 08:51. Exact 08:50 matching is required; no nearest-bar fallback is implemented because an 08:50 New York wall-clock time exists on both sides of a daylight-saving transition. Missing data causes the candidate to be skipped.
+Both models require timezone-aware, minute-aligned OHLC data indexed by each bar's **opening timestamp** and normalized to `America/New_York`. The signal is computed only after the bar timestamped 08:50 has closed. Entry uses the next minute bar's open, expected at 08:51. Exact 08:50 matching is required; no nearest-bar fallback is implemented because an 08:50 New York wall-clock time exists on both sides of a daylight-saving transition. Missing data causes the candidate to be skipped.
 
 ### Phase 6 only
 
-- Long: target bar at 08:50 NY, \`close > open\`, and \`close > EMA(20)\`.
-- Short: target bar at 08:50 NY, \`close < open\`, and \`close < EMA(20)\`.
+- Long: target bar at 08:50 NY, `close > open`, and `close > EMA(20)`.
+- Short: target bar at 08:50 NY, `close < open`, and `close < EMA(20)`.
 - Stop distance: 1.0 × true range of the signal bar. True range includes gaps from the previous close.
 
 ### Phase 6 + Layer 9
 
 Apply the same candle and EMA(20) rules, plus:
 
-- \`volume > 1.5 × mean(volume of the prior 20 bars)\`. The signal bar's volume is intentionally excluded from the reference mean.
-- Long only if \`close > EMA(200)\`; short only if \`close < EMA(200)\`.
+- `volume > 1.5 × mean(volume of the prior 20 bars)`. The signal bar's volume is intentionally excluded from the reference mean.
+- Long only if `close > EMA(200)`; short only if `close < EMA(200)`.
 - Wilder ATR(14) must be greater than its preceding value.
 - Stop distance: 1.5 × Wilder ATR(14), calculated at the signal bar close.
 
@@ -39,24 +39,24 @@ All indicator calculations use only current/past rows. EMA warm-up bars and ATR 
 
 Install research dependencies separately from the live runtime:
 
-\`\`\`bash
+```bash
 pip install -r requirements-research.txt
-\`\`\`
+```
 
 Run both models with explicit costs:
 
-\`\`\`bash
-python -m research.labs.phase6_time_filter \\
-  --data /path/to/NVDA.parquet \\
-  --timestamp-column timestamp \\
-  --source-timezone UTC \\
-  --commission-per-share-per-side 0.005 \\
-  --slippage-per-share-per-side 0.01 \\
-  --oos-start 2026-07-01 \\
+```bash
+python -m research.labs.phase6_time_filter \
+  --data /path/to/NVDA.parquet \
+  --timestamp-column timestamp \
+  --source-timezone UTC \
+  --commission-per-share-per-side 0.005 \
+  --slippage-per-share-per-side 0.01 \
+  --oos-start 2026-07-01 \
   --outdir artifacts/phase6_nvda
-\`\`\`
+```
 
-The sample cost numbers above are illustrative inputs, not verified execution costs. Replace them with the actual brokerage/venue cost model. For US-listed equities, 08:50 New York is premarket; use an extended-hours dataset and costs that reflect the wider spread and lower liquidity, or the test is not representative of a fillable setup. If timestamps already contain a timezone, \`--source-timezone\` is not used. Naive local timestamps around a DST fold must not be silently localized; ambiguous/nonexistent values abort.
+The sample cost numbers above are illustrative inputs, not verified execution costs. Replace them with the actual brokerage/venue cost model. For US-listed equities, 08:50 New York is premarket; use an extended-hours dataset and costs that reflect the wider spread and lower liquidity, or the test is not representative of a fillable setup. If timestamps already contain a timezone, `--source-timezone` is not used. Naive local timestamps around a DST fold must not be silently localized; ambiguous/nonexistent values abort.
 
 Outputs include a SHA-256 hash of the Parquet input, source revision when available, the full/partitioned metrics, trade-ledger CSVs, and skipped-signal reasons. Metrics are simulated research evidence, not broker truth.
 
