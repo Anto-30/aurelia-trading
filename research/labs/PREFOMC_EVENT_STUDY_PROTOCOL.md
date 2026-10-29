@@ -2,7 +2,7 @@
 
 **Status:** Research-only; historical edge is not validated for AURELIA.  
 **Capital authority:** None. **Live execution:** Forbidden.  
-**As-of:** 2026-10-28.
+**As-of:** 2026-10-29.
 
 ## Research question
 
@@ -26,6 +26,8 @@ This protocol separates (a) an academic event-study replication from (b) a trada
 - Use the same local clock time on the preceding verified US equity trading session for entry.
 - The historic scheduled statement time was commonly 14:15 ET, giving a 14:00 ET reference time. The post-2013 convention is 14:00 ET, giving a 13:45 ET reference time. Do not hardcode one reference time across all years.
 - Missing statement timestamps must be excluded and reported. Do not infer the time only from the meeting date.
+- Supply an independently verified US equity trading-session calendar as `sessions.csv`, with exactly the required `session_date` field (ISO dates). The command line requires `--calendar sessions.csv`.
+- The prior session is read from that calendar, not inferred from available bars. If the reference bar is missing for either expected session, the event is excluded as `MISSING_EXACT_REFERENCE_BAR`; the script never skips over the gap to choose an older date.
 - The script uses exact reference-minute samples; it does not interpolate a missing price.
 
 ## Data policy and timestamp normalization
@@ -37,7 +39,7 @@ Use a timestamped S&P 500 index futures series that covers the relevant sample: 
 SPY one-minute bars can be used for a **separately labelled proxy study**, not as an exact reproduction of the futures paper. The IEX-only feed is not the consolidated US equity tape and can contain missing minutes. The current connector's historical request returned no 2011 bars and only partial access to later dates, so a complete SPY study was not produced in this run.
 
 ### Bar-time conventions
-Normalize each data source before running the study. Many one-minute OHLCV feeds label a bar by its **start** time while `close` is observed at the end of that minute. Pairing the start label with the close price creates a one-minute timing mismatch. Shift the timestamp to the price observation time or use a suitable timestamp-aligned observation. Record the source, feed, timezone, timestamp convention, adjustment convention, extraction time, and SHA-256 hashes in the run manifest.
+Normalize each data source before running the study. Many one-minute OHLCV feeds label a bar by its **start** time while `close` is observed at the end of that minute. Pairing the start label with the close price creates a one-minute timing mismatch. Shift the timestamp to the price observation time or use a suitable timestamp-aligned observation. Record the source, feed, timezone, timestamp convention, adjustment convention, extraction time, and SHA-256 hashes in the run manifest. The script's summary includes input-file hashes for bars, the event file, and the independently verified session calendar.
 
 ### Official event source
 Use the Federal Reserve's FOMC calendars for meeting dates, then independently validate each announcement's timestamp using the associated statement/event record or an authoritative historical release record: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
@@ -59,6 +61,20 @@ Use the Federal Reserve's FOMC calendars for meeting dates, then independently v
 - Spot checks for several later FOMC windows returned values through the IEX feed, but repeated requests subsequently returned internal errors. The spot checks were incomplete and were not used to publish cohort performance metrics.
 - The HF Data Library describes a free one-minute US equity dataset under CC BY 4.0, but programmatic full-history downloads require a free account/API key and profile verification. This run did not register an account or use/guess credentials. Its post-March 2022 bars are identified as IEX-sourced. Start here: https://hfdatalibrary.com/ and API notes: https://hfdatalibrary.com/pages/api
 - No complete, hash-pinned research dataset and no validated complete event file were available in this run. Therefore **no full historical backtest result is claimed**.
+
+## Reproduction command
+
+```bash
+python research/labs/prefomc_event_study.py \
+  --bars data/spy_or_es_minute_bars.csv \
+  --events data/fomc_events_verified.csv \
+  --calendar data/us_equity_sessions_verified.csv \
+  --round-trip-cost-bps 2 \
+  --out reports/prefomc_event_returns.csv \
+  --summary reports/prefomc_event_summary.json
+```
+
+Run the cost sensitivity at 0, 2, 5, and 10 bps as separate, labelled outputs. Input files must be present and hash-pinned; the example command is not evidence that these files exist or that the backtest has run.
 
 ## AURELIA release gate
 
