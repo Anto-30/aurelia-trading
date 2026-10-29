@@ -196,3 +196,54 @@ jobs:
           test "$status" -eq 2
           echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
           echo "$output" | grep -q "REASON="
+
+  phase6-research:
+    name: Phase 6 research baseline (isolated, no production secrets)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-research.txt
+      - name: Install isolated research dependencies
+        run: python -m pip install -r requirements-research.txt
+      - name: Compile research code and tests
+        run: python -m py_compile research/labs/phase6_time_filter.py research/labs/fetch_deriv_candles.py research/labs/phase6_tests/test_phase6_time_filter.py research/labs/phase6_tests/test_deriv_fetch.py
+      - name: Run deterministic research tests
+        env:
+          PYTHONPATH: .
+        run: python -m unittest discover -s research/labs/phase6_tests -p 'test_*.py' -v
+      - name: Fetch and verify one year of public Deriv 1-minute candles
+        run: |
+          python research/labs/fetch_deriv_candles.py \
+            --symbol 1HZ75V \
+            --start 2025-10-01T00:00:00Z \
+            --output-dir artifacts/deriv
+      - name: Run Phase 6-only zero-cost out-of-sample diagnostic
+        run: |
+          echo "COSTS=ZERO_COST_SENSITIVITY_ONLY"
+          echo "VOLUME=NOT_AVAILABLE_FROM_DERIV_CANDLE_ENDPOINT"
+          echo "LAYER9_VARIANT=NOT_RUN"
+          python research/labs/phase6_time_filter.py \
+            --data artifacts/deriv/1HZ75V_1m.parquet \
+            --timestamp-column timestamp \
+            --source-timezone UTC \
+            --commission-per-share-per-side 0 \
+            --slippage-per-share-per-side 0 \
+            --oos-start 2026-07-01T00:00:00Z \
+            --variants PHASE6_ONLY \
+            --outdir artifacts/phase6_deriv
+      - name: Preserve public Deriv research data and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deriv-phase6-research-evidence
+          path: |
+            artifacts/deriv/
+            artifacts/phase6_deriv/
+          if-no-files-found: warn
+          retention-days: 30
