@@ -470,6 +470,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--slippage-per-share-per-side", required=True, type=float,
                         help="Explicit one-way adverse slippage assumption; pass 0 only for sensitivity analysis")
     parser.add_argument("--oos-start", default=None, help="Optional ISO timestamp/date for untouched out-of-sample reporting")
+    parser.add_argument("--variants", nargs="+", choices=("PHASE6_ONLY", "PHASE6_PLUS_9"),
+                        default=["PHASE6_ONLY", "PHASE6_PLUS_9"],
+                        help="Variants to run; omit to run both (requires volume for PHASE6_PLUS_9)")
     parser.add_argument("--outdir", type=Path, default=Path("artifacts/phase6_research"))
     args = parser.parse_args(argv)
     if not args.data.is_file():
@@ -494,7 +497,7 @@ def main(argv: list[str] | None = None) -> int:
             "metrics_are": "BACKTEST_SIMULATION_NOT_BROKER_EVIDENCE",
             "models": {},
         }
-        for variant in ("PHASE6_ONLY", "PHASE6_PLUS_9"):
+        for variant in args.variants:
             result = run_phase6_backtest(frame, variant=variant, config=config)  # type: ignore[arg-type]
             trades: pd.DataFrame = result.pop("trades")
             trades.to_csv(args.outdir / f"{variant.lower()}_trades.csv", index=False)
