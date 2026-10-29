@@ -36,6 +36,21 @@ RESEARCH_ONLY = True
 CAPITAL_AUTHORITY = False
 LIVE_EXECUTION = False
 NY = ZoneInfo("America/New_York")
+EVENT_RESULT_FIELDS = (
+    "meeting_date",
+    "announcement_timestamp",
+    "reference_time_et",
+    "entry_timestamp",
+    "exit_timestamp",
+    "entry_close",
+    "exit_close",
+    "gross_return",
+    "gross_log_return",
+    "round_trip_cost_bps",
+    "net_return",
+    "net_log_return",
+    "status",
+)
 
 
 def parse_timestamp(raw: str) -> datetime:
@@ -146,21 +161,12 @@ def run_study(
     for event in events:
         d = event["meeting_date"]
         announcement_raw = str(event.get("announcement_at", "")).strip()
-        base = {
+        base = {field: "" for field in EVENT_RESULT_FIELDS}
+        base.update({
             "meeting_date": d.isoformat(),
             "announcement_timestamp": announcement_raw,
-            "reference_time_et": "",
-            "entry_timestamp": "",
-            "exit_timestamp": "",
-            "entry_close": "",
-            "exit_close": "",
-            "gross_return": "",
-            "gross_log_return": "",
             "round_trip_cost_bps": round_trip_cost_bps,
-            "net_return": "",
-            "net_log_return": "",
-            "status": "",
-        }
+        })
         if not announcement_raw:
             base["status"] = "MISSING_ANNOUNCEMENT_TIMESTAMP"
             output.append(base)
@@ -253,6 +259,8 @@ def summarize(rows: list[dict]) -> dict:
         "events_valid": n,
         "events_excluded": len(rows) - n,
         "return_basis": "simple_return_with_log_return_fields",
+        "timezone": "America/New_York",
+        "reference_offset_minutes": 15,
         "mean_net_return": mean,
         "median_net_return": statistics.median(valid) if valid else None,
         "mean_net_log_return": log_mean,
@@ -295,11 +303,7 @@ def main() -> int:
     rows = run_study(bars, events, args.round_trip_cost_bps, sessions)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=list(rows[0]) if rows else [
-            "meeting_date", "announcement_timestamp", "reference_time_et", "entry_timestamp",
-            "exit_timestamp", "entry_close", "exit_close", "gross_return",
-            "gross_log_return", "round_trip_cost_bps", "net_return", "net_log_return", "status"
-        ])
+        writer = csv.DictWriter(f, fieldnames=EVENT_RESULT_FIELDS)
         writer.writeheader()
         writer.writerows(rows)
     summary = summarize(rows)
