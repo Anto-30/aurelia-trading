@@ -123,7 +123,13 @@ def run_study(
 ) -> list[dict]:
     if not math.isfinite(round_trip_cost_bps) or round_trip_cost_bps < 0:
         raise ValueError("round-trip cost must be finite and non-negative")
+    if round_trip_cost_bps >= 10_000:
+        raise ValueError("round-trip cost must be less than 10000 bps")
 
+    if not session_dates:
+        raise ValueError("verified session calendar cannot be empty")
+    if any(not isinstance(day, date) for day in session_dates):
+        raise ValueError("session calendar entries must be date values")
     if len(session_dates) != len(set(session_dates)):
         raise ValueError("session calendar contains duplicate dates")
     if session_dates != sorted(session_dates):
@@ -193,13 +199,14 @@ def run_study(
 
         entry_ts, entry_price = entry
         exit_ts, exit_price = exit_
-        gross_log_return = math.log(exit_price / entry_price)
-        # A proportional cost is additive in log-return space. This remains a
-        # flat cost assumption, not a broker-specific fill/spread simulation.
-        cost_log_return = round_trip_cost_bps / 10_000.0
-        net_log_return = gross_log_return - cost_log_return
-        gross_return = math.exp(gross_log_return) - 1.0
-        net_return = math.exp(net_log_return) - 1.0
+        # Separate log(price) terms avoid overflow in exit_price / entry_price.
+        gross_log_return = math.log(exit_price) - math.log(entry_price)
+        # Interpret bps as a proportional round-trip cost on notional. Apply the
+        # exact multiplicative haircut in log space, not a linear approximation.
+        cost_rate = round_trip_cost_bps / 10_000.0
+        net_log_return = gross_log_return + math.log1p(-cost_rate)
+        gross_return = math.expm1(gross_log_return)
+        net_return = math.expm1(net_log_return)
         base.update({
             "entry_timestamp": entry_ts.isoformat(),
             "exit_timestamp": exit_ts.isoformat(),
@@ -235,7 +242,6 @@ def summarize(rows: list[dict]) -> dict:
         peak = max(peak, equity)
         max_drawdown = max(max_drawdown, (peak - equity) / peak)
     wins = sum(x > 0 for x in valid)
-    losses = sum(x < 0 for x in valid)
     gross_wins = sum(x for x in valid if x > 0)
     gross_losses = abs(sum(x for x in valid if x < 0))
     return {
@@ -292,7 +298,7 @@ def main() -> int:
         writer = csv.DictWriter(f, fieldnames=list(rows[0]) if rows else [
             "meeting_date", "announcement_timestamp", "reference_time_et", "entry_timestamp",
             "exit_timestamp", "entry_close", "exit_close", "gross_return",
-            "round_trip_cost_bps", "net_return", "status"
+            "gross_log_return", "round_trip_cost_bps", "net_return", "net_log_return", "status"
         ])
         writer.writeheader()
         writer.writerows(rows)
