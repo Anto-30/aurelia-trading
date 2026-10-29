@@ -272,7 +272,7 @@ def summarize(rows: list[dict]) -> dict:
             "Cost is a user-specified flat round-trip haircut, not verified historical spread or slippage.",
             "No risk-free adjustment, benchmark adjustment, dividends, or market-impact model is applied.",
             "Announcement timestamp must be independently verified for each event; reference time is 15 minutes before it.",
-            "Available sessions are inferred from reference bars; validate against an authoritative US exchange calendar and complete-session data.",
+            "The prior-session mapping relies on the supplied session calendar; calendar coverage and accuracy must be independently verified.",
             "This output is not a trade signal or evidence of deployable alpha.",
         ],
     }
