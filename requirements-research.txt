@@ -1,3 +1,4 @@
 # Optional research-only dependencies; deliberately separate from live runtime requirements.
 pandas==3.1.0
 pyarrow==26.0.0
+websockets==15.0.1
