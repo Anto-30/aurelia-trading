@@ -97,7 +97,7 @@ class PreFOMCEventStudyTests(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             path = Path(temp_dir) / "sessions.csv"
             path.write_text(
-                "session_date\\n2026-10-28\\n2026-10-27\\n",
+                "session_date\n2026-10-28\n2026-10-27\n",
                 encoding="utf-8",
             )
             self.assertEqual(
@@ -109,7 +109,7 @@ class PreFOMCEventStudyTests(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             path = Path(temp_dir) / "sessions.csv"
             path.write_text(
-                "session_date\\n2026-10-27\\n2026-10-27\\n",
+                "session_date\n2026-10-27\n2026-10-27\n",
                 encoding="utf-8",
             )
             with self.assertRaises(ValueError):
