@@ -57,6 +57,21 @@ class DerivPublicDataTests(unittest.TestCase):
         batch = client.fetch_candles("frxXAUUSD", count=1)
         self.assertEqual(batch.symbol, "frxXAUUSD")
 
+    def test_trading_times_requires_iso_date(self):
+        client = DerivPublicDataClient(timeout_seconds=1)
+        with self.assertRaisesRegex(ValueError, "TRADING_TIMES_DATE_MUST_BE_YYYY_MM_DD"):
+            client.trading_times("today")
+
+    def test_trading_times_returns_public_symbol_schedules(self):
+        client = DerivPublicDataClient(timeout_seconds=1)
+        client._request = Mock(return_value=(
+            {"trading_times": {"markets": [{"name": "Forex", "submarkets": []}]}},
+            '{"trading_times":{"markets":[{"name":"Forex","submarkets":[]}]}}',
+        ))
+        result = client.trading_times("2026-10-30")
+        self.assertEqual(result["markets"][0]["name"], "Forex")
+        self.assertEqual(client._request.call_args.args[0], {"trading_times": "2026-10-30"})
+
 
 if __name__ == "__main__":
     unittest.main()
