@@ -1,8 +1,7 @@
-"""Retrieve an exact Deriv XAUUSD 15-minute public history sample.
+"""Paginated, read-only retrieval of Deriv XAUUSD M15 history.
 
-This script never authenticates an account or submits transactions. It writes a
-raw-research CSV plus a provenance/quality sidecar. Session gaps are reported,
-not filled or silently approved.
+Writes raw CSV plus a provenance/quality sidecar. No account auth or trading
+methods are used. Time gaps are retained and labelled; no repairs are applied.
 """
 from __future__ import annotations
 
@@ -16,8 +15,9 @@ import pandas as pd
 from research.labs.deriv_public_data import DerivPublicDataClient
 
 OUTPUT = Path("artifacts/t4f-369-xauusd-m15")
-COUNT = 5000
+REQUESTED_COUNT = 5000
 GRANULARITY_SECONDS = 900
+MAX_PAGES = 12
 EXACT_CODES = {"FRXXAUUSD", "XAUUSD"}
 
 
@@ -26,11 +26,8 @@ def write_json(path: Path, value: dict) -> None:
     path.write_text(json.dumps(value, sort_keys=True, indent=2) + "\n", encoding="utf-8")
 
 
-def main() -> int:
-    OUTPUT.mkdir(parents=True, exist_ok=True)
-    client = DerivPublicDataClient(timeout_seconds=30)
+def discover_xauusd_symbol(client: DerivPublicDataClient) -> tuple[str | None, list[dict]]:
     symbols = client.active_symbols()
-
     matches = []
     for item in symbols:
         symbol = str(item.get("symbol") or "").strip()
@@ -44,7 +41,6 @@ def main() -> int:
                 "market_display_name": item.get("market_display_name"),
                 "exchange_is_open": item.get("exchange_is_open"),
             })
-
     exact_codes = sorted({
         code
         for item in matches
@@ -54,21 +50,85 @@ def main() -> int:
     selected = "frxXAUUSD" if "frxXAUUSD" in exact_codes else (
         "XAUUSD" if "XAUUSD" in exact_codes else None
     )
+    return selected, symbols
+
+
+def fetch_history_pages(client: DerivPublicDataClient, symbol: str):
+    newest_first = []
+    requested_remaining = REQUESTED_COUNT
+    end: int | str = "latest"
+    page_hashes = []
+    exhausted = False
+
+    for page_number in range(1, MAX_PAGES + 1):
+        try:
+            batch = client.fetch_candles(
+                symbol=symbol,
+                granularity_seconds=GRANULARITY_SECONDS,
+                count=min(5000, requested_remaining),
+                end=end,
+            )
+        except RuntimeError as exc:
+            if "DERIV_CANDLE_RESPONSE_EMPTY_OR_INVALID" in str(exc):
+                exhausted = True
+                break
+            raise
+
+        if batch.frame.empty:
+            exhausted = True
+            break
+        if not batch.frame.index.is_monotonic_increasing or batch.frame.index.has_duplicates:
+            raise RuntimeError("DERIV_PAGE_TIMESTAMP_ORDER_OR_UNIQUENESS_FAILED")
+
+        newest_first.append(batch)
+        page_hashes.append(batch.raw_response_sha256)
+        requested_remaining -= len(batch.frame)
+        if requested_remaining <= 0:
+            break
+
+        oldest_epoch = int(batch.frame.index[0].timestamp())
+        next_end = oldest_epoch - 1
+        if next_end <= 0 or (isinstance(end, int) and next_end >= end):
+            raise RuntimeError("DERIV_HISTORY_PAGINATION_DID_NOT_MOVE_BACKWARD")
+        end = next_end
+
+    if not newest_first:
+        raise RuntimeError("DERIV_XAUUSD_HISTORY_NOT_RETURNED")
+
+    chronological_batches = list(reversed(newest_first))
+    combined = pd.concat([batch.frame for batch in chronological_batches], axis=0)
+    if combined.index.has_duplicates:
+        raise RuntimeError("DERIV_PAGINATED_HISTORY_OVERLAP_DETECTED")
+    if not combined.index.is_monotonic_increasing:
+        raise RuntimeError("DERIV_PAGINATED_HISTORY_ORDER_INVALID")
+
+    # The newest page was requested first; its server clock is the freshest.
+    latest_batch = newest_first[0]
+    combined_hash = hashlib.sha256("".join(page_hashes).encode("ascii")).hexdigest()
+    return combined, latest_batch, page_hashes, combined_hash, exhausted
+
+
+def main() -> int:
+    OUTPUT.mkdir(parents=True, exist_ok=True)
+    client = DerivPublicDataClient(timeout_seconds=30)
+    selected, symbols = discover_xauusd_symbol(client)
+
     if selected is None:
+        matches = [
+            {
+                "symbol": item.get("symbol"),
+                "underlying_symbol": item.get("underlying_symbol"),
+                "display_name": item.get("display_name"),
+            }
+            for item in symbols
+            if "gold" in str(item.get("display_name", "")).lower()
+            or "xau" in str(item.get("symbol", "")).lower()
+            or "xau" in str(item.get("underlying_symbol", "")).lower()
+        ]
         write_json(OUTPUT / "symbol-discovery.json", {
             "status": "XAUUSD_SYMBOL_NOT_FOUND",
             "active_symbol_count": len(symbols),
-            "exact_matches": matches,
-            "candidate_gold_symbols": [
-                {
-                    "symbol": item.get("symbol"),
-                    "underlying_symbol": item.get("underlying_symbol"),
-                    "display_name": item.get("display_name"),
-                }
-                for item in symbols
-                if "gold" in str(item.get("display_name", "")).lower()
-                or "xau" in str(item.get("symbol", "")).lower()
-            ],
+            "candidate_gold_symbols": matches,
             "action": "No substitute instrument selected.",
         })
         print(json.dumps({
@@ -78,12 +138,7 @@ def main() -> int:
         }, sort_keys=True))
         return 0
 
-    batch = client.fetch_candles(
-        symbol=selected,
-        granularity_seconds=GRANULARITY_SECONDS,
-        count=COUNT,
-    )
-    frame = batch.frame.copy()
+    frame, latest_batch, page_hashes, combined_raw_hash, exhausted = fetch_history_pages(client, selected)
     if frame.empty:
         raise RuntimeError("XAUUSD_CANDLE_HISTORY_EMPTY")
 
@@ -104,47 +159,69 @@ def main() -> int:
     if frame.index.has_duplicates:
         raise RuntimeError("XAUUSD_CANDLES_HAVE_DUPLICATE_TIMESTAMPS")
 
-    deltas = np.diff(frame.index.asi8) if len(frame) > 1 else np.array([], dtype="int64")
-    expected_ns = GRANULARITY_SECONDS * 1_000_000_000
-    missing_bars = int(sum(max(0, int(delta // expected_ns) - 1) for delta in deltas if delta > expected_ns))
-    exact_continuity = bool(np.all(deltas == expected_ns)) if len(deltas) else True
+    deltas_seconds = frame.index.to_series().diff().dt.total_seconds().dropna().to_numpy(dtype="float64")
+    non_15m_intervals = int(np.count_nonzero(deltas_seconds != GRANULARITY_SECONDS))
+    sub_interval_gaps = int(np.count_nonzero(
+        (deltas_seconds > 0) & (deltas_seconds < GRANULARITY_SECONDS)
+    ))
+    unadjusted_missing_slots = int(sum(
+        max(0, int(delta // GRANULARITY_SECONDS) - 1)
+        for delta in deltas_seconds if delta > GRANULARITY_SECONDS
+    ))
+    exact_continuity = bool(np.all(deltas_seconds == GRANULARITY_SECONDS)) if len(deltas_seconds) else True
 
-    bar_end_epochs = frame.index.asi8 // 1_000_000_000 + GRANULARITY_SECONDS
-    is_closed = bar_end_epochs <= batch.server_time_epoch
+    bar_start_epochs = np.array([int(stamp.timestamp()) for stamp in frame.index], dtype="int64")
+    is_closed = bar_start_epochs + GRANULARITY_SECONDS <= latest_batch.server_time_epoch
+    utc_grid_aligned = (bar_start_epochs % GRANULARITY_SECONDS) == 0
+
     output_frame = frame.copy()
     output_frame.insert(0, "timestamp_utc", output_frame.index.strftime("%Y-%m-%dT%H:%M:%S.%fZ"))
     output_frame["is_closed_at_server_time"] = is_closed
-    csv_bytes = output_frame.to_csv(index=False, lineterminator="\n", float_format="%.17g").encode("utf-8")
+    output_frame["bar_start_utc_grid_aligned"] = utc_grid_aligned
+    csv_bytes = output_frame.to_csv(
+        index=False, lineterminator="\n", float_format="%.17g"
+    ).encode("utf-8")
     normalized_hash = hashlib.sha256(csv_bytes).hexdigest()
-    csv_path = OUTPUT / "xauusd_m15_5000.csv"
+    csv_path = OUTPUT / "xauusd_m15_history.csv"
     csv_path.write_bytes(csv_bytes)
 
+    status = "RAW_CANDLES_RETRIEVED" if len(frame) >= REQUESTED_COUNT else "PARTIAL_RAW_CANDLES_RETRIEVED"
     metadata = {
-        "status": "RAW_CANDLES_RETRIEVED",
+        "status": status,
         "strategy_validation_status": "NOT_VALIDATED",
-        "symbol": batch.symbol,
-        "granularity_seconds": batch.granularity_seconds,
-        "requested_count": COUNT,
+        "symbol": selected,
+        "granularity_seconds": GRANULARITY_SECONDS,
+        "requested_count": REQUESTED_COUNT,
         "returned_count": int(len(frame)),
+        "pages_retrieved": len(page_hashes),
+        "history_exhausted_before_requested_count": bool(exhausted and len(frame) < REQUESTED_COUNT),
         "first_candle_utc": frame.index[0].isoformat(),
         "last_candle_utc": frame.index[-1].isoformat(),
-        "retrieved_at_utc": batch.retrieved_at_utc,
-        "server_time_epoch": batch.server_time_epoch,
-        "last_bar_closed": batch.last_bar_closed,
+        "retrieved_at_utc": latest_batch.retrieved_at_utc,
+        "server_time_epoch": latest_batch.server_time_epoch,
+        "last_bar_closed": bool(is_closed[-1]),
         "closed_bar_count": int(is_closed.sum()),
         "unclosed_bar_count": int((~is_closed).sum()),
-        "raw_response_sha256": batch.raw_response_sha256,
+        "utc_grid_aligned_count": int(utc_grid_aligned.sum()),
+        "utc_grid_unaligned_count": int((~utc_grid_aligned).sum()),
+        "raw_page_response_sha256": page_hashes,
+        "combined_raw_page_hashes_sha256": combined_raw_hash,
         "normalized_csv_sha256": normalized_hash,
         "duplicate_timestamps": int(frame.index.duplicated(keep=False).sum()),
         "timestamps_monotonic_increasing": bool(frame.index.is_monotonic_increasing),
-        "missing_expected_bars_between_rows": missing_bars,
+        "non_15m_intervals": non_15m_intervals,
+        "sub_15m_intervals": sub_interval_gaps,
+        "unadjusted_missing_15m_slots": unadjusted_missing_slots,
         "exact_15m_continuity": exact_continuity,
-        "continuity_status": "NO_GAPS_IN_RETURNED_WINDOW" if exact_continuity else "GAPS_REQUIRE_SESSION_CALENDAR_REVIEW",
+        "continuity_status": (
+            "NO_GAPS_IN_RETURNED_WINDOW" if exact_continuity
+            else "GAPS_REQUIRE_INSTRUMENT_SESSION_CALENDAR_REVIEW"
+        ),
         "ohlc_validation": "PASS",
         "session_calendar_validation": "NOT_PERFORMED",
         "forward_fill_or_repair": False,
-        "source_endpoint": batch.endpoint,
-        "authentication": batch.authentication,
+        "source_endpoint": latest_batch.endpoint,
+        "authentication": latest_batch.authentication,
         "capital_authority_granted": False,
         "order_submission_permitted": False,
         "dataset_path": str(csv_path),
@@ -152,14 +229,18 @@ def main() -> int:
     }
     write_json(OUTPUT / "metadata.json", metadata)
     print(json.dumps({
-        "status": metadata["status"],
-        "symbol": batch.symbol,
+        "status": status,
+        "symbol": selected,
+        "requested_count": REQUESTED_COUNT,
         "returned_count": len(frame),
+        "pages_retrieved": len(page_hashes),
         "closed_bar_count": metadata["closed_bar_count"],
-        "last_bar_closed": batch.last_bar_closed,
-        "missing_expected_bars": missing_bars,
+        "last_bar_closed": metadata["last_bar_closed"],
+        "utc_grid_unaligned_count": metadata["utc_grid_unaligned_count"],
+        "non_15m_intervals": non_15m_intervals,
+        "unadjusted_missing_15m_slots": unadjusted_missing_slots,
         "continuity_status": metadata["continuity_status"],
-        "raw_response_sha256": batch.raw_response_sha256,
+        "combined_raw_page_hashes_sha256": combined_raw_hash,
         "normalized_csv_sha256": normalized_hash,
         "dataset_path": str(csv_path),
         "capital_authority_granted": False,
