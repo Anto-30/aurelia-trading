@@ -151,9 +151,8 @@ def validate_frame(
         report["errors"].append(str(exc))
         return ValidationResult("FAIL", report, None)
 
-    numeric = frame.loc[:, REQUIRED_COLUMNS].apply(pd.to_numeric, errors="coerce")
+    numeric = frame.loc[:, list(REQUIRED_COLUMNS)].apply(pd.to_numeric, errors="coerce")
     values = numeric.to_numpy(dtype="float64", na_value=float("nan"))
-    finite_rows = pd.Series(values).groupby(level=0).size() if False else None
     import numpy as np
     finite_mask = np.isfinite(values).all(axis=1)
     report["non_finite_rows"] = int((~finite_mask).sum())
