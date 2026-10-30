@@ -79,3 +79,14 @@ NQ and ES need synchronized time series and a defined common session. The exact 
 - Current branch contains no market dataset and no executed backtest results.
 - All modules are research-only. No capital authority, proposal/buy/sell methods, live credentials, or order submission are present.
 - Existing AURELIA governance remains: LIVE_EXECUTION=BLOCKED, VERIFY_ONLY, FINAL_EXECUTION_AUTHORIZATION=false.
+
+
+## Additional deterministic primitives (v0.1.0 research candidates)
+
+The implementation now also contains:
+- Opening-reference comparison exactly applying the supplied rule: above either opening means LOOK_FOR_SELL; below means LOOK_FOR_BUY. Combined bias is BEARISH only when both references say sell, BULLISH only when both say buy, otherwise NEUTRAL. The 00:00 and 02:22 opening timezone/session-date policy is still unresolved, so callers must supply timestamped prices with provenance.
+- Exact 07:20–10:45 America/New_York marker calculations for fractions 0.000, 0.315, 0.630, 0.810 and 1.000. The helper returns exact timezone-aware times and does not round them to M1 bars. The marker times are 07:20:00, 08:24:34.5, 09:29:09, 10:06:03 and 10:45:00 local. The bar-selection/rounding policy remains unresolved.
+- NQ/ES SMT classification implementing only the supplied lower-low/no-ES-lower-low bullish condition and higher-high/no-ES-higher-high bearish condition. Input swings must be independently synchronized and preselected by the caller; exact comparison swing selection and the 09:27–09:33 window still need an explicit timestamp rule.
+- A first aligned 3-candle FVG candidate detector. It uses a strict three-candle non-overlap gap formula and returns gap bounds/midpoint only when the entire three-candle sequence begins after the supplied M1 confirmation index. This is an explicitly provisional candidate rule, not owner-approved final FVG logic. It does not generate an SL buffer, entry fill, CISD, or trade authorization.
+
+These primitives are intentionally labelled as candidate computations where the supplied rules are incomplete. They do not silently fill missing BOS, CISD displacement, STDV anchor, fill, or target definitions.
