@@ -45,9 +45,14 @@ def main() -> int:
                 "exchange_is_open": item.get("exchange_is_open"),
             })
 
-    unique_symbols = sorted({item["symbol"] for item in matches if item["symbol"]})
-    selected = "frxXAUUSD" if "frxXAUUSD" in unique_symbols else (
-        "XAUUSD" if "XAUUSD" in unique_symbols else None
+    exact_codes = sorted({
+        code
+        for item in matches
+        for code in (item["symbol"], item["underlying_symbol"])
+        if code and code.upper() in EXACT_CODES
+    })
+    selected = "frxXAUUSD" if "frxXAUUSD" in exact_codes else (
+        "XAUUSD" if "XAUUSD" in exact_codes else None
     )
     if selected is None:
         write_json(OUTPUT / "symbol-discovery.json", {
