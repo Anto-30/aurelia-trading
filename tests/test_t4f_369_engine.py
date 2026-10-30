@@ -44,6 +44,10 @@ class T4F369EngineTests(unittest.TestCase):
 
     def test_non_positive_reference_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "REFERENCE_PRICE_MUST_BE_POSITIVE"):
+            digital_root_for_reference("0")
+
+    def test_fractional_price_below_one_has_no_positive_integer_part(self):
+        with self.assertRaisesRegex(ValueError, "DIGITAL_ROOT_UNDEFINED_FOR_ZERO_REFERENCE"):
             digital_root_for_reference("0.5")
 
     def test_at_least_four_levels_required(self):
@@ -67,7 +71,7 @@ class T4F369EngineTests(unittest.TestCase):
 
     def test_pivot_candidate_is_available_only_after_right_window(self):
         highs = [1, 2, 3, 8, 4, 3, 2]
-        lows =  [0, 1, 2,  3, 2, 1, 1]
+        lows =  [5, 4, 3,  2, 3, 4, 5]
         candidates = detect_confirmed_pivot_candidates(
             highs, lows, left_bars=2, right_bars=2
         )
