@@ -10,6 +10,7 @@ dependencies = ["websockets>=17.1,<18"]
 
 [project.optional-dependencies]
 ml = ["torch>=2.6,<3"]
+data = ["pandas>=2.2,<4", "pyarrow>=18,<25"]
 
 [tool.setuptools.packages.find]
 include = ["runtime*", "research*"]
