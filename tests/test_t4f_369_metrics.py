@@ -23,7 +23,7 @@ class MetricsTests(unittest.TestCase):
         self.assertEqual(result["total_trades"], 2)
         self.assertEqual(result["net_pnl_usd"], 80.0)
         self.assertAlmostEqual(result["expectancy_net_r"], 0.4)
-        self.assertAlmostEqual(result["profit_factor_net"], 1.9)
+        self.assertAlmostEqual(result["profit_factor_net"], 190 / 110)
 
     def test_drawdown_includes_initial_zero_equity(self):
         frame = journal().iloc[[1]].copy()
@@ -47,6 +47,13 @@ class MetricsTests(unittest.TestCase):
         frame.loc[0, "risk_usd"] = 0
         with self.assertRaisesRegex(ValueError, "RISK_USD_MUST_BE_POSITIVE"):
             calculate_performance_metrics(frame)
+
+    def test_empty_369_subset_returns_zero_trade_metrics(self):
+        frame = journal()
+        frame["eligible_369"] = False
+        result = evaluate_369_filter_ablation(frame)
+        self.assertEqual(result["t4f_369_filtered"]["total_trades"], 0)
+        self.assertIsNone(result["t4f_369_filtered"]["expectancy_net_r"])
 
 
 if __name__ == "__main__":
