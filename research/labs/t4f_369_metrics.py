@@ -49,8 +49,20 @@ def _validated_metric_frame(frame: pd.DataFrame) -> pd.DataFrame:
     return work.sort_values("timestamp_utc", kind="stable").reset_index(drop=True)
 
 
+def _empty_metrics() -> dict[str, Any]:
+    return {
+        "total_trades": 0, "win_rate": None, "expectancy_net_r": None,
+        "profit_factor_net": None, "max_drawdown_r": None,
+        "gross_pnl_usd": 0.0, "total_costs_usd": 0.0, "net_pnl_usd": 0.0,
+        "net_r_total": 0.0, "first_trade_utc": None, "last_trade_utc": None,
+        "profit_factor_note": "No trades in this subset.",
+    }
+
+
 def calculate_performance_metrics(frame: pd.DataFrame) -> dict[str, Any]:
     """Calculate costs-after net metrics without mutating the caller's DataFrame."""
+    if isinstance(frame, pd.DataFrame) and frame.empty:
+        return _empty_metrics()
     work = _validated_metric_frame(frame)
     costs = work["commission_usd"] + work["spread_cost_usd"] + work["slippage_cost_usd"]
     net_pnl = work["gross_pnl_usd"] - costs
@@ -88,6 +100,8 @@ def evaluate_369_filter_ablation(frame: pd.DataFrame) -> dict[str, Any]:
     Each row must be a fully evaluated hypothetical T4F setup using identical
     entry/stop/target/fill/cost rules. eligible_369 is the only treatment.
     """
+    if not isinstance(frame, pd.DataFrame) or frame.empty:
+        raise ValueError("CANDIDATE_COHORT_EMPTY_OR_INVALID")
     if "eligible_369" not in frame.columns:
         raise ValueError("ELIGIBLE_369_COLUMN_REQUIRED")
     if frame["eligible_369"].isna().any():
