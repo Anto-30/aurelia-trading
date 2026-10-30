@@ -70,8 +70,8 @@ class T4F369EngineTests(unittest.TestCase):
         self.assertEqual(classify_m15_level_interaction(bar, "15"), "LOWER_WICK_REJECTION")
 
     def test_pivot_candidate_is_available_only_after_right_window(self):
-        highs = [1, 2, 3, 8, 4, 3, 2]
-        lows =  [5, 4, 3,  2, 3, 4, 5]
+        highs = [10, 11, 12, 18, 14, 13, 12]
+        lows =  [8, 7, 6, 4, 7, 8, 9]
         candidates = detect_confirmed_pivot_candidates(
             highs, lows, left_bars=2, right_bars=2
         )
