@@ -1,6 +1,6 @@
 # Deriv XAUUSD M15 Raw Dataset Observation — 2026-10-30
 
-**Status:** Retrieved raw source sample; not yet an approved research dataset and not a strategy backtest. Latest preserved snapshot: 2026-10-30 17:05:27 UTC; GitHub Actions run #41 (26 unit tests passed).
+**Status:** Retrieved raw source sample; not yet an approved research dataset and not a strategy backtest. Latest preserved snapshot: 2026-10-30 17:11:58 UTC; GitHub Actions run #49 (33 unit tests passed).
 
 ## Acquisition
 
@@ -14,8 +14,8 @@
 - Last bar start: 2026-10-30 17:00:00 UTC.
 - Closed bars at the server-time check: 4,999.
 - Current/final bar at retrieval: not yet closed; excluded from completed-bar analysis.
-- Normalized CSV SHA-256: `160cd0bdb6c4a012497f90c4e96f1955cea57e9dd85d0851be12a20334e0ffa1`.
-- Combined raw page-hash SHA-256: `bc987dc8502ef0c56f9f9787f9395ad45c02d5f4969db70a07198cbc73c9300f`.
+- Normalized CSV SHA-256: `8ca390221ab66dd7f831465057ba87be606f9ee244ceccf0d9ecf84bbd0caabb`.
+- Combined raw page-hash SHA-256: `608f2f845e2dc95d5a4501237a121e46549e0739b6c810a795fa7f161ae06421`.
 - Trading-times calendar sidecar SHA-256: `214539102a99e06c249538f55d7abe36fc350cffb7cac6e128b92752e488ed9d`.
 
 ## Structural data checks
@@ -53,7 +53,7 @@ No records were sorted, deduplicated, dropped, forward-filled or altered. The 2,
 
 ## Trading-times evidence
 
-Latest normalized CSV hash is bound to the raw-page hash and two-date schedule sidecar recorded above; the short-retention Actions artifact is available from [run #41](https://github.com/Anto-30/aurelia-trading/actions/runs/41095693978/artifacts/12995023499).
+Latest normalized CSV hash is bound to the raw-page hash and two-date schedule sidecar recorded above; the short-retention Actions artifact is available from [run #49](https://github.com/Anto-30/aurelia-trading/actions/runs/41096659478/artifacts/12995278959).
 
 The public `trading_times` API was queried for 2026-08-14 and 2026-10-30. Both responses included a schedule entry with:
 - `underlying_symbol = frxXAUUSD`
