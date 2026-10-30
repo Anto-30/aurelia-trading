@@ -3,11 +3,22 @@ import json
 import unittest
 from unittest.mock import Mock
 
-import pandas as pd
+try:
+    import pandas as pd
+    from research.labs.deriv_public_data import DerivPublicDataClient
+    _DERIV_RESEARCH_AVAILABLE = True
+except ModuleNotFoundError as exc:
+    if exc.name not in {"pandas", "numpy"}:
+        raise
+    pd = None
+    DerivPublicDataClient = None
+    _DERIV_RESEARCH_AVAILABLE = False
 
-from research.labs.deriv_public_data import DerivPublicDataClient
 
-
+@unittest.skipUnless(
+    _DERIV_RESEARCH_AVAILABLE,
+    "Optional pandas/numpy research dependencies are not installed",
+)
 class DerivPublicDataTests(unittest.TestCase):
     def _client_with_responses(self, server_time_offset):
         client = DerivPublicDataClient(timeout_seconds=1)
