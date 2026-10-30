@@ -86,14 +86,17 @@ class DerivPublicDataClient:
         symbol: str,
         granularity_seconds: int = 900,
         count: int = 5000,
+        end: int | str = "latest",
     ) -> CandleBatch:
         requested_symbol = symbol.strip()
         if not requested_symbol:
             raise ValueError("SYMBOL_REQUIRED")
         if granularity_seconds not in ALLOWED_GRANULARITIES:
             raise ValueError("GRANULARITY_NOT_SUPPORTED_BY_DERIV_TICKS_HISTORY")
-        if not isinstance(count, int) or count < 1:
-            raise ValueError("CANDLE_COUNT_MUST_BE_POSITIVE")
+        if isinstance(count, bool) or not isinstance(count, int) or count < 1 or count > 5000:
+            raise ValueError("CANDLE_COUNT_MUST_BE_BETWEEN_1_AND_5000")
+        if not (end == "latest" or (isinstance(end, int) and not isinstance(end, bool) and end > 0)):
+            raise ValueError("END_MUST_BE_LATEST_OR_POSITIVE_EPOCH")
 
         symbols = self.active_symbols()
         available = {
@@ -109,7 +112,7 @@ class DerivPublicDataClient:
             "ticks_history": requested_symbol,
             "adjust_start_time": 1,
             "count": count,
-            "end": "latest",
+            "end": end,
             "style": "candles",
             "granularity": granularity_seconds,
         })
