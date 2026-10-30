@@ -1,0 +1,64 @@
+//@version=5
+indicator("T4F x 369 Level Projector (Research)", overlay=true, max_lines_count=20, max_labels_count=20)
+
+// This is a manual numerical-level projector only.
+// It does not detect protected swings, BOS/MSS, entries, stops, or trade signals.
+
+group_ref = "Reference Data"
+ref_price = input.float(4217.395, title="Protected Swing Reference Price", group=group_ref, step=0.001, minval=0.000001)
+direction = input.string("Bearish (High)", title="Protected Swing Type", options=["Bearish (High)", "Bullish (Low)"], group=group_ref)
+instrument = input.string("XAUUSD", title="Instrument Mapping", options=["XAUUSD", "NQ", "ES"], group=group_ref)
+num_levels = input.int(4, title="Number of Levels", minval=4, maxval=10, group=group_ref)
+
+int int_part = int(math.floor(ref_price))
+int digital_root = int_part == 0 ? 0 : 1 + (int_part - 1) % 9
+float base_step = (digital_root == 1 or digital_root == 4 or digital_root == 7) ? 12.0 :
+     (digital_root == 2 or digital_root == 5 or digital_root == 8) ? 15.0 : 18.0
+float instrument_multiplier = instrument == "NQ" ? 10.0 : 1.0
+float scaled_step = base_step * instrument_multiplier
+bool es_unverified = instrument == "ES"
+
+var line[] level_lines = array.new_line()
+var label[] level_labels = array.new_label()
+var table info_table = table.new(position.top_right, 2, 7, bgcolor=color.new(color.black, 80), border_width=1)
+
+if barstate.isfirst
+    if ref_price <= 0
+        runtime.error("Reference price must be positive.")
+    for i = 1 to num_levels
+        float level_price = direction == "Bearish (High)" ? ref_price - (i * scaled_step) : ref_price + (i * scaled_step)
+        line line_id = line.new(bar_index, level_price, bar_index + 1, level_price,
+             extend=extend.right, color=color.new(color.orange, 25), width=1, style=line.style_dashed)
+        label label_id = label.new(bar_index, level_price, "",
+             color=color.new(color.black, 75), textcolor=color.orange,
+             style=label.style_label_right, size=size.small)
+        array.push(level_lines, line_id)
+        array.push(level_labels, label_id)
+
+if barstate.islast
+    for i = 0 to num_levels - 1
+        int level_n = i + 1
+        float level_price = direction == "Bearish (High)" ? ref_price - (level_n * scaled_step) : ref_price + (level_n * scaled_step)
+        line line_id = array.get(level_lines, i)
+        label label_id = array.get(level_labels, i)
+        line.set_xy1(line_id, bar_index - 1, level_price)
+        line.set_xy2(line_id, bar_index + 1, level_price)
+        label.set_xy(label_id, bar_index, level_price)
+        label.set_text(label_id, "L" + str.tostring(level_n) + ": " +
+             str.tostring(level_price, format.mintick) + " | Step " + str.tostring(scaled_step))
+
+    table.cell(info_table, 0, 0, "Reference", text_color=color.white)
+    table.cell(info_table, 1, 0, str.tostring(ref_price, format.mintick), text_color=color.orange)
+    table.cell(info_table, 0, 1, "Integer part", text_color=color.white)
+    table.cell(info_table, 1, 1, str.tostring(int_part), text_color=color.orange)
+    table.cell(info_table, 0, 2, "Digital root", text_color=color.white)
+    table.cell(info_table, 1, 2, str.tostring(digital_root), text_color=color.orange)
+    table.cell(info_table, 0, 3, "Base step", text_color=color.white)
+    table.cell(info_table, 1, 3, str.tostring(base_step), text_color=color.orange)
+    table.cell(info_table, 0, 4, "Scale", text_color=color.white)
+    table.cell(info_table, 1, 4, str.tostring(instrument_multiplier) + "x", text_color=color.orange)
+    table.cell(info_table, 0, 5, "Scaled step", text_color=color.white)
+    table.cell(info_table, 1, 5, str.tostring(scaled_step), text_color=color.orange)
+    table.cell(info_table, 0, 6, "Calibration", text_color=color.white)
+    table.cell(info_table, 1, 6, es_unverified ? "ES: UNVERIFIED" : "Per supplied mapping",
+         text_color=es_unverified ? color.yellow : color.orange)
