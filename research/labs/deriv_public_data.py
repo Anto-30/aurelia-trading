@@ -97,9 +97,10 @@ class DerivPublicDataClient:
 
         symbols = self.active_symbols()
         available = {
-            str(item.get("underlying_symbol") or item.get("symbol"))
+            str(item[field])
             for item in symbols
-            if item.get("underlying_symbol") or item.get("symbol")
+            for field in ("underlying_symbol", "symbol")
+            if item.get(field)
         }
         if requested_symbol not in available:
             raise ValueError("SYMBOL_NOT_RETURNED_BY_ACTIVE_SYMBOLS:" + requested_symbol)
