@@ -12,6 +12,7 @@ from research.labs.t4f_369_engine import (
     new_york_369_session_markers,
     classify_nq_es_smt,
     first_aligned_fvg_candidate,
+    detect_structure_break_candidates,
 )
 
 
@@ -131,6 +132,50 @@ class T4F369EngineTests(unittest.TestCase):
         self.assertIsNone(
             first_aligned_fvg_candidate(bars, direction="bullish", confirmation_bar_index=1)
         )
+
+    def test_bearish_bos_identifies_high_after_confirmed_higher_low(self):
+        candidates = detect_structure_break_candidates(
+            highs=[10, 11, 13, 12, 12, 15, 13, 9],
+            lows=[9, 8, 10, 11, 10, 11, 12, 7],
+            closes=[10, 10, 12, 11, 11, 14, 12, 8],
+            left_bars=1, right_bars=1, break_mode="close",
+        )
+        bearish = next(x for x in candidates if x.direction == "BEARISH_BOS_CANDIDATE")
+        self.assertEqual(bearish.protected_swing_type, "HIGH")
+        self.assertEqual(bearish.protected_swing_price, Decimal("15"))
+        self.assertEqual(bearish.protected_swing_pivot_index, 5)
+        self.assertEqual(bearish.opposing_structure_type, "HIGHER_LOW")
+        self.assertEqual(bearish.opposing_structure_level, Decimal("10"))
+        self.assertEqual(bearish.break_index, 7)
+
+    def test_bullish_bos_identifies_low_after_confirmed_lower_high(self):
+        candidates = detect_structure_break_candidates(
+            highs=[10, 15, 12, 14, 13, 12, 14, 16],
+            lows=[9, 10, 11, 8, 9, 7, 8, 9],
+            closes=[10, 14, 11, 9, 10, 8, 12, 14],
+            left_bars=1, right_bars=1, break_mode="close",
+        )
+        bullish = next(x for x in candidates if x.direction == "BULLISH_BOS_CANDIDATE")
+        self.assertEqual(bullish.protected_swing_type, "LOW")
+        self.assertEqual(bullish.protected_swing_price, Decimal("7"))
+        self.assertEqual(bullish.protected_swing_pivot_index, 5)
+        self.assertEqual(bullish.opposing_structure_type, "LOWER_HIGH")
+        self.assertEqual(bullish.opposing_structure_level, Decimal("13"))
+        self.assertEqual(bullish.break_index, 7)
+
+    def test_wick_bos_candidate_is_separate_from_close_break(self):
+        highs=[10, 11, 13, 12, 12, 15, 13, 11]
+        lows=[9, 8, 10, 11, 10, 11, 12, 7]
+        closes=[10, 10, 12, 11, 11, 14, 12, 10.5]
+        close_candidates=detect_structure_break_candidates(
+            highs,lows,closes,left_bars=1,right_bars=1,break_mode="close"
+        )
+        wick_candidates=detect_structure_break_candidates(
+            highs,lows,closes,left_bars=1,right_bars=1,break_mode="wick"
+        )
+        self.assertFalse(any(x.direction=="BEARISH_BOS_CANDIDATE" for x in close_candidates))
+        self.assertTrue(any(x.direction=="BEARISH_BOS_CANDIDATE" for x in wick_candidates))
+
 
     def test_lower_wick_rejection(self):
         bar = OHLC.from_values("16", "17", "14", "15.5")
