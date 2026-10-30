@@ -81,6 +81,17 @@ class DerivPublicDataClient:
             raise RuntimeError("DERIV_SERVER_TIME_RESPONSE_INVALID")
         return int(value)
 
+    def trading_times(self, date: str) -> dict[str, Any]:
+        """Return the public market schedule for one yyyy-mm-dd date."""
+        import re
+        if not isinstance(date, str) or not re.fullmatch(r"\\d{4}-\\d{2}-\\d{2}", date):
+            raise ValueError("TRADING_TIMES_DATE_MUST_BE_YYYY_MM_DD")
+        response, _ = self._request({"trading_times": date})
+        value = response.get("trading_times")
+        if not isinstance(value, dict) or not isinstance(value.get("markets"), list):
+            raise RuntimeError("DERIV_TRADING_TIMES_RESPONSE_INVALID")
+        return value
+
     def fetch_candles(
         self,
         symbol: str,
