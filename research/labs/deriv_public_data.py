@@ -26,6 +26,8 @@ class CandleBatch:
     granularity_seconds: int
     raw_response_sha256: str
     retrieved_at_utc: str
+    server_time_epoch: int
+    last_bar_closed: bool
     endpoint: str = PUBLIC_WS_ENDPOINT
     authentication: str = "PUBLIC_NO_AUTH"
 
@@ -72,6 +74,13 @@ class DerivPublicDataClient:
             raise RuntimeError("DERIV_ACTIVE_SYMBOLS_RESPONSE_INVALID")
         return symbols
 
+    def server_time_epoch(self) -> int:
+        response, _ = self._request({"time": 1})
+        value = response.get("time")
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise RuntimeError("DERIV_SERVER_TIME_RESPONSE_INVALID")
+        return int(value)
+
     def fetch_candles(
         self,
         symbol: str,
@@ -114,6 +123,9 @@ class DerivPublicDataClient:
             raise RuntimeError("DERIV_CANDLE_SCHEMA_INVALID")
         timestamps = pd.to_datetime(pd.to_numeric(frame.pop("epoch"), errors="raise"), unit="s", utc=True)
         frame.index = pd.DatetimeIndex(timestamps, name="timestamp")
+        server_time = self.server_time_epoch()
+        last_bar_epoch = int(pd.Timestamp(frame.index[-1]).timestamp())
+        last_bar_closed = last_bar_epoch + granularity_seconds <= server_time
         # Do not sort, deduplicate, forward-fill, or repair observations here.
         frame.attrs["deriv_symbol"] = requested_symbol
         frame.attrs["deriv_granularity_seconds"] = granularity_seconds
@@ -125,4 +137,6 @@ class DerivPublicDataClient:
             granularity_seconds=granularity_seconds,
             raw_response_sha256=raw_hash,
             retrieved_at_utc=datetime.now(timezone.utc).isoformat(),
+            server_time_epoch=server_time,
+            last_bar_closed=last_bar_closed,
         )
