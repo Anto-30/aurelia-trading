@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 from typing import Sequence
+from datetime import date, datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 RESEARCH_ONLY = True
 CAPITAL_AUTHORITY = False
@@ -216,3 +218,181 @@ def detect_confirmed_pivot_candidates(
                 price=pivot_low,
             ))
     return candidates
+
+
+
+@dataclass(frozen=True)
+class OpeningReferenceBias:
+    day_open_relation: str
+    day_open_action: str
+    london_open_relation: str
+    london_open_action: str
+    combined_bias: str
+
+
+def classify_opening_reference_bias(
+    current_price: Decimal | int | float | str,
+    day_open: Decimal | int | float | str,
+    london_open: Decimal | int | float | str,
+) -> OpeningReferenceBias:
+    """Apply the user's above-open => look sell / below-open => look buy rule."""
+    current = _to_decimal(current_price, "CURRENT_PRICE")
+    day = _to_decimal(day_open, "DAY_OPEN")
+    london = _to_decimal(london_open, "LONDON_OPEN")
+
+    def relation(reference: Decimal) -> tuple[str, str]:
+        if current > reference:
+            return "ABOVE", "LOOK_FOR_SELL"
+        if current < reference:
+            return "BELOW", "LOOK_FOR_BUY"
+        return "EQUAL", "NEUTRAL"
+
+    day_relation, day_action = relation(day)
+    london_relation, london_action = relation(london)
+    if day_action == london_action == "LOOK_FOR_SELL":
+        combined = "BEARISH"
+    elif day_action == london_action == "LOOK_FOR_BUY":
+        combined = "BULLISH"
+    else:
+        combined = "NEUTRAL"
+    return OpeningReferenceBias(
+        day_open_relation=day_relation,
+        day_open_action=day_action,
+        london_open_relation=london_relation,
+        london_open_action=london_action,
+        combined_bias=combined,
+    )
+
+
+def new_york_369_session_markers(session_date: date) -> tuple[tuple[str, str], ...]:
+    """Return exact America/New_York marker times for the supplied 07:20-10:45 window.
+
+    Fractions use the user's 205-minute session duration. These are exact
+    mathematical markers, not a rounding rule for matching M1/M15 candles.
+    """
+    timezone = ZoneInfo("America/New_York")
+    start = datetime.combine(session_date, time(7, 20), tzinfo=timezone)
+    duration_seconds = Decimal(205 * 60)
+    fractions = (
+        ("0.000", Decimal("0")),
+        ("0.315", Decimal("0.315")),
+        ("0.630", Decimal("0.630")),
+        ("0.810", Decimal("0.810")),
+        ("1.000", Decimal("1")),
+    )
+    markers = []
+    for label, fraction in fractions:
+        offset_seconds = duration_seconds * fraction
+        marker = start + timedelta(seconds=float(offset_seconds))
+        markers.append((label, marker.isoformat()))
+    return tuple(markers)
+
+
+@dataclass(frozen=True)
+class SMTResult:
+    classification: str
+    nq_made_lower_low: bool
+    es_failed_to_make_lower_low: bool
+    nq_made_higher_high: bool
+    es_failed_to_make_higher_high: bool
+
+
+def classify_nq_es_smt(
+    *,
+    nq_prior_high: Decimal | int | float | str,
+    nq_prior_low: Decimal | int | float | str,
+    nq_current_high: Decimal | int | float | str,
+    nq_current_low: Decimal | int | float | str,
+    es_prior_high: Decimal | int | float | str,
+    es_prior_low: Decimal | int | float | str,
+    es_current_high: Decimal | int | float | str,
+    es_current_low: Decimal | int | float | str,
+) -> SMTResult:
+    """Apply the exact NQ-versus-ES higher-high/lower-low divergence rules."""
+    values = {
+        key: _to_decimal(value, key.upper())
+        for key, value in locals().items()
+    }
+    nq_lower = values["nq_current_low"] < values["nq_prior_low"]
+    es_no_lower = values["es_current_low"] >= values["es_prior_low"]
+    nq_higher = values["nq_current_high"] > values["nq_prior_high"]
+    es_no_higher = values["es_current_high"] <= values["es_prior_high"]
+    bullish = nq_lower and es_no_lower
+    bearish = nq_higher and es_no_higher
+    classification = (
+        "MIXED_SMT" if bullish and bearish else
+        "BULLISH_SMT" if bullish else
+        "BEARISH_SMT" if bearish else
+        "NO_SMT"
+    )
+    return SMTResult(
+        classification=classification,
+        nq_made_lower_low=nq_lower,
+        es_failed_to_make_lower_low=es_no_lower,
+        nq_made_higher_high=nq_higher,
+        es_failed_to_make_higher_high=es_no_higher,
+    )
+
+
+@dataclass(frozen=True)
+class FairValueGapCandidate:
+    direction: str
+    first_bar_index: int
+    third_bar_index: int
+    gap_low: Decimal
+    gap_high: Decimal
+    midpoint: Decimal
+    stop_invalidation_boundary: Decimal
+    status: str = "FVG_CANDIDATE_RULE_REQUIRES_OWNER_FREEZE"
+
+
+def first_aligned_fvg_candidate(
+    bars: Sequence[OHLC],
+    *,
+    direction: str,
+    confirmation_bar_index: int,
+) -> FairValueGapCandidate | None:
+    """Return the first strict three-candle FVG formed wholly after confirmation.
+
+    The user requires the first aligned FVG but did not specify FVG boundaries.
+    The classic 3-candle non-overlap definition is exposed as a named candidate
+    only; it is not promoted to a frozen strategy rule.
+    """
+    normalized_direction = direction.strip().lower()
+    if normalized_direction not in {"bullish", "bearish"}:
+        raise ValueError("FVG_DIRECTION_INVALID")
+    if confirmation_bar_index < -1:
+        raise ValueError("FVG_CONFIRMATION_INDEX_INVALID")
+    if any(not isinstance(bar, OHLC) for bar in bars):
+        raise ValueError("FVG_BARS_MUST_BE_OHLC")
+    for idx in range(2, len(bars)):
+        first_idx = idx - 2
+        if first_idx <= confirmation_bar_index:
+            continue
+        first = bars[first_idx]
+        third = bars[idx]
+        if normalized_direction == "bullish" and third.low > first.high:
+            low = first.high
+            high = third.low
+            return FairValueGapCandidate(
+                direction="BULLISH",
+                first_bar_index=first_idx,
+                third_bar_index=idx,
+                gap_low=low,
+                gap_high=high,
+                midpoint=(low + high) / Decimal("2"),
+                stop_invalidation_boundary=low,
+            )
+        if normalized_direction == "bearish" and third.high < first.low:
+            low = third.high
+            high = first.low
+            return FairValueGapCandidate(
+                direction="BEARISH",
+                first_bar_index=first_idx,
+                third_bar_index=idx,
+                gap_low=low,
+                gap_high=high,
+                midpoint=(low + high) / Decimal("2"),
+                stop_invalidation_boundary=high,
+            )
+    return None
