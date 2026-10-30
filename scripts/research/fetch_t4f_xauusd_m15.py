@@ -108,6 +108,62 @@ def fetch_history_pages(client: DerivPublicDataClient, symbol: str):
     return combined, latest_batch, page_hashes, combined_hash, exhausted
 
 
+def extract_symbol_schedule(markets: list[dict], symbol: str) -> list[dict]:
+    found = []
+    for market in markets:
+        for submarket in market.get("submarkets", []) or []:
+            for item in submarket.get("symbols", []) or []:
+                if str(item.get("symbol") or "").lower() == symbol.lower():
+                    found.append({
+                        "market": market.get("name"),
+                        "submarket": submarket.get("name"),
+                        "name": item.get("name"),
+                        "symbol": item.get("symbol"),
+                        "times": item.get("times"),
+                        "trading_days": item.get("trading_days"),
+                        "events": item.get("events"),
+                    })
+    return found
+
+
+def retrieve_session_calendar(client: DerivPublicDataClient, symbol: str,
+                              first: pd.Timestamp, last: pd.Timestamp) -> dict:
+    dates = pd.date_range(first.date(), last.date(), freq="D")
+    records = []
+    failures = []
+    for session_date in dates:
+        date_text = session_date.strftime("%Y-%m-%d")
+        try:
+            response = client.trading_times(date_text)
+            matches = extract_symbol_schedule(response["markets"], symbol)
+            records.append({
+                "date": date_text,
+                "status": "SYMBOL_SCHEDULE_FOUND" if matches else "SYMBOL_SCHEDULE_NOT_FOUND",
+                "schedule": matches,
+            })
+        except Exception as exc:
+            failures.append({"date": date_text, "error": type(exc).__name__ + ":" + str(exc)})
+            records.append({
+                "date": date_text,
+                "status": "QUERY_FAILED",
+                "schedule": [],
+            })
+    return {
+        "schema": "t4f.deriv.trading_times_calendar.v1",
+        "symbol": symbol,
+        "requested_dates": len(dates),
+        "dates_with_schedule": sum(item["status"] == "SYMBOL_SCHEDULE_FOUND" for item in records),
+        "dates_without_schedule": sum(item["status"] == "SYMBOL_SCHEDULE_NOT_FOUND" for item in records),
+        "dates_failed": len(failures),
+        "status": "COMPLETE" if not failures and all(item["schedule"] for item in records
+                                                     if pd.Timestamp(item["date"]).dayofweek < 5) else "INCOMPLETE",
+        "calendar_timezone": "PROVIDER_SPEC_NOT_YET_NORMALIZED_TO_UTC",
+        "records": records,
+        "failures": failures,
+        "use_limit": "Schedule evidence only; gap classification requires review of returned trading days, open/close times and dated events.",
+    }
+
+
 def main() -> int:
     OUTPUT.mkdir(parents=True, exist_ok=True)
     client = DerivPublicDataClient(timeout_seconds=30)
@@ -170,6 +226,13 @@ def main() -> int:
     ))
     exact_continuity = bool(np.all(deltas_seconds == GRANULARITY_SECONDS)) if len(deltas_seconds) else True
 
+    session_calendar = retrieve_session_calendar(client, selected, frame.index[0], frame.index[-1])
+    calendar_path = OUTPUT / "trading_times_calendar.json"
+    write_json(calendar_path, session_calendar)
+    calendar_hash = hashlib.sha256(
+        calendar_path.read_bytes()
+    ).hexdigest()
+
     bar_start_epochs = np.array([int(stamp.timestamp()) for stamp in frame.index], dtype="int64")
     is_closed = bar_start_epochs + GRANULARITY_SECONDS <= latest_batch.server_time_epoch
     utc_grid_aligned = (bar_start_epochs % GRANULARITY_SECONDS) == 0
@@ -218,7 +281,13 @@ def main() -> int:
             else "GAPS_REQUIRE_INSTRUMENT_SESSION_CALENDAR_REVIEW"
         ),
         "ohlc_validation": "PASS",
-        "session_calendar_validation": "NOT_PERFORMED",
+        "session_calendar_validation": "SCHEDULE_RETRIEVED_REQUIRES_GAP_RECONCILIATION",
+        "session_calendar_status": session_calendar["status"],
+        "session_calendar_dates_requested": session_calendar["requested_dates"],
+        "session_calendar_dates_with_schedule": session_calendar["dates_with_schedule"],
+        "session_calendar_dates_failed": session_calendar["dates_failed"],
+        "session_calendar_sha256": calendar_hash,
+        "session_calendar_path": str(calendar_path),
         "forward_fill_or_repair": False,
         "source_endpoint": latest_batch.endpoint,
         "authentication": latest_batch.authentication,
