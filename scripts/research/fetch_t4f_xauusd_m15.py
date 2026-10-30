@@ -110,57 +110,73 @@ def fetch_history_pages(client: DerivPublicDataClient, symbol: str):
 
 def extract_symbol_schedule(markets: list[dict], symbol: str) -> list[dict]:
     found = []
+    candidates = []
     for market in markets:
         for submarket in market.get("submarkets", []) or []:
             for item in submarket.get("symbols", []) or []:
-                if str(item.get("symbol") or "").lower() == symbol.lower():
-                    found.append({
-                        "market": market.get("name"),
-                        "submarket": submarket.get("name"),
-                        "name": item.get("name"),
-                        "symbol": item.get("symbol"),
-                        "times": item.get("times"),
-                        "trading_days": item.get("trading_days"),
-                        "events": item.get("events"),
-                    })
-    return found
+                item_symbol = str(item.get("symbol") or "").strip()
+                underlying = str(item.get("underlying_symbol") or "").strip()
+                display = str(item.get("name") or item.get("display_name") or "")
+                record = {
+                    "market": market.get("name"),
+                    "submarket": submarket.get("name"),
+                    "name": item.get("name"),
+                    "symbol": item.get("symbol"),
+                    "underlying_symbol": item.get("underlying_symbol"),
+                    "times": item.get("times"),
+                    "trading_days": item.get("trading_days"),
+                    "events": item.get("events"),
+                }
+                if item_symbol.lower() == symbol.lower() or underlying.lower() == symbol.lower():
+                    found.append(record)
+                if "xau" in (item_symbol + " " + underlying + " " + display).lower() or "gold" in display.lower():
+                    candidates.append(record)
+    return found, candidates
 
 
 def retrieve_session_calendar(client: DerivPublicDataClient, symbol: str,
                               first: pd.Timestamp, last: pd.Timestamp) -> dict:
-    dates = pd.date_range(first.date(), last.date(), freq="D")
+    # Two read-only spot checks avoid overwhelming the public schedule endpoint.
+    dates = [first.date()]
+    if last.date() != first.date():
+        dates.append(last.date())
     records = []
     failures = []
     for session_date in dates:
         date_text = session_date.strftime("%Y-%m-%d")
         try:
             response = client.trading_times(date_text)
-            matches = extract_symbol_schedule(response["markets"], symbol)
+            matches, candidates = extract_symbol_schedule(response["markets"], symbol)
             records.append({
                 "date": date_text,
                 "status": "SYMBOL_SCHEDULE_FOUND" if matches else "SYMBOL_SCHEDULE_NOT_FOUND",
-                "schedule": matches,
+                "market_count": len(response["markets"]),
+                "market_names": [item.get("name") for item in response["markets"]],
+                "symbol_schedule": matches,
+                "xau_or_gold_candidates": candidates,
+                "raw_market_hierarchy": response["markets"],
             })
         except Exception as exc:
             failures.append({"date": date_text, "error": type(exc).__name__ + ":" + str(exc)})
             records.append({
                 "date": date_text,
                 "status": "QUERY_FAILED",
-                "schedule": [],
+                "symbol_schedule": [],
+                "xau_or_gold_candidates": [],
             })
+    found = sum(item["status"] == "SYMBOL_SCHEDULE_FOUND" for item in records)
     return {
         "schema": "t4f.deriv.trading_times_calendar.v1",
         "symbol": symbol,
         "requested_dates": len(dates),
-        "dates_with_schedule": sum(item["status"] == "SYMBOL_SCHEDULE_FOUND" for item in records),
+        "dates_with_schedule": found,
         "dates_without_schedule": sum(item["status"] == "SYMBOL_SCHEDULE_NOT_FOUND" for item in records),
         "dates_failed": len(failures),
-        "status": "COMPLETE" if not failures and all(item["schedule"] for item in records
-                                                     if pd.Timestamp(item["date"]).dayofweek < 5) else "INCOMPLETE",
+        "status": "FOUND" if found else ("QUERY_FAILED" if failures else "SYMBOL_NOT_PRESENT_IN_SCHEDULE"),
         "calendar_timezone": "PROVIDER_SPEC_NOT_YET_NORMALIZED_TO_UTC",
         "records": records,
         "failures": failures,
-        "use_limit": "Schedule evidence only; gap classification requires review of returned trading days, open/close times and dated events.",
+        "use_limit": "Two-date schedule inspection only; does not establish the complete historical holiday/session calendar or reconcile candle gaps.",
     }
 
 
