@@ -396,3 +396,153 @@ def first_aligned_fvg_candidate(
                 stop_invalidation_boundary=high,
             )
     return None
+
+
+@dataclass(frozen=True)
+class StructureBreakCandidate:
+    direction: str
+    protected_swing_type: str
+    protected_swing_price: Decimal
+    protected_swing_pivot_index: int
+    opposing_structure_type: str
+    opposing_structure_level: Decimal
+    break_index: int
+    break_mode: str
+    pivot_left_bars: int
+    pivot_right_bars: int
+    status: str = "STRUCTURE_CANDIDATE_NOT_OWNER_FROZEN"
+
+
+def detect_structure_break_candidates(
+    highs: Sequence[object],
+    lows: Sequence[object],
+    closes: Sequence[object],
+    *,
+    left_bars: int,
+    right_bars: int,
+    break_mode: str = "close",
+) -> list[StructureBreakCandidate]:
+    """Find T4F-shaped BOS candidates without promoting them to frozen swings.
+
+    Bearish candidate: the latest of two confirmed pivot lows is a higher low;
+    the latest confirmed pivot high formed after that higher low is the
+    protected-high candidate; price then breaks the higher-low level.
+
+    Bullish candidate: the latest of two confirmed pivot highs is a lower high;
+    the latest confirmed pivot low formed after that lower high is the
+    protected-low candidate; price then breaks the lower-high level.
+
+    The user supplied no exact pivot width or wick/close BOS rule. Both are
+    explicit inputs and each result retains its parameter values.
+    """
+    if len(highs) != len(lows) or len(highs) != len(closes):
+        raise ValueError("STRUCTURE_OHLC_LENGTH_MISMATCH")
+    mode = break_mode.strip().lower()
+    if mode not in {"close", "wick"}:
+        raise ValueError("STRUCTURE_BREAK_MODE_INVALID")
+    if len(highs) < max(left_bars, right_bars) * 2 + 3:
+        return []
+
+    high_values = [_to_decimal(v, "HIGH") for v in highs]
+    low_values = [_to_decimal(v, "LOW") for v in lows]
+    close_values = [_to_decimal(v, "CLOSE") for v in closes]
+    if any(v <= 0 for v in high_values + low_values + close_values):
+        raise ValueError("STRUCTURE_PRICES_MUST_BE_POSITIVE")
+    if any(low > high for low, high in zip(low_values, high_values)):
+        raise ValueError("STRUCTURE_HIGH_LOW_INCONSISTENT")
+
+    pivots = detect_confirmed_pivot_candidates(
+        high_values, low_values,
+        left_bars=left_bars,
+        right_bars=right_bars,
+    )
+    candidates: list[StructureBreakCandidate] = []
+    for break_idx in range(1, len(high_values)):
+        known = [p for p in pivots if p.confirmation_index < break_idx]
+        known_lows = sorted(
+            (p for p in known if p.pivot_type == "LOW"),
+            key=lambda p: p.pivot_index,
+        )
+        known_highs = sorted(
+            (p for p in known if p.pivot_type == "HIGH"),
+            key=lambda p: p.pivot_index,
+        )
+
+        bearish_trigger = False
+        if len(known_lows) >= 2:
+            previous_low, latest_low = known_lows[-2], known_lows[-1]
+            protected_highs = [
+                p for p in known_highs
+                if p.pivot_index > latest_low.pivot_index
+            ]
+            if latest_low.price > previous_low.price and protected_highs:
+                protected = protected_highs[-1]
+                if mode == "close":
+                    bearish_trigger = (
+                        close_values[break_idx] < latest_low.price
+                        and close_values[break_idx - 1] >= latest_low.price
+                    )
+                else:
+                    bearish_trigger = (
+                        low_values[break_idx] < latest_low.price
+                        and low_values[break_idx - 1] >= latest_low.price
+                    )
+                if bearish_trigger:
+                    candidates.append(StructureBreakCandidate(
+                        direction="BEARISH_BOS_CANDIDATE",
+                        protected_swing_type="HIGH",
+                        protected_swing_price=protected.price,
+                        protected_swing_pivot_index=protected.pivot_index,
+                        opposing_structure_type="HIGHER_LOW",
+                        opposing_structure_level=latest_low.price,
+                        break_index=break_idx,
+                        break_mode=mode.upper(),
+                        pivot_left_bars=left_bars,
+                        pivot_right_bars=right_bars,
+                    ))
+
+        bullish_trigger = False
+        if len(known_highs) >= 2:
+            previous_high, latest_high = known_highs[-2], known_highs[-1]
+            protected_lows = [
+                p for p in known_lows
+                if p.pivot_index > latest_high.pivot_index
+            ]
+            if latest_high.price < previous_high.price and protected_lows:
+                protected = protected_lows[-1]
+                if mode == "close":
+                    bullish_trigger = (
+                        close_values[break_idx] > latest_high.price
+                        and close_values[break_idx - 1] <= latest_high.price
+                    )
+                else:
+                    bullish_trigger = (
+                        high_values[break_idx] > latest_high.price
+                        and high_values[break_idx - 1] <= latest_high.price
+                    )
+                if bullish_trigger:
+                    candidates.append(StructureBreakCandidate(
+                        direction="BULLISH_BOS_CANDIDATE",
+                        protected_swing_type="LOW",
+                        protected_swing_price=protected.price,
+                        protected_swing_pivot_index=protected.pivot_index,
+                        opposing_structure_type="LOWER_HIGH",
+                        opposing_structure_level=latest_high.price,
+                        break_index=break_idx,
+                        break_mode=mode.upper(),
+                        pivot_left_bars=left_bars,
+                        pivot_right_bars=right_bars,
+                    ))
+
+        if bearish_trigger and bullish_trigger:
+            # Same-bar dual breaks are structurally ambiguous; never promote either.
+            candidates[-2:] = [
+                StructureBreakCandidate(
+                    **{
+                        **candidate.__dict__,
+                        "status": "AMBIGUOUS_DUAL_BREAK_ABORT",
+                    }
+                )
+                for candidate in candidates[-2:]
+            ]
+    return candidates
