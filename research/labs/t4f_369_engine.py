@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
-from typing import Iterable, Sequence
+from typing import Sequence
 
 RESEARCH_ONLY = True
 CAPITAL_AUTHORITY = False
@@ -132,6 +132,8 @@ class OHLC:
             raise ValueError("OHLC_HIGH_INCONSISTENT")
         if bar.low > min(bar.open, bar.close, bar.high):
             raise ValueError("OHLC_LOW_INCONSISTENT")
+        if min(bar.open, bar.high, bar.low, bar.close) <= 0:
+            raise ValueError("OHLC_PRICES_MUST_BE_POSITIVE")
         return bar
 
 
@@ -184,6 +186,8 @@ def detect_confirmed_pivot_candidates(
 
     high_values = [_to_decimal(v, "HIGH") for v in highs]
     low_values = [_to_decimal(v, "LOW") for v in lows]
+    if any(low <= 0 or high <= 0 for low, high in zip(low_values, high_values)):
+        raise ValueError("BAR_PRICES_MUST_BE_POSITIVE")
     if any(low > high for low, high in zip(low_values, high_values)):
         raise ValueError("BAR_HIGH_LOW_INCONSISTENT")
 
