@@ -24,6 +24,7 @@ class MetricsTests(unittest.TestCase):
         self.assertEqual(result["net_pnl_usd"], 80.0)
         self.assertAlmostEqual(result["expectancy_net_r"], 0.4)
         self.assertAlmostEqual(result["profit_factor_net"], 190 / 110)
+        self.assertAlmostEqual(result["max_drawdown_r"], -1.1)
 
     def test_drawdown_includes_initial_zero_equity(self):
         frame = journal().iloc[[1]].copy()
