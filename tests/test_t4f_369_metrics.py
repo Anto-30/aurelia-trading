@@ -56,6 +56,12 @@ class MetricsTests(unittest.TestCase):
         self.assertEqual(result["t4f_369_filtered"]["total_trades"], 0)
         self.assertIsNone(result["t4f_369_filtered"]["expectancy_net_r"])
 
+    def test_non_boolean_filter_column_rejected(self):
+        frame = journal()
+        frame["eligible_369"] = [1, 0]
+        with self.assertRaisesRegex(ValueError, "ELIGIBLE_369_MUST_BE_BOOLEAN"):
+            evaluate_369_filter_ablation(frame)
+
 
 if __name__ == "__main__":
     unittest.main()
