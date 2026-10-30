@@ -32,22 +32,23 @@
 | Unclosed bars | 1 |
 | UTC 15-minute grid-aligned bar starts | 4,995 |
 | Off-grid bar starts | 5 |
-| Consecutive intervals not equal to 900 seconds | 65 |
-| Intervals shorter than 900 seconds | 10 |
+| Consecutive intervals not equal to 900 seconds | 64 |
+| Intervals shorter than 900 seconds | 9 |
 
 Observed non-900-second intervals:
 
 - 42 intervals of 4,500 seconds (75 minutes), including repeated 20:45 → 22:00 UTC timestamp gaps.
+- 1 interval of 3,900 seconds (65 minutes).
 - 11 intervals of 184,500 seconds (51 hours 15 minutes), matching the observed Friday 20:45 → Monday 00:00 pattern.
 - 1 interval of 19,800 seconds (5 hours 30 minutes), from 2026-09-07 18:30 UTC to 2026-09-08 00:00 UTC.
-- 9 intervals shorter than 15 minutes: 97, 300, 301, 599, 600, 600, 600, 803 and 900? seconds.
+- 9 intervals shorter than 15 minutes: 97, 300, 300, 301, 599, 600, 600, 600 and 803 seconds.
 
 Off-grid candle start timestamps:
-- 2026-08-14 10:54:59 UTC
-- 2026-08-18 20:40:00 UTC
+- 2026-08-14 11:09:59 UTC
+- 2026-08-18 20:55:00 UTC
 - 2026-09-08 10:55:00 UTC
 - 2026-09-29 10:55:00 UTC
-- 2026-10-20 07:02:07 UTC
+- 2026-10-20 07:16:37 UTC
 
 No records were sorted, deduplicated, dropped, forward-filled or altered. The 2,437 unadjusted missing 15-minute slots are a raw arithmetic count and **must not be described as 2,437 missing feed bars**: it includes time outside sessions/weekends and other irregular intervals.
 
