@@ -1,9 +1,20 @@
 """Unit tests for T4F journal metrics."""
 import unittest
 
-import pandas as pd
-
-from research.labs.t4f_369_metrics import calculate_performance_metrics, evaluate_369_filter_ablation
+try:
+    import pandas as pd
+    from research.labs.t4f_369_metrics import (
+        calculate_performance_metrics,
+        evaluate_369_filter_ablation,
+    )
+    _RESEARCH_METRICS_AVAILABLE = True
+except ModuleNotFoundError as exc:
+    if exc.name not in {"pandas", "numpy"}:
+        raise
+    pd = None
+    calculate_performance_metrics = None
+    evaluate_369_filter_ablation = None
+    _RESEARCH_METRICS_AVAILABLE = False
 
 
 def journal():
@@ -17,6 +28,10 @@ def journal():
     ])
 
 
+@unittest.skipUnless(
+    _RESEARCH_METRICS_AVAILABLE,
+    "Optional pandas/numpy research dependencies are not installed",
+)
 class MetricsTests(unittest.TestCase):
     def test_metrics_are_net_of_costs(self):
         result = calculate_performance_metrics(journal())
