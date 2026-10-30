@@ -106,7 +106,7 @@ def evaluate_369_filter_ablation(frame: pd.DataFrame) -> dict[str, Any]:
         raise ValueError("ELIGIBLE_369_COLUMN_REQUIRED")
     if frame["eligible_369"].isna().any():
         raise ValueError("ELIGIBLE_369_MISSING")
-    if not frame["eligible_369"].isin([True, False]).all():
+    if not pd.api.types.is_bool_dtype(frame["eligible_369"]):
         raise ValueError("ELIGIBLE_369_MUST_BE_BOOLEAN")
     base = calculate_performance_metrics(frame)
     filtered = calculate_performance_metrics(frame.loc[frame["eligible_369"]].copy())
