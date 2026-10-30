@@ -90,3 +90,15 @@ The implementation now also contains:
 - A first aligned 3-candle FVG candidate detector. It uses a strict three-candle non-overlap gap formula and returns gap bounds/midpoint only when the entire three-candle sequence begins after the supplied M1 confirmation index. This is an explicitly provisional candidate rule, not owner-approved final FVG logic. It does not generate an SL buffer, entry fill, CISD, or trade authorization.
 
 These primitives are intentionally labelled as candidate computations where the supplied rules are incomplete. They do not silently fill missing BOS, CISD displacement, STDV anchor, fill, or target definitions.
+
+
+### BOS / protected-swing candidate implementation
+
+A parameterized structure-break candidate routine has now been added. It:
+- Uses only pivots whose right-side confirmation bar is strictly earlier than the proposed break bar.
+- For a bearish candidate, checks whether the latest two known pivot lows form a higher low, selects the latest confirmed pivot high formed after that higher low, then checks a break of the higher-low level.
+- For a bullish candidate, checks whether the latest two known pivot highs form a lower high, selects the latest confirmed pivot low formed after that lower high, then checks a break of the lower-high level.
+- Exposes independent `close` and `wick` break modes and preserves left/right pivot widths and break mode in the output.
+- Labels each result `STRUCTURE_CANDIDATE_NOT_OWNER_FROZEN`; a same-bar dual break is marked ambiguous and aborted.
+
+This is a transparent mechanical candidate interpretation of the supplied protected-swing prose. The pivot widths, close-vs-wick rule, exact definition of “meaningful” structure and independent review process remain unapproved. No candidate from this function is automatically an authorized Protected Swing or trade signal.
