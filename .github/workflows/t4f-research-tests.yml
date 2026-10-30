@@ -28,3 +28,28 @@ jobs:
           python -m pip install -e ".[research]"
       - name: Run T4F unit tests
         run: python -m unittest discover -s tests -p "test_t4f_369*.py" -v
+
+  public-deriv-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install research dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[research]"
+      - name: Retrieve read-only XAUUSD M15 history
+        run: python scripts/research/fetch_t4f_xauusd_m15.py
+      - name: Upload XAUUSD M15 research artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: t4f-369-xauusd-m15
+          path: artifacts/t4f-369-xauusd-m15/
+          if-no-files-found: warn
+          retention-days: 14
