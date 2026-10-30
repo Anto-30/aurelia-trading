@@ -84,7 +84,7 @@ class DerivPublicDataClient:
     def trading_times(self, date: str) -> dict[str, Any]:
         """Return the public market schedule for one yyyy-mm-dd date."""
         import re
-        if not isinstance(date, str) or not re.fullmatch(r"\\d{4}-\\d{2}-\\d{2}", date):
+        if not isinstance(date, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
             raise ValueError("TRADING_TIMES_DATE_MUST_BE_YYYY_MM_DD")
         response, _ = self._request({"trading_times": date})
         value = response.get("trading_times")
