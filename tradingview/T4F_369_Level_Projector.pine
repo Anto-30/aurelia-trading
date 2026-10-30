@@ -23,8 +23,8 @@ var label[] level_labels = array.new_label()
 var table info_table = table.new(position.top_right, 2, 7, bgcolor=color.new(color.black, 80), border_width=1)
 
 if barstate.isfirst
-    if ref_price <= 0
-        runtime.error("Reference price must be positive.")
+    if ref_price <= 0 or int_part <= 0
+        runtime.error("Reference price integer part must be positive.")
     for i = 1 to num_levels
         float level_price = direction == "Bearish (High)" ? ref_price - (i * scaled_step) : ref_price + (i * scaled_step)
         line line_id = line.new(bar_index, level_price, bar_index + 1, level_price,
