@@ -1,0 +1,30 @@
+name: Research-only T4F tests
+
+on:
+  push:
+    branches:
+      - research/t4f-369-engine-v0.1.0
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install research dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[research]"
+      - name: Run T4F unit tests
+        run: python -m unittest discover -s tests -p "test_t4f_369*.py" -v
