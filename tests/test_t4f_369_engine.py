@@ -150,7 +150,7 @@ class T4F369EngineTests(unittest.TestCase):
 
     def test_bullish_bos_identifies_low_after_confirmed_lower_high(self):
         candidates = detect_structure_break_candidates(
-            highs=[10, 15, 12, 14, 13, 12, 14, 16],
+            highs=[10, 15, 12, 11, 13, 12, 14, 16],
             lows=[9, 10, 11, 8, 9, 7, 8, 9],
             closes=[10, 14, 11, 9, 10, 8, 12, 14],
             left_bars=1, right_bars=1, break_mode="close",
