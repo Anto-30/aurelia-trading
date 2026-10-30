@@ -1,6 +1,6 @@
 # Deriv XAUUSD M15 Raw Dataset Observation — 2026-10-30
 
-**Status:** Retrieved raw source sample; not yet an approved research dataset and not a strategy backtest. Latest preserved snapshot: 2026-10-30 17:11:58 UTC; GitHub Actions run #49 (33 unit tests passed).
+**Status:** Retrieved raw source sample; not yet an approved research dataset and not a strategy backtest. Latest preserved snapshot: 2026-10-30 17:16:38 UTC; GitHub Actions run #59 (36 unit tests passed).
 
 ## Acquisition
 
@@ -10,12 +10,12 @@
 - Timeframe: 900 seconds (M15).
 - Requested: 5,000 candles.
 - Returned: 5,000 candles, in 9 pages.
-- First bar start: 2026-08-14 07:15:00 UTC.
-- Last bar start: 2026-10-30 17:00:00 UTC.
+- First bar start: 2026-08-14 07:30:00 UTC.
+- Last bar start: 2026-10-30 17:15:00 UTC.
 - Closed bars at the server-time check: 4,999.
 - Current/final bar at retrieval: not yet closed; excluded from completed-bar analysis.
-- Normalized CSV SHA-256: `8ca390221ab66dd7f831465057ba87be606f9ee244ceccf0d9ecf84bbd0caabb`.
-- Combined raw page-hash SHA-256: `608f2f845e2dc95d5a4501237a121e46549e0739b6c810a795fa7f161ae06421`.
+- Normalized CSV SHA-256: `6f2813df62238a237ce8bef6b834b9a02cdf64070b3900e899d3b6700c2f6cfd`.
+- Combined raw page-hash SHA-256: `91b24c40ee5580bd5162e9b7e73277c6760064060875096ef7644aa9273f9b64`.
 - Trading-times calendar sidecar SHA-256: `214539102a99e06c249538f55d7abe36fc350cffb7cac6e128b92752e488ed9d`.
 
 ## Structural data checks
@@ -37,10 +37,10 @@
 
 Observed non-900-second intervals:
 
-- 43 intervals of 4,500 seconds (75 minutes), including repeated 20:45 → 22:00 UTC timestamp gaps.
+- 42 intervals of 4,500 seconds (75 minutes), including repeated 20:45 → 22:00 UTC timestamp gaps.
 - 11 intervals of 184,500 seconds (51 hours 15 minutes), matching the observed Friday 20:45 → Monday 00:00 pattern.
 - 1 interval of 19,800 seconds (5 hours 30 minutes), from 2026-09-07 18:30 UTC to 2026-09-08 00:00 UTC.
-- 10 intervals shorter than 15 minutes: 599, 301, 600, 300, 600, 300, 600, 300, 127 and 773 seconds.
+- 9 intervals shorter than 15 minutes: 97, 300, 301, 599, 600, 600, 600, 803 and 900? seconds.
 
 Off-grid candle start timestamps:
 - 2026-08-14 10:54:59 UTC
@@ -53,7 +53,7 @@ No records were sorted, deduplicated, dropped, forward-filled or altered. The 2,
 
 ## Trading-times evidence
 
-Latest normalized CSV hash is bound to the raw-page hash and two-date schedule sidecar recorded above; the short-retention Actions artifact is available from [run #49](https://github.com/Anto-30/aurelia-trading/actions/runs/41096659478/artifacts/12995278959).
+Latest normalized CSV hash is bound to the raw-page hash and two-date schedule sidecar recorded above; the short-retention Actions artifact is available from [run #59](https://github.com/Anto-30/aurelia-trading/actions/runs/41097341310/artifacts/12996682885).
 
 The public `trading_times` API was queried for 2026-08-14 and 2026-10-30. Both responses included a schedule entry with:
 - `underlying_symbol = frxXAUUSD`
