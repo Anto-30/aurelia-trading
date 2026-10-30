@@ -124,8 +124,9 @@ class DerivPublicDataClient:
         timestamps = pd.to_datetime(pd.to_numeric(frame.pop("epoch"), errors="raise"), unit="s", utc=True)
         frame.index = pd.DatetimeIndex(timestamps, name="timestamp")
         server_time = self.server_time_epoch()
+        order_is_valid = frame.index.is_monotonic_increasing and not frame.index.has_duplicates
         last_bar_epoch = int(pd.Timestamp(frame.index[-1]).timestamp())
-        last_bar_closed = last_bar_epoch + granularity_seconds <= server_time
+        last_bar_closed = order_is_valid and last_bar_epoch + granularity_seconds <= server_time
         # Do not sort, deduplicate, forward-fill, or repair observations here.
         frame.attrs["deriv_symbol"] = requested_symbol
         frame.attrs["deriv_granularity_seconds"] = granularity_seconds
