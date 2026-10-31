@@ -1,0 +1,62 @@
+//@version=5
+indicator("T4F x 369 Level Projector — Research", overlay=true, max_lines_count=20, max_labels_count=20)
+
+// Research-only visual aid. The protected swing price is manually supplied.
+// This script does NOT detect BOS/MSS-protected swings or generate entries.
+
+group_ref = "Reference Data"
+ref_price = input.float(4217.395, "Protected Swing Reference Price", group=group_ref, step=0.001)
+direction = input.string("Bearish (High)", "Swing Type", options=["Bearish (High)", "Bullish (Low)"], group=group_ref)
+instrument = input.string("XAUUSD", "Instrument", options=["XAUUSD", "NQ", "ES"], group=group_ref)
+num_levels = input.int(4, "Number of Levels", minval=1, maxval=10, group=group_ref)
+show_table = input.bool(true, "Show Calculation Table", group=group_ref)
+
+int int_part = int(math.floor(ref_price))
+int digital_root = int_part <= 0 ? 0 : 1 + (int_part - 1) % 9
+float base_step = (digital_root == 1 or digital_root == 4 or digital_root == 7) ? 12.0 :
+     (digital_root == 2 or digital_root == 5 or digital_root == 8) ? 15.0 : 18.0
+float scale = instrument == "NQ" ? 10.0 : 1.0
+float step_size = base_step * scale
+
+var line[] level_lines = array.new_line()
+var label[] level_labels = array.new_label()
+var table info = table.new(position.top_right, 2, 6, bgcolor=color.new(color.black, 15), border_width=1)
+
+if barstate.islast
+    // Delete prior drawings before recreating them; prevents line/label accumulation.
+    while array.size(level_lines) > 0
+        line.delete(array.pop(level_lines))
+    while array.size(level_labels) > 0
+        label.delete(array.pop(level_labels))
+
+    for n = 1 to num_levels
+        float level_price = direction == "Bearish (High)" ?
+             ref_price - n * step_size : ref_price + n * step_size
+        line ln = line.new(bar_index, level_price, bar_index + 1, level_price,
+             extend=extend.right, color=color.new(color.orange, 20),
+             width=1, style=line.style_dashed)
+        array.push(level_lines, ln)
+        label lb = label.new(bar_index, level_price,
+             "L" + str.tostring(n) + "  " + str.tostring(level_price, format.mintick),
+             style=label.style_label_left, color=color.new(color.black, 15),
+             textcolor=color.orange, size=size.small)
+        array.push(level_labels, lb)
+
+    if show_table
+        table.cell(info, 0, 0, "Reference", text_color=color.white)
+        table.cell(info, 1, 0, str.tostring(ref_price, format.mintick), text_color=color.orange)
+        table.cell(info, 0, 1, "Integer part", text_color=color.white)
+        table.cell(info, 1, 1, str.tostring(int_part), text_color=color.orange)
+        table.cell(info, 0, 2, "Digital root", text_color=color.white)
+        table.cell(info, 1, 2, str.tostring(digital_root), text_color=color.orange)
+        table.cell(info, 0, 3, "Base step", text_color=color.white)
+        table.cell(info, 1, 3, str.tostring(base_step), text_color=color.orange)
+        table.cell(info, 0, 4, "Scaled step", text_color=color.white)
+        table.cell(info, 1, 4, str.tostring(step_size), text_color=color.orange)
+        table.cell(info, 0, 5, "Instrument", text_color=color.white)
+        table.cell(info, 1, 5, instrument + (instrument == "ES" ? " (verify)" : ""), text_color=color.orange)
+    else
+        table.clear(info, 0, 0, 1, 5)
+
+// ES is displayed using the supplied as-is step, but that scaling is not
+// empirically or contract-specification validated by this indicator.
