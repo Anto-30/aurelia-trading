@@ -183,7 +183,7 @@ def load_daily_csv(path: str | Path) -> list[DailyBar]:
                 ))
             except (TypeError, ValueError) as exc:
                 raise ValueError(f"CSV_INVALID_ROW:{line_number}:{exc}") from exc
-    bars.sort(key=lambda item: item.parsed_timestamp())
+    # Preserve source order so chronology defects are rejected, not silently repaired.
     validate_daily_bars(bars)
     return bars
 
@@ -344,6 +344,7 @@ def measure_tuesday_outcomes(
 def wilson_interval(
     successes: int, trials: int, *, z: float = 1.959963984540054
 ) -> tuple[float, float] | None:
+    """Return a binomial IID interval; it is not dependence-aware time-series inference."""
     if trials <= 0:
         return None
     if successes < 0 or successes > trials:
@@ -380,7 +381,7 @@ def summarize_outcomes(outcomes: Sequence[TuesdayOutcome]) -> dict[str, object]:
         "target_first_rate_on_resolved_events": (
             target_first / resolved if resolved else None
         ),
-        "target_first_wilson_95pct_interval_on_resolved_events": (
+        "target_first_wilson_95pct_interval_iid_diagnostic_only": (
             list(wilson_interval(target_first, resolved)) if resolved else None
         ),
         "unresolved_or_unreached_count": (
@@ -389,7 +390,8 @@ def summarize_outcomes(outcomes: Sequence[TuesdayOutcome]) -> dict[str, object]:
         "interpretation": (
             "Descriptive daily-OHLC path study only. No entry, spread, slippage, stop-fill, "
             "or M1/M15 execution model is represented. Ambiguous same-day double touches "
-            "are excluded from resolved-event rate and must not be counted as wins."
+            "are excluded from resolved-event rate and must not be counted as wins. The Wilson "
+            "interval is an IID binomial diagnostic only and ignores serial dependence."
         ),
     }
 
