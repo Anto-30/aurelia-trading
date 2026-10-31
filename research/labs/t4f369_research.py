@@ -28,8 +28,10 @@ def digital_root_from_price(price: float) -> tuple[int, int, int]:
     if not isfinite(float(price)) or float(price) <= 0:
         raise ValueError("REFERENCE_PRICE_MUST_BE_FINITE_AND_POSITIVE")
     integer_part = int(float(price))
+    if integer_part <= 0:
+        raise ValueError("REFERENCE_PRICE_INTEGER_PART_HAS_NO_DIGITAL_ROOT")
     digit_sum = sum(int(ch) for ch in str(integer_part))
-    root = 0 if integer_part == 0 else 1 + (integer_part - 1) % 9
+    root = 1 + (integer_part - 1) % 9
     return integer_part, digit_sum, root
 
 
@@ -128,10 +130,11 @@ def validate_candles(
     largest_gap = 0
     for previous, current in zip(stamps, stamps[1:]):
         delta = int((current - previous).total_seconds())
-        if delta > interval_seconds:
+        if delta > 0 and delta != interval_seconds:
             largest_gap = max(largest_gap, delta)
-            # Count absent expected bars, not merely the number of gap events.
-            missing += max(0, delta // interval_seconds - 1)
+            # Reject both missing intervals and off-grid timestamp deltas.
+            # For a 1-minute series, 90s or 30s is invalid, not a clean cadence.
+            missing += max(1, delta // interval_seconds - 1)
     valid = bool(candles) and duplicates == 0 and out_of_order == 0 and missing == 0
     return CandleQuality(
         len(candles), duplicates, out_of_order, missing, largest_gap,
@@ -148,7 +151,8 @@ class ConfirmedPivot:
 
 
 def detect_confirmed_pivots(
-    candles: Sequence[Candle], *, left_bars: int = 5, right_bars: int = 5
+    candles: Sequence[Candle], *, left_bars: int = 5, right_bars: int = 5,
+    interval_seconds: int = 60,
 ) -> tuple[ConfirmedPivot, ...]:
     """Causal pivot events; a pivot is unavailable until right_bars have closed.
 
@@ -157,9 +161,9 @@ def detect_confirmed_pivots(
     """
     if left_bars < 1 or right_bars < 1:
         raise ValueError("PIVOT_LOOKBACKS_MUST_BE_POSITIVE")
-    quality = validate_candles(candles, interval_seconds=60)
-    if quality.duplicate_timestamps or quality.out_of_order_timestamps:
-        raise ValueError("PIVOT_INPUT_CHRONOLOGY_INVALID")
+    quality = validate_candles(candles, interval_seconds=interval_seconds)
+    if quality.status != "PASS":
+        raise ValueError("PIVOT_INPUT_QUALITY_FAILED_CLOSED")
     events: list[ConfirmedPivot] = []
     for i in range(left_bars, len(candles) - right_bars):
         window = candles[i - left_bars:i + right_bars + 1]
@@ -197,6 +201,19 @@ def scan_level_touches(
         raise ValueError("TOLERANCE_FRACTION_OUT_OF_RANGE")
     if max_bars_after_confirmation < 1:
         raise ValueError("FORWARD_WINDOW_MUST_BE_POSITIVE")
+    quality = validate_candles(candles, interval_seconds=60)
+    if quality.status != "PASS":
+        raise ValueError("TOUCH_INPUT_QUALITY_FAILED_CLOSED")
+    if not (0 <= pivot.pivot_index < pivot.confirmed_at_index < len(candles)):
+        raise ValueError("PIVOT_INDEX_OUT_OF_RANGE")
+    if not isfinite(float(pivot.price)) or not isfinite(float(projection.reference_price)):
+        raise ValueError("PIVOT_OR_REFERENCE_PRICE_INVALID")
+    if not __import__("math").isclose(
+        float(pivot.price), float(projection.reference_price), rel_tol=0.0, abs_tol=1e-9
+    ):
+        raise ValueError("PIVOT_PROJECTION_REFERENCE_MISMATCH")
+    if pivot.kind not in {"HIGH", "LOW"}:
+        raise ValueError("PIVOT_KIND_INVALID")
     if pivot.kind == "HIGH" and projection.direction != "bearish":
         raise ValueError("PIVOT_DIRECTION_MISMATCH")
     if pivot.kind == "LOW" and projection.direction != "bullish":
@@ -226,11 +243,18 @@ def performance_metrics(rows: Iterable[dict[str, float]]) -> dict[str, float | i
     pnls: list[float] = []
     rs: list[float] = []
     for row in data:
-        pnl, r = float(row["pnl_net"]), float(row["r_multiple"])
-        if not isfinite(pnl) or not isfinite(r):
+        pnl = float(row["pnl_net"])
+        risk = float(row["risk_usd"])
+        r = float(row["r_multiple"])
+        if not all(isfinite(value) for value in (pnl, risk, r)):
             raise ValueError("TRADE_METRICS_MUST_BE_FINITE")
+        if risk <= 0:
+            raise ValueError("TRADE_RISK_MUST_BE_POSITIVE")
+        calculated_r = pnl / risk
+        if not __import__("math").isclose(calculated_r, r, rel_tol=1e-6, abs_tol=1e-8):
+            raise ValueError("R_MULTIPLE_DOES_NOT_MATCH_NET_PNL_OVER_RISK")
         pnls.append(pnl)
-        rs.append(r)
+        rs.append(calculated_r)
     gross_profit = sum(x for x in pnls if x > 0)
     gross_loss = abs(sum(x for x in pnls if x < 0))
     equity = peak = 0.0
