@@ -1,0 +1,38 @@
+name: Layer 9 research tests
+
+on:
+  pull_request:
+    paths:
+      - "research/labs/market_structure_369.py"
+      - "research/labs/tests/test_market_structure_369.py"
+      - "docs/LAYER9_STRUCTURE_369_EXPERIMENT_SPEC.md"
+      - "pyproject.toml"
+      - ".github/workflows/layer9-research-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "research/labs/market_structure_369.py"
+      - "research/labs/tests/test_market_structure_369.py"
+      - "docs/LAYER9_STRUCTURE_369_EXPERIMENT_SPEC.md"
+      - "pyproject.toml"
+      - ".github/workflows/layer9-research-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  deterministic-research-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install research dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[research]"
+      - name: Run Layer 9 deterministic tests
+        run: python -m unittest research.labs.tests.test_market_structure_369 -v
