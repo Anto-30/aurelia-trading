@@ -332,4 +332,4 @@ The canonical main `config/LIVE_LOCK.yaml` was re-read. Blob SHA remains `b2cddd
 - `capital_plane_mode: VERIFY_ONLY`
 - `research_capital_authority: false`
 
-The same lock file is absent from neither main nor the report branch; it was read, not modified. No orders, proposals, account authentication, capital movement, secrets access, lock mutation or strategy promotion occurred.
+The canonical main lock was read and remains unchanged. The report-branch diff contains only this documentation file and does not modify the lock. No orders, proposals, account authentication, capital movement, secrets access, lock mutation or strategy promotion occurred.
