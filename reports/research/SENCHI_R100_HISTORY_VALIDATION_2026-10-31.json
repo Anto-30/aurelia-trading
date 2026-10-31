@@ -1,0 +1,106 @@
+{
+  "schema": "aurelia.deriv.public_history_validation.v1",
+  "experiment_id": "SENCHI-R100-DAILY-HISTORY-2026-10-31",
+  "captured_at_utc": "2026-10-31",
+  "source": {
+    "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
+    "docs": [
+      "https://developers.deriv.com/docs/options/ws-public/",
+      "https://developers.deriv.com/docs/data/ticks-history/",
+      "https://developers.deriv.com/docs/data/active-symbols/"
+    ],
+    "authentication": "PUBLIC_NO_AUTH",
+    "symbol": "R_100",
+    "symbol_active": true
+  },
+  "request": {
+    "method": "ticks_history",
+    "style": "candles",
+    "granularity_seconds": 86400,
+    "count_included": false,
+    "interval_start_utc_inclusive": "2022-10-21T00:00:00Z",
+    "interval_end_utc_exclusive": "2024-10-22T00:00:00Z",
+    "expected_utc_dates": 732,
+    "chunks": [
+      [
+        "2022-10-21T00:00:00Z",
+        "2023-01-21T00:00:00Z",
+        1001
+      ],
+      [
+        "2023-01-21T00:00:00Z",
+        "2023-04-21T00:00:00Z",
+        1002
+      ],
+      [
+        "2023-04-21T00:00:00Z",
+        "2023-07-21T00:00:00Z",
+        1003
+      ],
+      [
+        "2023-07-21T00:00:00Z",
+        "2023-10-21T00:00:00Z",
+        1004
+      ],
+      [
+        "2023-10-21T00:00:00Z",
+        "2024-01-21T00:00:00Z",
+        1005
+      ],
+      [
+        "2024-01-21T00:00:00Z",
+        "2024-04-21T00:00:00Z",
+        1006
+      ],
+      [
+        "2024-04-21T00:00:00Z",
+        "2024-07-21T00:00:00Z",
+        1007
+      ],
+      [
+        "2024-07-21T00:00:00Z",
+        "2024-10-22T00:00:00Z",
+        1008
+      ]
+    ],
+    "echo_req_matched": true,
+    "api_errors": 0
+  },
+  "response_validation": {
+    "status": "REJECTED_RANGE_MISMATCH",
+    "chunks_completed": 8,
+    "rows_per_chunk": 366,
+    "aggregate_rows": 2928,
+    "first_returned_timestamp_utc": "2025-10-31T10:06:12Z",
+    "last_returned_timestamp_utc": "2026-10-31T00:00:00Z",
+    "missing_requested_utc_dates": 732,
+    "outside_range_rows": 2928,
+    "duplicate_timestamp_occurrences": 2561,
+    "duplicate_timestamp_keys": 367,
+    "duplicate_utc_date_occurrences": 2562,
+    "duplicate_utc_date_keys": 366,
+    "ohlc_sanity_rows_checked": 2928,
+    "ohlc_sanity_failures": 0,
+    "note": "All eight responses echoed their requested boundaries but returned the same unrelated latest-year candle block. A valid echo_req does not establish that the returned candle timestamps belong to the requested interval."
+  },
+  "normalized_response_sha256": "8817ac28862e29b19fda059acb300ceb4e5bbbac005d95df0fed9e04f088e597",
+  "normalization": {
+    "field_order": [
+      "epoch",
+      "open",
+      "high",
+      "low",
+      "close"
+    ],
+    "encoding": "UTF-8",
+    "separator": "LF",
+    "final_newline": true,
+    "epoch_type": "numeric",
+    "ohlc_representation": "preserved API text",
+    "normalized_bytes": 248612
+  },
+  "conclusion": "No strategy backtest was run. The downloaded candle block is not the requested historical sample and must not be used to calculate a win rate, expectancy, profit factor, drawdown, or trading edge.",
+  "research_only": true,
+  "capital_authority": false,
+  "live_execution": false
+}
