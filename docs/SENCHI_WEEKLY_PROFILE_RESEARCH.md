@@ -46,9 +46,15 @@ The CSV must contain timestamp_utc,open,high,low,close. Preserve the raw API res
 5. Daily OHLC target reach is not an executable return. The T4F × 369 stage requires chronological M15/M1 data, fully deterministic liquidity-sweep/MSS/displacement/FVG rules, realistic fill assumptions, and instrument-specific spread/slippage/fees.
 6. Reserve a chronological out-of-sample period and do not tune thresholds on it. Compare against unconditional Tuesday target-touch and matched non-reversal baselines. Use confidence intervals and dependence-aware resampling by week; a simple win-rate threshold is not sufficient evidence of edge.
 
-## Known blocker at initial implementation
+## Historical data retrieval result — 2026-10-31
 
-The first live public-history retrieval attempt identified R_100 but returned only 366 daily records from 2025-10-31 through 2026-10-31, rather than the requested 2022-10-21 through 2024-10-21 interval. That response is not accepted as the study dataset. The chunked historical retrieval must pass request/response echo validation and exact date coverage before analysis is run. No backtest performance figure is reported from the invalid response.
+R_100 was confirmed active on the Deriv public WebSocket market-data endpoint. The initial single-window request and a follow-up partition into eight contiguous, non-overlapping intervals both failed historical range validation.
+
+All eight chunk requests echoed their requested symbol, start, end, style, granularity and request ID, but each returned the same 366-row block dated 2025-10-31 10:06:12/13 UTC through 2026-10-31 00:00:00 UTC. Across 2,928 returned rows, all 732 requested UTC dates from 2022-10-21 through 2024-10-21 were missing and all 2,928 rows were outside the requested interval. The repeated block produced 2,561 duplicate timestamp occurrences and 2,562 duplicate UTC-date occurrences. OHLC numeric sanity checks passed for the returned rows, but that does not repair the date-range mismatch.
+
+The normalized response hash is 8817ac28862e29b19fda059acb300ceb4e5bbbac005d95df0fed9e04f088e597. The full request partition, echo checks, duplicate counts, normalization definition and hash are archived at reports/research/SENCHI_R100_HISTORY_VALIDATION_2026-10-31.json.
+
+Result: REJECTED_RANGE_MISMATCH. No performance statistic or backtest result was calculated from this response. Do not substitute the repeated latest-year block for the requested 2022–2024 sample. Historical access must be resolved with Deriv before this strategy hypothesis can be empirically evaluated.
 
 ## Governance
 
