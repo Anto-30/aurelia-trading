@@ -23,7 +23,7 @@ The UTC Monday–Sunday week is an objective proxy for an ICT/Senchi weekly prof
 
 ## Input validation
 
-The engine rejects empty inputs, naive timestamps, non-midnight daily candle boundaries, duplicate timestamps, non-chronological data, missing daily intervals, non-finite/non-positive prices and invalid OHLC relationships. For a 24/7 synthetic index, a missing daily candle is treated as a data-integrity failure, not as a market holiday to silently skip.
+The engine rejects empty inputs, naive timestamps, non-midnight daily candle boundaries, duplicate timestamps, non-chronological input rows, missing daily intervals, non-finite/non-positive prices and invalid OHLC relationships. CSV source order is preserved; chronology defects are rejected, not silently sorted into apparent validity. For a 24/7 synthetic index, a missing daily candle is treated as a data-integrity failure, not as a market holiday to silently skip.
 
 ## Run
 
@@ -45,6 +45,7 @@ The CSV must contain timestamp_utc,open,high,low,close. Preserve the raw API res
 4. Keep same-day target/stop double-touches, no-hit cases and missing-Tuesday cases visible. Do not remove them from the all-setups denominator.
 5. Daily OHLC target reach is not an executable return. The T4F × 369 stage requires chronological M15/M1 data, fully deterministic liquidity-sweep/MSS/displacement/FVG rules, realistic fill assumptions, and instrument-specific spread/slippage/fees.
 6. Reserve a chronological out-of-sample period and do not tune thresholds on it. Compare against unconditional Tuesday target-touch and matched non-reversal baselines. Use confidence intervals and dependence-aware resampling by week; a simple win-rate threshold is not sufficient evidence of edge.
+7. The included Wilson interval is an IID binomial diagnostic only. It ignores serial dependence and must not be treated as decision-grade time-series inference; use week/block-aware resampling before inferential claims.
 
 ## Historical data retrieval result — 2026-10-31
 
