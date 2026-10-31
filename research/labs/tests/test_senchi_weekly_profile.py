@@ -141,6 +141,14 @@ class SenchiWeeklyProfileTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "DAILY_DATASET_HAS_GAP"):
             validate_daily_bars(rows)
 
+    def test_out_of_order_daily_bars_are_rejected(self):
+        rows = [
+            bar(date(2026, 1, 2), 100.0, 105.0, 95.0, 100.0),
+            bar(date(2026, 1, 1), 100.0, 105.0, 95.0, 100.0),
+        ]
+        with self.assertRaisesRegex(ValueError, "DAILY_BARS_NOT_STRICTLY_CHRONOLOGICAL"):
+            validate_daily_bars(rows)
+
     def test_non_midnight_bar_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "UTC_MIDNIGHT_ALIGNED"):
             validate_daily_bars([
