@@ -323,6 +323,14 @@ Agent roles remain advisory/research-only. No Claude Code, KimiK3, JEV, GLM, Gro
 7. Freeze one canonical probability-policy source; a 0.55–0.75 numeric band is not itself calibration.
 8. Only then run the structure-only baseline, paired 369 ablation, walk-forward/sealed OOS, reliability/Brier/log-loss, dependence-aware block bootstrap, Monte Carlo, feature ablation, sensitivity and multiple-testing correction.
 
+### Canonical registry and policy audit
+
+The main-branch strategy registry was parsed from `config/strategy_registry.json` (registry version `2026-10-10.1`): nine entries total, four `RESEARCH_ONLY_UNQUALIFIED` and five `BLOCKED_IMPLEMENTATION_NOT_VERIFIED`. All nine have unknown cost profiles, OOS/walk-forward/calibration/net-economics states `NOT_RUN`, null reviewer, and empty qualification evidence IDs. The registry itself declares no capital or execution authority.
+
+The runtime probability configuration has `min_trade_probability: 0.50` and `max_trade_probability: 0.75`; the research delegation contract requires the inclusive `[0.55, 0.75]` range. This is a policy-source mismatch, not a reason to silently edit either setting during research. Resolve it in one reviewed canonical policy module and retain calibration as a separate release gate.
+
+The main-branch worker code confirms the liveness defect: `AgentWorkerSupervisor` emits a heartbeat even when `provider_session=NOT_CONFIGURED`; the probe only checks local active leases. The safe repair must test provider-command presence and a bounded successful handshake, while keeping AURELIA's deterministic capital authority outside the advisory worker pool.
+
 ### Safety re-verification
 
 The canonical main `config/LIVE_LOCK.yaml` was re-read. Blob SHA remains `b2cddd1efb0f25f35a6a08354290f805812bf34c`; values remain:
