@@ -9,6 +9,7 @@ from research.labs.senchi_weekly_profile import (
     summarize_outcomes,
     validate_daily_bars,
     wilson_interval,
+    validate_requested_range,
 )
 
 
@@ -165,6 +166,25 @@ class SenchiWeeklyProfileTests(unittest.TestCase):
         self.assertEqual(summary["target_first_count_including_open_gaps"], 0)
         self.assertEqual(summary["resolved_event_count"], 0)
         self.assertEqual(summary["target_touched_count_including_ambiguous"], 1)
+
+    def test_exact_requested_date_range_passes(self):
+        rows = base_previous_week() + [
+            bar(date(2026, 1, 12), 94.0, 105.0, 88.0, 96.0)
+        ]
+        receipt = validate_requested_range(
+            rows, start_date="2026-01-05", end_date="2026-01-12"
+        )
+        self.assertEqual(receipt["status"], "PASS")
+        self.assertEqual(receipt["expected_calendar_days"], 8)
+
+    def test_wrong_requested_date_range_is_rejected(self):
+        rows = base_previous_week() + [
+            bar(date(2026, 1, 12), 94.0, 105.0, 88.0, 96.0)
+        ]
+        with self.assertRaisesRegex(ValueError, "REQUESTED_DATE_RANGE_MISMATCH"):
+            validate_requested_range(
+                rows, start_date="2025-10-31", end_date="2026-10-31"
+            )
 
     def test_wilson_interval(self):
         lower, upper = wilson_interval(50, 100)
