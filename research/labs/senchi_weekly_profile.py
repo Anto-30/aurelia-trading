@@ -396,12 +396,48 @@ def summarize_outcomes(outcomes: Sequence[TuesdayOutcome]) -> dict[str, object]:
     }
 
 
+def validate_requested_range(
+    bars: Sequence[DailyBar], *, start_date: str, end_date: str
+) -> dict[str, object]:
+    """Require exact, inclusive date coverage for a declared research window."""
+    start = date.fromisoformat(start_date)
+    end = date.fromisoformat(end_date)
+    if end < start:
+        raise ValueError("REQUESTED_DATE_RANGE_INVALID")
+    validate_daily_bars(bars)
+    expected_days = (end - start).days + 1
+    actual_start = bars[0].session_date_utc
+    actual_end = bars[-1].session_date_utc
+    if actual_start != start or actual_end != end or len(bars) != expected_days:
+        raise ValueError(
+            "REQUESTED_DATE_RANGE_MISMATCH:"
+            f"expected={start.isoformat()}..{end.isoformat()}:{expected_days};"
+            f"actual={actual_start.isoformat()}..{actual_end.isoformat()}:{len(bars)}"
+        )
+    return {
+        "status": "PASS",
+        "start_date_inclusive": start.isoformat(),
+        "end_date_inclusive": end.isoformat(),
+        "expected_calendar_days": expected_days,
+        "actual_bars": len(bars),
+    }
+
+
 def build_research_report(
     bars: Sequence[DailyBar], *, symbol: str, source: str,
     input_sha256: str | None = None, code_commit: str | None = None,
     calendar_basis: str = "UTC_86400S_DAILY_CANDLES",
+    requested_start_date: str | None = None,
+    requested_end_date: str | None = None,
 ) -> dict[str, object]:
     validate_daily_bars(bars)
+    if (requested_start_date is None) != (requested_end_date is None):
+        raise ValueError("BOTH_REQUESTED_DATE_BOUNDS_REQUIRED")
+    range_validation = None
+    if requested_start_date is not None and requested_end_date is not None:
+        range_validation = validate_requested_range(
+            bars, start_date=requested_start_date, end_date=requested_end_date
+        )
     signals = classify_monday_signals(bars)
     outcomes = measure_tuesday_outcomes(bars, signals)
     monday_counts = Counter(row.action for row in signals)
@@ -430,6 +466,7 @@ def build_research_report(
             "first_timestamp_utc": bars[0].parsed_timestamp().isoformat().replace("+00:00", "Z"),
             "last_timestamp_utc": bars[-1].parsed_timestamp().isoformat().replace("+00:00", "Z"),
             "input_sha256": input_sha256,
+            "requested_range_validation": range_validation,
         },
         "code_commit": code_commit or os.getenv("GITHUB_SHA", "UNKNOWN"),
         "monday_action_counts": {key: monday_counts.get(key, 0) for key in MONDAY_ACTIONS},
@@ -451,12 +488,14 @@ def build_research_report(
 
 def run_csv_research(
     input_path: str | Path, output_path: str | Path, *, symbol: str,
-    source: str, calendar_basis: str = "UTC_86400S_DAILY_CANDLES",
+    source: str, start_date: str, end_date: str,
+    calendar_basis: str = "UTC_86400S_DAILY_CANDLES",
 ) -> dict[str, object]:
     bars = load_daily_csv(input_path)
     report = build_research_report(
         bars, symbol=symbol, source=source, input_sha256=sha256_file(input_path),
-        calendar_basis=calendar_basis,
+        calendar_basis=calendar_basis, requested_start_date=start_date,
+        requested_end_date=end_date,
     )
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -473,10 +512,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--output", required=True, help="Output JSON report path")
     parser.add_argument("--symbol", required=True)
     parser.add_argument("--source", required=True, help="Exact data-source/provenance label")
+    parser.add_argument("--start-date", required=True, help="Inclusive UTC candle date YYYY-MM-DD")
+    parser.add_argument("--end-date", required=True, help="Inclusive UTC candle date YYYY-MM-DD")
     parser.add_argument("--calendar-basis", default="UTC_86400S_DAILY_CANDLES")
     args = parser.parse_args(argv)
     report = run_csv_research(
         args.input, args.output, symbol=args.symbol, source=args.source,
+        start_date=args.start_date, end_date=args.end_date,
         calendar_basis=args.calendar_basis,
     )
     summary = report["outcomes"]
