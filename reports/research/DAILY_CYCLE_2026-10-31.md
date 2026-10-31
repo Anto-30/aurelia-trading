@@ -48,7 +48,7 @@
 - Instrument: `frxXAUUSD`; public no-auth Deriv market-data endpoint.
 - Sample: 5,000 M15 observations; 4,999 closed and one forming bar.
 - Normalized CSV SHA-256: `6f2813df62238a237ce8bef6b834b9a02cdf64070b3900e899d3b6700c2f6cfd`
-- Combined raw-page SHA-256: `91b24c40ee5580bd5162e9b7e73277c6760064060875096ef7644aa9273f9b64`
+- Combined raw-page SHA-256: `91b24c40ee5580bd5169e2b7e73277c6760064060875096ef7644aa9273f9b64`
 - Calendar SHA-256: `214539102a99e06c249538f55d7abe36fc350cffb7cac6e128b92752e488ed9d`
 - Dataset disposition in metadata: `RAW_RESEARCH_ONLY_PENDING_SESSION_CALENDAR_AND_FULL_DATA_QUALITY_VALIDATION`.
 
@@ -208,3 +208,128 @@ The main LIVE_LOCK blob SHA remains `b2cddd1efb0f25f35a6a08354290f805812bf34c`. 
 - `research_capital_authority: false`
 
 No orders were submitted. No secrets were accessed or printed. LIVE_LOCK was not changed. No strategy was promoted. All work in this report is research-only and non-authoritative.
+
+
+---
+
+## 11. Late-cycle evidence update — 2026-10-31 14:33 UTC
+
+This addendum supersedes earlier statements where it provides more recent or more specific evidence. It does not change the original experiment definitions or any release gate.
+
+### Market and macro refresh
+
+The last completed U.S. cash session remains Friday 2026-10-30; Saturday's cash-market closure means no Saturday U.S. equity close is reported. AP's Friday close reported S&P 500 -1.8% to 7,580.07, Nasdaq -2.9% to 25,437, and Dow -1.1% to 51,770.31. The same report attributed the technology sell-off to concerns about AI spending returns; Intel fell 28.6%, and Bitcoin moved below $77,000 amid a reported Binance security incident. Reuters reported the Nasdaq 100 was down more than 5.8% in October and described more than $2 trillion of market value as exposed to the repricing of AI-capex expectations. These are conventional-market risk-context observations, not Deriv synthetic-index signals.
+
+Official macro releases add a mixed growth/inflation picture:
+- BEA's 2026-10-29 advance estimate: Q3 real GDP +3.4% annualized, versus +2.2% in Q2. September personal income +0.2% month over month and PCE +0.5%; personal saving rate 3.8%.
+- BLS's 2026-10-30 Employment Cost Index: civilian compensation +0.8% quarter over quarter (SA) and +3.4% year over year (NSA); wages +0.7% QoQ and +3.1% YoY; benefits +0.9% QoQ and +3.9% YoY.
+- Interpretation: growth remained resilient, while compensation and PCE readings do not support an uncomplicated disinflation narrative. No directional trade implication for synthetic indices is inferred.
+
+Sources: [AP, 2026-10-30 market close](https://apnews.com/article/a01d3551e794fed1a0c317c20bc3f0a2), [Reuters, 2026-10-30 Nasdaq/AI-capex repricing](https://www.reuters.com/business/media-telecom/nasdaq-faces-2-trillion-wipeout-in-october-as-ai-spending-fears-deepen-2026-10-30/), [BEA, 2026-10-29 GDP and personal income/outlays](https://www.bea.gov/news/2026/gdp-advance-estimate-3rd-quarter-2026), [BLS, 2026-10-30 ECI](https://www.bls.gov/news.release/eci.nr0.htm).
+
+### Market-intelligence service status
+
+A new Fahali bundle request, followed by separate daily-brief, market-decision and engine-status requests, all timed out (8–15 seconds) on 2026-10-31 around 14:31–14:33 UTC. No current Fahali regime or market decision was produced. This is a source outage/timeout, not evidence of neutral conditions, low risk, or missing underlying market data. The external macro sources above are used only for broad context.
+
+### R_100 historical-data gate — independent failure reproduced
+
+PR #245 adds an exact request/response receipt for the Deriv public no-auth history endpoint:
+- Requested R_100 daily candles for 2022-10-21 through 2024-10-21 inclusive (732 UTC dates), partitioned into eight contiguous non-overlapping requests.
+- All eight requests echoed their request parameters, but every chunk returned the same 366-row block from 2025-10-31 10:06:12/13 UTC through 2026-10-31 00:00:00 UTC.
+- Aggregate rows: 2,928; requested dates missing: 732/732; rows outside requested range: 2,928; duplicate timestamp occurrences: 2,561; duplicate UTC-date occurrences: 2,562; OHLC sanity failures: zero.
+- Normalized response SHA-256: `8817ac28862e29b19fda059acb300ceb4e5bbbac005d95df0fed9e04f088e597`.
+- Disposition: `REJECTED_RANGE_MISMATCH`. No return, hit rate, expectancy, PF, drawdown or edge metric was calculated from this response.
+
+The raw receipt is in [PR #245](https://github.com/Anto-30/aurelia-trading/pull/245), `reports/research/SENCHI_R100_HISTORY_VALIDATION_2026-10-31.json`. The Senchi weekly-profile module is a deterministic higher-timeframe measurement tool only; its 19/19 regression tests passed, but it has no valid R_100 dataset, no M15/M1 entry simulation, no execution economics and no independent human review. Its UTC Monday–Sunday definition must not be relabelled as New York-close or Sunday-evening futures weeks.
+
+### R_100 prospective collector failure — log-level diagnosis
+
+The scheduled collector workflow [run #329](https://github.com/Anto-30/aurelia-trading/actions/runs/41115381103) was inspected through its job log, not just the run summary:
+- Campaign selection remained `VALID` / `FROZEN`.
+- The real public R_100 tick-collection step failed twice, with a 10-second retry delay.
+- Both attempts raised `DerivTransportError: {'code': 'TRANSPORT_READER_FAILED'}` from `runtime/adapters/deriv_ws.py:165`, called by `research/r100_prospective_oos_collector.py:549`.
+- The adapter's `_reader_loop()` catches the underlying exception, fails pending request futures with that exception, but sends only the generic `TRANSPORT_READER_FAILED` envelope to subscription queues. The collector therefore cannot identify whether the underlying cause was a remote close, local reader exception, malformed frame, decode error or other transport failure from the preserved log.
+- The prior-state artifact upload succeeded after the collection failure; state was preserved. No fresh tick observation is claimed.
+
+**Smallest safe transport repair:** propagate a sanitized structured failure to the subscription queue: exception class, WebSocket close code (if present), and a bounded/sanitized reason code. Do not log raw frames, URLs containing credentials, tokens or arbitrary server payloads. Add tests for remote close, malformed JSON, reader exception, queue wake-up and bounded reconnect. Do not merely increase retries. Reconnect only on a fresh transport; preserve the same frozen campaign and deduplicate/censor observations by immutable source timestamp and signal ID.
+
+### New research branches and exact CI evidence
+
+**PR #244 — Layer 9 structure + 3-6-9 engine**
+- Head: `e926d8053b305a0c064814b42c92d0782b580a81`; six changed files, 1,455 additions.
+- Dedicated deterministic tests: 30/30 passed on Python 3.11 and 3.12.
+- AURELIA Assurance, Agent Federation Audit and Agent Continuity Watchdog all completed successfully on that exact head.
+- Assurance explicitly skipped authenticated session, broker-account evidence and verify-only transaction-lifecycle steps because authenticated prerequisites were not provisioned. The readiness/certification output remains blocked by missing production evidence.
+- No historical Deriv candles were acquired and no six-month backtest was run. The 369 mapping is still an unproven filter hypothesis; source-backed instrument quantum/tick metadata is unresolved. Only fixed 2R is implemented; opposing-liquidity target mode is not. London phase windows are not specified.
+- No independent review submissions. Keep draft/unmerged.
+
+**PR #245 — Senchi weekly-profile measurement**
+- Head: `1671512b22cdc8c9641419386a45c209d947c439`; four changed files.
+- Regression suite: 19/19 passed.
+- AURELIA Assurance, Agent Federation Audit and Agent Continuity Watchdog all completed successfully on that exact head.
+- Authenticated session, account and transaction-lifecycle steps were skipped. No authenticated broker session is claimed.
+- Historical R_100 request failed the range gate as detailed above. No strategy backtest statistics were calculated.
+- No independent review submissions. Keep draft/unmerged.
+
+Passing CI establishes the tested code paths and fail-closed checks on those branch heads; it does not establish production evidence, historical-data validity, strategy performance, or live readiness.
+
+### Updated ranking and ownership
+
+Ranking is dependency-first, not a profitability forecast:
+
+| Rank | Hypothesis / repair | Primary owner | Independent review | Current decision |
+|---|---|---|---|---|
+| P0 | Expose sanitized Deriv reader failure cause; add deterministic transport failure/reconnect tests | ClaudeCode | JEV + GLM | First code repair; do not weaken range/continuity checks |
+| P0 | Obtain valid source-bound R_100 M1/M15 history and reconcile the 2022–2024 range defect | ClaudeCode / data owner | JEV | Blocking; public endpoint response rejected |
+| P1 | Structure-only M15 sweep → exact-boundary M1 MSS → first aligned FVG midpoint retest | KimiK3 | JEV; GLM adversarial review; ClaudeCode implementation | Baseline before any 369 filter |
+| P2 | Paired same-candidate-cohort structure-only vs structure+369 ablation | KimiK3 | JEV + GLM | Only after P1, metadata and data gates |
+| P3 | Senchi weekly UTC profile: reversal/expansion/inside/dual-sweep versus unconditional and matched baselines | KimiK3 | JEV | Measurement only; no executable edge claim |
+| P4 | MSNR Phase 6/Layer 9 BODY vs FULL_RANGE and ATR(14/20) | KimiK3 | JEV + GLM | Freeze exact signal/fill/cost definitions first |
+| P5 | Regime-conditioned trend/momentum versus mean reversion, volatility and tick-dynamics models | KimiK3 | JEV | No reliable current R_100 regime or data |
+| P6 | CNN-LSTM/TiRex-style ML and learned feature interactions | KimiK3 | JEV + GLM | Defer until a valid simple baseline, calibration and OOS protocol exist |
+
+Agent roles remain advisory/research-only. No Claude Code, KimiK3, JEV, GLM, GrokBot, GoogleAgentSkills, DeepSeek Harness or Hermes runtime was dispatched in this update. The successful GitHub CI agent audits are not external agent execution evidence.
+
+### Coverage and validation disposition
+
+| Domain | Current disposition |
+|---|---|
+| Market structure / BOS-MSS / protected swings | Deterministic Layer 9 code and tests exist in PR #244; no source-verified backtest |
+| Liquidity / sweep-reclaim | Price-only proxy; no DOM, resting-liquidity or aggressor-flow evidence |
+| Fair-value gaps | Deterministic midpoint mitigation is specified; no net expectancy test |
+| Opening-range / consolidation breaks | No qualified result; session calendar and exact M1/M15 synchronization remain unresolved |
+| Trend / momentum / mean reversion | R_100 v0.2.0 failed qualification; no new sample |
+| Volatility / tick dynamics | No fresh valid R_100 observations; absolute-return clustering from XAUUSD is descriptive only |
+| Multi-timeframe | M15→M1 sequence is specified in PR #244; no verified paired dataset |
+| Microstructure | True DOM, CVD/delta, order-book imbalance and traded volume remain unavailable/unsupported |
+| ML / feature engineering | No training; keep simple pre-registered features and baselines first |
+| Probability calibration / uncertainty | R_100 OOS Brier worse than base rate; probabilities overstate hit rate; no new calibration |
+| Position sizing / drawdown / tail risk | Not run; no sizing justified from failed calibration and unknown realized costs |
+| Execution costs | No canonical `config/costs.yaml` on main; proposal quotes are not fills |
+| Walk-forward / OOS | Existing R_100 OOS is adverse; no new walk-forward or sealed OOS |
+| Monte Carlo / ablation / sensitivity | Not run; paired 369 ablation is only a future design |
+| Multiple testing | R_100 v0.2.0 had one registered trial; new research family must log every candidate/config and keep OOS sealed |
+| Retirement / revalidation | Retire exact R_100 v0.2.0 from qualification; any revision gets a new hypothesis/version and untouched OOS |
+| Engineering / risk failure modes | Generic reader failure hides root cause; historic range mismatch; stale/unsealed campaign; worker-liveness false positive; missing costs and data |
+
+### Updated smallest-safe-repair order
+
+1. Patch only transport observability first: preserve exception class/close code and sanitized reason; add tests; retain fail-closed behavior.
+2. Resolve the public historical-range mismatch with Deriv/source owner evidence. Do not transform the repeated 2025–2026 block into 2022–2024 history.
+3. Add a campaign-expiry state transition: no new signals after end; bounded pending-outcome drain; censor unresolved labels; reconcile 784 quotes versus 783 outcomes and the pending signal; seal only after reconciliation.
+4. Repair provider liveness so local worker leases cannot be reported as external provider execution without a configured command and successful handshake.
+5. Establish source-verified instrument tick/quantum metadata, session calendars and synchronized M1/M15 data before evaluating structure or 369 filters.
+6. Obtain observed contract payout/fill/fee/slippage evidence; keep unknown costs null.
+7. Freeze one canonical probability-policy source; a 0.55–0.75 numeric band is not itself calibration.
+8. Only then run the structure-only baseline, paired 369 ablation, walk-forward/sealed OOS, reliability/Brier/log-loss, dependence-aware block bootstrap, Monte Carlo, feature ablation, sensitivity and multiple-testing correction.
+
+### Safety re-verification
+
+The canonical main `config/LIVE_LOCK.yaml` was re-read. Blob SHA remains `b2cddd1efb0f25f35a6a08354290f805812bf34c`; values remain:
+- `live_trading_enabled: false`
+- `FINAL_EXECUTION_AUTHORIZATION: false`
+- `LIVE_EXECUTION: BLOCKED`
+- `capital_plane_mode: VERIFY_ONLY`
+- `research_capital_authority: false`
+
+The same lock file is absent from neither main nor the report branch; it was read, not modified. No orders, proposals, account authentication, capital movement, secrets access, lock mutation or strategy promotion occurred.
