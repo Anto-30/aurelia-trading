@@ -23,7 +23,7 @@ The UTC Monday–Sunday week is an objective proxy for an ICT/Senchi weekly prof
 
 ## Input validation
 
-The engine rejects empty inputs, naive timestamps, non-midnight daily candle boundaries, duplicate timestamps, non-chronological input rows, missing daily intervals, non-finite/non-positive prices and invalid OHLC relationships. CSV source order is preserved; chronology defects are rejected, not silently sorted into apparent validity. For a 24/7 synthetic index, a missing daily candle is treated as a data-integrity failure, not as a market holiday to silently skip.
+The engine rejects empty inputs, naive timestamps, non-midnight daily candle boundaries, duplicate timestamps, non-chronological input rows, missing daily intervals, non-finite/non-positive prices and invalid OHLC relationships. CSV source order is preserved; chronology defects are rejected, not silently sorted into apparent validity. The CLI additionally requires explicit inclusive start and end dates and rejects any dataset that does not match the exact requested range. For a 24/7 synthetic index, a missing daily candle is treated as a data-integrity failure, not as a market holiday to silently skip.
 
 ## Run
 
@@ -31,9 +31,9 @@ Run the regression suite with:
 
     python -m unittest research.labs.tests.test_senchi_weekly_profile -v
 
-Run the research command with:
+Run the research command with exact requested range validation:
 
-    python -m research.labs.senchi_weekly_profile --input data/deriv/R_100_1D_UTC.csv --output reports/senchi_R_100_1D_research.json --symbol R_100 --source "Deriv public market-data WebSocket; ticks_history candles; granularity=86400"
+    python -m research.labs.senchi_weekly_profile --input data/deriv/R_100_1D_UTC.csv --output reports/senchi_R_100_1D_research.json --symbol R_100 --source "Deriv public market-data WebSocket; ticks_history candles; granularity=86400" --start-date 2022-10-21 --end-date 2024-10-21
 
 The CSV must contain timestamp_utc,open,high,low,close. Preserve the raw API response separately and record its SHA-256, request parameters, symbol, requested interval, returned interval, capture timestamp, and source commit. Never fill missing bars with interpolation or synthetic data.
 
