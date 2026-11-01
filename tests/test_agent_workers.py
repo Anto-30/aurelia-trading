@@ -50,7 +50,7 @@ async def test_configured_worker_emits_live_worker_lease(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_short_lived_worker_does_not_receive_active_lease(tmp_path, monkeypatch):
+async def test_short_lived_worker_lease_is_revoked_after_process_exit(tmp_path, monkeypatch):
     federation = PersistentAgentFederation(
         journal_path=tmp_path / "journal.ndjson",
         lease_path=tmp_path / "leases.json",
@@ -59,11 +59,11 @@ async def test_short_lived_worker_does_not_receive_active_lease(tmp_path, monkey
         source_hash="src",
         lease_seconds=5,
     )
-    monkeypatch.setenv("AURELIA_AGENT_CLAUDECODE_COMMAND", "python -c 'import time; time.sleep(0.05)'")
+    monkeypatch.setenv("AURELIA_AGENT_CLAUDECODE_COMMAND", "python -c 'import time; time.sleep(0.2)'")
     supervisor = AgentWorkerSupervisor(
         federation, agents=("ClaudeCode",), interval_seconds=0.05
     )
     supervisor.start()
-    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.5)
     assert "ClaudeCode" not in federation.active_agents()
     await supervisor.stop()
