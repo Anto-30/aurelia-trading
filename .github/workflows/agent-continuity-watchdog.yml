@@ -36,7 +36,11 @@ jobs:
       - name: Verify continuous-agent safety boundary
         run: python scripts/agent_continuity_check.py
       - name: Probe real federated advisory workers
+        if: github.event_name != 'pull_request'
         run: python scripts/agent_worker_probe.py
+      - name: Explain worker probe skip for untrusted pull requests
+        if: github.event_name == 'pull_request'
+        run: echo "AGENT_WORKER_PROBE=SKIPPED_UNTRUSTED_PULL_REQUEST"
       - name: Assert capital protection
         run: |
           set -euo pipefail
