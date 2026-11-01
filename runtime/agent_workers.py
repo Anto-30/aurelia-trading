@@ -51,6 +51,10 @@ class AgentWorkerSupervisor:
     async def _worker(self, spec: AgentWorkerSpec) -> None:
         worker_id = f"agent-worker:{spec.agent}:{os.getpid()}"
         command = self._command(spec.agent)
+        if not command:
+            # A supervisor task is not a provider worker. Without a configured
+            # provider process there is no execution capability to lease.
+            return
         restart_delay = max(1.0, self.interval_seconds)
         restart_count = 0
         while self._running:
