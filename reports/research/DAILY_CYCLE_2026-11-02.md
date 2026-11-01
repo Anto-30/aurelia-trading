@@ -161,3 +161,30 @@ Main `config/LIVE_LOCK.yaml` SHA remains `b2cddd1efb0f25f35a6a08354290f805812bf3
 No orders were submitted. No LIVE_LOCK, capital authority, production deployment, secrets, execution configuration or strategy registry were changed. No strategy was promoted.
 
 **Final disposition:** `DAILY_REVIEW=COMPLETE`; `MODEL_TRAINING=NOT_RUN`; `R100_HISTORICAL_DATA=BLOCKED`; `COST_MODEL=BLOCKED`; `PR247_PROVIDER_HEALTH=PARTIAL`; `PR248_CI=FAILED_UTF8`; `STRATEGY_PROMOTION=BLOCKED`.
+
+
+## 8. Source register
+
+Market data:
+- Alpaca IEX daily bars for SPY, QQQ, DIA, TLT, GLD and USO, request interval 2026-10-26T00:00:00Z through 2026-11-02T00:00:00Z; 5 daily bars per symbol.
+- Alpaca market clock: next regular US session open 2026-11-02 09:30 America/New_York.
+
+Official macro and calendar sources:
+- BEA Q3 2026 advance GDP release (October 29): https://www.bea.gov/data/gdp/gross-domestic-product
+- Federal Reserve FOMC statement (October 28): https://www.federalreserve.gov/newsevents/pressreleases/monetary20261028a.htm
+- Federal Reserve November statistical release calendar: https://www.federalreserve.gov/data/releaseschedule.htm
+- RBA November 2026 official calendar: https://www.rba.gov.au/schedules-events/calendar/
+- Bank of England 2026 MPC dates: https://www.bankofengland.co.uk/monetary-policy/upcoming-mpc-dates
+- BLS November 2026 selected release calendar: https://www.bls.gov/schedule/2026/11_sched.htm
+- BLS Employment Situation schedule: https://www.bls.gov/schedule/news_release/empsit.htm
+- ISM PMI release calendar and publication convention: https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/
+- South Korean October export report (Reuters, November 1): https://www.reuters.com/world/asia-pacific/south-korea-exports-nearly-double-october-strongest-growth-since-1974-2026-11-01/
+- October AI-capex/technology repricing (Reuters, October 30): https://www.reuters.com/business/media-telecom/nasdaq-faces-2-trillion-wipeout-october-ai-spending-fears-deepen-2026-10-30/
+
+Repository evidence:
+- PR #247 current head and exact-head workflows: https://github.com/Anto-30/aurelia-trading/pull/247
+- PR #248 current head and compile failure: https://github.com/Anto-30/aurelia-trading/pull/248
+- PR #221 reader diagnostics: https://github.com/Anto-30/aurelia-trading/pull/221
+- PR #244 Layer 9: https://github.com/Anto-30/aurelia-trading/pull/244
+- PR #245 Senchi: https://github.com/Anto-30/aurelia-trading/pull/245
+- PR #246 prior daily cycle: https://github.com/Anto-30/aurelia-trading/pull/246
