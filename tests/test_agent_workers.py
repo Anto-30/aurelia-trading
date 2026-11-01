@@ -10,7 +10,7 @@ from runtime.agent_workers import AgentWorkerSupervisor
 
 
 @pytest.mark.asyncio
-async def test_worker_heartbeat_requires_real_configured_command(tmp_path):
+async def test_worker_without_configured_command_does_not_emit_lease(tmp_path, monkeypatch):
     federation = PersistentAgentFederation(
         journal_path=tmp_path / "journal.ndjson",
         lease_path=tmp_path / "leases.json",
@@ -19,12 +19,13 @@ async def test_worker_heartbeat_requires_real_configured_command(tmp_path):
         source_hash="src",
         lease_seconds=2,
     )
+    monkeypatch.delenv("AURELIA_AGENT_CLAUDECODE_COMMAND", raising=False)
     supervisor = AgentWorkerSupervisor(
         federation, agents=("ClaudeCode",), interval_seconds=0.05
     )
     supervisor.start()
     await asyncio.sleep(0.15)
-    assert "ClaudeCode" in federation.active_agents()
+    assert "ClaudeCode" not in federation.active_agents()
     await supervisor.stop()
 
 
