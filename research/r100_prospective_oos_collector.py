@@ -153,6 +153,7 @@ def initial_state() -> dict[str, Any]:
         "observations": [],
         "pending": [],
         "quote_observations": [],
+        "transport_reconnects": [],
         "last_run_started_at_utc": None,
         "last_run_completed_at_utc": None,
         "last_price": None,
@@ -524,6 +525,7 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         "live_execution": False,
         "archive_hash": archive_hash,
         "campaign_complete": campaign_complete,
+        "transport_reconnect_count": len(state.get("transport_reconnects", [])),
         "retuning_after_seal": False,
     }
 
@@ -644,6 +646,14 @@ async def main() -> int:
         report = evaluation(state)
         report["collection_status"] = "FAILED_RETRYABLE"
         report["collection_error_type"] = type(exc).__name__
+        error_details = {}
+        if isinstance(exc, DerivTransportReaderError):
+            error_details = {
+                "collection_error_class": exc.error_class,
+                "collection_error_close_code": exc.close_code,
+                "collection_error_retryable": exc.retryable,
+            }
+            report.update(error_details)
         report_path.write_text(
             json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
             encoding="utf-8",
@@ -651,6 +661,9 @@ async def main() -> int:
         print(json.dumps({
             "R100_PROSPECTIVE_COLLECTION": "RETRYABLE_FAILURE",
             "ERROR_TYPE": type(exc).__name__,
+            "ERROR_CLASS": error_details.get("collection_error_class"),
+            "CLOSE_CODE": error_details.get("collection_error_close_code"),
+            "RETRYABLE": error_details.get("collection_error_retryable"),
             "OBSERVATIONS_PRESERVED": report["observations_total"],
             "EXECUTION_AUTHORIZED": False,
             "CAPITAL_AUTHORITY": False,
