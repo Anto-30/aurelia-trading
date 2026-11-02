@@ -41,7 +41,7 @@ def main() -> int:
         or os.getenv("DERIV_REFRESH_TOKEN", "").strip()
     )
     tokens_equal = bool(oauth and pat and oauth == pat)
-    credentials_isolated = bool(oauth) and not (
+    credentials_isolated = not (
         pat or generic or refresh or tokens_equal
     )
     auth_mode = os.getenv("ACCOUNT_DERIV_AUTH_MODE", "none").strip().lower()
