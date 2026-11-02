@@ -12,6 +12,7 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
         self.assertEqual(evidence["public_research"]["auth_mode"], "none")
         self.assertFalse(evidence["public_research"]["account_credentials_mapped"])
         self.assertFalse(evidence["account_evidence_ready"])
+        self.assertTrue(evidence["account_evidence"]["credentials_isolated_in_process"])
         self.assertEqual(
             evidence["account_evidence"]["reason"],
             "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
