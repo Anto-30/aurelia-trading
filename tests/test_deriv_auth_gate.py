@@ -22,7 +22,7 @@ class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
             (),
             {
                 "connect": AsyncMock(),
-                "request": AsyncMock(return_value={"history": {"prices": []}}),
+                "request": AsyncMock(return_value={"candles": [{"epoch": 1, "open": "1", "high": "2", "low": "1", "close": "2"}]}),
                 "subscribe": lambda self, key, payload: iter(()),
                 "close": AsyncMock(),
             },
@@ -37,13 +37,18 @@ class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
                 PUBLIC_RESEARCH_WS_URL,
                 timeout_seconds=10.0,
             )
-            await client.request({
-                "ticks_history": "R_100",
-                "start": 1,
-                "end": "latest",
-                "style": "candles",
-                "granularity": 60,
-            })
+            candles = await client.historical_candles(
+                "R_100",
+                granularity=60,
+                count=10,
+                end="latest",
+            )
+            self.assertEqual(len(candles), 1)
+            sent_payload = fake_transport.request.await_args.args[0]
+            self.assertEqual(sent_payload["ticks_history"], "R_100")
+            self.assertEqual(sent_payload["granularity"], 60)
+            self.assertEqual(sent_payload["style"], "candles")
+            self.assertEqual(set(transport_factory.call_args.kwargs), {"timeout_seconds"})
             fake_transport.request.assert_awaited_once()
             await client.close()
 
