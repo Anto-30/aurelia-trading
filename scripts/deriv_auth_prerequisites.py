@@ -24,7 +24,7 @@ def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object
         env.get("DERIV_EXPECTED_LOGINID", "").strip()
         or env.get("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()
     )
-    raw_mode = env.get("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+    raw_mode = env.get("DERIV_AUTH_MODE", "").strip().lower()
     mode_valid = raw_mode in SUPPORTED_AUTH_MODES
     safe_mode = raw_mode if mode_valid else "invalid"
     app_id_present = bool(env.get("DERIV_APP_ID", "").strip())

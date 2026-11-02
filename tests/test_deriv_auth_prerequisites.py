@@ -46,18 +46,29 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
     def test_missing_configuration_fails_closed_without_raw_values(self):
         evidence = build_evidence({})
         self.assertFalse(evidence["configured"])
-        self.assertEqual(evidence["auth_mode"], "pat")
+        self.assertEqual(evidence["auth_mode"], "invalid")
         self.assertEqual(evidence["expected_currency"], "missing")
         self.assertEqual(
             evidence["requirements"],
             {
                 "token_present": False,
                 "expected_loginid_present": False,
-                "auth_mode_valid": True,
+                "auth_mode_valid": False,
                 "app_id_present_when_pat": False,
                 "expected_currency_present": False,
             },
         )
+
+    def test_missing_auth_mode_fails_closed_even_when_other_credentials_exist(self):
+        evidence = build_evidence({
+            "DERIV_AUTH_TOKEN": "dummy-token",
+            "DERIV_APP_ID": "dummy-app-id",
+            "DERIV_EXPECTED_LOGINID": "dummy-account",
+            "DERIV_EXPECTED_CURRENCY": "USD",
+        })
+        self.assertFalse(evidence["configured"])
+        self.assertEqual(evidence["auth_mode"], "invalid")
+        self.assertFalse(evidence["requirements"]["auth_mode_valid"])
 
     def test_oauth_does_not_require_app_id(self):
         evidence = build_evidence({

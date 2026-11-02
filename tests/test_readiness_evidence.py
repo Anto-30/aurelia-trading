@@ -133,6 +133,23 @@ class ReadinessEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(credentials_gate["status"], "FAIL")
 
+
+    def test_missing_auth_mode_fails_credentials_gate(self) -> None:
+        os.environ.update({
+            "DERIV_AUTH_TOKEN": "test-token",
+            "DERIV_EXPECTED_LOGINID": "CRTEST",
+            "DERIV_APP_ID": "12345",
+            "DERIV_AUTH_MODE": "",
+            "DERIV_EXPECTED_CURRENCY": "USD",
+        })
+        with tempfile.TemporaryDirectory() as tmp:
+            report = evaluate(Path(tmp))
+        self.assertFalse(report["deriv"]["credentials_present"])
+        credentials_gate = next(
+            gate for gate in report["blockers"] if gate["gate"] == "DERIV_CREDENTIALS"
+        )
+        self.assertEqual(credentials_gate["status"], "FAIL")
+
     def test_oauth_accepts_authorized_account_alias_without_pat_app_id(self) -> None:
         os.environ.update({
             "DERIV_AUTH_TOKEN": "test-token",

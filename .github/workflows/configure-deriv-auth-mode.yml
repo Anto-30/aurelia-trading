@@ -1,0 +1,56 @@
+name: Configure Deriv Authentication Mode
+
+on:
+  workflow_dispatch:
+    inputs:
+      auth_mode:
+        description: Select the authentication mode matching the protected Deriv token.
+        required: true
+        type: choice
+        options:
+          - pat
+          - oauth
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  configure:
+    name: Update non-secret production configuration
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      AUTH_MODE: ${{ inputs.auth_mode }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Validate requested mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$AUTH_MODE" in
+            pat|oauth) ;;
+            *) echo "DERIV_AUTH_MODE_UPDATE=BLOCKED_INVALID_INPUT"; exit 2 ;;
+          esac
+
+      - name: Create or update production environment variable
+        shell: bash
+        run: |
+          set -euo pipefail
+          api="repos/$GITHUB_REPOSITORY/environments/production/variables/DERIV_AUTH_MODE"
+          collection="repos/$GITHUB_REPOSITORY/environments/production/variables"
+
+          if gh api "$api" >/dev/null 2>&1; then
+            gh api --method PATCH "$api" -f name=DERIV_AUTH_MODE -f value="$AUTH_MODE" >/dev/null
+          else
+            gh api --method POST "$collection" -f name=DERIV_AUTH_MODE -f value="$AUTH_MODE" >/dev/null
+          fi
+
+          saved="$(gh api "$api" --jq '.value')"
+          test "$saved" = "$AUTH_MODE"
+          echo "DERIV_AUTH_MODE_CONFIGURED=$AUTH_MODE"
+          echo "SECRET_VALUES_ACCESSED=false"
+          echo "LIVE_EXECUTION=BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"

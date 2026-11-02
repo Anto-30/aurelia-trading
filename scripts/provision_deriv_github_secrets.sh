@@ -78,8 +78,9 @@ if [[ -n "$existing_mode" && -n "$mode" && "$mode" != "$existing_mode" ]]; then
   fail "LOCAL_AUTH_MODE_MISMATCH_WITH_EXISTING_ENVIRONMENT_VARIABLE"
 fi
 if [[ -z "$mode" ]]; then
-  read -r -p "Deriv auth mode to use for this setup [pat/oauth; default pat]: " mode </dev/tty
-  mode="${mode:-pat}"
+  if ! read -r -p "Deriv auth mode to use for this setup [pat/oauth; no default]: " mode </dev/tty; then
+    fail "DERIV_AUTH_MODE_REQUIRED"
+  fi
   mode="$(printf '%s' "$mode" | tr '[:upper:]' '[:lower:]')"
 fi
 [[ "$mode" == "pat" || "$mode" == "oauth" ]] || fail "INVALID_AUTH_MODE"

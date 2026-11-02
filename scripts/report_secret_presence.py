@@ -10,7 +10,6 @@ SECRET_NAMES = (
     "DERIV_EXPECTED_LOGINID",
     "DERIV_AUTHORIZED_ACCOUNT_ID",
     "DERIV_EXPECTED_CURRENCY",
-    "DERIV_AUTH_MODE",
 )
 
 DEPLOYMENT_SECRET_NAMES = (
@@ -31,7 +30,7 @@ def main() -> int:
     for name in SECRET_NAMES:
         print(f"{name}_PRESENT={'true' if present(name) else 'false'}")
 
-    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+    auth_mode = os.getenv("DERIV_AUTH_MODE", "").strip().lower()
     auth_mode_valid = auth_mode in {"pat", "oauth"}
     auth_present = present("DERIV_AUTH_TOKEN") or present("DERIV_PAT")
     login_present = present("DERIV_EXPECTED_LOGINID") or present("DERIV_AUTHORIZED_ACCOUNT_ID")
