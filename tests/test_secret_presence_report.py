@@ -197,3 +197,27 @@ def test_short_operator_reset_signing_key_blocks_deployment_prerequisites() -> N
     assert "LIVE_EXECUTION=BLOCKED" in result.stdout
     assert "PRIVATE_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
     assert "SIGNING_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
+
+def test_missing_auth_mode_does_not_default_to_pat() -> None:
+    result = run_report(
+        DERIV_AUTH_TOKEN="FAKE_TOKEN",
+        DERIV_APP_ID="12345",
+        DERIV_EXPECTED_LOGINID="CRTEST",
+        DERIV_EXPECTED_CURRENCY="USD",
+        DERIV_AUTH_MODE="",
+        AURELIA_HOST="host.example.invalid",
+        AURELIA_USER="runtime-user",
+        AURELIA_SSH_KEY="PRIVATE_KEY_SENTINEL_DO_NOT_PRINT",
+        AURELIA_KNOWN_HOSTS="HOST_KEY_SENTINEL_DO_NOT_PRINT",
+        AURELIA_ATTESTATION_SIGNING_KEY="SIGNING_KEY_SENTINEL_DO_NOT_PRINT",
+        AURELIA_OPERATOR_RESET_SIGNING_KEY="OPERATOR_RESET_KEY_SENTINEL_DO_NOT_PRINT_32_CHARS",
+    )
+
+    assert result.returncode == 0
+    assert "DERIV_AUTH_MODE_PRESENT=false" in result.stdout
+    assert "DERIV_AUTH_MODE_VALID=false" in result.stdout
+    assert "DERIV_AUTH_MODE_EFFECTIVE=INVALID" in result.stdout
+    assert "DERIV_AUTH_CONFIGURED=false" in result.stdout
+    assert "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=false" in result.stdout
+    assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
+    assert "LIVE_EXECUTION=BLOCKED" in result.stdout
