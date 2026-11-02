@@ -6,7 +6,7 @@ from typing import Any, AsyncIterator
 
 from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_ws_url, validate_modern_options_ws_url
 from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
-from research.utils.deriv_auth_gate import (
+from runtime.security.deriv_auth_gate import (
     AuthModeMismatchError,
     DerivAuthenticationGate,
     SecurityError,
