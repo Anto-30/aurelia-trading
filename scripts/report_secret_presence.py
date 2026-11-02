@@ -3,14 +3,16 @@ from __future__ import annotations
 import os
 
 
-SECRET_NAMES = (
-    "DERIV_AUTH_TOKEN",
+DERIV_CREDENTIAL_NAMES = (
+    "DERIV_OAUTH_ACCESS_TOKEN",
+    "DERIV_OAUTH_REFRESH_TOKEN",
     "DERIV_PAT",
+    "DERIV_AUTH_TOKEN",
+    "DERIV_REFRESH_TOKEN",
     "DERIV_APP_ID",
     "DERIV_EXPECTED_LOGINID",
     "DERIV_AUTHORIZED_ACCOUNT_ID",
     "DERIV_EXPECTED_CURRENCY",
-    "DERIV_AUTH_MODE",
 )
 
 DEPLOYMENT_SECRET_NAMES = (
@@ -28,27 +30,28 @@ def present(name: str) -> bool:
 
 
 def main() -> int:
-    for name in SECRET_NAMES:
+    for name in DERIV_CREDENTIAL_NAMES:
         print(f"{name}_PRESENT={'true' if present(name) else 'false'}")
 
-    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
-    auth_mode_valid = auth_mode in {"pat", "oauth"}
-    auth_present = present("DERIV_AUTH_TOKEN") or present("DERIV_PAT")
-    login_present = present("DERIV_EXPECTED_LOGINID") or present("DERIV_AUTHORIZED_ACCOUNT_ID")
-    currency_present = present("DERIV_EXPECTED_CURRENCY")
-    currency_supported = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper() == "USD"
-    deriv_core = auth_present and login_present and currency_supported
-    deriv_configured = (
-        deriv_core
-        and auth_mode_valid
-        and (auth_mode != "pat" or present("DERIV_APP_ID"))
+    oauth = os.getenv("DERIV_OAUTH_ACCESS_TOKEN", "").strip()
+    pat = os.getenv("DERIV_PAT", "").strip()
+    generic = os.getenv("DERIV_AUTH_TOKEN", "").strip()
+    refresh = (
+        os.getenv("DERIV_OAUTH_REFRESH_TOKEN", "").strip()
+        or os.getenv("DERIV_REFRESH_TOKEN", "").strip()
     )
+    tokens_equal = bool(oauth and pat and oauth == pat)
+    credentials_isolated = bool(oauth) and not (
+        pat or generic or refresh or tokens_equal
+    )
+    auth_mode = os.getenv("ACCOUNT_DERIV_AUTH_MODE", "none").strip().lower()
+    mode_valid = auth_mode in {"none", "oauth"}
 
-    print(f"DERIV_AUTH_MODE_PRESENT={'true' if present('DERIV_AUTH_MODE') else 'false'}")
-    print(f"DERIV_AUTH_MODE_VALID={'true' if auth_mode_valid else 'false'}")
-    print(f"DERIV_AUTH_MODE_EFFECTIVE={auth_mode.upper() if auth_mode_valid else 'INVALID'}")
-    print(f"DERIV_EXPECTED_CURRENCY_SUPPORTED={str(currency_supported).lower()}")
-    print(f"DERIV_AUTH_CONFIGURED={'true' if deriv_configured else 'false'}")
+    print(f"ACCOUNT_DERIV_AUTH_MODE_VALID={'true' if mode_valid else 'false'}")
+    print(f"DERIV_OAUTH_PAT_IDENTICAL={'true' if tokens_equal else 'false'}")
+    print(f"DERIV_CREDENTIALS_ISOLATED_IN_PROCESS={'true' if credentials_isolated else 'false'}")
+    print("DERIV_READ_ONLY_SCOPE_SUPPORTED=false")
+    print("DERIV_AUTH_CONFIGURED=false")
 
     for name in DEPLOYMENT_SECRET_NAMES:
         print(f"{name}_PRESENT={'true' if present(name) else 'false'}")
@@ -67,10 +70,7 @@ def main() -> int:
         "AURELIA_DEPLOYMENT_SECRET_STORE_CONFIGURED="
         + ("true" if deployment_secrets_present else "false")
     )
-    print(
-        "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED="
-        + ("true" if deriv_configured and deployment_secrets_present else "false")
-    )
+    print("AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=false")
     print("FINAL_EXECUTION_AUTHORIZATION=false")
     print("LIVE_EXECUTION=BLOCKED")
     print("CAPITAL_MOVEMENT_PERMITTED=false")
