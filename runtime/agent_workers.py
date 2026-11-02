@@ -15,16 +15,15 @@ class AgentWorkerSpec:
 
 
 class AgentWorkerSupervisor:
-    """Maintains local advisory-worker leases without executing unverified commands.
+    """Report advisory connector state without inventing provider liveness.
 
-    A configured command is only a declaration. There is currently no versioned
-    IPC/task-response protocol or authenticated provider handshake, so launching
-    arbitrary commands would be both unverifiable and unsafe: subprocesses would
-    otherwise inherit broker and deployment credentials from the parent process.
+    A configured command is only a declaration. There is no versioned IPC /
+    task-response protocol or authenticated provider handshake, so this
+    supervisor never executes configured commands, creates agent heartbeat
+    leases, or claims provider tasks. It reports CONNECTOR_REQUIRED until a
+    reviewed worker protocol and provider-specific handshake are implemented.
 
-    Until a reviewed worker protocol exists, tasks are explicitly BLOCKED and
-    the federation emits CONNECTOR_REQUIRED. This supervisor has no capital
-    authority and never claims that a provider is authenticated.
+    No advisory worker receives capital authority.
     """
 
     def __init__(
@@ -51,7 +50,6 @@ class AgentWorkerSupervisor:
         return bool(os.getenv(cls._env_name(agent), "").strip())
 
     async def _worker(self, spec: AgentWorkerSpec) -> None:
-        worker_id = f"agent-worker:{spec.agent}:{os.getpid()}"
         command_configured = self._command_configured(spec.agent)
         provider_session = (
             "COMMAND_CONFIGURED_PROTOCOL_UNVERIFIED"
@@ -74,9 +72,10 @@ class AgentWorkerSupervisor:
                         message_type="CONNECTOR_STATUS",
                         payload={
                             "agent": spec.agent,
-                            "worker_runtime": "LOCAL_FEDERATED_WORKER",
+                            "worker_runtime": "LOCAL_CONNECTOR_SUPERVISOR",
                             "provider_session": provider_session,
                             "provider_authentication": "NOT_VERIFIED",
+                            "provider_process": "NOT_STARTED",
                             "worker_protocol": "NOT_IMPLEMENTED",
                             "capital_authority": False,
                             "connector_command_env": spec.command_env,
@@ -86,51 +85,27 @@ class AgentWorkerSupervisor:
                         priority=60,
                         requires_response=False,
                     )
-                    status_published = True
-
-                await self.federation.heartbeat(
-                    spec.agent,
-                    worker_id=worker_id,
-                    origin="WORKER",
-                )
-                task = await self.federation.claim_task(spec.agent)
-                if task is not None:
-                    await self.federation.publish(
-                        sender="AURELIA",
-                        recipients=(spec.agent,),
-                        message_type="AGENT_TASK_CLAIMED",
-                        payload={
-                            "task_id": task.task_id,
-                            "task_type": task.task_type,
-                            "payload": task.payload,
-                            "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
-                            "capital_authority": False,
-                        },
-                        correlation_id=task.correlation_id,
-                        priority=task.priority,
-                        requires_response=True,
-                    )
-                    await self.federation.complete_task(
-                        task.task_id,
-                        agent=spec.agent,
-                        status="BLOCKED",
-                    )
                     await self.federation.publish(
                         sender="AURELIA",
                         recipients=(spec.agent,),
                         message_type="CONNECTOR_REQUIRED",
                         payload={
-                            "task_id": task.task_id,
+                            "agent": spec.agent,
                             "reason": connector_reason,
                             "provider_authentication": "NOT_VERIFIED",
+                            "provider_process": "NOT_STARTED",
                             "worker_protocol": "NOT_IMPLEMENTED",
                             "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
                             "capital_authority": False,
                         },
-                        correlation_id=task.correlation_id,
+                        correlation_id=f"connector-required:{spec.agent}",
                         priority=95,
                         requires_response=False,
                     )
+                    status_published = True
+
+                # This local supervisor task is not an agent/provider worker.
+                # Do not create a federation heartbeat lease or consume tasks.
                 await asyncio.sleep(self.interval_seconds)
             except asyncio.CancelledError:
                 raise
@@ -141,7 +116,7 @@ class AgentWorkerSupervisor:
                     message_type="WORKER_RUNTIME_ERROR",
                     payload={
                         "agent": spec.agent,
-                        "worker_runtime": "LOCAL_FEDERATED_WORKER",
+                        "worker_runtime": "LOCAL_CONNECTOR_SUPERVISOR",
                         "error_class": type(exc).__name__,
                         "restart_policy": "ALWAYS_WHILE_RUNTIME_HEALTHY",
                         "capital_authority": False,
@@ -161,7 +136,7 @@ class AgentWorkerSupervisor:
                 continue
             spec = AgentWorkerSpec(agent=agent, command_env=self._env_name(agent))
             self._tasks[agent] = asyncio.create_task(
-                self._worker(spec), name=f"agent-worker:{agent}"
+                self._worker(spec), name=f"connector-supervisor:{agent}"
             )
 
     async def stop(self) -> None:
