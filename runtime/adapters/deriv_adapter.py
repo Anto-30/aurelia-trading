@@ -6,6 +6,11 @@ from typing import Any, AsyncIterator
 
 from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_ws_url, validate_modern_options_ws_url
 from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
+from research.utils.deriv_auth_gate import (
+    AuthModeMismatchError,
+    DerivAuthenticationGate,
+    SecurityError,
+)
 from runtime.core.circuit import CircuitBreaker
 from runtime.core.events import sha256
 from runtime.core.request_ledger import RequestLedger, RequestState
@@ -41,7 +46,7 @@ class DerivAdapter:
     ):
         self.ws_url = ws_url or os.getenv("DERIV_WS_URL", "")
         self.auth_token = (
-            auth_token if auth_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
+            auth_token if auth_token is not None else os.getenv("DERIV_OAUTH_ACCESS_TOKEN", "")
         )
         self.expected_loginid = (
             expected_loginid or get_optional_secret("DERIV_EXPECTED_LOGINID")
@@ -76,6 +81,11 @@ class DerivAdapter:
         self._validate_environment_url(self.ws_url)
         if not self.expected_currency:
             raise DerivProtocolError("EXPECTED_ACCOUNT_CURRENCY_REQUIRED")
+        try:
+            DerivAuthenticationGate(plane="account").get_client()
+        except (AuthModeMismatchError, SecurityError) as exc:
+            raise DerivProtocolError(str(exc)) from exc
+        raise DerivProtocolError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
         try:
             self.transport = DerivWebSocketTransport(
                 self.ws_url,
