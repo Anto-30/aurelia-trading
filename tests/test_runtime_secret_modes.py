@@ -19,6 +19,22 @@ class RuntimeSecretModeTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             validate_secrets_at_startup()
 
+    def test_verify_only_rejects_account_credentials_when_account_auth_is_disabled(self):
+        env = {
+            "AURELIA_DEPLOYMENT_MODE": "VERIFY_ONLY",
+            "FINAL_EXECUTION_AUTHORIZATION": "false",
+            "LIVE_EXECUTION": "BLOCKED",
+            "AURELIA_AUTONOMOUS_LOOP": "false",
+            "AURELIA_VERIFY_DERIV_AUTH": "false",
+            "DERIV_OAUTH_ACCESS_TOKEN": "UNEXPECTED_OAUTH_SENTINEL",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaisesRegex(
+                SecretsError,
+                "VERIFY_ONLY_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED",
+            ):
+                validate_secrets_at_startup()
+
     def test_verify_only_account_auth_is_blocked_even_with_distinct_oauth(self):
         env = {
             "AURELIA_DEPLOYMENT_MODE": "VERIFY_ONLY",
