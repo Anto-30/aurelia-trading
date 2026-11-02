@@ -93,7 +93,7 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("--read-only", deploy)
         self.assertIn("--cap-drop=ALL", deploy)
         self.assertIn("--security-opt=no-new-privileges", deploy)
-        self.assertIn("--tmpfs /tmp:rw,noexec,nosuid,nodev,size=64m", deploy)
+        self.assertIn("--tmpfs /var/tmp:rw,noexec,nosuid,nodev,size=32m", deploy)
 
     def test_live_deployment_requires_release_gate(self):
         workflow = (ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml").read_text(
