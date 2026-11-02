@@ -64,7 +64,7 @@ async def main() -> int:
         output.parent.mkdir(parents=True, exist_ok=True)
         temp = output.with_name(output.name + ".tmp")
         temp.write_text(
-            json.dumps(evidence, sort_keys=True, indent=2) + "\\n",
+            json.dumps(evidence, sort_keys=True, indent=2) + "\n",
             encoding="utf-8",
         )
         temp.replace(output)
