@@ -70,7 +70,7 @@ def main() -> int:
     evidence = build_evidence()
     temporary = output.with_name(output.name + ".tmp")
     temporary.write_text(
-        json.dumps(evidence, indent=2, sort_keys=True) + "\\n",
+        json.dumps(evidence, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     temporary.replace(output)
