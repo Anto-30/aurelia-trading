@@ -92,7 +92,7 @@ class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
             "currency": "USD",
             "duration": 10,
             "duration_unit": "t",
-            "symbol": "R_100",
+            "underlying_symbol": "R_100",
         })
 
     def test_public_proposal_rejects_unknown_or_capital_moving_fields(self):
