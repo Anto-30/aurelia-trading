@@ -161,6 +161,9 @@ jobs:
           assert report["live_execution"] is False
           assert report["strategy_live_eligible"] is False
           assert report["execution_economics"]["status"] == "UNDETERMINED_PRODUCTION"
+          assert report["strategy_code_commit"] == state["manifest"]["code_commit"]
+          assert report["collector_code_commit"] == __import__("os").environ["GITHUB_SHA"]
+          assert report["strategy_source_hash"]
           assert all(0.55 <= float(row["probability"]) <= 0.75 for row in state["observations"])
           assert all(row.get("quote_status") in {"OBSERVED", "UNAVAILABLE"} for row in state["quote_observations"])
           print(
