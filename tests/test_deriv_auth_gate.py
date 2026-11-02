@@ -16,6 +16,11 @@ class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
         gate = DerivAuthenticationGate(plane="research", environ={})
         client = gate.get_client()
         self.assertEqual(client.endpoint, PUBLIC_RESEARCH_WS_URL)
+        self.assertEqual(
+            client.endpoint,
+            "wss://api.derivws.com/trading/v1/options/ws/public",
+        )
+        self.assertNotIn("app_id=", client.endpoint)
 
         fake_transport = type(
             "FakeTransport",
