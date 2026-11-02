@@ -221,3 +221,13 @@ def test_missing_auth_mode_does_not_default_to_pat() -> None:
     assert "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=false" in result.stdout
     assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
     assert "LIVE_EXECUTION=BLOCKED" in result.stdout
+
+def test_assurance_runs_sanitized_production_presence_report() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "aurelia-assurance.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "run: python scripts/report_secret_presence.py" in workflow
+    assert "DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE }}" in workflow
+    assert "AURELIA_SSH_KEY: ${{ secrets.AURELIA_SSH_KEY }}" in workflow
+    assert "AURELIA_OPERATOR_RESET_SIGNING_KEY: ${{ secrets.AURELIA_OPERATOR_RESET_SIGNING_KEY }}" in workflow
+    assert "secrets.DERIV_AUTH_MODE" not in workflow
