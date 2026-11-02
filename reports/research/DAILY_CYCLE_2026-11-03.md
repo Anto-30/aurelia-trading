@@ -31,7 +31,7 @@ Sources:
 - The October 2026 US ISM Manufacturing PMI was 55.5, up from 54.5. New orders and production expanded, but the Prices Index remained elevated at 75.2. This is a growth-positive manufacturing reading with persistent input-price pressure, not an unambiguous disinflation signal.
 - BEA's advance Q3 2026 GDP estimate was +3.4% annualized. September PCE inflation was 3.6% year over year on the latest BEA series page.
 - The RBA cash-rate target is 4.60%. Its November 3 decision and Statement on Monetary Policy are scheduled for 14:30 AEDT (06:30 EAT); its press conference is scheduled for 15:30 AEDT.
-- BLS's November selected-release calendar lists September JOLTS for November 3 at 10:00 ET (18:00 EAT). The same calendar lists Q3 Productivity and Costs on November 5 at 08:30 ET, October Employment Situation on November 6 at 08:30 ET, and October CPI on November 10 at 08:30 ET.
+- BLS's November selected-release calendar lists September JOLTS for November 3 at 10:00 ET (18:00 EAT). However, the dedicated JOLTS release page currently lists October 2026 JOLTS for December 1 and does not show the September release on its visible schedule. Treat the November 3 JOLTS timing as provisional and verify the BLS release page before relying on it. The selected-release calendar also lists Q3 Productivity and Costs on November 5 at 08:30 ET, October Employment Situation on November 6 at 08:30 ET, and October CPI on November 10 at 08:30 ET.
 - US midterm elections take place November 3. Geopolitical negotiation headlines, election outcomes and the RBA decision create event risk; they do not create a Deriv synthetic-index edge.
 
 Sources:
