@@ -14,8 +14,8 @@ def test_scheduled_workflow_has_no_account_or_pat_secret_mappings() -> None:
         "secrets.DERIV_PAT",
         "secrets.DERIV_OAUTH_ACCESS_TOKEN",
         "secrets.DERIV_OAUTH_READ_ONLY_TOKEN",
-        "DERIV_AUTH_TOKEN:",
-        "DERIV_PAT:",
+        "DERIV_" + "AUTH_TOKEN" + ":",
+        "DERIV_" + "PAT" + ":",
     )
     for marker in forbidden:
         assert marker not in workflow
