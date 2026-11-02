@@ -16,14 +16,21 @@ DEFAULT_PUBLIC_APP_ID = 1089
 PUBLIC_RESEARCH_WS_URL = (
     f"wss://ws.derivws.com/websockets/v3?app_id={DEFAULT_PUBLIC_APP_ID}"
 )
-PUBLIC_RESEARCH_ACTIONS = frozenset({
-    "active_symbols",
-    "contracts_for",
-    "contracts_list",
-    "proposal",
-    "ticks",
-    "ticks_history",
-})
+PUBLIC_RESEARCH_ACTION_FIELDS = {
+    "active_symbols": {"active_symbols", "req_id", "passthrough"},
+    "contracts_for": {"contracts_for", "currency", "req_id", "passthrough"},
+    "contracts_list": {"contracts_list", "product_type", "req_id", "passthrough"},
+    "proposal": {
+        "proposal", "amount", "basis", "contract_type", "currency",
+        "duration", "duration_unit", "symbol", "barrier", "date_expiry",
+        "req_id", "passthrough",
+    },
+    "ticks": {"ticks", "subscribe", "req_id", "passthrough"},
+    "ticks_history": {
+        "ticks_history", "adjust_start_time", "count", "end", "start",
+        "style", "granularity", "subscribe", "req_id", "passthrough",
+    },
+}
 
 
 class DerivPublicClient:
@@ -65,9 +72,12 @@ class DerivPublicClient:
         self._reject_account_credentials()
         if not isinstance(payload, dict):
             raise SecurityError("PUBLIC_RESEARCH_REQUEST_INVALID")
-        action_keys = set(payload) - {"req_id", "passthrough"}
-        if len(action_keys) != 1 or not action_keys.issubset(PUBLIC_RESEARCH_ACTIONS):
+        actions = set(payload).intersection(PUBLIC_RESEARCH_ACTION_FIELDS)
+        if len(actions) != 1:
             raise SecurityError("PUBLIC_RESEARCH_ACTION_NOT_ALLOWED")
+        action = next(iter(actions))
+        if not set(payload).issubset(PUBLIC_RESEARCH_ACTION_FIELDS[action]):
+            raise SecurityError("PUBLIC_RESEARCH_REQUEST_FIELD_NOT_ALLOWED")
 
     async def connect(self) -> None:
         self._reject_account_credentials()
