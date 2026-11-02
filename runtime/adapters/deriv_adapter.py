@@ -45,9 +45,9 @@ class DerivAdapter:
         timeout_seconds: float = 10.0,
     ):
         self.ws_url = ws_url or os.getenv("DERIV_WS_URL", "")
-        self.auth_token = (
-            auth_token if auth_token is not None else os.getenv("DERIV_OAUTH_ACCESS_TOKEN", "")
-        )
+        # Account authentication is disabled until a verifiable read-only
+        # broker permission exists. Do not retain credential material here.
+        self.auth_token = ""
         self.expected_loginid = (
             expected_loginid or get_optional_secret("DERIV_EXPECTED_LOGINID")
         )
