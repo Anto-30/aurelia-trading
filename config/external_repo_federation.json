@@ -298,8 +298,13 @@
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/freqtrade/freqtrade",
-      "head_commit": "2cdfc2325e3c2af1680e8adbe5245ac42709fda9",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09"
+      "head_commit": "2cebcc38974ac6e606f48dc016e75f9b0b25bc4a",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "GPL-3.0",
+      "last_pushed_at": "2026-11-02T08:08:45Z",
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Research reference only. GPL-3.0; not Deriv synthetics-compatible by evidence reviewed. Do not vendor or connect execution."
     },
     {
       "repo": "hsliuping/TradingAgents-CN",
@@ -1494,8 +1499,12 @@
         "volatility-targeting",
         "historical-performance-analysis"
       ],
-      "integration_note": "Research/backtest reference only. Validate any imported methodology independently against AURELIA OOS and cost controls.",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09"
+      "integration_note": "Research/backtest reference only. Validate imported methods independently against AURELIA out-of-sample, latency and transaction-cost controls.",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "Apache-2.0",
+      "last_pushed_at": "2026-04-16T09:29:35Z",
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED"
     },
     {
       "repo": "stablyai/orca",
@@ -2857,11 +2866,14 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/QwenLM/qwen-code",
-      "head_commit": "4360b003a087fe9e57f6ffbe7ba48795980b59c3",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "head_commit": "14de8a035e5143e4018fda96a641826349546caf",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
       "physical_runtime_install": "NOT_CLAIMED",
-      "integration_note": "Large repository; clone only after disk-space and dependency checks. No production-secret access or capital authority.",
-      "capital_authority": false
+      "integration_note": "Refresh of existing pin. Agent daemon defaults to loopback without bearer auth; shared hosts require explicit authentication. Sandbox-only; no production secrets.",
+      "capital_authority": false,
+      "license_metadata": "Apache-2.0",
+      "last_pushed_at": "2026-11-02T15:03:39Z",
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING"
     },
     {
       "repo": "QuantConnect/Tutorials",
@@ -3890,10 +3902,15 @@
         "GrokBot",
         "JEV"
       ],
-      "mode": "RESEARCH_ONLY",
+      "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/hackobi/AI-Scalpel-Trading-Bot",
       "head_commit": "30eed4130d4808a25a5be6a0ee6cf42e3f19bc22",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09"
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "GPL-3.0",
+      "last_pushed_at": "2023-10-18T01:49:25Z",
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "integration_note": "Last pushed 2023; README identifies it as educational and a Freqtrade-derived fork. GPL-3.0 and old dependencies; no execution integration."
     },
     {
       "repo": "cm45t3r/candlestick",
@@ -6449,6 +6466,393 @@
         "equity-market-scanner-reference"
       ],
       "integration_note": "US-equity-focused toolkit using unofficial Yahoo Finance data and an Alpaca MCP approval/execution path. Borrow approval-state-machine patterns only after review; do not integrate its broker connector into Deriv execution."
+    },
+    {
+      "repo": "earendil-works/pi",
+      "category": "agent-harness",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/earendil-works/pi",
+      "head_commit": "ff2c8931cf8bfa7acb3554258d0b55df79243bb8",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "MIT",
+      "last_pushed_at": "2026-11-02T13:42:20Z",
+      "capabilities": [
+        "multi-provider-llm-api",
+        "agent-loop",
+        "tool-calling",
+        "coding-agent-cli",
+        "rpc"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Agent harness runs with caller permissions; README explicitly states there is no built-in filesystem/process/network/credential permission system. Isolate and deny production secrets."
+    },
+    {
+      "repo": "deepseek-ai/dsh-superagent-prototype",
+      "category": "deepseek-harness-prototype",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/deepseek-ai/dsh-superagent-prototype",
+      "head_commit": "6337fc823ce20251c8de8085948165c81aaa701e",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "MIT",
+      "last_pushed_at": "2026-10-31T12:05:51Z",
+      "capabilities": [
+        "github-event-driven-agent",
+        "isolated-work-items",
+        "agent-session",
+        "pull-request-workflow"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "README labels it a research prototype, not production-ready and not an official DeepSeek product. Requires full source audit and sandbox-only evaluation."
+    },
+    {
+      "repo": "vercel-labs/agent-desktop",
+      "category": "desktop-automation",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/vercel-labs/agent-desktop",
+      "head_commit": "9eb9b296192fcb70bda25e918cd6dd66abfa3d0d",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "Apache-2.0",
+      "last_pushed_at": "2026-11-02T09:39:59Z",
+      "capabilities": [
+        "os-accessibility-tree",
+        "desktop-ui-automation",
+        "stable-element-refs"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Desktop UI actions can reach arbitrary host apps. No connected Desktop Commander device; do not target broker/admin UIs or production hosts."
+    },
+    {
+      "repo": "microsoft/playwright-mcp",
+      "category": "browser-automation-mcp",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/microsoft/playwright-mcp",
+      "head_commit": "ec572ee8354015293bed67145db21eed386e876d",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "Apache-2.0",
+      "last_pushed_at": "2026-11-01T23:12:55Z",
+      "capabilities": [
+        "browser-automation",
+        "accessibility-snapshots",
+        "e2e-test-support"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Tooling-only for sandbox browser testing. Browser automation must not receive trading credentials or authorize broker transactions."
+    },
+    {
+      "repo": "mithun50/openclaw-termux",
+      "category": "android-agent-gateway",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/mithun50/openclaw-termux",
+      "head_commit": "87bc13b4e4bb82b5447d9d0514bd3e38f222fb8b",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "MIT",
+      "last_pushed_at": "2026-10-28T16:28:16Z",
+      "capabilities": [
+        "android-termux-gateway",
+        "provider-configuration",
+        "foreground-service",
+        "multi-agent-messaging"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Android/Termux host gateway with provider API-key configuration and foreground service. Not a qualified persistent trading host; no credentials or broker UI access."
+    },
+    {
+      "repo": "Alishahryar1/free-claude-code",
+      "category": "multi-harness-provider-router",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Alishahryar1/free-claude-code",
+      "head_commit": "653a3444d43c0489c26d1b3a2e2a336b001e20ff",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "NOASSERTION",
+      "last_pushed_at": "2026-10-31T07:53:18Z",
+      "capabilities": [
+        "multi-harness-launcher",
+        "custom-provider-routing",
+        "api-key-fallback"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "License metadata unresolved; advertises free-token/provider routing and API-key fallback. Do not install, authenticate, or route production provider credentials until license, provider terms, installer and secret-handling audit complete."
+    },
+    {
+      "repo": "nntaoli-project/goex",
+      "category": "crypto-exchange-sdk",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/nntaoli-project/goex",
+      "head_commit": "0a7d6619669ffc3164aa8fdceb545a64dc7f2cc4",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "MIT",
+      "last_pushed_at": "2026-10-30T09:20:39Z",
+      "capabilities": [
+        "okx-api",
+        "binance-api",
+        "private-api",
+        "order-creation"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "README documents exchange API keys/secrets and CreateOrder for OKX/Binance. No Deriv support established; never wire into AURELIA execution firewall."
+    },
+    {
+      "repo": "obra/superpowers",
+      "category": "agent-development-methodology",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/obra/superpowers",
+      "head_commit": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "MIT",
+      "last_pushed_at": "2026-10-29T23:35:34Z",
+      "capabilities": [
+        "systematic-debugging",
+        "tdd",
+        "implementation-plans",
+        "code-review-workflows"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Methodology/tooling reference. Equivalent Superpowers skills are already installed in this ChatGPT session; no repository installation needed."
+    },
+    {
+      "repo": "ruvnet/ruflo",
+      "category": "multi-agent-orchestration",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/ruvnet/ruflo",
+      "head_commit": "5f3dacc54b7279e39b172d6027d7989791448e2e",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "MIT",
+      "last_pushed_at": "2026-11-02T09:21:09Z",
+      "capabilities": [
+        "agent-swarms",
+        "mcp-server",
+        "memory",
+        "federation",
+        "policy-hooks"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "High-privilege orchestration/hook layer. README says mods run with the account's permissions. No direct production installation; isolate, review hooks and deny secrets."
+    },
+    {
+      "repo": "openclaw/openclaw",
+      "category": "personal-agent-gateway",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/openclaw/openclaw",
+      "head_commit": "744232dfe4ddf40d98ba768efc6a40314eb3b927",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "MIT",
+      "last_pushed_at": "2026-11-02T15:02:18Z",
+      "capabilities": [
+        "multi-provider-agent-gateway",
+        "tool-execution",
+        "messaging",
+        "sandboxing"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Host agent with tools and credential storage; README requires security/sandboxing review before exposing gateway. No production host or secret integration."
+    },
+    {
+      "repo": "letianzj/quanttrader",
+      "category": "event-driven-trading-framework",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/letianzj/quanttrader",
+      "head_commit": "224341d57e146aeaa143516049d2f37ff102dbf0",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "Apache-2.0",
+      "last_pushed_at": "2024-06-20T13:57:28Z",
+      "capabilities": [
+        "event-driven-backtesting",
+        "interactive-brokers-live-trading"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Last pushed 2024; README describes Interactive Brokers live trading. Not Deriv-native; no direct integration. Reference architecture only."
+    },
+    {
+      "repo": "ZhuLinsen/daily_stock_analysis",
+      "category": "llm-equity-analysis",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/ZhuLinsen/daily_stock_analysis",
+      "head_commit": "45381688c34df54470e9166ae69bbca912fdbe8f",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "MIT",
+      "last_pushed_at": "2026-11-02T13:56:04Z",
+      "capabilities": [
+        "multi-market-equity-data",
+        "news-analysis",
+        "llm-research",
+        "dashboards",
+        "notifications"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Equity research/news and reporting system with multiple optional external data and LLM keys. Not a Deriv synthetic execution or signal-validation component."
+    },
+    {
+      "repo": "just-nilux/awesome-tradingview",
+      "category": "tradingview-resource-catalog",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/just-nilux/awesome-tradingview",
+      "head_commit": "03d16ff0366351a0eff3945afba212caa410455b",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "UNKNOWN",
+      "last_pushed_at": "2023-05-02T17:35:54Z",
+      "capabilities": [
+        "pinescript-resources",
+        "indicator-catalog",
+        "strategy-catalog"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Curated resource list last pushed 2023; no root license metadata detected. PineScript resources require independent source/licensing and repaint/lookahead review."
+    },
+    {
+      "repo": "agentscope-ai/QwenPaw",
+      "category": "personal-multi-agent-assistant",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/agentscope-ai/QwenPaw",
+      "head_commit": "b660bc9a12ae8bf61699c0777b8d11df302a0194",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "license_metadata": "Apache-2.0",
+      "last_pushed_at": "2026-11-02T13:20:12Z",
+      "capabilities": [
+        "multi-agent",
+        "mcp",
+        "skills",
+        "local-models",
+        "sandbox-and-tool-guard"
+      ],
+      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Personal assistant with tool/plugin execution and local/cloud providers. Evaluate only in sandbox; no capital authority or production credential access."
     }
   ],
   "pin_policy": {
@@ -6919,5 +7323,31 @@
       "capital_authority": false
     }
   },
-  "repository_count": 303
+  "repository_count": 317,
+  "intake_2026_11_02_followup": {
+    "supplied_urls_count": 23,
+    "unique_supplied_repositories_count": 18,
+    "duplicate_urls": [
+      {
+        "repo": "microsoft/playwright-mcp",
+        "occurrences": 2
+      },
+      {
+        "repo": "QwenLM/qwen-code",
+        "occurrences": 4
+      },
+      {
+        "repo": "mithun50/openclaw-termux",
+        "occurrences": 2
+      }
+    ],
+    "added_to_registry": 14,
+    "existing_entries_refreshed": 4,
+    "physical_runtime_install": "NOT_CLAIMED_NO_REMOTE_DEVICE",
+    "clone_and_tests": "NOT_RUN_NO_CONNECTED_LOCAL_OR_REMOTE_SHELL",
+    "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+    "capital_authority": false,
+    "pin_source": "GitHub API default-branch commit endpoint",
+    "date": "2026-11-02"
+  }
 }
