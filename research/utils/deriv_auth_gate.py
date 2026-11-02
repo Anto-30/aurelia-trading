@@ -73,7 +73,7 @@ class DerivPublicClient:
         if self._transport is not None:
             return
         # No Authorization header, bearer token, PAT, or cookie is passed.
-        # The public app_id is a non-secret query parameter.
+        # The modern public endpoint requires no app ID or auth parameter.
         transport = DerivWebSocketTransport(
             self.endpoint,
             timeout_seconds=self.timeout_seconds,
