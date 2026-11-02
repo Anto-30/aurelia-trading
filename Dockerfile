@@ -9,5 +9,10 @@ COPY runtime ./runtime
 # Copy only their production dependencies, not the full assurance test suite.
 COPY assurance/certification_evidence.py assurance/evidence_writer.py ./assurance/
 COPY config ./config
+# The runtime writes only to its dedicated state mount; it must not run as root.
+RUN mkdir -p /tmp/aurelia && chown -R 10001:10001 /tmp/aurelia
+ENV HOME=/tmp/aurelia
+ENV TMPDIR=/tmp/aurelia
+USER 10001:10001
 EXPOSE 8080
 CMD ["python", "-m", "runtime.main"]

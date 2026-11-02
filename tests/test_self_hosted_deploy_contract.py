@@ -79,6 +79,25 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         )
         self.assertNotIn("secrets.DERIV_EXPECTED_CURRENCY || 'USD'", presence_workflow)
 
+
+    def test_runtime_container_is_nonroot_readonly_and_capability_restricted(self):
+        dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+        deploy = (ROOT / "scripts" / "deploy" / "bootstrap_and_deploy.sh").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("USER 10001:10001", dockerfile)
+        self.assertIn("chown -R 10001:10001 /tmp/aurelia", dockerfile)
+        self.assertIn('sudo chown -R 10001:10001 "$DATA_DIR"', deploy)
+        self.assertIn("--user 10001:10001", deploy)
+        self.assertIn("--read-only", deploy)
+        self.assertIn("--cap-drop=ALL", deploy)
+        self.assertTrue(
+            "--security-opt=no-new-privileges" in deploy
+            or "--security-opt no-new-privileges" in deploy,
+        )
+        self.assertIn("--tmpfs /var/tmp:rw,noexec,nosuid,nodev,size=32m", deploy)
+
     def test_live_deployment_requires_release_gate(self):
         workflow = (ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml").read_text(
             encoding="utf-8"
