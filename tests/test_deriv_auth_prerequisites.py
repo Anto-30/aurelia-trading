@@ -8,7 +8,7 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
     def test_public_research_is_ready_without_account_credentials(self):
         evidence = build_evidence({})
         self.assertEqual(evidence["schema_version"], "2")
-        self.assertEqual(evidence["public_research"]["status"], "READY")
+        self.assertEqual(evidence["public_research"]["status"], "CONFIGURED")
         self.assertEqual(evidence["public_research"]["auth_mode"], "none")
         self.assertFalse(evidence["public_research"]["account_credentials_mapped"])
         self.assertFalse(evidence["account_evidence_ready"])
