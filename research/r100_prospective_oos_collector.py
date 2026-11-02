@@ -249,7 +249,7 @@ def observe_tick(
             "signal_id": item["signal_id"],
             "strategy_id": STRATEGY_ID,
             "strategy_version": STRATEGY_VERSION,
-            "symbol": SYMBOL,
+            "underlying_symbol": SYMBOL,
             "regime": REGIME,
             "signal_timestamp_utc": item["signal_timestamp_utc"],
             "entry_quote": entry,
