@@ -13,7 +13,7 @@ from runtime.security.deriv_auth_gate import (
 from runtime.adapters.deriv_session import (
     AuthenticatedWebSocketUrl,
     DerivSessionError,
-    derive_ws_environment,
+    derive_ws_environment as derive_ws_environment_from_adapter,
     validate_modern_options_ws_url,
 )
 
@@ -54,12 +54,8 @@ def redact_ws_url(url: str) -> str:
 
 
 def derive_ws_environment(url: str) -> str:
-    return derive_ws_environment_from_adapter(url)
-
-
-def derive_ws_environment_from_adapter(url: str) -> str:
     try:
-        return derive_ws_environment(url)
+        return derive_ws_environment_from_adapter(url)
     except DerivSessionError as exc:
         raise DerivSessionManagerError(str(exc)) from exc
 
