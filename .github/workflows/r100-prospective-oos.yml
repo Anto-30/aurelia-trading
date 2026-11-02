@@ -57,49 +57,73 @@ jobs:
           mkdir -p "$(dirname "${AURELIA_R100_STATE_PATH}")"
           cp "$state_file" "${AURELIA_R100_STATE_PATH}"
           echo "Recovered prospective archive artifact ${artifact_id}."
-      - name: Select frozen campaign or roll incompatible campaign
+      - name: Select frozen campaign or stop on incompatibility
         id: select_campaign
         shell: bash
         run: |
           set -euo pipefail
+          current_commit="${GITHUB_SHA}"
           if [ ! -f "${AURELIA_R100_STATE_PATH}" ]; then
+            campaign_commit="${current_commit}"
+            strategy_hash=""
             echo "R100_CAMPAIGN_SELECTION=FRESH"
-            echo "AURELIA_RESEARCH_CODE_COMMIT=${GITHUB_SHA}" >> "$GITHUB_ENV"
-            exit 0
+          else
+            campaign_commit="$(python -c 'import json,os; from pathlib import Path; s=json.loads(Path(os.environ["AURELIA_R100_STATE_PATH"]).read_text()); print(str(s.get("manifest",{}).get("code_commit") or ""))')"
+            sealed="$(python -c 'import json,os; from pathlib import Path; s=json.loads(Path(os.environ["AURELIA_R100_STATE_PATH"]).read_text()); print(str(bool(s.get("manifest",{}).get("sealed"))).lower())')"
+            if [ "$sealed" = "true" ]; then
+              echo "R100_CAMPAIGN_SELECTION=SEALED_STOP"
+              echo "R100_CAMPAIGN_QUALIFICATION_REQUIRES_NEW_VERSION=true"
+              echo "stop=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ -z "$campaign_commit" ]; then
+              echo "R100_CAMPAIGN_SELECTION=INCOMPATIBLE_STOP"
+              echo "R100_CAMPAIGN_STOP_REASON=MISSING_FROZEN_SOURCE_COMMIT"
+              echo "stop=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if ! git cat-file -e "${campaign_commit}^{commit}" 2>/dev/null; then
+              if ! git fetch --no-tags --depth=1 origin "$campaign_commit"; then
+                echo "R100_CAMPAIGN_SELECTION=INCOMPATIBLE_STOP"
+                echo "R100_CAMPAIGN_STOP_REASON=FROZEN_SOURCE_COMMIT_UNAVAILABLE"
+                echo "stop=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            fi
+
+            set +e
+            strategy_hash="$(python scripts/verify_r100_strategy_source.py --reference-commit "$campaign_commit" 2>&1)"
+            strategy_status=$?
+            set -e
+            if [ "$strategy_status" -ne 0 ]; then
+              echo "$strategy_hash"
+              echo "R100_CAMPAIGN_SELECTION=STRATEGY_SOURCE_MISMATCH"
+              echo "stop=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            set +e
+            validation_output="$(AURELIA_RESEARCH_CODE_COMMIT="$campaign_commit" python -c 'import os; from pathlib import Path; from research.r100_prospective_oos_collector import load_state; load_state(Path(os.environ["AURELIA_R100_STATE_PATH"])); print("R100_CAMPAIGN_STATE=VALID")' 2>&1)"
+            validation_status=$?
+            set -e
+            echo "$validation_output"
+            if [ "$validation_status" -ne 0 ]; then
+              echo "R100_CAMPAIGN_SELECTION=INCOMPATIBLE_STOP"
+              echo "R100_CAMPAIGN_STOP_REASON=FROZEN_CONFIG_OR_SCHEMA_MISMATCH"
+              echo "stop=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "R100_CAMPAIGN_SELECTION=FROZEN_STRATEGY_VERIFIED"
           fi
-          campaign_commit="$(python -c 'import json,os; from pathlib import Path; s=json.loads(Path(os.environ["AURELIA_R100_STATE_PATH"]).read_text()); print(str(s.get("manifest",{}).get("code_commit") or ""))')"
-          sealed="$(python -c 'import json,os; from pathlib import Path; s=json.loads(Path(os.environ["AURELIA_R100_STATE_PATH"]).read_text()); print(str(bool(s.get("manifest",{}).get("sealed"))).lower())')"
-          if [ "$sealed" = "true" ]; then
-            echo "R100_CAMPAIGN_SELECTION=SEALED_STOP"
-            echo "R100_CAMPAIGN_QUALIFICATION_REQUIRES_NEW_VERSION=true"
-            echo "stop=true" >> "$GITHUB_OUTPUT"
-            exit 0
+
+          if [ -z "$strategy_hash" ]; then
+            strategy_hash="$(python scripts/verify_r100_strategy_source.py --reference-commit "$campaign_commit")"
           fi
-          test -n "$campaign_commit"
-          git fetch --no-tags --depth=1 origin "$campaign_commit"
-          git checkout --detach "$campaign_commit"
-          set +e
-          validation_output="$(AURELIA_RESEARCH_CODE_COMMIT="$campaign_commit" python -c 'import os; from pathlib import Path; from research.r100_prospective_oos_collector import load_state; load_state(Path(os.environ["AURELIA_R100_STATE_PATH"])); print("R100_CAMPAIGN_STATE=VALID")' 2>&1)"
-          status=$?
-          set -e
-          echo "$validation_output"
-          if [ "$status" -eq 0 ]; then
-            echo "R100_CAMPAIGN_SELECTION=FROZEN"
-            echo "AURELIA_RESEARCH_CODE_COMMIT=${campaign_commit}" >> "$GITHUB_ENV"
-            exit 0
-          fi
-          if echo "$validation_output" | grep -qE "R100_(CONFIG_HASH|SOURCE_COMMIT)_MISMATCH"; then
-            archive_dir=".research_state/incompatible-$(date -u +%Y%m%dT%H%M%SZ)"
-            mkdir -p "$archive_dir"
-            cp "${AURELIA_R100_STATE_PATH}" "$archive_dir/aurelia_r100_state.json"
-            rm -f "${AURELIA_R100_STATE_PATH}"
-            git checkout --detach "${GITHUB_SHA}"
-            echo "R100_CAMPAIGN_SELECTION=ROLLED_OVER_INCOMPATIBLE"
-            echo "R100_ARCHIVED_STATE=$archive_dir/aurelia_r100_state.json"
-            echo "AURELIA_RESEARCH_CODE_COMMIT=${GITHUB_SHA}" >> "$GITHUB_ENV"
-            exit 0
-          fi
-          exit "$status"
+          echo "R100_STRATEGY_SOURCE_COMPATIBLE=true"
+          echo "R100_STRATEGY_SOURCE_HASH=$strategy_hash"
+          echo "AURELIA_RESEARCH_CODE_COMMIT=$campaign_commit" >> "$GITHUB_ENV"
+          echo "AURELIA_COLLECTOR_CODE_COMMIT=$current_commit" >> "$GITHUB_ENV"
+          echo "AURELIA_VERIFIED_STRATEGY_SOURCE_HASH=$strategy_hash" >> "$GITHUB_ENV"
       - name: Collect real public Deriv R100 observations with bounded retry
         if: steps.select_campaign.outputs.stop != 'true'
         shell: bash
