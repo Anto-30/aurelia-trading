@@ -21,7 +21,7 @@ def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object
     )
     mode = str(env.get("ACCOUNT_DERIV_AUTH_MODE", "oauth")).strip().lower()
     tokens_equal = bool(oauth_token and pat_token and oauth_token == pat_token)
-    credentials_isolated = bool(oauth_token) and not (
+    credentials_isolated = not (
         pat_token or generic_token or refresh_token or tokens_equal
     )
     public_credentials_present = any(
