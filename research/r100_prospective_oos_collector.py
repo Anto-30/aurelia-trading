@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from runtime.adapters.deriv_ws import DerivWebSocketTransport
+from runtime.adapters.deriv_ws import DerivTransportReaderError, DerivWebSocketTransport
 from runtime.strategy.autonomous_signal_engine import AutonomousSignalHunter
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
@@ -26,6 +26,9 @@ STRATEGY_ID = "R100_TICK_MOMENTUM_PROSPECTIVE_V0.2.0"
 STRATEGY_VERSION = "0.2.0"
 REGIME = "ALL_MARKET"
 COLLECTION_SECONDS = int(os.getenv("AURELIA_R100_COLLECTION_SECONDS", "540"))
+MAX_STREAM_RECONNECTS = int(os.getenv("AURELIA_R100_MAX_STREAM_RECONNECTS", "5"))
+RECONNECT_BASE_DELAY_SECONDS = float(os.getenv("AURELIA_R100_RECONNECT_BASE_DELAY_SECONDS", "1.0"))
+RECONNECT_MAX_DELAY_SECONDS = float(os.getenv("AURELIA_R100_RECONNECT_MAX_DELAY_SECONDS", "15.0"))
 HORIZON_TICKS = int(os.getenv("AURELIA_R100_HORIZON_TICKS", "10"))
 STATE_PATH = Path(os.getenv("AURELIA_R100_STATE_PATH", ".research_state/aurelia_r100_state.json"))
 MIN_TRADE_PROBABILITY = 0.55
@@ -542,13 +545,43 @@ async def collect_once(state: dict[str, Any]) -> None:
     stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
     iterator = stream.__aiter__()
     deadline = asyncio.get_running_loop().time() + COLLECTION_SECONDS
+    reconnect_attempts = 0
     try:
         while asyncio.get_running_loop().time() < deadline:
             remaining = deadline - asyncio.get_running_loop().time()
             try:
-                message = await asyncio.wait_for(iterator.__anext__(), timeout=max(1.0, remaining))
+                message = await asyncio.wait_for(
+                    iterator.__anext__(),
+                    timeout=max(0.1, remaining),
+                )
             except asyncio.TimeoutError:
                 break
+            except DerivTransportReaderError as exc:
+                if not exc.retryable:
+                    raise
+                reconnect_attempts += 1
+                if reconnect_attempts > MAX_STREAM_RECONNECTS:
+                    raise
+                delay = min(
+                    RECONNECT_MAX_DELAY_SECONDS,
+                    RECONNECT_BASE_DELAY_SECONDS * (2 ** (reconnect_attempts - 1)),
+                )
+                reconnect_events = state.setdefault("transport_reconnects", [])
+                if not isinstance(reconnect_events, list):
+                    raise ValueError("R100_TRANSPORT_RECONNECT_STATE_INVALID")
+                reconnect_events.append({
+                    "at_utc": iso(utc_now()),
+                    "attempt": reconnect_attempts,
+                    "error_class": exc.error_class,
+                    "close_code": exc.close_code,
+                    "delay_seconds": delay,
+                })
+                await transport.close()
+                await asyncio.sleep(min(delay, max(0.0, remaining)))
+                await transport.connect()
+                stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
+                iterator = stream.__aiter__()
+                continue
             tick = message.get("tick") or {}
             try:
                 quote = float(tick["quote"])
