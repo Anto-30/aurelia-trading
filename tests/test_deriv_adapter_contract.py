@@ -16,6 +16,7 @@ class TestDerivAdapterContract(unittest.TestCase):
             expected_loginid="CR123",
         )
         self.assertNotIn("SECRET", adapter.connection_fingerprint)
+        self.assertEqual(adapter.auth_token, "")
 
     def test_proposal_id_required_by_executor_contract(self):
         self.assertIn("ORDER_REQUIRES_BROKER_PROPOSAL_ID", "ORDER_REQUIRES_BROKER_PROPOSAL_ID")
@@ -76,6 +77,14 @@ class TestDerivAdapterContract(unittest.TestCase):
                 ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
                 expected_currency="USD",
             )
+        self.assertEqual(adapter.auth_token, "")
+
+    def test_explicit_account_token_is_not_retained(self):
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+            auth_token="EXPLICIT_TOKEN_SENTINEL",
+            expected_currency="USD",
+        )
         self.assertEqual(adapter.auth_token, "")
 
     def test_unknown_is_explicit_result_type(self):
