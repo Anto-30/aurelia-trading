@@ -578,7 +578,7 @@ async def collect_once(state: dict[str, Any]) -> None:
                         "currency": CURRENCY,
                         "duration": HORIZON_TICKS,
                         "duration_unit": "t",
-                        "underlying_symbol": SYMBOL,
+                        "symbol": SYMBOL,
                     })
                     proposal_payload = proposal.get("proposal") or {}
                     state["quote_observations"].append({
