@@ -46,3 +46,20 @@ async def test_configured_worker_emits_live_worker_lease(tmp_path, monkeypatch):
     await asyncio.sleep(0.15)
     assert "ClaudeCode" in federation.active_agents()
     await supervisor.stop()
+
+@pytest.mark.asyncio
+async def test_worker_probe_distinguishes_local_leases_from_provider_authentication(monkeypatch, capsys):
+    from scripts.agent_worker_probe import ADVISORY_WORKERS, main
+    from runtime.agent_workers import AgentWorkerSupervisor
+
+    for agent in ADVISORY_WORKERS:
+        monkeypatch.delenv(AgentWorkerSupervisor._env_name(agent), raising=False)
+
+    result = await main()
+    output = capsys.readouterr().out
+
+    assert result == 0
+    assert "AGENT_LOCAL_WORKER_LEASES_ACTIVE=" in output
+    assert "AGENT_PROVIDER_COMMAND_MISSING=" in output
+    assert "AGENT_CONNECTOR_REQUIRED=" in output
+    assert "AGENT_PROVIDER_AUTHENTICATION=NOT_VERIFIED" in output
