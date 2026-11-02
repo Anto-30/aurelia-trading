@@ -37,3 +37,16 @@ def test_workflows_never_read_auth_mode_from_a_secret() -> None:
         if "secrets.DERIV_AUTH_MODE" in content:
             offenders.append(str(path.relative_to(ROOT)))
     assert not offenders, "DERIV_AUTH_MODE is non-secret configuration; secret fallback found in: " + ", ".join(offenders)
+
+def test_manual_auth_mode_repair_workflow_is_protected_and_nonsecret() -> None:
+    path = WORKFLOWS / "configure-deriv-auth-mode.yml"
+    content = path.read_text(encoding="utf-8")
+    assert "workflow_dispatch:" in content
+    assert "environment: production" in content
+    assert "actions: write" in content
+    assert "options:" in content and "- pat" in content and "- oauth" in content
+    assert "DERIV_AUTH_MODE" in content
+    assert "secrets." not in content
+    assert "SECRET_VALUES_ACCESSED=false" in content
+    assert "LIVE_EXECUTION=BLOCKED" in content
+    assert "FINAL_EXECUTION_AUTHORIZATION=false" in content
