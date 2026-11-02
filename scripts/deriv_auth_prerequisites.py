@@ -54,7 +54,7 @@ def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object
         "public_research": {
             "status": "BLOCKED" if public_credentials_present else "CONFIGURED",
             "auth_mode": "none",
-            "endpoint": "wss://ws.derivws.com/websockets/v3?app_id=1089",
+            "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
             "account_credentials_mapped": False,
             "account_credentials_present_in_process": public_credentials_present,
         },
