@@ -541,7 +541,6 @@ async def collect_once(state: dict[str, Any]) -> None:
         threshold=1.5,
         cooldown_seconds=30.0,
     )
-    await transport.connect()
     stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
     iterator = stream.__aiter__()
     deadline = asyncio.get_running_loop().time() + COLLECTION_SECONDS
