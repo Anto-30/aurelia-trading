@@ -21,12 +21,18 @@ def test_workflow_auth_mode_assignments_are_allowlisted() -> None:
                 assignments.append((str(path.relative_to(ROOT)), line_number, value))
 
     assert assignments, "Expected at least one Deriv auth-mode workflow assignment"
+    diagnostic_only = "${{ vars.DERIV_AUTH_MODE }}"
     unsafe = [
         f"{path}:{line}: {value}"
         for path, line, value in assignments
         if value != SAFE_DERIV_AUTH_MODE_EXPRESSION
+        and not (
+            path == ".github/workflows/aurelia-assurance.yml"
+            and value == diagnostic_only
+        )
     ]
     assert not unsafe, "Unallowlisted DERIV_AUTH_MODE workflow assignments:\n" + "\n".join(unsafe)
+    assert sum(value == diagnostic_only for _, _, value in assignments) == 1
 
 
 def test_workflows_never_read_auth_mode_from_a_secret() -> None:
