@@ -8,6 +8,23 @@ from runtime.core.secrets import SecretsError, validate_secrets_at_startup
 
 
 class RuntimeSecretModeTests(unittest.TestCase):
+    def test_non_production_soak_rejects_account_credentials(self):
+        env = {
+            "AURELIA_NON_PRODUCTION_SOAK": "true",
+            "FINAL_EXECUTION_AUTHORIZATION": "false",
+            "LIVE_EXECUTION": "BLOCKED",
+            "AURELIA_VERIFY_DERIV_PUBLIC": "false",
+            "AURELIA_VERIFY_DERIV_AUTH": "false",
+            "AURELIA_CONTINUOUS_RUNTIME": "false",
+            "DERIV_PAT": "UNEXPECTED_PAT_SENTINEL",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaisesRegex(
+                SecretsError,
+                "NON_PRODUCTION_SOAK_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED",
+            ):
+                validate_secrets_at_startup()
+
     def test_locked_verify_only_runtime_can_start_without_broker_credentials(self):
         env = {
             "AURELIA_DEPLOYMENT_MODE": "VERIFY_ONLY",
