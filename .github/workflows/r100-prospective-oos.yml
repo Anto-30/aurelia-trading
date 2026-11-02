@@ -58,6 +58,7 @@ jobs:
           cp "$state_file" "${AURELIA_R100_STATE_PATH}"
           echo "Recovered prospective archive artifact ${artifact_id}."
       - name: Select frozen campaign or roll incompatible campaign
+        id: select_campaign
         shell: bash
         run: |
           set -euo pipefail
@@ -69,12 +70,9 @@ jobs:
           campaign_commit="$(python -c 'import json,os; from pathlib import Path; s=json.loads(Path(os.environ["AURELIA_R100_STATE_PATH"]).read_text()); print(str(s.get("manifest",{}).get("code_commit") or ""))')"
           sealed="$(python -c 'import json,os; from pathlib import Path; s=json.loads(Path(os.environ["AURELIA_R100_STATE_PATH"]).read_text()); print(str(bool(s.get("manifest",{}).get("sealed"))).lower())')"
           if [ "$sealed" = "true" ]; then
-            archive_dir=".research_state/sealed-$(date -u +%Y%m%dT%H%M%SZ)"
-            mkdir -p "$archive_dir"
-            cp "${AURELIA_R100_STATE_PATH}" "$archive_dir/aurelia_r100_state.json"
-            rm -f "${AURELIA_R100_STATE_PATH}"
-            echo "R100_CAMPAIGN_SELECTION=NEW_AFTER_SEAL"
-            echo "AURELIA_RESEARCH_CODE_COMMIT=${GITHUB_SHA}" >> "$GITHUB_ENV"
+            echo "R100_CAMPAIGN_SELECTION=SEALED_STOP"
+            echo "R100_CAMPAIGN_QUALIFICATION_REQUIRES_NEW_VERSION=true"
+            echo "stop=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           test -n "$campaign_commit"
@@ -103,6 +101,7 @@ jobs:
           fi
           exit "$status"
       - name: Collect real public Deriv R100 observations with bounded retry
+        if: steps.select_campaign.outputs.stop != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -124,6 +123,7 @@ jobs:
           echo "R100_COLLECTION_EXHAUSTED=1 state_preserved_for_next_run=true"
           exit "$status"
       - name: Verify research-only semantics
+        if: steps.select_campaign.outputs.stop != 'true'
         shell: bash
         run: |
           python - <<'PY'
@@ -147,7 +147,7 @@ jobs:
           )
           PY
       - name: Upload prospective research archive
-        if: always()
+        if: always() && steps.select_campaign.outputs.stop != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: aurelia-r100-prospective-oos
