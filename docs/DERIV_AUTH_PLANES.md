@@ -10,13 +10,13 @@
 
 ## Layer 9 — public research
 
-The research client connects to the Classic public market-data WebSocket:
+The research client connects to Deriv's current public market-data WebSocket:
 
 ```text
-wss://ws.derivws.com/websockets/v3?app_id=1089
+wss://api.derivws.com/trading/v1/options/ws/public
 ```
 
-The application ID is a public identifier, not a credential. The client sends no Authorization header, bearer token, PAT, cookie, or OAuth token. It rejects a process environment containing any account credential variable, and rechecks that boundary before each request.
+No app ID, Authorization header, bearer token, PAT, cookie, or OAuth token is sent. It rejects a process environment containing any account credential variable, and rechecks that boundary before each request.
 
 Allowed request families are limited to public market data and non-executing proposal quotes: active symbols, contract metadata, proposals, ticks, and tick history. The request validator also enforces an action-specific field allowlist. It rejects account authorization, buy/sell, and all unrecognized request fields.
 
