@@ -68,6 +68,31 @@ jobs:
           echo "No PAT, generic token, OAuth token, or refresh token will be injected into deployment."
           exit 2
 
+      - name: Require canonical LIVE release gate
+        if: inputs.deployment_mode == 'LIVE'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/live_release_gate.py
+
+      - name: Block LIVE deployment until a verifiable read-only Deriv account scope exists
+        if: inputs.deployment_mode == 'LIVE'
+        shell: bash
+        run: |
+          echo "LIVE_GATE_BLOCKED=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
+          echo "No PAT, generic token, OAuth token, or refresh token will be injected into deployment."
+          exit 2
+
+      - name: Provision LIVE runtime secrets to root-only host store
+        if: inputs.deployment_mode == 'LIVE'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Downstream of the non-overridable read-only-scope blocker above.
+          # The provisioner itself independently rejects Deriv credentials.
+          ssh -F "$HOME/.ssh/config" aurelia-target \
+            "sudo -n python3 /opt/aurelia/releases/$GITHUB_SHA/scripts/deploy/provision_runtime_secrets.py" </dev/null
+
       - name: Require green AURELIA Assurance for the exact commit
         env:
           GH_TOKEN: ${{ github.token }}
@@ -93,6 +118,32 @@ jobs:
               sys.exit(2)
           print(f"ASSURANCE_GREEN_PUSH_RUNS={len(eligible)}")
           PY
+
+      - name: Verify public Deriv R100 M1 and current readiness
+        env:
+          DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT: artifacts/deriv_public_transport.json
+          AURELIA_READINESS_OUT: artifacts/AURELIA_READINESS.current.json
+          AURELIA_READINESS_PATH: artifacts/AURELIA_READINESS.current.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/verify_deriv_public_transport.py
+          set +e
+          python -m runtime.ops.readiness_orchestrator
+          status=$?
+          set -e
+          test "$status" -eq 2
+
+      - name: Upload public data and readiness evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-public-data-and-readiness
+          path: |
+            artifacts/deriv_public_transport.json
+            artifacts/AURELIA_READINESS.current.json
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Require self-host transport secrets
         env:
