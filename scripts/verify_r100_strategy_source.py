@@ -102,10 +102,10 @@ def _selected_ast(source: str, *, path: str) -> dict[str, str]:
             for name in sorted(names & STRATEGY_CONSTANTS):
                 selected[f"constant:{name}"] = ast.dump(node, include_attributes=False)
 
-    required = {
-        *(f"constant:{name}" for name in STRATEGY_CONSTANTS),
-        *(name for name in wanted_nodes),
-    }
+    required = set(wanted_nodes)
+    if path == COLLECTOR_PATH:
+        required.update(f"constant:{name}" for name in STRATEGY_CONSTANTS)
+
     missing = sorted(required - set(selected))
     if missing:
         raise ValueError(f"R100_STRATEGY_SOURCE_NODES_MISSING:{','.join(missing)}")
