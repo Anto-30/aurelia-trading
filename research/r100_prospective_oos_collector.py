@@ -208,6 +208,20 @@ def load_state(path: Path) -> dict[str, Any]:
         manifest["config_hash"] = expected_config_hash
     return state
 
+def add_runtime_provenance(report: dict[str, Any], state: dict[str, Any]) -> dict[str, Any]:
+    manifest = state.get("manifest") or {}
+    report["strategy_code_commit"] = manifest.get("code_commit")
+    report["collector_code_commit"] = (
+        os.getenv("AURELIA_COLLECTOR_CODE_COMMIT", "").strip()
+        or os.getenv("GITHUB_SHA", "").strip()
+        or "LOCAL_UNPINNED"
+    )
+    report["strategy_source_hash"] = (
+        os.getenv("AURELIA_VERIFIED_STRATEGY_SOURCE_HASH", "").strip() or None
+    )
+    return report
+
+
 def save_state(path: Path, state: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_suffix(path.suffix + ".tmp")
@@ -648,7 +662,7 @@ async def main() -> int:
         state["last_run_error_type"] = type(exc).__name__
         state["last_run_error_at_utc"] = iso(utc_now())
         save_state(STATE_PATH, state)
-        report = evaluation(state)
+        report = add_runtime_provenance(evaluation(state), state)
         report["collection_status"] = "FAILED_RETRYABLE"
         report["collection_error_type"] = type(exc).__name__
         error_details = {}
@@ -677,7 +691,7 @@ async def main() -> int:
 
     state.pop("last_run_error_type", None)
     state.pop("last_run_error_at_utc", None)
-    report = evaluation(state)
+    report = add_runtime_provenance(evaluation(state), state)
     report["collection_status"] = "PASS"
     save_state(STATE_PATH, state)
     report_path.write_text(
