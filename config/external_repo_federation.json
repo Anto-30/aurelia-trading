@@ -7351,6 +7351,26 @@
     "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
     "capital_authority": false,
     "pin_source": "GitHub API default-branch commit endpoint",
-    "date": "2026-11-02"
+    "date": "2026-11-02",
+    "repository_names": [
+      "earendil-works/pi",
+      "deepseek-ai/dsh-superagent-prototype",
+      "vercel-labs/agent-desktop",
+      "hackobi/AI-Scalpel-Trading-Bot",
+      "microsoft/playwright-mcp",
+      "freqtrade/freqtrade",
+      "mithun50/openclaw-termux",
+      "cuemacro/finmarketpy",
+      "Alishahryar1/free-claude-code",
+      "nntaoli-project/goex",
+      "obra/superpowers",
+      "ruvnet/ruflo",
+      "openclaw/openclaw",
+      "letianzj/quanttrader",
+      "ZhuLinsen/daily_stock_analysis",
+      "QwenLM/qwen-code",
+      "just-nilux/awesome-tradingview",
+      "agentscope-ai/QwenPaw"
+    ]
   }
 }
