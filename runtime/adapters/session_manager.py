@@ -8,7 +8,11 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
-from runtime.core.secrets import get_optional_secret
+from research.utils.deriv_auth_gate import (
+    AuthModeMismatchError,
+    DerivAuthenticationGate,
+    SecurityError,
+)
 
 from runtime.adapters.deriv_session import (
     AuthenticatedWebSocketUrl,
@@ -135,11 +139,11 @@ class DerivSessionManager:
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> list[dict[str, Any]]:
-        token = bearer_token if bearer_token is not None else (get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT"))
-        application_id = app_id if app_id is not None else get_optional_secret("DERIV_APP_ID")
-        if not token:
-            raise DerivSessionManagerError("DERIV_BEARER_TOKEN_MISSING")
-        payload = self._request_json(
+        try:
+            DerivAuthenticationGate(plane="account").get_client()
+        except (AuthModeMismatchError, SecurityError) as exc:
+            raise DerivSessionManagerError(str(exc)) from exc
+        raise DerivSessionManagerError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
             method="GET",
             url=ACCOUNTS_ENDPOINT,
             bearer_token=token,
