@@ -6,7 +6,8 @@ from typing import Any
 
 from runtime.adapters.deriv_ws import DerivWebSocketTransport
 
-PUBLIC_RESEARCH_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
+DEFAULT_PUBLIC_APP_ID = 1089
+PUBLIC_RESEARCH_WS_URL = f"wss://ws.derivws.com/websockets/v3?app_id={DEFAULT_PUBLIC_APP_ID}"
 PUBLIC_RESEARCH_ACTIONS = frozenset({
     "active_symbols",
     "contracts_for",
@@ -49,7 +50,13 @@ class DerivPublicClient:
         ]
         if present:
             raise SecurityError("RESEARCH_PLANE_ACCOUNT_CREDENTIALS_PRESENT")
-        self.endpoint = PUBLIC_RESEARCH_WS_URL
+        raw_app_id = str(env.get("DERIV_PUBLIC_APP_ID", str(DEFAULT_PUBLIC_APP_ID))).strip()
+        if not raw_app_id.isdecimal() or int(raw_app_id) <= 0:
+            raise SecurityError("DERIV_PUBLIC_APP_ID_INVALID")
+        # Classic market-data WebSocket is public and supports ticks_history.
+        # It is intentionally confined to research/ and never used for orders.
+        self.app_id = int(raw_app_id)
+        self.endpoint = f"wss://ws.derivws.com/websockets/v3?app_id={self.app_id}"
         self.timeout_seconds = timeout_seconds
         self._transport: DerivWebSocketTransport | None = None
 
@@ -79,6 +86,36 @@ class DerivPublicClient:
     async def request(self, payload: dict[str, Any]) -> dict[str, Any]:
         self.validate_request(payload)
         return await self._connected_transport().request(payload)
+
+    async def historical_candles(
+        self,
+        symbol: str,
+        *,
+        granularity: int = 60,
+        count: int = 500,
+        end: str = "latest",
+    ) -> list[dict[str, Any]]:
+        allowed_granularities = {
+            60, 120, 180, 300, 600, 900, 1800, 3600, 7200,
+            14400, 28800, 86400,
+        }
+        if not symbol or not symbol.replace("_", "").isalnum():
+            raise ValueError("DERIV_PUBLIC_SYMBOL_INVALID")
+        if granularity not in allowed_granularities:
+            raise ValueError("DERIV_PUBLIC_GRANULARITY_UNSUPPORTED")
+        if isinstance(count, bool) or not isinstance(count, int) or not 1 <= count <= 5000:
+            raise ValueError("DERIV_PUBLIC_CANDLE_COUNT_INVALID")
+        response = await self.request({
+            "ticks_history": symbol,
+            "end": end,
+            "style": "candles",
+            "granularity": granularity,
+            "count": count,
+        })
+        candles = response.get("candles")
+        if not isinstance(candles, list):
+            raise RuntimeError("DERIV_PUBLIC_CANDLE_RESPONSE_INVALID")
+        return [dict(row) for row in candles if isinstance(row, dict)]
 
     def subscribe(self, key: str, payload: dict[str, Any]):
         if set(payload) != {"ticks"} or not str(payload["ticks"]).strip():
