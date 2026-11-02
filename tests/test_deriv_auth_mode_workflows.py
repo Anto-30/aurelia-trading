@@ -6,8 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
 SAFE_DERIV_AUTH_MODE_EXPRESSION = (
-    "${{ vars.DERIV_AUTH_MODE == '' && 'pat' "
-    "|| vars.DERIV_AUTH_MODE == 'pat' && 'pat' "
+    "${{ vars.DERIV_AUTH_MODE == 'pat' && 'pat' "
     "|| vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' "
     "|| 'invalid' }}"
 )
@@ -50,3 +49,12 @@ def test_manual_auth_mode_repair_workflow_is_protected_and_nonsecret() -> None:
     assert "SECRET_VALUES_ACCESSED=false" in content
     assert "LIVE_EXECUTION=BLOCKED" in content
     assert "FINAL_EXECUTION_AUTHORIZATION=false" in content
+
+def test_assurance_prerequisite_gate_does_not_default_missing_mode_to_pat() -> None:
+    path = WORKFLOWS / "aurelia-assurance.yml"
+    content = path.read_text(encoding="utf-8")
+    line = next(line for line in content.splitlines() if "DERIV_AUTH_CONFIGURED:" in line)
+    assert "vars.DERIV_AUTH_MODE == 'pat'" in line
+    assert "vars.DERIV_AUTH_MODE == 'oauth'" in line
+    assert "vars.DERIV_AUTH_MODE || 'pat'" not in line
+    assert "vars.DERIV_AUTH_MODE ||" not in line
