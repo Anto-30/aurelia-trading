@@ -33,6 +33,18 @@ def is_ancestor(commit: str, head: str) -> bool:
     )
 
 
+def has_reproducible_pin(item: dict) -> bool:
+    pin = item.get("head_commit")
+    if isinstance(pin, str):
+        return len(pin) == 40 and all(char in "0123456789abcdef" for char in pin.lower()) and pin != "SYNC_REQUIRED"
+    return (
+        pin is None
+        and item.get("pin_validation_status") == "UNRESOLVED_REPOSITORY_REDIRECT"
+        and item.get("mode") == "REFERENCE_ONLY"
+        and item.get("security_review_status") == "BLOCKED_REPOSITORY_IDENTITY_AND_PIN_UNRESOLVED"
+    )
+
+
 def main() -> None:
     federation = load_json("config/agent_skill_federation.json")
     external_repos = load_json("config/external_repo_federation.json")
@@ -123,7 +135,7 @@ def main() -> None:
     }
     all_external = external_repos["repositories"]
     assert len({item["repo"] for item in all_external}) == len(all_external)
-    assert all(item.get("head_commit") and item["head_commit"] != "SYNC_REQUIRED" for item in all_external)
+    assert all(has_reproducible_pin(item) for item in all_external)
     registered = {item["repo"]: item for item in all_external}
     for repo, expected_commit in expected_external.items():
         item = registered[repo]
