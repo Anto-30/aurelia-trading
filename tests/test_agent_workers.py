@@ -29,6 +29,7 @@ async def test_worker_without_command_is_connector_required_not_active(tmp_path,
     assert any(
         message.get("message_type") == "CONNECTOR_STATUS"
         and message.get("payload", {}).get("provider_session") == "NOT_CONFIGURED"
+        and message.get("payload", {}).get("provider_authentication") == "NOT_VERIFIED"
         for message in messages
     )
     assert any(
@@ -63,6 +64,7 @@ async def test_configured_process_emits_liveness_lease_not_provider_authenticati
     assert any(
         message.get("message_type") == "CONNECTOR_STATUS"
         and message.get("payload", {}).get("provider_session") == "CONFIGURED_COMMAND"
+        and message.get("payload", {}).get("provider_authentication") == "NOT_VERIFIED"
         for message in messages
     )
     assert not any(
