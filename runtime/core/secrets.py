@@ -71,50 +71,19 @@ def validate_secrets_at_startup() -> None:
             raise SecretsError(
                 "VERIFY_ONLY_RUNTIME_NOT_SEALED: " + ",".join(failed)
             )
-        # Permit a credential-free locked worker to run, but if read-only broker
-        # verification was requested, validate its credentials before startup.
+        # Public research is credential-free. Account authentication is not
+        # available until Deriv documents a genuine read-only permission.
         if os.getenv("AURELIA_VERIFY_DERIV_AUTH", "").strip().lower() != "true":
             return
 
-    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
-    token = os.getenv("DERIV_AUTH_TOKEN", "").strip() or os.getenv("DERIV_PAT", "").strip()
-    loginid = os.getenv("DERIV_EXPECTED_LOGINID", "").strip() or os.getenv(
-        "DERIV_AUTHORIZED_ACCOUNT_ID", ""
-    ).strip()
-    currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip()
-    environment = os.getenv("DERIV_ENVIRONMENT", "").strip().lower()
+    from runtime.security.deriv_auth_gate import (
+        AuthModeMismatchError,
+        DerivAuthenticationGate,
+        SecurityError,
+    )
 
-    missing: list[str] = []
-    if not token:
-        missing.append("DERIV_AUTH_TOKEN_OR_DERIV_PAT")
-    if auth_mode not in {"pat", "oauth"}:
-        raise SecretsError("STARTUP_AUTH_MODE_INVALID")
-    if auth_mode == "pat" and not os.getenv("DERIV_APP_ID", "").strip():
-        missing.append("DERIV_APP_ID")
-    if not loginid:
-        missing.append("DERIV_EXPECTED_LOGINID_OR_DERIV_AUTHORIZED_ACCOUNT_ID")
-    if not currency:
-        missing.append("DERIV_EXPECTED_CURRENCY")
-    if environment not in {"real", "demo"}:
-        missing.append("DERIV_ENVIRONMENT")
-    if deployment_mode == "LIVE" and environment != "real":
-        raise SecretsError("LIVE_RUNTIME_REQUIRES_REAL_DERIV_ENVIRONMENT")
-    if deployment_mode == "LIVE":
-        reset_key = os.getenv("AURELIA_OPERATOR_RESET_SIGNING_KEY", "").strip()
-        if len(reset_key) < 32:
-            missing.append("AURELIA_OPERATOR_RESET_SIGNING_KEY")
-        if not os.getenv("AURELIA_KILL_SWITCH_STATE_PATH", "").strip():
-            missing.append("AURELIA_KILL_SWITCH_STATE_PATH")
-        if not (
-            os.getenv("GITHUB_SHA", "").strip()
-            or os.getenv("AURELIA_SOURCE_SHA", "").strip()
-        ):
-            missing.append("GITHUB_SHA_OR_AURELIA_SOURCE_SHA")
-    if missing:
-        raise SecretsError(
-            f"STARTUP_SECRET_VALIDATION_FAILED: missing={missing}"
-        )
-    # A locked VERIFY_ONLY process may authenticate and verify its account,
-    # but capital authority and autonomous order execution remain sealed above.
-    if deployment_mode == "VERIFY_ONLY":
-        return
+    try:
+        DerivAuthenticationGate(plane="account").get_client()
+    except (AuthModeMismatchError, SecurityError) as exc:
+        raise SecretsError(str(exc)) from exc
+    raise SecretsError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
