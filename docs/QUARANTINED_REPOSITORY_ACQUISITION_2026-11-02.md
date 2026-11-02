@@ -112,7 +112,7 @@ Duplicate URLs were deduplicated: `microsoft/playwright-mcp` (2 occurrences), `Q
 
 ### Follow-up security and integration decision
 
-- **No external source was cloned, installed, executed, or connected to AURELIA in this follow-up.** These are pinned source references, not runtime installations.
+- **18/18 external sources were cloned into an ephemeral GitHub-hosted runner at their pinned commits and source-scanned.** The clones were discarded at job completion; no source was committed to AURELIA and no external runtime was installed.
 - **No repository was granted Deriv credentials, production secrets, host access, broker access, or capital authority.**
 - **No new execution adapter is approved.** Freqtrade, GoEx, QuantTrader and AI-Scalpel are not Deriv-native evidence. They cannot be used to place AURELIA trades.
 - **No model/provider credentials were sent to free-claude-code, Pi, Ruflo, OpenClaw, Qwen Code, QwenPaw, Hermes or the DeepSeek prototype.** These are untrusted or sandbox-only agent runtimes until separately audited.
@@ -129,3 +129,29 @@ The separate `configure-deriv-auth-mode.yml` workflow is manual and protected by
 ### Registry integrity correction
 
 The new registry test detected a pre-existing malformed 41-character commit pin for `Anil-matcha/open-dots`. GitHub returned a permanent repository redirect to repository ID `645381450`, but the public repository connector could not resolve a canonical owner/name or current commit. The entry is now `REFERENCE_ONLY`, its invalid SHA was removed, and `pin_validation_status=UNRESOLVED_REPOSITORY_REDIRECT`. It is not treated as a pinned or approved source. This prevents an invalid identifier from being mistaken for a reproducible source pin.
+
+
+### Ephemeral clone and source-scan evidence
+
+The source-only clone workflow completed successfully on 2026-11-02:
+- Workflow run: `41472773080`
+- Source head: `1cf3fe19a3c99bb022c3682a2fbb2235616834d8`
+- Artifact: `13156296533` (`quarantined-repo-source-scan`)
+- Pinned repositories cloned and checked out: **18/18**
+- Clone/scan failures or skips: **0**
+- Repository code executed: **false**
+- Dependencies installed: **false**
+- Broker access or production secrets accessed: **false**
+- Raw secret values emitted: **false**
+
+The heuristic scan recorded 5,355 regex secret indicators across 12 repositories, 768 workflow risk indicators and 17 package lifecycle hooks. These are **not confirmed credentials or vulnerabilities**. The generic secret patterns match many test fixtures, examples, documentation and placeholder strings; a manual source-level validation is required before treating any match as a real secret. Workflow indicators include unpinned action references, `pull_request_target` usage and credential-persistence settings. These also require contextual review and are not automatically exploitable findings.
+
+Highest-priority manual review candidates remain:
+- `openclaw/openclaw`: 20 `pull_request_target` workflow matches and package lifecycle hooks
+- `QwenLM/qwen-code`: 46 `pull_request_target` and 50 unpinned action-reference matches
+- `agentscope-ai/QwenPaw`: 7 `pull_request_target` and 220 unpinned action-reference matches
+- `ruvnet/ruflo`: 318 unpinned action-reference matches and package lifecycle hooks
+- `microsoft/playwright-mcp`: 2 `pull_request_target` and 8 unpinned action-reference matches
+- `mithun50/openclaw-termux`: 17 unpinned action-reference matches
+
+The scan is a reproducible source inventory and heuristic triage, not an SBOM, CVE/SCA report, malware analysis, full secret-scanning certification, dependency installation or runtime test. All external sources remain quarantined under their registry modes.
