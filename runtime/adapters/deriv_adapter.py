@@ -86,50 +86,6 @@ class DerivAdapter:
         except (AuthModeMismatchError, SecurityError) as exc:
             raise DerivProtocolError(str(exc)) from exc
         raise DerivProtocolError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
-        try:
-            self.transport = DerivWebSocketTransport(
-                self.ws_url,
-                timeout_seconds=self.timeout_seconds,
-            )
-            await self.transport.connect()
-
-            if self.auth_token:
-                reply = await self._tracked_request("authorize", {"authorize": self.auth_token})
-                identity_payload = reply.get("authorize") or {}
-            else:
-                reply = await self._tracked_request("balance", {"balance": 1})
-                identity_payload = reply.get("balance") or {}
-
-            loginid = str(
-                identity_payload.get("loginid")
-                or identity_payload.get("login_id")
-                or ""
-            )
-            currency = str(identity_payload.get("currency") or "").strip().upper()
-            if not loginid:
-                raise DerivProtocolError("ACCOUNT_IDENTITY_UNVERIFIED")
-            if self.expected_loginid and loginid != self.expected_loginid:
-                raise DerivProtocolError("ACCOUNT_IDENTITY_MISMATCH")
-            if not currency:
-                raise DerivProtocolError("ACCOUNT_CURRENCY_UNVERIFIED")
-            if currency != self.expected_currency:
-                raise DerivProtocolError("CURRENCY_MISMATCH")
-
-            account_type = (
-                "demo" if self.environment.lower() in {"demo", "virtual"} else "real"
-            )
-            self.account = AccountIdentity(
-                loginid=loginid,
-                account_type=account_type,
-                currency=currency,
-                environment=self.environment,
-            )
-            self.authorized = True
-            self.circuit.record_success()
-            return self.account
-        except (DerivTransportError, DerivProtocolError):
-            await self.close()
-            raise
 
     async def connect_from_otp(
         self,
