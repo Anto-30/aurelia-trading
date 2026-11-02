@@ -58,11 +58,7 @@ class DerivAuthenticationGate:
             raise SecurityError("DERIV_OAUTH_REFRESH_TOKEN_UNSUPPORTED")
         if not oauth_token:
             raise AuthModeMismatchError("DERIV_OAUTH_ACCESS_TOKEN_MISSING")
-        if not self._verify_read_only_boundary(oauth_token):
-            raise SecurityError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
+        # Token inequality and token shape do not establish authorization
+        # scope. Deriv currently requires `trade` for the account-list and OTP
+        # endpoints used here, so no account client is issued.
         raise SecurityError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
-
-    @staticmethod
-    def _verify_read_only_boundary(token: str) -> bool:
-        """Return False until Deriv documents a read-only scope for account APIs."""
-        return False
