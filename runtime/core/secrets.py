@@ -74,6 +74,12 @@ def validate_secrets_at_startup() -> None:
         # Public research is credential-free. Account authentication is not
         # available until Deriv documents a genuine read-only permission.
         if os.getenv("AURELIA_VERIFY_DERIV_AUTH", "").strip().lower() != "true":
+            from runtime.security.deriv_auth_gate import ACCOUNT_CREDENTIAL_ENV_NAMES
+
+            if any(os.getenv(name, "").strip() for name in ACCOUNT_CREDENTIAL_ENV_NAMES):
+                raise SecretsError(
+                    "VERIFY_ONLY_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED"
+                )
             return
 
     from runtime.security.deriv_auth_gate import (
