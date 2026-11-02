@@ -54,10 +54,7 @@ def redact_ws_url(url: str) -> str:
 
 
 def derive_ws_environment(url: str) -> str:
-    try:
-        return derive_ws_environment_from_adapter(url)
-    except DerivSessionError as exc:
-        raise DerivSessionManagerError(str(exc)) from exc
+    return derive_ws_environment_from_adapter(url)
 
 
 class DerivSessionManager:
