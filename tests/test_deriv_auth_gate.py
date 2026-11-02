@@ -67,6 +67,16 @@ class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
                         environ={name: "secret-sentinel"},
                     ).get_client()
 
+    def test_research_plane_rechecks_credentials_at_request_time(self):
+        environ = {}
+        client = DerivAuthenticationGate(plane="research", environ=environ).get_client()
+        environ["DERIV_PAT"] = "late_injected_pat"
+        with self.assertRaisesRegex(
+            SecurityError,
+            "RESEARCH_PLANE_ACCOUNT_CREDENTIALS_PRESENT",
+        ):
+            client.validate_request({"ticks_history": "R_100"})
+
     def test_research_plane_does_not_accept_capital_moving_actions(self):
         client = DerivAuthenticationGate(plane="research", environ={}).get_client()
         with self.assertRaisesRegex(SecurityError, "PUBLIC_RESEARCH_ACTION_NOT_ALLOWED"):
