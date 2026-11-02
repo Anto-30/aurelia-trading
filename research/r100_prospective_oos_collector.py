@@ -579,7 +579,12 @@ async def collect_once(state: dict[str, Any]) -> None:
                     "delay_seconds": delay,
                 })
                 await transport.close()
-                await asyncio.sleep(min(delay, max(0.0, remaining)))
+                remaining_after_close = deadline - asyncio.get_running_loop().time()
+                if remaining_after_close <= 0:
+                    break
+                await asyncio.sleep(min(delay, remaining_after_close))
+                if asyncio.get_running_loop().time() >= deadline:
+                    break
                 await transport.connect()
                 stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
                 iterator = stream.__aiter__()
