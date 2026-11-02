@@ -51,6 +51,41 @@ class AgentWorkerSupervisor:
     async def _worker(self, spec: AgentWorkerSpec) -> None:
         worker_id = f"agent-worker:{spec.agent}:{os.getpid()}"
         command = self._command(spec.agent)
+        if not command:
+            await self.federation.publish(
+                sender="AURELIA",
+                recipients=(spec.agent,),
+                message_type="CONNECTOR_STATUS",
+                payload={
+                    "agent": spec.agent,
+                    "worker_runtime": "LOCAL_FEDERATED_WORKER",
+                    "provider_session": "NOT_CONFIGURED",
+                    "provider_authentication": "NOT_VERIFIED",
+                    "capital_authority": False,
+                    "connector_command_env": self._env_name(spec.agent),
+                    "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
+                },
+                correlation_id=f"connector-status:{spec.agent}",
+                priority=60,
+                requires_response=False,
+            )
+            await self.federation.publish(
+                sender="AURELIA",
+                recipients=(spec.agent,),
+                message_type="CONNECTOR_REQUIRED",
+                payload={
+                    "agent": spec.agent,
+                    "reason": "NO_AUTHENTICATED_PROVIDER_COMMAND",
+                    "provider_authentication": "NOT_VERIFIED",
+                    "capital_authority": False,
+                    "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
+                },
+                correlation_id=f"connector-required:{spec.agent}",
+                priority=95,
+                requires_response=False,
+            )
+            return
+
         restart_delay = max(1.0, self.interval_seconds)
         restart_count = 0
         while self._running:
@@ -65,7 +100,8 @@ class AgentWorkerSupervisor:
                     payload={
                         "agent": spec.agent,
                         "worker_runtime": "LOCAL_FEDERATED_WORKER",
-                        "provider_session": "CONFIGURED_COMMAND" if command else "NOT_CONFIGURED",
+                        "provider_session": "CONFIGURED_COMMAND",
+                        "provider_authentication": "NOT_VERIFIED",
                         "capital_authority": False,
                         "connector_command_env": self._env_name(spec.agent),
                         "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
