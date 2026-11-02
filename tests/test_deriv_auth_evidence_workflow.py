@@ -7,29 +7,38 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "deriv-auth-evidence.yml"
 
 
-def test_scheduled_deriv_verifier_loads_production_environment_secrets() -> None:
+def test_scheduled_workflow_has_no_account_or_pat_secret_mappings() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
+    forbidden = (
+        "secrets.DERIV_AUTH_TOKEN",
+        "secrets.DERIV_PAT",
+        "secrets.DERIV_OAUTH_ACCESS_TOKEN",
+        "secrets.DERIV_OAUTH_READ_ONLY_TOKEN",
+        "DERIV_AUTH_TOKEN:",
+        "DERIV_PAT:",
+    )
+    for marker in forbidden:
+        assert marker not in workflow
+    assert "environment: production" not in workflow
+    assert 'ACCOUNT_DERIV_AUTH_MODE: "oauth"' in workflow
 
-    assert "environment: production" in workflow
-    assert "DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}" in workflow
-    assert "DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}" in workflow
-    assert "DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}" in workflow
-    assert "secrets.DERIV_AUTH_MODE" not in workflow
-    assert "DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}" in workflow
-    assert "DERIV_AUTH_SESSION=BLOCKED_EXPECTED_CURRENCY_MISSING" in workflow
-    assert "DERIV_AUTH_SESSION=BLOCKED_UNSUPPORTED_CURRENCY" in workflow
-    assert "secrets.DERIV_EXPECTED_CURRENCY || 'USD'" not in workflow
 
-
-def test_scheduled_workflow_generates_read_only_broker_account_evidence() -> None:
+def test_workflow_verifies_public_market_data_not_authenticated_account_access() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
-    assert "python scripts/verify_deriv_broker_evidence.py" in workflow
-    assert "artifacts/deriv_broker_account_evidence.json" in workflow
+    assert "scripts/verify_deriv_public_transport.py" in workflow
+    assert "R_100 M1 historical data" in workflow
+    assert "scripts/verify_deriv_session.py" not in workflow
+    assert "scripts/verify_deriv_broker_evidence.py" not in workflow
+    assert "scripts/verify_deriv_transaction_lifecycle.py" not in workflow
 
 
-def test_scheduled_deriv_verifier_keeps_capital_authority_blocked() -> None:
-    workflow = WORKFLOW.read_text(encoding="utf-8")
-
-    assert 'FINAL_EXECUTION_AUTHORIZATION: "false"' in workflow
-    assert 'LIVE_EXECUTION: "BLOCKED"' in workflow
-    assert 'echo "DERIV_ORDERS_SUBMITTED=0"' in workflow
+def test_account_scope_gate_workflow_has_no_trade_credential_mappings() -> None:
+    for name in (
+        "deriv-session-verification.yml",
+        "deriv-verify-only-lifecycle.yml",
+    ):
+        workflow = (ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
+        assert "secrets.DERIV_AUTH_TOKEN" not in workflow
+        assert "secrets.DERIV_PAT" not in workflow
+        assert "secrets.DERIV_OAUTH_ACCESS_TOKEN" not in workflow
+        assert "environment: production" not in workflow
