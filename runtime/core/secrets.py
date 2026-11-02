@@ -47,6 +47,12 @@ def validate_secrets_at_startup() -> None:
             ).strip().lower() == "false",
         }
         if all(sealed_flags.values()):
+            from runtime.security.deriv_auth_gate import ACCOUNT_CREDENTIAL_ENV_NAMES
+
+            if any(os.getenv(name, "").strip() for name in ACCOUNT_CREDENTIAL_ENV_NAMES):
+                raise SecretsError(
+                    "NON_PRODUCTION_SOAK_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED"
+                )
             return
         failed = [name for name, valid in sealed_flags.items() if not valid]
         raise SecretsError(
