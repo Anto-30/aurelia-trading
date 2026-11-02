@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import shlex
 from pathlib import Path
 
 import pytest
@@ -45,10 +46,11 @@ async def test_unconfigured_worker_lease_reports_connector_required(tmp_path):
 @pytest.mark.asyncio
 async def test_configured_command_is_not_executed_without_verified_worker_protocol(tmp_path, monkeypatch):
     sentinel = tmp_path / "untrusted-command-executed.txt"
-    command = (
-        "python -c "
-        f"'from pathlib import Path; Path({str(sentinel)!r}).write_text("executed")'"
-    )
+    command = shlex.join([
+        "python",
+        "-c",
+        f"from pathlib import Path; Path({str(sentinel)!r}).write_text('executed')",
+    ])
     monkeypatch.setenv("AURELIA_AGENT_CLAUDECODE_COMMAND", command)
     federation = PersistentAgentFederation(
         journal_path=tmp_path / "journal.ndjson",
