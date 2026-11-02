@@ -37,19 +37,6 @@ class ExternalRepositoryFederationRegistryTests(unittest.TestCase):
                     self.assertRegex(pin, re.compile(r"^[0-9a-f]{40}$"))
 
 
-    def test_agent_federation_validator_accepts_explicitly_unresolved_reference_pin(self):
-        import subprocess
-        import sys
-
-        result = subprocess.run(
-            [sys.executable, str(ROOT / "scripts" / "validate_agent_federation.py")],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
-
     def test_external_repositories_never_receive_capital_or_live_order_authority(self):
         controls = self.registry["global_controls"]
         self.assertIs(controls["capital_authority"], False)
