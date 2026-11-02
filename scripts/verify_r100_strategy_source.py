@@ -16,6 +16,7 @@ COLLECTOR_NODE_NAMES = {
     "PendingSignal",
     "research_config_hash",
     "legacy_research_config_hash",
+    "initial_state",
     "build_signal_id",
     "observe_tick",
     "probability_metrics",
@@ -63,7 +64,7 @@ def _assignment_names(node: ast.AST) -> set[str]:
     return names
 
 
-def _strip_operational_evaluation_fields(node: ast.AST) -> ast.AST:
+def _strip_operational_campaign_fields(node: ast.AST) -> ast.AST:
     for child in ast.walk(node):
         if isinstance(child, ast.Dict):
             pairs = [
@@ -71,7 +72,7 @@ def _strip_operational_evaluation_fields(node: ast.AST) -> ast.AST:
                 for key, value in zip(child.keys, child.values)
                 if not (
                     isinstance(key, ast.Constant)
-                    and key.value == "transport_reconnect_count"
+                    and key.value in {"transport_reconnect_count", "transport_reconnects"}
                 )
             ]
             child.keys = [key for key, _ in pairs]
@@ -93,8 +94,8 @@ def _selected_ast(source: str, *, path: str) -> dict[str, str]:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             if node.name not in wanted_nodes:
                 continue
-            if node.name == "evaluation":
-                node = _strip_operational_evaluation_fields(node)
+            if node.name in {"initial_state", "evaluation"}:
+                node = _strip_operational_campaign_fields(node)
             selected[node.name] = ast.dump(node, include_attributes=False)
         elif path == COLLECTOR_PATH:
             names = _assignment_names(node)
