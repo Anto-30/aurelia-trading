@@ -228,6 +228,8 @@ def test_assurance_runs_sanitized_production_presence_report() -> None:
     )
     assert "run: python scripts/report_secret_presence.py" in workflow
     assert "DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE }}" in workflow
+    assert "DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}" in workflow
+    assert "DERIV_PAT: ${{ secrets.DERIV_PAT }}" in workflow
     assert "AURELIA_SSH_KEY: ${{ secrets.AURELIA_SSH_KEY }}" in workflow
     assert "AURELIA_OPERATOR_RESET_SIGNING_KEY: ${{ secrets.AURELIA_OPERATOR_RESET_SIGNING_KEY }}" in workflow
     assert "secrets.DERIV_AUTH_MODE" not in workflow
