@@ -51,6 +51,9 @@ def _single_line_value(payload: dict[str, Any], name: str, *, required: bool) ->
 def build_env_text(payload: dict[str, Any]) -> str:
     if not isinstance(payload, dict):
         raise RuntimeSecretProvisioningError("INPUT_MUST_BE_JSON_OBJECT")
+    raise RuntimeSecretProvisioningError(
+        "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
+    )
 
     values = {
         name: _single_line_value(payload, name, required=True)
