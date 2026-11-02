@@ -124,3 +124,8 @@ Duplicate URLs were deduplicated: `microsoft/playwright-mcp` (2 occurrences), `Q
 PR #251's exact head `67adbd21de97823da7aa2e8ac7f5b51010adc66c` has passing GitHub Assurance, Agent Federation Audit and Agent Continuity Watchdog workflows. Its Assurance run still reports `DERIV_AUTH_MODE=INVALID`, `DERIV_AUTH_PREREQUISITES=NOT_READY`, and skips authenticated Deriv session, broker evidence and verify-only lifecycle steps. The same run reports the PAT-only App ID requirement as false because the mode is invalid; this does **not** prove an App ID is configured. No live-trading gate was opened.
 
 The separate `configure-deriv-auth-mode.yml` workflow is manual and protected by the `production` GitHub environment. It requires an operator to choose `pat` or `oauth`; the correct choice cannot be inferred from token presence. It has not been dispatched. Do not merge or run it until the correct mode is confirmed from the credential's provenance and provider setup. If PAT is selected, configure `DERIV_APP_ID` as a protected GitHub environment secret; never source tokens from plaintext Drive/Library files or commit them.
+
+
+### Registry integrity correction
+
+The new registry test detected a pre-existing malformed 41-character commit pin for `Anil-matcha/open-dots`. GitHub returned a permanent repository redirect to repository ID `645381450`, but the public repository connector could not resolve a canonical owner/name or current commit. The entry is now `REFERENCE_ONLY`, its invalid SHA was removed, and `pin_validation_status=UNRESOLVED_REPOSITORY_REDIRECT`. It is not treated as a pinned or approved source. This prevents an invalid identifier from being mistaken for a reproducible source pin.
