@@ -219,31 +219,8 @@ class DerivSessionManager:
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> DerivSessionBootstrap:
-        token = bearer_token if bearer_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
-        application_id = app_id if app_id is not None else os.getenv("DERIV_APP_ID", "")
-        accounts = self.list_accounts(
-            bearer_token=token,
-            app_id=application_id,
-        )
-        binding = self.select_account(accounts)
         try:
-            websocket = get_authenticated_ws_url(
-                binding.loginid,
-                bearer_token=token,
-                app_id=application_id,
-                timeout_seconds=self.timeout_seconds,
-            )
-        except DerivSessionError as exc:
+            DerivAuthenticationGate(plane="account").get_client()
+        except (AuthModeMismatchError, SecurityError) as exc:
             raise DerivSessionManagerError(str(exc)) from exc
-
-        actual_environment = derive_ws_environment(websocket.url)
-        self.validate_binding(
-            loginid=binding.loginid,
-            environment=actual_environment,
-        )
-        if actual_environment != self.expected_environment:
-            raise DerivSessionManagerError("OTP_WS_ENVIRONMENT_MISMATCH")
-        return DerivSessionBootstrap(
-            binding=binding,
-            websocket=websocket,
-        )
+        raise DerivSessionManagerError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
