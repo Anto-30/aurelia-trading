@@ -12,10 +12,7 @@ from runtime.security.deriv_auth_gate import (
     SecurityError,
 )
 
-DEFAULT_PUBLIC_APP_ID = 1089
-PUBLIC_RESEARCH_WS_URL = (
-    f"wss://ws.derivws.com/websockets/v3?app_id={DEFAULT_PUBLIC_APP_ID}"
-)
+PUBLIC_RESEARCH_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
 PUBLIC_RESEARCH_ACTION_FIELDS = {
     "active_symbols": {"active_symbols", "req_id", "passthrough"},
     "contracts_for": {"contracts_for", "currency", "req_id", "passthrough"},
@@ -49,15 +46,7 @@ class DerivPublicClient:
         ]
         if present:
             raise SecurityError("RESEARCH_PLANE_ACCOUNT_CREDENTIALS_PRESENT")
-        raw_app_id = str(
-            self.environ.get("DERIV_PUBLIC_APP_ID", str(DEFAULT_PUBLIC_APP_ID))
-        ).strip()
-        if not raw_app_id.isdecimal() or int(raw_app_id) <= 0:
-            raise SecurityError("DERIV_PUBLIC_APP_ID_INVALID")
-        self.app_id = int(raw_app_id)
-        self.endpoint = (
-            f"wss://ws.derivws.com/websockets/v3?app_id={self.app_id}"
-        )
+        self.endpoint = PUBLIC_RESEARCH_WS_URL
         self.timeout_seconds = timeout_seconds
         self._transport: DerivWebSocketTransport | None = None
 
