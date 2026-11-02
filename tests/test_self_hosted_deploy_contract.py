@@ -92,9 +92,9 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("--user 10001:10001", deploy)
         self.assertIn("--read-only", deploy)
         self.assertIn("--cap-drop=ALL", deploy)
-        self.assertRegex(
-            deploy,
-            r"--security-opt(?:=|\\s+)no-new-privileges",
+        self.assertTrue(
+            "--security-opt=no-new-privileges" in deploy
+            or "--security-opt no-new-privileges" in deploy,
         )
         self.assertIn("--tmpfs /var/tmp:rw,noexec,nosuid,nodev,size=32m", deploy)
 
