@@ -7,7 +7,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
-from research.utils.deriv_auth_gate import (
+from runtime.security.deriv_auth_gate import (
     AuthModeMismatchError,
     DerivAuthenticationGate,
     SecurityError,
