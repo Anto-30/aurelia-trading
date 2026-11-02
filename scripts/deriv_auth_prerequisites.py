@@ -44,7 +44,7 @@ def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object
         "public_research": {
             "status": "READY",
             "auth_mode": "none",
-            "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
+            "endpoint": "wss://ws.derivws.com/websockets/v3?app_id=1089",
             "account_credentials_mapped": False,
         },
         "account_evidence": {
