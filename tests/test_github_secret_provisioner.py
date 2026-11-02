@@ -106,7 +106,7 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
         self.env["DERIV_AUTH_MODE"] = ""
         result = self.run_provisioner()
         self.assertEqual(result.returncode, 2)
-        self.assertIn("INVALID_AUTH_MODE", result.stderr)
+        self.assertIn("DERIV_AUTH_MODE_REQUIRED", result.stderr)
         self.assertFalse(self.record.exists(), "missing auth mode must block before writing secrets")
         self.assertFalse(self.variable_record.exists(), "missing auth mode must block before writing variables")
 
