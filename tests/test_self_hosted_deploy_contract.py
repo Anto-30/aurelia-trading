@@ -92,7 +92,10 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("--user 10001:10001", deploy)
         self.assertIn("--read-only", deploy)
         self.assertIn("--cap-drop=ALL", deploy)
-        self.assertIn("--security-opt=no-new-privileges", deploy)
+        self.assertRegex(
+            deploy,
+            r"--security-opt(?:=|\\s+)no-new-privileges",
+        )
         self.assertIn("--tmpfs /var/tmp:rw,noexec,nosuid,nodev,size=32m", deploy)
 
     def test_live_deployment_requires_release_gate(self):
