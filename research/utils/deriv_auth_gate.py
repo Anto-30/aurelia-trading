@@ -70,7 +70,7 @@ class DerivPublicClient:
     async def connect(self) -> None:
         if self._transport is not None:
             return
-        # No headers, bearer token, PAT, cookie, or app-id parameter is passed.
+        # No Authorization header, bearer token, PAT, or cookie is passed. The public app_id is a non-secret query parameter.
         transport = DerivWebSocketTransport(
             self.endpoint,
             timeout_seconds=self.timeout_seconds,
