@@ -101,6 +101,15 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
             timeout=15,
         )
 
+
+    def test_missing_auth_mode_never_defaults_to_pat(self) -> None:
+        self.env["DERIV_AUTH_MODE"] = ""
+        result = self.run_provisioner()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("INVALID_AUTH_MODE", result.stderr)
+        self.assertFalse(self.record.exists(), "missing auth mode must block before writing secrets")
+        self.assertFalse(self.variable_record.exists(), "missing auth mode must block before writing variables")
+
     def test_missing_secrets_are_added_without_printing_values(self) -> None:
         result = self.run_provisioner()
         self.assertEqual(result.returncode, 0, result.stderr)
