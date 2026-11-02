@@ -48,6 +48,18 @@ class LiveReleaseGateTests(unittest.TestCase):
             ):
                 gate.check_environment()
 
+    def test_generic_token_fallback_is_rejected_in_oauth_account_plane(self):
+        env = {
+            "DERIV_AUTH_TOKEN": "GENERIC_SENTINEL",
+            "DERIV_EXPECTED_LOGINID": "CRTEST",
+            "DERIV_EXPECTED_CURRENCY": "USD",
+            "DERIV_ENVIRONMENT": "real",
+            "ACCOUNT_DERIV_AUTH_MODE": "oauth",
+        }
+        with patch.dict(os.environ, env, clear=False):
+            with self.assertRaisesRegex(RuntimeError, "GENERIC_TOKEN_FALLBACK_BLOCKED"):
+                gate.check_environment()
+
     def test_pat_is_rejected_in_oauth_account_plane(self):
         env = {
             "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SENTINEL",
