@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.verify_r100_strategy_source import ENGINE_PATH, _selected_ast
+from scripts.verify_r100_strategy_source import (
+    COLLECTOR_PATH,
+    ENGINE_PATH,
+    _selected_ast,
+)
 
 
 class StrategySourceVerifierTests(unittest.TestCase):
@@ -21,6 +25,10 @@ class AutonomousSignalHunter:
             set(selected),
             {"SignalCandidate", "AutonomousSignalHunter"},
         )
+
+    def test_collector_source_still_requires_strategy_constants(self):
+        with self.assertRaisesRegex(ValueError, "constant:SYMBOL"):
+            _selected_ast("", path=COLLECTOR_PATH)
 
 
 if __name__ == "__main__":
