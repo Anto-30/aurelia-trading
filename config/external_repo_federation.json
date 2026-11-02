@@ -302,9 +302,11 @@
       "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
       "license_metadata": "GPL-3.0",
       "last_pushed_at": "2026-11-02T08:08:45Z",
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
-      "integration_note": "Research reference only. GPL-3.0; not Deriv synthetics-compatible by evidence reviewed. Do not vendor or connect execution."
+      "integration_note": "Research reference only. GPL-3.0; not Deriv synthetics-compatible by evidence reviewed. Do not vendor or connect execution.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "hsliuping/TradingAgents-CN",
@@ -1503,8 +1505,10 @@
       "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
       "license_metadata": "Apache-2.0",
       "last_pushed_at": "2026-04-16T09:29:35Z",
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
-      "physical_runtime_install": "NOT_CLAIMED"
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "stablyai/orca",
@@ -2876,7 +2880,9 @@
       "capital_authority": false,
       "license_metadata": "Apache-2.0",
       "last_pushed_at": "2026-11-02T15:03:39Z",
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING"
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "QuantConnect/Tutorials",
@@ -3911,9 +3917,11 @@
       "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
       "license_metadata": "GPL-3.0",
       "last_pushed_at": "2023-10-18T01:49:25Z",
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
-      "integration_note": "Last pushed 2023; README identifies it as educational and a Freqtrade-derived fork. GPL-3.0 and old dependencies; no execution integration."
+      "integration_note": "Last pushed 2023; README identifies it as educational and a Freqtrade-derived fork. GPL-3.0 and old dependencies; no execution integration.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "cm45t3r/candlestick",
@@ -6494,10 +6502,12 @@
         "coding-agent-cli",
         "rpc"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "Agent harness runs with caller permissions; README explicitly states there is no built-in filesystem/process/network/credential permission system. Isolate and deny production secrets."
+      "integration_note": "Agent harness runs with caller permissions; README explicitly states there is no built-in filesystem/process/network/credential permission system. Isolate and deny production secrets.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "deepseek-ai/dsh-superagent-prototype",
@@ -6522,10 +6532,12 @@
         "agent-session",
         "pull-request-workflow"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "README labels it a research prototype, not production-ready and not an official DeepSeek product. Requires full source audit and sandbox-only evaluation."
+      "integration_note": "README labels it a research prototype, not production-ready and not an official DeepSeek product. Requires full source audit and sandbox-only evaluation.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "vercel-labs/agent-desktop",
@@ -6549,10 +6561,12 @@
         "desktop-ui-automation",
         "stable-element-refs"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "Desktop UI actions can reach arbitrary host apps. No connected Desktop Commander device; do not target broker/admin UIs or production hosts."
+      "integration_note": "Desktop UI actions can reach arbitrary host apps. No connected Desktop Commander device; do not target broker/admin UIs or production hosts.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "microsoft/playwright-mcp",
@@ -6576,10 +6590,12 @@
         "accessibility-snapshots",
         "e2e-test-support"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "Tooling-only for sandbox browser testing. Browser automation must not receive trading credentials or authorize broker transactions."
+      "integration_note": "Tooling-only for sandbox browser testing. Browser automation must not receive trading credentials or authorize broker transactions.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "mithun50/openclaw-termux",
@@ -6604,10 +6620,12 @@
         "foreground-service",
         "multi-agent-messaging"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "Android/Termux host gateway with provider API-key configuration and foreground service. Not a qualified persistent trading host; no credentials or broker UI access."
+      "integration_note": "Android/Termux host gateway with provider API-key configuration and foreground service. Not a qualified persistent trading host; no credentials or broker UI access.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "Alishahryar1/free-claude-code",
@@ -6630,10 +6648,12 @@
         "custom-provider-routing",
         "api-key-fallback"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "License metadata unresolved; advertises free-token/provider routing and API-key fallback. Do not install, authenticate, or route production provider credentials until license, provider terms, installer and secret-handling audit complete."
+      "integration_note": "License metadata unresolved; advertises free-token/provider routing and API-key fallback. Do not install, authenticate, or route production provider credentials until license, provider terms, installer and secret-handling audit complete.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "nntaoli-project/goex",
@@ -6657,10 +6677,12 @@
         "private-api",
         "order-creation"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "README documents exchange API keys/secrets and CreateOrder for OKX/Binance. No Deriv support established; never wire into AURELIA execution firewall."
+      "integration_note": "README documents exchange API keys/secrets and CreateOrder for OKX/Binance. No Deriv support established; never wire into AURELIA execution firewall.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "obra/superpowers",
@@ -6685,10 +6707,12 @@
         "implementation-plans",
         "code-review-workflows"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "Methodology/tooling reference. Equivalent Superpowers skills are already installed in this ChatGPT session; no repository installation needed."
+      "integration_note": "Methodology/tooling reference. Equivalent Superpowers skills are already installed in this ChatGPT session; no repository installation needed.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "ruvnet/ruflo",
@@ -6714,10 +6738,12 @@
         "federation",
         "policy-hooks"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "High-privilege orchestration/hook layer. README says mods run with the account's permissions. No direct production installation; isolate, review hooks and deny secrets."
+      "integration_note": "High-privilege orchestration/hook layer. README says mods run with the account's permissions. No direct production installation; isolate, review hooks and deny secrets.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "openclaw/openclaw",
@@ -6742,10 +6768,12 @@
         "messaging",
         "sandboxing"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "Host agent with tools and credential storage; README requires security/sandboxing review before exposing gateway. No production host or secret integration."
+      "integration_note": "Host agent with tools and credential storage; README requires security/sandboxing review before exposing gateway. No production host or secret integration.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "letianzj/quanttrader",
@@ -6767,10 +6795,12 @@
         "event-driven-backtesting",
         "interactive-brokers-live-trading"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "Last pushed 2024; README describes Interactive Brokers live trading. Not Deriv-native; no direct integration. Reference architecture only."
+      "integration_note": "Last pushed 2024; README describes Interactive Brokers live trading. Not Deriv-native; no direct integration. Reference architecture only.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "ZhuLinsen/daily_stock_analysis",
@@ -6797,10 +6827,12 @@
         "dashboards",
         "notifications"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "Equity research/news and reporting system with multiple optional external data and LLM keys. Not a Deriv synthetic execution or signal-validation component."
+      "integration_note": "Equity research/news and reporting system with multiple optional external data and LLM keys. Not a Deriv synthetic execution or signal-validation component.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "just-nilux/awesome-tradingview",
@@ -6823,10 +6855,12 @@
         "indicator-catalog",
         "strategy-catalog"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "Curated resource list last pushed 2023; no root license metadata detected. PineScript resources require independent source/licensing and repaint/lookahead review."
+      "integration_note": "Curated resource list last pushed 2023; no root license metadata detected. PineScript resources require independent source/licensing and repaint/lookahead review.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     },
     {
       "repo": "agentscope-ai/QwenPaw",
@@ -6852,10 +6886,12 @@
         "local-models",
         "sandbox-and-tool-guard"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "Personal assistant with tool/plugin execution and local/cloud providers. Evaluate only in sandbox; no capital authority or production credential access."
+      "integration_note": "Personal assistant with tool/plugin execution and local/cloud providers. Evaluate only in sandbox; no capital authority or production credential access.",
+      "source_scan_run_id": 41472773080,
+      "source_scan_artifact_id": 13156296533
     }
   ],
   "pin_policy": {
@@ -7347,7 +7383,7 @@
     "added_to_registry": 14,
     "existing_entries_refreshed": 4,
     "physical_runtime_install": "NOT_CLAIMED_NO_REMOTE_DEVICE",
-    "clone_and_tests": "NOT_RUN_NO_CONNECTED_LOCAL_OR_REMOTE_SHELL",
+    "clone_and_tests": "EPHEMERAL_CI_CLONE_COMPLETED_18_OF_18; SOURCE_SCAN_ONLY; NO_REPOSITORY_CODE_EXECUTED; NO_DEPENDENCIES_INSTALLED; NO_TESTS_RUN",
     "security_review_status": "PRELIMINARY_METADATA_README_ONLY_FULL_AUDIT_PENDING",
     "capital_authority": false,
     "pin_source": "GitHub API default-branch commit endpoint",
@@ -7371,6 +7407,24 @@
       "QwenLM/qwen-code",
       "just-nilux/awesome-tradingview",
       "agentscope-ai/QwenPaw"
-    ]
+    ],
+    "source_scan": {
+      "workflow_run_id": 41472773080,
+      "workflow_head_sha": "1cf3fe19a3c99bb022c3682a2fbb2235616834d8",
+      "artifact_id": 13156296533,
+      "requested_repositories": 18,
+      "completed_repositories": 18,
+      "failed_or_skipped_repositories": 0,
+      "heuristic_secret_indicators": 5355,
+      "repositories_with_heuristic_secret_indicators": 12,
+      "workflow_risk_indicators": 768,
+      "package_lifecycle_hooks": 17,
+      "repository_code_executed": false,
+      "dependencies_installed": false,
+      "broker_access_performed": false,
+      "production_secrets_accessed": false,
+      "raw_secret_values_emitted": false,
+      "interpretation": "Regex indicators are not confirmed credentials or vulnerabilities; many matches occur in tests, documentation, examples and fixtures. Manual source-level validation, SBOM, CVE/SCA, malware and egress audits remain pending."
+    }
   }
 }
