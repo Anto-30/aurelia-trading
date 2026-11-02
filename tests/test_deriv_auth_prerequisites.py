@@ -17,6 +17,7 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
             "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
         )
         self.assertFalse(evidence["secret_values_exposed"])
+        self.assertFalse(evidence["public_research"]["account_credentials_present_in_process"])
 
     def test_identical_oauth_and_pat_values_are_reported_as_equal_without_exposure(self):
         evidence = build_evidence({
@@ -28,6 +29,8 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
         self.assertTrue(account["oauth_pat_values_equal"])
         self.assertFalse(account["credentials_isolated_in_process"])
         self.assertEqual(account["reason"], "OAUTH_TOKEN_EQUALS_PAT")
+        self.assertEqual(evidence["public_research"]["status"], "BLOCKED")
+        self.assertTrue(evidence["public_research"]["account_credentials_present_in_process"])
         encoded = json.dumps(evidence)
         self.assertNotIn("SAME_SECRET_SENTINEL", encoded)
 
