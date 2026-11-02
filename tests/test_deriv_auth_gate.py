@@ -9,6 +9,7 @@ from research.utils.deriv_auth_gate import (
     DerivAuthenticationGate,
     SecurityError,
 )
+from research.r100_prospective_oos_collector import build_proposal_request
 
 
 class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
@@ -81,6 +82,14 @@ class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
             "RESEARCH_PLANE_ACCOUNT_CREDENTIALS_PRESENT",
         ):
             client.validate_request({"ticks_history": "R_100"})
+
+    def test_prospective_collector_builds_schema_valid_public_proposal(self):
+        payload = build_proposal_request("CALL")
+        self.assertEqual(payload["underlying_symbol"], "R_100")
+        self.assertNotIn("symbol", payload)
+        DerivAuthenticationGate(plane="research", environ={}).get_client().validate_request(payload)
+        with self.assertRaisesRegex(ValueError, "R100_PROPOSAL_DIRECTION_INVALID"):
+            build_proposal_request("BUY")
 
     def test_public_proposal_request_with_bounded_parameters_is_allowed(self):
         client = DerivAuthenticationGate(plane="research", environ={}).get_client()
