@@ -24,6 +24,16 @@ def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object
     credentials_isolated = bool(oauth_token) and not (
         pat_token or generic_token or refresh_token or tokens_equal
     )
+    public_credentials_present = any(
+        str(env.get(name, "")).strip()
+        for name in (
+            "DERIV_AUTH_TOKEN",
+            "DERIV_PAT",
+            "DERIV_OAUTH_ACCESS_TOKEN",
+            "DERIV_OAUTH_REFRESH_TOKEN",
+            "DERIV_REFRESH_TOKEN",
+        )
+    )
 
     account_reason = (
         "ACCOUNT_PLANE_REQUIRES_EXPLICIT_OAUTH_MODE"
@@ -42,10 +52,11 @@ def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object
     return {
         "schema_version": "2",
         "public_research": {
-            "status": "READY",
+            "status": "BLOCKED" if public_credentials_present else "READY",
             "auth_mode": "none",
             "endpoint": "wss://ws.derivws.com/websockets/v3?app_id=1089",
             "account_credentials_mapped": False,
+            "account_credentials_present_in_process": public_credentials_present,
         },
         "account_evidence": {
             "status": "BLOCKED",
