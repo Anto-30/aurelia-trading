@@ -7,7 +7,12 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
-from runtime.core.secrets import get_optional_secret
+from research.utils.deriv_auth_gate import (
+    AuthModeMismatchError,
+    DerivAuthenticationGate,
+    SecurityError,
+)
+
 
 OTP_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts/{account_id}/otp"
 MODERN_OPTIONS_WS_HOST = "api.derivws.com"
@@ -116,27 +121,14 @@ def get_authenticated_ws_url(
     Raises:
         DerivSessionError: If validation or request fails
     """
-    token = (
-        bearer_token
-        if bearer_token is not None
-        else get_optional_secret("DERIV_AUTH_TOKEN")
-    )
-    application_id = (
-        app_id
-        if app_id is not None
-        else get_optional_secret("DERIV_APP_ID")
-    )
-    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
-    if not account_id:
-        raise DerivSessionError("ACCOUNT_ID_REQUIRED")
-    if not token:
-        raise DerivSessionError("DERIV_BEARER_TOKEN_MISSING")
-    if auth_mode == "pat" and not application_id:
-        raise DerivSessionError("DERIV_APP_ID_MISSING")
+    try:
+        DerivAuthenticationGate(plane="account").get_client()
+    except (AuthModeMismatchError, SecurityError) as exc:
+        raise DerivSessionError(str(exc)) from exc
+    raise DerivSessionError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
 
-    headers = {"Authorization": f"Bearer {token}"}
-    if auth_mode == "pat":
-        headers["Deriv-App-ID"] = application_id
+    # Deliberately unreachable until Deriv documents a genuine read-only
+    # account scope for the account-list and OTP endpoints.
 
     request = Request(
         OTP_ENDPOINT.format(account_id=account_id),
