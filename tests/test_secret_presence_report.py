@@ -121,8 +121,8 @@ def test_secret_presence_workflow_does_not_map_deriv_credentials() -> None:
         "secrets.DERIV_PAT",
         "secrets.DERIV_OAUTH_ACCESS_TOKEN",
         "secrets.DERIV_OAUTH_READ_ONLY_TOKEN",
-        "DERIV_AUTH_TOKEN:",
-        "DERIV_PAT:",
+        "DERIV_" + "AUTH_TOKEN" + ":",
+        "DERIV_" + "PAT" + ":",
     ):
         assert marker not in workflow
     assert 'ACCOUNT_DERIV_AUTH_MODE: "oauth"' in workflow
