@@ -13,7 +13,7 @@ def test_secret_scan_reports_rule_and_line_without_emitting_value() -> None:
     assert findings[0]["line"] == 2
     rendered = repr(findings)
     assert sentinel not in rendered
-    assert "TOKEN" not in rendered
+    assert "ghp_" not in rendered
 
 
 def test_workflow_scan_flags_unpinned_and_privileged_patterns() -> None:
