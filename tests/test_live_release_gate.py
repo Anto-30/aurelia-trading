@@ -24,23 +24,42 @@ class LiveReleaseGateTests(unittest.TestCase):
             "DERIV_EXPECTED_LOGINID": "CRTEST",
             "DERIV_EXPECTED_CURRENCY": "USD",
             "DERIV_ENVIRONMENT": "real",
-            "DERIV_AUTH_MODE": "deriv_auth_token",
+            "ACCOUNT_DERIV_AUTH_MODE": "pat",
         }
         with patch.dict(os.environ, env, clear=False):
-            with self.assertRaisesRegex(RuntimeError, "DERIV_AUTH_MODE must be pat or oauth"):
+            with self.assertRaisesRegex(
+                RuntimeError,
+                "ACCOUNT_DERIV_AUTH_MODE must be oauth",
+            ):
                 gate.check_environment()
 
-    def test_oauth_mode_does_not_require_pat_application_id(self):
+    def test_oauth_mode_does_not_claim_read_only_account_scope(self):
         env = {
-            "DERIV_AUTH_TOKEN": "test-token",
+            "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SENTINEL",
             "DERIV_EXPECTED_LOGINID": "CRTEST",
             "DERIV_EXPECTED_CURRENCY": "USD",
             "DERIV_ENVIRONMENT": "real",
-            "DERIV_AUTH_MODE": "oauth",
-            "DERIV_APP_ID": "",
+            "ACCOUNT_DERIV_AUTH_MODE": "oauth",
         }
         with patch.dict(os.environ, env, clear=False):
-            gate.check_environment()
+            with self.assertRaisesRegex(
+                RuntimeError,
+                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
+            ):
+                gate.check_environment()
+
+    def test_pat_is_rejected_in_oauth_account_plane(self):
+        env = {
+            "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SENTINEL",
+            "DERIV_PAT": "PAT_SENTINEL",
+            "DERIV_EXPECTED_LOGINID": "CRTEST",
+            "DERIV_EXPECTED_CURRENCY": "USD",
+            "DERIV_ENVIRONMENT": "real",
+            "ACCOUNT_DERIV_AUTH_MODE": "oauth",
+        }
+        with patch.dict(os.environ, env, clear=False):
+            with self.assertRaisesRegex(RuntimeError, "ACCOUNT_PLANE_PAT_PRESENT"):
+                gate.check_environment()
 
     def test_readiness_is_recomputed_and_never_trusted_from_a_snapshot(self):
         current = {
@@ -70,11 +89,11 @@ class LiveReleaseGateTests(unittest.TestCase):
 
     def test_unsupported_currency_is_rejected(self):
         env = {
-            "DERIV_AUTH_TOKEN": "test-token",
+            "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SENTINEL",
             "DERIV_EXPECTED_LOGINID": "CRTEST",
             "DERIV_EXPECTED_CURRENCY": "EUR",
             "DERIV_ENVIRONMENT": "real",
-            "DERIV_AUTH_MODE": "oauth",
+            "ACCOUNT_DERIV_AUTH_MODE": "oauth",
         }
         with patch.dict(os.environ, env, clear=False):
             with self.assertRaisesRegex(RuntimeError, "DERIV_EXPECTED_CURRENCY must be USD"):
@@ -270,11 +289,18 @@ class LiveReleaseGateTests(unittest.TestCase):
             path = Path(td) / "transport.json"
             gate.PUBLIC_TRANSPORT_EVIDENCE_PATH = path
             evidence = {
-                "schema": "aurelia.deriv_public_transport.v1",
+                "schema": "aurelia.deriv_public_transport.v2",
                 "source_sha": "test-source-sha",
                 "generated_at_utc": datetime.now(timezone.utc).isoformat(),
                 "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
                 "active_symbol_count": 10,
+                "r100_symbol_present": True,
+                "symbol": "R_100",
+                "granularity_seconds": 60,
+                "candle_count": 10,
+                "authentication_mode": "none",
+                "authorization_headers_sent": False,
+                "account_credentials_loaded": False,
                 "capital_authority_granted": False,
                 "order_submission_permitted": False,
             }
