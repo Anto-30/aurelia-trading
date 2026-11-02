@@ -77,6 +77,28 @@ class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
         ):
             client.validate_request({"ticks_history": "R_100"})
 
+    def test_public_proposal_request_with_bounded_parameters_is_allowed(self):
+        client = DerivAuthenticationGate(plane="research", environ={}).get_client()
+        client.validate_request({
+            "proposal": 1,
+            "amount": 1.0,
+            "basis": "stake",
+            "contract_type": "CALL",
+            "currency": "USD",
+            "duration": 10,
+            "duration_unit": "t",
+            "symbol": "R_100",
+        })
+
+    def test_public_proposal_rejects_unknown_or_capital_moving_fields(self):
+        client = DerivAuthenticationGate(plane="research", environ={}).get_client()
+        with self.assertRaisesRegex(SecurityError, "PUBLIC_RESEARCH_REQUEST_FIELD_NOT_ALLOWED"):
+            client.validate_request({
+                "proposal": 1,
+                "amount": 1.0,
+                "buy": "proposal-id",
+            })
+
     def test_research_plane_does_not_accept_capital_moving_actions(self):
         client = DerivAuthenticationGate(plane="research", environ={}).get_client()
         with self.assertRaisesRegex(SecurityError, "PUBLIC_RESEARCH_ACTION_NOT_ALLOWED"):
