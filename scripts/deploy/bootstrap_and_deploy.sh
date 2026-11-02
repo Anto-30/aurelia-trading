@@ -70,7 +70,8 @@ fi
 
 sudo systemctl enable --now docker
 sudo install -d -m 700 "$ENV_DIR"
-sudo install -d -m 700 "$DATA_DIR"
+sudo install -d -m 700 -o 10001 -g 10001 "$DATA_DIR"
+sudo chown -R 10001:10001 "$DATA_DIR"
 sudo install -d -m 755 "$RELEASE_ROOT"
 
 if [ -f "$ENV_FILE" ]; then
@@ -247,6 +248,13 @@ sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 sudo docker run --detach \
   --name "$CONTAINER" \
   --restart unless-stopped \
+  --init \
+  --user 10001:10001 \
+  --read-only \
+  --cap-drop=ALL \
+  --security-opt no-new-privileges \
+  --pids-limit 256 \
+  --tmpfs /var/tmp:rw,noexec,nosuid,nodev,size=32m \
   --env-file "$ENV_FILE" "${SECRET_ENV_ARGS[@]}" \
   --env AURELIA_DEPLOYMENT_MODE="$DEPLOYMENT_MODE" \
   --env AURELIA_AUTONOMOUS_LOOP="$AUTONOMOUS_LOOP" \
