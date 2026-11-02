@@ -16,10 +16,12 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from runtime.adapters.deriv_ws import DerivWebSocketTransport
+from research.utils.deriv_auth_gate import (
+    DerivAuthenticationGate,
+    PUBLIC_RESEARCH_WS_URL as PUBLIC_WS_URL,
+)
 from runtime.strategy.autonomous_signal_engine import AutonomousSignalHunter
 
-PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
 SYMBOL = "R_100"
 CURRENCY = "USD"
 STRATEGY_ID = "R100_TICK_MOMENTUM_PROSPECTIVE_V0.2.0"
@@ -528,7 +530,8 @@ async def collect_once(state: dict[str, Any]) -> None:
     start = utc_now()
     state["last_run_started_at_utc"] = iso(start)
 
-    transport = DerivWebSocketTransport(PUBLIC_WS_URL, timeout_seconds=10.0)
+    transport = DerivAuthenticationGate(plane="research").get_client()
+    await transport.connect()
     campaign_end = datetime.fromisoformat(
         state["manifest"]["campaign_end_at_utc"].replace("Z", "+00:00")
     )
