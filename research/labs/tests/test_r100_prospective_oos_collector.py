@@ -275,9 +275,6 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertGreater(HORIZON_TICKS, 0)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
     def test_collect_once_reconnects_after_retryable_websocket_reader_failure(self):
         import research.r100_prospective_oos_collector as collector
         from runtime.adapters.deriv_ws import DerivTransportReaderError
@@ -347,3 +344,6 @@ if __name__ == "__main__":
         )
         self.assertEqual(state["last_price"], 100.0)
         self.assertTrue(state["last_run_completed_at_utc"])
+
+if __name__ == "__main__":
+    unittest.main()
