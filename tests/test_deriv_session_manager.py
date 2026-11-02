@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from runtime.adapters.deriv_session import DerivSessionError
 from runtime.adapters.session_manager import (
@@ -58,6 +59,40 @@ class SessionManagerContractTests(unittest.TestCase):
         manager = DerivSessionManager(expected_loginid="CRREAL", expected_environment="real")
         with self.assertRaises(ValueError):
             manager.validate_binding(loginid="CRREAL", environment="demo")
+
+    def test_list_accounts_fails_closed_even_with_oauth_token(self):
+        manager = DerivSessionManager(
+            expected_loginid="CRREAL",
+            expected_environment="real",
+            expected_currency="USD",
+        )
+        with patch.dict(
+            "os.environ",
+            {
+                "ACCOUNT_DERIV_AUTH_MODE": "oauth",
+                "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SECRET_SENTINEL",
+            },
+            clear=True,
+        ):
+            with self.assertRaisesRegex(
+                DerivSessionManagerError,
+                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
+            ):
+                manager.list_accounts()
+
+    def test_list_accounts_rejects_pat_even_when_oauth_is_selected(self):
+        manager = DerivSessionManager(expected_loginid="CRREAL", expected_environment="real", expected_currency="USD")
+        with patch.dict(
+            "os.environ",
+            {
+                "ACCOUNT_DERIV_AUTH_MODE": "oauth",
+                "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SECRET_SENTINEL",
+                "DERIV_PAT": "PAT_SECRET_SENTINEL",
+            },
+            clear=True,
+        ):
+            with self.assertRaisesRegex(DerivSessionManagerError, "ACCOUNT_PLANE_PAT_PRESENT"):
+                manager.list_accounts()
 
 
 if __name__ == "__main__":
