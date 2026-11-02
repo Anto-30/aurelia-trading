@@ -12,7 +12,6 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from runtime.core.secrets import get_optional_secret
 from runtime.core.events import sha256
 from assurance.certification_evidence import validate_evidence_bundle
 from runtime.ops.readiness_attestation import config_hash as readiness_config_hash
@@ -84,23 +83,36 @@ def _assert_env(name: str) -> str:
 
 
 def check_environment() -> None:
-    if not (get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")):
-        raise RuntimeError("missing required env var: DERIV_AUTH_TOKEN (or DERIV_PAT)")
-    if not (os.getenv("DERIV_EXPECTED_LOGINID", "").strip() or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()):
-        raise RuntimeError("missing required env var: DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID)")
     currency = _assert_env("DERIV_EXPECTED_CURRENCY").upper()
     if currency != "USD":
         raise RuntimeError("DERIV_EXPECTED_CURRENCY must be USD for the current AURELIA configuration")
-    _assert_env("DERIV_ENVIRONMENT")
-    auth_mode = _assert_env("DERIV_AUTH_MODE").lower()
 
-    if auth_mode not in {"pat", "oauth"}:
-        raise RuntimeError("DERIV_AUTH_MODE must be pat or oauth")
-    if os.getenv("DERIV_ENVIRONMENT", "").strip().lower() != "real":
+    loginid = (
+        os.getenv("DERIV_EXPECTED_LOGINID", "").strip()
+        or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()
+    )
+    if not loginid:
+        raise RuntimeError("DERIV_EXPECTED_LOGINID is required for account evidence")
+
+    environment = _assert_env("DERIV_ENVIRONMENT").lower()
+    if environment != "real":
         raise RuntimeError("DERIV_ENVIRONMENT must be real for live trading")
 
-    if auth_mode == "pat" and not get_optional_secret("DERIV_APP_ID"):
-        raise RuntimeError("DERIV_APP_ID required when DERIV_AUTH_MODE=pat")
+    mode = os.getenv("ACCOUNT_DERIV_AUTH_MODE", "").strip().lower()
+    if mode != "oauth":
+        raise RuntimeError("ACCOUNT_DERIV_AUTH_MODE must be oauth; PAT and generic token modes are blocked")
+
+    from runtime.security.deriv_auth_gate import (
+        AuthModeMismatchError,
+        DerivAuthenticationGate,
+        SecurityError,
+    )
+
+    try:
+        DerivAuthenticationGate(plane="account").get_client()
+    except (AuthModeMismatchError, SecurityError) as exc:
+        raise RuntimeError(str(exc)) from exc
+    raise RuntimeError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
 
 
 def check_live_lock() -> None:
@@ -303,7 +315,7 @@ def check_runtime_verification_flags() -> None:
         raise RuntimeError("public Deriv transport evidence is invalid JSON") from exc
     if not isinstance(evidence, dict):
         raise RuntimeError("public Deriv transport evidence must be a JSON object")
-    if evidence.get("schema") != "aurelia.deriv_public_transport.v1":
+    if evidence.get("schema") != "aurelia.deriv_public_transport.v2":
         raise RuntimeError("public Deriv transport evidence schema is invalid")
     expected_source = (
         os.getenv("GITHUB_SHA", "").strip()
@@ -327,9 +339,23 @@ def check_runtime_verification_flags() -> None:
         or age < 0 or age > max_age
     ):
         raise RuntimeError("public Deriv transport evidence is stale or from the future")
-    count = evidence.get("active_symbol_count")
-    if isinstance(count, bool) or not isinstance(count, int) or count < 1:
+    active_count = evidence.get("active_symbol_count")
+    candle_count = evidence.get("candle_count")
+    if isinstance(active_count, bool) or not isinstance(active_count, int) or active_count < 1:
         raise RuntimeError("public Deriv transport reports no active symbols")
+    if evidence.get("r100_symbol_present") is not True:
+        raise RuntimeError("public Deriv transport did not verify R_100 availability")
+    if (
+        isinstance(candle_count, bool)
+        or not isinstance(candle_count, int)
+        or candle_count < 1
+        or evidence.get("symbol") != "R_100"
+        or evidence.get("granularity_seconds") != 60
+        or evidence.get("authentication_mode") != "none"
+        or evidence.get("authorization_headers_sent") is not False
+        or evidence.get("account_credentials_loaded") is not False
+    ):
+        raise RuntimeError("public Deriv transport candle/authentication evidence is incomplete")
     if (
         evidence.get("capital_authority_granted") is not False
         or evidence.get("order_submission_permitted") is not False
