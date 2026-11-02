@@ -23,6 +23,18 @@ async def main() -> int:
     try:
         client = DerivAuthenticationGate(plane="research").get_client()
         await client.connect()
+        symbols_response = await client.request({"active_symbols": "brief"})
+        active_symbols = symbols_response.get("active_symbols")
+        if not isinstance(active_symbols, list) or not active_symbols:
+            raise RuntimeError("DERIV_PUBLIC_ACTIVE_SYMBOLS_INVALID")
+        active_symbol_codes = {
+            str(row.get("symbol") or row.get("underlying_symbol") or "")
+            for row in active_symbols
+            if isinstance(row, dict)
+        }
+        r100_symbol_present = "R_100" in active_symbol_codes
+        if not r100_symbol_present:
+            raise RuntimeError("DERIV_PUBLIC_R100_SYMBOL_NOT_AVAILABLE")
         candles = await client.historical_candles(
             "R_100",
             granularity=60,
@@ -50,6 +62,8 @@ async def main() -> int:
             "symbol": "R_100",
             "granularity_seconds": 60,
             "candle_count": len(candles),
+            "active_symbol_count": len(active_symbols),
+            "r100_symbol_present": r100_symbol_present,
             "first_epoch": candles[0]["epoch"],
             "last_epoch": candles[-1]["epoch"],
             "capital_authority_granted": False,
@@ -77,6 +91,8 @@ async def main() -> int:
             "symbol": "R_100",
             "granularity_seconds": 60,
             "candle_count": len(candles),
+            "active_symbol_count": len(active_symbols),
+            "r100_symbol_present": r100_symbol_present,
             "evidence_path": str(output),
             "source_sha": source_sha,
             "record_hash": evidence["record_hash"],
