@@ -239,7 +239,7 @@ def evaluate(root: Path = ROOT) -> dict[str, Any]:
         os.getenv("DERIV_EXPECTED_LOGINID", "").strip()
         or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()
     )
-    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+    auth_mode = os.getenv("DERIV_AUTH_MODE", "").strip().lower()
     auth_mode_valid = auth_mode in {"pat", "oauth"}
     app_present = bool(os.getenv("DERIV_APP_ID", "").strip())
     credentials = (
