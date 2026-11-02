@@ -37,6 +37,22 @@ CALIBRATION_MIN_BUCKET_SAMPLES = 10
 CALIBRATION_MAX_RELIABILITY_GAP = 0.05
 LEGACY_DEFAULT_COLLECTION_SECONDS = 540
 
+
+def build_proposal_request(direction: str) -> dict[str, Any]:
+    """Build a public, non-executing Deriv proposal request."""
+    if direction not in {"CALL", "PUT"}:
+        raise ValueError("R100_PROPOSAL_DIRECTION_INVALID")
+    return {
+        "proposal": 1,
+        "amount": 1.0,
+        "basis": "stake",
+        "contract_type": direction,
+        "currency": CURRENCY,
+        "duration": HORIZON_TICKS,
+        "duration_unit": "t",
+        "underlying_symbol": SYMBOL,
+    }
+
 @dataclass(frozen=True)
 class PendingSignal:
     signal_id: str
@@ -569,16 +585,9 @@ async def collect_once(state: dict[str, Any]) -> None:
             if len(state["pending"]) > prior_pending:
                 new_signal = state["pending"][-1]
                 try:
-                    proposal = await transport.request({
-                        "proposal": 1,
-                        "amount": 1.0,
-                        "basis": "stake",
-                        "contract_type": new_signal["direction"],
-                        "currency": CURRENCY,
-                        "duration": HORIZON_TICKS,
-                        "duration_unit": "t",
-                        "symbol": SYMBOL,
-                    })
+                    proposal = await transport.request(
+                        build_proposal_request(new_signal["direction"])
+                    )
                     proposal_payload = proposal.get("proposal") or {}
                     state["quote_observations"].append({
                         "signal_id": new_signal["signal_id"],
