@@ -322,8 +322,10 @@ class CompositeAccountIdentity:
         broker_uuid: BrokerReturnedUUID,
         login_id: LoginID,
         context: AccountContext,
+        verified_at: datetime,
     ) -> str:
         data = {
+            "verified_at": verified_at.isoformat(),
             "aurelia": {
                 "internal_uuid": aurelia.internal_uuid,
                 "created_at": aurelia.created_at.isoformat(),
@@ -376,7 +378,10 @@ class CompositeAccountIdentity:
             validator = getattr(component, "validate", None)
             if not callable(validator) or validator() is not True:
                 raise ValueError(f"{label}_IDENTITY_VALIDATION_FAILED")
-        payload = cls._payload(aurelia, deriv_account, broker_uuid, login_id, context)
+        verified_at = utc_now()
+        payload = cls._payload(
+            aurelia, deriv_account, broker_uuid, login_id, context, verified_at
+        )
         checksum = hashlib.sha256(payload.encode("utf-8")).hexdigest()
         return cls(
             aurelia=aurelia,
@@ -385,7 +390,7 @@ class CompositeAccountIdentity:
             login_id=login_id,
             context=context,
             identity_checksum=checksum,
-            verified_at=utc_now(),
+            verified_at=verified_at,
         )
 
     def validate_integrity(self) -> bool:
@@ -414,6 +419,7 @@ class CompositeAccountIdentity:
             self.broker_uuid,
             self.login_id,
             self.context,
+            self.verified_at,
         )
         expected = hashlib.sha256(payload.encode("utf-8")).hexdigest()
         return self.identity_checksum == expected
