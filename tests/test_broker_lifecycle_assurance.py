@@ -51,7 +51,8 @@ class FakeEvidenceAcquirer:
 
 
 class FakeLifecycleAssessor:
-    def __init__(self):
+    def __init__(self, transport):
+        self.transport = transport
         self.calls = 0
         self.adapter = None
 
@@ -100,7 +101,7 @@ def make_assurance(*, evidence=None, identity=None, replace_transport=False):
         replace_transport=replace_transport,
     )
     acquirer = FakeEvidenceAcquirer(adapter.transport, evidence=evidence)
-    lifecycle = FakeLifecycleAssessor()
+    lifecycle = FakeLifecycleAssessor(adapter.transport)
     assurance = AURELIABrokerLifecycleAssurance(
         existing_adapter=adapter,
         aurelia_uuid=str(uuid4()),
@@ -121,7 +122,7 @@ class BrokerLifecycleAssuranceTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(report.status, "COMPLETED")
         self.assertTrue(report.transport_reused)
-        self.assertEqual(report.new_connections_created, 0)
+        self.assertIsNone(report.new_connections_created)
         self.assertIs(adapter.transport, canonical_transport)
         self.assertIs(lifecycle.adapter, adapter)
         self.assertEqual(adapter.connect_calls, 0)
@@ -145,6 +146,19 @@ class BrokerLifecycleAssuranceTests(unittest.IsolatedAsyncioTestCase):
                 identity_verifier=verifier,
                 evidence_acquirer=FakeEvidenceAcquirer(adapter.transport),
                 lifecycle_assessor=FakeLifecycleAssessor(),
+                stake_policy_registry=FakePolicyRegistry(),
+            )
+
+    async def test_rejects_lifecycle_assessor_with_noncanonical_transport(self):
+        adapter = FakeAdapter()
+        lifecycle = FakeLifecycleAssessor(object())
+        with self.assertRaisesRegex(ValueError, "LIFECYCLE_ASSESSOR_MUST_USE_CANONICAL_TRANSPORT"):
+            AURELIABrokerLifecycleAssurance(
+                existing_adapter=adapter,
+                aurelia_uuid=str(uuid4()),
+                identity_verifier=FakeVerifier(adapter.transport),
+                evidence_acquirer=FakeEvidenceAcquirer(adapter.transport),
+                lifecycle_assessor=lifecycle,
                 stake_policy_registry=FakePolicyRegistry(),
             )
 
