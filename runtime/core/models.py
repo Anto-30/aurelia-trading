@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from math import isfinite
 from typing import Any, Mapping
+from uuid import UUID
 
 
 def utc_now():
@@ -188,9 +191,6 @@ class LedgerEvent:
 
 # Composite broker identity: each namespace remains distinct.  SHA-256 below is
 # an integrity checksum, not a signature, identity provider, or proof of broker scope.
-import hashlib
-import json
-from uuid import UUID
 
 
 def _identity_timestamp_valid(value: datetime) -> bool:
