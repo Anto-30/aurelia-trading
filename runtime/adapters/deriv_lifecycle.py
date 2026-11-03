@@ -72,7 +72,7 @@ class AssuranceReport:
     stake_reconciliation: dict[str, Any] | None = None
     evidence: dict[str, Any] = field(default_factory=dict)
     transport_reused: bool = True
-    new_connections_created: int = 0
+    new_connections_created: int | None = None
 
 
 class AURELIABrokerLifecycleAssurance:
@@ -148,8 +148,9 @@ class AURELIABrokerLifecycleAssurance:
         for label, component in (
             ("IDENTITY_VERIFIER", identity_verifier),
             ("EVIDENCE_ACQUIRER", evidence_acquirer),
+            ("LIFECYCLE_ASSESSOR", lifecycle_assessor),
         ):
-            component_transport = getattr(component, "transport", canonical_transport)
+            component_transport = getattr(component, "transport", None)
             if component_transport is not canonical_transport:
                 raise ValueError(f"{label}_MUST_USE_CANONICAL_TRANSPORT")
 
@@ -251,5 +252,4 @@ class AURELIABrokerLifecycleAssurance:
         finally:
             report.completed_at = datetime.now(timezone.utc)
             report.transport_reused = getattr(self.adapter, "transport", None) is self.transport
-            report.new_connections_created = 0
         return report
