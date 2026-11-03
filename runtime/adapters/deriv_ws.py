@@ -198,7 +198,7 @@ class DerivWebSocketTransport:
             key: subscription.payload.copy()
             for key, subscription in self._subscriptions.items()
         }
-        await self.close()
+        await self.close(preserve_subscriptions=True)
         if fresh_url:
             self.url = fresh_url
         await self.connect()
@@ -214,7 +214,7 @@ class DerivWebSocketTransport:
                 json.dumps({**payload, "req_id": subscription.request_id})
             )
 
-    async def close(self) -> None:
+    async def close(self, *, preserve_subscriptions: bool = False) -> None:
         # Capture the socket before cancelling the reader: _reader_loop clears
         # self.ws in its finally block, so inspecting self.ws after awaiting the
         # task can otherwise skip the actual WebSocket close.
@@ -232,5 +232,14 @@ class DerivWebSocketTransport:
             await ws.close()
         self.ws = None
         self._fail_pending(DerivTransportError("BROKER_SESSION_CLOSED"))
-
         self._subscription_by_request_id.clear()
+
+        if not preserve_subscriptions:
+            # Wake every consumer before discarding subscription state. Without
+            # this terminal event, an async iterator can remain blocked forever
+            # on queue.get() after an explicit transport shutdown.
+            for subscription in self._subscriptions.values():
+                subscription.queue.put_nowait(
+                    {"error": {"code": "BROKER_SESSION_CLOSED"}}
+                )
+            self._subscriptions.clear()
