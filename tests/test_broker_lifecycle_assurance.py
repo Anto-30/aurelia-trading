@@ -59,15 +59,16 @@ class FakeLifecycleAssessor:
         self.calls += 1
         self.adapter = adapter
         return {
-            "status": "TEST_DOUBLE_ONLY",
-            "authentication": "not_run",
-            "connection": "existing_transport_injected",
-            "heartbeat": "not_run_without_transport_contract",
-            "disconnect": "not_run",
-            "fresh_otp_reconnect": "not_run",
-            "state_recovery": "not_run",
-            "reconciliation": "not_run",
-            "shutdown": "not_run",
+            # This is an injected unit-test double, not broker-side evidence.
+            "authentication": "PASS",
+            "connection": "PASS",
+            "heartbeat": "PASS",
+            "controlled_disconnect": "PASS",
+            "fresh_otp_reconnect": "PASS",
+            "state_recovery": "PASS",
+            "reconciliation": "PASS",
+            "clean_shutdown": "PASS",
+            "test_scope": "UNIT_TEST_DOUBLE_ONLY",
         }
 
 
@@ -208,14 +209,24 @@ class BrokerLifecycleAssuranceTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(report.transport_reused)
         self.assertEqual(report.new_connections_created, 0)
 
-    async def test_readiness_report_marks_external_lifecycle_scenarios_unrun(self):
-        assurance, *_ = make_assurance()
+    async def test_unrun_lifecycle_phases_cannot_be_reported_as_complete(self):
+        assurance, _, _, _, lifecycle_assessor = make_assurance()
+        async def incomplete(**_kwargs):
+            return {
+                "authentication": "not_run",
+                "connection": "PASS",
+                "heartbeat": "PASS",
+                "controlled_disconnect": "PASS",
+                "fresh_otp_reconnect": "not_run",
+                "state_recovery": "not_run",
+                "reconciliation": "not_run",
+                "clean_shutdown": "PASS",
+            }
+        lifecycle_assessor.execute_lifecycle_tests = incomplete
         report = await assurance.execute_complete_assurance()
-        lifecycle = report.evidence["lifecycle"]
-        self.assertEqual(lifecycle["authentication"], "not_run")
-        self.assertEqual(lifecycle["fresh_otp_reconnect"], "not_run")
-        self.assertEqual(lifecycle["state_recovery"], "not_run")
-        self.assertEqual(lifecycle["reconciliation"], "not_run")
+        self.assertEqual(report.status, "FAILED")
+        self.assertFalse(report.lifecycle_assessment_completed)
+        self.assertEqual(report.failure_reason, "ValueError")
 
 
 if __name__ == "__main__":
