@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation, ROUND_DOWN, ROUND_UP
+from enum import Enum
 from math import isfinite
 from typing import Any
 
@@ -95,10 +98,6 @@ def size_stake_for_balance(
 
 # Stake-policy provenance is separate from numeric sizing. The registry never
 # changes DEFAULT_MAX_TRADE_RISK_FRACTION or DEFAULT_MINIMUM_STAKE.
-from datetime import datetime
-from enum import Enum
-import re
-
 
 class CapitalPlane(str, Enum):
     LIVE = "LIVE"
@@ -130,19 +129,22 @@ class StakePolicyRecord:
     validation_status: StakePolicyStatus = StakePolicyStatus.PENDING
 
     def has_valid_stake_value(self) -> bool:
-        return (
-            not isinstance(self.stake_value, bool)
-            and isinstance(self.stake_value, (int, float, Decimal))
-            and isfinite(float(self.stake_value))
-            and float(self.stake_value) > 0
-        )
+        if isinstance(self.stake_value, bool) or not isinstance(
+            self.stake_value, (int, float, Decimal)
+        ):
+            return False
+        try:
+            value = float(self.stake_value)
+        except (TypeError, ValueError, OverflowError):
+            return False
+        return isfinite(value) and value > 0
 
     @staticmethod
     def _valid_utc(value: datetime | None) -> bool:
         return (
             isinstance(value, datetime)
             and value.tzinfo is not None
-            and value.utcoffset() == datetime.now().astimezone().utcoffset()
+            and value.utcoffset() == timezone.utc.utcoffset(value)
         )
 
     def provenance_gaps(self) -> tuple[str, ...]:
@@ -212,7 +214,6 @@ class StakePolicyReconciliationRegistry:
         return candidates[0]
 
     def export_reconciliation_report(self) -> dict[str, Any]:
-        from datetime import timezone
         rows = []
         for policy in self._policies:
             gaps = policy.provenance_gaps()
