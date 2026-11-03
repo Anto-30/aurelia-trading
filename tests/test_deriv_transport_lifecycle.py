@@ -138,6 +138,27 @@ class DerivTransportLifecycleTests(unittest.IsolatedAsyncioTestCase):
             await transport.close()
             self.assertTrue(second.closed)
 
+    async def test_reconnect_preserves_active_subscription_consumer(self):
+        first = FakeWebSocket()
+        second = FakeWebSocket()
+        with patch(
+            "runtime.adapters.deriv_ws.connect",
+            new=AsyncMock(side_effect=[first, second]),
+        ):
+            transport = DerivWebSocketTransport("wss://example.invalid/ws/test")
+            await transport.connect()
+            iterator = transport.subscribe("ticks:R_100", {"ticks": "R_100"})
+            first_event = await asyncio.wait_for(anext(iterator), timeout=0.2)
+            self.assertEqual(first_event["echo"], True)
+
+            await transport.reconnect("wss://example.invalid/ws/test?otp=FRESH_TEST")
+
+            recovered_event = await asyncio.wait_for(anext(iterator), timeout=0.2)
+            self.assertEqual(recovered_event["echo"], True)
+            self.assertIn("ticks:R_100", transport._subscriptions)
+            await iterator.aclose()
+            await transport.close()
+
     async def test_close_unblocks_active_subscription_consumer(self):
         websocket = FakeWebSocket()
         websocket.send = AsyncMock()  # leave subscription waiting for its first event
