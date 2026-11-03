@@ -265,7 +265,7 @@ class DerivReadOnlyLifecycleTests(unittest.IsolatedAsyncioTestCase):
         websocket = FakeWebSocket()
 
         async def fake_connect(_url, **kwargs):
-            self.kwargs = kwargs
+            fake_connect.kwargs = kwargs
             return websocket
 
         fake_connect.kwargs = {}
