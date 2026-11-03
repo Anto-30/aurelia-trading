@@ -91,3 +91,153 @@ def size_stake_for_balance(
         float(budget),
         "BALANCE_SCALED_WITHIN_RISK_BUDGET",
     )
+
+
+# Stake-policy provenance is separate from numeric sizing. The registry never
+# changes DEFAULT_MAX_TRADE_RISK_FRACTION or DEFAULT_MINIMUM_STAKE.
+from datetime import datetime
+from enum import Enum
+import re
+
+
+class CapitalPlane(str, Enum):
+    LIVE = "LIVE"
+    SHADOW = "SHADOW"
+    RESEARCH = "RESEARCH"
+
+
+class StakePolicyStatus(str, Enum):
+    PENDING = "PENDING"
+    VALIDATED = "VALIDATED"
+    REJECTED = "REJECTED"
+
+
+@dataclass(frozen=True)
+class StakePolicyRecord:
+    """Source and approval provenance for one policy candidate.
+
+    Missing provenance is represented as None and remains non-authoritative.
+    A commit hash establishes a source revision; it is not an approval signature.
+    """
+    stake_value: float
+    source_document: str | None
+    source_commit: str | None
+    approval_authority: str | None
+    approval_date: datetime | None
+    effective_date: datetime | None
+    intended_capital_plane: CapitalPlane | None
+    rationale: str | None
+    validation_status: StakePolicyStatus = StakePolicyStatus.PENDING
+
+    def has_valid_stake_value(self) -> bool:
+        return (
+            not isinstance(self.stake_value, bool)
+            and isinstance(self.stake_value, (int, float, Decimal))
+            and isfinite(float(self.stake_value))
+            and float(self.stake_value) > 0
+        )
+
+    @staticmethod
+    def _valid_utc(value: datetime | None) -> bool:
+        return (
+            isinstance(value, datetime)
+            and value.tzinfo is not None
+            and value.utcoffset() == datetime.now().astimezone().utcoffset()
+        )
+
+    def provenance_gaps(self) -> tuple[str, ...]:
+        gaps: list[str] = []
+        if not self.has_valid_stake_value():
+            gaps.append("STAKE_VALUE_INVALID")
+        if not isinstance(self.source_document, str) or not self.source_document.strip():
+            gaps.append("SOURCE_DOCUMENT_MISSING")
+        if (
+            not isinstance(self.source_commit, str)
+            or re.fullmatch(r"[0-9a-fA-F]{40}|[0-9a-fA-F]{64}", self.source_commit) is None
+        ):
+            gaps.append("SOURCE_COMMIT_MISSING_OR_INVALID")
+        if not isinstance(self.approval_authority, str) or not self.approval_authority.strip():
+            gaps.append("APPROVAL_AUTHORITY_MISSING")
+        if not self._valid_utc(self.approval_date):
+            gaps.append("APPROVAL_DATE_MISSING_OR_NON_UTC")
+        if not self._valid_utc(self.effective_date):
+            gaps.append("EFFECTIVE_DATE_MISSING_OR_NON_UTC")
+        if not isinstance(self.intended_capital_plane, CapitalPlane):
+            gaps.append("CAPITAL_PLANE_MISSING")
+        if not isinstance(self.rationale, str) or not self.rationale.strip():
+            gaps.append("RATIONALE_MISSING")
+        if not isinstance(self.validation_status, StakePolicyStatus):
+            gaps.append("VALIDATION_STATUS_INVALID")
+        return tuple(gaps)
+
+    def is_fully_documented(self) -> bool:
+        return not self.provenance_gaps()
+
+
+class StakePolicyReconciliationRegistry:
+    """Fail-closed registry for sourced policy candidates and approvals."""
+
+    def __init__(self) -> None:
+        self._policies: list[StakePolicyRecord] = []
+
+    def record_candidate(self, policy: StakePolicyRecord) -> None:
+        """Record an unresolved candidate without making it authoritative."""
+        if not isinstance(policy, StakePolicyRecord) or not policy.has_valid_stake_value():
+            raise ValueError("STAKE_POLICY_CANDIDATE_INVALID")
+        self._policies.append(policy)
+
+    def register_policy(self, policy: StakePolicyRecord) -> None:
+        """Register a documented policy; incomplete provenance is rejected."""
+        if not isinstance(policy, StakePolicyRecord) or not policy.is_fully_documented():
+            gaps = policy.provenance_gaps() if isinstance(policy, StakePolicyRecord) else ("POLICY_TYPE_INVALID",)
+            raise ValueError("STAKE_POLICY_PROVENANCE_INCOMPLETE:" + ",".join(gaps))
+        self._policies.append(policy)
+
+    def get_authoritative_policy(
+        self,
+        capital_plane: CapitalPlane,
+    ) -> StakePolicyRecord | None:
+        candidates = [
+            policy for policy in self._policies
+            if policy.intended_capital_plane == capital_plane
+            and policy.validation_status is StakePolicyStatus.VALIDATED
+            and policy.is_fully_documented()
+        ]
+        if not candidates:
+            return None
+        if len(candidates) > 1:
+            raise ValueError(
+                f"MULTIPLE_VALIDATED_STAKE_POLICIES_FOR_{capital_plane.value}"
+            )
+        return candidates[0]
+
+    def export_reconciliation_report(self) -> dict[str, Any]:
+        from datetime import timezone
+        rows = []
+        for policy in self._policies:
+            gaps = policy.provenance_gaps()
+            rows.append({
+                "stake_value": float(policy.stake_value),
+                "source_document": policy.source_document,
+                "source_commit": policy.source_commit,
+                "approval_authority": policy.approval_authority,
+                "approval_date": policy.approval_date.isoformat() if policy.approval_date else None,
+                "effective_date": policy.effective_date.isoformat() if policy.effective_date else None,
+                "intended_capital_plane": (
+                    policy.intended_capital_plane.value
+                    if isinstance(policy.intended_capital_plane, CapitalPlane) else None
+                ),
+                "rationale": policy.rationale,
+                "validation_status": (
+                    policy.validation_status.value
+                    if isinstance(policy.validation_status, StakePolicyStatus) else "INVALID"
+                ),
+                "authoritative": not gaps and policy.validation_status is StakePolicyStatus.VALIDATED,
+                "provenance_gaps": list(gaps),
+            })
+        return {
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "policy_count": len(rows),
+            "authoritative_policy_count": sum(1 for row in rows if row["authoritative"]),
+            "policies": rows,
+        }
