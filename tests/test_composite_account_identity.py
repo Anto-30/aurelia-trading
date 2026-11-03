@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 from runtime.core.models import (
@@ -70,6 +70,15 @@ class CompositeAccountIdentityTests(unittest.TestCase):
         )
         object.__setattr__(identity.deriv_account, "deriv_loginid", "CR999999")
         self.assertFalse(identity.validate_integrity())
+
+    def test_integrity_check_detects_verified_timestamp_tampering(self) -> None:
+        identity = CompositeAccountIdentity.create(
+            self.aurelia, self.deriv, self.broker_uuid, self.login_id, self.context
+        )
+        tampered = __import__("dataclasses").replace(
+            identity, verified_at=identity.verified_at + timedelta(seconds=1)
+        )
+        self.assertFalse(tampered.validate_integrity())
 
     def test_identity_does_not_store_email_or_email_hash(self) -> None:
         identity = CompositeAccountIdentity.create(
