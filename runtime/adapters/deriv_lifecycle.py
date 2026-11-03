@@ -87,6 +87,16 @@ class AURELIABrokerLifecycleAssurance:
     This class does not override the account-plane gate.
     """
 
+    REQUIRED_LIFECYCLE_PHASES = frozenset({
+        "authentication",
+        "connection",
+        "heartbeat",
+        "controlled_disconnect",
+        "fresh_otp_reconnect",
+        "state_recovery",
+        "reconciliation",
+        "clean_shutdown",
+    })
     REQUIRED_EVIDENCE_KEYS = frozenset({
         "identity",
         "balance",
@@ -212,6 +222,19 @@ class AURELIABrokerLifecycleAssurance:
             )
             if not isinstance(lifecycle, Mapping):
                 raise ValueError("LIFECYCLE_ASSESSMENT_INVALID")
+            missing_phases = self.REQUIRED_LIFECYCLE_PHASES.difference(lifecycle.keys())
+            if missing_phases:
+                raise ValueError(
+                    "LIFECYCLE_PHASES_MISSING:" + ",".join(sorted(missing_phases))
+                )
+            failed_phases = sorted(
+                phase for phase in self.REQUIRED_LIFECYCLE_PHASES
+                if lifecycle.get(phase) != "PASS"
+            )
+            if failed_phases:
+                raise ValueError(
+                    "LIFECYCLE_PHASES_NOT_PROVEN:" + ",".join(failed_phases)
+                )
             report.evidence["lifecycle"] = dict(lifecycle)
             report.lifecycle_assessment_completed = True
             self._assert_canonical_transport_unchanged()
