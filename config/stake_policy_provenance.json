@@ -1,0 +1,77 @@
+{
+  "schema": "aurelia.stake_policy_provenance.v1",
+  "capital_authority": false,
+  "runtime_policy_mutation": false,
+  "policy_selection_performed": false,
+  "captured_at_utc": "2026-11-03T00:00:00Z",
+  "observed_at_commit": "d04564aca0648201feff0326fe9af0fbcee92e94",
+  "notes": [
+    "This is a provenance inventory, not a risk policy or an execution configuration.",
+    "The $0.35 value is documented as a frozen research unit, not a live execution minimum.",
+    "The $1.00 value is documented as canonical execution minimum/starting stake, but its original introducing commit and complete effective-date chain are missing.",
+    "The $1.50 value is only referenced as a historical policy era and is not an active candidate.",
+    "No $5/$10/$15 daily-loss thresholds are established by these artifacts.",
+    "No record is validated; ambiguous policy must block sizing rather than fall back."
+  ],
+  "policies": [
+    {
+      "policy_id": "DERIV-RESEARCH-UNIT-035",
+      "version": "v2.08-stake-unit-035",
+      "stake_usd": 0.35,
+      "role": "RESEARCH_UNIT",
+      "source_documents": [
+        "AURELIA_STAKE_POLICY_DERIV.json",
+        "AURELIA_CURRENT_POLICY_EVIDENCE_REPORT.md",
+        "canonical_stake_policy.py"
+      ],
+      "source_modified_at_utc": "2026-09-28T19:08:07.413Z",
+      "source_commit": null,
+      "observed_at_commit": "d04564aca0648201feff0326fe9af0fbcee92e94",
+      "approval_authority": null,
+      "approval_date": null,
+      "effective_date": null,
+      "intended_capital_plane": "RESEARCH",
+      "rationale": "Frozen research allocation unit; canonical source explicitly says research units never authorize execution.",
+      "validation_status": "PENDING"
+    },
+    {
+      "policy_id": "DERIV-EXECUTION-MINIMUM-100",
+      "version": "v2.09-canonical-stake-start-1usd",
+      "stake_usd": 1,
+      "role": "EXECUTION_MINIMUM_AND_STARTING_STAKE",
+      "source_documents": [
+        "canonical_stake_policy.py",
+        "AURELIA_v208_STAKE_POLICY_AUDIT.md",
+        "runtime/core/stake_sizing.py"
+      ],
+      "source_modified_at_utc": "2026-10-03T15:03:56.964Z",
+      "source_commit": null,
+      "observed_at_commit": "d04564aca0648201feff0326fe9af0fbcee92e94",
+      "approval_authority": "OWNER (as stated in AURELIA_v208_STAKE_POLICY_AUDIT.md)",
+      "approval_date": "2026-09-26",
+      "effective_date": null,
+      "intended_capital_plane": "LIVE",
+      "rationale": "Canonical policy describes $1.00 as execution minimum and starting stake; still subordinate to risk, lock, kill-switch, reconciliation and final authorization.",
+      "validation_status": "PENDING"
+    },
+    {
+      "policy_id": "DERIV-HISTORICAL-MINIMUM-150",
+      "version": "v2.08-stake-150",
+      "stake_usd": 1.5,
+      "role": "HISTORICAL_POLICY_MINIMUM",
+      "source_documents": [
+        "AURELIA_STAKE_POLICY_DERIV.json",
+        "AURELIA_CURRENT_POLICY_EVIDENCE_REPORT.md"
+      ],
+      "source_modified_at_utc": "2026-09-28T19:08:07.413Z",
+      "source_commit": null,
+      "observed_at_commit": "d04564aca0648201feff0326fe9af0fbcee92e94",
+      "approval_authority": null,
+      "approval_date": null,
+      "effective_date": null,
+      "intended_capital_plane": "HISTORICAL",
+      "rationale": "The current JSON marks this as a previous historical policy era; evidence report records one $1.50 loss. It is not an active execution default.",
+      "validation_status": "PENDING"
+    }
+  ]
+}
