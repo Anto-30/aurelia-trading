@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from time import perf_counter
 from dataclasses import dataclass
 from typing import Any, AsyncIterator
 
@@ -210,6 +211,24 @@ class DerivWebSocketTransport:
             await self.ws.send(
                 json.dumps({**payload, "req_id": subscription.request_id})
             )
+
+    async def ping(self) -> float:
+        """Send a WebSocket control-frame Ping and await its matching Pong.
+
+        This is transport heartbeat evidence only; it is not an account API
+        request and it does not grant any capital or trading authority.
+        """
+        if self.ws is None:
+            raise DerivTransportError("BROKER_SESSION_NOT_CONNECTED")
+        started = perf_counter()
+        try:
+            pong_waiter = await self.ws.ping()
+            await asyncio.wait_for(pong_waiter, timeout=self.timeout_seconds)
+        except asyncio.TimeoutError as exc:
+            raise DerivTransportError("BROKER_HEARTBEAT_TIMEOUT") from exc
+        except Exception as exc:
+            raise DerivTransportError("BROKER_HEARTBEAT_FAILED") from exc
+        return max(0.0, (perf_counter() - started) * 1000.0)
 
     async def close(self) -> None:
         reader = self._reader_task
