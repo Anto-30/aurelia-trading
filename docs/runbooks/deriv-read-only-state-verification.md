@@ -71,6 +71,7 @@ values are:
 
 - DERIV_AUTH_TOKEN (or configured DERIV_PAT alias)
 - DERIV_EXPECTED_LOGINID (or configured authorized account ID)
+- AURELIA_INTERNAL_ACCOUNT_UUID (a pre-existing valid AURELIA UUID; never generated during verification)
 - DERIV_EXPECTED_CURRENCY=USD for the current runtime policy
 - DERIV_ENVIRONMENT=real
 - DERIV_APP_ID for PAT mode
