@@ -145,7 +145,7 @@ class BrokerLifecycleAssuranceTests(unittest.IsolatedAsyncioTestCase):
                 aurelia_uuid=str(uuid4()),
                 identity_verifier=verifier,
                 evidence_acquirer=FakeEvidenceAcquirer(adapter.transport),
-                lifecycle_assessor=FakeLifecycleAssessor(),
+                lifecycle_assessor=FakeLifecycleAssessor(adapter.transport),
                 stake_policy_registry=FakePolicyRegistry(),
             )
 
@@ -170,7 +170,7 @@ class BrokerLifecycleAssuranceTests(unittest.IsolatedAsyncioTestCase):
                 aurelia_uuid=str(uuid4()),
                 identity_verifier=FakeVerifier(None),
                 evidence_acquirer=FakeEvidenceAcquirer(None),
-                lifecycle_assessor=FakeLifecycleAssessor(),
+                lifecycle_assessor=FakeLifecycleAssessor(None),
                 stake_policy_registry=FakePolicyRegistry(),
             )
 
@@ -182,7 +182,7 @@ class BrokerLifecycleAssuranceTests(unittest.IsolatedAsyncioTestCase):
                 aurelia_uuid="not-a-uuid",
                 identity_verifier=FakeVerifier(adapter.transport),
                 evidence_acquirer=FakeEvidenceAcquirer(adapter.transport),
-                lifecycle_assessor=FakeLifecycleAssessor(),
+                lifecycle_assessor=FakeLifecycleAssessor(adapter.transport),
                 stake_policy_registry=FakePolicyRegistry(),
             )
 
@@ -221,7 +221,7 @@ class BrokerLifecycleAssuranceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(report.status, "FAILED")
         self.assertEqual(report.failure_reason, "RuntimeError")
         self.assertFalse(report.transport_reused)
-        self.assertEqual(report.new_connections_created, 0)
+        self.assertIsNone(report.new_connections_created)
 
     async def test_unrun_lifecycle_phases_cannot_be_reported_as_complete(self):
         assurance, _, _, _, lifecycle_assessor = make_assurance()
