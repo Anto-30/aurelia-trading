@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import replace
+import json
 import unittest
+from pathlib import Path
 
 from assurance.stake_policy_registry import (
     CapitalPlane,
@@ -93,6 +94,25 @@ class StakePolicyRegistryTests(unittest.TestCase):
             registry.get_authoritative_policy(CapitalPlane.HISTORICAL).policy_id,
             "HIST-150",
         )
+
+    def test_inventory_classifies_each_amount_on_its_documented_plane(self):
+        path = Path(__file__).resolve().parents[1] / "config" / "stake_policy_provenance.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        policies = {round(item["stake_usd"], 2): item for item in data["policies"]}
+        self.assertEqual(policies[0.35]["intended_capital_plane"], "RESEARCH")
+        self.assertEqual(policies[1.0]["intended_capital_plane"], "LIVE")
+        self.assertEqual(policies[1.5]["intended_capital_plane"], "HISTORICAL")
+        self.assertTrue(all(item["validation_status"] == "PENDING" for item in policies.values()))
+        self.assertTrue(all(item["source_commit"] is None for item in policies.values()))
+        self.assertFalse(data["capital_authority"])
+        self.assertFalse(data["runtime_policy_mutation"])
+        self.assertFalse(data["policy_selection_performed"])
+
+    def test_non_utc_source_timestamp_is_not_complete_provenance(self):
+        record = valid_record(source_modified_at_utc="2026-10-03T17:03:56+02:00")
+        self.assertIn("source_modified_at_utc", record.missing_provenance())
+        with self.assertRaisesRegex(ValueError, "VALIDATED_STAKE_POLICY_MISSING_PROVENANCE"):
+            StakePolicyReconciliationRegistry([record])
 
     def test_invalid_nonfinite_values_rejected(self):
         for value in (float("nan"), float("inf"), 0.0, -1.0, True):
