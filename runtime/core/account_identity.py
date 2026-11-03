@@ -40,7 +40,11 @@ def _utc_timestamp(value: str) -> bool:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         return False
-    return parsed.tzinfo is not None and parsed.utcoffset() is not None
+    return (
+        parsed.tzinfo is not None
+        and parsed.utcoffset() is not None
+        and parsed.utcoffset().total_seconds() == 0
+    )
 
 
 def _sha256(value: Any) -> str:
@@ -71,7 +75,11 @@ class AURELIAIdentity:
     source_config_key: str = "AURELIA_INTERNAL_ACCOUNT_UUID"
 
     def validate(self) -> bool:
-        return _is_uuid(self.internal_uuid) and bool(self.source_config_key.strip())
+        return (
+            _is_uuid(self.internal_uuid)
+            and isinstance(self.source_config_key, str)
+            and bool(self.source_config_key.strip())
+        )
 
 
 @dataclass(frozen=True)
@@ -181,6 +189,8 @@ class CompositeAccountIdentity:
         components = (aurelia, deriv_account, broker_uuid, login_id, context)
         if not all(component.validate() for component in components):
             raise ValueError("ACCOUNT_IDENTITY_COMPONENT_INVALID")
+        if aurelia.internal_uuid == broker_uuid.value:
+            raise ValueError("AURELIA_AND_BROKER_UUID_COLLISION")
         if deriv_account.account_id != login_id.value:
             raise ValueError("DERIV_ACCOUNT_ID_LOGINID_MISMATCH")
         if deriv_account.account_type != context.environment.value:
