@@ -19,7 +19,13 @@ UTC = timezone.utc
 
 class ReadOnlyDerivAdapter:
     def __init__(self, *, balances=(100.0, 100.0), portfolio=None, statement=None):
-        self.account = AccountIdentity("CRREAL", "real", "USD", "real")
+        self.account = AccountIdentity(
+            "CRREAL", "real", "USD", "real",
+            broker_uuid="f2ac691f-68d7-b467-6308-72d5ecaf9030",
+            broker_uuid_source="balance",
+            broker_uuid_captured_at_utc=datetime.now(UTC).isoformat(),
+            identity_response_sha256="a" * 64,
+        )
         self.balances = list(balances)
         self.portfolio_rows = list(portfolio or [])
         self.statement_rows = list(statement or [])
@@ -84,6 +90,17 @@ class DerivReadOnlyStateTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["trade_api_calls"], [])
         self.assertEqual(result["orders_submitted"], 0)
         self.assertFalse(result["capital_movement"])
+
+    async def test_snapshot_includes_broker_uuid_and_response_hashes(self):
+        adapter = ReadOnlyDerivAdapter()
+        result = await collect_read_only_snapshot(
+            adapter,
+            expected_loginid="CRREAL",
+            expected_currency="USD",
+        )
+        self.assertEqual(result["broker_uuid"], adapter.account.broker_uuid)
+        self.assertEqual(result["broker_uuid_source"], "balance")
+        self.assertEqual(result["broker_uuid_response_sha256"], "a" * 64)
 
     async def test_balance_change_during_read_sequence_blocks_snapshot(self):
         adapter = ReadOnlyDerivAdapter(balances=(100.0, 99.0))
