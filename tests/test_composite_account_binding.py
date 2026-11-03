@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -19,7 +19,7 @@ from runtime.core.persistent import BrokerUUIDToLoginBinding
 
 
 def make_identity() -> CompositeAccountIdentity:
-    now = datetime.now().astimezone()
+    now = datetime.now(timezone.utc)
     aurelia = AURELIAIdentity(str(uuid4()), now, "test-version")
     deriv = DerivAccountIdentifier("CR123456", "real", False, False)
     broker_uuid = BrokerReturnedUUID(None, "not_returned", None)
