@@ -19,6 +19,38 @@ class TestDerivAdapterContract(unittest.TestCase):
   with patch("runtime.adapters.deriv_adapter.DerivWebSocketTransport",return_value=transport):
    with self.assertRaisesRegex(DerivProtocolError,"ACCOUNT_CURRENCY_UNVERIFIED"):asyncio.run(a.connect())
   transport.close.assert_awaited_once()
+ def test_authenticated_balance_captures_broker_uuid_as_distinct_identity(self):
+  import asyncio
+  from types import SimpleNamespace
+  from unittest.mock import AsyncMock, patch
+  response = {
+   "msg_type": "balance",
+   "req_id": 1,
+   "balance": {
+    "balance": 100.0,
+    "currency": "USD",
+    "id": "f2ac691f-68d7-b467-6308-72d5ecaf9030",
+    "loginid": "CRREAL",
+   },
+  }
+  transport = SimpleNamespace(
+   connect=AsyncMock(),
+   request=AsyncMock(return_value=response),
+   close=AsyncMock(),
+  )
+  adapter = DerivAdapter(
+   ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+   expected_loginid="CRREAL",
+   expected_currency="USD",
+  )
+  with patch("runtime.adapters.deriv_adapter.DerivWebSocketTransport", return_value=transport):
+   account = asyncio.run(adapter.connect())
+  self.assertEqual(account.loginid, "CRREAL")
+  self.assertEqual(account.broker_uuid, "f2ac691f-68d7-b467-6308-72d5ecaf9030")
+  self.assertEqual(account.broker_uuid_source, "balance")
+  self.assertEqual(len(account.identity_response_sha256), 64)
+  self.assertNotEqual(account.loginid, account.broker_uuid)
+
  def test_unknown_is_explicit_result_type(self):from runtime.core.models import BrokerOutcome;self.assertEqual(BrokerOutcome.UNKNOWN.value,"UNKNOWN")
  def test_current_deriv_underlying_symbol_is_normalized_for_internal_consumers(self):
   from unittest.mock import AsyncMock
