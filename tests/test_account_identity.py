@@ -99,6 +99,17 @@ class CompositeAccountIdentityTests(unittest.TestCase):
                 context=replace(identity.context, balance_currency="EUR"),
             )
 
+    def test_internal_uuid_must_not_equal_broker_uuid(self):
+        identity = valid_identity()
+        with self.assertRaisesRegex(ValueError, "AURELIA_AND_BROKER_UUID_COLLISION"):
+            CompositeAccountIdentity.create(
+                aurelia=replace(identity.aurelia, internal_uuid=UUID_BROKER),
+                deriv_account=identity.deriv_account,
+                broker_uuid=identity.broker_uuid,
+                login_id=identity.login_id,
+                context=identity.context,
+            )
+
     def test_internal_uuid_is_validated_independently(self):
         identity = valid_identity()
         with self.assertRaisesRegex(ValueError, "ACCOUNT_IDENTITY_COMPONENT_INVALID"):
