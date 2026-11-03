@@ -103,7 +103,11 @@ def _valid_timestamp(value: str) -> bool:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         return False
-    return parsed.tzinfo is not None and parsed.utcoffset() is not None
+    return (
+        parsed.tzinfo is not None
+        and parsed.utcoffset() is not None
+        and parsed.utcoffset().total_seconds() == 0
+    )
 
 
 def _valid_date_or_timestamp(value: str) -> bool:
