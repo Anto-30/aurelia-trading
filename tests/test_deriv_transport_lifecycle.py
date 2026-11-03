@@ -5,7 +5,7 @@ import json
 import unittest
 from unittest.mock import AsyncMock, call, patch
 
-from runtime.adapters.deriv_ws import DerivWebSocketTransport
+from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
 
 
 class FakeWebSocket:
@@ -137,6 +137,29 @@ class DerivTransportLifecycleTests(unittest.IsolatedAsyncioTestCase):
             )
             await transport.close()
             self.assertTrue(second.closed)
+
+    async def test_close_unblocks_active_subscription_consumer(self):
+        websocket = FakeWebSocket()
+        websocket.send = AsyncMock()  # leave subscription waiting for its first event
+        with patch(
+            "runtime.adapters.deriv_ws.connect",
+            new=AsyncMock(return_value=websocket),
+        ):
+            transport = DerivWebSocketTransport(
+                "wss://example.invalid/ws/test", timeout_seconds=1.0
+            )
+            await transport.connect()
+            iterator = transport.subscribe("ticks:R_100", {"ticks": "R_100"})
+            consumer = asyncio.create_task(anext(iterator))
+            await asyncio.sleep(0)
+            await asyncio.sleep(0)
+
+            await transport.close()
+
+            with self.assertRaises(DerivTransportError):
+                await asyncio.wait_for(consumer, timeout=0.2)
+            self.assertEqual(transport._subscriptions, {})
+            self.assertEqual(transport._subscription_by_request_id, {})
 
     async def test_transport_close_cancels_pending_request_and_closes_socket(self):
         websocket = FakeWebSocket(response_factory=lambda _payload: {})
