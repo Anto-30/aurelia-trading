@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import date, datetime, time as wall_time, timedelta, timezone
 from math import isfinite, log, sqrt
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from statistics import fmean, median
 from typing import Sequence
 
@@ -229,6 +230,498 @@ def detect_msnr_liquidity_sweep(
         )
     return None
 
+
+
+@dataclass(frozen=True)
+class CycleMarkerConfig:
+    """Explicit optional 0.618 marker policy; disabled for 24/7 synthetics by default."""
+
+    enabled: bool = False
+    base_marker_time: str = "08:49:55"
+    timezone_name: str = "America/New_York"
+    normalization: str | None = None
+    est_offset_minutes: int | None = None
+    entry_window_seconds: int = 45
+    hard_cutoff_seconds: int = 90
+    dst_transition_policy: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.entry_window_seconds < 0 or self.hard_cutoff_seconds < self.entry_window_seconds:
+            raise ValueError("CYCLE_MARKER_WINDOW_INVALID")
+        try:
+            hour, minute, second = (int(part) for part in self.base_marker_time.split(":"))
+            wall_time(hour, minute, second)
+        except (TypeError, ValueError):
+            raise ValueError("CYCLE_MARKER_TIME_INVALID") from None
+        if self.normalization not in {None, "clock_fixed", "solar_fixed"}:
+            raise ValueError("CYCLE_NORMALIZATION_INVALID")
+        if self.dst_transition_policy not in {
+            None, "apply_local_timezone", "skip_transition_days"
+        }:
+            raise ValueError("CYCLE_DST_TRANSITION_POLICY_INVALID")
+        if self.est_offset_minutes is not None and (
+            isinstance(self.est_offset_minutes, bool)
+            or not isinstance(self.est_offset_minutes, int)
+            or not -180 <= self.est_offset_minutes <= 180
+        ):
+            raise ValueError("CYCLE_EST_OFFSET_INVALID")
+
+
+@dataclass(frozen=True)
+class MSNRConfirmationConfig:
+    """Proposed MSNR-1..5 thresholds; research-only until separately qualified."""
+
+    timeframe: str
+    lookback_bars: int
+    tick_size: float
+    atr_period: int = 14
+    min_sweep_atr: float = 1.0
+    rejection_close_fraction: float = 0.60
+    stop_buffer_ticks: float = 0.0
+    require_volume_confirmation: bool = False
+    volume_sma_period: int = 20
+    volume_multiplier: float = 1.5
+    require_htf_alignment: bool = False
+    htf_ema_period: int = 50
+    htf_slope_lookback: int = 5
+    temporal_required: bool = False
+    allowed_regimes: tuple[str, ...] = ("TRENDING_LOW_VOL", "RANGING_LOW_VOL")
+    version: str = "msnr-confirmation-hypothesis-v1"
+
+    def __post_init__(self) -> None:
+        if self.timeframe not in {"1m", "15m"}:
+            raise ValueError("MSNR_TIMEFRAME_INVALID")
+        lower, upper = (20, 50) if self.timeframe == "1m" else (10, 20)
+        if not lower <= self.lookback_bars <= upper:
+            raise ValueError("MSNR_LOOKBACK_OUT_OF_POLICY_RANGE")
+        if (
+            isinstance(self.tick_size, bool)
+            or not isinstance(self.tick_size, (int, float))
+            or not isfinite(float(self.tick_size))
+            or self.tick_size <= 0
+        ):
+            raise ValueError("MSNR_TICK_SIZE_INVALID")
+        if isinstance(self.atr_period, bool) or self.atr_period < 2:
+            raise ValueError("MSNR_ATR_PERIOD_INVALID")
+        if not isfinite(self.min_sweep_atr) or self.min_sweep_atr <= 0:
+            raise ValueError("MSNR_MIN_SWEEP_ATR_INVALID")
+        if not 0.5 <= self.rejection_close_fraction <= 1.0:
+            raise ValueError("MSNR_REJECTION_FRACTION_INVALID")
+        if not isfinite(self.stop_buffer_ticks) or self.stop_buffer_ticks < 0:
+            raise ValueError("MSNR_STOP_BUFFER_INVALID")
+        if isinstance(self.volume_sma_period, bool) or self.volume_sma_period < 2:
+            raise ValueError("MSNR_VOLUME_PERIOD_INVALID")
+        if not isfinite(self.volume_multiplier) or self.volume_multiplier <= 0:
+            raise ValueError("MSNR_VOLUME_MULTIPLIER_INVALID")
+        if self.htf_ema_period < 2 or self.htf_slope_lookback < 1:
+            raise ValueError("MSNR_HTF_PERIOD_INVALID")
+        if not self.allowed_regimes:
+            raise ValueError("MSNR_ALLOWED_REGIMES_EMPTY")
+
+
+@dataclass(frozen=True)
+class MSNRConfirmationVerdict:
+    signal_valid: bool
+    reason: str
+    direction: str | None = None
+    signal_timestamp_utc: str | None = None
+    stop_reference_price: float | None = None
+    target_reference_price: float | None = None
+    atr: float | None = None
+    rejection_close_fraction: float | None = None
+    regime: str | None = None
+    evidence_codes: tuple[str, ...] = ()
+    capital_authority: bool = False
+    order_submission_permitted: bool = False
+
+
+def _msnr_reject(
+    reason: str,
+    *,
+    direction: str | None = None,
+    signal_timestamp_utc: str | None = None,
+    atr: float | None = None,
+    rejection_close_fraction: float | None = None,
+    regime: str | None = None,
+    evidence_codes: Sequence[str] = (),
+) -> MSNRConfirmationVerdict:
+    return MSNRConfirmationVerdict(
+        False, reason, direction, signal_timestamp_utc, None, None,
+        atr, rejection_close_fraction, regime, tuple(evidence_codes), False, False,
+    )
+
+
+def _is_dst_transition_day(day: date, zone: ZoneInfo) -> bool:
+    def midday(value: date):
+        return datetime.combine(value, wall_time(12, 0), tzinfo=zone).utcoffset()
+    return (
+        midday(day - timedelta(days=1)) != midday(day)
+        or midday(day) != midday(day + timedelta(days=1))
+    )
+
+
+def _cycle_marker_check(
+    signal_time: datetime,
+    config: CycleMarkerConfig | None,
+) -> tuple[bool, str, str | None]:
+    if config is None or not config.enabled:
+        return True, "TEMPORAL_FILTER_DISABLED", None
+    if config.normalization is None:
+        return False, "CYCLE_DST_NORMALIZATION_UNSPECIFIED", None
+    if config.dst_transition_policy is None:
+        return False, "CYCLE_DST_TRANSITION_POLICY_UNSPECIFIED", None
+    if config.normalization == "solar_fixed" and config.est_offset_minutes is None:
+        return False, "CYCLE_EST_OFFSET_UNSPECIFIED", None
+    if not isinstance(signal_time, datetime) or signal_time.tzinfo is None:
+        return False, "SIGNAL_TIME_MUST_BE_TIMEZONE_AWARE", None
+    try:
+        zone = ZoneInfo(config.timezone_name)
+    except (ZoneInfoNotFoundError, ValueError):
+        return False, "CYCLE_TIMEZONE_INVALID", None
+
+    local_signal = signal_time.astimezone(zone)
+    transition_day = _is_dst_transition_day(local_signal.date(), zone)
+    if transition_day and config.dst_transition_policy == "skip_transition_days":
+        return False, "TEMPORAL_DST_TRANSITION_DAY_SKIPPED", None
+
+    try:
+        hour, minute, second = (int(part) for part in config.base_marker_time.split(":"))
+        marker_clock = wall_time(hour, minute, second)
+    except (TypeError, ValueError):
+        return False, "CYCLE_MARKER_TIME_INVALID", None
+
+    shift_minutes = 0
+    if config.normalization == "solar_fixed":
+        offset = local_signal.utcoffset()
+        if offset is None:
+            return False, "CYCLE_LOCAL_UTC_OFFSET_UNKNOWN", None
+        if offset.total_seconds() == -5 * 3600:
+            shift_minutes = int(config.est_offset_minutes or 0)
+        elif offset.total_seconds() != -4 * 3600:
+            return False, "CYCLE_SOLAR_OFFSET_UNSUPPORTED", None
+
+    marker_local = datetime.combine(local_signal.date(), marker_clock, tzinfo=zone)
+    marker_local += timedelta(minutes=shift_minutes)
+    marker_utc = marker_local.astimezone(timezone.utc)
+    signal_utc = signal_time.astimezone(timezone.utc)
+    delta_seconds = (signal_utc - marker_utc).total_seconds()
+
+    if abs(delta_seconds) <= config.entry_window_seconds:
+        return True, "CYCLE_MARKER_WINDOW_CONFIRMED", marker_utc.isoformat()
+    if delta_seconds > config.hard_cutoff_seconds:
+        return False, "TEMPORAL_HARD_CUTOFF_EXCEEDED", marker_utc.isoformat()
+    if delta_seconds < -config.entry_window_seconds:
+        return False, "TEMPORAL_BEFORE_ENTRY_WINDOW", marker_utc.isoformat()
+    return False, "TEMPORAL_OUTSIDE_ENTRY_WINDOW", marker_utc.isoformat()
+
+
+def _ema_values(values: Sequence[float], period: int) -> list[float]:
+    alpha = 2.0 / (period + 1.0)
+    result = [float(values[0])]
+    for value in values[1:]:
+        result.append(alpha * float(value) + (1.0 - alpha) * result[-1])
+    return result
+
+
+def evaluate_msnr_entry_confirmation(
+    bars: Sequence[StrategyBar],
+    *,
+    config: MSNRConfirmationConfig,
+    regime_config: RegimeConfig = RegimeConfig(),
+    higher_timeframe_bars: Sequence[StrategyBar] | None = None,
+    volume_source_verified: bool = False,
+    signal_time: datetime | None = None,
+    cycle_config: CycleMarkerConfig | None = None,
+) -> MSNRConfirmationVerdict:
+    """Evaluate Layer-9 MSNR rules on closed bars only; never grants capital authority.
+
+    For Deriv synthetic indices, true traded volume is not present in the public
+    ticks_history payload. Volume confirmation therefore remains off by default
+    and, when requested, requires independently verified volume provenance.
+    """
+
+    try:
+        _validate_bars(bars)
+    except ValueError as exc:
+        return _msnr_reject(str(exc))
+    if not bars:
+        return _msnr_reject("MSNR_BARS_EMPTY")
+
+    current = bars[-1]
+    current_stamp = _utc(current.timestamp_utc)
+    observed_signal_time = signal_time
+    if observed_signal_time is None:
+        try:
+            observed_signal_time = datetime.fromisoformat(
+                current.timestamp_utc.replace("Z", "+00:00")
+            )
+        except (TypeError, ValueError):
+            return _msnr_reject("SIGNAL_TIME_INVALID")
+    if not isinstance(observed_signal_time, datetime) or observed_signal_time.tzinfo is None:
+        return _msnr_reject("SIGNAL_TIME_MUST_BE_TIMEZONE_AWARE")
+    if observed_signal_time.astimezone(timezone.utc) < current_stamp:
+        return _msnr_reject("SIGNAL_TIME_PRECEDES_SIGNAL_BAR")
+    signal_stamp = observed_signal_time.astimezone(timezone.utc).isoformat()
+
+    required_history = max(
+        config.lookback_bars + 1,
+        config.atr_period + 1,
+        config.volume_sma_period + 1 if config.require_volume_confirmation else 0,
+    )
+    if len(bars) < required_history:
+        return _msnr_reject(
+            "MSNR_INSUFFICIENT_HISTORY",
+            signal_timestamp_utc=signal_stamp,
+        )
+
+    index = len(bars) - 1
+    prior = bars[index - config.lookback_bars:index]
+    reference_low = min(bar.low for bar in prior)
+    reference_high = max(bar.high for bar in prior)
+
+    true_ranges = [
+        _true_range(bars[k], bars[k - 1].close)
+        for k in range(index - config.atr_period, index)
+    ]
+    atr = fmean(true_ranges)
+    if not isfinite(atr) or atr <= 0:
+        return _msnr_reject(
+            "MSNR_ATR_INVALID", signal_timestamp_utc=signal_stamp
+        )
+
+    sweep_distance = config.min_sweep_atr * atr
+    swept_low = current.low <= reference_low - sweep_distance
+    swept_high = current.high >= reference_high + sweep_distance
+    if swept_low and swept_high:
+        return _msnr_reject(
+            "AMBIGUOUS_BIDIRECTIONAL_SWEEP",
+            signal_timestamp_utc=signal_stamp,
+            atr=atr,
+        )
+    if not swept_low and not swept_high:
+        return _msnr_reject(
+            "NO_ATR_SIZED_LIQUIDITY_SWEEP",
+            signal_timestamp_utc=signal_stamp,
+            atr=atr,
+        )
+
+    direction = "LONG" if swept_low else "SHORT"
+    candle_range = current.high - current.low
+    if candle_range <= 0:
+        return _msnr_reject(
+            "REJECTION_CANDLE_ZERO_RANGE",
+            direction=direction,
+            signal_timestamp_utc=signal_stamp,
+            atr=atr,
+        )
+    inward_fraction = (
+        (current.close - current.low) / candle_range
+        if direction == "LONG"
+        else (current.high - current.close) / candle_range
+    )
+    close_inside = (
+        reference_low < current.close <= reference_high
+        if direction == "LONG"
+        else reference_low <= current.close < reference_high
+    )
+    if not close_inside:
+        return _msnr_reject(
+            "REJECTION_CLOSE_NOT_BACK_INSIDE_RANGE",
+            direction=direction,
+            signal_timestamp_utc=signal_stamp,
+            atr=atr,
+            rejection_close_fraction=inward_fraction,
+        )
+    if inward_fraction < config.rejection_close_fraction:
+        return _msnr_reject(
+            "REJECTION_BODY_FRACTION_NOT_MET",
+            direction=direction,
+            signal_timestamp_utc=signal_stamp,
+            atr=atr,
+            rejection_close_fraction=inward_fraction,
+        )
+
+    regime = classify_regime(bars[:-1], config=regime_config)
+    if regime is None:
+        return _msnr_reject(
+            "VOLATILITY_REGIME_HISTORY_INSUFFICIENT",
+            direction=direction,
+            signal_timestamp_utc=signal_stamp,
+            atr=atr,
+            rejection_close_fraction=inward_fraction,
+        )
+    if regime.state not in config.allowed_regimes:
+        return _msnr_reject(
+            "VOLATILITY_REGIME_NOT_ALLOWED",
+            direction=direction,
+            signal_timestamp_utc=signal_stamp,
+            atr=atr,
+            rejection_close_fraction=inward_fraction,
+            regime=regime.state,
+        )
+
+    evidence = [
+        "PRIOR_SWING_REFERENCE_DEFINED",
+        "ATR_SWEEP_CONFIRMED",
+        "REJECTION_CLOSE_INWARD_CONFIRMED",
+        "PRIOR_RANGE_RECLAIM_CONFIRMED",
+        "VOLATILITY_REGIME_PASSED",
+    ]
+
+    if config.require_volume_confirmation:
+        if not volume_source_verified:
+            return _msnr_reject(
+                "VOLUME_SOURCE_UNVERIFIED",
+                direction=direction,
+                signal_timestamp_utc=signal_stamp,
+                atr=atr,
+                rejection_close_fraction=inward_fraction,
+                regime=regime.state,
+                evidence_codes=evidence,
+            )
+        volumes = [bar.volume for bar in prior[-config.volume_sma_period:]]
+        if current.volume is None or any(value is None for value in volumes):
+            return _msnr_reject(
+                "VERIFIED_VOLUME_DATA_MISSING",
+                direction=direction,
+                signal_timestamp_utc=signal_stamp,
+                atr=atr,
+                rejection_close_fraction=inward_fraction,
+                regime=regime.state,
+                evidence_codes=evidence,
+            )
+        volume_baseline = fmean(float(value) for value in volumes)
+        if volume_baseline <= 0 or float(current.volume) < config.volume_multiplier * volume_baseline:
+            return _msnr_reject(
+                "VOLUME_POP_NOT_CONFIRMED",
+                direction=direction,
+                signal_timestamp_utc=signal_stamp,
+                atr=atr,
+                rejection_close_fraction=inward_fraction,
+                regime=regime.state,
+                evidence_codes=evidence,
+            )
+        evidence.append("VERIFIED_VOLUME_SMA_POP")
+    else:
+        evidence.append("VOLUME_FILTER_NOT_APPLICABLE_PUBLIC_TICKS_HAVE_NO_TRADE_VOLUME")
+
+    if config.require_htf_alignment:
+        if higher_timeframe_bars is None or len(higher_timeframe_bars) < (
+            config.htf_ema_period + config.htf_slope_lookback
+        ):
+            return _msnr_reject(
+                "HTF_DATA_UNAVAILABLE",
+                direction=direction,
+                signal_timestamp_utc=signal_stamp,
+                atr=atr,
+                rejection_close_fraction=inward_fraction,
+                regime=regime.state,
+                evidence_codes=evidence,
+            )
+        try:
+            _validate_bars(higher_timeframe_bars)
+        except ValueError as exc:
+            return _msnr_reject(
+                str(exc),
+                direction=direction,
+                signal_timestamp_utc=signal_stamp,
+                atr=atr,
+                rejection_close_fraction=inward_fraction,
+                regime=regime.state,
+                evidence_codes=evidence,
+            )
+        if _utc(higher_timeframe_bars[-1].timestamp_utc) >= current_stamp:
+            return _msnr_reject(
+                "HTF_DATA_NOT_CLOSED_BEFORE_SIGNAL",
+                direction=direction,
+                signal_timestamp_utc=signal_stamp,
+                atr=atr,
+                rejection_close_fraction=inward_fraction,
+                regime=regime.state,
+                evidence_codes=evidence,
+            )
+        ema_values = _ema_values(
+            [bar.close for bar in higher_timeframe_bars],
+            config.htf_ema_period,
+        )
+        slope = ema_values[-1] - ema_values[-1 - config.htf_slope_lookback]
+        aligned = slope > 0 if direction == "LONG" else slope < 0
+        if not aligned:
+            return _msnr_reject(
+                "HTF_STRUCTURE_OPPOSED" if slope != 0 else "HTF_STRUCTURE_FLAT",
+                direction=direction,
+                signal_timestamp_utc=signal_stamp,
+                atr=atr,
+                rejection_close_fraction=inward_fraction,
+                regime=regime.state,
+                evidence_codes=evidence,
+            )
+        evidence.append("HTF_EMA50_SLOPE_ALIGNED")
+
+    if config.temporal_required:
+        temporal_pass, temporal_reason, marker_utc = _cycle_marker_check(
+            observed_signal_time, cycle_config
+        )
+        if not temporal_pass:
+            return _msnr_reject(
+                temporal_reason,
+                direction=direction,
+                signal_timestamp_utc=signal_stamp,
+                atr=atr,
+                rejection_close_fraction=inward_fraction,
+                regime=regime.state,
+                evidence_codes=evidence,
+            )
+        evidence.append("CYCLE_MARKER_WINDOW_CONFIRMED")
+    elif cycle_config is not None and cycle_config.enabled:
+        temporal_pass, temporal_reason, marker_utc = _cycle_marker_check(
+            observed_signal_time, cycle_config
+        )
+        if not temporal_pass:
+            return _msnr_reject(
+                temporal_reason,
+                direction=direction,
+                signal_timestamp_utc=signal_stamp,
+                atr=atr,
+                rejection_close_fraction=inward_fraction,
+                regime=regime.state,
+                evidence_codes=evidence,
+            )
+        evidence.append("CYCLE_MARKER_WINDOW_CONFIRMED")
+
+    stop = (
+        current.low - config.stop_buffer_ticks * config.tick_size
+        if direction == "LONG"
+        else current.high + config.stop_buffer_ticks * config.tick_size
+    )
+    target = reference_high if direction == "LONG" else reference_low
+    if (direction == "LONG" and target <= current.close) or (
+        direction == "SHORT" and target >= current.close
+    ):
+        return _msnr_reject(
+            "STRUCTURAL_TARGET_NOT_REWARDING",
+            direction=direction,
+            signal_timestamp_utc=signal_stamp,
+            atr=atr,
+            rejection_close_fraction=inward_fraction,
+            regime=regime.state,
+            evidence_codes=evidence,
+        )
+    evidence.append("STRUCTURAL_TARGET_REFERENCE_DEFINED")
+    return MSNRConfirmationVerdict(
+        signal_valid=True,
+        reason="PASSED",
+        direction=direction,
+        signal_timestamp_utc=signal_stamp,
+        stop_reference_price=stop,
+        target_reference_price=target,
+        atr=atr,
+        rejection_close_fraction=inward_fraction,
+        regime=regime.state,
+        evidence_codes=tuple(evidence),
+        capital_authority=False,
+        order_submission_permitted=False,
+    )
 
 @dataclass(frozen=True)
 class VWAPPullbackConfig:
