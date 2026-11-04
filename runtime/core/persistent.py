@@ -253,6 +253,10 @@ class ExistingAccountBindingStore(Protocol):
         self, aurelia_uuid: str
     ) -> CompositeAccountIdentity | None: ...
 
+    def get_binding_by_deriv_account_id(
+        self, account_id: str
+    ) -> CompositeAccountIdentity | None: ...
+
     def get_binding_by_deriv_loginid(
         self, deriv_loginid: str
     ) -> CompositeAccountIdentity | None: ...
@@ -272,6 +276,7 @@ class BrokerUUIDToLoginBinding:
         required_methods = (
             "bind_account",
             "get_binding_by_aurelia_uuid",
+            "get_binding_by_deriv_account_id",
             "get_binding_by_deriv_loginid",
         )
         if any(not callable(getattr(existing_binding_store, name, None)) for name in required_methods):
@@ -295,6 +300,18 @@ class BrokerUUIDToLoginBinding:
             raise ValueError("STORED_AURELIA_IDENTITY_KEY_MISMATCH")
         return identity
 
+    def get_binding_by_deriv_account_id(
+        self, account_id: str
+    ) -> CompositeAccountIdentity | None:
+        identity = self.existing_store.get_binding_by_deriv_account_id(account_id)
+        if identity is None:
+            return None
+        if not isinstance(identity, CompositeAccountIdentity) or identity.validate_integrity() is not True:
+            raise ValueError("STORED_IDENTITY_INTEGRITY_VALIDATION_FAILED")
+        if identity.deriv_account.account_id != account_id:
+            raise ValueError("STORED_DERIV_ACCOUNT_ID_KEY_MISMATCH")
+        return identity
+
     def get_binding_by_deriv_loginid(
         self, deriv_loginid: str
     ) -> CompositeAccountIdentity | None:
@@ -303,8 +320,8 @@ class BrokerUUIDToLoginBinding:
             return None
         if not isinstance(identity, CompositeAccountIdentity) or identity.validate_integrity() is not True:
             raise ValueError("STORED_IDENTITY_INTEGRITY_VALIDATION_FAILED")
-        if identity.deriv_account.deriv_loginid != deriv_loginid:
-            raise ValueError("STORED_DERIV_LOGINID_KEY_MISMATCH")
+        if identity.deriv_account.legacy_loginid != deriv_loginid:
+            raise ValueError("STORED_LEGACY_DERIV_LOGINID_KEY_MISMATCH")
         return identity
 
 

@@ -224,31 +224,80 @@ class AURELIAIdentity:
 
 @dataclass(frozen=True)
 class DerivAccountIdentifier:
-    """Broker account identity returned by Deriv (for example, a CR/VR account)."""
-    deriv_loginid: str
+    """Modern Deriv Options account identity.
+
+    account_id is the canonical modern Options identifier (for example
+    DOT90004580). It is not a legacy CR/VR loginid and must never be relabelled
+    as one. Legacy loginid is optional and retained in its own field only when
+    an explicit provider source actually returns it.
+    """
+    account_id: str
     account_type: str
-    is_disabled: bool
-    is_virtual: bool
+    status: str
+    group: str
+    currency: str
+    balance: float
+    legacy_loginid: str | None = None
 
     def validate(self) -> bool:
-        return (
-            isinstance(self.deriv_loginid, str)
-            and bool(self.deriv_loginid.strip())
-            and isinstance(self.account_type, str)
-            and bool(self.account_type.strip())
-            and isinstance(self.is_disabled, bool)
-            and isinstance(self.is_virtual, bool)
-        )
+        if (
+            not isinstance(self.account_id, str)
+            or not self.account_id
+            or not self.account_id.isascii()
+            or not self.account_id.isalnum()
+            or self.account_id != self.account_id.upper()
+        ):
+            return False
+        if self.account_type not in {"real", "demo"}:
+            return False
+        if self.status not in {"active", "inactive"}:
+            return False
+        if not isinstance(self.group, str) or not self.group.strip():
+            return False
+        if (
+            not isinstance(self.currency, str)
+            or len(self.currency) != 3
+            or not self.currency.isalpha()
+            or self.currency != self.currency.upper()
+        ):
+            return False
+        if isinstance(self.balance, bool) or not isinstance(self.balance, (int, float)):
+            return False
+        try:
+            balance = float(self.balance)
+        except (TypeError, ValueError, OverflowError):
+            return False
+        if not isfinite(balance) or balance < 0:
+            return False
+        if self.legacy_loginid is not None and (
+            not isinstance(self.legacy_loginid, str)
+            or not self.legacy_loginid.strip()
+            or not self.legacy_loginid.isascii()
+            or not self.legacy_loginid.isalnum()
+            or self.legacy_loginid != self.legacy_loginid.upper()
+        ):
+            return False
+        return True
 
 
 @dataclass(frozen=True)
 class BrokerReturnedUUID:
-    """Required UUID returned by Deriv; absence is not accepted for binding."""
-    broker_uuid: str
+    """Optional external identity UUID; it is not an Options account_id.
+
+    Deriv's modern Options account-list response does not contain this field.
+    The separate identity endpoint requires account_manage, which AURELIA does
+    not request in the trade-only OAuth flow. Absence is explicit.
+    """
+    broker_uuid: str | None
     broker_uuid_source: str
-    broker_uuid_timestamp: datetime
+    broker_uuid_timestamp: datetime | None
 
     def validate(self) -> bool:
+        if self.broker_uuid is None:
+            return (
+                self.broker_uuid_source == "not_returned"
+                and self.broker_uuid_timestamp is None
+            )
         if not isinstance(self.broker_uuid, str) or not self.broker_uuid.strip():
             return False
         try:
@@ -264,11 +313,17 @@ class BrokerReturnedUUID:
 
 @dataclass(frozen=True)
 class LoginID:
-    """Required login identifier; email addresses and hashes are excluded."""
-    login_id: str
+    """Optional AURELIA user-facing login identifier, not Deriv account_id.
+
+    Email addresses and email hashes are deliberately excluded. This value is
+    only populated when supplied by AURELIA's authenticated identity provider.
+    """
+    login_id: str | None
     login_id_source: str
 
     def validate(self) -> bool:
+        if self.login_id is None:
+            return self.login_id_source == "not_returned"
         return (
             isinstance(self.login_id, str)
             and bool(self.login_id.strip())
@@ -325,10 +380,13 @@ class CompositeAccountIdentity:
                 "system_version": aurelia.system_version,
             },
             "deriv_account": {
-                "deriv_loginid": deriv_account.deriv_loginid,
+                "account_id": deriv_account.account_id,
                 "account_type": deriv_account.account_type,
-                "is_disabled": deriv_account.is_disabled,
-                "is_virtual": deriv_account.is_virtual,
+                "status": deriv_account.status,
+                "group": deriv_account.group,
+                "currency": deriv_account.currency,
+                "balance": float(deriv_account.balance),
+                "legacy_loginid": deriv_account.legacy_loginid,
             },
             "broker_uuid": {
                 "broker_uuid": broker_uuid.broker_uuid,
@@ -371,6 +429,17 @@ class CompositeAccountIdentity:
             validator = getattr(component, "validate", None)
             if not callable(validator) or validator() is not True:
                 raise ValueError(f"{label}_IDENTITY_VALIDATION_FAILED")
+        expected_environment = (
+            "REAL" if deriv_account.account_type == "real" else "DEMO"
+        )
+        if (
+            context.environment != expected_environment
+            or context.currency != deriv_account.currency
+        ):
+            raise ValueError("ACCOUNT_CONTEXT_MISMATCH")
+        if deriv_account.status != "active":
+            raise ValueError("DERIV_ACCOUNT_NOT_ACTIVE")
+
         verified_at = utc_now()
         payload = cls._payload(
             aurelia, deriv_account, broker_uuid, login_id, context, verified_at
@@ -396,6 +465,15 @@ class CompositeAccountIdentity:
                 self.login_id,
                 self.context,
             )
+        ):
+            return False
+        expected_environment = (
+            "REAL" if self.deriv_account.account_type == "real" else "DEMO"
+        )
+        if (
+            self.deriv_account.status != "active"
+            or self.context.environment != expected_environment
+            or self.context.currency != self.deriv_account.currency
         ):
             return False
         if not _identity_timestamp_valid(self.verified_at):

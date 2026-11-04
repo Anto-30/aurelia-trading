@@ -35,7 +35,7 @@ from .models import (
 from .persistent import ExistingAccountBindingStore
 
 
-_SCHEMA = "aurelia.account_bindings.v1"
+_SCHEMA = "aurelia.account_bindings.v2"
 _PRIVATE_MODE = 0o600
 _PRIVATE_DIR_MODE = 0o700
 
@@ -48,10 +48,13 @@ def _serialize_identity(identity: CompositeAccountIdentity) -> dict[str, object]
             "system_version": identity.aurelia.system_version,
         },
         "deriv_account": {
-            "deriv_loginid": identity.deriv_account.deriv_loginid,
+            "account_id": identity.deriv_account.account_id,
             "account_type": identity.deriv_account.account_type,
-            "is_disabled": identity.deriv_account.is_disabled,
-            "is_virtual": identity.deriv_account.is_virtual,
+            "status": identity.deriv_account.status,
+            "group": identity.deriv_account.group,
+            "currency": identity.deriv_account.currency,
+            "balance": float(identity.deriv_account.balance),
+            "legacy_loginid": identity.deriv_account.legacy_loginid,
         },
         "broker_uuid": {
             "broker_uuid": identity.broker_uuid.broker_uuid,
@@ -95,10 +98,13 @@ def _deserialize_identity(row: object) -> CompositeAccountIdentity:
             system_version=aurelia["system_version"],
         ),
         deriv_account=DerivAccountIdentifier(
-            deriv_loginid=deriv["deriv_loginid"],
+            account_id=deriv["account_id"],
             account_type=deriv["account_type"],
-            is_disabled=deriv["is_disabled"],
-            is_virtual=deriv["is_virtual"],
+            status=deriv["status"],
+            group=deriv["group"],
+            currency=deriv["currency"],
+            balance=deriv["balance"],
+            legacy_loginid=deriv.get("legacy_loginid"),
         ),
         broker_uuid=BrokerReturnedUUID(
             broker_uuid=broker["broker_uuid"],
@@ -207,7 +213,11 @@ class EncryptedAccountBindingStore(ExistingAccountBindingStore):
 
         try:
             payload = json.loads(plaintext.decode("utf-8"))
-            if not isinstance(payload, dict) or payload.get("schema") != _SCHEMA:
+            if not isinstance(payload, dict):
+                raise ValueError("SCHEMA_MISMATCH")
+            if payload.get("schema") == "aurelia.account_bindings.v1":
+                raise RuntimeError("ACCOUNT_BINDING_SCHEMA_V1_REQUIRES_EXPLICIT_REBIND")
+            if payload.get("schema") != _SCHEMA:
                 raise ValueError("SCHEMA_MISMATCH")
             records = payload.get("records")
             if not isinstance(records, dict):
@@ -484,7 +494,7 @@ class EncryptedAccountBindingStore(ExistingAccountBindingStore):
             raise ValueError("IDENTITY_INTEGRITY_VALIDATION_FAILED")
         row = _serialize_identity(identity)
         aurelia_uuid = identity.aurelia.internal_uuid
-        deriv_loginid = identity.deriv_account.deriv_loginid
+        deriv_account_id = identity.deriv_account.account_id
 
         with self._locked():
             records = self._read_records_unlocked()
@@ -494,9 +504,9 @@ class EncryptedAccountBindingStore(ExistingAccountBindingStore):
             for other_uuid, other_row in records.items():
                 if (
                     other_uuid != aurelia_uuid
-                    and other_row["deriv_account"]["deriv_loginid"] == deriv_loginid
+                    and other_row["deriv_account"]["account_id"] == deriv_account_id
                 ):
-                    raise ValueError("DERIV_LOGINID_ALREADY_BOUND")
+                    raise ValueError("DERIV_ACCOUNT_ID_ALREADY_BOUND")
             if existing is None:
                 records[aurelia_uuid] = row
                 self._write_records_unlocked(records)
@@ -511,6 +521,21 @@ class EncryptedAccountBindingStore(ExistingAccountBindingStore):
             row = records.get(aurelia_uuid)
             return _deserialize_identity(row) if row is not None else None
 
+    def get_binding_by_deriv_account_id(
+        self, account_id: str
+    ) -> CompositeAccountIdentity | None:
+        if not isinstance(account_id, str) or not account_id.strip():
+            raise ValueError("DERIV_ACCOUNT_ID_REQUIRED")
+        with self._locked():
+            records = self._read_records_unlocked()
+            matches = [
+                row for row in records.values()
+                if row["deriv_account"]["account_id"] == account_id
+            ]
+            if len(matches) > 1:
+                raise RuntimeError("AMBIGUOUS_DERIV_ACCOUNT_ID_BINDING")
+            return _deserialize_identity(matches[0]) if matches else None
+
     def get_binding_by_deriv_loginid(
         self, deriv_loginid: str
     ) -> CompositeAccountIdentity | None:
@@ -520,8 +545,8 @@ class EncryptedAccountBindingStore(ExistingAccountBindingStore):
             records = self._read_records_unlocked()
             matches = [
                 row for row in records.values()
-                if row["deriv_account"]["deriv_loginid"] == deriv_loginid
+                if row["deriv_account"].get("legacy_loginid") == deriv_loginid
             ]
             if len(matches) > 1:
-                raise RuntimeError("AMBIGUOUS_DERIV_LOGINID_BINDING")
+                raise RuntimeError("AMBIGUOUS_LEGACY_DERIV_LOGINID_BINDING")
             return _deserialize_identity(matches[0]) if matches else None

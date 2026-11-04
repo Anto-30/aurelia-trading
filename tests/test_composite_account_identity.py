@@ -21,11 +21,16 @@ class CompositeAccountIdentityTests(unittest.TestCase):
     def setUp(self) -> None:
         self.now = datetime.now(UTC)
         self.aurelia = AURELIAIdentity(str(uuid4()), self.now, "test-version")
-        self.deriv = DerivAccountIdentifier("CR123456", "real", False, False)
-        self.broker_uuid = BrokerReturnedUUID(
-            "f2ac691f-68d7-b467-6308-72d5ecaf9030", "balance", self.now
+        self.deriv = DerivAccountIdentifier(
+            account_id="DOT90004580",
+            account_type="real",
+            status="active",
+            group="row",
+            currency="USD",
+            balance=1250.5,
         )
-        self.login_id = LoginID("CR123456", "balance")
+        self.broker_uuid = BrokerReturnedUUID(None, "not_returned", None)
+        self.login_id = LoginID(None, "not_returned")
         self.context = AccountContext("OPTIONS", "REAL", "USD", self.now)
 
     def test_each_identity_component_validates_independently(self) -> None:
@@ -36,26 +41,28 @@ class CompositeAccountIdentityTests(unittest.TestCase):
         self.assertTrue(self.context.validate())
 
         self.assertFalse(AURELIAIdentity("not-a-uuid", self.now, "v1").validate())
-        self.assertFalse(DerivAccountIdentifier("", "real", False, False).validate())
-        self.assertFalse(BrokerReturnedUUID("not-a-uuid", "balance", self.now).validate())
-        self.assertFalse(BrokerReturnedUUID(
-            "f2ac691f-68d7-b467-6308-72d5ecaf9030", "", self.now
+        self.assertFalse(DerivAccountIdentifier(
+            account_id="", account_type="real", status="active",
+            group="row", currency="USD", balance=0.0
         ).validate())
+        self.assertTrue(BrokerReturnedUUID(None, "not_returned", None).validate())
+        self.assertFalse(BrokerReturnedUUID(None, "balance", None).validate())
+        self.assertFalse(LoginID(None, "balance").validate())
         self.assertFalse(LoginID("", "balance").validate())
         self.assertFalse(AccountContext("OPTIONS", "LIVE", "USD", self.now).validate())
 
     def test_broker_uuid_must_have_source_and_utc_timestamp(self) -> None:
         broker_uuid = "f2ac691f-68d7-b467-6308-72d5ecaf9030"
-        self.assertTrue(BrokerReturnedUUID(broker_uuid, "balance", self.now).validate())
-        self.assertFalse(BrokerReturnedUUID("not-a-uuid", "balance", self.now).validate())
+        self.assertTrue(BrokerReturnedUUID(broker_uuid, "account_manage_identity", self.now).validate())
+        self.assertFalse(BrokerReturnedUUID("not-a-uuid", "account_manage_identity", self.now).validate())
         self.assertFalse(BrokerReturnedUUID(broker_uuid, "", self.now).validate())
 
     def test_composite_creation_rejects_each_invalid_component(self) -> None:
         bad_components = (
             (AURELIAIdentity("bad", self.now, "v1"), self.deriv, self.broker_uuid, self.login_id, self.context),
             (self.aurelia, DerivAccountIdentifier("", "real", False, False), self.broker_uuid, self.login_id, self.context),
-            (self.aurelia, self.deriv, BrokerReturnedUUID("not-a-uuid", "balance", self.now), self.login_id, self.context),
-            (self.aurelia, self.deriv, self.broker_uuid, LoginID("", "balance"), self.context),
+            (self.aurelia, self.deriv, BrokerReturnedUUID("not-a-uuid", "account_manage_identity", self.now), self.login_id, self.context),
+            (self.aurelia, self.deriv, self.broker_uuid, LoginID("", "aurelia_auth"), self.context),
             (self.aurelia, self.deriv, self.broker_uuid, self.login_id, AccountContext("OPTIONS", "LIVE", "USD", self.now)),
         )
         for components in bad_components:
@@ -74,7 +81,7 @@ class CompositeAccountIdentityTests(unittest.TestCase):
         identity = CompositeAccountIdentity.create(
             self.aurelia, self.deriv, self.broker_uuid, self.login_id, self.context
         )
-        object.__setattr__(identity.deriv_account, "deriv_loginid", "CR999999")
+        object.__setattr__(identity.deriv_account, "account_id", "DOT90004581")
         self.assertFalse(identity.validate_integrity())
 
     def test_integrity_check_detects_verified_timestamp_tampering(self) -> None:
