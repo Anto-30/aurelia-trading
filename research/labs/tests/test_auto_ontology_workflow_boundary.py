@@ -42,6 +42,21 @@ class ResearchCiBoundaryTests(unittest.TestCase):
         self.assertIn("AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true'", block)
         self.assertIn("environment: production", block)
 
+
+    def test_nonproduction_soak_flags_are_scoped_to_health_probe(self):
+        text = RESEARCH_WORKFLOW.read_text(encoding="utf-8")
+        job_environment = text.split("    steps:", 1)[0]
+        self.assertNotIn("AURELIA_NON_PRODUCTION_SOAK", job_environment)
+        health_step = text.split("- name: Verify clean non-production worker health", 1)[1]
+        for flag in (
+            "AURELIA_NON_PRODUCTION_SOAK",
+            "FINAL_EXECUTION_AUTHORIZATION",
+            "LIVE_EXECUTION",
+            "AURELIA_VERIFY_DERIV_AUTH",
+            "AURELIA_CONTINUOUS_RUNTIME",
+        ):
+            self.assertIn(flag, health_step)
+
     def test_research_ci_is_secret_free_and_has_no_production_environment(self):
         text = RESEARCH_WORKFLOW.read_text(encoding="utf-8")
         self.assertNotIn("${{ secrets.", text)
