@@ -135,14 +135,15 @@ class BacktestPolicyTests(unittest.TestCase):
         self.assertLessEqual(metrics.r_p05, metrics.r_median)
         self.assertLessEqual(metrics.r_median, metrics.r_p95)
 
-    def test_filter_efficacy_reports_rejected_loss_rate_over_accepted_loss_rate(self):
+    def test_filter_efficacy_compares_rejected_loss_rate_with_accepted_profit_rate(self):
         efficacy = evaluate_filter_efficacy(
             accepted_r_multiples=[1.0, 2.0, -1.0, 1.5],
             rejected_counterfactual_r_multiples=[-1.0, -0.5, -1.0, 0.2],
         )
         self.assertAlmostEqual(efficacy.accepted_loss_rate, 0.25)
+        self.assertAlmostEqual(efficacy.accepted_profit_rate, 0.75)
         self.assertAlmostEqual(efficacy.rejected_loss_rate, 0.75)
-        self.assertAlmostEqual(efficacy.filter_efficacy_ratio, 3.0)
+        self.assertAlmostEqual(efficacy.filter_efficacy_ratio, 1.0)
         self.assertEqual(efficacy.rejected_signal_count, 4)
 
     def test_filter_efficacy_is_unavailable_when_a_comparison_pool_is_empty(self):
