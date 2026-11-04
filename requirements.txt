@@ -1,1 +1,2 @@
-websockets==17.1\npyarrow>=18,<24\n
+websockets==17.1
+pyarrow>=18,<24
