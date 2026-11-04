@@ -19,7 +19,7 @@ class TestDerivAdapterContract(unittest.TestCase):
   with patch("runtime.adapters.deriv_adapter.DerivWebSocketTransport",return_value=transport):
    with self.assertRaisesRegex(DerivProtocolError,"ACCOUNT_CURRENCY_UNVERIFIED"):asyncio.run(a.connect())
   transport.close.assert_awaited_once()
- def test_balance_connection_id_is_not_misclassified_as_broker_uuid(self):
+ def test_authenticated_balance_captures_broker_uuid_as_distinct_identity(self):
   import asyncio
   from types import SimpleNamespace
   from unittest.mock import AsyncMock, patch
@@ -46,9 +46,8 @@ class TestDerivAdapterContract(unittest.TestCase):
   with patch("runtime.adapters.deriv_adapter.DerivWebSocketTransport", return_value=transport):
    account = asyncio.run(adapter.connect())
   self.assertEqual(account.loginid, "CRREAL")
-  self.assertIsNone(account.broker_uuid)
-  self.assertIsNone(account.broker_uuid_source)
-  self.assertIsNone(account.broker_uuid_captured_at_utc)
+  self.assertEqual(account.broker_uuid, "f2ac691f-68d7-b467-6308-72d5ecaf9030")
+  self.assertEqual(account.broker_uuid_source, "balance")
   self.assertEqual(len(account.identity_response_sha256), 64)
   self.assertNotEqual(account.loginid, account.broker_uuid)
 
