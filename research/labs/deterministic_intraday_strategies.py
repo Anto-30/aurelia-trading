@@ -364,8 +364,10 @@ def _cycle_marker_check(
     signal_time: datetime,
     config: CycleMarkerConfig | None,
 ) -> tuple[bool, str, str | None]:
-    if config is None or not config.enabled:
-        return True, "TEMPORAL_FILTER_DISABLED", None
+    if config is None:
+        return False, "CYCLE_MARKER_CONFIGURATION_REQUIRED", None
+    if not config.enabled:
+        return False, "CYCLE_MARKER_DISABLED_WHEN_REQUIRED", None
     if config.normalization is None:
         return False, "CYCLE_DST_NORMALIZATION_UNSPECIFIED", None
     if config.dst_transition_policy is None:
@@ -431,6 +433,7 @@ def evaluate_msnr_entry_confirmation(
     higher_timeframe_bars: Sequence[StrategyBar] | None = None,
     volume_source_verified: bool = False,
     signal_time: datetime | None = None,
+    setup_ready_time: datetime | None = None,
     cycle_config: CycleMarkerConfig | None = None,
 ) -> MSNRConfirmationVerdict:
     """Evaluate Layer-9 MSNR rules on closed bars only; never grants capital authority.
@@ -658,7 +661,30 @@ def evaluate_msnr_entry_confirmation(
             )
         evidence.append("HTF_EMA50_SLOPE_ALIGNED")
 
-    if config.temporal_required:
+    temporal_enabled = config.temporal_required or (
+        cycle_config is not None and cycle_config.enabled
+    )
+    if config.temporal_required and cycle_config is None:
+        return _msnr_reject(
+            "CYCLE_MARKER_CONFIGURATION_REQUIRED",
+            direction=direction,
+            signal_timestamp_utc=signal_stamp,
+            atr=atr,
+            rejection_close_fraction=inward_fraction,
+            regime=regime.state,
+            evidence_codes=evidence,
+        )
+    if config.temporal_required and cycle_config is not None and not cycle_config.enabled:
+        return _msnr_reject(
+            "CYCLE_MARKER_DISABLED_WHEN_REQUIRED",
+            direction=direction,
+            signal_timestamp_utc=signal_stamp,
+            atr=atr,
+            rejection_close_fraction=inward_fraction,
+            regime=regime.state,
+            evidence_codes=evidence,
+        )
+    if temporal_enabled:
         temporal_pass, temporal_reason, marker_utc = _cycle_marker_check(
             observed_signal_time, cycle_config
         )
@@ -672,14 +698,48 @@ def evaluate_msnr_entry_confirmation(
                 regime=regime.state,
                 evidence_codes=evidence,
             )
-        evidence.append("CYCLE_MARKER_WINDOW_CONFIRMED")
-    elif cycle_config is not None and cycle_config.enabled:
-        temporal_pass, temporal_reason, marker_utc = _cycle_marker_check(
-            observed_signal_time, cycle_config
-        )
-        if not temporal_pass:
+        if marker_utc is None:
             return _msnr_reject(
-                temporal_reason,
+                "CYCLE_MARKER_TIMESTAMP_MISSING",
+                direction=direction,
+                signal_timestamp_utc=signal_stamp,
+                atr=atr,
+                rejection_close_fraction=inward_fraction,
+                regime=regime.state,
+                evidence_codes=evidence,
+            )
+        if setup_ready_time is None:
+            setup_ready = current_stamp
+        else:
+            if not isinstance(setup_ready_time, datetime) or setup_ready_time.tzinfo is None:
+                return _msnr_reject(
+                    "SETUP_READY_TIME_MUST_BE_TIMEZONE_AWARE",
+                    direction=direction,
+                    signal_timestamp_utc=signal_stamp,
+                    atr=atr,
+                    rejection_close_fraction=inward_fraction,
+                    regime=regime.state,
+                    evidence_codes=evidence,
+                )
+            setup_ready = setup_ready_time.astimezone(timezone.utc)
+        signal_utc = observed_signal_time.astimezone(timezone.utc)
+        if setup_ready > signal_utc:
+            return _msnr_reject(
+                "SETUP_READY_TIME_AFTER_SIGNAL",
+                direction=direction,
+                signal_timestamp_utc=signal_stamp,
+                atr=atr,
+                rejection_close_fraction=inward_fraction,
+                regime=regime.state,
+                evidence_codes=evidence,
+            )
+        marker_time = datetime.fromisoformat(marker_utc)
+        window_opens = marker_time - timedelta(
+            seconds=cycle_config.entry_window_seconds
+        )
+        if setup_ready > window_opens:
+            return _msnr_reject(
+                "MSNR_SETUP_NOT_READY_BEFORE_ENTRY_WINDOW",
                 direction=direction,
                 signal_timestamp_utc=signal_stamp,
                 atr=atr,
@@ -688,6 +748,7 @@ def evaluate_msnr_entry_confirmation(
                 evidence_codes=evidence,
             )
         evidence.append("CYCLE_MARKER_WINDOW_CONFIRMED")
+        evidence.append("MSNR_SETUP_READY_BEFORE_ENTRY_WINDOW")
 
     stop = (
         current.low - config.stop_buffer_ticks * config.tick_size
