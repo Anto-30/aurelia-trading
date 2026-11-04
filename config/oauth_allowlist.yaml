@@ -1,0 +1,28 @@
+# AURELIA Deriv OAuth allowlist.
+# This file intentionally ships with no redirect URIs. Add the real HTTPS
+# callback only after it is deployed and registered exactly in Deriv's portal.
+# Never use wildcards, user-supplied endpoints, or a placeholder production host.
+oauth_application:
+  name: "aurelia-trading-runtime"
+  provider: "deriv"
+  app_id_env_var: "DERIV_OAUTH_APP_ID"
+  redirect_uris: []
+
+# Deriv documents trade, account_manage, application_read and payment.
+# The Options account-list and OTP endpoints require trade. AURELIA requests
+# only trade; there is no separate read-only Options account scope.
+token_scope:
+  permitted:
+    - "trade"
+
+# Only the provider-documented Authorization Code + PKCE endpoints are allowed.
+endpoints:
+  authorize: "https://auth.deriv.com/oauth2/auth"
+  token: "https://auth.deriv.com/oauth2/token"
+
+# Access-token expiry is read from the token response. Deriv does not issue
+# refresh tokens; expiry/401 requires a fresh user authorization.
+token_policy:
+  pending_authorization_ttl_seconds: 600
+  max_access_token_ttl_seconds: 7776000
+  refresh_tokens_supported: false
