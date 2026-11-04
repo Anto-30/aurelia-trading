@@ -19,12 +19,12 @@ def make_bar(index, open_, high, low, close, *, volume=None, start=None, minutes
     return StrategyBar(stamp.isoformat(), open_, high, low, close, volume=volume)
 
 
-def msnr_bars(*, volume=100.0):
+def msnr_bars(*, volume=100.0, start=None):
     rows = [
-        make_bar(i, 100.0, 101.0, 99.0, 100.0, volume=volume)
+        make_bar(i, 100.0, 101.0, 99.0, 100.0, volume=volume, start=start)
         for i in range(20)
     ]
-    rows.append(make_bar(20, 100.0, 100.5, 96.9, 100.0, volume=151.0))
+    rows.append(make_bar(20, 100.0, 100.5, 96.9, 100.0, volume=151.0, start=start))
     return rows
 
 
@@ -150,14 +150,15 @@ class MSNRConfirmationTests(unittest.TestCase):
         self.assertNotIn("CYCLE_MARKER", verdict.evidence_codes)
 
     def test_clock_fixed_marker_uses_new_york_wall_clock_on_est_day(self):
-        signal_time = datetime(2026, 11, 4, 8, 49, 55, tzinfo=ZoneInfo("America/New_York"))
+        origin = datetime(2026, 11, 4, 8, 29, 55, tzinfo=ZoneInfo("America/New_York"))
+        signal_time = origin + timedelta(minutes=20)
         cycle = CycleMarkerConfig(
             enabled=True,
             normalization="clock_fixed",
             dst_transition_policy="apply_local_timezone",
         )
         verdict = evaluate_msnr_entry_confirmation(
-            msnr_bars(),
+            msnr_bars(start=origin),
             config=self.config(temporal_required=True),
             regime_config=RegimeConfig(lookback_bars=10, high_volatility_pct=10),
             signal_time=signal_time,
@@ -183,9 +184,10 @@ class MSNRConfirmationTests(unittest.TestCase):
             normalization="clock_fixed",
             dst_transition_policy="apply_local_timezone",
         )
-        signal_time = datetime(2026, 11, 4, 8, 51, 26, tzinfo=ZoneInfo("America/New_York"))
+        origin = datetime(2026, 11, 4, 8, 31, 26, tzinfo=ZoneInfo("America/New_York"))
+        signal_time = origin + timedelta(minutes=20)
         verdict = evaluate_msnr_entry_confirmation(
-            msnr_bars(),
+            msnr_bars(start=origin),
             config=self.config(temporal_required=True),
             regime_config=RegimeConfig(lookback_bars=10, high_volatility_pct=10),
             signal_time=signal_time,
