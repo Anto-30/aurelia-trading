@@ -64,6 +64,56 @@ class TestDerivAdapterContract(unittest.TestCase):
                 asyncio.run(adapter.connect())
         transport.connect.assert_not_awaited()
 
+    def test_generic_request_rejects_all_capital_actions_before_transport(self):
+        import asyncio
+
+        transport = AsyncMock()
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+            expected_currency="USD",
+        )
+        adapter.transport = transport
+
+        async def exercise():
+            for payload in (
+                {"buy": "PROPOSAL-1", "price": 1.0},
+                {"sell": "CONTRACT-1", "price": 1.0},
+                {"cancel": "CONTRACT-1"},
+                {"contract_update": 1, "contract_id": 1},
+            ):
+                with self.subTest(payload=payload):
+                    with self.assertRaisesRegex(
+                        DerivProtocolError,
+                        "CAPITAL_ACTION_REQUIRES_EXECUTOR_AUTHORITY",
+                    ):
+                        await adapter.request(payload)
+
+        asyncio.run(exercise())
+        transport.request.assert_not_awaited()
+
+    def test_generic_request_rejects_unknown_or_ambiguous_actions(self):
+        import asyncio
+
+        transport = AsyncMock()
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+            expected_currency="USD",
+        )
+        adapter.transport = transport
+
+        async def exercise():
+            for payload in (
+                {"unknown_action": 1},
+                {"balance": 1, "portfolio": 1},
+                {"proposal": 1, "buy": "PROPOSAL-1"},
+            ):
+                with self.subTest(payload=payload):
+                    with self.assertRaises(DerivProtocolError):
+                        await adapter.request(payload)
+
+        asyncio.run(exercise())
+        transport.request.assert_not_awaited()
+
     def test_legacy_generic_token_is_not_loaded_as_oauth(self):
         with patch.dict(
             os.environ,
