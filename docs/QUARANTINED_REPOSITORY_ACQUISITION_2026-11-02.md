@@ -155,3 +155,28 @@ Highest-priority manual review candidates remain:
 - `mithun50/openclaw-termux`: 17 unpinned action-reference matches
 
 The scan is a reproducible source inventory and heuristic triage, not an SBOM, CVE/SCA report, malware analysis, full secret-scanning certification, dependency installation or runtime test. All external sources remain quarantined under their registry modes.
+
+
+## 2026-11-04 follow-up — six additional agent/tooling candidates
+
+The following repositories were supplied for a further AURELIA intake. Current default-branch commit IDs were retrieved from GitHub and recorded in `config/external_repo_federation.json`; they are pinned for provenance, not approved for installation.
+
+| Repository | Exact reviewed pin | License metadata | Disposition | Fit and restriction |
+|---|---|---|---|---|
+| `superlinked/sie` | `8563ef3bf92e181c7ddd32356be78d7a15599d45` | Apache-2.0 | `SANDBOX_ONLY` | Self-hosted inference server for embeddings, retrieval, structured extraction, OCR, safety and agent-loop model serving. Heavy Python/ML/Docker/Kubernetes/GPU surface and model downloads; research endpoint only after dependency, model provenance, data-retention and egress review. |
+| `opensandbox-group/OpenSandbox` | `fab314287bded086a5f76b2735935c7f484a0332` | Apache-2.0 | `SANDBOX_ONLY` | Best-fit future candidate for disposable agent/code-execution test environments. Its Credential Vault and DNS+nft default-deny egress design are useful architectural references, not independently validated controls. Do not inject Deriv credentials, attach production volumes or expose trading/order tools. |
+| `jarrodwatts/claude-hud` | `dd8c0bebeeef81f94a9361af317492f626d3890d` | MIT | `TOOLCHAIN_ONLY` | Claude Code status-line plugin for context, rate limits, tools, agents and todo progress. Current package manifest reports version 0.15.1 and Node >=22.18.0. Its permission model/import fence and fixed helper process were reviewed from README claims only; keep the optional shell `--extra-cmd` disabled. Developer workstation utility, not an AURELIA runtime. |
+| `obra/superpowers` | `22f0b463e7a5e579904dd6211a520321035526f7` | MIT | `TOOLCHAIN_ONLY` | Existing registry entry refreshed to current pin. The corresponding Superpowers skill set is already installed and used in this ChatGPT session; no second installation or provider runtime activation is needed. |
+| `simonw/llm` | `b9786a2daa44a995ff7719c655c5338bf685d551` | Apache-2.0 | `SANDBOX_ONLY` | Provider-agnostic CLI/Python library; current manifest reports 0.37.1 and Python >=3.11. Supports plugin-installed providers, local/hosted models, SQLite prompt logging and tool execution. Evaluate only in a disposable research environment; review plugins, stored prompts and credentials before any use. |
+| `openinterpreter/openinterpreter` | `f12ce327eeee679d2f2f22ce23018b0db9ae092f` | Apache-2.0 | `SANDBOX_ONLY` | Rust-based coding-agent harness with provider/harness switching, MCP, skills and command execution. README describes native sandboxing and approvals; documented bypass/danger-full-access modes must remain prohibited. External disposable VM only, no broker credentials, host mounts or capital tools. |
+
+### Review boundary and evidence
+
+- This pass read current GitHub README files, available root manifests/package metadata, LICENSE files, and OpenSandbox's Credential Vault and egress documentation.
+- Exact current commit pins and preliminary dispositions are recorded in the registry. The 317-entry registry now contains 321 unique repository entries: four new entries and two refreshed pins.
+- This is not a full source checkout or source audit. No repository code was executed, no dependencies were installed, and no model weights were downloaded.
+- No SBOM, transitive dependency inventory, current CVE/SCA report, malware scan, nested license audit, prompt-injection assessment, network capture or sandbox enforcement test was completed.
+- No Claude Code, DeepSeek, Hermes, OpenInterpreter or `llm` runtime was started from these repositories. The installed Superpowers skills are toolchain guidance, not evidence that those external harnesses are connected.
+- OpenSandbox's credential broker must not be treated as permission to expose broker secrets. If a future test requires credentials, it needs an independently reviewed credential policy, explicit domain/method allowlists, strict default-deny egress, approval controls and a separate disposable account. No account credentials were used here.
+
+**Disposition:** retain all six in their recorded quarantine modes. Do not copy code into AURELIA's canonical runtime or grant broker, capital, order, release, live-lock or production-secret authority. Full audits and independent review remain required before any mode is changed.
