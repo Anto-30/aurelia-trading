@@ -180,6 +180,7 @@ class ParquetTickStoreTests(unittest.TestCase):
                 ticks=ticks,
                 request={"ticks_history": "R_100", "count": 2, "end": "1790000001"},
                 source_sha="fixture-sha",
+                page_sha256="a" * 64,
             )
             parquet_path = Path(written.parquet_paths[0])
             self.assertTrue(parquet_path.is_file())

@@ -162,6 +162,7 @@ class MSNRConfirmationTests(unittest.TestCase):
             config=self.config(temporal_required=True),
             regime_config=RegimeConfig(lookback_bars=10, high_volatility_pct=10),
             signal_time=signal_time,
+            setup_ready_time=origin + timedelta(minutes=19),
             cycle_config=cycle,
         )
         self.assertTrue(verdict.signal_valid)
@@ -178,6 +179,35 @@ class MSNRConfirmationTests(unittest.TestCase):
         self.assertFalse(verdict.signal_valid)
         self.assertEqual(verdict.reason, "CYCLE_DST_NORMALIZATION_UNSPECIFIED")
 
+    def test_cycle_gate_requires_setup_before_entry_window_opens(self):
+        origin = datetime(2026, 11, 4, 8, 49, 20, tzinfo=ZoneInfo("America/New_York"))
+        signal_time = datetime(2026, 11, 4, 8, 49, 55, tzinfo=ZoneInfo("America/New_York"))
+        cycle = CycleMarkerConfig(
+            enabled=True,
+            normalization="clock_fixed",
+            dst_transition_policy="apply_local_timezone",
+        )
+        verdict = evaluate_msnr_entry_confirmation(
+            msnr_bars(start=origin - timedelta(minutes=20)),
+            config=self.config(temporal_required=True),
+            regime_config=RegimeConfig(lookback_bars=10, high_volatility_pct=10),
+            signal_time=signal_time,
+            setup_ready_time=origin,
+            cycle_config=cycle,
+        )
+        self.assertFalse(verdict.signal_valid)
+        self.assertEqual(verdict.reason, "MSNR_SETUP_NOT_READY_BEFORE_ENTRY_WINDOW")
+
+    def test_temporal_required_without_cycle_configuration_fails_closed(self):
+        verdict = evaluate_msnr_entry_confirmation(
+            msnr_bars(),
+            config=self.config(temporal_required=True),
+            regime_config=RegimeConfig(lookback_bars=10, high_volatility_pct=10),
+            signal_time=datetime(2026, 10, 10, 0, 20, tzinfo=timezone.utc),
+        )
+        self.assertFalse(verdict.signal_valid)
+        self.assertEqual(verdict.reason, "CYCLE_MARKER_CONFIGURATION_REQUIRED")
+
     def test_cycle_marker_enforces_hard_cutoff(self):
         cycle = CycleMarkerConfig(
             enabled=True,
@@ -191,6 +221,7 @@ class MSNRConfirmationTests(unittest.TestCase):
             config=self.config(temporal_required=True),
             regime_config=RegimeConfig(lookback_bars=10, high_volatility_pct=10),
             signal_time=signal_time,
+            setup_ready_time=origin + timedelta(minutes=19),
             cycle_config=cycle,
         )
         self.assertFalse(verdict.signal_valid)
