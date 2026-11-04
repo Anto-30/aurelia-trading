@@ -8,11 +8,20 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Mapping
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 from uuid import UUID
 
 from runtime.oauth.allowlist import OAuthAllowlist
 from runtime.oauth.pkce import PKCEChallenge
+
+
+
+
+class _RejectOAuthRedirectHandler(HTTPRedirectHandler):
+    """Never forward an OAuth code or PKCE verifier to a redirect target."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
 
 
 class DerivOAuthError(RuntimeError):
@@ -155,7 +164,8 @@ class DerivOAuthExtension:
             method="POST",
         )
         try:
-            with urlopen(request, timeout=self.timeout_seconds) as response:
+            opener = build_opener(_RejectOAuthRedirectHandler())
+            with opener.open(request, timeout=self.timeout_seconds) as response:
                 if getattr(response, "status", 200) != 200:
                     raise DerivOAuthError("DERIV_OAUTH_TOKEN_EXCHANGE_REJECTED")
                 raw = response.read(65537)
