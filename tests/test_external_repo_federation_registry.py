@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from contextlib import redirect_stdout
+from io import StringIO
 import json
 import re
+import runpy
 import unittest
 from pathlib import Path
 
@@ -36,6 +39,16 @@ class ExternalRepositoryFederationRegistryTests(unittest.TestCase):
                 else:
                     self.assertRegex(pin, re.compile(r"^[0-9a-f]{40}$"))
 
+
+    def test_registry_validator_accepts_refreshed_current_pin_for_historical_intake(self):
+        namespace = runpy.run_path(
+            str(ROOT / "scripts" / "validate_agent_tool_skill_assignments.py"),
+            run_name="registry_validator_test",
+        )
+        output = StringIO()
+        with redirect_stdout(output):
+            namespace["main"]()
+        self.assertIn("AGENT_TOOL_SKILL_ASSIGNMENT_AUDIT=PASS", output.getvalue())
 
     def test_external_repositories_never_receive_capital_or_live_order_authority(self):
         controls = self.registry["global_controls"]
