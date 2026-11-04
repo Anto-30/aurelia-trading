@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import json
+import os
+import stat
 import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
+
+from cryptography.fernet import Fernet
 
 from runtime.core.models import (
     AURELIAIdentity,
@@ -16,12 +20,13 @@ from runtime.core.models import (
     LoginID,
 )
 from runtime.core.persistent import BrokerUUIDToLoginBinding
+from runtime.core.account_binding_store import EncryptedAccountBindingStore
 
 
-def make_identity() -> CompositeAccountIdentity:
+def make_identity(*, deriv_loginid: str = "CR123456") -> CompositeAccountIdentity:
     now = datetime.now(timezone.utc)
     aurelia = AURELIAIdentity(str(uuid4()), now, "test-version")
-    deriv = DerivAccountIdentifier("CR123456", "real", False, False)
+    deriv = DerivAccountIdentifier(deriv_loginid, "real", False, False)
     broker_uuid = BrokerReturnedUUID(None, "not_returned", None)
     login_id = LoginID(None, "not_returned")
     context = AccountContext("OPTIONS", "REAL", "USD", now)
@@ -93,7 +98,7 @@ def deserialize_identity(row: dict) -> CompositeAccountIdentity:
 
 
 class FakeExistingPersistentBindingStore:
-    """Test-only persistent backing store implementing AURELIA's injected contract."""
+    """Test-only plaintext fake for adapter contract tests; not production persistence."""
 
     def __init__(self, path: Path):
         self.path = path
@@ -147,7 +152,6 @@ class BrokerUUIDToLoginBindingTests(unittest.TestCase):
             first = BrokerUUIDToLoginBinding(FakeExistingPersistentBindingStore(path))
             first.bind_complete_identity(identity)
 
-            # Reconstruct the store and adapter as on a process restart.
             second_store = FakeExistingPersistentBindingStore(path)
             second = BrokerUUIDToLoginBinding(second_store)
             restored = second.get_binding_by_aurelia_uuid(identity.aurelia.internal_uuid)
@@ -183,6 +187,82 @@ class BrokerUUIDToLoginBindingTests(unittest.TestCase):
             BrokerUUIDToLoginBinding(None)
         with self.assertRaisesRegex(TypeError, "EXISTING_ACCOUNT_BINDING_STORE_INTERFACE_INVALID"):
             BrokerUUIDToLoginBinding(object())
+
+
+class EncryptedAccountBindingStoreTests(unittest.TestCase):
+    def test_encrypted_store_survives_adapter_and_store_reconstruction(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "account_bindings.enc"
+            key = Fernet.generate_key()
+            identity = make_identity()
+
+            first = BrokerUUIDToLoginBinding(EncryptedAccountBindingStore(path, key))
+            first.bind_complete_identity(identity)
+
+            raw = path.read_bytes()
+            self.assertTrue(raw.startswith(b"gAAAA"))
+            self.assertNotIn(identity.aurelia.internal_uuid.encode(), raw)
+            self.assertNotIn(b"CR123456", raw)
+            self.assertNotIn(b"OPTIONS", raw)
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+
+            second = BrokerUUIDToLoginBinding(EncryptedAccountBindingStore(path, key))
+            restored = second.get_binding_by_aurelia_uuid(identity.aurelia.internal_uuid)
+            self.assertIsNotNone(restored)
+            self.assertEqual(restored.identity_checksum, identity.identity_checksum)
+            self.assertEqual(
+                second.get_binding_by_deriv_loginid("CR123456").aurelia.internal_uuid,
+                identity.aurelia.internal_uuid,
+            )
+
+    def test_missing_store_is_empty_and_does_not_create_plaintext_file(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "account_bindings.enc"
+            store = EncryptedAccountBindingStore(path, Fernet.generate_key())
+            self.assertIsNone(store.get_binding_by_aurelia_uuid(str(uuid4())))
+            self.assertFalse(path.exists())
+
+    def test_wrong_encryption_key_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "account_bindings.enc"
+            identity = make_identity()
+            EncryptedAccountBindingStore(path, Fernet.generate_key()).bind_account(identity)
+
+            wrong_key_store = EncryptedAccountBindingStore(path, Fernet.generate_key())
+            with self.assertRaisesRegex(RuntimeError, "ACCOUNT_BINDING_STORE_AUTHENTICATION_FAILED"):
+                wrong_key_store.get_binding_by_aurelia_uuid(identity.aurelia.internal_uuid)
+
+    def test_ciphertext_tampering_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "account_bindings.enc"
+            key = Fernet.generate_key()
+            identity = make_identity()
+            EncryptedAccountBindingStore(path, key).bind_account(identity)
+
+            ciphertext = bytearray(path.read_bytes())
+            position = len(ciphertext) // 2
+            ciphertext[position] = ord("A") if ciphertext[position] != ord("A") else ord("B")
+            path.write_bytes(ciphertext)
+
+            store = EncryptedAccountBindingStore(path, key)
+            with self.assertRaisesRegex(RuntimeError, "ACCOUNT_BINDING_STORE_AUTHENTICATION_FAILED"):
+                store.get_binding_by_aurelia_uuid(identity.aurelia.internal_uuid)
+
+    def test_conflicting_deriv_loginid_cannot_be_bound_to_two_internal_accounts(self):
+        with tempfile.TemporaryDirectory() as td:
+            store = EncryptedAccountBindingStore(Path(td) / "account_bindings.enc", Fernet.generate_key())
+            first = make_identity()
+            second = make_identity()
+            store.bind_account(first)
+            with self.assertRaisesRegex(ValueError, "DERIV_LOGINID_ALREADY_BOUND"):
+                store.bind_account(second)
+
+    def test_incomplete_or_invalid_encryption_key_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            with self.assertRaisesRegex(ValueError, "ACCOUNT_BINDING_ENCRYPTION_KEY_REQUIRED"):
+                EncryptedAccountBindingStore(Path(td) / "account_bindings.enc", b"")
+            with self.assertRaisesRegex(ValueError, "ACCOUNT_BINDING_ENCRYPTION_KEY_INVALID"):
+                EncryptedAccountBindingStore(Path(td) / "account_bindings.enc", b"not-a-fernet-key")
 
 
 if __name__ == "__main__":
