@@ -147,6 +147,77 @@ class HistoricalTickIngestionTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(DerivTickIngestionError, "PAGE_LIMIT_REACHED"):
             await ingestor.fetch_ticks("R_100", start_epoch=5, end_epoch=10)
 
+    def test_tick_resampling_builds_closed_one_minute_ohlc_without_fake_volume(self):
+        from research.data.pipeline import resample_ticks_to_strategy_bars
+
+        bars = resample_ticks_to_strategy_bars(
+            [
+                Tick("R_100", 600001, 10.0),
+                Tick("R_100", 600002, 10.2),
+                Tick("R_100", 600002, 10.25),
+                Tick("R_100", 600059, 9.8),
+                Tick("R_100", 600060, 9.9),
+                Tick("R_100", 600119, 10.1),
+            ],
+            timeframe_seconds=60,
+            data_end_epoch=600120,
+        )
+        self.assertEqual(len(bars), 2)
+        self.assertEqual((bars[0].open, bars[0].high, bars[0].low, bars[0].close),
+                         (10.0, 10.25, 9.8, 9.8))
+        self.assertEqual((bars[1].open, bars[1].high, bars[1].low, bars[1].close),
+                         (9.9, 10.1, 9.9, 10.1))
+        self.assertEqual(bars[0].timestamp_utc, "1970-01-07T22:41:00+00:00")
+        self.assertIsNone(bars[0].volume)
+        self.assertIsNone(bars[1].session_id)
+
+    def test_tick_resampling_excludes_incomplete_last_bar_and_does_not_fill_gaps(self):
+        from research.data.pipeline import resample_ticks_to_strategy_bars
+
+        bars = resample_ticks_to_strategy_bars(
+            [
+                Tick("R_100", 600001, 10.0),
+                Tick("R_100", 600059, 10.1),
+                Tick("R_100", 600121, 10.2),
+                Tick("R_100", 600179, 10.3),
+            ],
+            timeframe_seconds=60,
+            data_end_epoch=600150,
+        )
+        self.assertEqual(len(bars), 1)
+        self.assertEqual(bars[0].close, 10.1)
+
+    def test_tick_resampling_supports_fifteen_minute_bars(self):
+        from research.data.pipeline import resample_ticks_to_strategy_bars
+
+        bars = resample_ticks_to_strategy_bars(
+            [
+                Tick("R_100", 900001, 100.0),
+                Tick("R_100", 900899, 101.0),
+            ],
+            timeframe_seconds=900,
+            data_end_epoch=900900,
+        )
+        self.assertEqual(len(bars), 1)
+        self.assertEqual((bars[0].open, bars[0].high, bars[0].low, bars[0].close),
+                         (100.0, 101.0, 100.0, 101.0))
+
+    def test_tick_resampling_rejects_unsupported_timeframe_and_no_closed_bars(self):
+        from research.data.pipeline import resample_ticks_to_strategy_bars
+
+        with self.assertRaisesRegex(ValueError, "TIMEFRAME_SECONDS_UNSUPPORTED"):
+            resample_ticks_to_strategy_bars(
+                [Tick("R_100", 600001, 10.0)],
+                timeframe_seconds=300,
+                data_end_epoch=600600,
+            )
+        with self.assertRaisesRegex(ValueError, "NO_COMPLETE_BARS_AVAILABLE"):
+            resample_ticks_to_strategy_bars(
+                [Tick("R_100", 600001, 10.0)],
+                timeframe_seconds=60,
+                data_end_epoch=600030,
+            )
+
     def test_tick_record_rejects_invalid_fields(self):
         for tick in (
             Tick("", 100, 10.0),
