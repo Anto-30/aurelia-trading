@@ -279,6 +279,8 @@ class DerivTickIngestor:
         run_identifier = run_id or uuid4().hex
         revision = source_sha or os.getenv("GITHUB_SHA", "").strip() or "LOCAL_UNPINNED"
         collected: list[Tick] = []
+        seen_tick_keys: set[tuple[str, int, float]] = set()
+        observed_tick_count = 0
         seen_page_hashes: set[str] = set()
         parquet_paths: list[str] = []
         provenance_paths: list[str] = []
@@ -344,14 +346,25 @@ class DerivTickIngestor:
                 if not in_range:
                     source_exhausted = True
                     break
-                collected.extend(in_range)
 
-                if store is not None:
+                observed_tick_count += len(in_range)
+                new_page_ticks: list[Tick] = []
+                for tick in in_range:
+                    tick_key = (tick.symbol, tick.epoch, float(tick.quote))
+                    if tick_key in seen_tick_keys:
+                        continue
+                    seen_tick_keys.add(tick_key)
+                    new_page_ticks.append(tick)
+                    collected.append(tick)
+
+                # Deduplicate inclusive page overlaps before durable storage.
+                # Different prices at the same epoch remain distinct ticks.
+                if store is not None and new_page_ticks:
                     written = store.write_page(
                         symbol=symbol,
                         run_id=run_identifier,
                         page_number=page_number,
-                        ticks=in_range,
+                        ticks=new_page_ticks,
                         request=request,
                         source_sha=revision,
                         page_sha256=page.payload_sha256,
@@ -374,15 +387,13 @@ class DerivTickIngestor:
             raise DerivTickIngestionError("NO_TICKS_RETURNED")
 
         collected.sort(key=lambda item: item.epoch)
-        deduped: list[Tick] = []
-        seen_ticks: set[tuple[str, int, float]] = set()
-        for tick in collected:
-            key = (tick.symbol, tick.epoch, float(tick.quote))
-            if key not in seen_ticks:
-                deduped.append(tick)
-                seen_ticks.add(key)
-
+        # Collection already removes exact page/local duplicates before storage.
+        # Retain this invariant check as a fail-closed defense against future edits.
+        deduped = collected
         report = validate_ticks(deduped, max_gap_seconds=self.max_gap_seconds)
+        duplicates_removed = observed_tick_count - report.unique_count
+        if duplicates_removed < 0:
+            raise DerivTickIngestionError("TICK_DEDUPLICATION_ACCOUNTING_INVALID")
         dataset_payload = [
             {"symbol": tick.symbol, "epoch": tick.epoch, "quote": float(tick.quote)}
             for tick in deduped
@@ -397,7 +408,7 @@ class DerivTickIngestor:
             end_epoch=end_epoch,
             pages_fetched=pages_fetched,
             tick_count=report.unique_count,
-            duplicates_removed=report.duplicate_count,
+            duplicates_removed=duplicates_removed,
             max_gap_seconds=report.max_gap_seconds,
             gaps_over_threshold=report.gaps_over_threshold,
             first_epoch=report.first_epoch,
