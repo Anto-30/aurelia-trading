@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-11-02",
+  "generated_date": "2026-11-04",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -2976,12 +2976,14 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/openinterpreter/openinterpreter",
-      "head_commit": "ac1fcc8fe57aba51fcc3c79afd57a0883237fe87",
-      "pin_source": "github_api_commits_HEAD_checked_2026-10-11",
+      "head_commit": "f12ce327eeee679d2f2f22ce23018b0db9ae092f",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-04",
       "physical_runtime_install": "NOT_CLAIMED",
-      "integration_note": "Sandbox-only computer-use/automation evaluation; deny access to broker sessions, secrets, and production hosts.",
+      "integration_note": "Retain SANDBOX_ONLY. It supports command execution, MCP, skills and harness switching. Use only in a disposable external VM with read-only/workspace-only permissions, no host mounts, no broker/session credentials and approval prompts; never use danger-full-access, --yolo or bypass flags in AURELIA.",
       "capital_authority": false,
-      "security_review_status": "PENDING"
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_SANDBOX_DOC_REVIEW_ONLY_FULL_SOURCE_AUDIT_PENDING",
+      "license_metadata": "Apache-2.0",
+      "package_version": "0.0.59"
     },
     {
       "repo": "anomalyco/opencode",
@@ -6697,8 +6699,8 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/obra/superpowers",
-      "head_commit": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
-      "pin_source": "github_api_commits_default_branch_checked_2026-11-02",
+      "head_commit": "22f0b463e7a5e579904dd6211a520321035526f7",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-04",
       "license_metadata": "MIT",
       "last_pushed_at": "2026-10-29T23:35:34Z",
       "capabilities": [
@@ -6707,10 +6709,10 @@
         "implementation-plans",
         "code-review-workflows"
       ],
-      "security_review_status": "PRELIMINARY_METADATA_README_AND_HEURISTIC_SOURCE_SCAN_FULL_AUDIT_PENDING",
+      "security_review_status": "PRELIMINARY_METADATA_README_AND_INSTALLED_SKILL_COVERAGE_REVIEW_FULL_AUDIT_PENDING",
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
-      "integration_note": "Methodology/tooling reference. Equivalent Superpowers skills are already installed in this ChatGPT session; no repository installation needed.",
+      "integration_note": "Toolchain methodology already available through installed Superpowers skills in this session. Update immutable pin only; do not reinstall or claim Claude, Codex or Hermes runtimes are connected.",
       "source_scan_run_id": 41472773080,
       "source_scan_artifact_id": 13156296533
     },
@@ -6892,6 +6894,127 @@
       "integration_note": "Personal assistant with tool/plugin execution and local/cloud providers. Evaluate only in sandbox; no capital authority or production credential access.",
       "source_scan_run_id": 41472773080,
       "source_scan_artifact_id": 13156296533
+    },
+    {
+      "repo": "superlinked/sie",
+      "category": "self-hosted-ml-inference-engine",
+      "domain": "engineering",
+      "assigned_agents": [
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "sync_targets": [
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/superlinked/sie",
+      "head_commit": "8563ef3bf92e181c7ddd32356be78d7a15599d45",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-04",
+      "license_metadata": "Apache-2.0",
+      "security_review_status": "PRELIMINARY_METADATA_README_MANIFEST_REVIEW_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "capabilities": [
+        "multi-model inference serving",
+        "embeddings and reranking",
+        "structured extraction",
+        "OCR/document conversion",
+        "agent loop"
+      ],
+      "integration_note": "Self-hosted inference infrastructure with Python 3.12 workspace, ML dependencies, model downloads, Docker/Kubernetes and GPU variants. Keep isolated from canonical runtime; evaluate only as a research inference service after image/model provenance, SBOM, GPU resource, egress and data-retention audits."
+    },
+    {
+      "repo": "opensandbox-group/OpenSandbox",
+      "category": "agent-sandbox-platform",
+      "domain": "engineering",
+      "assigned_agents": [
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "sync_targets": [
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/opensandbox-group/OpenSandbox",
+      "head_commit": "fab314287bded086a5f76b2735935c7f484a0332",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-04",
+      "license_metadata": "Apache-2.0",
+      "security_review_status": "PRELIMINARY_METADATA_README_CREDENTIAL_VAULT_EGRESS_DOC_REVIEW_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "capabilities": [
+        "isolated code execution",
+        "Docker and Kubernetes lifecycle",
+        "per-sandbox egress policies",
+        "Credential Vault",
+        "browser and desktop automation",
+        "SDK and MCP"
+      ],
+      "integration_note": "Best-fit future candidate for disposable research/agent test sandboxes. Credential Vault and DNS+nft egress claims require independent verification; enforce default-deny, no broker credentials, no production mounts and no capital/order tool. Sandbox status is not an authorization to inject secrets."
+    },
+    {
+      "repo": "jarrodwatts/claude-hud",
+      "category": "claude-code-statusline-plugin",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT"
+      ],
+      "sync_targets": [
+        "ClaudeCode",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/jarrodwatts/claude-hud",
+      "head_commit": "dd8c0bebeeef81f94a9361af317492f626d3890d",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-04",
+      "license_metadata": "MIT",
+      "package_version": "0.15.1",
+      "runtime_requirement": "Node.js >=22.18.0",
+      "security_review_status": "PRELIMINARY_METADATA_README_PACKAGE_JSON_SECURITY_CLAIM_REVIEW_ONLY_FULL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "capabilities": [
+        "Claude Code context usage display",
+        "rate limit display",
+        "tool and agent activity display",
+        "todo progress"
+      ],
+      "integration_note": "Developer workstation UI only; Node permission model and import fence described in upstream README but not independently tested here. Keep extra shell command feature disabled. Not an AURELIA runtime dependency and not proof Claude Code is connected."
+    },
+    {
+      "repo": "simonw/llm",
+      "category": "multi-provider-llm-cli-library",
+      "domain": "engineering",
+      "assigned_agents": [
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "sync_targets": [
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/simonw/llm",
+      "head_commit": "b9786a2daa44a995ff7719c655c5338bf685d551",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-04",
+      "license_metadata": "Apache-2.0",
+      "package_version": "0.37.1",
+      "python_requirement": ">=3.11",
+      "security_review_status": "PRELIMINARY_METADATA_README_MANIFEST_REVIEW_ONLY_FULL_DEPENDENCY_AND_TOOL_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "capabilities": [
+        "provider-agnostic LLM CLI and Python library",
+        "local and hosted model support",
+        "SQLite prompt/response logging",
+        "embeddings",
+        "structured output",
+        "tool execution"
+      ],
+      "integration_note": "Useful as a bounded provider adapter/experimentation CLI only inside disposable research sandbox. Plugin installation, provider credentials, tool execution and SQLite prompt logs require separate supply-chain and data-retention review. No production secrets or trading tools."
     }
   ],
   "pin_policy": {
@@ -7362,7 +7485,7 @@
       "capital_authority": false
     }
   },
-  "repository_count": 317,
+  "repository_count": 321,
   "intake_2026_11_02_followup": {
     "supplied_urls_count": 23,
     "unique_supplied_repositories_count": 18,
@@ -7426,5 +7549,72 @@
       "raw_secret_values_emitted": false,
       "interpretation": "Regex indicators are not confirmed credentials or vulnerabilities; many matches occur in tests, documentation, examples and fixtures. Manual source-level validation, SBOM, CVE/SCA, malware and egress audits remain pending."
     }
+  },
+  "intake_2026_11_04_followup": {
+    "date": "2026-11-04",
+    "supplied_urls_count": 6,
+    "unique_supplied_repositories_count": 6,
+    "existing_records_refreshed": 2,
+    "new_records_added": 4,
+    "pin_source": "GitHub API default-branch commit endpoint",
+    "repository_pins": [
+      {
+        "repo": "superlinked/sie",
+        "head_commit": "8563ef3bf92e181c7ddd32356be78d7a15599d45",
+        "mode": "SANDBOX_ONLY",
+        "license_metadata": "Apache-2.0"
+      },
+      {
+        "repo": "opensandbox-group/OpenSandbox",
+        "head_commit": "fab314287bded086a5f76b2735935c7f484a0332",
+        "mode": "SANDBOX_ONLY",
+        "license_metadata": "Apache-2.0"
+      },
+      {
+        "repo": "jarrodwatts/claude-hud",
+        "head_commit": "dd8c0bebeeef81f94a9361af317492f626d3890d",
+        "mode": "TOOLCHAIN_ONLY",
+        "license_metadata": "MIT"
+      },
+      {
+        "repo": "obra/superpowers",
+        "head_commit": "22f0b463e7a5e579904dd6211a520321035526f7",
+        "mode": "TOOLCHAIN_ONLY",
+        "license_metadata": "MIT"
+      },
+      {
+        "repo": "simonw/llm",
+        "head_commit": "b9786a2daa44a995ff7719c655c5338bf685d551",
+        "mode": "SANDBOX_ONLY",
+        "license_metadata": "Apache-2.0"
+      },
+      {
+        "repo": "openinterpreter/openinterpreter",
+        "head_commit": "f12ce327eeee679d2f2f22ce23018b0db9ae092f",
+        "mode": "SANDBOX_ONLY",
+        "license_metadata": "Apache-2.0"
+      }
+    ],
+    "source_review": "Current default-branch README, root manifest/package metadata where available, LICENSE, and OpenSandbox Credential Vault/egress docs reviewed through GitHub read-only APIs. This is preliminary metadata/documentation review, not full source review.",
+    "physical_runtime_install": "NOT_CLAIMED",
+    "repository_code_executed": false,
+    "dependencies_installed": false,
+    "sbom_generated": false,
+    "vulnerability_scan_completed": false,
+    "malware_scan_completed": false,
+    "transitive_license_audit_completed": false,
+    "production_secrets_accessed": false,
+    "broker_access_performed": false,
+    "live_orders_submitted": 0,
+    "capital_authority": false,
+    "security_review_status": "PRELIMINARY_METADATA_AND_DOCUMENTATION_ONLY_FULL_AUDIT_PENDING",
+    "data_gaps": [
+      "No immutable checkout/source archive was scanned in this turn",
+      "No SBOM or transitive dependency resolution",
+      "No current CVE/SCA or malware analysis",
+      "No complete nested license/NOTICE audit",
+      "No sandbox runtime/egress test",
+      "No host installation or provider runtime connection"
+    ]
   }
 }
