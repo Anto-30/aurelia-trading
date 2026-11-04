@@ -17,13 +17,6 @@ jobs:
       contents: read
     env:
       PYTHONPATH: "."
-      AURELIA_NON_PRODUCTION_SOAK: "true"
-      FINAL_EXECUTION_AUTHORIZATION: "false"
-      LIVE_EXECUTION: "BLOCKED"
-      AURELIA_VERIFY_DERIV_PUBLIC: "false"
-      AURELIA_VERIFY_DERIV_AUTH: "false"
-      AURELIA_CONTINUOUS_RUNTIME: "false"
-      AURELIA_RUN_ONCE: "false"
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -75,6 +68,14 @@ jobs:
           test "$status" -eq 2
           echo "READINESS_EXPECTED_BLOCKED=true"
       - name: Verify clean non-production worker health
+        env:
+          AURELIA_NON_PRODUCTION_SOAK: "true"
+          FINAL_EXECUTION_AUTHORIZATION: "false"
+          LIVE_EXECUTION: "BLOCKED"
+          AURELIA_VERIFY_DERIV_PUBLIC: "false"
+          AURELIA_VERIFY_DERIV_AUTH: "false"
+          AURELIA_CONTINUOUS_RUNTIME: "false"
+          AURELIA_RUN_ONCE: "false"
         run: |
           python -m runtime.main >/tmp/aurelia-worker.log 2>&1 &
           PID=$!
