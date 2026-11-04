@@ -1,5 +1,6 @@
 import os
 import unittest
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from runtime.adapters.deriv_adapter import DerivAdapter, DerivProtocolError
@@ -67,7 +68,7 @@ class TestDerivAdapterContract(unittest.TestCase):
     def test_generic_request_rejects_all_capital_actions_before_transport(self):
         import asyncio
 
-        transport = AsyncMock()
+        transport = SimpleNamespace(request=AsyncMock())
         adapter = DerivAdapter(
             ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
             expected_currency="USD",
@@ -94,7 +95,7 @@ class TestDerivAdapterContract(unittest.TestCase):
     def test_generic_request_rejects_unknown_or_ambiguous_actions(self):
         import asyncio
 
-        transport = AsyncMock()
+        transport = SimpleNamespace(request=AsyncMock())
         adapter = DerivAdapter(
             ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
             expected_currency="USD",
