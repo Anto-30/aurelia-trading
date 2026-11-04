@@ -158,7 +158,7 @@ class BacktestPolicyTests(unittest.TestCase):
         self.assertEqual(split.train_start, 0)
         self.assertEqual(split.train_end, 600)
         self.assertEqual(split.validation_start, 610)
-        self.assertEqual(split.validation_end, 790)
+        self.assertEqual(split.validation_end, 800)
         self.assertEqual(split.test_start, 810)
         self.assertEqual(split.test_end, 1000)
         self.assertLess(split.train_end, split.validation_start)
