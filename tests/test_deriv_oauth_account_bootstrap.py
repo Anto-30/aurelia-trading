@@ -60,7 +60,7 @@ token_policy:
         self.store.store_oauth_access_token(
             principal_uuid=PRINCIPAL,
             app_id=APP_ID,
-            access_token="tradeScopeFixtureBearerToken",
+            access_token="unit-test-abc123",
             token_type="Bearer",
             scopes=["trade"],
             scope_source="provider_response",
@@ -101,7 +101,7 @@ token_policy:
 
         def request(method, endpoint, headers, body):
             self.requests.append((method, endpoint, dict(headers), body))
-            self.assertEqual(headers.get("Authorization"), "Bearer tradeScopeFixtureBearerToken")
+            self.assertEqual(headers.get("Authorization"), "Bearer unit-test-abc123")
             self.assertEqual(headers.get("Deriv-App-ID"), APP_ID)
             if method == "GET":
                 self.assertEqual(
