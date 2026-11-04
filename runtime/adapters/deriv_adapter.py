@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timezone
+from math import isfinite
 from typing import Any, AsyncIterator
 
 from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_ws_url, validate_modern_options_ws_url
@@ -32,7 +33,68 @@ class DerivProtocolError(RuntimeError):
 
 
 class DerivAdapter:
-    """Transport-only Deriv Options API boundary for AURELIA."""
+    """Transport-only Deriv Options API boundary for AURELIA.
+
+    Generic request calls are restricted to an explicit non-mutating action
+    allowlist. Capital-moving requests are only constructed by the dedicated
+    executor submission method after the adapter has an authorized account
+    session; they cannot be smuggled through request() or mixed with read calls.
+    """
+
+    _READ_REQUEST_FIELDS = {
+        "active_symbols": frozenset({"active_symbols", "req_id", "passthrough"}),
+        "balance": frozenset({"balance", "subscribe", "req_id", "passthrough"}),
+        "portfolio": frozenset({"portfolio", "req_id", "passthrough"}),
+        "statement": frozenset({
+            "statement", "limit", "offset", "action_type", "date_from",
+            "date_to", "req_id", "passthrough",
+        }),
+        "proposal": frozenset({
+            "proposal", "amount", "basis", "contract_type", "currency",
+            "duration", "duration_unit", "underlying_symbol", "barrier",
+            "date_expiry", "req_id", "passthrough",
+        }),
+        "proposal_open_contract": frozenset({
+            "proposal_open_contract", "contract_id", "subscribe",
+            "req_id", "passthrough",
+        }),
+    }
+    _CAPITAL_ACTIONS = frozenset({
+        "buy", "sell", "cancel", "contract_update", "payout",
+        "deposit", "withdrawal", "transfer", "topup",
+        "paymentagent_transfer",
+    })
+
+    @classmethod
+    def _validate_request_payload(
+        cls,
+        payload: dict[str, Any],
+        *,
+        executor_submission: bool = False,
+    ) -> str:
+        if not isinstance(payload, dict) or not payload:
+            raise DerivProtocolError("BROKER_REQUEST_PAYLOAD_INVALID")
+
+        recognized_actions = set(cls._READ_REQUEST_FIELDS).union(cls._CAPITAL_ACTIONS)
+        actions = set(payload).intersection(recognized_actions)
+        if len(actions) != 1:
+            raise DerivProtocolError("BROKER_REQUEST_ACTION_INVALID")
+
+        action = next(iter(actions))
+        if action in cls._CAPITAL_ACTIONS:
+            if not (executor_submission and action == "buy"):
+                raise DerivProtocolError(
+                    "CAPITAL_ACTION_REQUIRES_EXECUTOR_AUTHORITY"
+                )
+            allowed_fields = frozenset({"buy", "price"})
+        else:
+            if executor_submission:
+                raise DerivProtocolError("EXECUTOR_BUY_ACTION_REQUIRED")
+            allowed_fields = cls._READ_REQUEST_FIELDS[action]
+
+        if not set(payload).issubset(allowed_fields):
+            raise DerivProtocolError("BROKER_REQUEST_FIELD_NOT_ALLOWED")
+        return action
 
     def __init__(
         self,
@@ -137,8 +199,24 @@ class DerivAdapter:
             await self.close()
             raise
 
-    async def _tracked_request(self, request_type: str, payload: dict[str, Any]) -> dict[str, Any]:
-        """Send a Deriv API request with correlation and circuit enforcement."""
+    async def _tracked_request(
+        self,
+        request_type: str,
+        payload: dict[str, Any],
+        *,
+        executor_submission: bool = False,
+    ) -> dict[str, Any]:
+        """Send a request after action validation, with correlation and circuit enforcement.
+
+        The executor_submission flag is an internal-only path used by
+        submit_authorized_order(). Public request() never sets it.
+        """
+        action = self._validate_request_payload(
+            payload,
+            executor_submission=executor_submission,
+        )
+        if executor_submission and (request_type != "buy" or action != "buy"):
+            raise DerivProtocolError("EXECUTOR_BUY_ACTION_REQUIRED")
         if self.transport is None:
             raise DerivProtocolError("BROKER_SESSION_NOT_CONNECTED")
         if not self.circuit.allow_request():
@@ -283,14 +361,32 @@ class DerivAdapter:
         return proposal_id
 
     async def submit_authorized_order(self, payload: dict[str, Any]) -> BrokerResult:
-        if not self.authorized:
+        if not self.authorized or self.account is None:
             raise DerivProtocolError("BROKER_SESSION_NOT_AUTHORIZED")
+        if not isinstance(payload, dict) or set(payload) != {"proposal_id", "stake"}:
+            raise DerivProtocolError("ORDER_PAYLOAD_INVALID")
+
         proposal_id = payload.get("proposal_id")
-        if not proposal_id:
+        if not isinstance(proposal_id, str) or not proposal_id.strip():
             raise DerivProtocolError("ORDER_REQUIRES_BROKER_PROPOSAL_ID")
+        stake = payload.get("stake")
+        if (
+            isinstance(stake, bool)
+            or not isinstance(stake, (int, float))
+            or not isfinite(float(stake))
+            or float(stake) <= 0
+        ):
+            raise DerivProtocolError("ORDER_STAKE_INVALID")
+
         try:
-            reply = await self.request(
-                {"buy": str(proposal_id), "price": payload["stake"]}
+            # This is the only adapter method allowed to construct a buy
+            # request. It is called by CapitalPlaneExecutor after the
+            # deterministic release, risk, firewall, exposure, reconciliation,
+            # fencing, idempotency, proposal-binding and balance checks.
+            reply = await self._tracked_request(
+                "buy",
+                {"buy": proposal_id.strip(), "price": float(stake)},
+                executor_submission=True,
             )
         except Exception:
             return BrokerResult(
