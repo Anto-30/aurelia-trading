@@ -3,16 +3,18 @@ from __future__ import annotations
 import asyncio
 import inspect
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from math import isfinite
 from typing import Any, Callable, Mapping
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit, parse_qs
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 from uuid import UUID
 
 from runtime.oauth.allowlist import OAuthAllowlist
 from runtime.oauth.pkce import PKCEChallenge
+from runtime.core.models import DerivAccountIdentifier
 
 
 
@@ -26,6 +28,14 @@ class _RejectOAuthRedirectHandler(HTTPRedirectHandler):
 
 class DerivOAuthError(RuntimeError):
     """Sanitized OAuth flow failure; provider response bodies are never propagated."""
+
+
+@dataclass(frozen=True)
+class DerivDemoAccountSession:
+    """Account snapshot plus a one-use OTP URL; repr deliberately hides OTP."""
+
+    account: DerivAccountIdentifier
+    websocket_url: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -61,6 +71,10 @@ class DerivOAuthExtension:
         principal_uuid: str,
         timeout_seconds: float = 10.0,
         token_exchange: Callable[[dict[str, str]], Mapping[str, Any]] | None = None,
+        provider_request: Callable[
+            [str, str, dict[str, str], dict[str, Any] | None],
+            Mapping[str, Any],
+        ] | None = None,
     ) -> None:
         if existing_adapter is None:
             raise ValueError("EXISTING_DERIV_ADAPTER_REQUIRED")
@@ -93,6 +107,7 @@ class DerivOAuthExtension:
         self.allowlist = allowlist
         self.timeout_seconds = float(timeout_seconds)
         self._token_exchange = token_exchange or self._exchange_authorization_code
+        self._provider_request = provider_request or self._request_deriv_rest
         attach = getattr(existing_adapter, "attach_oauth_extension", None)
         if not callable(attach):
             raise TypeError("DERIV_ADAPTER_OAUTH_EXTENSION_HOOK_REQUIRED")
@@ -302,6 +317,228 @@ class DerivOAuthExtension:
             token_type="Bearer",
             issued_at_utc=issued.isoformat(),
             expires_at_utc=expires.isoformat(),
+        )
+
+    def _request_deriv_rest(
+        self,
+        method: str,
+        endpoint: str,
+        headers: dict[str, str],
+        body: dict[str, Any] | None,
+    ) -> Mapping[str, Any]:
+        """Call only a fixed Deriv Options REST endpoint without redirects."""
+        if method not in {"GET", "POST"}:
+            raise DerivOAuthError("DERIV_REST_METHOD_NOT_ALLOWED")
+        allowed = {
+            "GET": "https://api.derivws.com/trading/v1/options/accounts",
+        }
+        if method == "GET" and endpoint != allowed["GET"]:
+            raise DerivOAuthError("DERIV_REST_ENDPOINT_NOT_ALLOWED")
+        if method == "POST" and not endpoint.startswith(
+            "https://api.derivws.com/trading/v1/options/accounts/"
+        ):
+            raise DerivOAuthError("DERIV_REST_ENDPOINT_NOT_ALLOWED")
+        if method == "POST" and not endpoint.endswith("/otp"):
+            raise DerivOAuthError("DERIV_REST_ENDPOINT_NOT_ALLOWED")
+
+        payload = None if body is None else json.dumps(
+            body, separators=(",", ":"), allow_nan=False
+        ).encode("utf-8")
+        request_headers = {
+            "Accept": "application/json",
+            **headers,
+        }
+        if payload is not None:
+            request_headers["Content-Type"] = "application/json"
+        request = Request(
+            endpoint,
+            data=payload,
+            headers=request_headers,
+            method=method,
+        )
+        try:
+            opener = build_opener(_RejectOAuthRedirectHandler())
+            with opener.open(request, timeout=self.timeout_seconds) as response:
+                if getattr(response, "status", 200) != 200:
+                    raise DerivOAuthError("DERIV_REST_REQUEST_REJECTED")
+                raw = response.read(65537)
+        except HTTPError as exc:
+            # Do not expose provider response text: it may echo sensitive request data.
+            if exc.code in {401, 403}:
+                raise DerivOAuthError("DERIV_OAUTH_PROVIDER_AUTHORIZATION_REJECTED") from None
+            raise DerivOAuthError("DERIV_REST_REQUEST_REJECTED") from None
+        except (URLError, TimeoutError, OSError):
+            raise DerivOAuthError("DERIV_REST_REQUEST_UNAVAILABLE") from None
+        if len(raw) > 65536:
+            raise DerivOAuthError("DERIV_REST_RESPONSE_TOO_LARGE")
+        try:
+            decoded = json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            raise DerivOAuthError("DERIV_REST_RESPONSE_INVALID") from None
+        if not isinstance(decoded, dict):
+            raise DerivOAuthError("DERIV_REST_RESPONSE_INVALID")
+        if "errors" in decoded:
+            raise DerivOAuthError("DERIV_REST_PROVIDER_ERROR")
+        return decoded
+
+    def _provider_headers(self) -> dict[str, str]:
+        token = self.get_access_token_for_server()
+        return {
+            "Authorization": "Bearer " + token,
+            # Deriv's REST reference mandates the app identifier for PAT
+            # auth; including the registered app id is also safe with OAuth.
+            "Deriv-App-ID": self.allowlist.app_id,
+        }
+
+    @staticmethod
+    def _account_from_options_row(row: object) -> DerivAccountIdentifier:
+        if not isinstance(row, dict):
+            raise DerivOAuthError("OPTIONS_ACCOUNT_SCHEMA_INVALID")
+        required = {
+            "account_id", "account_type", "status", "group", "currency", "balance"
+        }
+        if not required.issubset(row):
+            raise DerivOAuthError("OPTIONS_ACCOUNT_SCHEMA_INVALID")
+        account_id = row.get("account_id")
+        account_type = row.get("account_type")
+        status = row.get("status")
+        group = row.get("group")
+        currency = row.get("currency")
+        balance = row.get("balance")
+        if (
+            not isinstance(account_id, str)
+            or not account_id
+            or not account_id.isascii()
+            or not account_id.isalnum()
+            or account_id != account_id.upper()
+            or account_type not in {"real", "demo"}
+            or status not in {"active", "inactive"}
+            or not isinstance(group, str)
+            or not group.strip()
+            or not isinstance(currency, str)
+            or len(currency) != 3
+            or not currency.isalpha()
+            or currency != currency.upper()
+            or isinstance(balance, bool)
+            or not isinstance(balance, (int, float))
+            or not isfinite(float(balance))
+            or float(balance) < 0
+        ):
+            raise DerivOAuthError("OPTIONS_ACCOUNT_SCHEMA_INVALID")
+        try:
+            account = DerivAccountIdentifier(
+                account_id=account_id,
+                account_type=account_type,
+                status=status,
+                group=group,
+                currency=currency,
+                balance=float(balance),
+            )
+        except (TypeError, ValueError):
+            raise DerivOAuthError("OPTIONS_ACCOUNT_SCHEMA_INVALID") from None
+        if account.validate() is not True:
+            raise DerivOAuthError("OPTIONS_ACCOUNT_SCHEMA_INVALID")
+        return account
+
+    def create_authenticated_demo_session(
+        self,
+        *,
+        account_id: str,
+        expected_currency: str,
+    ) -> DerivDemoAccountSession:
+        """Request a one-use authenticated demo WS URL for one exact Options account.
+
+        This method only discovers the caller's accounts and obtains a demo
+        OTP. It does not connect, submit, authorize or manage broker orders.
+        Real accounts are explicitly rejected by this demo-only bootstrap.
+        """
+        if (
+            not isinstance(account_id, str)
+            or not account_id
+            or not account_id.isascii()
+            or not account_id.isalnum()
+            or account_id != account_id.upper()
+        ):
+            raise DerivOAuthError("DERIV_OPTIONS_ACCOUNT_ID_REQUIRED")
+        currency = str(expected_currency or "").strip().upper()
+        if len(currency) != 3 or not currency.isalpha():
+            raise DerivOAuthError("EXPECTED_ACCOUNT_CURRENCY_REQUIRED")
+
+        headers = self._provider_headers()
+        try:
+            response = self._provider_request(
+                "GET",
+                "https://api.derivws.com/trading/v1/options/accounts",
+                headers,
+                None,
+            )
+        except DerivOAuthError:
+            raise
+        except Exception:
+            raise DerivOAuthError("DERIV_ACCOUNT_LIST_UNAVAILABLE") from None
+        if not isinstance(response, Mapping):
+            raise DerivOAuthError("OPTIONS_ACCOUNT_LIST_RESPONSE_INVALID")
+        rows = response.get("data")
+        if not isinstance(rows, list):
+            raise DerivOAuthError("OPTIONS_ACCOUNT_LIST_RESPONSE_INVALID")
+
+        parsed = [self._account_from_options_row(row) for row in rows]
+        matches = [account for account in parsed if account.account_id == account_id]
+        if not matches:
+            raise DerivOAuthError("ACCOUNT_ID_NOT_FOUND")
+        if len(matches) != 1:
+            raise DerivOAuthError("ACCOUNT_ID_AMBIGUOUS")
+        account = matches[0]
+        if account.account_type != "demo":
+            raise DerivOAuthError("DEMO_ACCOUNT_REQUIRED")
+        if account.status != "active":
+            raise DerivOAuthError("ACCOUNT_NOT_ACTIVE")
+        if account.currency != currency:
+            raise DerivOAuthError("ACCOUNT_CURRENCY_MISMATCH")
+
+        from urllib.parse import quote
+        endpoint = (
+            "https://api.derivws.com/trading/v1/options/accounts/"
+            + quote(account.account_id, safe="")
+            + "/otp"
+        )
+        try:
+            otp_response = self._provider_request("POST", endpoint, headers, None)
+        except DerivOAuthError:
+            raise
+        except Exception:
+            raise DerivOAuthError("DERIV_OTP_REQUEST_UNAVAILABLE") from None
+        if not isinstance(otp_response, Mapping):
+            raise DerivOAuthError("DERIV_OTP_RESPONSE_INVALID")
+        otp_data = otp_response.get("data")
+        if not isinstance(otp_data, Mapping):
+            raise DerivOAuthError("DERIV_OTP_RESPONSE_INVALID")
+        websocket_url = otp_data.get("url")
+        if not isinstance(websocket_url, str) or not websocket_url:
+            raise DerivOAuthError("DERIV_OTP_URL_MISSING")
+        try:
+            parts = urlsplit(websocket_url)
+            query = parse_qs(parts.query, keep_blank_values=True, strict_parsing=True)
+        except ValueError:
+            raise DerivOAuthError("DERIV_OTP_URL_INVALID") from None
+        if (
+            parts.scheme != "wss"
+            or parts.hostname != "api.derivws.com"
+            or parts.port is not None
+            or parts.username is not None
+            or parts.password is not None
+            or parts.fragment
+            or parts.path != "/trading/v1/options/ws/demo"
+            or set(query) != {"otp"}
+            or len(query.get("otp", [])) != 1
+            or not query["otp"][0]
+            or len(query["otp"][0]) > 512
+            or any(ch.isspace() for ch in query["otp"][0])
+        ):
+            raise DerivOAuthError("DERIV_OTP_URL_UNTRUSTED_OR_NOT_DEMO")
+        return DerivDemoAccountSession(
+            account=account,
+            websocket_url=websocket_url,
         )
 
     def get_access_token_for_server(self) -> str:
