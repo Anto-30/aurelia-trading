@@ -10,11 +10,14 @@ from .deriv_tick_ingestor import (
     validate_ticks,
 )
 from .parquet_store import ParquetTickStore
+from .pipeline import HistoricalDataPipeline, resample_ticks_to_strategy_bars
 
 __all__ = [
     "DerivTickIngestionError",
     "DerivTickIngestor",
     "IngestionResult",
+    "HistoricalDataPipeline",
+    "resample_ticks_to_strategy_bars",
     "ParquetTickStore",
     "Tick",
     "TickValidationReport",

@@ -4,9 +4,83 @@ import argparse
 import asyncio
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Sequence
 
 from .deriv_tick_ingestor import DerivTickIngestor
 from .parquet_store import ParquetTickStore
+
+
+from research.labs.deterministic_intraday_strategies import StrategyBar
+from .deriv_tick_ingestor import Tick, validate_ticks
+
+
+def resample_ticks_to_strategy_bars(
+    ticks: Sequence[Tick],
+    *,
+    timeframe_seconds: int,
+    data_end_epoch: int,
+) -> list[StrategyBar]:
+    """Build closed UTC OHLC bars from public ticks without inventing volume.
+
+    Only 60-second and 900-second bars are supported. data_end_epoch is the
+    exclusive coverage boundary: any bucket whose close is after it is omitted.
+    Empty periods remain gaps; they are never filled with synthetic candles.
+    """
+
+    if (
+        isinstance(timeframe_seconds, bool)
+        or not isinstance(timeframe_seconds, int)
+        or timeframe_seconds not in {60, 900}
+    ):
+        raise ValueError("TIMEFRAME_SECONDS_UNSUPPORTED")
+    if (
+        isinstance(data_end_epoch, bool)
+        or not isinstance(data_end_epoch, int)
+        or data_end_epoch <= 0
+    ):
+        raise ValueError("DATA_END_EPOCH_INVALID")
+
+    ordered = sorted(ticks, key=lambda item: item.epoch)
+    if not ordered:
+        raise ValueError("NO_TICKS_AVAILABLE")
+    validate_ticks(ordered, max_gap_seconds=max(timeframe_seconds * 2, 1))
+
+    grouped: dict[int, list[Tick]] = {}
+    for tick in ordered:
+        bucket_start = (tick.epoch // timeframe_seconds) * timeframe_seconds
+        bucket_end = bucket_start + timeframe_seconds
+        if bucket_end > data_end_epoch:
+            continue
+        grouped.setdefault(bucket_start, []).append(tick)
+
+    if not grouped:
+        raise ValueError("NO_COMPLETE_BARS_AVAILABLE")
+
+    bars: list[StrategyBar] = []
+    for bucket_start, rows in sorted(grouped.items()):
+        quotes = [float(row.quote) for row in rows]
+        bucket_end = bucket_start + timeframe_seconds
+        timestamp = datetime.fromtimestamp(
+            bucket_end, tz=timezone.utc
+        ).isoformat()
+        bars.append(
+            StrategyBar(
+                timestamp_utc=timestamp,
+                open=quotes[0],
+                high=max(quotes),
+                low=min(quotes),
+                close=quotes[-1],
+                volume=None,
+                session_id=None,
+            )
+        )
+
+    for index in range(1, len(bars)):
+        previous = datetime.fromisoformat(bars[index - 1].timestamp_utc)
+        current = datetime.fromisoformat(bars[index].timestamp_utc)
+        if current <= previous:
+            raise ValueError("RESAMPLED_BAR_TIMESTAMPS_NOT_INCREASING")
+    return bars
 
 
 class HistoricalDataPipeline:
