@@ -60,7 +60,10 @@ class CompositeAccountIdentityTests(unittest.TestCase):
     def test_composite_creation_rejects_each_invalid_component(self) -> None:
         bad_components = (
             (AURELIAIdentity("bad", self.now, "v1"), self.deriv, self.broker_uuid, self.login_id, self.context),
-            (self.aurelia, DerivAccountIdentifier("", "real", False, False), self.broker_uuid, self.login_id, self.context),
+            (self.aurelia, DerivAccountIdentifier(
+                account_id="", account_type="real", status="active",
+                group="row", currency="USD", balance=0.0
+            ), self.broker_uuid, self.login_id, self.context),
             (self.aurelia, self.deriv, BrokerReturnedUUID("not-a-uuid", "account_manage_identity", self.now), self.login_id, self.context),
             (self.aurelia, self.deriv, self.broker_uuid, LoginID("", "aurelia_auth"), self.context),
             (self.aurelia, self.deriv, self.broker_uuid, self.login_id, AccountContext("OPTIONS", "LIVE", "USD", self.now)),

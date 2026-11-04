@@ -213,7 +213,7 @@ class BrokerUUIDToLoginBindingTests(unittest.TestCase):
             store = FakeExistingPersistentBindingStore(Path(td) / "bindings.json")
             binding = BrokerUUIDToLoginBinding(store)
             identity = make_identity()
-            object.__setattr__(identity.deriv_account, "deriv_loginid", "CR999999")
+            object.__setattr__(identity.deriv_account, "account_id", "DOT90004581")
             with self.assertRaisesRegex(ValueError, "IDENTITY_INTEGRITY_VALIDATION_FAILED"):
                 binding.bind_complete_identity(identity)
             self.assertEqual(store.bind_calls, 0)
