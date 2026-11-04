@@ -219,7 +219,7 @@ class AURELIABrokerLifecycleAssurance:
                 raise ValueError(
                     "COMPOSITE_IDENTITY_AURELIA_UUID_INVALID"
                 ) from None
-            if verified_aurelia_uuid != expected_aurelia_uuid:
+            if verified_aurelia_uuid != UUID(self.aurelia_uuid):
                 raise ValueError(
                     "COMPOSITE_IDENTITY_AURELIA_UUID_MISMATCH"
                 )
