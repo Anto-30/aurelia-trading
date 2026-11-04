@@ -33,6 +33,8 @@ class DerivProtocolError(RuntimeError):
 
 
 class DerivAdapter:
+    _requires_executor_capability = True
+
     """Transport-only Deriv Options API boundary for AURELIA.
 
     Generic request calls are restricted to an explicit non-mutating action
@@ -120,6 +122,7 @@ class DerivAdapter:
         self.transport: DerivWebSocketTransport | None = None
         self.authorized = False
         self.account: AccountIdentity | None = None
+        self._executor_capability: object | None = None
         self.circuit = CircuitBreaker(
             failure_threshold=5,
             recovery_timeout_seconds=60.0,
@@ -127,6 +130,16 @@ class DerivAdapter:
         )
         self.ledger = RequestLedger(max_pending_age_seconds=30.0)
         self._subscription_keys: set[str] = set()
+
+    def _bind_executor_capability(self, capability: object) -> None:
+        """Bind this adapter to exactly one capital-plane executor instance."""
+        if capability is None:
+            raise DerivProtocolError("BROKER_EXECUTOR_CAPABILITY_REQUIRED")
+        if self._executor_capability is not None:
+            if self._executor_capability is capability:
+                return
+            raise DerivProtocolError("BROKER_EXECUTOR_CAPABILITY_ALREADY_BOUND")
+        self._executor_capability = capability
 
     def _validate_environment_url(self, url: str) -> None:
         try:
@@ -204,13 +217,13 @@ class DerivAdapter:
         request_type: str,
         payload: dict[str, Any],
         *,
-        executor_submission: bool = False,
+        executor_capability: object | None = None,
     ) -> dict[str, Any]:
-        """Send a request after action validation, with correlation and circuit enforcement.
-
-        The executor_submission flag is an internal-only path used by
-        submit_authorized_order(). Public request() never sets it.
-        """
+        """Send a request after action validation, with correlation and circuit enforcement."""
+        executor_submission = (
+            self._executor_capability is not None
+            and executor_capability is self._executor_capability
+        )
         action = self._validate_request_payload(
             payload,
             executor_submission=executor_submission,
@@ -360,7 +373,17 @@ class DerivAdapter:
             raise DerivProtocolError("PROPOSAL_ID_MISSING_FROM_BROKER")
         return proposal_id
 
-    async def submit_authorized_order(self, payload: dict[str, Any]) -> BrokerResult:
+    async def submit_authorized_order(
+        self,
+        payload: dict[str, Any],
+        *,
+        executor_capability: object | None = None,
+    ) -> BrokerResult:
+        if (
+            self._executor_capability is None
+            or executor_capability is not self._executor_capability
+        ):
+            raise DerivProtocolError("BROKER_EXECUTOR_CAPABILITY_REQUIRED")
         if not self.authorized or self.account is None:
             raise DerivProtocolError("BROKER_SESSION_NOT_AUTHORIZED")
         if not isinstance(payload, dict) or set(payload) != {"proposal_id", "stake"}:
@@ -386,7 +409,7 @@ class DerivAdapter:
             reply = await self._tracked_request(
                 "buy",
                 {"buy": proposal_id.strip(), "price": float(stake)},
-                executor_submission=True,
+                executor_capability=executor_capability,
             )
         except Exception:
             return BrokerResult(

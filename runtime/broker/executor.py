@@ -77,6 +77,14 @@ class CapitalPlaneExecutor:
         operator_reset_signing_key: str | None = None,
     ):
         self.broker = broker
+        self._broker_submission_capability: object | None = None
+        if bool(getattr(broker, "_requires_executor_capability", False)):
+            binder = getattr(broker, "_bind_executor_capability", None)
+            if not callable(binder):
+                raise TypeError("BROKER_EXECUTOR_CAPABILITY_BINDER_REQUIRED")
+            capability = object()
+            binder(capability)
+            self._broker_submission_capability = capability
         self.journal = journal
         self.ledger = ledger
         self.idempotency = idempotency
@@ -1025,9 +1033,17 @@ class CapitalPlaneExecutor:
 
         broker_started = perf_counter()
         try:
-            result = await self.broker.submit_authorized_order(
-                {"proposal_id": intent.proposal_id, "stake": intent.stake}
-            )
+            submission_payload = {
+                "proposal_id": intent.proposal_id,
+                "stake": intent.stake,
+            }
+            if self._broker_submission_capability is not None:
+                result = await self.broker.submit_authorized_order(
+                    submission_payload,
+                    executor_capability=self._broker_submission_capability,
+                )
+            else:
+                result = await self.broker.submit_authorized_order(submission_payload)
             self.latency.observe(
                 "broker_submission",
                 (perf_counter() - broker_started) * 1000.0,
