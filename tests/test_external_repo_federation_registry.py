@@ -40,6 +40,22 @@ class ExternalRepositoryFederationRegistryTests(unittest.TestCase):
                     self.assertRegex(pin, re.compile(r"^[0-9a-f]{40}$"))
 
 
+    def test_nvidia_auto_ontology_is_reference_only_and_non_authoritative(self):
+        matches = [
+            entry for entry in self.repositories
+            if entry.get("repo") == "NVIDIA/auto-ontology"
+        ]
+        self.assertEqual(len(matches), 1)
+        entry = matches[0]
+        self.assertEqual(entry["mode"], "REFERENCE_ONLY")
+        self.assertEqual(
+            entry["source_url"], "https://github.com/NVIDIA/auto-ontology"
+        )
+        self.assertRegex(entry["head_commit"], re.compile(r"^[0-9a-f]{40}$"))
+        self.assertIs(entry.get("capital_authority"), False)
+        self.assertIs(entry.get("live_order_submission"), False)
+        self.assertEqual(entry.get("physical_runtime_install"), "NOT_CLAIMED")
+
     def test_registry_validator_accepts_refreshed_current_pin_for_historical_intake(self):
         namespace = runpy.run_path(
             str(ROOT / "scripts" / "validate_agent_tool_skill_assignments.py"),
