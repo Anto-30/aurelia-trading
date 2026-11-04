@@ -23,7 +23,7 @@ def write_allowlist(path: Path, *, redirect_uris=None, permitted=None, authorize
         "  name: aurelia-trading-runtime",
         "  provider: deriv",
         "  app_id_env_var: DERIV_OAUTH_APP_ID",
-        "  redirect_uris:",
+        "  redirect_uris: []" if not redirects else "  redirect_uris:",
         *[f'    - "{uri}"' for uri in redirects],
         "token_scope:",
         "  permitted:",
