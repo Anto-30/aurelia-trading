@@ -22,8 +22,10 @@ class CompositeAccountIdentityTests(unittest.TestCase):
         self.now = datetime.now(UTC)
         self.aurelia = AURELIAIdentity(str(uuid4()), self.now, "test-version")
         self.deriv = DerivAccountIdentifier("CR123456", "real", False, False)
-        self.broker_uuid = BrokerReturnedUUID(None, "not_returned", None)
-        self.login_id = LoginID(None, "not_returned")
+        self.broker_uuid = BrokerReturnedUUID(
+            "f2ac691f-68d7-b467-6308-72d5ecaf9030", "balance", self.now
+        )
+        self.login_id = LoginID("CR123456", "balance")
         self.context = AccountContext("OPTIONS", "REAL", "USD", self.now)
 
     def test_each_identity_component_validates_independently(self) -> None:
@@ -35,21 +37,25 @@ class CompositeAccountIdentityTests(unittest.TestCase):
 
         self.assertFalse(AURELIAIdentity("not-a-uuid", self.now, "v1").validate())
         self.assertFalse(DerivAccountIdentifier("", "real", False, False).validate())
-        self.assertFalse(BrokerReturnedUUID(None, "get_account_status", self.now).validate())
-        self.assertFalse(LoginID(None, "authorize").validate())
+        self.assertFalse(BrokerReturnedUUID("not-a-uuid", "balance", self.now).validate())
+        self.assertFalse(BrokerReturnedUUID(
+            "f2ac691f-68d7-b467-6308-72d5ecaf9030", "", self.now
+        ).validate())
+        self.assertFalse(LoginID("", "balance").validate())
         self.assertFalse(AccountContext("OPTIONS", "LIVE", "USD", self.now).validate())
 
     def test_broker_uuid_must_have_source_and_utc_timestamp(self) -> None:
-        self.assertTrue(BrokerReturnedUUID("broker-uuid-1", "documented-source", self.now).validate())
-        self.assertFalse(BrokerReturnedUUID("broker-uuid-1", "", self.now).validate())
-        self.assertFalse(BrokerReturnedUUID("broker-uuid-1", "documented-source", None).validate())
+        broker_uuid = "f2ac691f-68d7-b467-6308-72d5ecaf9030"
+        self.assertTrue(BrokerReturnedUUID(broker_uuid, "balance", self.now).validate())
+        self.assertFalse(BrokerReturnedUUID("not-a-uuid", "balance", self.now).validate())
+        self.assertFalse(BrokerReturnedUUID(broker_uuid, "", self.now).validate())
 
     def test_composite_creation_rejects_each_invalid_component(self) -> None:
         bad_components = (
             (AURELIAIdentity("bad", self.now, "v1"), self.deriv, self.broker_uuid, self.login_id, self.context),
             (self.aurelia, DerivAccountIdentifier("", "real", False, False), self.broker_uuid, self.login_id, self.context),
-            (self.aurelia, self.deriv, BrokerReturnedUUID(None, "unknown", None), self.login_id, self.context),
-            (self.aurelia, self.deriv, self.broker_uuid, LoginID(None, "unknown"), self.context),
+            (self.aurelia, self.deriv, BrokerReturnedUUID("not-a-uuid", "balance", self.now), self.login_id, self.context),
+            (self.aurelia, self.deriv, self.broker_uuid, LoginID("", "balance"), self.context),
             (self.aurelia, self.deriv, self.broker_uuid, self.login_id, AccountContext("OPTIONS", "LIVE", "USD", self.now)),
         )
         for components in bad_components:

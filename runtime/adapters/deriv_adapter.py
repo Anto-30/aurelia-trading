@@ -123,6 +123,7 @@ class DerivAdapter:
         self.authorized = False
         self.account: AccountIdentity | None = None
         self._executor_capability: object | None = None
+        self._oauth_extension: Any | None = None
         self.circuit = CircuitBreaker(
             failure_threshold=5,
             recovery_timeout_seconds=60.0,
@@ -130,6 +131,32 @@ class DerivAdapter:
         )
         self.ledger = RequestLedger(max_pending_age_seconds=30.0)
         self._subscription_keys: set[str] = set()
+
+    def attach_oauth_extension(self, extension: Any) -> None:
+        if getattr(extension, "adapter", None) is not self:
+            raise DerivProtocolError("OAUTH_EXTENSION_ADAPTER_MISMATCH")
+        if self._oauth_extension is not None and self._oauth_extension is not extension:
+            raise DerivProtocolError("OAUTH_EXTENSION_ALREADY_ATTACHED")
+        self._oauth_extension = extension
+
+    def initiate_oauth_authorization(self, *, redirect_uri: str, session_binding: str) -> str:
+        extension = self._oauth_extension
+        if extension is None:
+            raise DerivProtocolError("DERIV_OAUTH_EXTENSION_NOT_CONFIGURED")
+        return extension.initiate_authorization(
+            redirect_uri=redirect_uri, session_binding=session_binding
+        )
+
+    async def complete_oauth_authorization(
+        self, *, auth_code: str, state: str, redirect_uri: str, session_binding: str
+    ):
+        extension = self._oauth_extension
+        if extension is None:
+            raise DerivProtocolError("DERIV_OAUTH_EXTENSION_NOT_CONFIGURED")
+        return await extension.complete_authorization(
+            auth_code=auth_code, state=state,
+            redirect_uri=redirect_uri, session_binding=session_binding,
+        )
 
     def _bind_executor_capability(self, capability: object) -> None:
         """Bind this adapter to exactly one capital-plane executor instance."""

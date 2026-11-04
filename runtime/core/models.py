@@ -243,39 +243,32 @@ class DerivAccountIdentifier:
 
 @dataclass(frozen=True)
 class BrokerReturnedUUID:
-    """Optional broker UUID; absence is explicit and is never fabricated."""
-    broker_uuid: str | None
+    """Required UUID returned by Deriv; absence is not accepted for binding."""
+    broker_uuid: str
     broker_uuid_source: str
-    broker_uuid_timestamp: datetime | None
+    broker_uuid_timestamp: datetime
 
     def validate(self) -> bool:
-        if self.broker_uuid is None:
-            return (
-                self.broker_uuid_source == "not_returned"
-                and self.broker_uuid_timestamp is None
-            )
         if not isinstance(self.broker_uuid, str) or not self.broker_uuid.strip():
+            return False
+        try:
+            UUID(self.broker_uuid)
+        except (ValueError, TypeError, AttributeError):
             return False
         return (
             isinstance(self.broker_uuid_source, str)
             and bool(self.broker_uuid_source.strip())
-            and self.broker_uuid_timestamp is not None
             and _identity_timestamp_valid(self.broker_uuid_timestamp)
         )
 
 
 @dataclass(frozen=True)
 class LoginID:
-    """A distinct AURELIA/user-facing login identifier, not the Deriv loginid.
-
-    Email addresses and email hashes are intentionally excluded from this model.
-    """
-    login_id: str | None
+    """Required login identifier; email addresses and hashes are excluded."""
+    login_id: str
     login_id_source: str
 
     def validate(self) -> bool:
-        if self.login_id is None:
-            return self.login_id_source == "not_returned"
         return (
             isinstance(self.login_id, str)
             and bool(self.login_id.strip())

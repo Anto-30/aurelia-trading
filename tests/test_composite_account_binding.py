@@ -27,8 +27,10 @@ def make_identity(*, deriv_loginid: str = "CR123456") -> CompositeAccountIdentit
     now = datetime.now(timezone.utc)
     aurelia = AURELIAIdentity(str(uuid4()), now, "test-version")
     deriv = DerivAccountIdentifier(deriv_loginid, "real", False, False)
-    broker_uuid = BrokerReturnedUUID(None, "not_returned", None)
-    login_id = LoginID(None, "not_returned")
+    broker_uuid = BrokerReturnedUUID(
+        "f2ac691f-68d7-b467-6308-72d5ecaf9030", "balance", now
+    )
+    login_id = LoginID(deriv_loginid, "balance")
     context = AccountContext("OPTIONS", "REAL", "USD", now)
     return CompositeAccountIdentity.create(
         aurelia, deriv, broker_uuid, login_id, context

@@ -307,6 +307,28 @@ class BrokerUUIDToLoginBinding:
             raise ValueError("STORED_DERIV_LOGINID_KEY_MISMATCH")
         return identity
 
+
+    def _delegate_oauth_store(self, method_name: str, **kwargs):
+        method = getattr(self.existing_store, method_name, None)
+        if not callable(method):
+            raise TypeError("ENCRYPTED_OAUTH_BINDING_STORE_INTERFACE_REQUIRED")
+        return method(**kwargs)
+
+    def create_pending_oauth_authorization(self, **kwargs):
+        return self._delegate_oauth_store("create_pending_oauth_authorization", **kwargs)
+
+    def consume_pending_oauth_authorization(self, **kwargs):
+        return self._delegate_oauth_store("consume_pending_oauth_authorization", **kwargs)
+
+    def store_oauth_access_token(self, **kwargs):
+        return self._delegate_oauth_store("store_oauth_access_token", **kwargs)
+
+    def get_oauth_access_token(self, **kwargs):
+        return self._delegate_oauth_store("get_oauth_access_token", **kwargs)
+
+    def delete_oauth_access_token(self, **kwargs):
+        return self._delegate_oauth_store("delete_oauth_access_token", **kwargs)
+
     def validate_binding_integrity(self, aurelia_uuid: str) -> bool:
         identity = self.get_binding_by_aurelia_uuid(aurelia_uuid)
         return identity is not None and identity.validate_integrity() is True

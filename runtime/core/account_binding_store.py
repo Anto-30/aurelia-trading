@@ -8,14 +8,18 @@ encryption, uniqueness, locking, and recovery guarantees.
 """
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import os
+import re
 import stat
 import tempfile
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from threading import RLock
+from uuid import UUID
 from typing import Iterator
 
 from cryptography.fernet import Fernet, InvalidToken
@@ -148,6 +152,7 @@ class EncryptedAccountBindingStore(ExistingAccountBindingStore):
             raise ValueError("ACCOUNT_BINDING_ENCRYPTION_KEY_INVALID") from exc
 
         self.path = Path(path)
+        self.oauth_path = self.path.with_name(self.path.name + ".oauth")
         self._thread_lock = RLock()
         if not self.path.name or self.path.name in {".", ".."}:
             raise ValueError("ACCOUNT_BINDING_STORE_PATH_INVALID")
@@ -249,6 +254,227 @@ class EncryptedAccountBindingStore(ExistingAccountBindingStore):
                 temp_path.unlink(missing_ok=True)
             finally:
                 raise
+
+    def _read_oauth_payload_unlocked(self) -> dict[str, object]:
+        """Read the encrypted OAuth sidecar under the existing binding-store lock."""
+        empty = {"schema": "aurelia.oauth_credentials.v1", "pending": {}, "credentials": {}}
+        path = self.oauth_path
+        if not path.exists():
+            return empty
+        if path.is_symlink():
+            raise RuntimeError("OAUTH_STORE_SYMLINK_FORBIDDEN")
+        metadata = path.stat()
+        if not stat.S_ISREG(metadata.st_mode):
+            raise RuntimeError("OAUTH_STORE_NOT_REGULAR_FILE")
+        if stat.S_IMODE(metadata.st_mode) & 0o077:
+            raise RuntimeError("OAUTH_STORE_PERMISSIONS_TOO_BROAD")
+        try:
+            plaintext = self._cipher.decrypt(path.read_bytes())
+        except (InvalidToken, OSError, ValueError) as exc:
+            raise RuntimeError("OAUTH_STORE_AUTHENTICATION_FAILED") from exc
+        try:
+            payload = json.loads(plaintext.decode("utf-8"))
+            if (
+                not isinstance(payload, dict)
+                or payload.get("schema") != "aurelia.oauth_credentials.v1"
+                or not isinstance(payload.get("pending"), dict)
+                or not isinstance(payload.get("credentials"), dict)
+            ):
+                raise ValueError("OAUTH_STORE_SCHEMA_INVALID")
+            for section in ("pending", "credentials"):
+                for key, row in payload[section].items():
+                    if not isinstance(key, str) or not re.fullmatch(r"[0-9a-f]{64}", key) or not isinstance(row, dict):
+                        raise ValueError("OAUTH_STORE_RECORD_INVALID")
+            return payload
+        except (KeyError, TypeError, ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise RuntimeError("OAUTH_STORE_FORMAT_INVALID") from exc
+
+    def _write_oauth_payload_unlocked(self, payload: dict[str, object]) -> None:
+        plaintext = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode("utf-8")
+        ciphertext = self._cipher.encrypt(plaintext)
+        fd, temp_name = tempfile.mkstemp(prefix=self.oauth_path.name + ".", suffix=".tmp", dir=self.oauth_path.parent)
+        temp_path = Path(temp_name)
+        try:
+            os.fchmod(fd, _PRIVATE_MODE)
+            with os.fdopen(fd, "wb") as handle:
+                handle.write(ciphertext)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temp_path, self.oauth_path)
+            os.chmod(self.oauth_path, _PRIVATE_MODE)
+            dir_fd = os.open(self.oauth_path.parent, os.O_RDONLY)
+            try:
+                os.fsync(dir_fd)
+            finally:
+                os.close(dir_fd)
+        except Exception:
+            try:
+                temp_path.unlink(missing_ok=True)
+            finally:
+                raise
+
+    @staticmethod
+    def _oauth_timestamp(value: str) -> datetime:
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("OAUTH_TIMESTAMP_INVALID")
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError("OAUTH_TIMESTAMP_INVALID") from exc
+        if parsed.tzinfo is None or parsed.utcoffset() is None or parsed.utcoffset().total_seconds() != 0:
+            raise ValueError("OAUTH_TIMESTAMP_MUST_BE_UTC")
+        return parsed
+
+    @staticmethod
+    def _oauth_principal_uuid(value: str) -> str:
+        try:
+            return str(UUID(value))
+        except (TypeError, ValueError, AttributeError) as exc:
+            raise ValueError("AURELIA_OAUTH_PRINCIPAL_UUID_INVALID") from exc
+
+    @staticmethod
+    def _oauth_record_key(principal_uuid: str, app_id: str) -> str:
+        return hashlib.sha256((principal_uuid + "|" + app_id).encode("utf-8")).hexdigest()
+
+    def create_pending_oauth_authorization(
+        self, *, state: str, code_verifier: str, code_challenge: str,
+        code_challenge_method: str, redirect_uri: str, session_binding: str,
+        app_id: str, principal_uuid: str, requested_scopes: list[str],
+        created_at_utc: str, expires_at_utc: str,
+    ) -> None:
+        if not isinstance(state, str) or not re.fullmatch(r"[A-Za-z0-9_-]{43,128}", state):
+            raise ValueError("OAUTH_STATE_INVALID")
+        if not isinstance(code_verifier, str) or not re.fullmatch(r"[A-Za-z0-9._~-]{43,128}", code_verifier):
+            raise ValueError("OAUTH_CODE_VERIFIER_INVALID")
+        if not isinstance(code_challenge, str) or not re.fullmatch(r"[A-Za-z0-9_-]{43}", code_challenge):
+            raise ValueError("OAUTH_CODE_CHALLENGE_INVALID")
+        if code_challenge_method != "S256":
+            raise ValueError("OAUTH_PKCE_METHOD_FORBIDDEN")
+        if not isinstance(redirect_uri, str) or not redirect_uri:
+            raise ValueError("OAUTH_REDIRECT_URI_REQUIRED")
+        if not isinstance(session_binding, str) or len(session_binding) < 32:
+            raise ValueError("OAUTH_SERVER_SESSION_BINDING_REQUIRED")
+        if not isinstance(app_id, str) or not app_id.strip():
+            raise ValueError("DERIV_OAUTH_APP_ID_REQUIRED")
+        principal = self._oauth_principal_uuid(principal_uuid)
+        if requested_scopes != ["trade"]:
+            raise ValueError("DERIV_OAUTH_SCOPE_MUST_BE_TRADE_ONLY")
+        created = self._oauth_timestamp(created_at_utc)
+        expires = self._oauth_timestamp(expires_at_utc)
+        if expires <= created or (expires - created).total_seconds() > 1800:
+            raise ValueError("OAUTH_PENDING_AUTHORIZATION_TTL_INVALID")
+        state_hash = hashlib.sha256(state.encode("ascii")).hexdigest()
+        row = {
+            "code_verifier": code_verifier,
+            "code_challenge": code_challenge,
+            "code_challenge_method": code_challenge_method,
+            "redirect_uri": redirect_uri,
+            "session_binding_sha256": hashlib.sha256(session_binding.encode("utf-8")).hexdigest(),
+            "app_id": app_id,
+            "principal_uuid": principal,
+            "requested_scopes": ["trade"],
+            "created_at_utc": created.isoformat(),
+            "expires_at_utc": expires.isoformat(),
+        }
+        with self._locked():
+            payload = self._read_oauth_payload_unlocked()
+            if state_hash in payload["pending"]:
+                raise ValueError("OAUTH_STATE_ALREADY_EXISTS")
+            payload["pending"][state_hash] = row
+            self._write_oauth_payload_unlocked(payload)
+
+    def consume_pending_oauth_authorization(
+        self, *, state: str, session_binding: str, consumed_at_utc: str
+    ) -> dict[str, object]:
+        if not isinstance(state, str) or not re.fullmatch(r"[A-Za-z0-9_-]{43,128}", state):
+            raise ValueError("OAUTH_STATE_INVALID")
+        if not isinstance(session_binding, str) or len(session_binding) < 32:
+            raise ValueError("OAUTH_SERVER_SESSION_BINDING_REQUIRED")
+        consumed = self._oauth_timestamp(consumed_at_utc)
+        state_hash = hashlib.sha256(state.encode("ascii")).hexdigest()
+        session_hash = hashlib.sha256(session_binding.encode("utf-8")).hexdigest()
+        with self._locked():
+            payload = self._read_oauth_payload_unlocked()
+            row = payload["pending"].get(state_hash)
+            if row is None:
+                raise ValueError("OAUTH_STATE_UNKNOWN_OR_REPLAYED")
+            expected = row.get("session_binding_sha256")
+            if not isinstance(expected, str) or not hmac.compare_digest(expected, session_hash):
+                raise ValueError("OAUTH_STATE_SESSION_MISMATCH")
+            expires = self._oauth_timestamp(row.get("expires_at_utc"))
+            payload["pending"].pop(state_hash, None)
+            self._write_oauth_payload_unlocked(payload)
+            if consumed >= expires:
+                raise ValueError("OAUTH_STATE_EXPIRED")
+            return dict(row)
+
+    def store_oauth_access_token(
+        self, *, principal_uuid: str, app_id: str, access_token: str,
+        token_type: str, scopes: list[str], scope_source: str,
+        issued_at_utc: str, expires_at_utc: str,
+    ) -> None:
+        principal = self._oauth_principal_uuid(principal_uuid)
+        if not isinstance(app_id, str) or not app_id.strip():
+            raise ValueError("DERIV_OAUTH_APP_ID_REQUIRED")
+        if not isinstance(access_token, str) or not access_token.strip() or len(access_token) > 8192 or any(ch.isspace() for ch in access_token):
+            raise ValueError("DERIV_OAUTH_ACCESS_TOKEN_INVALID")
+        if not isinstance(token_type, str) or token_type.lower() != "bearer":
+            raise ValueError("DERIV_OAUTH_TOKEN_TYPE_UNSUPPORTED")
+        if scopes != ["trade"]:
+            raise ValueError("DERIV_OAUTH_SCOPE_MUST_BE_TRADE_ONLY")
+        if scope_source not in {"provider_response", "authorization_request"}:
+            raise ValueError("DERIV_OAUTH_SCOPE_SOURCE_INVALID")
+        issued = self._oauth_timestamp(issued_at_utc)
+        expires = self._oauth_timestamp(expires_at_utc)
+        if expires <= issued:
+            raise ValueError("DERIV_OAUTH_TOKEN_EXPIRY_INVALID")
+        key = self._oauth_record_key(principal, app_id)
+        row = {
+            "principal_uuid": principal, "app_id": app_id,
+            "access_token": access_token, "token_type": "Bearer",
+            "scopes": ["trade"], "scope_source": scope_source,
+            "issued_at_utc": issued.isoformat(), "expires_at_utc": expires.isoformat(),
+        }
+        with self._locked():
+            payload = self._read_oauth_payload_unlocked()
+            payload["credentials"][key] = row
+            self._write_oauth_payload_unlocked(payload)
+
+    def get_oauth_access_token(
+        self, *, principal_uuid: str, app_id: str, now_utc: str | None = None
+    ) -> dict[str, object] | None:
+        principal = self._oauth_principal_uuid(principal_uuid)
+        if not isinstance(app_id, str) or not app_id.strip():
+            raise ValueError("DERIV_OAUTH_APP_ID_REQUIRED")
+        now = self._oauth_timestamp(now_utc or datetime.now(timezone.utc).isoformat())
+        key = self._oauth_record_key(principal, app_id)
+        with self._locked():
+            payload = self._read_oauth_payload_unlocked()
+            row = payload["credentials"].get(key)
+            if row is None:
+                return None
+            if row.get("principal_uuid") != principal or row.get("app_id") != app_id:
+                raise RuntimeError("DERIV_OAUTH_CREDENTIAL_BINDING_MISMATCH")
+            if row.get("token_type") != "Bearer" or row.get("scopes") != ["trade"]:
+                raise RuntimeError("DERIV_OAUTH_CREDENTIAL_POLICY_INVALID")
+            if now >= self._oauth_timestamp(row.get("expires_at_utc")):
+                payload["credentials"].pop(key, None)
+                self._write_oauth_payload_unlocked(payload)
+                return None
+            return dict(row)
+
+    def delete_oauth_access_token(self, *, principal_uuid: str, app_id: str) -> bool:
+        principal = self._oauth_principal_uuid(principal_uuid)
+        if not isinstance(app_id, str) or not app_id.strip():
+            raise ValueError("DERIV_OAUTH_APP_ID_REQUIRED")
+        key = self._oauth_record_key(principal, app_id)
+        with self._locked():
+            payload = self._read_oauth_payload_unlocked()
+            existed = payload["credentials"].pop(key, None) is not None
+            if existed:
+                self._write_oauth_payload_unlocked(payload)
+            return existed
+
 
     def bind_account(self, identity: CompositeAccountIdentity) -> None:
         if (
