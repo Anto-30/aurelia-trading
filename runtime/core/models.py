@@ -24,10 +24,21 @@ class BrokerOutcome(str, Enum):
 
 @dataclass(frozen=True)
 class AccountIdentity:
-    loginid: str
+    """Account identity with separate modern Options and legacy namespaces."""
+
+    loginid: str | None
     account_type: str
     currency: str
     environment: str
+    account_id: str | None = None
+
+    @property
+    def canonical_account_key(self) -> str | None:
+        if self.account_id:
+            return "deriv-options:" + self.account_id
+        if self.loginid:
+            return "deriv-legacy:" + self.loginid
+        return None
 
 
 @dataclass(frozen=True)

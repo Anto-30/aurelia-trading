@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 from datetime import datetime, timezone
 from math import isfinite
@@ -16,6 +17,7 @@ from runtime.core.circuit import CircuitBreaker
 from runtime.core.events import sha256
 from runtime.core.request_ledger import RequestLedger, RequestState
 from runtime.core.secrets import get_optional_secret
+from runtime.oauth.client import DerivOAuthError
 from runtime.core.models import (
     AccountIdentity,
     BrokerOutcome,
@@ -208,6 +210,99 @@ class DerivAdapter:
         self.auth_token = ""
         return await self.connect()
 
+    async def connect_demo_with_oauth(
+        self,
+        *,
+        account_id: str,
+        expected_currency: str,
+    ) -> AccountIdentity:
+        """Connect one exact demo account through OAuth, REST OTP and WS.
+
+        This bootstrap never creates a real-account session or changes the
+        capital-plane release state. The OTP URL remains an in-memory secret.
+        """
+        if self._oauth_extension is None:
+            raise DerivProtocolError("DERIV_OAUTH_EXTENSION_NOT_CONFIGURED")
+        if not isinstance(expected_currency, str) or not expected_currency.strip():
+            raise DerivProtocolError("EXPECTED_ACCOUNT_CURRENCY_REQUIRED")
+        try:
+            session = await asyncio.to_thread(
+                self._oauth_extension.create_authenticated_demo_session,
+                account_id=account_id,
+                expected_currency=expected_currency,
+            )
+        except DerivOAuthError as exc:
+            raise DerivProtocolError(str(exc)) from None
+        except Exception:
+            raise DerivProtocolError("DERIV_OAUTH_DEMO_BOOTSTRAP_FAILED") from None
+
+        try:
+            validate_modern_options_ws_url(
+                session.websocket_url,
+                expected_environment="demo",
+            )
+            if (
+                session.account.account_id != account_id
+                or session.account.account_type != "demo"
+                or session.account.status != "active"
+                or session.account.currency != expected_currency.strip().upper()
+            ):
+                raise DerivProtocolError("DERIV_DEMO_ACCOUNT_BINDING_MISMATCH")
+
+            if self.transport is None:
+                transport = DerivWebSocketTransport(
+                    session.websocket_url,
+                    timeout_seconds=self.timeout_seconds,
+                )
+                await transport.connect()
+                self.transport = transport
+            else:
+                await self.transport.reconnect(fresh_url=session.websocket_url)
+
+            self.ws_url = session.websocket_url
+            self.auth_token = ""
+            self.authorized = False
+            self.account = None
+
+            reply = await self._tracked_request("balance", {"balance": 1})
+            result = reply.get("balance")
+            if not isinstance(result, dict):
+                raise DerivProtocolError("OPTIONS_BALANCE_RESPONSE_INVALID")
+            amount = result.get("balance")
+            currency = result.get("currency")
+            if (
+                isinstance(amount, bool)
+                or not isinstance(amount, (int, float))
+                or not isfinite(float(amount))
+                or float(amount) < 0
+            ):
+                raise DerivProtocolError("OPTIONS_BALANCE_VALUE_INVALID")
+            if currency != session.account.currency:
+                raise DerivProtocolError("CURRENCY_CHANGED")
+            returned_account_id = result.get("account_id")
+            if returned_account_id is not None and returned_account_id != account_id:
+                raise DerivProtocolError("ACCOUNT_IDENTITY_CHANGED")
+
+            returned_loginid = result.get("loginid")
+            if returned_loginid is not None and (
+                not isinstance(returned_loginid, str) or not returned_loginid.strip()
+            ):
+                raise DerivProtocolError("LEGACY_LOGINID_RESPONSE_INVALID")
+            self.account = AccountIdentity(
+                loginid=returned_loginid,
+                account_type="demo",
+                currency=session.account.currency,
+                environment="demo",
+                account_id=account_id,
+            )
+            self.environment = "demo"
+            self.expected_currency = session.account.currency
+            self.authorized = True
+            return self.account
+        except Exception:
+            await self.close()
+            raise
+
     async def connect_public(self) -> int:
         transport = DerivWebSocketTransport(
             PUBLIC_WS_URL,
@@ -302,14 +397,34 @@ class DerivAdapter:
     async def get_balance(self) -> CapitalSnapshot:
         if not self.account:
             raise DerivProtocolError("ACCOUNT_NOT_VERIFIED")
-        result = (await self.request({"balance": 1})).get("balance") or {}
-        amount = float(result["balance"])
-        currency = str(result.get("currency") or self.account.currency)
-        loginid = str(result.get("loginid") or self.account.loginid)
-        if loginid != self.account.loginid:
-            raise DerivProtocolError("ACCOUNT_IDENTITY_CHANGED")
+        result = (await self.request({"balance": 1})).get("balance")
+        if not isinstance(result, dict):
+            raise DerivProtocolError("OPTIONS_BALANCE_RESPONSE_INVALID")
+        raw_amount = result.get("balance")
+        if (
+            isinstance(raw_amount, bool)
+            or not isinstance(raw_amount, (int, float))
+            or not isfinite(float(raw_amount))
+            or float(raw_amount) < 0
+        ):
+            raise DerivProtocolError("OPTIONS_BALANCE_VALUE_INVALID")
+        amount = float(raw_amount)
+        currency = str(result.get("currency") or "").strip().upper()
         if currency != self.account.currency:
             raise DerivProtocolError("CURRENCY_CHANGED")
+        returned_account_id = result.get("account_id")
+        if (
+            returned_account_id is not None
+            and returned_account_id != self.account.account_id
+        ):
+            raise DerivProtocolError("ACCOUNT_IDENTITY_CHANGED")
+        returned_loginid = result.get("loginid")
+        if (
+            self.account.loginid is not None
+            and returned_loginid is not None
+            and returned_loginid != self.account.loginid
+        ):
+            raise DerivProtocolError("ACCOUNT_IDENTITY_CHANGED")
         return CapitalSnapshot(
             balance=amount,
             currency=currency,
@@ -413,6 +528,11 @@ class DerivAdapter:
             raise DerivProtocolError("BROKER_EXECUTOR_CAPABILITY_REQUIRED")
         if not self.authorized or self.account is None:
             raise DerivProtocolError("BROKER_SESSION_NOT_AUTHORIZED")
+        if (
+            self.account.account_type != "real"
+            or self.account.environment != "real"
+        ):
+            raise DerivProtocolError("LIVE_ORDER_REQUIRES_REAL_ACCOUNT")
         if not isinstance(payload, dict) or set(payload) != {"proposal_id", "stake"}:
             raise DerivProtocolError("ORDER_PAYLOAD_INVALID")
 

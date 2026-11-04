@@ -120,6 +120,83 @@ class TestDerivAdapterContract(unittest.TestCase):
 
         transport.request.assert_not_awaited()
 
+    def test_demo_oauth_connection_uses_existing_transport_and_binds_modern_account_id(self):
+        import asyncio
+        from types import SimpleNamespace
+
+        demo_session = SimpleNamespace(
+            account=SimpleNamespace(
+                account_id="DOT90004580",
+                account_type="demo",
+                status="active",
+                currency="USD",
+            ),
+            websocket_url=(
+                "wss://api.derivws.com/trading/v1/options/ws/demo?otp=single-use-demo-otp"
+            ),
+        )
+        extension = SimpleNamespace(
+            adapter=None,
+            create_authenticated_demo_session=lambda **kwargs: demo_session,
+        )
+        adapter = DerivAdapter(
+            ws_url="",
+            environment="demo",
+            expected_currency="USD",
+        )
+        extension.adapter = adapter
+        adapter.attach_oauth_extension(extension)
+
+        transport = SimpleNamespace(
+            request=AsyncMock(return_value={
+                "req_id": 1,
+                "balance": {"balance": 1000.0, "currency": "USD"},
+            }),
+            connect=AsyncMock(),
+            close=AsyncMock(),
+            reconnect=AsyncMock(),
+        )
+        with patch(
+            "runtime.adapters.deriv_adapter.DerivWebSocketTransport",
+            return_value=transport,
+        ) as factory:
+            account = asyncio.run(adapter.connect_demo_with_oauth(
+                account_id="DOT90004580",
+                expected_currency="USD",
+            ))
+
+        factory.assert_called_once()
+        transport.connect.assert_awaited_once()
+        self.assertEqual(account.account_type, "demo")
+        self.assertEqual(account.environment, "demo")
+        self.assertEqual(account.account_id, "DOT90004580")
+        self.assertIsNone(account.loginid)
+        self.assertTrue(adapter.authorized)
+        self.assertNotIn("single-use-demo-otp", adapter.connection_fingerprint)
+
+    def test_live_order_submission_rejects_demo_account_even_with_executor_capability(self):
+        import asyncio
+        from runtime.core.models import AccountIdentity
+
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/demo",
+            environment="demo",
+            expected_currency="USD",
+        )
+        capability = object()
+        adapter._bind_executor_capability(capability)
+        adapter.authorized = True
+        adapter.account = AccountIdentity(
+            None, "demo", "USD", "demo", account_id="DOT90004580"
+        )
+        with self.assertRaisesRegex(
+            DerivProtocolError, "LIVE_ORDER_REQUIRES_REAL_ACCOUNT"
+        ):
+            asyncio.run(adapter.submit_authorized_order(
+                {"proposal_id": "PROPOSAL-1", "stake": 1.0},
+                executor_capability=capability,
+            ))
+
     def test_generic_request_rejects_unknown_or_ambiguous_actions(self):
         import asyncio
 
