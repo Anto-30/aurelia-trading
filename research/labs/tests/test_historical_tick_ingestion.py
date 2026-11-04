@@ -106,7 +106,9 @@ class HistoricalTickIngestionTests(unittest.IsolatedAsyncioTestCase):
             {"msg_type": "history", "req_id": 1,
              "history": {"times": [8, 9, 10], "prices": [10.8, 10.9, 11.0]}},
             {"msg_type": "history", "req_id": 2,
-             "history": {"times": [5, 6, 7], "prices": [10.5, 10.6, 10.7]}},
+             "history": {"times": [6, 7, 8], "prices": [10.6, 10.7, 10.8]}},
+            {"msg_type": "history", "req_id": 3,
+             "history": {"times": [5, 6], "prices": [10.5, 10.6]}},
         ]
         ws = FakeWebSocket(responses)
         ingestor = DerivTickIngestor(
@@ -118,12 +120,12 @@ class HistoricalTickIngestionTests(unittest.IsolatedAsyncioTestCase):
             "R_100", start_epoch=5, end_epoch=10
         )
         self.assertEqual(result.status, "COMPLETE")
-        self.assertEqual(result.pages_fetched, 2)
+        self.assertEqual(result.pages_fetched, 3)
         self.assertEqual(result.tick_count, 6)
         self.assertEqual([x.epoch for x in result.ticks], [5, 6, 7, 8, 9, 10])
         self.assertEqual(
             [x["end"] for x in ws.requests],
-            ["10", "8"],
+            ["10", "8", "6"],
         )
         for request in ws.requests:
             self.assertEqual(request["count"], 3)
