@@ -141,7 +141,7 @@ class AURELIABrokerLifecycleAssurance:
         if canonical_transport is None:
             raise ValueError("CANONICAL_AURELIA_TRANSPORT_REQUIRED")
         try:
-            UUID(aurelia_uuid)
+            expected_aurelia_uuid = UUID(aurelia_uuid)
         except (TypeError, ValueError, AttributeError):
             raise ValueError("AURELIA_UUID_INVALID") from None
 
@@ -165,7 +165,7 @@ class AURELIABrokerLifecycleAssurance:
 
         self.adapter = existing_adapter
         self.transport = canonical_transport
-        self.aurelia_uuid = aurelia_uuid
+        self.aurelia_uuid = str(expected_aurelia_uuid)
         self.identity_verifier = identity_verifier
         self.evidence_acquirer = evidence_acquirer
         self.lifecycle_assessor = lifecycle_assessor
@@ -208,6 +208,21 @@ class AURELIABrokerLifecycleAssurance:
                 raise ValueError("COMPOSITE_IDENTITY_INTERFACE_INVALID")
             if identity.validate_integrity() is not True:
                 raise ValueError("COMPOSITE_IDENTITY_INTEGRITY_FAILED")
+            identity_aurelia_uuid = getattr(
+                getattr(identity, "aurelia", None),
+                "internal_uuid",
+                None,
+            )
+            try:
+                verified_aurelia_uuid = UUID(identity_aurelia_uuid)
+            except (AttributeError, TypeError, ValueError):
+                raise ValueError(
+                    "COMPOSITE_IDENTITY_AURELIA_UUID_INVALID"
+                ) from None
+            if verified_aurelia_uuid != expected_aurelia_uuid:
+                raise ValueError(
+                    "COMPOSITE_IDENTITY_AURELIA_UUID_MISMATCH"
+                )
             report.identity_verified = True
             self._assert_canonical_transport_unchanged()
 
