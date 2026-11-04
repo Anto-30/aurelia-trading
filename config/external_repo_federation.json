@@ -7015,6 +7015,35 @@
         "tool execution"
       ],
       "integration_note": "Useful as a bounded provider adapter/experimentation CLI only inside disposable research sandbox. Plugin installation, provider credentials, tool execution and SQLite prompt logs require separate supply-chain and data-retention review. No production secrets or trading tools."
+    },
+    {
+      "repo": "NVIDIA/auto-ontology",
+      "category": "semantic-ontology-and-mcp",
+      "domain": "engineering",
+      "assigned_agents": [
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "sync_targets": [
+        "AURELIA",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/NVIDIA/auto-ontology",
+      "head_commit": "caced11e69e19663dfa0f73778dbecbcb71e87a0",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-04",
+      "license_metadata": "Apache-2.0",
+      "capabilities": [
+        "ontology and semantic graph",
+        "read-only MCP query interface",
+        "ontology management and query validation",
+        "API-driven knowledge integration"
+      ],
+      "security_review_status": "PRELIMINARY_README_DOCS_AND_LICENSE_REVIEW_ONLY_FULL_SOURCE_AUDIT_PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "integration_note": "Reference-only candidate for research metadata, strategy definitions and evidence lineage. It is not a broker connector, trading strategy or execution engine. No broker credentials or order data may be connected. Upstream documentation describes a Postgres/pgvector-backed service and UI-managed connection credentials; require a dedicated non-production analytics database, Vault-backed secrets, read-only MCP permissions, strict egress and data-classification review. AURELIA has no production persistent database or deployed Auto Ontology instance verified; no integration, clone, dependency installation or code execution is claimed."
     }
   ],
   "pin_policy": {
@@ -7485,7 +7514,7 @@
       "capital_authority": false
     }
   },
-  "repository_count": 321,
+  "repository_count": 322,
   "intake_2026_11_02_followup": {
     "supplied_urls_count": 23,
     "unique_supplied_repositories_count": 18,
@@ -7552,10 +7581,10 @@
   },
   "intake_2026_11_04_followup": {
     "date": "2026-11-04",
-    "supplied_urls_count": 6,
+    "supplied_urls_count": 7,
     "unique_supplied_repositories_count": 6,
     "existing_records_refreshed": 2,
-    "new_records_added": 4,
+    "new_records_added": 5,
     "pin_source": "GitHub API default-branch commit endpoint",
     "repository_pins": [
       {
@@ -7593,9 +7622,15 @@
         "head_commit": "f12ce327eeee679d2f2f22ce23018b0db9ae092f",
         "mode": "SANDBOX_ONLY",
         "license_metadata": "Apache-2.0"
+      },
+      {
+        "repo": "NVIDIA/auto-ontology",
+        "head_commit": "caced11e69e19663dfa0f73778dbecbcb71e87a0",
+        "mode": "REFERENCE_ONLY",
+        "license_metadata": "Apache-2.0"
       }
     ],
-    "source_review": "Current default-branch README, root manifest/package metadata where available, LICENSE, and OpenSandbox Credential Vault/egress docs reviewed through GitHub read-only APIs. This is preliminary metadata/documentation review, not full source review.",
+    "source_review": "Preliminary GitHub metadata, README, root manifest, licence and documentation review for the six prior candidates plus NVIDIA/auto-ontology. No full source audit, dependency resolution, SBOM, CVE/SCA, malware scan, sandbox execution or deployment.",
     "physical_runtime_install": "NOT_CLAIMED",
     "repository_code_executed": false,
     "dependencies_installed": false,
@@ -7607,14 +7642,15 @@
     "broker_access_performed": false,
     "live_orders_submitted": 0,
     "capital_authority": false,
-    "security_review_status": "PRELIMINARY_METADATA_AND_DOCUMENTATION_ONLY_FULL_AUDIT_PENDING",
+    "security_review_status": "PRELIMINARY_METADATA_README_DOCS_AND_LICENSE_ONLY_FULL_AUDIT_PENDING",
     "data_gaps": [
-      "No immutable checkout/source archive was scanned in this turn",
+      "No immutable full source checkout or archive scan",
       "No SBOM or transitive dependency resolution",
       "No current CVE/SCA or malware analysis",
-      "No complete nested license/NOTICE audit",
-      "No sandbox runtime/egress test",
-      "No host installation or provider runtime connection"
-    ]
+      "No complete nested license and NOTICE audit",
+      "No sandbox runtime, egress or secret-storage test",
+      "No production database, Vault or MCP instance connected"
+    ],
+    "unique_repositories_count": 7
   }
 }
