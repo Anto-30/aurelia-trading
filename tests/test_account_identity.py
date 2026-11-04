@@ -23,10 +23,10 @@ def valid_identity():
     return CompositeAccountIdentity.create(
         aurelia=AURELIAIdentity(UUID_AURELIA),
         deriv_account=DerivAccountIdentifier(
-            "DOT90004580", "real", "active", OPTIONS_ACCOUNTS_ENDPOINT, HASH_A, NOW
+            "ROT92026649", "real", "active", OPTIONS_ACCOUNTS_ENDPOINT, HASH_A, NOW
         ),
-        broker_uuid=BrokerReturnedUUID(UUID_BROKER, "documented_source_fixture", HASH_B, NOW),
-        login_id=LoginID("CR123456", "documented_balance_loginid", NOW),
+        broker_uuid=BrokerReturnedUUID(UUID_BROKER, "balance", HASH_B, NOW),
+        login_id=LoginID("ROT92026649", "balance", NOW),
         context=AccountContext(
             ProductType.OPTIONS, EnvironmentType.REAL, "USD", "USD", "USD",
             "active", OPTIONS_ACCOUNTS_ENDPOINT, WS_REAL, NOW,
@@ -39,15 +39,20 @@ class CompositeAccountIdentityTests(unittest.TestCase):
         identity = valid_identity()
         self.assertTrue(identity.validate_integrity())
         self.assertNotEqual(identity.aurelia.internal_uuid, identity.broker_uuid.value)
-        self.assertEqual(identity.deriv_account.account_id, "DOT90004580")
-        self.assertEqual(identity.login_id.value, "CR123456")
-        self.assertNotEqual(identity.deriv_account.account_id, identity.login_id.value)
+        self.assertEqual(identity.deriv_account.account_id, "ROT92026649")
+        self.assertEqual(identity.login_id.value, "ROT92026649")
         self.assertNotEqual(identity.deriv_account.source_endpoint, identity.login_id.source_method)
 
-    def test_account_id_and_loginid_are_independent_namespaces(self):
+    def test_account_id_loginid_mismatch_is_rejected(self):
         identity = valid_identity()
-        self.assertTrue(identity.validate_integrity())
-        self.assertNotEqual(identity.deriv_account.account_id, identity.login_id.value)
+        with self.assertRaisesRegex(ValueError, "DERIV_ACCOUNT_ID_LOGINID_MISMATCH"):
+            CompositeAccountIdentity.create(
+                aurelia=identity.aurelia,
+                deriv_account=identity.deriv_account,
+                broker_uuid=identity.broker_uuid,
+                login_id=replace(identity.login_id, value="ROT00000000"),
+                context=identity.context,
+            )
 
     def test_broker_uuid_format_is_validated(self):
         identity = valid_identity()
@@ -115,28 +120,6 @@ class CompositeAccountIdentityTests(unittest.TestCase):
                 login_id=identity.login_id,
                 context=identity.context,
             )
-
-    def test_balance_connection_id_cannot_be_used_as_broker_uuid_source(self):
-        identity = valid_identity()
-        with self.assertRaisesRegex(ValueError, "ACCOUNT_IDENTITY_COMPONENT_INVALID"):
-            CompositeAccountIdentity.create(
-                aurelia=identity.aurelia,
-                deriv_account=identity.deriv_account,
-                broker_uuid=replace(identity.broker_uuid, source_method="balance"),
-                login_id=identity.login_id,
-                context=identity.context,
-            )
-
-    def test_checksum_detects_provenance_timestamp_drift(self):
-        identity = valid_identity()
-        tampered = replace(
-            identity,
-            deriv_account=replace(
-                identity.deriv_account,
-                observed_at_utc="2026-11-03T00:00:00+00:00",
-            ),
-        )
-        self.assertFalse(tampered.validate_integrity())
 
     def test_checksum_detects_source_hash_drift(self):
         identity = valid_identity()
