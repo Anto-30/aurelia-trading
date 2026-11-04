@@ -5,6 +5,10 @@ import re
 import unittest
 from pathlib import Path
 
+from scripts.validate_agent_tool_skill_assignments import (
+    validate_intake_source_against_registry,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_PATH = ROOT / "config" / "external_repo_federation.json"
 ALLOWED_MODES = {"SANDBOX_ONLY", "TOOLCHAIN_ONLY", "RESEARCH_ONLY", "REFERENCE_ONLY"}
@@ -36,7 +40,6 @@ class ExternalRepositoryFederationRegistryTests(unittest.TestCase):
                 else:
                     self.assertRegex(pin, re.compile(r"^[0-9a-f]{40}$"))
 
-
     def test_external_repositories_never_receive_capital_or_live_order_authority(self):
         controls = self.registry["global_controls"]
         self.assertIs(controls["capital_authority"], False)
@@ -46,6 +49,41 @@ class ExternalRepositoryFederationRegistryTests(unittest.TestCase):
             with self.subTest(repo=entry.get("repo")):
                 self.assertIs(entry.get("capital_authority", False), False)
                 self.assertIs(entry.get("live_order_submission", False), False)
+
+
+class HistoricalIntakeSnapshotTests(unittest.TestCase):
+    def setUp(self):
+        self.intake = {
+            "repo": "example/project",
+            "source_url": "https://github.com/example/project",
+            "head_commit": "a" * 40,
+            "assigned_agents": ["AURELIA"],
+            "mode": "SANDBOX_ONLY",
+            "capital_authority": False,
+        }
+        self.current = {
+            "repo": "example/project",
+            "source_url": "https://github.com/example/project",
+            "head_commit": "b" * 40,
+            "assigned_agents": ["AURELIA"],
+            "mode": "SANDBOX_ONLY",
+            "capital_authority": False,
+        }
+
+    def test_current_pin_may_advance_without_rewriting_historical_intake(self):
+        self.assertIsNone(
+            validate_intake_source_against_registry(self.intake, self.current)
+        )
+
+    def test_current_pin_must_remain_a_full_commit_sha(self):
+        self.current["head_commit"] = "SYNC_REQUIRED"
+        with self.assertRaises(AssertionError):
+            validate_intake_source_against_registry(self.intake, self.current)
+
+    def test_policy_drift_is_still_rejected(self):
+        self.current["mode"] = "RESEARCH_ONLY"
+        with self.assertRaises(AssertionError):
+            validate_intake_source_against_registry(self.intake, self.current)
 
 
 if __name__ == "__main__":
