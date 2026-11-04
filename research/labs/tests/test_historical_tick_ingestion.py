@@ -26,6 +26,20 @@ class FakeWebSocket:
         return json.dumps(self.responses.pop(0))
 
 
+class CapturingStore:
+    def __init__(self):
+        self.pages = []
+        self.manifests = []
+
+    def write_page(self, **kwargs):
+        self.pages.append(tuple(kwargs["ticks"]))
+        from types import SimpleNamespace
+        return SimpleNamespace(parquet_paths=(), provenance_paths=())
+
+    def write_run_manifest(self, result, *, source_sha):
+        self.manifests.append((result.dataset_sha256, source_sha))
+
+
 class FakeWebSocketContext:
     def __init__(self, ws):
         self.ws = ws
@@ -116,13 +130,22 @@ class HistoricalTickIngestionTests(unittest.IsolatedAsyncioTestCase):
             page_size=3,
             rate_limit_seconds=0,
         )
+        store = CapturingStore()
         result = await ingestor.fetch_ticks(
-            "R_100", start_epoch=5, end_epoch=10
+            "R_100", start_epoch=5, end_epoch=10, store=store
         )
         self.assertEqual(result.status, "COMPLETE")
         self.assertEqual(result.pages_fetched, 3)
         self.assertEqual(result.tick_count, 6)
+        self.assertEqual(result.duplicates_removed, 2)
         self.assertEqual([x.epoch for x in result.ticks], [5, 6, 7, 8, 9, 10])
+        stored = [tick for page in store.pages for tick in page]
+        self.assertEqual(len(stored), 6)
+        self.assertEqual(
+            sorted((tick.epoch, tick.quote) for tick in stored),
+            [(5, 10.5), (6, 10.6), (7, 10.7), (8, 10.8), (9, 10.9), (10, 11.0)],
+        )
+        self.assertEqual(len(store.manifests), 1)
         self.assertEqual(
             [x["end"] for x in ws.requests],
             ["10", "8", "6"],
