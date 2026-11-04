@@ -8,8 +8,12 @@ from runtime.adapters.deriv_lifecycle import AURELIABrokerLifecycleAssurance
 
 
 class FakeIdentity:
-    def __init__(self, valid: bool = True):
+    def __init__(self, valid: bool = True, aurelia_uuid: str | None = None):
         self.valid = valid
+        self.aurelia = (
+            SimpleNamespace(internal_uuid=aurelia_uuid)
+            if aurelia_uuid is not None else None
+        )
 
     def validate_integrity(self) -> bool:
         return self.valid
@@ -94,9 +98,11 @@ class FakeAdapter:
 
 def make_assurance(*, evidence=None, identity=None, replace_transport=False):
     adapter = FakeAdapter()
+    expected_aurelia_uuid = str(uuid4())
+    verified_identity = identity or FakeIdentity(aurelia_uuid=expected_aurelia_uuid)
     verifier = FakeVerifier(
         adapter.transport,
-        identity=identity,
+        identity=verified_identity,
         adapter=adapter,
         replace_transport=replace_transport,
     )
@@ -104,7 +110,7 @@ def make_assurance(*, evidence=None, identity=None, replace_transport=False):
     lifecycle = FakeLifecycleAssessor(adapter.transport)
     assurance = AURELIABrokerLifecycleAssurance(
         existing_adapter=adapter,
-        aurelia_uuid=str(uuid4()),
+        aurelia_uuid=expected_aurelia_uuid,
         identity_verifier=verifier,
         evidence_acquirer=acquirer,
         lifecycle_assessor=lifecycle,
@@ -193,6 +199,20 @@ class BrokerLifecycleAssuranceTests(unittest.IsolatedAsyncioTestCase):
         report = await assurance.execute_complete_assurance()
         self.assertEqual(report.status, "FAILED")
         self.assertEqual(report.failure_reason, "ValueError")
+        self.assertFalse(report.evidence_acquired)
+        self.assertEqual(acquirer.calls, 0)
+        self.assertEqual(lifecycle.calls, 0)
+
+    async def test_mismatched_aurelia_identity_blocks_evidence_and_lifecycle(self):
+        assurance, _, _, acquirer, lifecycle = make_assurance(
+            identity=FakeIdentity(aurelia_uuid=str(uuid4()))
+        )
+
+        report = await assurance.execute_complete_assurance()
+
+        self.assertEqual(report.status, "FAILED")
+        self.assertEqual(report.failure_reason, "ValueError")
+        self.assertFalse(report.identity_verified)
         self.assertFalse(report.evidence_acquired)
         self.assertEqual(acquirer.calls, 0)
         self.assertEqual(lifecycle.calls, 0)
