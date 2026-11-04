@@ -86,6 +86,41 @@ class CompositeAccountIdentityTests(unittest.TestCase):
         )
         self.assertFalse(tampered.validate_integrity())
 
+    def test_modern_options_account_contract_uses_account_id_and_complete_schema(self) -> None:
+        account = DerivAccountIdentifier(
+            account_id="DOT90004580",
+            account_type="real",
+            status="active",
+            group="row",
+            currency="USD",
+            balance=1250.5,
+        )
+        self.assertTrue(account.validate())
+        self.assertEqual(account.account_id, "DOT90004580")
+        self.assertNotIn("deriv_loginid", account.__dataclass_fields__)
+
+    def test_unavailable_provider_uuid_and_legacy_loginid_are_explicit(self) -> None:
+        self.assertTrue(BrokerReturnedUUID(None, "not_returned", None).validate())
+        self.assertTrue(LoginID(None, "not_returned").validate())
+
+    def test_composite_identity_rejects_account_context_currency_mismatch(self) -> None:
+        account = DerivAccountIdentifier(
+            account_id="DOT90004580",
+            account_type="real",
+            status="active",
+            group="row",
+            currency="EUR",
+            balance=1000.0,
+        )
+        with self.assertRaisesRegex(ValueError, "ACCOUNT_CONTEXT_MISMATCH"):
+            CompositeAccountIdentity.create(
+                self.aurelia,
+                account,
+                BrokerReturnedUUID(None, "not_returned", None),
+                LoginID(None, "not_returned"),
+                self.context,
+            )
+
     def test_identity_does_not_store_email_or_email_hash(self) -> None:
         identity = CompositeAccountIdentity.create(
             self.aurelia, self.deriv, self.broker_uuid, self.login_id, self.context
