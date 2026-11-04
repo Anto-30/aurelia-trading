@@ -1,0 +1,38 @@
+name: Quarantined Repository Source Scan
+
+on:
+  pull_request:
+    paths:
+      - "config/external_repo_federation.json"
+      - "scripts/scan_quarantined_repositories.py"
+      - "tests/test_quarantined_repo_scan.py"
+      - ".github/workflows/quarantined-repo-source-scan.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-only-clone-and-scan:
+    name: Clone pinned sources without executing repository code
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      AURELIA_REPO_SCAN_OUT: artifacts/quarantined_repo_source_scan.json
+    steps:
+      - name: Checkout AURELIA registry
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          submodules: false
+
+      - name: Run source-only pinned clone and scan
+        run: python3 scripts/scan_quarantined_repositories.py
+
+      - name: Upload sanitized source scan report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: quarantined-repo-source-scan
+          path: artifacts/quarantined_repo_source_scan.json
+          if-no-files-found: error

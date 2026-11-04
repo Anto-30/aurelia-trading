@@ -81,7 +81,11 @@ def main() -> None:
         assert item.get("physical_runtime_install") == "NOT_CLAIMED"
         assert item["assigned_agents"] and set(item["assigned_agents"]).issubset(router["agents"]), item["repo"]
         registered = repo_by_name[item["repo"]]
-        assert registered["head_commit"] == item["head_commit"], item["repo"]
+        # Intake pins are immutable historical snapshots; the active registry
+        # pin may advance independently after an upstream default-branch update.
+        assert registered["source_url"] == item["source_url"], item["repo"]
+        current_pin = registered.get("head_commit")
+        assert current_pin is None or re.fullmatch(r"[0-9a-f]{40}", current_pin), item["repo"]
         assert registered["assigned_agents"] == item["assigned_agents"], item["repo"]
         assert registered["mode"] == item["mode"], item["repo"]
         assert registered.get("capital_authority", False) is False, item["repo"]
