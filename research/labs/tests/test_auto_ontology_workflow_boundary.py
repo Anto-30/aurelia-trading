@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 import unittest
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 WORKFLOW = ROOT / ".github" / "workflows" / "aurelia-assurance.yml"
 RESEARCH_WORKFLOW = ROOT / ".github" / "workflows" / "aurelia-research-ci.yml"
 
