@@ -48,8 +48,8 @@ class BacktestPolicyTests(unittest.TestCase):
     def test_long_trade_uses_next_open_stop_target_and_round_trip_costs(self):
         bars = [
             bar(0, 100, 101, 99, 100),
-            bar(1, 100, 102, 99, 101),
-            bar(2, 101, 103, 100, 102),
+            bar(1, 100, 102, 99.5, 101),
+            bar(2, 101, 102.5, 100, 102),
         ]
         verdict = MSNRConfirmationVerdict(
             signal_valid=True,
