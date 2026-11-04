@@ -68,7 +68,7 @@ class TestDerivAdapterContract(unittest.TestCase):
     def test_generic_request_rejects_all_capital_actions_before_transport(self):
         import asyncio
 
-        transport = SimpleNamespace(request=AsyncMock())
+        transport = SimpleNamespace(request=AsyncMock(return_value={}))
         adapter = DerivAdapter(
             ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
             expected_currency="USD",
@@ -92,10 +92,38 @@ class TestDerivAdapterContract(unittest.TestCase):
         asyncio.run(exercise())
         transport.request.assert_not_awaited()
 
+    def test_direct_order_submission_requires_executor_bound_capability(self):
+        import asyncio
+        from runtime.core.models import AccountIdentity
+
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+            expected_loginid="CRREAL",
+            expected_currency="USD",
+        )
+        adapter.authorized = True
+        adapter.account = AccountIdentity("CRREAL", "real", "USD", "real")
+        transport = SimpleNamespace(request=AsyncMock(return_value={
+            "req_id": 1,
+            "buy": {"transaction_id": "TX-1", "contract_id": "C-1"},
+        }))
+        adapter.transport = transport
+
+        with self.assertRaisesRegex(
+            DerivProtocolError,
+            "BROKER_EXECUTOR_CAPABILITY_REQUIRED",
+        ):
+            asyncio.run(adapter.submit_authorized_order(
+                {"proposal_id": "PROPOSAL-1", "stake": 1.0},
+                executor_capability=object(),
+            ))
+
+        transport.request.assert_not_awaited()
+
     def test_generic_request_rejects_unknown_or_ambiguous_actions(self):
         import asyncio
 
-        transport = SimpleNamespace(request=AsyncMock())
+        transport = SimpleNamespace(request=AsyncMock(return_value={}))
         adapter = DerivAdapter(
             ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
             expected_currency="USD",
