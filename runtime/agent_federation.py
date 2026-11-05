@@ -291,13 +291,11 @@ class PersistentAgentFederation:
         if selected.get("status") != "CLAIMED" or selected.get("assigned_agent") != agent:
             return False
         stored_hash = selected.get("claim_token_sha256")
-        if not stored_hash:
-            # Fail closed for incomplete or corrupt capability-bound claim records.
-            return (
-                worker_id is None
-                and claim_token is None
-                and not selected.get("claim_worker_id")
-            )
+        # Every claim is created with a worker ID and one-time capability.
+        # Legacy, incomplete, or corrupted claim records have no authority to
+        # complete, renew, or requeue work; stale recovery must requeue them.
+        if not isinstance(stored_hash, str) or len(stored_hash) != 64:
+            return False
         if (
             not isinstance(worker_id, str)
             or not worker_id.strip()
