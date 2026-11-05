@@ -11,21 +11,23 @@ from runtime.agent_federation import PersistentAgentFederation
 from runtime.agent_workers import AgentWorkerSupervisor
 
 
-def _protocol_worker_command(tmp_path: Path) -> str:
+def _protocol_worker_command(tmp_path: Path, mode: str = "success") -> str:
     script = tmp_path / "protocol-worker.py"
     script.write_text(
-        """
+        f"""
 import json
 import os
 import sys
 from pathlib import Path
+
+MODE = {mode!r}
 
 for line in sys.stdin:
     message = json.loads(line)
     if message.get("type") == "HELLO":
         ready = {key: message[key] for key in ("protocol", "agent", "worker_id", "session_nonce")}
         ready["type"] = "READY"
-        if os.getenv("TEST_BAD_HANDSHAKE") == "1":
+        if MODE == "bad_handshake":
             ready["session_nonce"] = "wrong"
         print(json.dumps(ready), flush=True)
     elif message.get("type") == "TASK":
@@ -41,17 +43,17 @@ for line in sys.stdin:
             "traversal": "../outside.json",
             "missing_evidence": "",
             "symlink": "symlink-evidence.json",
-        }.get(os.getenv("TEST_EVIDENCE_MODE", ""), "worker-evidence.json")
+        }.get(MODE, "worker-evidence.json")
         result["result"] = {"summary": "fixture completed", "artifact_type": "test/evidence"}
-        if os.getenv("TEST_BAD_TASK") == "1":
+        if MODE == "bad_task":
             result["task_id"] = "task:wrong"
-        if os.getenv("TEST_BAD_CORRELATION") == "1":
+        if MODE == "bad_correlation":
             result["correlation_id"] = "wrong-correlation"
-        if os.getenv("TEST_AUTHORITY_FIELD") == "1":
+        if MODE == "authority_field":
             result["capital_authority"] = False
-        if os.getenv("TEST_BAD_STATUS_TYPE") == "1":
+        if MODE == "bad_status_type":
             result["status"] = []
-        if os.getenv("TEST_OVERSIZED_RESPONSE") == "1":
+        if MODE == "oversized_response":
             print("x" * 70000, flush=True)
         else:
             print(json.dumps(result), flush=True)
@@ -177,9 +179,8 @@ async def test_worker_handshake_mismatch_never_creates_worker_lease_or_claims_ta
 ):
     evidence_root = tmp_path / "evidence"
     monkeypatch.setenv("AURELIA_EVIDENCE_ROOT", str(evidence_root))
-    monkeypatch.setenv("TEST_BAD_HANDSHAKE", "1")
     monkeypatch.setenv(
-        "AURELIA_AGENT_CLAUDECODE_COMMAND", _protocol_worker_command(tmp_path)
+        "AURELIA_AGENT_CLAUDECODE_COMMAND", _protocol_worker_command(tmp_path, mode="bad_handshake")
     )
     federation = _federation(tmp_path)
     task = await federation.enqueue_task(
@@ -218,9 +219,9 @@ async def test_worker_cannot_complete_task_without_evidence_inside_evidence_root
     if mode == "symlink":
         (evidence_root / "symlink-evidence.json").symlink_to(tmp_path / "outside.json")
     monkeypatch.setenv("AURELIA_EVIDENCE_ROOT", str(evidence_root))
-    monkeypatch.setenv("TEST_EVIDENCE_MODE", mode)
     monkeypatch.setenv(
-        "AURELIA_AGENT_CLAUDECODE_COMMAND", _protocol_worker_command(tmp_path)
+        "AURELIA_AGENT_CLAUDECODE_COMMAND",
+        _protocol_worker_command(tmp_path, mode=mode),
     )
     federation = _federation(tmp_path)
     task = await federation.enqueue_task(
@@ -248,29 +249,29 @@ async def test_worker_cannot_complete_task_without_evidence_inside_evidence_root
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "bad_field",
+    "mode",
     [
-        "TEST_BAD_TASK",
-        "TEST_BAD_CORRELATION",
-        "TEST_AUTHORITY_FIELD",
-        "TEST_OVERSIZED_RESPONSE",
-        "TEST_BAD_STATUS_TYPE",
+        "bad_task",
+        "bad_correlation",
+        "authority_field",
+        "oversized_response",
+        "bad_status_type",
     ],
 )
 async def test_worker_cannot_complete_an_unmatched_task(
-    tmp_path, monkeypatch, bad_field
+    tmp_path, monkeypatch, mode
 ):
     evidence_root = tmp_path / "evidence"
     monkeypatch.setenv("AURELIA_EVIDENCE_ROOT", str(evidence_root))
-    monkeypatch.setenv(bad_field, "1")
     monkeypatch.setenv(
-        "AURELIA_AGENT_CLAUDECODE_COMMAND", _protocol_worker_command(tmp_path)
+        "AURELIA_AGENT_CLAUDECODE_COMMAND",
+        _protocol_worker_command(tmp_path, mode=mode),
     )
     federation = _federation(tmp_path)
     task = await federation.enqueue_task(
         task_type="ENGINEERING_REVIEW",
         payload={},
-        correlation_id=f"worker-jsonl-{bad_field}",
+        correlation_id=f"worker-jsonl-{mode}",
         assigned_agent="ClaudeCode",
     )
     supervisor = AgentWorkerSupervisor(
@@ -282,12 +283,12 @@ async def test_worker_cannot_complete_an_unmatched_task(
     )
     supervisor.start()
     expected_error = {
-        "TEST_BAD_TASK": "WORKER_TASK_CORRELATION_MISMATCH",
-        "TEST_BAD_CORRELATION": "WORKER_TASK_CORRELATION_MISMATCH",
-        "TEST_AUTHORITY_FIELD": "WORKER_AUTHORITY_FIELD_FORBIDDEN",
-        "TEST_OVERSIZED_RESPONSE": "WORKER_RESPONSE_FRAME_TOO_LARGE",
-        "TEST_BAD_STATUS_TYPE": "WORKER_TASK_STATUS_INVALID",
-    }[bad_field]
+        "bad_task": "WORKER_TASK_CORRELATION_MISMATCH",
+        "bad_correlation": "WORKER_TASK_CORRELATION_MISMATCH",
+        "authority_field": "WORKER_AUTHORITY_FIELD_FORBIDDEN",
+        "oversized_response": "WORKER_RESPONSE_FRAME_TOO_LARGE",
+        "bad_status_type": "WORKER_TASK_STATUS_INVALID",
+    }[mode]
     try:
         assert await _wait_for_protocol_error(federation, expected_error)
         assert await _wait_for_requeue(federation, task.task_id)
@@ -348,3 +349,35 @@ async def test_worker_input_with_nested_access_token_is_blocked_before_dispatch(
         assert stored["result"]["reason"] == "WORKER_INPUT_CONTAINS_SENSITIVE_FIELD"
     finally:
         await supervisor.stop()
+
+
+def test_worker_environment_is_deny_by_default_and_uses_private_home(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setenv("HOME", str(tmp_path / "developer-home"))
+    monkeypatch.setenv("PATH", "/usr/bin:/bin")
+    monkeypatch.setenv("CUSTOM_PROVIDER_ACCESS_TOKEN", "must-not-leak")
+    monkeypatch.setenv("UNRECOGNIZED_SECRET", "must-not-leak")
+    supervisor = AgentWorkerSupervisor(
+        _federation(tmp_path), agents=("ClaudeCode",)
+    )
+    private_home = tmp_path / "private-worker-home"
+    private_home.mkdir(mode=0o700)
+    env = supervisor._worker_environment(
+        supervisor_worker_spec := __import__(
+            "runtime.agent_workers", fromlist=["AgentWorkerSpec"]
+        ).AgentWorkerSpec(
+            agent="ClaudeCode",
+            command_env="AURELIA_AGENT_CLAUDECODE_COMMAND",
+        ),
+        worker_id="worker-test",
+        session_nonce="nonce-test",
+        home_dir=str(private_home),
+    )
+
+    assert env["PATH"] == "/usr/bin:/bin"
+    assert env["HOME"] == str(private_home)
+    assert env["USERPROFILE"] == str(private_home)
+    assert "CUSTOM_PROVIDER_ACCESS_TOKEN" not in env
+    assert "UNRECOGNIZED_SECRET" not in env
+    assert env["AURELIA_WORKER_AGENT"] == "ClaudeCode"
