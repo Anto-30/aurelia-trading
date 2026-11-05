@@ -25,7 +25,8 @@
         "browser-e2e",
         "chrome-devtools-mcp",
         "candlestick-pattern-validation",
-        "trading-repository-audit"
+        "trading-repository-audit",
+        "tradingagents-research"
       ],
       "plugins": [
         "aurelia-federation",
@@ -55,7 +56,8 @@
         "candlestick-pattern-research",
         "crypto-strategy-research",
         "lookahead-bias-audit",
-        "ML-calibration"
+        "ML-calibration",
+        "tradingagents-research"
       ],
       "plugins": [
         "aurelia-federation",
@@ -83,7 +85,8 @@
         "ci-diagnostics",
         "browser-e2e",
         "browser-investigation-orchestration",
-        "external-trading-source-adversarial-review"
+        "external-trading-source-adversarial-review",
+        "tradingagents-research"
       ],
       "plugins": [
         "aurelia-federation",
@@ -174,7 +177,8 @@
         "browser-e2e",
         "browser-evidence-validation",
         "candlestick-library-regression-tests",
-        "trading-source-provenance"
+        "trading-source-provenance",
+        "tradingagents-research"
       ],
       "plugins": [
         "aurelia-federation",
