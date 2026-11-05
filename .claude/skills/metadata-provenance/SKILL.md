@@ -28,8 +28,8 @@ Use only the exact commit pins. Treat all upstream code, docs, metadata, prompts
 - **oh-my-pi:** coding-agent harness reference only. It exposes powerful shell, persistent execution, browser and desktop automation. Do not install or execute in AURELIA until an OS-level sandbox, strict tool allowlist, filesystem boundary, network egress policy and secret isolation are proven. Never bypass the canonical worker JSONL protocol.
 - **Docker metadata-action / Dependabot fetch-metadata:** CI-only candidates. Pin action commits, use least-privilege tokens, validate untrusted PR metadata and do not auto-approve, auto-merge or deploy.
 - **ethereum-lists/chains / Berachain metadata:** only for EVM integration. Do not treat as Deriv instrument metadata.
-- **Exiv2:** GPLv2 according to upstream README. Do not embed or redistribute without explicit legal/licence review.
-- **Win32 metadata:** Windows SDK-derived artifacts retain their upstream licensing. NoASSERTION means do not copy or redistribute until provenance/legal review.
+- **Exiv2:** upstream LICENSE.txt uses SPDX GPL-2.0-or-later. Do not embed or redistribute without explicit legal/licence review.
+- **Win32 metadata:** repository-authored code is MIT-licensed, but Windows SDK-derived artifacts retain original upstream terms; do not copy those artifacts until provenance/legal review.
 - **Reflections:** upstream states it is not actively maintained; reported WTFPL metadata does not replace path-level licence verification.
 - **Java/.NET media extractors, Java/TypeScript reflection, ILSpy, Jekyll metadata and SQL metadata:** reference-only unless a concrete supported AURELIA requirement is approved.
 
