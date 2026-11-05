@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 import os
+import tempfile
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -189,6 +190,56 @@ class AgentPerformanceEvaluator:
         except (OSError, RuntimeError, ValueError):
             return None
         return resolved if resolved.is_file() else None
+
+    def snapshot_evidence(self, ref: str) -> tuple[str, str, int] | None:
+        """Copy submitted evidence into a content-addressed archive under evidence_root."""
+        source = self._resolve_evidence(ref)
+        if source is None:
+            return None
+        try:
+            raw = source.read_bytes()
+            digest = hashlib.sha256(raw).hexdigest()
+            root = self.evidence_root.expanduser().resolve(strict=True)
+            archive_dir = root / "agent-tasks"
+            if archive_dir.is_symlink():
+                return None
+            archive_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+            resolved_dir = archive_dir.resolve(strict=True)
+            resolved_dir.relative_to(root)
+            destination = resolved_dir / f"{digest}.artifact"
+            if destination.is_symlink():
+                return None
+            if destination.exists():
+                if not destination.is_file() or destination.read_bytes() != raw:
+                    return None
+            else:
+                fd, temporary_name = tempfile.mkstemp(
+                    prefix=f".{digest}.",
+                    suffix=".tmp",
+                    dir=resolved_dir,
+                )
+                try:
+                    with os.fdopen(fd, "wb") as handle:
+                        handle.write(raw)
+                        handle.flush()
+                        os.fsync(handle.fileno())
+                    try:
+                        os.link(temporary_name, destination)
+                    except FileExistsError:
+                        if (
+                            destination.is_symlink()
+                            or not destination.is_file()
+                            or destination.read_bytes() != raw
+                        ):
+                            return None
+                finally:
+                    try:
+                        os.unlink(temporary_name)
+                    except FileNotFoundError:
+                        pass
+            return f"agent-tasks/{digest}.artifact", digest, len(raw)
+        except (OSError, RuntimeError, ValueError):
+            return None
 
     def evaluate(self, *, task_id: str, agent: str, status: str, evidence_ref: str = "",
                  result: dict[str, Any] | None = None, evaluation_id: str | None = None) -> dict[str, Any]:
