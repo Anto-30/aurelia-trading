@@ -314,13 +314,20 @@ async def test_complete_task_rejects_missing_evidence(tmp_path, monkeypatch):
         correlation_id="missing-evidence-direct",
         assigned_agent="ClaudeCode",
     )
-    claimed = await federation.claim_task("ClaudeCode")
+    claimed = await federation.claim_task(
+        "ClaudeCode",
+        worker_id="claude-no-evidence-test-worker",
+    )
     assert claimed is not None
     with pytest.raises(
         ValueError, match="COMPLETED_TASK_REQUIRES_VERIFIABLE_EVIDENCE"
     ):
         await federation.complete_task(
-            task.task_id, agent="ClaudeCode", status="COMPLETED"
+            task.task_id,
+            agent="ClaudeCode",
+            status="COMPLETED",
+            worker_id=claimed.worker_id,
+            claim_token=claimed.claim_token,
         )
 
 
