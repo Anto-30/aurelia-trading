@@ -126,7 +126,9 @@ class DerivWebSocketTransport:
                 await asyncio.sleep(self.application_ping_interval)
                 if self.ws is None:
                     return
-                await self.request({"ping": 1})
+                response = await self.request({"ping": 1})
+                if response.get("msg_type") != "ping" or response.get("ping") != "pong":
+                    raise DerivTransportError("DERIV_PING_RESPONSE_INVALID")
         except asyncio.CancelledError:
             raise
         except Exception as exc:
