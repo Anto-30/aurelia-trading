@@ -68,6 +68,7 @@ class SupervisedWorkerTests(unittest.IsolatedAsyncioTestCase):
             rows = federation._load_tasks()
             self.assertEqual(rows[0]["status"], "COMPLETED")
             self.assertEqual(rows[0]["evidence_ref"], "worker-result.json")
+            self.assertEqual(rows[0]["completed_by_worker_id"], "claude-real-worker-test")
             await worker.stop()
             self.assertEqual(worker.status.state, "STOPPED")
 
