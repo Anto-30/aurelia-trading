@@ -19,12 +19,15 @@ This is a source audit, not a certification of strategy performance or live exec
 | Duplicate tick detection | NOT IMPLEMENTED | No event-level deduplication key is persisted. Do not infer duplicate-free data from WebSocket ordering. |
 | Gap/continuity measurement | NOT IMPLEMENTED | No tick-gap counters, missing-interval report, or continuity threshold is applied. |
 | Bounded reconnection | PASS (code + tests) | Retryable reader errors are typed; collector reconnects/resubscribes with capped exponential backoff and records reconnect events. |
-| Input quote validation | FAIL (fix in progress) | Float conversion does not reject NaN, infinity, zero or negative quote values before the signal engine/state update. |
+| Input quote validation | PASS (verified by CI) | `validate_tick_input()` now rejects booleans, malformed, non-finite and non-positive quotes, and timezone-naive timestamps before `observe_tick()` mutates pending-signal state. Regression coverage passed on exact head `97f09a489d371b5068d4b1cf207adb1b706c3035`. |
 | Persistent storage format | PARTIAL | State/report are JSON and uploaded as a GitHub Actions artifact; no Parquet/Arrow writer exists. Artifact retention in this workflow is 30 days, not an indefinite data store. |
 | Deriv authentication isolation | PASS (source scope) | Collector uses the documented `/trading/v1/options/ws/public` endpoint and does not import the authenticated Deriv account adapter or read Deriv credential variables. |
 | Capital/execution authority | PASS (source scope) | Collector emits only research/proposal data and explicitly reports `strategy_live_eligible=false`, `execution_authorized=false`, `capital_authority=false`, and `live_execution=false`. |
 
 ## Existing verification evidence
+
+Updated PR head `97f09a489d371b5068d4b1cf207adb1b706c3035` passed GitHub Actions Assurance run `42010762673` (completed successfully). On this exact head, the `research/labs/tests` suite passed, the complete runtime test suite passed (**319 tests**), and the assurance test suite passed (**61 tests**). The two new regression tests, four research-security-boundary tests, and two source-verifier boundary tests passed within the runtime suite. The frozen R100 strategy-source integrity check and clean runtime container build also passed. Public Deriv transport verification passed. The protected Deriv authenticated session/account/lifecycle steps were skipped because credentials were not verified/configured; no credential was used by the collector.
+
 
 GitHub Actions Assurance run **41477157422** on PR #253's baseline completed successfully. Its steps included:
 
