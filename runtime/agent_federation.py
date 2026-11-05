@@ -318,7 +318,12 @@ class PersistentAgentFederation:
             self._save_tasks(tasks)
         self._append(
             "AGENT_TASK_CLAIM_RENEWED",
-            {"task_id": task_id, "agent": agent, "worker_id": worker_id},
+            {
+                "task_id": task_id,
+                "agent": agent,
+                "worker_id": worker_id,
+                "renewed_at": datetime.now(timezone.utc).isoformat(),
+            },
             task_id,
         )
         return True

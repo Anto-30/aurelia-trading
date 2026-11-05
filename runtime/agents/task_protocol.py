@@ -9,6 +9,7 @@ capital/order authority.
 """
 
 import hashlib
+import hmac
 import json
 import os
 from dataclasses import dataclass
@@ -32,6 +33,8 @@ SENSITIVE_KEYS = frozenset({
     "otp",
     "loginid",
     "account_loginid",
+    "claim_token",
+    "task_capability",
 })
 AUTHORITY_KEYS = frozenset({
     "capital_authority",
@@ -159,7 +162,7 @@ def validate_task_result(
         raise ProtocolError("TASK_ID_MISMATCH")
     supplied_token = message.get("claim_token")
     if not isinstance(supplied_token, str) or not expected_claim_token or not (
-        __import__("hmac").compare_digest(supplied_token, expected_claim_token)
+        hmac.compare_digest(supplied_token, expected_claim_token)
     ):
         raise ProtocolError("CLAIM_TOKEN_MISMATCH")
     status = message.get("status")
@@ -234,7 +237,11 @@ def persist_evidence(root: str | Path, record: dict[str, Any]) -> EvidenceArtifa
         resolved_dir.relative_to(root_path)
     except ValueError as exc:
         raise ProtocolError("EVIDENCE_PATH_ESCAPES_ROOT") from exc
+    if artifact_path.is_symlink():
+        raise ProtocolError("EVIDENCE_PATH_SYMLINK_FORBIDDEN")
     if artifact_path.exists():
+        if artifact_path.resolve().parent != resolved_dir:
+            raise ProtocolError("EVIDENCE_PATH_ESCAPES_ROOT")
         if artifact_path.read_bytes() != raw:
             raise ProtocolError("EVIDENCE_CONTENT_ADDRESS_CONFLICT")
     else:

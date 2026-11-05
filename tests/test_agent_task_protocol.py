@@ -111,6 +111,26 @@ class TestAgentTaskProtocol(unittest.TestCase):
                 expected_claim_token="one-time-secret",
             )
 
+
+    def test_task_result_rejects_secret_capability_fields_inside_evidence(self):
+        result = {
+            "type": "TASK_RESULT",
+            "protocol_version": 1,
+            "agent": "ClaudeCode",
+            "task_id": "task:123",
+            "claim_token": "one-time-secret",
+            "status": "COMPLETED",
+            "result": {"summary": "done"},
+            "evidence": {"claim_token": "should-not-be-persisted"},
+        }
+        with self.assertRaisesRegex(ProtocolError, "SECRET_FIELD_FORBIDDEN"):
+            validate_task_result(
+                result,
+                expected_agent="ClaudeCode",
+                expected_task_id="task:123",
+                expected_claim_token="one-time-secret",
+            )
+
     def test_persisted_evidence_is_content_addressed_and_verifiable(self):
         with tempfile.TemporaryDirectory(prefix="aurelia-protocol-test-") as tmp:
             root = Path(tmp)
