@@ -61,9 +61,8 @@ class AgentPerformanceFederationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0]["agent"], "KimiK3")
             self.assertEqual(rows[0]["total_points"], 0.0)
-            self.assertEqual(
-                rows[0]["verification_state"],
-                "SUBMISSION_ONLY_NOT_QUALIFIED",
+            self.assertTrue(
+                all(score == 0.0 for score in rows[0]["category_scores"].values())
             )
 
     async def test_completion_without_verifiable_evidence_is_rejected(self) -> None:
