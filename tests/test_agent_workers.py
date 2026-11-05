@@ -32,7 +32,9 @@ for line in sys.stdin:
         root = Path(os.environ["AURELIA_EVIDENCE_ROOT"])
         root.mkdir(parents=True, exist_ok=True)
         (root / "worker-evidence.json").write_text("evidence", encoding="utf-8")
-        result = {key: message[key] for key in ("protocol", "agent", "worker_id", "session_nonce", "task_id", "correlation_id")}
+        result = {key: message[key] for key in ("protocol", "agent", "worker_id", "session_nonce")}
+        result["task_id"] = message["task"]["task_id"]
+        result["correlation_id"] = message["task"]["correlation_id"]
         result["type"] = "TASK_RESULT"
         result["status"] = "COMPLETED"
         result["evidence_ref"] = {
