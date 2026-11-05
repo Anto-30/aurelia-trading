@@ -65,9 +65,9 @@ jobs:
         env:
           DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY == 'USD' && 'USD' || 'INVALID' }}
           DERIV_ENVIRONMENT: real
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE == '' && 'pat' || vars.DERIV_AUTH_MODE == 'pat' && 'pat' || vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'INVALID' }}
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
         shell: bash
         run: |
@@ -101,9 +101,9 @@ jobs:
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY == 'USD' && 'USD' || 'INVALID' }}
           DERIV_ENVIRONMENT: real
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE == '' && 'pat' || vars.DERIV_AUTH_MODE == 'pat' && 'pat' || vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'INVALID' }}
           DERIV_EVIDENCE_OUT: artifacts/deriv_authenticated_session.json
           DERIV_LIFECYCLE_MODE: VERIFY_ONLY
           DERIV_LIFECYCLE_EVIDENCE_OUT: artifacts/deriv_transaction_lifecycle.json
@@ -132,9 +132,9 @@ jobs:
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY == 'USD' && 'USD' || 'INVALID' }}
           DERIV_ENVIRONMENT: real
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE == '' && 'pat' || vars.DERIV_AUTH_MODE == 'pat' && 'pat' || vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'INVALID' }}
           AURELIA_RUNTIME_ID: ${{ vars.AURELIA_RUNTIME_ID || 'aurelia-production-worker' }}
           AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
           AURELIA_ATTESTATION_DIR: artifacts/attestations
@@ -161,9 +161,9 @@ jobs:
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_AUTHORIZED_ACCOUNT_ID: ${{ secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY == 'USD' && 'USD' || 'INVALID' }}
           DERIV_ENVIRONMENT: real
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE == '' && 'pat' || vars.DERIV_AUTH_MODE == 'pat' && 'pat' || vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'INVALID' }}
           AURELIA_RUNTIME_ID: ${{ vars.AURELIA_RUNTIME_ID || 'aurelia-production-worker' }}
           AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
           AURELIA_ATTESTATION_DIR: artifacts/attestations
@@ -316,9 +316,9 @@ jobs:
           DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY == 'USD' && 'USD' || 'INVALID' }}
           DERIV_ENVIRONMENT: real
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE == '' && 'pat' || vars.DERIV_AUTH_MODE == 'pat' && 'pat' || vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'INVALID' }}
           AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}
           AURELIA_OPERATOR_RESET_SIGNING_KEY: ${{ secrets.AURELIA_OPERATOR_RESET_SIGNING_KEY }}
           AURELIA_RUNTIME_ID: ${{ vars.AURELIA_RUNTIME_ID || 'aurelia-production-worker' }}
