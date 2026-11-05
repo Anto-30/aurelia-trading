@@ -176,12 +176,19 @@ class AgentPerformanceEvaluator:
         self.evidence_root = Path(evidence_root or os.getenv("AURELIA_EVIDENCE_ROOT", "/var/lib/aurelia/evidence"))
 
     def _resolve_evidence(self, ref: str) -> Path | None:
-        if not ref or ref == "MISSING":
+        """Resolve evidence only when the final path remains inside evidence_root."""
+        if not isinstance(ref, str) or not ref.strip() or ref == "MISSING":
             return None
-        path = Path(ref)
-        if not path.is_absolute():
-            path = self.evidence_root / path
-        return path if path.is_file() else None
+        try:
+            root = self.evidence_root.expanduser().resolve(strict=True)
+            candidate = Path(ref)
+            if candidate.is_absolute():
+                return None
+            resolved = (root / candidate).resolve(strict=True)
+            resolved.relative_to(root)
+        except (OSError, RuntimeError, ValueError):
+            return None
+        return resolved if resolved.is_file() else None
 
     def evaluate(self, *, task_id: str, agent: str, status: str, evidence_ref: str = "",
                  result: dict[str, Any] | None = None, evaluation_id: str | None = None) -> dict[str, Any]:
