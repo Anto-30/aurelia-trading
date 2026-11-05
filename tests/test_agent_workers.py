@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import shlex
 import sys
 from pathlib import Path
@@ -169,7 +170,10 @@ async def test_worker_jsonl_protocol_completes_only_correlated_task_with_evidenc
     try:
         assert await _wait_for_status(federation, task.task_id, "COMPLETED")
         stored = next(x for x in federation._load_tasks() if x["task_id"] == task.task_id)
-        assert stored["evidence_ref"] == "worker-evidence.json"
+        expected_hash = hashlib.sha256(b"evidence").hexdigest()
+        assert stored["evidence_ref"] == f"agent-tasks/{expected_hash}.artifact"
+        assert stored["submitted_evidence_ref"] == "worker-evidence.json"
+        assert (federation.performance_evaluator.evidence_root / stored["evidence_ref"]).read_bytes() == b"evidence"
         assert stored["result"]["artifact_type"] == "test/evidence"
         assert "ClaudeCode" in federation.active_agents()
     finally:
