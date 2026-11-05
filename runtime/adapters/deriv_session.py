@@ -126,7 +126,9 @@ def get_authenticated_ws_url(
         if app_id is not None
         else get_optional_secret("DERIV_APP_ID")
     )
-    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
+    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+    if auth_mode not in {"pat", "oauth"}:
+        raise DerivSessionError("UNSUPPORTED_AUTH_MODE")
     if not account_id:
         raise DerivSessionError("ACCOUNT_ID_REQUIRED")
     if not token:
