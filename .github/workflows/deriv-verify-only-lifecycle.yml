@@ -57,7 +57,8 @@ jobs:
       DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
       DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
       DERIV_ENVIRONMENT: "real"
-      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+      # Pass only allowlisted enum values to the runner; malformed values become 'invalid'.
+      DERIV_AUTH_MODE: ${{ (vars.DERIV_AUTH_MODE == '' || vars.DERIV_AUTH_MODE == 'pat') && 'pat' || (vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'invalid') }}
       DERIV_LIFECYCLE_MODE: "VERIFY_ONLY"
       DERIV_VERIFY_SYMBOL: ${{ inputs.symbol }}
       DERIV_VERIFY_CONTRACT_TYPE: ${{ inputs.contract_type }}
