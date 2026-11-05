@@ -89,7 +89,7 @@ class SupervisedWorkerTests(unittest.IsolatedAsyncioTestCase):
             )
             self.assertNotIn(
                 "must-not-be-persisted",
-                (federation.lease_path.parent / "journal.ndjson").read_text(encoding="utf-8"),
+                (federation.journal.path).read_text(encoding="utf-8"),
             )
             await worker.stop()
             self.assertEqual(worker.status.state, "STOPPED")
