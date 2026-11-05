@@ -1,18 +1,20 @@
 {
   "schema": "aurelia.agent_tool_skill_assignment.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-05",
   "purpose": "Task-aware, least-privilege tool, skill, plugin, and repository routing across AURELIA's canonical agents and ChatGPT supervisory workflow.",
   "authority_model": {
     "canonical_repository": "Anto-30/aurelia-trading",
     "canonical_branch": "main",
     "primary_engineering_agent": "ClaudeCode",
     "primary_quant_research_agent": "KimiK3",
-    "primary_orchestration_agent": "GrokBot",
+    "primary_orchestration_agent": "ClaudeCode",
     "primary_independent_validation_agent": "JEV",
     "sole_capital_control_plane": "AURELIA",
     "external_agents_capital_authority": false,
     "live_lock_mutation_by_agents": false,
-    "live_order_submission_by_external_agents": false
+    "live_order_submission_by_external_agents": false,
+    "primary_executive_agent": "ClaudeCode",
+    "specialist_orchestration_support_agent": "GrokBot"
   },
   "inventory_basis": {
     "tool_inventory": "config/agent_tool_inventory.json",
@@ -45,6 +47,40 @@
     "Before claiming completion, reconcile changed commit, tests, CI, artifacts, and runtime evidence separately."
   ],
   "task_routes": [
+    {
+      "task": "Executive planning, prioritization and delegation",
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "tools": [
+        "GitHub",
+        "persistent agent federation when a verified worker adapter is connected",
+        "CI",
+        "Python tests",
+        "currently authenticated task-scoped tools"
+      ],
+      "skills": [
+        "aurelia-continuity",
+        "external-repo-federation",
+        "evidence-reconciliation",
+        "security-review",
+        "ci-diagnostics"
+      ],
+      "plugins": [
+        "superpowers",
+        "mcp-precheck",
+        "coderabbit"
+      ],
+      "repository_modes": [
+        "SANDBOX_ONLY",
+        "TOOLCHAIN_ONLY",
+        "REFERENCE_ONLY"
+      ],
+      "guard": "Standing owner approval covers bounded non-capital work. Require registered agents, active leases, task claims, evidence and independent review. No capital, secret, LIVE_LOCK, release-gate or production-deployment authority."
+    },
     {
       "task": "Quantitative strategy research and backtesting",
       "primary": "KimiK3",
@@ -120,9 +156,9 @@
     },
     {
       "task": "Agent orchestration, harnesses, worker/agent memory",
-      "primary": "GrokBot",
+      "primary": "ClaudeCode",
       "reviewers": [
-        "ClaudeCode",
+        "GrokBot",
         "GoogleAgentSkills",
         "JEV",
         "ChatGPT"
@@ -149,7 +185,7 @@
         "REFERENCE_ONLY",
         "TOOLCHAIN_ONLY"
       ],
-      "guard": "Do not auto-install executors, browser bridges, arbitrary shell agents, model routers, or memory backends into production."
+      "guard": "ClaudeCode is the executive coordinator. GrokBot provides specialist orchestration and adversarial support. Tasks may be marked assigned only after a registered worker with an active lease claims them; no agent gateway or memory backend enters production without separate review."
     },
     {
       "task": "Security, MCP servers, LLM gateways, plugin supply chain",
@@ -395,7 +431,7 @@
     },
     "ClaudeCode": {
       "status": "CANONICAL_ENGINEERING_AGENT_PROFILE",
-      "role": "primary engineering and repair",
+      "role": "AURELIA CEO / primary executive orchestrator and principal engineering lead",
       "tools": [
         "GitHub",
         "local shell if connected",
@@ -421,11 +457,21 @@
         "vercel (conditional)"
       ],
       "can_mutate_live_lock": false,
-      "capital_authority": false
+      "capital_authority": false,
+      "executive_scope": [
+        "prioritize bounded non-capital AURELIA work",
+        "decompose goals into traceable tasks and milestones",
+        "delegate tasks to registered specialist agents",
+        "coordinate cross-agent dependencies and independent reviews",
+        "track worker liveness, task status, evidence and blockers",
+        "prepare engineering branches and pull requests under repository policy",
+        "report verified outcomes, unknowns and unresolved risks to the owner"
+      ],
+      "delegation_policy": "Use the persistent federation task bus only through a connected worker adapter; require a registered agent, valid active worker lease, task claim, terminal status and evidence before reporting completion."
     },
     "GrokBot": {
       "status": "CANONICAL_ORCHESTRATION_PROFILE",
-      "role": "research, orchestration, market/catalyst context and blocker diagnosis",
+      "role": "specialist research, adversarial review, orchestration support, market/catalyst context and blocker diagnosis",
       "tools": [
         "web",
         "GitHub read",
@@ -657,5 +703,87 @@
     "Tool access is role-scoped; agent names in a registry do not grant connector authentication.",
     "The Dev role is registered logically but cannot run until a user-controlled device is connected.",
     "Only the existing AURELIA deterministic capital plane owns live trading authorization; all agent profiles have capital_authority=false except the AURELIA policy-owner label, which still cannot bypass gates."
-  ]
+  ],
+  "executive_governance": {
+    "role": "AURELIA CEO / Chief Executive Orchestrator",
+    "executive_agent": "ClaudeCode",
+    "delegation_transport": "PersistentAgentFederation.enqueue_task/claim_task/complete_task with verified worker leases and evidence",
+    "require_registered_agent": true,
+    "require_active_worker_lease": true,
+    "ceo_may_self_approve_material_changes": false,
+    "delegation_targets": [
+      "GrokBot",
+      "KimiK3",
+      "GoogleAgentSkills",
+      "JEV",
+      "GLM",
+      "PlaywrightCLI",
+      "ChatGPT",
+      "Dev"
+    ],
+    "owner_authorization": {
+      "standing_scope": [
+        "non-capital project planning",
+        "research",
+        "documentation",
+        "sandbox implementation",
+        "testing",
+        "task creation and delegation",
+        "branch and pull-request preparation",
+        "evidence-based delivery coordination"
+      ],
+      "limitations": [
+        "no capital authorization",
+        "no broker order submission",
+        "no LIVE_LOCK or FINAL_EXECUTION_AUTHORIZATION mutation",
+        "no production-secret access",
+        "no release-gate bypass",
+        "no unapproved production deployment"
+      ]
+    },
+    "worker_truth_rule": "A registered profile or queued message is not a live agent. Require a verified active worker lease and a task claim; otherwise report NOT_CONNECTED or PENDING_UNCLAIMED.",
+    "external_runtime_interfaces": [
+      {
+        "name": "Claude Code",
+        "agent_id": "ClaudeCode",
+        "status": "PROFILE_REGISTERED_WORKER_UNVERIFIED"
+      },
+      {
+        "name": "OpenClaw",
+        "agent_id": null,
+        "status": "NOT_CONNECTED"
+      },
+      {
+        "name": "Cursor IDE",
+        "agent_id": null,
+        "status": "NOT_CONNECTED"
+      },
+      {
+        "name": "Codex",
+        "agent_id": null,
+        "status": "NOT_CONNECTED"
+      },
+      {
+        "name": "DeepSeek Harness",
+        "agent_id": null,
+        "status": "NOT_CONNECTED"
+      },
+      {
+        "name": "Hermes",
+        "agent_id": null,
+        "status": "NOT_CONNECTED"
+      },
+      {
+        "name": "TradingCursor market-analysis connector",
+        "agent_id": null,
+        "status": "SEPARATE_TOOL_NOT_CURSOR_IDE"
+      }
+    ],
+    "capital_authority": false,
+    "can_mutate_live_lock": false,
+    "can_change_final_execution_authorization": false,
+    "can_submit_orders": false,
+    "can_read_production_secrets": false,
+    "production_deployment_authority": false
+  }
 }
