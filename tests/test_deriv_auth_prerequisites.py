@@ -33,6 +33,21 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
         self.assertFalse(evidence["configured"])
         self.assertNotIn(marker, json.dumps(evidence))
 
+    def test_multiline_auth_mode_is_rejected_and_redacted(self):
+        marker = "pat\nexport DERIV_APP_ID=do-not-persist"
+        evidence = build_evidence({
+            "DERIV_AUTH_TOKEN": "dummy-token",
+            "DERIV_EXPECTED_LOGINID": "dummy-account",
+            "DERIV_AUTH_MODE": marker,
+            "DERIV_APP_ID": "do-not-persist",
+            "DERIV_EXPECTED_CURRENCY": "USD",
+        })
+        self.assertEqual(evidence["auth_mode"], "invalid")
+        self.assertFalse(evidence["configured"])
+        encoded = json.dumps(evidence)
+        self.assertNotIn(marker, encoded)
+        self.assertNotIn("do-not-persist", encoded)
+
     def test_invalid_currency_is_redacted(self):
         marker = "private-currency-marker"
         evidence = build_evidence({
