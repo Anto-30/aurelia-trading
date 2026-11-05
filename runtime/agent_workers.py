@@ -36,6 +36,8 @@ SENSITIVE_INPUT_FIELDS = {
     "otp",
     "loginid",
     "accounttoken",
+    "accesskey",
+    "bearer",
 }
 
 
@@ -93,8 +95,10 @@ class AgentWorkerSupervisor:
         if isinstance(value, dict):
             for key, nested in value.items():
                 normalized = "".join(c for c in str(key).casefold() if c.isalnum())
-                if normalized in blocked or AgentWorkerSupervisor._contains_field(
-                    nested, blocked
+                if (
+                    normalized in blocked
+                    or any(marker in normalized for marker in blocked if len(marker) >= 5)
+                    or AgentWorkerSupervisor._contains_field(nested, blocked)
                 ):
                     return True
         elif isinstance(value, (list, tuple)):
