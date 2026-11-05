@@ -13,6 +13,8 @@ Configure a worker command with the matching environment variable:
 
 The command must launch a dedicated adapter that implements this JSONL protocol. A raw interactive Claude, DeepSeek, Hermes, Kimi, Grok or other CLI is not automatically compatible. The supervisor starts one subprocess per configured worker, connects stdin and stdout, discards stderr from protocol processing, and requires one JSON object per line.
 
+The subprocess runs with the same operating-system user and filesystem permissions as AURELIA; this protocol is not a sandbox. Only configure trusted adapters. Production deployment must additionally isolate adapters with OS/container controls and restrict their writable/readable paths to the minimum required evidence and working directories.
+
 The supervisor filters inherited environment variables containing common credential, token, secret, broker, account and cloud-provider markers. Do not put credentials in command-line arguments. An adapter that needs an external model API must authenticate independently using its own approved secret store. It must not receive broker credentials. A local process handshake does not establish provider identity or provider account authentication.
 
 ## Handshake
