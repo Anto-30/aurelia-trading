@@ -6,14 +6,14 @@
 
 ## Intent
 
-Replace the current process-liveness-only worker supervisor with a real, bounded, attributable task/result channel. A configured worker process must receive a task through an explicit protocol and return a response bound to the same agent, worker instance, session, task, and correlation ID. The federation may mark a task completed only when a valid completion response points to a verifiable evidence artifact inside the configured evidence root.
+Replace the current process-liveness-only worker supervisor with a real, bounded, attributable task/result channel. A configured worker process must receive a task through an explicit protocol and return a response bound to the same agent, worker instance, session, task, correlation ID, and one-time claim capability. The federation may mark a task completed only when a valid completion response points to a verifiable evidence artifact inside the configured evidence root.
 
 ## Goals
 
 - Keep the durable federation queue as the source of truth for PENDING, CLAIMED and terminal task state.
 - Use newline-delimited JSON (JSONL) on subprocess stdin/stdout; stdout is protocol-only and stderr is not ingested.
 - Require a per-process HELLO/READY handshake before publishing a worker lease or claiming work.
-- Correlate each result to the exact task and worker session.
+- Correlate each result to the exact task, worker session and worker-specific one-time claim capability.
 - Bound frame size, response size, handshake time and task-response time.
 - Reject unknown protocol versions, malformed frames, mismatched identities/correlation, authority fields, invalid status and evidence paths outside the evidence root.
 - Renew the claimed task while the worker is processing it; requeue on process loss or invalid protocol response.
@@ -37,11 +37,11 @@ Every frame is one UTF-8 JSON object followed by a newline. The supervisor enfor
 
 1. Supervisor sends HELLO with protocol version, agent, worker ID and random process-session nonce.
 2. Worker replies READY echoing protocol version, agent, worker ID and session nonce.
-3. Supervisor renews the worker lease and sends TASK with task ID, correlation ID, task type and task payload.
-4. Worker replies TASK_RESULT with matching protocol, agent, worker ID, session nonce, task ID and correlation ID; status is COMPLETED, FAILED or BLOCKED. COMPLETED requires a relative evidence reference that resolves to a file inside the configured evidence root. Result metadata is limited to a short summary and artifact type.
+3. Supervisor claims the task for a specific worker ID, stores only a SHA-256 verifier, then sends TASK with task ID, correlation ID, task type, task payload and the one-time claim capability in a separate top-level field.
+4. Worker replies TASK_RESULT with matching protocol, agent, worker ID, session nonce, task ID, correlation ID and the exact one-time claim capability; status is COMPLETED, FAILED or BLOCKED. COMPLETED requires a relative evidence reference that resolves to a file inside the configured evidence root. Result metadata is limited to a short summary and artifact type.
 5. The supervisor rejects authority-bearing fields and never forwards worker-supplied claims such as verified, regression_free or reproducible as deterministic validation evidence.
 
-The session nonce is a correlation value for a supervised local subprocess, not a substitute for OS isolation or external provider authentication. A provider adapter must independently authenticate to its provider and should not be given broker credentials.
+The claim capability is random and single-claim, and only its SHA-256 verifier is persisted. It is not written to task journal events or task payloads. Completion, renewal and requeue require the matching worker ID and capability. The session nonce is a correlation value for a supervised local subprocess, not a substitute for OS isolation or external provider authentication. A provider adapter must independently authenticate to its provider and should not be given broker credentials.
 
 ## Failure behavior
 
