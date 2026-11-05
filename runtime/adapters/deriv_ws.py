@@ -231,6 +231,10 @@ class DerivWebSocketTransport:
         return max(0.0, (perf_counter() - started) * 1000.0)
 
     async def close(self) -> None:
+        # Keep a local socket reference: cancelling the reader runs its
+        # finally block, which clears self.ws. Closing only self.ws after
+        # awaiting the reader would therefore leak the underlying socket.
+        websocket = self.ws
         reader = self._reader_task
         self._reader_task = None
         if reader is not None:
@@ -240,8 +244,8 @@ class DerivWebSocketTransport:
             except asyncio.CancelledError:
                 pass
 
-        if self.ws is not None:
-            await self.ws.close()
+        if websocket is not None:
+            await websocket.close()
         self.ws = None
         self._fail_pending(DerivTransportError("BROKER_SESSION_CLOSED"))
 
