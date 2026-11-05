@@ -196,13 +196,18 @@ class AgentPerformanceEvaluator:
         evidence_path = self._resolve_evidence(evidence_ref)
         evidence_ok = evidence_path is not None
         completed, failed, blocked = status == "COMPLETED", status == "FAILED", status == "BLOCKED"
-        scores = {"correctness": 25.0 if completed and evidence_ok and result.get("verified") else 0.0,
-                  "evidence_quality": 20.0 if evidence_ok else 0.0,
-                  "task_outcome": 20.0 if completed and evidence_ok else 0.0,
-                  "robustness": 15.0 if completed and evidence_ok and result.get("regression_free") else 0.0,
-                  "reproducibility": 10.0 if completed and evidence_ok and result.get("reproducible") else 0.0,
-                  "efficiency": 5.0 if completed and evidence_ok and result.get("efficient") else 0.0,
-                  "collaboration": 5.0 if completed and evidence_ok and result.get("handoff_clean") else 0.0}
+        # A worker-submitted artifact is a handoff, not independent validation.
+        # Never award quality points from worker-supplied booleans or file existence
+        # alone. A separate deterministic validation pipeline must award scores.
+        scores = {
+            "correctness": 0.0,
+            "evidence_quality": 0.0,
+            "task_outcome": 0.0,
+            "robustness": 0.0,
+            "reproducibility": 0.0,
+            "efficiency": 0.0,
+            "collaboration": 0.0,
+        }
         penalty = -20.0 if failed else (-5.0 if blocked else 0.0)
         penalty_reason = "FAILED_TASK" if failed else ("BLOCKED_TASK" if blocked else "")
         for reason, value in self.PENALTIES.items():
@@ -215,7 +220,11 @@ class AgentPerformanceEvaluator:
         evaluation = self.ledger.award(agent=agent, task_id=task_id, category_scores=scores,
             penalty=penalty, status=status, evidence_ref=evidence_ref or "MISSING",
             evaluation_id=evaluation_id, evidence_sha256=sha256, evidence_size_bytes=size)
-        return asdict(evaluation) | {"total_points": evaluation.total_points, "penalty_reason": penalty_reason}
+        return asdict(evaluation) | {
+            "total_points": evaluation.total_points,
+            "penalty_reason": penalty_reason,
+            "verification_state": "SUBMISSION_ONLY_NOT_QUALIFIED",
+        }
 
 
 class PersistentAgentPerformance:
