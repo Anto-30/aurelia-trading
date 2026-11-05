@@ -209,6 +209,54 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
                 )
             )
 
+    async def test_corrupt_unbound_claim_cannot_be_completed(self):
+        with tempfile.TemporaryDirectory() as td:
+            evidence_root = Path(td) / "evidence"
+            evidence_root.mkdir()
+            federation = PersistentAgentFederation(
+                journal_path=f"{td}/events.ndjson",
+                lease_path=f"{td}/leases.json",
+                task_path=f"{td}/tasks.json",
+                config_hash="cfg",
+                source_hash="src",
+            )
+            federation.performance_evaluator.evidence_root = evidence_root
+            task = await federation.enqueue_task(
+                task_type="ENGINEERING",
+                payload={},
+                correlation_id="corrupt-unbound-claim",
+                assigned_agent="ClaudeCode",
+            )
+            claimed = await federation.claim_task(
+                "ClaudeCode",
+                worker_id="worker-one",
+            )
+            self.assertIsNotNone(claimed)
+            (evidence_root / "evidence.json").write_text("evidence", encoding="utf-8")
+
+            # Simulate a legacy/corrupted CLAIMED record with its capability
+            # verifier and worker binding removed. It must not be completable
+            # through an unauthenticated call.
+            rows = federation._load_tasks()
+            selected = next(row for row in rows if row["task_id"] == task.task_id)
+            selected.pop("claim_worker_id", None)
+            selected.pop("claim_token_sha256", None)
+            federation._save_tasks(rows)
+
+            self.assertFalse(
+                await federation.complete_task(
+                    task.task_id,
+                    agent="ClaudeCode",
+                    evidence_ref="evidence.json",
+                )
+            )
+            self.assertEqual(
+                next(row for row in federation._load_tasks()
+                     if row["task_id"] == task.task_id)["status"],
+                "CLAIMED",
+            )
+            self.assertFalse((evidence_root / "agent-tasks").exists())
+
     async def test_stale_agent_is_detectable_after_lease_expiry(self):
         with tempfile.TemporaryDirectory() as td:
             federation = PersistentAgentFederation(
