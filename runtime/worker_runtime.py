@@ -144,20 +144,20 @@ class SupervisedAgentWorker:
                 continue
 
             self._state = "ACTIVE"
-            await self.federation.publish(
-                sender=self.agent,
-                recipients=("AURELIA",),
-                message_type="WORKER_PROGRESS",
-                payload={
-                    "worker_id": self.worker_id,
-                    "task_id": task.task_id,
-                    "state": "RUNNING",
-                    "capital_authority": False,
-                },
-                correlation_id=task.correlation_id,
-                priority=60,
-            )
             try:
+                await self.federation.publish(
+                    sender=self.agent,
+                    recipients=("AURELIA",),
+                    message_type="WORKER_PROGRESS",
+                    payload={
+                        "worker_id": self.worker_id,
+                        "task_id": task.task_id,
+                        "state": "RUNNING",
+                        "capital_authority": False,
+                    },
+                    correlation_id=task.correlation_id,
+                    priority=60,
+                )
                 result = await self._invoke_with_claim_renewal(task)
                 evidence_ref = result.get("evidence_ref", "")
                 artifact_type = result.get("artifact_type", "")
