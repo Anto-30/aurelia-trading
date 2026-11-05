@@ -1,17 +1,58 @@
 from __future__ import annotations
 
 import asyncio
+import shlex
+import sys
+from pathlib import Path
+
 import pytest
 
 from runtime.agent_federation import PersistentAgentFederation
 from runtime.agent_workers import AgentWorkerSupervisor
 
 
-@pytest.mark.asyncio
-async def test_unconfigured_worker_does_not_emit_a_phantom_lease_or_claim_work(
-    tmp_path, monkeypatch
-):
-    federation = PersistentAgentFederation(
+def _protocol_worker_command(tmp_path: Path) -> str:
+    script = tmp_path / "protocol-worker.py"
+    script.write_text(
+        """
+import json
+import os
+import sys
+from pathlib import Path
+
+for line in sys.stdin:
+    message = json.loads(line)
+    if message.get("type") == "HELLO":
+        ready = {key: message[key] for key in ("protocol", "agent", "worker_id", "session_nonce")}
+        ready["type"] = "READY"
+        if os.getenv("TEST_BAD_HANDSHAKE") == "1":
+            ready["session_nonce"] = "wrong"
+        print(json.dumps(ready), flush=True)
+    elif message.get("type") == "TASK":
+        root = Path(os.environ["AURELIA_EVIDENCE_ROOT"])
+        root.mkdir(parents=True, exist_ok=True)
+        (root / "worker-evidence.json").write_text("evidence", encoding="utf-8")
+        result = {key: message[key] for key in ("protocol", "agent", "worker_id", "session_nonce", "task_id", "correlation_id")}
+        result["type"] = "TASK_RESULT"
+        result["status"] = "COMPLETED"
+        result["evidence_ref"] = {
+            "traversal": "../outside.json",
+            "missing_evidence": "",
+        }.get(os.getenv("TEST_EVIDENCE_MODE", ""), "worker-evidence.json")
+        result["result"] = {"summary": "fixture completed", "artifact_type": "test/evidence"}
+        if os.getenv("TEST_BAD_TASK") == "1":
+            result["task_id"] = "task:wrong"
+        if os.getenv("TEST_BAD_CORRELATION") == "1":
+            result["correlation_id"] = "wrong-correlation"
+        print(json.dumps(result), flush=True)
+""",
+        encoding="utf-8",
+    )
+    return f"{shlex.quote(sys.executable)} -u {shlex.quote(str(script))}"
+
+
+def _federation(tmp_path: Path) -> PersistentAgentFederation:
+    return PersistentAgentFederation(
         journal_path=tmp_path / "journal.ndjson",
         lease_path=tmp_path / "leases.json",
         task_path=tmp_path / "tasks.json",
@@ -19,6 +60,24 @@ async def test_unconfigured_worker_does_not_emit_a_phantom_lease_or_claim_work(
         source_hash="src",
         lease_seconds=2,
     )
+
+
+async def _wait_for_status(
+    federation: PersistentAgentFederation, task_id: str, status: str
+) -> bool:
+    for _ in range(100):
+        row = next(x for x in federation._load_tasks() if x["task_id"] == task_id)
+        if row["status"] == status:
+            return True
+        await asyncio.sleep(0.02)
+    return False
+
+
+@pytest.mark.asyncio
+async def test_unconfigured_worker_does_not_emit_a_phantom_lease_or_claim_work(
+    tmp_path, monkeypatch
+):
+    federation = _federation(tmp_path)
     monkeypatch.delenv("AURELIA_AGENT_CLAUDECODE_COMMAND", raising=False)
     task = await federation.enqueue_task(
         task_type="ENGINEERING_REVIEW",
@@ -38,40 +97,160 @@ async def test_unconfigured_worker_does_not_emit_a_phantom_lease_or_claim_work(
 
 
 @pytest.mark.asyncio
-async def test_configured_worker_emits_live_worker_lease(tmp_path, monkeypatch):
-    federation = PersistentAgentFederation(
-        journal_path=tmp_path / "journal.ndjson",
-        lease_path=tmp_path / "leases.json",
-        task_path=tmp_path / "tasks.json",
-        config_hash="cfg",
-        source_hash="src",
-        lease_seconds=2,
+async def test_worker_jsonl_protocol_completes_only_correlated_task_with_evidence(
+    tmp_path, monkeypatch
+):
+    evidence_root = tmp_path / "evidence"
+    monkeypatch.setenv("AURELIA_EVIDENCE_ROOT", str(evidence_root))
+    monkeypatch.setenv(
+        "AURELIA_AGENT_CLAUDECODE_COMMAND", _protocol_worker_command(tmp_path)
     )
-    monkeypatch.setenv("AURELIA_AGENT_CLAUDECODE_COMMAND", "python -c 'import time; time.sleep(2)'")
+    federation = _federation(tmp_path)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING_REVIEW",
+        payload={"scope": "test"},
+        correlation_id="worker-jsonl-success",
+        assigned_agent="ClaudeCode",
+    )
     supervisor = AgentWorkerSupervisor(
-        federation, agents=("ClaudeCode",), interval_seconds=0.05
+        federation,
+        agents=("ClaudeCode",),
+        interval_seconds=0.05,
+        handshake_timeout_seconds=1,
+        response_timeout_seconds=1,
     )
     supervisor.start()
-    await asyncio.sleep(0.15)
-    assert "ClaudeCode" in federation.active_agents()
-    await supervisor.stop()
+    try:
+        assert await _wait_for_status(federation, task.task_id, "COMPLETED")
+        stored = next(x for x in federation._load_tasks() if x["task_id"] == task.task_id)
+        assert stored["evidence_ref"] == "worker-evidence.json"
+        assert stored["result"]["summary"] == "fixture completed"
+        assert "ClaudeCode" in federation.active_agents()
+    finally:
+        await supervisor.stop()
 
 
-def test_agent_worker_probe_only_requires_configured_workers(monkeypatch):
-    from scripts.agent_worker_probe import probe_worker_state
-
-    monkeypatch.delenv("AURELIA_AGENT_CLAUDECODE_COMMAND", raising=False)
-    configured, missing, unexpected = probe_worker_state(
-        active=set(), advisory_workers=("ClaudeCode",)
+@pytest.mark.asyncio
+async def test_worker_handshake_mismatch_never_creates_worker_lease_or_claims_task(
+    tmp_path, monkeypatch
+):
+    evidence_root = tmp_path / "evidence"
+    monkeypatch.setenv("AURELIA_EVIDENCE_ROOT", str(evidence_root))
+    monkeypatch.setenv("TEST_BAD_HANDSHAKE", "1")
+    monkeypatch.setenv(
+        "AURELIA_AGENT_CLAUDECODE_COMMAND", _protocol_worker_command(tmp_path)
     )
-    assert configured == set()
-    assert missing == set()
-    assert unexpected == set()
-
-    monkeypatch.setenv("AURELIA_AGENT_CLAUDECODE_COMMAND", "claude")
-    configured, missing, unexpected = probe_worker_state(
-        active=set(), advisory_workers=("ClaudeCode",)
+    federation = _federation(tmp_path)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING_REVIEW",
+        payload={},
+        correlation_id="worker-jsonl-bad-handshake",
+        assigned_agent="ClaudeCode",
     )
-    assert configured == {"ClaudeCode"}
-    assert missing == {"ClaudeCode"}
-    assert unexpected == set()
+    supervisor = AgentWorkerSupervisor(
+        federation,
+        agents=("ClaudeCode",),
+        interval_seconds=0.05,
+        handshake_timeout_seconds=0.2,
+        response_timeout_seconds=0.2,
+    )
+    supervisor.start()
+    try:
+        await asyncio.sleep(0.2)
+        stored = next(x for x in federation._load_tasks() if x["task_id"] == task.task_id)
+        assert stored["status"] == "PENDING"
+        assert "ClaudeCode" not in federation.active_agents()
+    finally:
+        await supervisor.stop()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("mode", ["traversal", "missing_evidence"])
+async def test_worker_cannot_complete_task_without_evidence_inside_evidence_root(
+    tmp_path, monkeypatch, mode
+):
+    evidence_root = tmp_path / "evidence"
+    evidence_root.mkdir()
+    (tmp_path / "outside.json").write_text("outside", encoding="utf-8")
+    monkeypatch.setenv("AURELIA_EVIDENCE_ROOT", str(evidence_root))
+    monkeypatch.setenv("TEST_EVIDENCE_MODE", mode)
+    monkeypatch.setenv(
+        "AURELIA_AGENT_CLAUDECODE_COMMAND", _protocol_worker_command(tmp_path)
+    )
+    federation = _federation(tmp_path)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING_REVIEW",
+        payload={},
+        correlation_id=f"worker-jsonl-{mode}",
+        assigned_agent="ClaudeCode",
+    )
+    supervisor = AgentWorkerSupervisor(
+        federation,
+        agents=("ClaudeCode",),
+        interval_seconds=0.05,
+        handshake_timeout_seconds=1,
+        response_timeout_seconds=1,
+    )
+    supervisor.start()
+    try:
+        await asyncio.sleep(0.2)
+        stored = next(x for x in federation._load_tasks() if x["task_id"] == task.task_id)
+        assert stored["status"] != "COMPLETED"
+        assert stored.get("evidence_ref") is None
+    finally:
+        await supervisor.stop()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("bad_field", ["TEST_BAD_TASK", "TEST_BAD_CORRELATION"])
+async def test_worker_cannot_complete_an_unmatched_task(
+    tmp_path, monkeypatch, bad_field
+):
+    evidence_root = tmp_path / "evidence"
+    monkeypatch.setenv("AURELIA_EVIDENCE_ROOT", str(evidence_root))
+    monkeypatch.setenv(bad_field, "1")
+    monkeypatch.setenv(
+        "AURELIA_AGENT_CLAUDECODE_COMMAND", _protocol_worker_command(tmp_path)
+    )
+    federation = _federation(tmp_path)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING_REVIEW",
+        payload={},
+        correlation_id=f"worker-jsonl-{bad_field}",
+        assigned_agent="ClaudeCode",
+    )
+    supervisor = AgentWorkerSupervisor(
+        federation,
+        agents=("ClaudeCode",),
+        interval_seconds=0.05,
+        handshake_timeout_seconds=1,
+        response_timeout_seconds=1,
+    )
+    supervisor.start()
+    try:
+        await asyncio.sleep(0.2)
+        stored = next(x for x in federation._load_tasks() if x["task_id"] == task.task_id)
+        assert stored["status"] != "COMPLETED"
+        assert stored.get("evidence_ref") is None
+    finally:
+        await supervisor.stop()
+
+
+@pytest.mark.asyncio
+async def test_complete_task_rejects_missing_evidence(tmp_path, monkeypatch):
+    monkeypatch.setenv("AURELIA_EVIDENCE_ROOT", str(tmp_path / "evidence"))
+    federation = _federation(tmp_path)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING_REVIEW",
+        payload={},
+        correlation_id="missing-evidence-direct",
+        assigned_agent="ClaudeCode",
+    )
+    claimed = await federation.claim_task("ClaudeCode")
+    assert claimed is not None
+    with pytest.raises(
+        ValueError, match="COMPLETED_TASK_REQUIRES_VERIFIABLE_EVIDENCE"
+    ):
+        await federation.complete_task(
+            task.task_id, agent="ClaudeCode", status="COMPLETED"
+        )
