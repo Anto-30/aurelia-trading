@@ -238,7 +238,9 @@ class DerivAdapter:
                             "DERIV_PUBLIC_TICK_STREAM_ENDED"
                         ) from exc
 
-                    tick = message.get("tick") if isinstance(message, dict) else None
+                    if not isinstance(message, dict) or message.get("msg_type") != "tick":
+                        raise DerivProtocolError("DERIV_PUBLIC_TICK_MESSAGE_INVALID")
+                    tick = message.get("tick")
                     if not isinstance(tick, dict):
                         raise DerivProtocolError("DERIV_PUBLIC_TICK_PAYLOAD_INVALID")
                     tick_symbol = str(tick.get("symbol") or selected_symbol)
@@ -259,6 +261,7 @@ class DerivAdapter:
                         or not isinstance(epoch, (int, float))
                         or not math.isfinite(float(epoch))
                         or epoch <= 0
+                        or not float(epoch).is_integer()
                     ):
                         raise DerivProtocolError("DERIV_PUBLIC_TICK_EPOCH_INVALID")
                     normalized_epoch = int(epoch)
@@ -279,12 +282,14 @@ class DerivAdapter:
                 }
             return result
         finally:
-            if iterator is not None:
-                await iterator.aclose()
             try:
-                await transport.close()
+                if iterator is not None:
+                    await iterator.aclose()
             finally:
-                self.transport = previous_transport
+                try:
+                    await transport.close()
+                finally:
+                    self.transport = previous_transport
 
     async def connect_public(self) -> int:
         result = await self.probe_public_market_data()
