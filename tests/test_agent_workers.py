@@ -36,6 +36,7 @@ for line in sys.stdin:
         (root / "worker-evidence.json").write_text("evidence", encoding="utf-8")
         result = {key: message[key] for key in ("protocol", "agent", "worker_id", "session_nonce")}
         result["task_id"] = message["task"]["task_id"]
+        result["claim_token"] = message.get("claim_token", "")
         result["correlation_id"] = message["task"]["correlation_id"]
         result["type"] = "TASK_RESULT"
         result["status"] = "COMPLETED"
@@ -47,6 +48,8 @@ for line in sys.stdin:
         result["result"] = {"summary": "fixture completed", "artifact_type": "test/evidence"}
         if MODE == "bad_task":
             result["task_id"] = "task:wrong"
+        if MODE == "wrong_claim_token":
+            result["claim_token"] = "not-the-claim-capability"
         if MODE == "bad_correlation":
             result["correlation_id"] = "wrong-correlation"
         if MODE == "authority_field":
@@ -253,6 +256,7 @@ async def test_worker_cannot_complete_task_without_evidence_inside_evidence_root
     [
         "bad_task",
         "bad_correlation",
+        "wrong_claim_token",
         "authority_field",
         "oversized_response",
         "bad_status_type",
@@ -285,6 +289,7 @@ async def test_worker_cannot_complete_an_unmatched_task(
     expected_error = {
         "bad_task": "WORKER_TASK_CORRELATION_MISMATCH",
         "bad_correlation": "WORKER_TASK_CORRELATION_MISMATCH",
+        "wrong_claim_token": "WORKER_CLAIM_CAPABILITY_MISMATCH",
         "authority_field": "WORKER_AUTHORITY_FIELD_FORBIDDEN",
         "oversized_response": "WORKER_RESPONSE_FRAME_TOO_LARGE",
         "bad_status_type": "WORKER_TASK_STATUS_INVALID",
