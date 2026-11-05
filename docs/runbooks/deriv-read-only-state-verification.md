@@ -11,6 +11,30 @@ The script refuses to run unless the repository release configuration remains
 locked in VERIFY_ONLY mode. It reads the local daily-risk and kill-switch
 persistence files without modifying or resetting them.
 
+## Identity and permission semantics
+
+The verifier keeps four values separate: the configured AURELIA internal UUID,
+the Options REST account_id, the authenticated balance response id (broker
+UUID), and the authenticated balance response loginid. The account ID and
+balance login ID must match exactly, but remain separately typed and
+source-recorded. The broker UUID is never substituted for either account ID.
+The AURELIA internal UUID must be supplied through
+AURELIA_INTERNAL_ACCOUNT_UUID; it is never generated during verification.
+
+The Options account-list row supplies account_type, status and currency; the
+authenticated WebSocket URL independently confirms the real/demo environment;
+the balance response independently confirms login ID, broker UUID and
+currency. Missing status, non-active status, identifier mismatch, missing
+broker UUID, or currency/environment disagreement blocks the snapshot.
+Product identity is established by the Options REST endpoint used for account
+discovery, not by a hard-coded account label or a legacy API authorize field.
+
+A read-only API request sequence is not the same as a read-only credential
+scope. Deriv documents GET /trading/v1/options/accounts and the OTP endpoint
+with the trade scope. Evidence therefore records that no order endpoint was
+called without claiming that the token itself is read-only. This implementation
+does not resolve the PR #191 / PR #256 permission-policy decision.
+
 ## Authentication and API sequence
 
 1. Read DERIV_AUTH_TOKEN (or the accepted PAT alias), expected account ID,
@@ -47,6 +71,7 @@ values are:
 
 - DERIV_AUTH_TOKEN (or configured DERIV_PAT alias)
 - DERIV_EXPECTED_LOGINID (or configured authorized account ID)
+- AURELIA_INTERNAL_ACCOUNT_UUID (a pre-existing valid AURELIA UUID; never generated during verification)
 - DERIV_EXPECTED_CURRENCY=USD for the current runtime policy
 - DERIV_ENVIRONMENT=real
 - DERIV_APP_ID for PAT mode

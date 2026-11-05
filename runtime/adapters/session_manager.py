@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -29,10 +31,17 @@ class DerivSessionManagerError(RuntimeError):
 
 @dataclass(frozen=True)
 class DerivAccountBinding:
+    # loginid is retained for legacy consumers. New identity evidence uses
+    # account_id and the independent authenticated balance.loginid field.
     loginid: str
     account_type: str
     currency: str
     environment: str
+    account_id: str = ""
+    status: str = "unknown"
+    source_endpoint: str = ACCOUNTS_ENDPOINT
+    source_response_sha256: str = ""
+    observed_at_utc: str = ""
 
 
 @dataclass(frozen=True)
@@ -156,44 +165,59 @@ class DerivSessionManager:
         if not self.expected_currency:
             raise DerivSessionManagerError("EXPECTED_CURRENCY_REQUIRED")
         candidates: list[DerivAccountBinding] = []
+        observed_at = datetime.now(timezone.utc).isoformat()
         for row in accounts:
-            loginid = str(
-                row.get("account_id")
-                or row.get("loginid")
-                or row.get("login_id")
-                or ""
-            )
-            if not loginid:
+            # The modern Options account-list schema uses account_id. Do not
+            # infer this value from a legacy loginid field.
+            account_id = str(row.get("account_id") or "").strip()
+            if not account_id:
                 continue
-            account_type = str(row.get("account_type") or "").lower()
+            account_type = str(row.get("account_type") or "").strip().lower()
+            if account_type not in {"real", "demo"}:
+                continue
+            environment = account_type
+            declared_environment = str(row.get("environment") or "").strip().lower()
+            if declared_environment:
+                normalized_environment = "demo" if declared_environment == "virtual" else declared_environment
+                if normalized_environment != environment:
+                    continue
             currency = str(row.get("currency") or "").strip().upper()
-            environment = "real" if account_type == "real" else "demo"
-            if row.get("environment"):
-                environment = str(row["environment"]).lower()
-            if environment == "virtual":
-                environment = "demo"
-            targeted_row = environment == self.expected_environment and (not self.expected_loginid or loginid == self.expected_loginid)
-            if targeted_row and not currency:
-                raise DerivSessionManagerError("ACCOUNT_CURRENCY_UNVERIFIED")
             if not currency:
+                if environment == self.expected_environment and (
+                    not self.expected_loginid or account_id == self.expected_loginid
+                ):
+                    raise DerivSessionManagerError("ACCOUNT_CURRENCY_UNVERIFIED")
                 continue
+            status = str(row.get("status") or "unknown").strip().lower()
+            try:
+                row_bytes = json.dumps(
+                    row, sort_keys=True, separators=(",", ":"),
+                    ensure_ascii=False, allow_nan=False,
+                ).encode("utf-8")
+            except (TypeError, ValueError) as exc:
+                raise DerivSessionManagerError("ACCOUNT_ROW_NOT_HASHABLE") from exc
+            row_hash = hashlib.sha256(row_bytes).hexdigest()
             candidates.append(
                 DerivAccountBinding(
-                    loginid=loginid,
-                    account_type=account_type or environment,
+                    loginid=account_id,
+                    account_type=account_type,
                     currency=currency,
                     environment=environment,
+                    account_id=account_id,
+                    status=status,
+                    source_endpoint=ACCOUNTS_ENDPOINT,
+                    source_response_sha256=row_hash,
+                    observed_at_utc=observed_at,
                 )
             )
 
         matches = [
-            item
-            for item in candidates
+            item for item in candidates
             if item.environment == self.expected_environment
             and item.currency == self.expected_currency
             and (
                 not self.expected_loginid
-                or item.loginid == self.expected_loginid
+                or item.account_id == self.expected_loginid
             )
         ]
         if not matches:
@@ -204,7 +228,7 @@ class DerivSessionManager:
             )
         selected = matches[0]
         self.validate_binding(
-            loginid=selected.loginid,
+            loginid=selected.account_id,
             environment=selected.environment,
         )
         return selected
@@ -224,7 +248,7 @@ class DerivSessionManager:
         binding = self.select_account(accounts)
         try:
             websocket = get_authenticated_ws_url(
-                binding.loginid,
+                binding.account_id,
                 bearer_token=token,
                 app_id=application_id,
                 timeout_seconds=self.timeout_seconds,

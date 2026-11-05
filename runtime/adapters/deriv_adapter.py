@@ -60,6 +60,9 @@ class DerivAdapter:
         )
         self.ledger = RequestLedger(max_pending_age_seconds=30.0)
         self._subscription_keys: set[str] = set()
+        self.last_balance_response_sha256: str | None = None
+        self.last_portfolio_response_sha256: str | None = None
+        self.last_statement_response_sha256: str | None = None
 
     def _validate_environment_url(self, url: str) -> None:
         try:
@@ -108,11 +111,23 @@ class DerivAdapter:
             account_type = (
                 "demo" if self.environment.lower() in {"demo", "virtual"} else "real"
             )
+            identity_observed_at = datetime.now(timezone.utc).isoformat()
+            broker_uuid_value = identity_payload.get("id")
+            broker_uuid = (
+                str(broker_uuid_value).strip()
+                if isinstance(broker_uuid_value, str) and broker_uuid_value.strip()
+                else None
+            )
+            identity_source = "balance" if "balance" in reply else "authorize"
             self.account = AccountIdentity(
                 loginid=loginid,
                 account_type=account_type,
                 currency=currency,
                 environment=self.environment,
+                broker_uuid=broker_uuid,
+                broker_uuid_source=identity_source if broker_uuid else None,
+                broker_uuid_captured_at_utc=identity_observed_at if broker_uuid else None,
+                identity_response_sha256=sha256(reply),
             )
             self.authorized = True
             self.circuit.record_success()
@@ -218,7 +233,9 @@ class DerivAdapter:
     async def get_balance(self) -> CapitalSnapshot:
         if not self.account:
             raise DerivProtocolError("ACCOUNT_NOT_VERIFIED")
-        result = (await self.request({"balance": 1})).get("balance") or {}
+        balance_reply = await self.request({"balance": 1})
+        self.last_balance_response_sha256 = sha256(balance_reply)
+        result = balance_reply.get("balance") or {}
         amount = float(result["balance"])
         currency = str(result.get("currency") or self.account.currency)
         loginid = str(result.get("loginid") or self.account.loginid)
@@ -403,6 +420,7 @@ class DerivAdapter:
 
     async def portfolio(self) -> list[dict[str, Any]]:
         reply = await self.request({"portfolio": 1})
+        self.last_portfolio_response_sha256 = sha256(reply)
         return list(reply.get("portfolio", {}).get("contracts") or [])
 
     async def statement(
@@ -432,6 +450,7 @@ class DerivAdapter:
         if date_to is not None:
             payload["date_to"] = int(date_to)
         reply = await self.request(payload)
+        self.last_statement_response_sha256 = sha256(reply)
         statement = reply.get("statement") or {}
         return list(statement.get("transactions") or [])
 

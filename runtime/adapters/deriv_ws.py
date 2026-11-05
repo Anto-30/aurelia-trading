@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from time import perf_counter
 from dataclasses import dataclass
 from typing import Any, AsyncIterator
 
@@ -211,7 +212,29 @@ class DerivWebSocketTransport:
                 json.dumps({**payload, "req_id": subscription.request_id})
             )
 
+    async def ping(self) -> float:
+        """Send a WebSocket control-frame Ping and await its matching Pong.
+
+        This is transport heartbeat evidence only; it is not an account API
+        request and it does not grant any capital or trading authority.
+        """
+        if self.ws is None:
+            raise DerivTransportError("BROKER_SESSION_NOT_CONNECTED")
+        started = perf_counter()
+        try:
+            pong_waiter = await self.ws.ping()
+            await asyncio.wait_for(pong_waiter, timeout=self.timeout_seconds)
+        except asyncio.TimeoutError as exc:
+            raise DerivTransportError("BROKER_HEARTBEAT_TIMEOUT") from exc
+        except Exception as exc:
+            raise DerivTransportError("BROKER_HEARTBEAT_FAILED") from exc
+        return max(0.0, (perf_counter() - started) * 1000.0)
+
     async def close(self) -> None:
+        # Keep a local socket reference: cancelling the reader runs its
+        # finally block, which clears self.ws. Closing only self.ws after
+        # awaiting the reader would therefore leak the underlying socket.
+        websocket = self.ws
         reader = self._reader_task
         self._reader_task = None
         if reader is not None:
@@ -221,8 +244,8 @@ class DerivWebSocketTransport:
             except asyncio.CancelledError:
                 pass
 
-        if self.ws is not None:
-            await self.ws.close()
+        if websocket is not None:
+            await websocket.close()
         self.ws = None
         self._fail_pending(DerivTransportError("BROKER_SESSION_CLOSED"))
 

@@ -25,6 +25,12 @@ class AccountIdentity:
     account_type: str
     currency: str
     environment: str
+    # Broker UUID from the authenticated modern Options balance response.
+    # It is distinct from loginid and any AURELIA-internal UUID.
+    broker_uuid: str | None = None
+    broker_uuid_source: str | None = None
+    broker_uuid_captured_at_utc: str | None = None
+    identity_response_sha256: str | None = None
 
 
 @dataclass(frozen=True)

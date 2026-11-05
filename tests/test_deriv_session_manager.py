@@ -54,6 +54,28 @@ class SessionManagerContractTests(unittest.TestCase):
         binding = manager.select_account([{"account_id": "CRREAL", "account_type": "real", "currency": "USD"}])
         self.assertEqual(binding.currency, "USD")
 
+    def test_binding_preserves_options_account_id_status_and_source_hash(self):
+        manager = DerivSessionManager(
+            expected_loginid="ROT92026649",
+            expected_environment="real",
+            expected_currency="USD",
+        )
+        binding = manager.select_account([{
+            "account_id": "ROT92026649",
+            "account_type": "real",
+            "currency": "USD",
+            "status": "active",
+        }])
+        self.assertEqual(binding.account_id, "ROT92026649")
+        self.assertEqual(binding.loginid, "ROT92026649")  # legacy compatibility only
+        self.assertEqual(binding.status, "active")
+        self.assertEqual(
+            binding.source_endpoint,
+            "https://api.derivws.com/trading/v1/options/accounts",
+        )
+        self.assertEqual(len(binding.source_response_sha256), 64)
+        self.assertTrue(binding.observed_at_utc)
+
     def test_manager_rejects_account_environment_mismatch(self):
         manager = DerivSessionManager(expected_loginid="CRREAL", expected_environment="real")
         with self.assertRaises(ValueError):

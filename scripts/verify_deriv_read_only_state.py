@@ -25,6 +25,17 @@ from assurance.evidence_writer import build_evidence, payload_sha256, write_evid
 from runtime.adapters.deriv_adapter import DerivAdapter
 from runtime.adapters.session_manager import DerivSessionManager
 from runtime.core.daily_risk import derive_utc_day_start_balance
+from runtime.core.account_identity import (
+    AURELIAIdentity,
+    AccountContext,
+    BrokerReturnedUUID,
+    CompositeAccountIdentity,
+    DerivAccountIdentifier,
+    EnvironmentType,
+    LoginID,
+    OPTIONS_ACCOUNTS_ENDPOINT,
+    ProductType,
+)
 from runtime.core.events import sha256
 from runtime.core.release_gate import read_live_release
 from runtime.core.runtime_config import load_config_hash
@@ -153,6 +164,14 @@ async def collect_read_only_snapshot(
         "statement_window_start_utc": day_start.isoformat(),
         "statement_window_end_utc": utc_now.isoformat(),
         "balance_stable_across_snapshot": True,
+        "broker_uuid": getattr(account, "broker_uuid", None),
+        "broker_uuid_source": getattr(account, "broker_uuid_source", None),
+        "broker_uuid_captured_at_utc": getattr(account, "broker_uuid_captured_at_utc", None),
+        "broker_uuid_response_sha256": getattr(account, "identity_response_sha256", None),
+        "balance_response_sha256": getattr(adapter, "last_balance_response_sha256", None),
+        "portfolio_response_sha256": getattr(adapter, "last_portfolio_response_sha256", None),
+        "statement_response_sha256": getattr(adapter, "last_statement_response_sha256", None),
+        "account_status_source": OPTIONS_ACCOUNTS_ENDPOINT,
         "read_api_calls": ["balance", "portfolio", "statement", "balance"],
         "trade_api_calls": [],
         "orders_submitted": 0,
@@ -253,6 +272,11 @@ async def run() -> int:
     ).strip()
     currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper()
     environment = os.getenv("DERIV_ENVIRONMENT", "").strip().lower()
+    aurelia_internal_uuid = os.getenv("AURELIA_INTERNAL_ACCOUNT_UUID", "").strip()
+    if not aurelia_internal_uuid:
+        print("DERIV_READONLY_STATE=BLOCKED")
+        print("REASON=AURELIA_INTERNAL_ACCOUNT_UUID_MISSING")
+        return 2
     if not token or not loginid or not currency or environment != "real":
         print("DERIV_READONLY_STATE=BLOCKED")
         print("REASON=AUTHENTICATED_REAL_ACCOUNT_CONFIGURATION_MISSING")
@@ -287,6 +311,79 @@ async def run() -> int:
             expected_currency=currency,
             now=now,
         )
+        broker_uuid_value = snapshot.get("broker_uuid")
+        broker_uuid_source = snapshot.get("broker_uuid_source")
+        broker_uuid_hash = snapshot.get("broker_uuid_response_sha256")
+        balance_capture_time = snapshot.get("balance_captured_at_utc")
+        account_status = bootstrap.binding.status
+        if not bootstrap.binding.account_id:
+            raise ReadOnlyVerificationError("DERIV_OPTIONS_ACCOUNT_ID_MISSING")
+        if not bootstrap.binding.source_response_sha256:
+            raise ReadOnlyVerificationError("DERIV_OPTIONS_ACCOUNT_RESPONSE_HASH_MISSING")
+        if not bootstrap.binding.observed_at_utc:
+            raise ReadOnlyVerificationError("DERIV_OPTIONS_ACCOUNT_TIMESTAMP_MISSING")
+        if not broker_uuid_value or broker_uuid_source != "balance":
+            raise ReadOnlyVerificationError("DERIV_BROKER_UUID_MISSING_OR_UNVERIFIED")
+        if not broker_uuid_hash:
+            raise ReadOnlyVerificationError("DERIV_BROKER_UUID_RESPONSE_HASH_MISSING")
+        if not balance_capture_time:
+            raise ReadOnlyVerificationError("DERIV_BALANCE_TIMESTAMP_MISSING")
+        if snapshot["account_loginid"] != bootstrap.binding.account_id:
+            raise ReadOnlyVerificationError("DERIV_ACCOUNT_ID_LOGINID_MISMATCH")
+        if snapshot["account_type"] != bootstrap.binding.account_type:
+            raise ReadOnlyVerificationError("DERIV_ACCOUNT_TYPE_MISMATCH")
+        if snapshot["environment"] != bootstrap.binding.environment:
+            raise ReadOnlyVerificationError("DERIV_ACCOUNT_ENVIRONMENT_MISMATCH")
+        if snapshot["currency"] != bootstrap.binding.currency:
+            raise ReadOnlyVerificationError("DERIV_ACCOUNT_CURRENCY_MISMATCH")
+
+        try:
+            composite_identity = CompositeAccountIdentity.create(
+                aurelia=AURELIAIdentity(
+                    internal_uuid=aurelia_internal_uuid,
+                    source_config_key="AURELIA_INTERNAL_ACCOUNT_UUID",
+                ),
+                deriv_account=DerivAccountIdentifier(
+                    account_id=bootstrap.binding.account_id,
+                    account_type=bootstrap.binding.account_type,
+                    status=account_status,
+                    source_endpoint=bootstrap.binding.source_endpoint,
+                    source_response_sha256=bootstrap.binding.source_response_sha256,
+                    observed_at_utc=bootstrap.binding.observed_at_utc,
+                ),
+                broker_uuid=BrokerReturnedUUID(
+                    value=broker_uuid_value,
+                    source_method=broker_uuid_source,
+                    source_response_sha256=broker_uuid_hash,
+                    observed_at_utc=snapshot["broker_uuid_captured_at_utc"],
+                ),
+                login_id=LoginID(
+                    value=snapshot["account_loginid"],
+                    source_method="balance",
+                    observed_at_utc=balance_capture_time,
+                ),
+                context=AccountContext(
+                    product=ProductType.OPTIONS,
+                    environment=(
+                        EnvironmentType.REAL
+                        if bootstrap.binding.environment == "real"
+                        else EnvironmentType.DEMO
+                    ),
+                    currency=snapshot["currency"],
+                    account_list_currency=bootstrap.binding.currency,
+                    balance_currency=snapshot["currency"],
+                    account_status=account_status,
+                    product_source_endpoint=OPTIONS_ACCOUNTS_ENDPOINT,
+                    environment_source_endpoint=bootstrap.websocket.safe_url().split("?", 1)[0],
+                    currency_verified_at_utc=balance_capture_time,
+                ),
+            )
+        except ValueError as exc:
+            raise ReadOnlyVerificationError(str(exc)) from exc
+
+        if not composite_identity.validate_integrity():
+            raise ReadOnlyVerificationError("DERIV_COMPOSITE_IDENTITY_INTEGRITY_FAILED")
+
         persisted = read_persistent_runtime_controls(
             account_loginid=loginid,
             currency=currency,
@@ -298,6 +395,7 @@ async def run() -> int:
         )
         observed = {
             **snapshot,
+            "composite_account_identity": composite_identity.to_dict(),
             **persisted,
             "live_execution": "BLOCKED",
             "final_execution_authorization": False,
@@ -339,6 +437,10 @@ async def run() -> int:
             invariants_checked=[
                 "modern_deriv_otp_authenticated_session",
                 "verified_real_account_binding",
+                "four_distinct_source_bound_identifiers",
+                "options_product_and_environment_cross_check",
+                "active_account_status_from_options_account_list",
+                "broker_uuid_from_authenticated_balance_response",
                 "fresh_balance_before_and_after_snapshot",
                 "open_portfolio_read",
                 "statement_history_read",
@@ -353,7 +455,10 @@ async def run() -> int:
         )
         enriched = dict(evidence)
         enriched["observed"] = observed
-        enriched["read_only_scope"] = True
+        # The request sequence is read-only; the PAT/OAuth permission is not.
+        # The Options account-list and OTP endpoints are documented with trade scope.
+        enriched["read_only_api_sequence"] = True
+        enriched["credential_scope_verified_read_only"] = False
         enriched["orders_submitted"] = 0
         enriched["capital_movement"] = False
         enriched["capital_authority_granted"] = False
@@ -366,7 +471,9 @@ async def run() -> int:
 
         print("DERIV_READONLY_STATE=VERIFIED")
         print(f"DERIV_READONLY_EVIDENCE={OUTPUT}")
-        print(f"ACCOUNT={loginid}")
+        print(f"ACCOUNT_ID={bootstrap.binding.account_id}")
+        print(f"LOGIN_ID={snapshot['account_loginid']}")
+        print(f"BROKER_UUID_PRESENT={bool(broker_uuid_value)}")
         print(f"BALANCE={snapshot['balance']}")
         print(f"OPEN_POSITIONS={snapshot['open_positions_count']}")
         print(f"STATEMENT_TRANSACTIONS={snapshot['statement_transaction_count']}")
