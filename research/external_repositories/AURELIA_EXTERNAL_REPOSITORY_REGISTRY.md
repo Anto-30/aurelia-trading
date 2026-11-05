@@ -200,3 +200,44 @@ Four requested repositories are pinned as research sources, not installed runtim
 - The A-share-only sources are not directly applicable to Deriv synthetic indices; do not import T+1, price-limit, hot-money or A-share vendor assumptions into synthetic research.
 
 Detailed contract: `docs/integrations/TRADINGAGENTS_RESEARCH_FEDERATION.md`. Machine-readable pins and license restrictions: `config/external_repo_federation.json`.
+
+
+## Metadata, provenance and tooling sources — 2026-11-05
+
+The following 19 repositories are pinned at exact upstream default-branch commits. These are federated references, not blanket runtime installations. All entries have `runtime_dependency=false`, `runtime_install=NOT_INSTALLED`, and `capital_authority=false`.
+
+| Repository | Pinned commit | License | Mode | AURELIA disposition |
+|---|---|---|---|---|
+| [can1357/oh-my-pi](https://github.com/can1357/oh-my-pi) | `96e4d8eb5ba1212d2d6018f242de266284cffab9` | MIT | SANDBOX_ONLY | High-privilege agent harness with shell, persistent execution, browser and desktop control. Reference only until independently isolated and permission-audited; never replace AURELIA's supervisor or worker boundary. |
+| [ethereum-lists/chains](https://github.com/ethereum-lists/chains) | `e17474286275730fb6b0490b1d7ea1c64a36ed9e` | MIT | REFERENCE_ONLY | Only for future EVM integrations. Does not describe Deriv synthetic indices or provide broker instrument metadata. |
+| [open-metadata/OpenMetadata](https://github.com/open-metadata/OpenMetadata) | `a3012259ca604141e3f778aa3f259d827371470a` | Apache-2.0 | REFERENCE_ONLY | Architecture reference for evidence cataloguing and governed data context. Do not deploy a new service or add its dependency tree without a separate cost/security/ops decision. |
+| [drewnoakes/metadata-extractor](https://github.com/drewnoakes/metadata-extractor) | `4d5cd46935c1987d8b19bfb49f3a24eb1d832e53` | Apache-2.0 | REFERENCE_ONLY | Not relevant to current Python trading runtime; use only if media-file evidence ingestion becomes a real requirement. |
+| [ronmamo/reflections](https://github.com/ronmamo/reflections) | `f5514b125c4f4b58e92beb0979a40ddce48d5be1` | WTFPL (GitHub SPDX metadata; LICENSE file not found in root) | REFERENCE_ONLY | Upstream README states the project is not actively maintained and last release was 2021. No runtime adoption; verify exact license text before copying. |
+| [microsoft/reflect-metadata](https://github.com/microsoft/reflect-metadata) | `acdeee445509ea05c8fab270f73928f7bb2c50f1` | Apache-2.0 | REFERENCE_ONLY | Legacy TypeScript decorator compatibility only; not part of the AURELIA Python runtime. TC39 standard decorator metadata supersedes the proposal for new projects. |
+| [apache/ossie](https://github.com/apache/ossie) | `172a3e566f2fc9c0a733ebbb470e97c33d2bd8b1` | Apache-2.0 (Apache incubating project) | REFERENCE_ONLY | Evaluate the specification for canonical metric and strategy semantics; no converter or runtime package adopted yet. |
+| [grafeas/grafeas](https://github.com/grafeas/grafeas) | `4a8bf366a01f0e509b9118b9f8afd64f211e64c6` | Apache-2.0 | REFERENCE_ONLY | Use as a provenance/evidence model reference. Do not add a Grafeas server or make its records authoritative for AURELIA release approval. |
+| [docker/metadata-action](https://github.com/docker/metadata-action) | `1ec73021df0717d8bef7700a897c064453280439` | Apache-2.0 | TOOLCHAIN_ONLY | CI-only candidate for immutable image labels and release tags; not an application runtime dependency. |
+| [google/ml-metadata](https://github.com/google/ml-metadata) | `7efdb25a3390cd1547372792ece6390e5b4364d1` | Apache-2.0 | REFERENCE_ONLY | Reference for experiment and model lineage. Existing AURELIA evidence store remains canonical; no MLMD service/database introduced. |
+| [microsoft/win32metadata](https://github.com/microsoft/win32metadata) | `ae66c067ff3e9516fcc9cda09204bf72a9d57e56` | NOASSERTION; upstream Windows SDK header/artifact terms remain applicable | REFERENCE_ONLY | Windows-specific and irrelevant to current Linux/Python trading runtime. Repository LICENSE warns that original SDK header licenses are not changed; require provenance/legal review before reuse. |
+| [drewnoakes/metadata-extractor-dotnet](https://github.com/drewnoakes/metadata-extractor-dotnet) | `cb71a8ad84a15dbf64ddb25a77c17cd855adfef4` | Apache-2.0 | REFERENCE_ONLY | Not relevant to current Python runtime; optional only for future .NET media evidence tooling. |
+| [macbre/sql-metadata](https://github.com/macbre/sql-metadata) | `e48f1595cffaf409cef51fe1dfff21519da36ee5` | MIT | REFERENCE_ONLY | Use only if SQL lineage or audit query analysis becomes a requirement; parser metadata is not a substitute for database query plans or execution evidence. |
+| [berachain/metadata](https://github.com/berachain/metadata) | `1cd819a51e50ec2d603f2409f382232c99ec1de0` | MIT | REFERENCE_ONLY | Chain-specific ecosystem list. Not a source of truth for Deriv instruments or general EVM chain configuration. |
+| [Exiv2/exiv2](https://github.com/Exiv2/exiv2) | `ef4e79590c53cdef48bbed5629cdb81065b42287` | GPL-2.0 (README identifies GPLv2; inspect COPYING before any reuse) | REFERENCE_ONLY | GPL licensing is incompatible with casual embedding in a proprietary AURELIA runtime absent a separate legal review or commercial licence. No installation. |
+| [icsharpcode/ILSpy](https://github.com/icsharpcode/ILSpy) | `695f7aced9626eb5bffdf9a04a835cd984b9b5ce` | MIT | REFERENCE_ONLY | Forensic/developer utility only; do not use to bypass licensing, access controls or secrets. No AURELIA runtime dependency. |
+| [jekyll/github-metadata](https://github.com/jekyll/github-metadata) | `c26a5d4574785fa79ecbccc1df890f3f9909a02d` | MIT | REFERENCE_ONLY | Website publishing plugin unrelated to AURELIA runtime; retained as a reference only. |
+| [OpenLineage/OpenLineage](https://github.com/OpenLineage/OpenLineage) | `dd64b09365f08ee02a3a0653ddda0e62d8cc76f2` | Apache-2.0 | REFERENCE_ONLY | Strong candidate for mapping AURELIA research/validation runs to provenance events. Adopt concepts/schema selectively; no external lineage backend introduced. |
+| [dependabot/fetch-metadata](https://github.com/dependabot/fetch-metadata) | `57721ba1e64f4a53fe9300b820eeee8398b772fb` | MIT | TOOLCHAIN_ONLY | CI-only candidate for dependency policy checks. Does not approve, merge or deploy dependency updates. |
+
+### Selective adoption plan
+
+- **Evidence lineage:** OpenLineage is the preferred event/schema reference for research, validation, test, soak and release evidence. Grafeas and ML Metadata are comparison references for artifact attestations and experiment tracking. Existing AURELIA evidence storage and release authority remain canonical.
+- **Semantic governance:** Apache Ossie is a specification candidate for consistent metric, strategy and data-source definitions. OpenMetadata is an optional future catalog platform, not a service to deploy by default.
+- **Agent harness:** oh-my-pi is a high-capability coding-agent reference only. Its shell, persistent execution, browser and desktop-control surfaces require independent OS sandboxing, command allowlists and secret isolation before any operational trial. It does not replace AURELIA's worker protocol or supervisor.
+- **CI metadata:** Docker metadata-action and Dependabot fetch-metadata are workflow-only candidates. Any workflow adoption must be pinned by immutable commit, least-privilege, and review-gated; neither may auto-approve or auto-merge production changes.
+- **Market metadata:** ethereum-lists/chains and Berachain metadata apply only to EVM chain integrations. They do not describe Deriv synthetic indices or broker contracts.
+- **Non-applicable utilities:** Java/.NET reflection, TypeScript legacy decorator metadata, Win32 API metadata, ILSpy, media EXIF/IPTC/XMP extraction, Jekyll metadata and SQL parsing are reference-only until a specific AURELIA requirement exists.
+- **License controls:** Exiv2 is identified as GPLv2 in its README; do not embed it in proprietary AURELIA without a licence decision. Win32 metadata retains upstream Windows SDK header licensing. Reflections' repository reports WTFPL but has no root LICENSE file and is not actively maintained; verify before copying. Other listed license identifiers are recorded from GitHub metadata and/or root licence files; transitive dependency and vendored-code audits remain mandatory before installation.
+
+### Agent and ChatGPT boundary
+
+The `metadata-provenance` skill is assigned in the AURELIA capability matrix to all currently defined logical agents. The Claude Code skill file is included in this repository. This does not install packages on a local machine, activate an external provider, connect a worker, or modify the ChatGPT application. ChatGPT can use the repository evidence and skill guidance in a connected session; persistent ChatGPT-side installation is not exposed by GitHub.
