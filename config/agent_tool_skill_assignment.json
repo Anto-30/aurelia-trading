@@ -387,7 +387,8 @@
         "aurelia-agent-core",
         "evidence-reconciliation",
         "security-review",
-        "risk-and-capital-controls"
+        "risk-and-capital-controls",
+        "metadata-provenance"
       ],
       "plugins": [],
       "can_mutate_live_lock": false,
@@ -410,7 +411,8 @@
         "security-review",
         "ci-diagnostics",
         "browser-e2e",
-        "trading-repository-audit"
+        "trading-repository-audit",
+        "metadata-provenance"
       ],
       "plugins": [
         "superpowers",
@@ -438,7 +440,8 @@
         "research-intelligence",
         "ci-diagnostics",
         "browser-e2e",
-        "external-trading-source-adversarial-review"
+        "external-trading-source-adversarial-review",
+        "metadata-provenance"
       ],
       "plugins": [
         "data-analytics",
@@ -464,7 +467,8 @@
         "candlestick-pattern-research",
         "crypto-strategy-research",
         "lookahead-bias-audit",
-        "ML-calibration"
+        "ML-calibration",
+        "metadata-provenance"
       ],
       "plugins": [
         "data-analytics",
@@ -490,7 +494,8 @@
         "security-review",
         "ci-diagnostics",
         "browser-e2e",
-        "browser-evidence-validation"
+        "browser-evidence-validation",
+        "metadata-provenance"
       ],
       "plugins": [
         "coderabbit",
@@ -513,7 +518,8 @@
         "security-review",
         "external-repo-federation",
         "MCP-browser-security-review",
-        "external-tool-permission-review"
+        "external-tool-permission-review",
+        "metadata-provenance"
       ],
       "plugins": [
         "endor-labs-agent-kit",
@@ -536,7 +542,8 @@
         "evidence-inspection",
         "evidence-reconciliation",
         "research-intelligence",
-        "security-review"
+        "security-review",
+        "metadata-provenance"
       ],
       "plugins": [
         "data-analytics (conditional for numeric tables)"
@@ -558,7 +565,8 @@
         "network-inspection",
         "performance-tracing",
         "evidence-reconciliation",
-        "security-review"
+        "security-review",
+        "metadata-provenance"
       ],
       "plugins": [
         "mcp-precheck",
@@ -583,7 +591,8 @@
         "aurelia-evidence-reconciliation",
         "external-repo-federation",
         "research-intelligence",
-        "security-review"
+        "security-review",
+        "metadata-provenance"
       ],
       "plugins": [
         "data-analytics",
@@ -611,7 +620,8 @@
         "aurelia-federated-repair",
         "evidence-reconciliation",
         "security-review",
-        "ci-diagnostics"
+        "ci-diagnostics",
+        "metadata-provenance"
       ],
       "plugins": [
         "superpowers",
