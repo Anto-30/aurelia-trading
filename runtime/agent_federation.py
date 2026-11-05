@@ -227,8 +227,8 @@ class PersistentAgentFederation:
         *,
         worker_id: str | None = None,
     ) -> AgentTask | None:
-        normalized_worker_id = str(worker_id).strip() if worker_id is not None else None
-        if worker_id is not None and not normalized_worker_id:
+        normalized_worker_id = str(worker_id).strip() if worker_id is not None else ""
+        if not normalized_worker_id:
             raise ValueError("WORKER_ID_REQUIRED")
 
         async with self._lock:
