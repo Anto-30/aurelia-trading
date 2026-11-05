@@ -407,3 +407,27 @@ def test_worker_self_attested_quality_flags_do_not_award_points(tmp_path):
     assert result["total_points"] == 0.0
     assert result["verification_state"] == "SUBMISSION_ONLY_NOT_QUALIFIED"
     assert all(value == 0.0 for value in result["category_scores"].values())
+
+
+def test_external_provider_probe_roster_is_explicit_and_unconfigured_is_not_connected(monkeypatch):
+    from scripts.agent_worker_probe import ADVISORY_WORKERS, probe_worker_state
+
+    required = {
+        "ClaudeCode",
+        "DeepSeekHarness",
+        "Hermes",
+        "KimiK3",
+        "GrokBot",
+        "JEV",
+        "Dev",
+        "PlaywrightCLI",
+    }
+    assert required.issubset(set(ADVISORY_WORKERS))
+
+    for agent in ADVISORY_WORKERS:
+        monkeypatch.delenv(AgentWorkerSupervisor._env_name(agent), raising=False)
+
+    configured, missing, unexpected = probe_worker_state(active=set())
+    assert configured == set()
+    assert missing == set()
+    assert unexpected == set()
