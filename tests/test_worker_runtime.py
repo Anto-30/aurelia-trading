@@ -32,11 +32,15 @@ class SupervisedWorkerTests(unittest.IsolatedAsyncioTestCase):
                 source_hash="src",
                 lease_seconds=3,
             )
+            evidence_root = federation.lease_path.parent / "evidence"
+            evidence_root.mkdir(parents=True)
+            federation.performance_evaluator.evidence_root = evidence_root
             seen = []
 
             async def handler(task):
                 seen.append(task.task_id)
-                return {"accepted": True}
+                (evidence_root / "worker-result.json").write_text("evidence", encoding="utf-8")
+                return {"accepted": True, "evidence_ref": "worker-result.json"}
 
             worker = SupervisedAgentWorker(
                 federation,
@@ -63,6 +67,7 @@ class SupervisedWorkerTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(seen, [task.task_id])
             rows = federation._load_tasks()
             self.assertEqual(rows[0]["status"], "COMPLETED")
+            self.assertEqual(rows[0]["evidence_ref"], "worker-result.json")
             await worker.stop()
             self.assertEqual(worker.status.state, "STOPPED")
 
@@ -102,6 +107,43 @@ class SupervisedWorkerTests(unittest.IsolatedAsyncioTestCase):
                 and m["payload"]["task_id"] == task.task_id
             ]
             self.assertEqual(len(failures), 1)
+            await worker.stop()
+
+
+    async def test_worker_does_not_mark_task_completed_without_verifiable_evidence(self):
+        with tempfile.TemporaryDirectory() as td:
+            federation = PersistentAgentFederation(
+                journal_path=f"{td}/events.ndjson",
+                lease_path=f"{td}/leases.json",
+                task_path=f"{td}/tasks.json",
+                config_hash="cfg",
+                source_hash="src",
+            )
+
+            async def handler(task):
+                return {"accepted": True}
+
+            worker = SupervisedAgentWorker(
+                federation,
+                agent="ClaudeCode",
+                handler=handler,
+                poll_seconds=0.05,
+            )
+            task = await federation.enqueue_task(
+                task_type="ENGINEERING",
+                payload={},
+                correlation_id="worker-missing-evidence",
+                assigned_agent="ClaudeCode",
+            )
+            await worker.start()
+            for _ in range(30):
+                rows = federation._load_tasks()
+                if rows and rows[0]["status"] == "FAILED":
+                    break
+                await __import__("asyncio").sleep(0.05)
+
+            self.assertEqual(federation._load_tasks()[0]["status"], "FAILED")
+            self.assertFalse(federation._load_tasks()[0].get("evidence_ref"))
             await worker.stop()
 
 

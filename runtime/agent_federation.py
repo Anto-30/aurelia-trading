@@ -248,6 +248,69 @@ class PersistentAgentFederation:
             ),
         )
 
+    async def renew_task_claim(self, task_id: str, *, agent: str) -> bool:
+        """Renew one live claim so long-running workers cannot be reclaimed."""
+        claimed_at = datetime.now(timezone.utc)
+        async with self._lock:
+            tasks = self._load_tasks()
+            selected = next((x for x in tasks if x.get("task_id") == task_id), None)
+            if (
+                selected is None
+                or selected.get("assigned_agent") != agent
+                or selected.get("status") != "CLAIMED"
+            ):
+                return False
+            selected["claimed_at"] = claimed_at.isoformat()
+            self._save_tasks(tasks)
+        self._append(
+            "AGENT_TASK_CLAIM_RENEWED",
+            {"task_id": task_id, "agent": agent, "claimed_at": claimed_at.isoformat()},
+            task_id,
+        )
+        return True
+
+    async def requeue_task(
+        self, task_id: str, *, agent: str, reason: str
+    ) -> bool:
+        """Return a worker-owned claim to PENDING without fabricating a result."""
+        if not reason or len(reason) > 96:
+            raise ValueError("INVALID_TASK_REQUEUE_REASON")
+        async with self._lock:
+            tasks = self._load_tasks()
+            selected = next((x for x in tasks if x.get("task_id") == task_id), None)
+            if (
+                selected is None
+                or selected.get("assigned_agent") != agent
+                or selected.get("status") != "CLAIMED"
+            ):
+                return False
+            selected["status"] = "PENDING"
+            selected["assigned_agent"] = None
+            selected.pop("claimed_at", None)
+            self._save_tasks(tasks)
+        self._append(
+            "AGENT_TASK_REQUEUED",
+            {"task_id": task_id, "agent": agent, "reason": reason},
+            task_id,
+        )
+        return True
+
+    async def revoke_lease(self, agent: str, *, worker_id: str) -> bool:
+        """Remove a lease only when it belongs to the worker being stopped."""
+        async with self._lock:
+            leases = self._load_leases()
+            current = leases.get(agent)
+            if not current or current.get("worker_id") != worker_id:
+                return False
+            leases.pop(agent, None)
+            self._save_leases(leases)
+        self._append(
+            "AGENT_LEASE_REVOKED",
+            {"agent": agent, "worker_id": worker_id},
+            f"agent:{agent}:worker:{worker_id}",
+        )
+        return True
+
     async def complete_task(
         self,
         task_id: str,
@@ -259,6 +322,12 @@ class PersistentAgentFederation:
     ) -> bool:
         if status not in {"COMPLETED", "FAILED", "BLOCKED"}:
             raise ValueError("INVALID_TASK_STATUS")
+        if status == "COMPLETED" and (
+            not isinstance(evidence_ref, str)
+            or not evidence_ref.strip()
+            or self.performance_evaluator._resolve_evidence(evidence_ref) is None
+        ):
+            raise ValueError("COMPLETED_TASK_REQUIRES_VERIFIABLE_EVIDENCE")
         async with self._lock:
             tasks = self._load_tasks()
             selected = next((x for x in tasks if x.get("task_id") == task_id), None)

@@ -63,6 +63,10 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
                 source_hash="src",
             )
             federation = PersistentAgentFederation(**kwargs)
+            evidence_root = federation.lease_path.parent / "evidence"
+            evidence_root.mkdir(parents=True)
+            federation.performance_evaluator.evidence_root = evidence_root
+            (evidence_root / "fixture.json").write_text("evidence", encoding="utf-8")
             first = await federation.enqueue_task(
                 task_type="RESEARCH",
                 payload={"x": 1},
@@ -89,7 +93,7 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
             claimed = await federation.claim_task("GoogleAgentSkills")
             self.assertIsNotNone(claimed)
             self.assertEqual(claimed.task_id, high.task_id)
-            self.assertTrue(await federation.complete_task(high.task_id, agent="GoogleAgentSkills"))
+            self.assertTrue(await federation.complete_task(high.task_id, agent="GoogleAgentSkills", evidence_ref="fixture.json"))
             self.assertEqual(len(federation.pending_tasks()), 1)
 
             restored = PersistentAgentFederation(**kwargs)

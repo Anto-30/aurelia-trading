@@ -124,8 +124,22 @@ class SupervisedAgentWorker:
                     result = await result
                 if not isinstance(result, dict):
                     result = {"result": result}
+                evidence_ref = result.get("evidence_ref", "")
+                if not isinstance(evidence_ref, str) or not evidence_ref.strip():
+                    raise ValueError("WORKER_EVIDENCE_REFERENCE_REQUIRED")
+                safe_result: dict[str, str] = {}
+                summary = result.get("summary")
+                artifact_type = result.get("artifact_type")
+                if isinstance(summary, str) and len(summary) <= 4096:
+                    safe_result["summary"] = summary
+                if isinstance(artifact_type, str) and len(artifact_type) <= 128:
+                    safe_result["artifact_type"] = artifact_type
                 await self.federation.complete_task(
-                    task.task_id, agent=self.agent, status="COMPLETED"
+                    task.task_id,
+                    agent=self.agent,
+                    status="COMPLETED",
+                    evidence_ref=evidence_ref,
+                    result=safe_result,
                 )
                 await self.federation.publish(
                     sender=self.agent,
@@ -135,7 +149,7 @@ class SupervisedAgentWorker:
                         "worker_id": self.worker_id,
                         "task_id": task.task_id,
                         "state": "COMPLETED",
-                        "result": result,
+                        "result": safe_result,
                         "capital_authority": False,
                     },
                     correlation_id=task.correlation_id,
@@ -144,7 +158,7 @@ class SupervisedAgentWorker:
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
-                self._last_error = f"{type(exc).__name__}: {exc}"
+                self._last_error = f"{type(exc).__name__}: WORKER_TASK_FAILED"
                 self._state = "DEGRADED"
                 await self.federation.complete_task(
                     task.task_id, agent=self.agent, status="FAILED"
