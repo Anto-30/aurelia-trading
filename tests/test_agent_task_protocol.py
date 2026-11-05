@@ -31,11 +31,55 @@ class TestAgentTaskProtocol(unittest.TestCase):
             decode_message(b'{"x":"' + b"a" * 128 + b'"}\n', max_bytes=64)
 
     def test_validate_hello_requires_protocol_and_exact_agent_identity(self):
-        good = {"type": "HELLO", "protocol_version": 1, "agent": "ClaudeCode"}
+        good = {
+            "type": "HELLO",
+            "protocol_version": 1,
+            "agent": "ClaudeCode",
+            "capital_authority": False,
+            "final_execution_authorization": False,
+            "live_trading_enabled": False,
+            "order_submission_permitted": False,
+        }
         validate_hello(good, expected_agent="ClaudeCode")
 
         with self.assertRaisesRegex(ProtocolError, "WORKER_IDENTITY_MISMATCH"):
             validate_hello(good, expected_agent="DeepSeekHarness")
+
+    def test_validate_hello_rejects_missing_or_enabled_authority_acknowledgements(self):
+        incomplete = {
+            "type": "HELLO",
+            "protocol_version": 1,
+            "agent": "ClaudeCode",
+            "capital_authority": False,
+        }
+        with self.assertRaisesRegex(ProtocolError, "WORKER_AUTHORITY_ACK_REQUIRED"):
+            validate_hello(incomplete, expected_agent="ClaudeCode")
+
+        enabled = {
+            "type": "HELLO",
+            "protocol_version": 1,
+            "agent": "ClaudeCode",
+            "capital_authority": False,
+            "final_execution_authorization": False,
+            "live_trading_enabled": False,
+            "order_submission_permitted": True,
+        }
+        with self.assertRaisesRegex(ProtocolError, "WORKER_AUTHORITY_ACK_REQUIRED"):
+            validate_hello(enabled, expected_agent="ClaudeCode")
+
+    def test_validate_hello_rejects_secret_fields(self):
+        hello = {
+            "type": "HELLO",
+            "protocol_version": 1,
+            "agent": "ClaudeCode",
+            "capital_authority": False,
+            "final_execution_authorization": False,
+            "live_trading_enabled": False,
+            "order_submission_permitted": False,
+            "api_token": "must-not-cross-protocol",
+        }
+        with self.assertRaisesRegex(ProtocolError, "SECRET_FIELD_FORBIDDEN"):
+            validate_hello(hello, expected_agent="ClaudeCode")
 
     def test_task_result_requires_exact_task_and_claim_token(self):
         result = {
@@ -204,7 +248,11 @@ import sys
 print(json.dumps({
     "type": "HELLO",
     "protocol_version": 1,
-    "agent": "ClaudeCode"
+    "agent": "ClaudeCode",
+    "capital_authority": False,
+    "final_execution_authorization": False,
+    "live_trading_enabled": False,
+    "order_submission_permitted": False
 }), flush=True)
 
 for raw in sys.stdin:
