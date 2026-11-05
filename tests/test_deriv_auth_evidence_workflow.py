@@ -10,8 +10,8 @@ WORKFLOWS = (
     ROOT / ".github" / "workflows" / "deriv-verify-only-lifecycle.yml",
 )
 SAFE_AUTH_MODE_BINDING = (
-    "${{ vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' "
-    "|| (vars.DERIV_AUTH_MODE == 'pat' && 'pat' || 'invalid') }}"
+    "${{ (vars.DERIV_AUTH_MODE == '' || vars.DERIV_AUTH_MODE == 'pat') "
+    "&& 'pat' || (vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'invalid') }}"
 )
 
 
