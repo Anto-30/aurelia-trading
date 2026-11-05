@@ -93,6 +93,7 @@ class SupervisedWorkerTests(unittest.IsolatedAsyncioTestCase):
             )
             await worker.stop()
             self.assertEqual(worker.status.state, "STOPPED")
+            self.assertNotIn("ClaudeCode", federation.active_agents())
 
     async def test_in_process_worker_renews_long_running_claim(self):
         with tempfile.TemporaryDirectory() as td:
