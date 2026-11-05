@@ -335,7 +335,7 @@
       "Only the existing AURELIA capital plane can authorize capital movement."
     ]
   },
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-05",
   "common_skill_bundle": [
     "aurelia-agent-core",
     "external-repo-federation",
@@ -576,6 +576,30 @@
     "6yte96/freebuffet": [
       "ClaudeCode",
       "GoogleAgentSkills",
+      "GrokBot",
+      "JEV"
+    ],
+    "TauricResearch/TradingAgents": [
+      "ClaudeCode",
+      "KimiK3",
+      "GrokBot",
+      "JEV"
+    ],
+    "hsliuping/TradingAgents-CN": [
+      "ClaudeCode",
+      "KimiK3",
+      "GrokBot",
+      "JEV"
+    ],
+    "simonlin1212/TradingAgents-astock": [
+      "ClaudeCode",
+      "KimiK3",
+      "GrokBot",
+      "JEV"
+    ],
+    "KylinMountain/TradingAgents-AShare": [
+      "ClaudeCode",
+      "KimiK3",
       "GrokBot",
       "JEV"
     ]
@@ -924,6 +948,50 @@
       "install_status": "PINNED_SANDBOX_CANDIDATE",
       "mode": "SANDBOX_ONLY",
       "security": "Sandbox-only CLI review. It can generate provider configuration; never write secrets or config into production hosts automatically."
+    },
+    "TauricResearch/TradingAgents": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "RESEARCH_ONLY",
+      "security": "No runtime dependency or source checkout execution. Use only through Layer 9 and the existing JSONL worker protocol. No secrets, broker access, capital authority or order submission. License restrictions and market compatibility are documented in docs/integrations/TRADINGAGENTS_RESEARCH_FEDERATION.md."
+    },
+    "hsliuping/TradingAgents-CN": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "RESEARCH_ONLY",
+      "security": "No runtime dependency or source checkout execution. Use only through Layer 9 and the existing JSONL worker protocol. No secrets, broker access, capital authority or order submission. License restrictions and market compatibility are documented in docs/integrations/TRADINGAGENTS_RESEARCH_FEDERATION.md."
+    },
+    "simonlin1212/TradingAgents-astock": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "RESEARCH_ONLY",
+      "security": "No runtime dependency or source checkout execution. Use only through Layer 9 and the existing JSONL worker protocol. No secrets, broker access, capital authority or order submission. License restrictions and market compatibility are documented in docs/integrations/TRADINGAGENTS_RESEARCH_FEDERATION.md."
+    },
+    "KylinMountain/TradingAgents-AShare": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_ONLY",
+      "mode": "RESEARCH_ONLY",
+      "security": "No runtime dependency or source checkout execution. Use only through Layer 9 and the existing JSONL worker protocol. No secrets, broker access, capital authority or order submission. License restrictions and market compatibility are documented in docs/integrations/TRADINGAGENTS_RESEARCH_FEDERATION.md."
     }
   }
 }
