@@ -178,3 +178,25 @@ The following 19 repositories have been pinned for reference or isolated develop
 - `global-intelligence-os` and several proxy repositories have no declared license in GitHub API metadata. They remain reference-only until license and ownership are clarified.
 
 This is repository federation and source pinning—not physical installation, credential transfer, an authenticated provider connection, or proof that ChatGPT/Claude/Dev runtimes are connected. The label `Dev` is not a canonical agent identity in this repository; developer-oriented work is routed to `ClaudeCode` unless a real Dev runtime is registered and verified.
+
+## TradingAgents multi-agent research federation — checked 2026-11-05
+
+Four requested repositories are pinned as research sources, not installed runtime dependencies. Integration owner: ClaudeCode; quantitative review: KimiK3; adversarial orchestration review: GrokBot; evidence/schema review: JEV. All assignments are non-capital and require independently verified worker runtimes before task execution.
+
+| Repository | Full commit pin | License | Mode | Status |
+|---|---|---|---|---|
+| [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents) | `9fa1196fffbcfd9de5146d2dd2869df84ab99838` | Apache-2.0 | RESEARCH_ONLY | PINNED_REFERENCE_ONLY |
+| [hsliuping/TradingAgents-CN](https://github.com/hsliuping/TradingAgents-CN) | `51060a7682cf51810b4bc3a704829438d18cd8dc` | Hybrid: Apache-2.0 scoped paths + proprietary app/frontend/core | RESEARCH_ONLY | PINNED_REFERENCE_ONLY |
+| [simonlin1212/TradingAgents-astock](https://github.com/simonlin1212/TradingAgents-astock) | `3a9171182304e87042743dde245c64922e04ed96` | Apache-2.0 | RESEARCH_ONLY | PINNED_REFERENCE_ONLY |
+| [KylinMountain/TradingAgents-AShare](https://github.com/KylinMountain/TradingAgents-AShare) | `63b25eda444377366ab6e4e265228454c51713f3` | Apache-2.0 upstream portions + PolyForm Noncommercial additions/modifications | RESEARCH_ONLY | PINNED_REFERENCE_ONLY |
+
+### Integration boundary
+
+- Use the original TauricResearch project as the primary workflow reference; forks are specialized references, not independent corroborating alpha sources.
+- Do not copy TradingAgents-CN proprietary application directories or KylinMountain PolyForm Noncommercial additions into a commercial AURELIA deployment without permission.
+- Do not add any of these projects' dependency trees to the AURELIA runtime. If needed, run an isolated research adapter with a separately pinned environment and communicate only over the existing worker JSONL protocol.
+- ClaudeCode owns the adapter/research integration; KimiK3, GrokBot and JEV provide independent non-capital review when their real runtimes are available.
+- No worker may promote a strategy, alter risk, access broker credentials, or submit orders. All outputs are advisory evidence for Layer 9 and require canonical qualification.
+- The A-share-only sources are not directly applicable to Deriv synthetic indices; do not import T+1, price-limit, hot-money or A-share vendor assumptions into synthetic research.
+
+Detailed contract: `docs/integrations/TRADINGAGENTS_RESEARCH_FEDERATION.md`. Machine-readable pins and license restrictions: `config/external_repo_federation.json`.
