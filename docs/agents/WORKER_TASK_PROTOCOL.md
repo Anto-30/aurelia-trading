@@ -15,7 +15,7 @@ The command must launch a dedicated adapter that implements this JSONL protocol.
 
 The subprocess runs with the same operating-system user and filesystem permissions as AURELIA; this protocol is not a sandbox. Only configure trusted adapters. Production deployment must additionally isolate adapters with OS/container controls and restrict their writable/readable paths to the minimum required evidence and working directories.
 
-The supervisor filters inherited environment variables containing common credential, token, secret, broker, account and cloud-provider markers. Do not put credentials in command-line arguments. An adapter that needs an external model API must authenticate independently using its own approved secret store. It must not receive broker credentials. A local process handshake does not establish provider identity or provider account authentication.
+The supervisor does not pass through the parent environment wholesale. It copies only an explicit runtime allowlist (process search path, OS startup variables, locale/time/terminal settings, temporary-directory settings, Python encoding settings and CA-bundle settings), then sets a worker-private HOME, temporary paths and the protocol/evidence variables. All other inherited variables are dropped, including provider and broker credentials. Do not put credentials in command-line arguments. An adapter that needs an external model API must authenticate independently through an approved secret store that is not exposed to the AURELIA process environment. It must not receive broker credentials. A local process handshake does not establish provider identity or provider account authentication.
 
 ## Handshake
 
