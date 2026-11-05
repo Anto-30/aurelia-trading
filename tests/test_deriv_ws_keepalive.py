@@ -109,6 +109,22 @@ class DerivWebSocketKeepaliveTests(unittest.IsolatedAsyncioTestCase):
                 await iterator.aclose()
                 await transport.close()
 
+    async def test_close_closes_the_underlying_websocket(self) -> None:
+        websocket = FakeWebSocket()
+
+        async def fake_connect(*args, **kwargs):
+            return websocket
+
+        with patch("runtime.adapters.deriv_ws.connect", new=AsyncMock(side_effect=fake_connect)):
+            transport = DerivWebSocketTransport(
+                "wss://api.derivws.com/trading/v1/options/ws/public",
+                application_ping_interval=0.01,
+            )
+            await transport.connect()
+            await transport.close()
+
+        self.assertTrue(websocket.closed)
+
     async def test_reader_failure_exposes_sanitized_transport_diagnostics(self) -> None:
         class BrokenWebSocket(FakeWebSocket):
             async def recv(self) -> str:
