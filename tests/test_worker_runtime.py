@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import tempfile
 import unittest
 
@@ -73,8 +74,17 @@ class SupervisedWorkerTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(seen, [task.task_id])
             rows = federation._load_tasks()
             self.assertEqual(rows[0]["status"], "COMPLETED")
-            self.assertEqual(rows[0]["evidence_ref"], "worker-result.json")
+            expected_hash = hashlib.sha256(b"evidence").hexdigest()
+            self.assertEqual(
+                rows[0]["evidence_ref"],
+                f"agent-tasks/{expected_hash}.artifact",
+            )
+            self.assertEqual(rows[0]["submitted_evidence_ref"], "worker-result.json")
             self.assertEqual(rows[0]["completed_by_worker_id"], "claude-real-worker-test")
+            self.assertEqual(
+                (evidence_root / rows[0]["evidence_ref"]).read_bytes(),
+                b"evidence",
+            )
             self.assertEqual(rows[0]["result"], {"artifact_type": "application/json"})
             self.assertNotIn("access_token", str(rows[0]))
             acknowledgements = [
