@@ -415,11 +415,6 @@ class PersistentAgentFederation:
         submitted_evidence_ref = evidence_ref
         evidence_sha256: str | None = None
         evidence_size_bytes: int | None = None
-        if status == "COMPLETED":
-            snapshot = self.performance_evaluator.snapshot_evidence(evidence_ref)
-            if snapshot is None:
-                raise ValueError("COMPLETED_TASK_REQUIRES_VERIFIABLE_EVIDENCE")
-            evidence_ref, evidence_sha256, evidence_size_bytes = snapshot
         async with self._lock:
             tasks = self._load_tasks()
             selected = next((x for x in tasks if x.get("task_id") == task_id), None)
@@ -431,6 +426,11 @@ class PersistentAgentFederation:
             ):
                 return False
             completed_by_worker_id = selected.get("claim_worker_id")
+            if status == "COMPLETED":
+                snapshot = self.performance_evaluator.snapshot_evidence(evidence_ref)
+                if snapshot is None:
+                    raise ValueError("COMPLETED_TASK_REQUIRES_VERIFIABLE_EVIDENCE")
+                evidence_ref, evidence_sha256, evidence_size_bytes = snapshot
             selected["status"] = status
             if evidence_ref:
                 selected["evidence_ref"] = evidence_ref
