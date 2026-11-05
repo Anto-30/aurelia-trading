@@ -88,7 +88,15 @@ class AgentWorkerSupervisor:
     @classmethod
     def _command(cls, agent: str) -> list[str] | None:
         raw = os.getenv(cls._env_name(agent), "").strip()
-        return shlex.split(raw) if raw else None
+        if not raw:
+            return None
+        try:
+            command = shlex.split(raw)
+        except ValueError:
+            raise WorkerProtocolError("WORKER_COMMAND_SYNTAX_INVALID") from None
+        if not command:
+            raise WorkerProtocolError("WORKER_COMMAND_EMPTY")
+        return command
 
     @staticmethod
     def _contains_field(value: Any, blocked: set[str]) -> bool:
@@ -203,6 +211,7 @@ class AgentWorkerSupervisor:
             raise WorkerProtocolError("WORKER_RESPONSE_EOF")
         if len(line) > max_bytes:
             raise WorkerProtocolError("WORKER_RESPONSE_FRAME_TOO_LARGE")
+
         def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
             value: dict[str, Any] = {}
             for key, item in pairs:
@@ -285,7 +294,11 @@ class AgentWorkerSupervisor:
             raise WorkerProtocolError("WORKER_TASK_CORRELATION_MISMATCH")
 
         status = response.get("status")
-        if status not in {"COMPLETED", "FAILED", "BLOCKED"}:
+        if not isinstance(status, str) or status not in {
+            "COMPLETED",
+            "FAILED",
+            "BLOCKED",
+        }:
             raise WorkerProtocolError("WORKER_TASK_STATUS_INVALID")
 
         evidence_ref = response.get("evidence_ref", "")
@@ -384,7 +397,6 @@ class AgentWorkerSupervisor:
         )
 
     async def _worker(self, spec: AgentWorkerSpec) -> None:
-        command = self._command(spec.agent)
         restart_delay = max(1.0, self.interval_seconds)
         restart_count = 0
         while self._running:
@@ -393,6 +405,7 @@ class AgentWorkerSupervisor:
             session_nonce = secrets.token_urlsafe(24)
             claimed_task_id: str | None = None
             try:
+                command = self._command(spec.agent)
                 if not command:
                     await self.federation.publish(
                         sender="AURELIA",
@@ -579,11 +592,17 @@ class AgentWorkerSupervisor:
                     )
                 if process is not None:
                     if process.returncode is None:
-                        process.terminate()
+                        try:
+                            process.terminate()
+                        except ProcessLookupError:
+                            pass
                         try:
                             await asyncio.wait_for(process.wait(), timeout=5)
                         except asyncio.TimeoutError:
-                            process.kill()
+                            try:
+                                process.kill()
+                            except ProcessLookupError:
+                                pass
                             await process.wait()
                     await self.federation.revoke_lease(
                         spec.agent, worker_id=worker_id
