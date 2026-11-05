@@ -38,13 +38,19 @@ for line in sys.stdin:
         result["evidence_ref"] = {
             "traversal": "../outside.json",
             "missing_evidence": "",
+            "symlink": "symlink-evidence.json",
         }.get(os.getenv("TEST_EVIDENCE_MODE", ""), "worker-evidence.json")
         result["result"] = {"summary": "fixture completed", "artifact_type": "test/evidence"}
         if os.getenv("TEST_BAD_TASK") == "1":
             result["task_id"] = "task:wrong"
         if os.getenv("TEST_BAD_CORRELATION") == "1":
             result["correlation_id"] = "wrong-correlation"
-        print(json.dumps(result), flush=True)
+        if os.getenv("TEST_AUTHORITY_FIELD") == "1":
+            result["capital_authority"] = False
+        if os.getenv("TEST_OVERSIZED_RESPONSE") == "1":
+            print("x" * 70000, flush=True)
+        else:
+            print(json.dumps(result), flush=True)
 """,
         encoding="utf-8",
     )
@@ -69,6 +75,21 @@ async def _wait_for_status(
         row = next(x for x in federation._load_tasks() if x["task_id"] == task_id)
         if row["status"] == status:
             return True
+        await asyncio.sleep(0.02)
+    return False
+
+
+async def _wait_for_requeue(
+    federation: PersistentAgentFederation, task_id: str
+) -> bool:
+    for _ in range(100):
+        for event in federation.journal.read_all():
+            if (
+                event.get("event_type") == "AGENT_TASK_REQUEUED"
+                and event.get("payload", {}).get("task_id") == task_id
+            ):
+                row = next(x for x in federation._load_tasks() if x["task_id"] == task_id)
+                return row["status"] == "PENDING"
         await asyncio.sleep(0.02)
     return False
 
@@ -165,13 +186,15 @@ async def test_worker_handshake_mismatch_never_creates_worker_lease_or_claims_ta
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("mode", ["traversal", "missing_evidence"])
+@pytest.mark.parametrize("mode", ["traversal", "missing_evidence", "symlink"])
 async def test_worker_cannot_complete_task_without_evidence_inside_evidence_root(
     tmp_path, monkeypatch, mode
 ):
     evidence_root = tmp_path / "evidence"
     evidence_root.mkdir()
     (tmp_path / "outside.json").write_text("outside", encoding="utf-8")
+    if mode == "symlink":
+        (evidence_root / "symlink-evidence.json").symlink_to(tmp_path / "outside.json")
     monkeypatch.setenv("AURELIA_EVIDENCE_ROOT", str(evidence_root))
     monkeypatch.setenv("TEST_EVIDENCE_MODE", mode)
     monkeypatch.setenv(
@@ -193,16 +216,19 @@ async def test_worker_cannot_complete_task_without_evidence_inside_evidence_root
     )
     supervisor.start()
     try:
-        await asyncio.sleep(0.2)
+        assert await _wait_for_requeue(federation, task.task_id)
         stored = next(x for x in federation._load_tasks() if x["task_id"] == task.task_id)
-        assert stored["status"] != "COMPLETED"
+        assert stored["status"] == "PENDING"
         assert stored.get("evidence_ref") is None
     finally:
         await supervisor.stop()
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("bad_field", ["TEST_BAD_TASK", "TEST_BAD_CORRELATION"])
+@pytest.mark.parametrize(
+    "bad_field",
+    ["TEST_BAD_TASK", "TEST_BAD_CORRELATION", "TEST_AUTHORITY_FIELD", "TEST_OVERSIZED_RESPONSE"],
+)
 async def test_worker_cannot_complete_an_unmatched_task(
     tmp_path, monkeypatch, bad_field
 ):
@@ -228,9 +254,9 @@ async def test_worker_cannot_complete_an_unmatched_task(
     )
     supervisor.start()
     try:
-        await asyncio.sleep(0.2)
+        assert await _wait_for_requeue(federation, task.task_id)
         stored = next(x for x in federation._load_tasks() if x["task_id"] == task.task_id)
-        assert stored["status"] != "COMPLETED"
+        assert stored["status"] == "PENDING"
         assert stored.get("evidence_ref") is None
     finally:
         await supervisor.stop()
@@ -254,3 +280,35 @@ async def test_complete_task_rejects_missing_evidence(tmp_path, monkeypatch):
         await federation.complete_task(
             task.task_id, agent="ClaudeCode", status="COMPLETED"
         )
+
+
+@pytest.mark.asyncio
+async def test_worker_input_with_nested_access_token_is_blocked_before_dispatch(
+    tmp_path, monkeypatch
+):
+    evidence_root = tmp_path / "evidence"
+    monkeypatch.setenv("AURELIA_EVIDENCE_ROOT", str(evidence_root))
+    monkeypatch.setenv(
+        "AURELIA_AGENT_CLAUDECODE_COMMAND", _protocol_worker_command(tmp_path)
+    )
+    federation = _federation(tmp_path)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING_REVIEW",
+        payload={"request": {"access_token": "must-not-be-dispatched"}},
+        correlation_id="worker-sensitive-input",
+        assigned_agent="ClaudeCode",
+    )
+    supervisor = AgentWorkerSupervisor(
+        federation,
+        agents=("ClaudeCode",),
+        interval_seconds=0.05,
+        handshake_timeout_seconds=1,
+        response_timeout_seconds=1,
+    )
+    supervisor.start()
+    try:
+        assert await _wait_for_status(federation, task.task_id, "BLOCKED")
+        stored = next(x for x in federation._load_tasks() if x["task_id"] == task.task_id)
+        assert stored["result"]["reason"] == "WORKER_INPUT_CONTAINS_SENSITIVE_FIELD"
+    finally:
+        await supervisor.stop()
