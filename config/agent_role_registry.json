@@ -1,0 +1,95 @@
+{
+  "schema": "aurelia.agent_role_registry.v1",
+  "generated_date": "2026-10-20",
+  "purpose": "Govern advisory agent roles independently of runtime implementation and capital authority.",
+  "global_invariants": {
+    "capital_authority": false,
+    "live_order_authority": false,
+    "production_deployment_authority": false,
+    "secret_reading": false,
+    "secret_logging": false,
+    "live_lock_mutation": false,
+    "broker_transaction_write": false,
+    "external_code_execution": "DENY_BY_DEFAULT",
+    "deterministic_risk_and_release_gates_are_authoritative": true
+  },
+  "agents": [
+    {
+      "agent_id": "DeepSeekHarness",
+      "display_name": "DeepSeek Harness — Quantitative Validation Agent",
+      "status": "REGISTERED_SHADOW_ONLY",
+      "runtime_binding_status": "NOT_CONNECTED",
+      "primary_function": "Independently challenge quantitative hypotheses and review research/code evidence for correctness, leakage, data quality, and reproducibility.",
+      "responsibilities": [
+        "Review strategy hypotheses and identify falsifiable assumptions.",
+        "Audit backtest and walk-forward code for lookahead bias, leakage, survivorship bias, fold contamination, and incorrect metric aggregation.",
+        "Challenge probability calibration, sample-size sufficiency, cost assumptions, payout/contract mechanics, and net expectancy calculations.",
+        "Propose focused unit tests, boundary cases, adversarial tests, and reproducibility checks.",
+        "Review code diffs for correctness, complexity, failure handling, and test coverage.",
+        "Return a concise evidence-linked assessment with defects, severity, confidence, and required validation."
+      ],
+      "inputs_allowed": [
+        "non-secret source diffs and test output",
+        "synthetic or approved historical research datasets",
+        "strategy specifications and documented contract economics",
+        "CI logs with secrets redacted",
+        "research reports and immutable artifact hashes"
+      ],
+      "output_contract": {
+        "required_fields": [
+          "task_id",
+          "source_refs",
+          "evidence_refs",
+          "findings",
+          "severity",
+          "confidence",
+          "assumptions",
+          "tests_recommended",
+          "disposition"
+        ],
+        "disposition_enum": [
+          "PASS_FOR_NEXT_REVIEW",
+          "REVISE",
+          "REJECT",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "unsupported_claims": "Must be explicitly marked; no performance claim without reproducible evidence."
+      },
+      "escalation_rules": [
+        "Any missing/stale/ambiguous broker or cost evidence => INSUFFICIENT_EVIDENCE.",
+        "Any lookahead/leakage or unverifiable source data => REJECT pending correction.",
+        "Any attempt to alter capital controls, secrets, LIVE_LOCK, or execution authorization => reject and escalate.",
+        "Agent recommendations never change strategy qualification, risk limits, or execution state."
+      ],
+      "allowed_tools": [
+        "read-only repository inspection",
+        "isolated research/test environment",
+        "non-secret evidence review"
+      ],
+      "prohibited_tools": [
+        "broker order/proposal/buy/sell APIs",
+        "production secrets",
+        "live deployment",
+        "LIVE_LOCK mutation",
+        "capital-plane authorization",
+        "unreviewed dependency installation into runtime"
+      ],
+      "handoff_chain": [
+        "DeepSeekHarness",
+        "ClaudeCode or Engineering",
+        "independent QA/Security review",
+        "deterministic CI and evidence gates",
+        "human merge approval"
+      ],
+      "source": {
+        "repo": "0xsline/awesome-deepseek-harness",
+        "url": "https://github.com/0xsline/awesome-deepseek-harness",
+        "pinned_commit": "cd4faf97da814f06fab4a5e307e5ba0f62c638af",
+        "source_type": "community catalogue/reference",
+        "runtime_install": "NOT_PERFORMED",
+        "security_review": "PENDING"
+      },
+      "activation_note": "Role is recorded in governance config only. No DSH runtime, model provider, plugin, or external execution environment was installed or connected by this change."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.intelligence_source_routing.v1",
-  "generated_date": "2026-10-07",
+  "generated_date": "2026-10-20",
   "purpose": "Route external intelligence and engineering services to bounded AURELIA agents without granting capital authority.",
   "invariants": {
     "capital_authority": false,
@@ -234,6 +234,26 @@
       ],
       "authority": "research_only",
       "policy": "non-Deriv execution code is reference material; no direct adapter reuse or order authority"
+    },
+    {
+      "source": "DeepSeek Harness (DSH) — curated ecosystem catalogue",
+      "agent_roles": [
+        "DeepSeekHarness",
+        "Quant Research",
+        "Quantitative Validation",
+        "Engineering",
+        "QA"
+      ],
+      "uses": [
+        "independent quantitative reasoning",
+        "code and test review",
+        "strategy hypothesis falsification",
+        "data-quality and lookahead review",
+        "harness/plugin discovery",
+        "reproducible experiment design"
+      ],
+      "authority": "sandbox_and_research_only",
+      "policy": "advisory agent only; outputs require deterministic tests and independent review; no secret access, capital authority, broker calls, LIVE_LOCK mutation, release approval, or production code execution; catalogue plugins must be reviewed and pinned separately"
     }
   ],
   "agent_contract": "Every routed source produces typed evidence tagged source, timestamp, provenance, confidence, and authority class. Deterministic Risk Warden, Execution Firewall, Balance Truth, LIVE_LOCK, reconciliation, and release gates remain final."

@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-10-23",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -1539,7 +1539,19 @@
         "arbitrage-opportunity-scanning",
         "market-pair-enumeration"
       ],
-      "integration_note": "Legacy reference only; public README states the active trading-bot code is private. Do not treat this repository as production execution code."
+      "integration_note": "Legacy reference only; public README states the active trading-bot code is private. Do not treat this repository as production execution code.",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "security_review_status": "PENDING",
+      "runtime_install": "NOT_CLAIMED",
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     },
     {
       "repo": "Eigenwise/atomic-agents",
@@ -6321,6 +6333,1536 @@
         "developer-experience-reference"
       ],
       "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "0xsline/awesome-deepseek-harness",
+      "category": "deepseek-harness-ecosystem-catalogue",
+      "domain": "agent-intelligence",
+      "mode": "REFERENCE_ONLY",
+      "assigned_agents": [
+        "DeepSeekHarness",
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "source_url": "https://github.com/0xsline/awesome-deepseek-harness",
+      "head_commit": "cd4faf97da814f06fab4a5e307e5ba0f62c638af",
+      "pin_source": "github_api_commit_checked_2026-10-20",
+      "capital_authority": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "capabilities": [
+        "deepseek-harness-plugin-catalogue",
+        "tooling-discovery",
+        "agent-workflow-reference"
+      ],
+      "integration_note": "Catalogue/reference only. This is not the DeepSeek Harness runtime and does not activate an agent by itself. Review each plugin individually, pin exact versions, and test in an isolated sandbox before use.",
+      "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "mvschwarz/openrig",
+      "category": "multi-agent-harness",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/mvschwarz/openrig",
+      "head_commit": "48ea010b4c899af35114da0db0d2c9f437b54dbb",
+      "pin_source": "github_default_branch_HEAD_checked_2026-10-23",
+      "license": "Apache-2.0",
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "notes": "Harness can write trust records, hooks, skills/plugins and workspace files. Audit permission model and hooks in a disposable least-privilege sandbox before any use."
+    },
+    {
+      "repo": "1jehuang/jcode",
+      "category": "coding-agent-harness",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/1jehuang/jcode",
+      "head_commit": "7d342c133df9f8dfea05445bb91a5013c3639367",
+      "pin_source": "github_default_branch_HEAD_checked_2026-10-23",
+      "license": "MIT",
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "notes": "Rust coding-agent harness; inspect dependencies, shell/process permissions and filesystem boundaries. Do not run remote shell-pipe installer in a trusted environment; promote beyond reference only after isolated smoke tests and review."
+    },
+    {
+      "repo": "jgravelle/jcodemunch-mcp",
+      "category": "code-indexing-mcp",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/jgravelle/jcodemunch-mcp",
+      "head_commit": "d56f459210cc0ef0c6ee8ec60b45112466a3f7b5",
+      "pin_source": "github_default_branch_HEAD_checked_2026-10-23",
+      "license": "jCodeMunch-MCP Dual-Use License v1.2 (effective 2026-10-21; commercial-use terms require legal review)",
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "notes": "Keep reference-only until license compatibility and commercial-use permission are confirmed. Review path traversal, symlink handling, ignore rules, secret exclusion and MCP data exposure."
+    },
+    {
+      "repo": "trycua/hermes-cua-spaces",
+      "category": "computer-use-agent-sandbox",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/trycua/hermes-cua-spaces",
+      "head_commit": "82bb8d31517d2d1b8f1ef7f64701558dcac8aea9",
+      "pin_source": "github_default_branch_HEAD_checked_2026-10-23",
+      "license": "MIT",
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "notes": "Runs terminal/file/code operations in CUA Spaces and documents skipping risky-command prompts in created Spaces. Isolate from AURELIA runtime, broker sessions, production credentials, home mounts and capital-plane files."
+    },
+    {
+      "repo": "vinta/awesome-python",
+      "category": "python-resource-catalogue",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/vinta/awesome-python",
+      "head_commit": "8c385dcab9b1a7b6029a6ecb7c5b1f52597fd418",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "master",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Curated discovery catalogue only; audit individual packages separately."
+    },
+    {
+      "repo": "jobbole/awesome-python-cn",
+      "category": "python-resource-catalogue-cn",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/jobbole/awesome-python-cn",
+      "head_commit": "e718fecd821fb94d696713da1259a86f18b400af",
+      "pin_source": "GitHub recent commit search result observed 2021-11-24T09:20:31Z; default branch HEAD not independently verified",
+      "default_branch": "master",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "Chinese-language catalogue; links are not vetted or approved dependencies."
+    },
+    {
+      "repo": "mahmoud/awesome-python-applications",
+      "category": "python-application-examples",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/mahmoud/awesome-python-applications",
+      "head_commit": "ee6ff705d902d4b59f3203c44015ec8e7c759c8a",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "master",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Application examples only; review licenses and dependency provenance per project."
+    },
+    {
+      "repo": "Shubhamsaboo/awesome-llm-apps",
+      "category": "llm-agent-example-catalogue",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Shubhamsaboo/awesome-llm-apps",
+      "head_commit": "6c16b23f1bacd0fdf240bb5141ef45e59e82c306",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Large catalogue of agent/RAG apps; no automatic skill or code installation."
+    },
+    {
+      "repo": "521xueweihan/HelloGitHub",
+      "category": "developer-project-discovery",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/521xueweihan/HelloGitHub",
+      "head_commit": "030121514da552ed91e640ef8bde4083c753dd52",
+      "pin_source": "GitHub recent commit search result observed 2026-09-28T00:05:31Z; default branch HEAD not independently verified",
+      "default_branch": "master",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "Project discovery list; each external project requires its own review."
+    },
+    {
+      "repo": "lukasmasuch/best-of-ml-python",
+      "category": "ml-python-resource-catalogue",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/lukasmasuch/best-of-ml-python",
+      "head_commit": "47f29706164810be3fe3c3e50f5216fe8e95d2dc",
+      "pin_source": "GitHub recent commit search result observed 2026-03-22T08:44:47Z; default branch HEAD not independently verified",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "ML project ranking/catalogue; do not infer package security or production fitness."
+    },
+    {
+      "repo": "DjangoEx/awesome-python-resources",
+      "category": "python-resource-catalogue",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/DjangoEx/awesome-python-resources",
+      "head_commit": "fbe8a7d2fb1f685366aa07266ca3dceec4e694e3",
+      "pin_source": "GitHub recent commit search result observed 2026-10-16T12:40:39Z; default branch HEAD not independently verified",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "Resource list only; links and packages require independent review."
+    },
+    {
+      "repo": "uhub/awesome-python",
+      "category": "python-resource-catalogue",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/uhub/awesome-python",
+      "head_commit": "30ddec3b30bb9dedb1f9284f468313e4ea597595",
+      "pin_source": "GitHub recent commit search result observed 2026-09-26T12:27:35Z; default branch HEAD not independently verified",
+      "default_branch": "master",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "Resource list only; links and packages require independent review."
+    },
+    {
+      "repo": "duckdb/duckdb",
+      "category": "analytical-database-core",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/duckdb/duckdb",
+      "head_commit": "1641475ef1db08ec063631ff6a8f08d9d6736ae7",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Official DuckDB core; evaluate separately for research analytics, query isolation, data provenance and resource limits; no production migration authorized."
+    },
+    {
+      "repo": "gessen/majutsu-delta",
+      "category": "git-diff-tool",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/gessen/majutsu-delta",
+      "head_commit": "699e6275d3be8215bece29431c449443c71888c4",
+      "pin_source": "GitHub recent commit search result observed 2026-08-12T19:01:11Z; default branch HEAD not independently verified",
+      "default_branch": "master",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "Exact immutable commit recorded; repository content and license still require verification; remain reference-only."
+    },
+    {
+      "repo": "duckdb/duckdb-web",
+      "category": "duckdb-documentation-site",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/duckdb/duckdb-web",
+      "head_commit": "5d13ec7734088f793b3547f852a8eb0878fa4ceb",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Documentation website only; not an engine dependency."
+    },
+    {
+      "repo": "duckdb/duckdb-ui",
+      "category": "database-ui-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/duckdb/duckdb-ui",
+      "head_commit": "b4f0b9bb123f8c61f739ba72eb5511236082c1e7",
+      "pin_source": "GitHub recent commit search result observed 2026-10-21T18:51:19Z; default branch HEAD not independently verified",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "UI component requires separate source, auth, and data-exposure review."
+    },
+    {
+      "repo": "duckdb/duckdb-httpfs",
+      "category": "duckdb-httpfs-extension",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/duckdb/duckdb-httpfs",
+      "head_commit": "77392a72077a85897db2519fae11e2c0da972b8a",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Remote file access extension: evaluate SSRF, egress allowlists, credential forwarding and URL handling before use."
+    },
+    {
+      "repo": "duckdb/duckdb-java",
+      "category": "duckdb-java-client",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/duckdb/duckdb-java",
+      "head_commit": "679d526542cf9dfb24322d9d9c75641624f24bc1",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Java client bindings; review artifact integrity and version compatibility."
+    },
+    {
+      "repo": "duckdb/duckdb-rs",
+      "category": "duckdb-rust-client",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/duckdb/duckdb-rs",
+      "head_commit": "4acbea84794582c4cd962ee971a3d7a5dcb72e39",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Rust client bindings; review build scripts, native dependency chain and version compatibility."
+    },
+    {
+      "repo": "duckdb/duckdb-python",
+      "category": "duckdb-python-client",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/duckdb/duckdb-python",
+      "head_commit": "4154efc6aa9114a04ee705e2182e044e13381fff",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Python client; review native wheels, build chain, ABI and version compatibility."
+    },
+    {
+      "repo": "duckdb/dbt-duckdb",
+      "category": "dbt-duckdb-adapter",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/duckdb/dbt-duckdb",
+      "head_commit": "a993eaee5674de1acc2226279739842012f929e3",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "master",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "dbt adapter; requires dependency, SQL semantics and reproducibility tests."
+    },
+    {
+      "repo": "duckdb/duckdb-postgres",
+      "category": "duckdb-postgres-integration",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/duckdb/duckdb-postgres",
+      "head_commit": "487235919b12b66cc6fdbf2ec1511273aac168d0",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Postgres integration; review extension privileges, transaction semantics and isolation before any use."
+    },
+    {
+      "repo": "duckdb/pg_duckdb",
+      "category": "postgres-duckdb-extension",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/duckdb/pg_duckdb",
+      "head_commit": "ee38d3b540ecea1d93683ba99bdcec5632a21eaf",
+      "pin_source": "GitHub recent commit search result observed 2026-07-17T12:03:00Z; default branch HEAD not independently verified",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "Postgres extension; high impact on database trust boundary; requires isolated build and permission review."
+    },
+    {
+      "repo": "duckdb/duckdb-wasm",
+      "category": "duckdb-wasm-client",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/duckdb/duckdb-wasm",
+      "head_commit": "1f85a503e0c25f0c0980f205915de328c923f476",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "WASM runtime; review browser permissions, extension loading and resource caps."
+    },
+    {
+      "repo": "davidgasquez/awesome-duckdb",
+      "category": "duckdb-resource-catalogue",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/davidgasquez/awesome-duckdb",
+      "head_commit": "2fe7c07d3e6f1fdb02f3bba703f0d5f5037f93b0",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Community resource list only; independently review each linked extension or package."
+    },
+    {
+      "repo": "rustyorg/rustygit",
+      "category": "git-rust-tooling",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/rustyorg/rustygit",
+      "head_commit": "0d6063b2fc889be6fa44c913ed29758f3c1f9b93",
+      "pin_source": "GitHub recent commit search result observed 2022-06-16T23:48:31Z; default branch HEAD not independently verified",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "Exact immutable commit recorded; default-branch HEAD, license and source audit remain pending; do not build/run yet."
+    },
+    {
+      "repo": "dandavison/magit-delta",
+      "category": "git-diff-tool",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/dandavison/magit-delta",
+      "head_commit": "5fc7dbddcfacfe46d3fd876172ad02a9ab6ac616",
+      "pin_source": "GitHub recent commit search result observed 2022-01-25T00:50:31Z; default branch HEAD not independently verified",
+      "default_branch": "master",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "Exact immutable commit recorded; default-branch HEAD, license and source audit remain pending; do not build/run yet."
+    },
+    {
+      "repo": "dandavison/dandavison.github.io",
+      "category": "developer-documentation-reference",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/dandavison/dandavison.github.io",
+      "head_commit": "f52759b795ae15996b990e14c6349f6a30c733f3",
+      "pin_source": "GitHub recent commit search result observed 2026-07-15T14:17:59Z; default branch HEAD not independently verified",
+      "default_branch": "master",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "notes": "Personal website/reference content only; no runtime dependency."
+    },
+    {
+      "repo": "openai/php2shell-checker",
+      "category": "security-version-checker",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/openai/php2shell-checker",
+      "head_commit": "ffcd3fc82e5b404f2a04a95b2805ca7639d530fa",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Non-exploit version checker; URL mode sends HEAD and sometimes GET. Do not scan third-party systems without authorization; advertised headers do not prove patch status."
+    },
+    {
+      "repo": "9bie/php2shell-bypass-aslr-exp",
+      "category": "php2shell-rce-exploit-research",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/9bie/php2shell-bypass-aslr-exp",
+      "head_commit": "80eae705288de858d73f075795dc7e1b0fdb7479",
+      "pin_source": "github_recent_commit_checked_2026-10-23",
+      "default_branch": "main",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "live_lock_mutation": false,
+      "secret_reading": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "commit_pin_status": "COMMIT_OBSERVED_REQUIRES_VERIFY_AS_DEFAULT_BRANCH_HEAD",
+      "notes": "Exploit project explicitly documents remote code execution. Never execute, deploy, connect to targets, or include in runtime/CI; retain metadata for defensive threat intelligence only."
+    },
+    {
+      "repo": "cloudflare/cloudflare-os",
+      "category": "cloudflare-app-reference",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/cloudflare/cloudflare-os",
+      "head_commit": "03cf8766ecebd6e6b59b7bdd1902eeefc45643eb",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "application-reference",
+        "workflow-ideas"
+      ],
+      "integration_note": "Untrusted application source; sandbox only until purpose, dependencies, permissions and deployment model are reviewed.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "caddy-dns/cloudflare",
+      "category": "dns-provider-module",
+      "domain": "infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/caddy-dns/cloudflare",
+      "head_commit": "a8737d095ad5a48ca031cea6ab704057dbc2d250",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "caddy-dns-provider",
+        "acme-dns-challenge"
+      ],
+      "integration_note": "DNS-write capable when configured; no production DNS tokens, no certificate/DNS mutations in AURELIA. Review least-privilege token scope and dependency chain.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "zhuima/awesome-cloudflare",
+      "category": "cloudflare-resource-catalog",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/zhuima/awesome-cloudflare",
+      "head_commit": "4d90410f80178f4c41655c1252a7d5b653e8e8bd",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "resource-discovery"
+      ],
+      "integration_note": "Curated list only; every linked project needs separate license, provenance and security review.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "MarSeventh/CloudFlare-ImgBed",
+      "category": "cloudflare-image-hosting-app",
+      "domain": "application",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/MarSeventh/CloudFlare-ImgBed",
+      "head_commit": "fbd4785d1a577c85da824eef232b36b11a2180eb",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "image-upload",
+        "object-storage-integration"
+      ],
+      "integration_note": "Untrusted upload/storage app; review auth, upload validation, public bucket exposure, XSS, secrets and billing before any deployment.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "cloudflare/cloudflared",
+      "category": "cloudflare-tunnel-client",
+      "domain": "infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/cloudflare/cloudflared",
+      "head_commit": "8cc81c7fcc524a2b1ebec51506685180652ea25d",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "tunnel-client",
+        "connectivity"
+      ],
+      "integration_note": "Potential network ingress/egress and remote access path; do not create tunnels or expose AURELIA services. Verify metrics/debug endpoints and egress policy.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "dreamhunter2333/cloudflare_temp_email",
+      "category": "temporary-email-platform",
+      "domain": "application",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/dreamhunter2333/cloudflare_temp_email",
+      "head_commit": "8bdd353efcdd65559fb5c0ea6f036a69541595d5",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "temporary-mailbox",
+        "email-processing",
+        "cloudflare-workers"
+      ],
+      "integration_note": "Handles sensitive inbound mail and attachments; test auth/tenant isolation, XSS, SMTP/IMAP exposure, retention, abuse controls and secrets in isolated sandbox only.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "yonggekkk/Cloudflare-vless-trojan",
+      "category": "proxy-tunnel-config-reference",
+      "domain": "networking",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/yonggekkk/Cloudflare-vless-trojan",
+      "head_commit": "4a61f9c4e2b96b0ee05519570cf92ff29a6d1b22",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "proxy-configuration-reference"
+      ],
+      "integration_note": "Reference only. Do not deploy or wire proxy/tunnel configuration into production agents or AURELIA.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "cloudflare/cloudflare-docs",
+      "category": "official-documentation",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/cloudflare/cloudflare-docs",
+      "head_commit": "06eb1cd432068d63617dbaa973682e1ccda46dbc",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "documentation-reference"
+      ],
+      "integration_note": "Documentation source only; use for human-reviewed guidance, not as executable code or authority.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "XIU2/CloudflareSpeedTest",
+      "category": "network-performance-test-tool",
+      "domain": "networking",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/XIU2/CloudflareSpeedTest",
+      "head_commit": "50b42c7f95cfb06413740ce6e1967578ebe63380",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "latency-testing",
+        "network-throughput-testing"
+      ],
+      "integration_note": "Network probes only against authorized endpoints and from isolated environment; do not use results to modify AURELIA routing or broker connectivity.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "sarperavci/CloudflareBypassForScraping",
+      "category": "anti-bot-circumvention-reference",
+      "domain": "security-research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/sarperavci/CloudflareBypassForScraping",
+      "head_commit": "97e4d9777c7d12f9449b9581383858ec06fcbaee",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "anti-bot-research-reference"
+      ],
+      "integration_note": "Do not execute for bypassing access controls or scraping protected targets; use only for authorized defensive research and policy review.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "gslege/CloudflareIP",
+      "category": "network-indicator-list",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/gslege/CloudflareIP",
+      "head_commit": "597aea7ae4dfd4e971846a7664b1884f164f3355",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "ip-list-reference"
+      ],
+      "integration_note": "Auto-updated network lists are untrusted indicators; validate provenance, integrity and freshness before any firewall use. Never apply automatically.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "cloudflare/cloudflare-go",
+      "category": "cloudflare-api-sdk",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/cloudflare/cloudflare-go",
+      "head_commit": "91580cb481bde15bf5738770243f6b7f5908c8a9",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "cloudflare-api-client"
+      ],
+      "integration_note": "SDK can perform privileged account operations depending on token; least-privilege scoped test credentials only, no production secrets or writes.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "maillab/cloud-mail",
+      "category": "cloudflare-email-service",
+      "domain": "application",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/maillab/cloud-mail",
+      "head_commit": "c0009ddae326197e22c44986b6537ca7d97e803a",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "email-service",
+        "role-based-access-control",
+        "object-storage"
+      ],
+      "integration_note": "Email and attachment storage service; review RBAC, tenant isolation, outbound mail abuse, attachment access, and secret handling before deployment.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "timothymiller/cloudflare-ddns",
+      "category": "dynamic-dns-client",
+      "domain": "infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/timothymiller/cloudflare-ddns",
+      "head_commit": "545f49d016fdd21f9d5e63f29b5756ed40c4ea24",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "dynamic-dns",
+        "ip-detection",
+        "dns-record-updates"
+      ],
+      "integration_note": "Can mutate DNS records; dry-run only for initial review, no production API token, no record cleanup, no live DNS writes.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "cloudflare/mcp-server-cloudflare",
+      "category": "cloudflare-mcp-server",
+      "domain": "agent-integration",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/cloudflare/mcp-server-cloudflare",
+      "head_commit": "a21972e219289337731a066befb5c66886b9ce7b",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "cloudflare-api-tools",
+        "mcp-integration"
+      ],
+      "integration_note": "High-privilege agent surface: sandbox only; audit tool list, OAuth scopes, prompt-injection/data exfiltration paths and account isolation. No production credentials or write scopes.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "cloudflare/terraform-provider-cloudflare",
+      "category": "terraform-provider",
+      "domain": "infrastructure",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/cloudflare/terraform-provider-cloudflare",
+      "head_commit": "9b51a582458f5c5d46d8547ed2604fcba91fb861",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "infrastructure-as-code",
+        "cloudflare-resource-management"
+      ],
+      "integration_note": "Plan/validate only in isolated workspace; terraform apply and destroy prohibited until independently approved infrastructure change.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "Jazee6/cloudflare-ai-web",
+      "category": "ai-web-application",
+      "domain": "application",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/Jazee6/cloudflare-ai-web",
+      "head_commit": "50d49147225010eff862053604c453d34910bd5b",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "ai-web-app",
+        "cloudflare-deployment"
+      ],
+      "integration_note": "Sandbox only pending auth, API route, model provider, prompt-injection, rate-limit and secret-handling review.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "supermemoryai/cloudflare-saas-stack",
+      "category": "saas-starter",
+      "domain": "application",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/supermemoryai/cloudflare-saas-stack",
+      "head_commit": "600a5b385e30e8a387dce6d0d782b5a6283db872",
+      "pin_source": "github_fetch_commit_verified_2026-10-23; immutable_commit_object_exists; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "saas-scaffold",
+        "cloudflare-stack"
+      ],
+      "integration_note": "Historical revision; verify current maintenance and dependency/security state. Sandbox only; no tenant data, secrets or production deployment.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "Jakeschincariol/day-trader-skill",
+      "category": "day-trading-agent-skill-pack",
+      "domain": "quantitative-research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Jakeschincariol/day-trader-skill",
+      "head_commit": "3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd",
+      "pin_source": "github_recent_commit_search_observed_2026-10-23; exact_immutable_commit_object_verified; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "stock_chart_scanning",
+        "news_monitoring",
+        "entry_exit_planning",
+        "historical_setup_replay",
+        "position_sizing",
+        "risk_checks",
+        "paper_trading_workflow"
+      ],
+      "integration_note": "MIT license is stated in upstream README. Eleven-skill Python toolkit uses unofficial Yahoo Finance bars and includes a broker-ticket workflow with explicit human approvals and paper trading default. Reference-only until source, dependencies, tests, data freshness and broker surfaces are independently audited; never adapt its order flow to bypass AURELIA's deterministic risk/ledger/execution firewall.",
+      "security_review_status": "PENDING",
+      "license_status": "MIT_STATED_UPSTREAM_NOT_INDEPENDENTLY_AUDITED",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "KanishkThakar/day-trader-warroom",
+      "category": "day-trading-warroom-toolkit",
+      "domain": "quantitative-research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/KanishkThakar/day-trader-warroom",
+      "head_commit": "3e46cfaf991694a5be118d3b57bc119f988635f9",
+      "pin_source": "github_recent_commit_search_observed_2026-10-23; exact_immutable_commit_object_verified; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "multi-skill_day-trading_workflow",
+        "setup_replay_simulation",
+        "candidate_ranking",
+        "risk_check_visualization",
+        "warroom_dashboard"
+      ],
+      "integration_note": "Upstream README states MIT and describes a Python-based multi-skill toolkit with a War Room dashboard and 10,000-replay simulations. Treat all outputs as research hypotheses, not validated expectancy. Reference-only; audit dependency tree, replay methodology, data survivorship/lookahead, costs, broker ticket paths and dashboard security before considering isolated tests.",
+      "security_review_status": "PENDING",
+      "license_status": "MIT_STATED_UPSTREAM_NOT_INDEPENDENTLY_AUDITED",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
+    },
+    {
+      "repo": "yoavfael/day-trading-skill",
+      "category": "day-trading-education-skill",
+      "domain": "quantitative-research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/yoavfael/day-trading-skill",
+      "head_commit": "b0623ec77c7accbd6bc96a16627840d7f16dd423",
+      "pin_source": "github_recent_commit_search_observed_2026-10-23; exact_immutable_commit_object_verified; default_branch_head_unverified",
+      "commit_pin_status": "PINNED_IMMUTABLE_REVISION_OBJECT_VERIFIED_HEAD_UNVERIFIED",
+      "capabilities": [
+        "technical_analysis_explanations",
+        "risk_management_education",
+        "position_sizing_guidance",
+        "strategy_concept_audits"
+      ],
+      "integration_note": "OpenClaw skill for educational analysis, risk management concepts and setup explanations. No runtime integration is implied. Review prompt instructions, license and package metadata before any sandbox import; outputs must not supersede AURELIA's deterministic risk engine or qualify strategies.",
+      "security_review_status": "PENDING",
+      "license_status": "PENDING_VERIFICATION",
+      "runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "live_order_submission": false,
+      "broker_transaction_write": false,
+      "live_lock_mutation": false,
+      "production_secret_access": false,
+      "controls": {
+        "capital_authority": false,
+        "live_order_submission": false,
+        "broker_transaction_write": false,
+        "live_lock_mutation": false,
+        "production_secret_access": false,
+        "external_code_execution": "DENY_BY_DEFAULT"
+      }
     }
   ],
   "pin_policy": {
@@ -6329,422 +7871,55 @@
     "automatic_upstream_execution": false
   },
   "last_sync": {
-    "completed_at": "2026-10-11",
-    "source": "User-supplied GitHub repository batch; current default HEAD commit pins queried through GitHub API",
-    "unique_repositories_added_or_refreshed": [
-      "ychampion/melete",
-      "yxq953/MuseLite",
-      "leepokai/Codync",
-      "tjiuce/OpenDots",
-      "Shashankss1205/OpenDots",
-      "docmost/docmost",
-      "Anil-matcha/open-dots",
-      "CopilotKit/OpenDots"
+    "checked_date": "2026-10-23",
+    "external_repo_batch": [
+      "cloudflare/cloudflare-os",
+      "caddy-dns/cloudflare",
+      "zhuima/awesome-cloudflare",
+      "MarSeventh/CloudFlare-ImgBed",
+      "cloudflare/cloudflared",
+      "dreamhunter2333/cloudflare_temp_email",
+      "yonggekkk/Cloudflare-vless-trojan",
+      "cloudflare/cloudflare-docs",
+      "XIU2/CloudflareSpeedTest",
+      "sarperavci/CloudflareBypassForScraping",
+      "gslege/CloudflareIP",
+      "cloudflare/cloudflare-go",
+      "maillab/cloud-mail",
+      "timothymiller/cloudflare-ddns",
+      "cloudflare/mcp-server-cloudflare",
+      "cloudflare/terraform-provider-cloudflare",
+      "Jazee6/cloudflare-ai-web",
+      "supermemoryai/cloudflare-saas-stack",
+      "manu354/cryptocurrency-arbitrage"
     ],
-    "duplicate_input": "none",
-    "physical_grok_jev_install": "NOT_CLAIMED",
-    "canonical_sync_contract": "This file",
-    "assignment_policy": "All canonical AURELIA agent IDs are assigned; the first assignment is the primary specialist selected by repo_agent_routing.json",
-    "assigned_agents": [
-      "ClaudeCode",
-      "GrokBot",
-      "JEV",
-      "AURELIA"
-    ],
-    "oh_my_pstack": {
-      "head_commit": "fc0eabd25f21b194a336b640e75e29c252382866",
-      "targets": [
-        "ClaudeCode",
-        "GrokBot",
-        "JEV",
-        "AURELIA"
+    "status": "REGISTERED_FOR_REVIEW_ONLY",
+    "note": "Added three user-supplied day-trading skill repositories as REFERENCE_ONLY; immutable commit objects resolved, default-branch HEAD equivalence and security review remain pending.",
+    "pin_resolution_followup": {
+      "date": "2026-10-23",
+      "method": "GitHub recent commit search results",
+      "repositories": [
+        "jobbole/awesome-python-cn",
+        "521xueweihan/HelloGitHub",
+        "lukasmasuch/best-of-ml-python",
+        "DjangoEx/awesome-python-resources",
+        "uhub/awesome-python",
+        "gessen/majutsu-delta",
+        "duckdb/duckdb-ui",
+        "duckdb/pg_duckdb",
+        "rustyorg/rustygit",
+        "dandavison/magit-delta",
+        "dandavison/dandavison.github.io"
       ],
-      "physical_runtime_install": "NOT_CLAIMED",
-      "mode": "SANDBOX_ONLY"
+      "limitation": "Immutable commit IDs recorded; these are not represented as verified default-branch HEADs."
     },
-    "pstack_batch": [
-      {
-        "repo": "backnotprop/pstack",
-        "head_commit": "3a604672c46cd8187d2b19980eae0a34f9f91138",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "michael-denyer/pstack-claude",
-        "head_commit": "29eb31cb8e198c62dd9cff4027e6c4f0f2f63d0b",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "ericlitman/open-pstack",
-        "head_commit": "1b03678171f6f400ae2cc9dc4e7a4a6a13e4bb43",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "peadar/pstack",
-        "head_commit": "165dad4c56ea26dce74b42ac86dc9d5bf2c2e51c",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "bloomberg/pystack",
-        "head_commit": "5c594dc24996eab7b589264eb42a9d6e8cdec283",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "ScriptedAlchemy/pstack-codex",
-        "head_commit": "c25afa251f1513b0b28cc089294d468c5e350444",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "Aqua-123/pstack-for-codex",
-        "head_commit": "9fecac589333cbc0b058c8bb47e1720cf87b6061",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      }
-    ],
-    "quantum_flow_batch": [
-      {
-        "repo": "web3spreads/quant-flow",
-        "head_commit": "f0cb60b347611b54d39626c4022c29582d2168a6",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED",
-        "mode": "RESEARCH_ONLY"
-      },
-      {
-        "repo": "mathisgerdes/continuous-flow-lft",
-        "head_commit": "fcc769c3d34647563401b9c33e4b074941b7d298",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED",
-        "mode": "RESEARCH_ONLY"
-      },
-      {
-        "repo": "zimingttkx/QuantumFlow",
-        "head_commit": "2de147bbb32cb178ae842af0879e2957bce9ae3d",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED",
-        "mode": "SANDBOX_ONLY"
-      },
-      {
-        "repo": "dwave-examples/flow-shop-scheduling",
-        "head_commit": "fcddaf799c7426cd683385f2d309e7194825edac",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED",
-        "mode": "RESEARCH_ONLY"
-      }
-    ],
-    "targets": [
-      "GrokBot",
-      "ClaudeCode",
-      "JEV",
-      "AURELIA",
-      "KimiK3",
-      "GLM",
-      "GoogleAgentSkills",
-      "PlaywrightCLI"
-    ],
-    "requested_batch": [
-      {
-        "repo": "yeshrajawat/codync",
-        "head_commit": "37bd30255a8b0f3d95ae51b0e27a2a0216985540",
-        "mode": "SANDBOX_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "itsablabla/codync-web",
-        "head_commit": "9bc8a63ccc9543f811627f69ab91b205ecc87631",
-        "mode": "SANDBOX_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "leepokai/homebrew-codync",
-        "head_commit": "e74aa2deb8bb3e22ce1829572035dc2c28a007c9",
-        "mode": "TOOLCHAIN_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "leepokai/Codync-web",
-        "head_commit": "b34ea5d9a2e0d9fcb15e5d13cbe5428a03025f70",
-        "mode": "REFERENCE_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "QwenLM/qwen-code",
-        "head_commit": "4360b003a087fe9e57f6ffbe7ba48795980b59c3",
-        "mode": "SANDBOX_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "QuantConnect/Tutorials",
-        "head_commit": "4a341890296f7e79e095508f06170c72ccaa629c",
-        "mode": "RESEARCH_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "SockTrader/SockTrader",
-        "head_commit": "565971c5c1be5678d6dfb223663e11881dbcf697",
-        "mode": "RESEARCH_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "openinterpreter/openinterpreter",
-        "head_commit": "cc054cf52fa3585a3de50e0d4e0be6f9ee6677e8",
-        "mode": "SANDBOX_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "anomalyco/opencode",
-        "head_commit": "388406238bd5ca15564a762840a2362c3a45bd9c",
-        "mode": "TOOLCHAIN_ONLY",
-        "physical_runtime_install": "NOT_CLAIMED"
-      }
-    ],
-    "refreshed_existing_pins": [
-      {
-        "repo": "leepokai/Codync",
-        "head_commit": "9de648192320eabea121ba8a24e44937cdaa24f7"
-      },
-      {
-        "repo": "stablyai/orca",
-        "head_commit": "049bf808ab24ec7712a2dd0e72e80ce5b65360a0"
-      },
-      {
-        "repo": "cuemacro/finmarketpy",
-        "head_commit": "afeaef28f5c8b78e613e649ecf18a9653dbf41fd"
-      }
-    ],
-    "registry_updated": true,
-    "physical_runtime_clone": "BLOCKED_NO_REMOTE_DEVICE",
-    "deployment": "NOT_PERFORMED",
-    "capital_authority": false,
-    "requested_agent_aliases_unresolved": [
-      "Dev"
-    ],
-    "agent_alias_resolution_note": "The repository's canonical config/repo_agent_routing.json does not define an agent ID named Dev; this batch is routed only to canonical agent IDs. Do not claim Dev runtime sync until its canonical ID is registered and reviewed.",
-    "repositories_added_or_refreshed": [
-      {
-        "repo": "CryptoSignal/Crypto-Signal",
-        "head_commit": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
-        "assigned_agents": [
-          "KimiK3",
-          "GrokBot",
-          "ClaudeCode",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "Kappaemme-git/codex-first-customer-finder-skill",
-        "head_commit": "d3f6964bd989745ac183edbd545c588a68451146",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "Neeeophytee/finding-unknowns-skills",
-        "head_commit": "ca5696a0f08d2de6b2997fff1d6cc05c3ed587cc",
-        "assigned_agents": [
-          "ClaudeCode",
-          "JEV",
-          "GrokBot",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "he-yufeng/FindJobs-Agent",
-        "head_commit": "591fe6b451db98fe0bebb8f92a7b9902b0fd6079",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "davepoon/buildwithclaude",
-        "head_commit": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "workersio/skills",
-        "head_commit": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
-        "assigned_agents": [
-          "ClaudeCode",
-          "JEV",
-          "GrokBot",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      }
-    ],
-    "physical_runtime_install": "NOT_CLAIMED",
-    "note": "Pinned registry sync only; no external source copied into execution paths.",
-    "latest_batch": [
-      {
-        "repo": "CryptoSignal/Crypto-Signal",
-        "head_commit": "7cb9c5c6cd226c6fe2d345e4bda3bec8156cefec",
-        "assigned_agents": [
-          "KimiK3",
-          "GrokBot",
-          "ClaudeCode",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "Kappaemme-git/codex-first-customer-finder-skill",
-        "head_commit": "d3f6964bd989745ac183edbd545c588a68451146",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "Neeeophytee/finding-unknowns-skills",
-        "head_commit": "ca5696a0f08d2de6b2997fff1d6cc05c3ed587cc",
-        "assigned_agents": [
-          "ClaudeCode",
-          "JEV",
-          "GrokBot",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "he-yufeng/FindJobs-Agent",
-        "head_commit": "591fe6b451db98fe0bebb8f92a7b9902b0fd6079",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "davepoon/buildwithclaude",
-        "head_commit": "616deb5c66db0b06a6afeb7ae675e70a1b6e3b34",
-        "assigned_agents": [
-          "ClaudeCode",
-          "GrokBot",
-          "JEV",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      },
-      {
-        "repo": "workersio/skills",
-        "head_commit": "0e3950fc7b284db4f6b317e48bcb99edd2c1e3bb",
-        "assigned_agents": [
-          "ClaudeCode",
-          "JEV",
-          "GrokBot",
-          "AURELIA"
-        ],
-        "physical_runtime_install": "NOT_CLAIMED"
-      }
-    ],
-    "legacy_head_pinning": {
-      "previously_unpinned": 73,
-      "now_pinned": 73,
-      "source": "GitHub default-branch commit API",
-      "completed_at": "2026-10-09",
-      "physical_runtime_install": "NOT_CLAIMED"
+    "cloudflare_batch": {
+      "repository_count": 19,
+      "new_records": 18,
+      "preexisting_records": 1,
+      "commit_pin_status": "IMMUTABLE_REVISION_HEAD_UNVERIFIED",
+      "install_policy": "BLOCKED_PENDING_HEAD_LICENSE_AND_SECURITY_REVIEW"
     },
-    "repository_count": 154,
-    "all_repository_heads_pinned": true,
-    "date": "2026-10-09",
-    "summary": "Added 19 Freebuff-related sources as pinned reference/sandbox entries; all external capital authority remains false.",
-    "intake_2026_10_11": {
-      "provided_repository_urls_count": 84,
-      "unique_supplied_repositories_count": 84,
-      "newly_added_to_external_repo_registry": 82,
-      "existing_repositories_refreshed": [
-        "OpenByteInc/QuantDinger",
-        "openinterpreter/openinterpreter"
-      ],
-      "existing_sources_not_reinstalled": true,
-      "skill_source_entries_added": 51,
-      "all_source_heads_pinned": true,
-      "assigned_agents": "Relevant specialist primary + supporting reviewers + ChatGPT supervisory review; Dev excluded from execution until connected.",
-      "physical_runtime_install": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
-      "security_review_status": "PENDING",
-      "date": "2026-10-11"
-    }
+    "date": "2026-10-23"
   }
 }
