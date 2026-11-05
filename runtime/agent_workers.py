@@ -74,53 +74,40 @@ class AgentWorkerSupervisor:
                     priority=60,
                     requires_response=False,
                 )
+                if process is None:
+                    # A configured identity is not a running provider. Do not
+                    # publish an agent lease or claim work until an actual worker
+                    # process has been started.
+                    await self.federation.publish(
+                        sender="AURELIA",
+                        recipients=(spec.agent,),
+                        message_type="CONNECTOR_REQUIRED",
+                        payload={
+                            "agent": spec.agent,
+                            "reason": "NO_AUTHENTICATED_PROVIDER_COMMAND",
+                            "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
+                            "capital_authority": False,
+                        },
+                        correlation_id=f"connector-required:{spec.agent}",
+                        priority=95,
+                        requires_response=False,
+                    )
+                    while self._running:
+                        await asyncio.sleep(self.interval_seconds)
+                    continue
+
                 while self._running:
+                    if process.returncode is not None:
+                        break
                     await self.federation.heartbeat(
                         spec.agent,
                         worker_id=f"{worker_id}:r{restart_count}",
                         origin="WORKER",
                     )
-                    task = await self.federation.claim_task(spec.agent)
-                    if task is not None:
-                        await self.federation.publish(
-                            sender="AURELIA",
-                            recipients=(spec.agent,),
-                            message_type="AGENT_TASK_CLAIMED",
-                            payload={
-                                "task_id": task.task_id,
-                                "task_type": task.task_type,
-                                "payload": task.payload,
-                                "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
-                                "capital_authority": False,
-                            },
-                            correlation_id=task.correlation_id,
-                            priority=task.priority,
-                            requires_response=True,
-                        )
-                        # A configured external worker owns execution. The local
-                        # supervisor never fabricates a provider result. It leaves
-                        # the task CLAIMED so the provider worker can complete it;
-                        # stale claims are requeued by the federation.
-                        if process is None:
-                            await self.federation.complete_task(
-                                task.task_id, agent=spec.agent, status="BLOCKED"
-                            )
-                            await self.federation.publish(
-                                sender="AURELIA",
-                                recipients=(spec.agent,),
-                                message_type="CONNECTOR_REQUIRED",
-                                payload={
-                                    "task_id": task.task_id,
-                                    "reason": "NO_AUTHENTICATED_PROVIDER_COMMAND",
-                                    "tools_skills_plugins": "ORCHESTRATOR_CONTROLLED",
-                                    "capital_authority": False,
-                                },
-                                correlation_id=task.correlation_id,
-                                priority=95,
-                                requires_response=False,
-                            )
-                    if process is not None and process.returncode is not None:
-                        break
+                    # Task execution is not inferred from process liveness.
+                    # Until a worker completes an authenticated task through
+                    # the federation contract, the supervisor leaves queued
+                    # work PENDING rather than manufacturing a claim/result.
                     await asyncio.sleep(self.interval_seconds)
             except asyncio.CancelledError:
                 raise
