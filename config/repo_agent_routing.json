@@ -128,6 +128,26 @@
   },
   "routing_rules": [
     {
+      "priority": 101,
+      "when": {
+        "category_contains_any": [
+          "multi-agent-trading-research",
+          "tradingagents",
+          "tradingagents-cn",
+          "tradingagents-astock",
+          "tradingagents-ashare"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode_default": "RESEARCH_ONLY",
+      "rationale": "ClaudeCode owns bounded AURELIA integration through the existing worker protocol; KimiK3 performs quantitative challenge, GrokBot adversarially reviews orchestration, and JEV verifies evidence/schema. External TradingAgents code is not imported into capital/execution paths."
+    },
+    {
       "priority": 100,
       "when": {
         "category_contains_any": [
