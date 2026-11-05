@@ -8,12 +8,13 @@ from runtime.adapters.deriv_adapter import DerivAdapter, DerivProtocolError
 
 
 class FakePublicTransport:
-    def __init__(self, *, active_symbols=None, ticks=None) -> None:
+    def __init__(self, *, active_symbols=None, ticks=None, stall=False) -> None:
         self.active_symbols = active_symbols or [{"underlying_symbol": "R_100"}]
         self.ticks = ticks if ticks is not None else [
             {"msg_type": "tick", "tick": {"symbol": "R_100", "quote": 100.1, "epoch": 1_800_000_001}},
             {"msg_type": "tick", "tick": {"symbol": "R_100", "quote": 100.2, "epoch": 1_800_000_002}},
         ]
+        self.stall = stall
         self.connected = False
         self.closed = False
         self.requests: list[dict] = []
@@ -36,6 +37,8 @@ class FakePublicTransport:
             if isinstance(tick, Exception):
                 raise tick
             yield tick
+        if self.stall:
+            await asyncio.sleep(1.0)
 
     async def close(self) -> None:
         self.closed = True
@@ -84,12 +87,7 @@ class DerivPublicTickProbeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(transport.subscriptions, [])
 
     async def test_public_probe_times_out_without_fabricating_ticks(self) -> None:
-        async def no_ticks():
-            await asyncio.sleep(1.0)
-            if False:
-                yield {}
-
-        transport = FakePublicTransport(ticks=no_ticks())
+        transport = FakePublicTransport(ticks=[], stall=True)
         adapter = DerivAdapter()
 
         with patch("runtime.adapters.deriv_adapter.DerivWebSocketTransport", return_value=transport):
