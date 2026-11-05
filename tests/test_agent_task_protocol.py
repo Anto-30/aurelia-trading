@@ -116,3 +116,132 @@ def test_persisted_evidence_is_content_addressed_and_verifiable(tmp_path):
     assert hashlib.sha256(raw).hexdigest() == artifact.sha256
     assert json.loads(raw) == record
     assert artifact.relative_ref.startswith("agent-tasks/")
+
+
+@pytest.mark.asyncio
+async def test_federation_claim_requires_bound_worker_capability(tmp_path):
+    from runtime.agent_federation import PersistentAgentFederation
+
+    federation = PersistentAgentFederation(
+        journal_path=tmp_path / "journal.ndjson",
+        lease_path=tmp_path / "leases.json",
+        task_path=tmp_path / "tasks.json",
+        config_hash="cfg",
+        source_hash="src",
+        lease_seconds=5,
+    )
+    enqueued = await federation.enqueue_task(
+        task_type="ENGINEERING_REVIEW",
+        payload={"scope": "safe"},
+        correlation_id="claim-capability",
+        assigned_agent="ClaudeCode",
+    )
+    claim = await federation.claim_task("ClaudeCode", worker_id="worker-1")
+    assert claim is not None
+    assert claim.task_id == enqueued.task_id
+    assert claim.claim_token
+
+    assert not await federation.complete_task(
+        claim.task_id,
+        agent="ClaudeCode",
+        worker_id="worker-1",
+        claim_token="incorrect-capability",
+        status="COMPLETED",
+    )
+    assert await federation.renew_task_claim(
+        claim.task_id,
+        agent="ClaudeCode",
+        worker_id="worker-1",
+        claim_token=claim.claim_token,
+    )
+    assert await federation.complete_task(
+        claim.task_id,
+        agent="ClaudeCode",
+        worker_id="worker-1",
+        claim_token=claim.claim_token,
+        status="COMPLETED",
+        evidence_ref="agent-tasks/test.json",
+        result={"verified": False},
+    )
+
+
+@pytest.mark.asyncio
+async def test_supervisor_executes_and_records_attributable_jsonl_result(tmp_path, monkeypatch):
+    import shlex
+    import sys
+    import time
+
+    from runtime.agent_federation import PersistentAgentFederation
+    from runtime.agent_workers import AgentWorkerSupervisor
+
+    worker_script = r'''
+import json
+import sys
+
+print(json.dumps({
+    "type": "HELLO",
+    "protocol_version": 1,
+    "agent": "ClaudeCode"
+}), flush=True)
+
+for raw in sys.stdin:
+    message = json.loads(raw)
+    if message.get("type") != "TASK":
+        continue
+    response = {
+        "type": "TASK_RESULT",
+        "protocol_version": 1,
+        "agent": "ClaudeCode",
+        "task_id": message["task_id"],
+        "claim_token": message["claim_token"],
+        "status": "COMPLETED",
+        "result": {"summary": "worker completed task", "verified": True},
+        "evidence": {"kind": "test-report", "checks": ["one", "two"]}
+    }
+    print(json.dumps(response, separators=(",", ":")), flush=True)
+'''
+    command = f"{shlex.quote(sys.executable)} -u -c {shlex.quote(worker_script)}"
+    monkeypatch.setenv("AURELIA_AGENT_CLAUDECODE_COMMAND", command)
+
+    federation = PersistentAgentFederation(
+        journal_path=tmp_path / "journal.ndjson",
+        lease_path=tmp_path / "leases.json",
+        task_path=tmp_path / "tasks.json",
+        config_hash="cfg",
+        source_hash="src",
+        lease_seconds=5,
+    )
+    await federation.enqueue_task(
+        task_type="ENGINEERING_REVIEW",
+        payload={"scope": "protocol integration test"},
+        correlation_id="worker-protocol-integration",
+        assigned_agent="ClaudeCode",
+    )
+    supervisor = AgentWorkerSupervisor(
+        federation,
+        agents=("ClaudeCode",),
+        interval_seconds=0.05,
+        startup_timeout_seconds=2,
+        task_timeout_seconds=2,
+        evidence_root=tmp_path,
+    )
+    supervisor.start()
+    deadline = time.monotonic() + 4
+    stored = []
+    try:
+        while time.monotonic() < deadline:
+            stored = federation._load_tasks()
+            if stored and stored[0].get("status") in {"COMPLETED", "FAILED", "BLOCKED"}:
+                break
+            await asyncio.sleep(0.05)
+    finally:
+        await supervisor.stop()
+
+    assert stored[0]["status"] == "COMPLETED"
+    assert stored[0]["completed_by_worker_id"].startswith("agent-worker:ClaudeCode:")
+    evidence_path = tmp_path / stored[0]["evidence_ref"]
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    assert evidence["attribution"]["claim_capability_validated"] is True
+    assert evidence["attribution"]["provider_authentication"] is False
+    assert evidence["worker_result"]["verified"] is True
+    assert stored[0]["result"]["verified"] is False
