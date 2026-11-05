@@ -9,6 +9,7 @@ The optional `protected-deriv-evidence` job is separate. It can run only for a p
 - `AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED`
 - `AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED`
 - `AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED`
+- `AURELIA_DERIV_CREDENTIAL_ROTATION_VERIFIED` (owner attestation that the previously exposed credential has been revoked and replaced)
 
 The job binds the protected `production` environment. Pull requests and feature-branch pushes cannot run it.
 
