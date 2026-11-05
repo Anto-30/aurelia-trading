@@ -95,7 +95,7 @@ class SupervisedAgentWorker:
                     priority=85,
                 )
 
-            task = await self.federation.claim_task(self.agent)
+            task = await self.federation.claim_task(self.agent, worker_id=self.worker_id)
             if task is None:
                 self._state = "WAITING_FOR_EVENT"
                 try:
@@ -125,13 +125,17 @@ class SupervisedAgentWorker:
                 if not isinstance(result, dict):
                     result = {"result": result}
                 evidence_ref = result.get("evidence_ref", "")
-                await self.federation.complete_task(
+                completed = await self.federation.complete_task(
                     task.task_id,
                     agent=self.agent,
                     status="COMPLETED",
                     evidence_ref=evidence_ref,
                     result=result,
+                    worker_id=self.worker_id,
+                    claim_token=task.claim_token,
                 )
+                if not completed:
+                    raise RuntimeError("WORKER_TASK_COMPLETION_REJECTED")
                 await self.federation.publish(
                     sender=self.agent,
                     recipients=("AURELIA",),
@@ -152,7 +156,11 @@ class SupervisedAgentWorker:
                 self._last_error = f"{type(exc).__name__}: {exc}"
                 self._state = "DEGRADED"
                 await self.federation.complete_task(
-                    task.task_id, agent=self.agent, status="FAILED"
+                    task.task_id,
+                    agent=self.agent,
+                    status="FAILED",
+                    worker_id=self.worker_id,
+                    claim_token=task.claim_token,
                 )
                 await self.federation.publish(
                     sender=self.agent,
