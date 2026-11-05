@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "skills"
 TARGETS = [ROOT / ".claude" / "skills", ROOT / ".grok" / "skills", ROOT / ".agents" / "skills"]
-PREFIXES = ("aurelia-", "research-", "security-", "browser-", "ci-", "evidence-")
+PREFIXES = ("aurelia-", "research-", "security-", "browser-", "ci-", "evidence-", "metadata-")
 
 def main() -> None:
     selected = [p for p in SOURCE.iterdir() if p.is_dir() and p.name.startswith(PREFIXES)]
