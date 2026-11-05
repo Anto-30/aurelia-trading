@@ -25,6 +25,9 @@
         "integration",
         "deployment-engineering",
         "general-toolchain"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "KimiK3": {
@@ -37,6 +40,9 @@
         "market-modeling",
         "algorithmic-trading-research",
         "data-analysis"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "GrokBot": {
@@ -49,6 +55,9 @@
         "workflow-composition",
         "external-research",
         "cross-agent-coordination"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "PlaywrightCLI": {
@@ -59,6 +68,9 @@
         "network-testing",
         "responsive-testing",
         "desktop-ui-verification"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "GLM": {
@@ -68,6 +80,9 @@
         "document-analysis",
         "multimodal-inspection",
         "visual-analysis"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "GoogleAgentSkills": {
@@ -78,6 +93,9 @@
         "cloud-architecture",
         "multi-agent-security",
         "agentic-analytics"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "JEV": {
@@ -89,6 +107,9 @@
         "draft-verification",
         "tool-call-gating",
         "agent-workflow-optimization"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "AURELIA": {
@@ -98,6 +119,9 @@
         "policy-evaluation",
         "cross-agent-coordination",
         "capital-plane-policy-enforcement"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "ChatGPT": {
@@ -110,7 +134,10 @@
         "source-provenance",
         "risk-boundary-review"
       ],
-      "runtime_status": "CURRENT_CHAT_SESSION_ONLY"
+      "runtime_status": "CURRENT_CHAT_SESSION_ONLY",
+      "skills": [
+        "metadata-provenance"
+      ]
     },
     "Dev": {
       "role": "implementation_and_runtime_operations_when_connected",
@@ -123,7 +150,10 @@
         "browser-e2e"
       ],
       "runtime_status": "NOT_CONNECTED",
-      "activation_gate": "Authorized host must be connected and runtime identity verified before tool execution."
+      "activation_gate": "Authorized host must be connected and runtime identity verified before tool execution.",
+      "skills": [
+        "metadata-provenance"
+      ]
     }
   },
   "routing_rules": [
