@@ -267,3 +267,82 @@ Main `config/LIVE_LOCK.yaml` was re-read directly and remains at blob SHA `b2cdd
 No orders were submitted. LIVE_LOCK was not changed. No secret values were retrieved or emitted. No authenticated broker account lifecycle was claimed. No strategy was promoted and no production deployment was performed.
 
 **Final state:** `DAILY_REVIEW=COMPLETE / MODEL_TRAINING=NOT_RUN / R100_HISTORY=BLOCKED / EXECUTION_ECONOMICS=UNVERIFIED / V0.2.0=RETIRED / STRATEGY_PROMOTION=BLOCKED`.
+
+
+---
+
+## 10. Engineering closeout update — 2026-11-05 14:35 EAT
+
+This addendum supersedes earlier PR-head statuses in this report where the head SHA has changed. Statuses below are from direct GitHub reads during this closeout.
+
+### 10.1 R100 collector — PR #253
+
+Latest reviewed head: `1b3657798582cf412082b5e8645b93cbfc3e118d`.
+
+- AURELIA Assurance, Agent Federation Audit and Agent Continuity Watchdog: **SUCCESS**.
+- Assurance included research-plane tests, 319 runtime tests, 61 assurance tests, frozen strategy-source verification, clean runtime container build and public Deriv transport check.
+- Invalid quote values (NaN, infinity, zero, negative, malformed and boolean) and timezone-naive timestamps are rejected before pending-signal state mutation.
+- Frozen-source verification ignores only the exact first-statement call to the validation helper; the strategy body remains covered by the AST integrity comparison.
+- `R100_COLLECTOR_AUDIT.md` records the evidence and the workflow credential-boundary stop-ship.
+
+Disposition: code/test repair verified on this head; **not merge-ready**. No independent review is recorded. Its branch is still based on `main` and contains the older Assurance workflow variant, so it must be rebased/ported onto the reviewed credential-isolated workflow before merge. A successful CI run does not establish complete historical data, strategy edge or execution economics.
+
+### 10.2 Credential-plane split — PR #256
+
+Head before repair: `218cc07a94f4751232020e0e775b86c3ac57ff98`. Assurance failed because `tests/test_privileged_workflow_branch_gates.py` imports `yaml`, but the job installed no PyYAML package (`ModuleNotFoundError: No module named 'yaml'`).
+
+Repair commit: `c83d16ec25be3f7a8bea813687ab76bbe9695d9b`. The Assurance install step now explicitly installs `pyyaml`. The general Assurance job remains without a production environment binding and without Deriv credential injection.
+
+Disposition: narrow fix committed; **exact-head CI not yet observed** after this commit. No independent review recorded. Do not merge until the new Assurance run passes and the environment/branch-protection controls are independently reviewed.
+
+### 10.3 Deriv identity and lifecycle — PR #258
+
+The prior Assurance failure was `test_transport_ping_waits_for_matching_pong`. The transport's `close()` cancelled the reader; the reader's `finally` cleared `self.ws`; then `close()` skipped closing the underlying socket.
+
+Repair commit: `92644870394d30654f8e65427cc9de9ee75efbe4`. `close()` now captures the WebSocket reference before cancelling the reader and closes that captured socket afterwards.
+
+Disposition: source-level defect repaired; **exact-head CI not yet observed** after this commit. PR remains draft, unreviewed, and based on `feat/layer6-fail-closed-risk-gate`, not `main`. It still does not prove an actual Deriv OAuth app registration, callback deployment, read-only account scope, or authenticated account evidence.
+
+### 10.4 Other open PR dispositions
+
+- **#254 provider command/readiness isolation:** current recorded Assurance, Federation Audit and Continuity Watchdog runs passed. It addresses the inherited child-process environment risk documented above. Still unreviewed/unmerged; review and integrate before enabling external provider commands.
+- **#255 non-root runtime/container hardening:** recorded workflows passed. Still unreviewed/unmerged; no production deployment was performed.
+- **#251 Deriv auth-mode sanitization:** recorded workflows passed. Still unreviewed/unmerged; do not treat sanitization as valid broker authentication.
+- **#261 Auto Ontology/research contract and CI split:** recorded Assurance, Research CI, Federation Audit and Continuity Watchdog passed on its recorded head. The protected Deriv job was skipped on PR events. Vercel status remains blocked by Verified Commits. Draft and unreviewed.
+- **#259 broker identity/stake provenance:** draft, unreviewed; no evidence here establishes a live OAuth callback, real account binding or authenticated lifecycle.
+- **#250 external repository intake:** 18/18 source-only targets were scanned, but the configured target list excludes NVIDIA Auto Ontology. It remains REFERENCE_ONLY and requires a separate pinned source/security review.
+- **#248 ICT Silver Bullet:** source files are irrecoverably truncated/corrupt; do not patch by guessing. Requires an attributable intact source archive or a separately versioned reconstruction after a complete specification.
+- **#244 Layer 9 structure/369:** deterministic code and tests exist, but no R_100 historical data acquisition, full backtest or cost-adjusted edge has been established. Research-only.
+- **#241 T4F × 369/MSNR:** specification and utilities exist; unresolved strategy definitions and no empirical backtest remain. Keep separate from the MSNR specification.
+- **#239 Phase 6 + Layer 9 time-filter baseline:** no NVDA Parquet dataset or calibrated execution costs were available; no real-market performance claim. Premarket timestamp and spread assumptions require validation.
+- **#237 closed-M15 MSNR context gate:** deterministic context validation is implemented, but this does not define a directional M15 bias or establish a profitable strategy.
+- **#235 pre-FOMC event study:** harness and tests exist; complete hash-pinned historical data, replication, OOS results, cost model and independent review remain absent.
+- **#233 liquidity-sweep strategy/runtime hardening:** research-only; no validated R_100 edge or independent review.
+
+### 10.5 Cross-cutting blockers — still open
+
+1. **Credential incident:** the Deriv credential rotation/revocation status remains unverified. Do not access or reuse any previously exposed token. The owner must revoke/rotate through Deriv and verify the replacement is stored only in the protected environment.
+2. **GitHub governance:** branch protection and production environment required-reviewer configuration must be verified in GitHub settings. Repository variables/attestation flags alone are not proof of those controls.
+3. **Vercel:** the linked `github-repo-audit` deployment is BLOCKED by Verified Commits. Do not disable the control as a CI workaround. Resolve commit verification or obtain owner review of the Vercel project policy.
+4. **Broker identity:** actual OAuth application/client ID, exact registered callback URI, deployed callback and supported read-only account scope are not evidenced. No credential was read or used in this closeout.
+5. **R_100 data:** no accepted hash-pinned historical M1/M15 dataset, strict continuity manifest, or independently sourced cost model is present on `main`. Public transport and 10-candle smoke tests are not a historical dataset.
+6. **Strategy economics:** no strategy is qualified. The archived R100 Tick Momentum v0.2.0 remains retired after negative quoted economics and adverse calibration. New strategy versions require fresh, untouched prospective OOS.
+7. **Runtime evidence:** 3,600-second soak, persistent production runtime, recovery matrix, deployment attestation and telemetry evidence remain incomplete.
+8. **Policy reconciliation:** `main` runtime probability minimum 0.50 conflicts with the proposed 0.55–0.75 research band. Resolve via reviewed canonical policy and boundary tests; do not silently change thresholds.
+9. **Independent review:** the material PRs listed above have no independent review submissions recorded in the latest checks. AI code review is not a substitute for a qualified human approval.
+
+### 10.6 Agent and tool execution evidence
+
+Installed Superpowers skills were used for systematic debugging, test-driven development and verification-before-completion. GitHub Actions supplied exact-head CI evidence; Vercel tools supplied deployment/policy diagnostics; an available Python code-review tool returned no blocking issue for the reviewed workflow/collector source, while its generic performance suggestions are not treated as independent sign-off.
+
+Claude Code, DeepSeek Harness, Hermes and Kimi K3 were searched for as callable integrations but no callable runtimes were exposed in this session. They were not run. Logical assignments in earlier plans are not agent execution evidence.
+
+### 10.7 Release decision
+
+`LIVE_EXECUTION=BLOCKED`  
+`FINAL_EXECUTION_AUTHORIZATION=false`  
+`capital_plane_mode=VERIFY_ONLY`  
+`research_capital_authority=false`  
+`REAL_ORDERS=0`
+
+No live order, authenticated account request, credential read, production deployment or strategy promotion was performed in this closeout. The next safe technical sequence is: obtain exact-head CI on #256/#258 repairs; independently review and integrate the credential-plane workflow; port #253 onto that baseline; then collect and freeze the missing R_100 evidence before any strategy qualification decision.
