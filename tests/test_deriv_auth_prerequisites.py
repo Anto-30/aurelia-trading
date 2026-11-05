@@ -5,6 +5,21 @@ from scripts.deriv_auth_prerequisites import build_evidence
 
 
 class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
+
+    def test_boolean_presence_inputs_need_no_secret_values(self):
+        evidence = build_evidence({
+            "DERIV_AUTH_TOKEN_PRESENT": "true",
+            "DERIV_APP_ID_PRESENT": "true",
+            "DERIV_EXPECTED_LOGINID_PRESENT": "true",
+            "DERIV_AUTH_MODE": "pat",
+            "DERIV_EXPECTED_CURRENCY": "USD",
+        })
+        self.assertTrue(evidence["configured"])
+        self.assertTrue(evidence["requirements"]["token_present"])
+        self.assertTrue(evidence["requirements"]["expected_loginid_present"])
+        self.assertTrue(evidence["requirements"]["app_id_present_when_pat"])
+        self.assertFalse(evidence["secret_values_exposed"])
+
     def test_valid_pat_configuration_persists_only_safe_values(self):
         evidence = build_evidence({
             "DERIV_AUTH_TOKEN": "test-token-do-not-persist",
