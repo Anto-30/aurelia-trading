@@ -5,6 +5,8 @@ import json
 import os
 import secrets
 import shlex
+import shutil
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
@@ -117,40 +119,49 @@ class AgentWorkerSupervisor:
         return False
 
     def _worker_environment(
-        self, spec: AgentWorkerSpec, *, worker_id: str, session_nonce: str
+        self,
+        spec: AgentWorkerSpec,
+        *,
+        worker_id: str,
+        session_nonce: str,
+        home_dir: str,
     ) -> dict[str, str]:
-        secret_markers = (
-            "TOKEN",
-            "SECRET",
-            "PASSWORD",
-            "API_KEY",
-            "AUTH",
-            "COOKIE",
-            "PRIVATE_KEY",
-            "CREDENTIAL",
-            "DERIV",
-            "BROKER",
-            "LOGINID",
-            "ACCOUNT",
-            "AWS_",
-            "GCP_",
-            "OCI_",
-            "AZURE_",
-            "GITHUB_",
-            "GH_TOKEN",
-            "VERCEL_",
-            "SUPABASE_",
-        )
+        # Inherit only runtime essentials. Deny-by-default is intentional:
+        # name-based secret filtering is insufficient because CLI credentials
+        # are commonly cached below HOME and custom environment variable names
+        # cannot be comprehensively enumerated.
+        allowed = {
+            "PATH",
+            "SYSTEMROOT",
+            "WINDIR",
+            "COMSPEC",
+            "PATHEXT",
+            "LANG",
+            "LC_ALL",
+            "LC_CTYPE",
+            "TZ",
+            "TERM",
+            "TMPDIR",
+            "TEMP",
+            "TMP",
+            "PYTHONIOENCODING",
+            "PYTHONUTF8",
+            "SSL_CERT_FILE",
+            "SSL_CERT_DIR",
+            "REQUESTS_CA_BUNDLE",
+        }
         env = {
-            key: value
-            for key, value in os.environ.items()
-            if not (
-                key.startswith("AURELIA_AGENT_") and key.endswith("_COMMAND")
-            )
-            and not any(marker in key.upper() for marker in secret_markers)
+            key: value for key, value in os.environ.items() if key in allowed
         }
         env.update(
             {
+                "HOME": home_dir,
+                "USERPROFILE": home_dir,
+                "APPDATA": str(Path(home_dir) / "appdata"),
+                "LOCALAPPDATA": str(Path(home_dir) / "localappdata"),
+                "TMP": str(Path(home_dir) / "tmp"),
+                "TEMP": str(Path(home_dir) / "tmp"),
+                "TMPDIR": str(Path(home_dir) / "tmp"),
                 "AURELIA_WORKER_PROTOCOL": WORKER_PROTOCOL,
                 "AURELIA_WORKER_AGENT": spec.agent,
                 "AURELIA_WORKER_ID": worker_id,
@@ -160,6 +171,8 @@ class AgentWorkerSupervisor:
                 ),
             }
         )
+        for name in ("appdata", "localappdata", "tmp"):
+            (Path(home_dir) / name).mkdir(parents=True, exist_ok=True)
         return env
 
     @staticmethod
@@ -404,6 +417,7 @@ class AgentWorkerSupervisor:
             worker_id = f"agent-worker:{spec.agent}:{secrets.token_hex(12)}"
             session_nonce = secrets.token_urlsafe(24)
             claimed_task_id: str | None = None
+            worker_home: str | None = None
             try:
                 command = self._command(spec.agent)
                 if not command:
@@ -437,8 +451,13 @@ class AgentWorkerSupervisor:
                     await asyncio.sleep(self.interval_seconds)
                     continue
 
+                worker_home = tempfile.mkdtemp(prefix="aurelia-worker-home-")
+                Path(worker_home).chmod(0o700)
                 env = self._worker_environment(
-                    spec, worker_id=worker_id, session_nonce=session_nonce
+                    spec,
+                    worker_id=worker_id,
+                    session_nonce=session_nonce,
+                    home_dir=worker_home,
                 )
                 process = await asyncio.create_subprocess_exec(
                     *command,
@@ -607,6 +626,8 @@ class AgentWorkerSupervisor:
                     await self.federation.revoke_lease(
                         spec.agent, worker_id=worker_id
                     )
+                if worker_home is not None:
+                    shutil.rmtree(worker_home, ignore_errors=True)
             if not self._running:
                 break
             restart_count += 1
