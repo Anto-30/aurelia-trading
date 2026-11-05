@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hmac
 import json
 import os
 import secrets
@@ -290,6 +291,7 @@ class AgentWorkerSupervisor:
             "session_nonce",
             "task_id",
             "correlation_id",
+            "claim_token",
             "status",
             "evidence_ref",
             "result",
@@ -305,6 +307,13 @@ class AgentWorkerSupervisor:
             or response.get("correlation_id") != task.correlation_id
         ):
             raise WorkerProtocolError("WORKER_TASK_CORRELATION_MISMATCH")
+        supplied_claim_token = response.get("claim_token")
+        if (
+            not isinstance(supplied_claim_token, str)
+            or not task.claim_token
+            or not hmac.compare_digest(supplied_claim_token, task.claim_token)
+        ):
+            raise WorkerProtocolError("WORKER_CLAIM_CAPABILITY_MISMATCH")
 
         status = response.get("status")
         if not isinstance(status, str) or status not in {
@@ -358,7 +367,10 @@ class AgentWorkerSupervisor:
             while True:
                 await asyncio.sleep(cadence)
                 renewed = await self.federation.renew_task_claim(
-                    task.task_id, agent=spec.agent
+                    task.task_id,
+                    agent=spec.agent,
+                    worker_id=worker_id,
+                    claim_token=task.claim_token,
                 )
                 if not renewed:
                     raise WorkerProtocolError("WORKER_TASK_CLAIM_LOST")
@@ -416,7 +428,7 @@ class AgentWorkerSupervisor:
             process: asyncio.subprocess.Process | None = None
             worker_id = f"agent-worker:{spec.agent}:{secrets.token_hex(12)}"
             session_nonce = secrets.token_urlsafe(24)
-            claimed_task_id: str | None = None
+            claimed_task: AgentTask | None = None
             worker_home: str | None = None
             try:
                 command = self._command(spec.agent)
@@ -511,20 +523,25 @@ class AgentWorkerSupervisor:
                     await self.federation.heartbeat(
                         spec.agent, worker_id=worker_id, origin="WORKER"
                     )
-                    task = await self.federation.claim_task(spec.agent)
+                    task = await self.federation.claim_task(
+                        spec.agent,
+                        worker_id=worker_id,
+                    )
                     if task is None:
                         await asyncio.sleep(self.interval_seconds)
                         continue
 
-                    claimed_task_id = task.task_id
+                    claimed_task = task
                     if self._contains_field(task.payload, SENSITIVE_INPUT_FIELDS):
                         await self.federation.complete_task(
                             task.task_id,
                             agent=spec.agent,
                             status="BLOCKED",
                             result={"reason": "WORKER_INPUT_CONTAINS_SENSITIVE_FIELD"},
+                            worker_id=worker_id,
+                            claim_token=task.claim_token,
                         )
-                        claimed_task_id = None
+                        claimed_task = None
                         continue
                     try:
                         json.dumps(task.payload, allow_nan=False)
@@ -534,8 +551,10 @@ class AgentWorkerSupervisor:
                             agent=spec.agent,
                             status="BLOCKED",
                             result={"reason": "WORKER_INPUT_NOT_JSON_SERIALIZABLE"},
+                            worker_id=worker_id,
+                            claim_token=task.claim_token,
                         )
-                        claimed_task_id = None
+                        claimed_task = None
                         continue
 
                     await self._send_frame(
@@ -546,6 +565,7 @@ class AgentWorkerSupervisor:
                             "agent": spec.agent,
                             "worker_id": worker_id,
                             "session_nonce": session_nonce,
+                            "claim_token": task.claim_token,
                             "task": task.as_payload(),
                         },
                     )
@@ -570,17 +590,21 @@ class AgentWorkerSupervisor:
                             status=status,
                             evidence_ref=evidence_ref,
                             result=safe_result,
+                            worker_id=worker_id,
+                            claim_token=task.claim_token,
                         )
                         if not completed:
                             raise WorkerProtocolError("WORKER_TASK_COMPLETION_REJECTED")
-                        claimed_task_id = None
+                        claimed_task = None
                     except WorkerProtocolError as exc:
                         await self.federation.requeue_task(
                             task.task_id,
                             agent=spec.agent,
                             reason=exc.code,
+                            worker_id=worker_id,
+                            claim_token=task.claim_token,
                         )
-                        claimed_task_id = None
+                        claimed_task = None
                         raise
 
             except asyncio.CancelledError:
@@ -603,11 +627,13 @@ class AgentWorkerSupervisor:
                     requires_response=False,
                 )
             finally:
-                if claimed_task_id is not None:
+                if claimed_task is not None:
                     await self.federation.requeue_task(
-                        claimed_task_id,
+                        claimed_task.task_id,
                         agent=spec.agent,
                         reason="WORKER_PROCESS_STOPPED",
+                        worker_id=worker_id,
+                        claim_token=claimed_task.claim_token,
                     )
                 if process is not None:
                     if process.returncode is None:
