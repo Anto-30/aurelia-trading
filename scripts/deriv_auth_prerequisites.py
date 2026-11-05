@@ -16,18 +16,24 @@ SUPPORTED_CURRENCIES = frozenset({"USD"})
 DEFAULT_OUTPUT = Path("artifacts/deriv_auth_prerequisites.json")
 
 
+def _presence(env: Mapping[str, str], flag: str, *raw_names: str) -> bool:
+    if flag in env:
+        return env[flag].strip().lower() == "true"
+    return any(bool(env.get(name, "").strip()) for name in raw_names)
+
+
 def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object]:
     env = os.environ if environ is None else environ
 
-    token_present = bool(env.get("DERIV_AUTH_TOKEN", "").strip())
-    loginid_present = bool(
-        env.get("DERIV_EXPECTED_LOGINID", "").strip()
-        or env.get("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()
+    token_present = _presence(env, "DERIV_AUTH_TOKEN_PRESENT", "DERIV_AUTH_TOKEN", "DERIV_PAT")
+    loginid_present = _presence(
+        env, "DERIV_EXPECTED_LOGINID_PRESENT",
+        "DERIV_EXPECTED_LOGINID", "DERIV_AUTHORIZED_ACCOUNT_ID",
     )
     raw_mode = env.get("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
     mode_valid = raw_mode in SUPPORTED_AUTH_MODES
     safe_mode = raw_mode if mode_valid else "invalid"
-    app_id_present = bool(env.get("DERIV_APP_ID", "").strip())
+    app_id_present = _presence(env, "DERIV_APP_ID_PRESENT", "DERIV_APP_ID")
 
     raw_currency = env.get("DERIV_EXPECTED_CURRENCY", "").strip().upper()
     currency_valid = raw_currency in SUPPORTED_CURRENCIES
