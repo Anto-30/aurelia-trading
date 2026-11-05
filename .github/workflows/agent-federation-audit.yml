@@ -3,8 +3,8 @@ name: AURELIA Agent Federation Audit
 on:
   push:
     branches: ["main"]
+  # Run on stacked PRs as well as main-targeted PRs; this workflow has no production secrets.
   pull_request:
-    branches: ["main"]
   workflow_dispatch:
 
 permissions:
