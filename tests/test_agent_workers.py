@@ -49,6 +49,8 @@ for line in sys.stdin:
             result["correlation_id"] = "wrong-correlation"
         if os.getenv("TEST_AUTHORITY_FIELD") == "1":
             result["capital_authority"] = False
+        if os.getenv("TEST_BAD_STATUS_TYPE") == "1":
+            result["status"] = []
         if os.getenv("TEST_OVERSIZED_RESPONSE") == "1":
             print("x" * 70000, flush=True)
         else:
@@ -92,6 +94,22 @@ async def _wait_for_requeue(
             ):
                 row = next(x for x in federation._load_tasks() if x["task_id"] == task_id)
                 return row["status"] == "PENDING"
+        await asyncio.sleep(0.02)
+    return False
+
+
+async def _wait_for_protocol_error(
+    federation: PersistentAgentFederation, error_code: str
+) -> bool:
+    for _ in range(100):
+        for event in federation.journal.read_all():
+            message = event.get("payload", {})
+            if (
+                event.get("event_type") == "AGENT_MESSAGE"
+                and message.get("message_type") == "WORKER_PROTOCOL_ERROR"
+                and message.get("payload", {}).get("error_code") == error_code
+            ):
+                return True
         await asyncio.sleep(0.02)
     return False
 
@@ -179,7 +197,9 @@ async def test_worker_handshake_mismatch_never_creates_worker_lease_or_claims_ta
     )
     supervisor.start()
     try:
-        await asyncio.sleep(0.2)
+        assert await _wait_for_protocol_error(
+            federation, "WORKER_HANDSHAKE_MISMATCH"
+        )
         stored = next(x for x in federation._load_tasks() if x["task_id"] == task.task_id)
         assert stored["status"] == "PENDING"
         assert "ClaudeCode" not in federation.active_agents()
@@ -229,7 +249,13 @@ async def test_worker_cannot_complete_task_without_evidence_inside_evidence_root
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "bad_field",
-    ["TEST_BAD_TASK", "TEST_BAD_CORRELATION", "TEST_AUTHORITY_FIELD", "TEST_OVERSIZED_RESPONSE"],
+    [
+        "TEST_BAD_TASK",
+        "TEST_BAD_CORRELATION",
+        "TEST_AUTHORITY_FIELD",
+        "TEST_OVERSIZED_RESPONSE",
+        "TEST_BAD_STATUS_TYPE",
+    ],
 )
 async def test_worker_cannot_complete_an_unmatched_task(
     tmp_path, monkeypatch, bad_field
@@ -255,7 +281,15 @@ async def test_worker_cannot_complete_an_unmatched_task(
         response_timeout_seconds=1,
     )
     supervisor.start()
+    expected_error = {
+        "TEST_BAD_TASK": "WORKER_TASK_CORRELATION_MISMATCH",
+        "TEST_BAD_CORRELATION": "WORKER_TASK_CORRELATION_MISMATCH",
+        "TEST_AUTHORITY_FIELD": "WORKER_AUTHORITY_FIELD_FORBIDDEN",
+        "TEST_OVERSIZED_RESPONSE": "WORKER_RESPONSE_FRAME_TOO_LARGE",
+        "TEST_BAD_STATUS_TYPE": "WORKER_TASK_STATUS_INVALID",
+    }[bad_field]
     try:
+        assert await _wait_for_protocol_error(federation, expected_error)
         assert await _wait_for_requeue(federation, task.task_id)
         stored = next(x for x in federation._load_tasks() if x["task_id"] == task.task_id)
         assert stored["status"] == "PENDING"
