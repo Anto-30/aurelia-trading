@@ -28,6 +28,8 @@ jobs:
       - name: Validate task-aware tool, skill, plugin, and repository assignments
         run: python scripts/validate_agent_tool_skill_assignments.py
 
+      - name: Validate metadata provenance federation and canonical skill synchronization
+        run: python scripts/validate_metadata_provenance_federation.py
       - name: Assert live release remains locked
         shell: bash
         run: |
