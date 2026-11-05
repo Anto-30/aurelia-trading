@@ -412,12 +412,14 @@ class PersistentAgentFederation:
     ) -> bool:
         if status not in {"COMPLETED", "FAILED", "BLOCKED"}:
             raise ValueError("INVALID_TASK_STATUS")
-        if status == "COMPLETED" and (
-            not isinstance(evidence_ref, str)
-            or not evidence_ref.strip()
-            or self.performance_evaluator._resolve_evidence(evidence_ref) is None
-        ):
-            raise ValueError("COMPLETED_TASK_REQUIRES_VERIFIABLE_EVIDENCE")
+        submitted_evidence_ref = evidence_ref
+        evidence_sha256: str | None = None
+        evidence_size_bytes: int | None = None
+        if status == "COMPLETED":
+            snapshot = self.performance_evaluator.snapshot_evidence(evidence_ref)
+            if snapshot is None:
+                raise ValueError("COMPLETED_TASK_REQUIRES_VERIFIABLE_EVIDENCE")
+            evidence_ref, evidence_sha256, evidence_size_bytes = snapshot
         async with self._lock:
             tasks = self._load_tasks()
             selected = next((x for x in tasks if x.get("task_id") == task_id), None)
@@ -432,6 +434,11 @@ class PersistentAgentFederation:
             selected["status"] = status
             if evidence_ref:
                 selected["evidence_ref"] = evidence_ref
+            if submitted_evidence_ref:
+                selected["submitted_evidence_ref"] = submitted_evidence_ref
+            if evidence_sha256:
+                selected["evidence_sha256"] = evidence_sha256
+                selected["evidence_size_bytes"] = evidence_size_bytes
             if result is not None:
                 selected["result"] = dict(result)
             if completed_by_worker_id:
@@ -445,6 +452,9 @@ class PersistentAgentFederation:
             "worker_id": completed_by_worker_id,
             "status": status,
             "evidence_ref": evidence_ref,
+            "submitted_evidence_ref": submitted_evidence_ref,
+            "evidence_sha256": evidence_sha256,
+            "evidence_size_bytes": evidence_size_bytes,
             "result": result or {},
         }
         self._append("AGENT_TASK_COMPLETED", payload, task_id)
