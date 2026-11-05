@@ -36,8 +36,8 @@ The 19 sources span:
 ## Licence and provenance constraints
 
 - MIT and Apache-2.0 source licences still require notices, transitive dependency and vendored-code review.
-- Exiv2 is identified as GPLv2 in its README; no embedding/redistribution without a legal decision or suitable commercial licence.
-- Win32 metadata's repository licence disclaimer preserves the original Windows SDK header/artifact terms; GitHub reports NOASSERTION. Do not copy those artifacts until provenance and legal review.
+- Exiv2's LICENSE.txt uses SPDX GPL-2.0-or-later; no embedding/redistribution without a legal decision or suitable commercial licence.
+- Win32 metadata's repository-authored code is MIT-licensed, but its licence disclaimer preserves original Windows SDK header/artifact terms; GitHub reports NOASSERTION. Do not copy generated SDK-derived artifacts until provenance and legal review.
 - Reflections reports WTFPL in GitHub metadata, but its root LICENSE was not found and its README says it is not actively maintained. Do not copy until exact path-level licence verification.
 - Check the precise licence for every path, generated artifact and vendored component before any source reuse. A repository-level SPDX identifier does not establish every file's licence.
 
