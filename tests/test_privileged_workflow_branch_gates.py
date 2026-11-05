@@ -39,5 +39,28 @@ class PrivilegedWorkflowBranchGateTests(unittest.TestCase):
         self.assertIn("TWILIO_API_SECRET", env)
 
 
+    def _workflow_events(self, filename: str) -> dict:
+        workflow = yaml.safe_load((WORKFLOWS / filename).read_text(encoding="utf-8"))
+        # PyYAML's YAML 1.1 resolver parses the unquoted key "on" as True.
+        events = workflow.get("on", workflow.get(True, {}))
+        self.assertIsInstance(events, dict, f"{filename} has no workflow event mapping")
+        return events
+
+    def test_agent_federation_audit_runs_for_stacked_pull_requests(self):
+        events = self._workflow_events("agent-federation-audit.yml")
+        self.assertIn("pull_request", events)
+        trigger = events["pull_request"]
+        self.assertTrue(trigger is None or isinstance(trigger, dict))
+        if isinstance(trigger, dict):
+            self.assertNotIn("branches", trigger)
+
+    def test_agent_continuity_watchdog_runs_for_stacked_pull_requests(self):
+        events = self._workflow_events("agent-continuity-watchdog.yml")
+        self.assertIn("pull_request", events)
+        trigger = events["pull_request"]
+        self.assertTrue(trigger is None or isinstance(trigger, dict))
+        if isinstance(trigger, dict):
+            self.assertNotIn("branches", trigger)
+
 if __name__ == "__main__":
     unittest.main()
