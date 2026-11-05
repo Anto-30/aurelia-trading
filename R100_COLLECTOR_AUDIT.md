@@ -24,6 +24,14 @@ This is a source audit, not a certification of strategy performance or live exec
 | Deriv authentication isolation | PASS (source scope) | Collector uses the documented `/trading/v1/options/ws/public` endpoint and does not import the authenticated Deriv account adapter or read Deriv credential variables. |
 | Capital/execution authority | PASS (source scope) | Collector emits only research/proposal data and explicitly reports `strategy_live_eligible=false`, `execution_authorized=false`, `capital_authority=false`, and `live_execution=false`. |
 
+## Critical release-boundary finding
+
+**STOP-SHIP for merge until reconciled with the security-plane PRs.** The branch's `.github/workflows/aurelia-assurance.yml` still contains `environment: production` on the general `assurance` job, while the workflow triggers on pushes to all branches and on `pull_request`. The same unsafe inheritance exists on `main` (workflow blob `31656dd5abc2a2c7ef23fa3cf4539ec2e3178192`) and this PR branch (blob `a30350680e043548c253176cf56f51ff139efd8e`). The GitHub connector cannot inspect the production environment's configured required reviewers or protection rules, so secret isolation cannot be assumed.
+
+PR #256 removes Deriv credentials from the general assurance job and keeps account evidence blocked when a read-only account scope is unavailable. PR #261 independently separates unprivileged assurance from a privileged job gated to a trusted `main` push and four explicit owner-attestation variables. Both remain open and have no independent review recorded. PR #253 is based directly on `main` and must not be merged in a way that reintroduces the unsafe workflow variant.
+
+Required integration decision: first complete an independently reviewed security-boundary integration of #256 and/or #261; then rebase or port #253's collector fix and tests onto that reviewed workflow baseline, preserving the privileged job's trusted-main condition and all four attestation gates. Do not resolve this by changing environment approvals or disabling checks ad hoc.
+
 ## Existing verification evidence
 
 Updated PR head `97f09a489d371b5068d4b1cf207adb1b706c3035` passed GitHub Actions Assurance run `42010762673` (completed successfully). On this exact head, the `research/labs/tests` suite passed, the complete runtime test suite passed (**319 tests**), and the assurance test suite passed (**61 tests**). The two new regression tests, four research-security-boundary tests, and two source-verifier boundary tests passed within the runtime suite. The frozen R100 strategy-source integrity check and clean runtime container build also passed. Public Deriv transport verification passed. The protected Deriv authenticated session/account/lifecycle steps were skipped because credentials were not verified/configured; no credential was used by the collector.
