@@ -15,7 +15,7 @@ from .models import (
 )
 from .stake_sizing import size_stake_for_balance
 
-MIN_PROBABILITY = 0.50
+MIN_PROBABILITY = 0.55
 MAX_PROBABILITY = 0.75
 STARTING_STAKE = 1.00
 EXECUTION_MINIMUM_STAKE = 1.00
