@@ -292,8 +292,12 @@ class PersistentAgentFederation:
             return False
         stored_hash = selected.get("claim_token_sha256")
         if not stored_hash:
-            # Backward compatibility is limited to claims created without a worker ID.
-            return worker_id is None and claim_token is None
+            # Fail closed for incomplete or corrupt capability-bound claim records.
+            return (
+                worker_id is None
+                and claim_token is None
+                and not selected.get("claim_worker_id")
+            )
         if (
             not isinstance(worker_id, str)
             or not worker_id.strip()
