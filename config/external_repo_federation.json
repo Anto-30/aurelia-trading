@@ -6668,12 +6668,12 @@
       "runtime_install": "NOT_INSTALLED",
       "provider_authentication": "NOT_APPLICABLE",
       "capital_authority": false,
-      "license": "NOASSERTION; upstream Windows SDK header/artifact terms remain applicable",
+      "license": "MIT for repository-authored code; SDK-derived artifacts retain original Windows SDK terms (GitHub API reports NOASSERTION)",
       "capabilities": [
         "Win32 API metadata",
         "language projection generation"
       ],
-      "integration_note": "Windows-specific and irrelevant to current Linux/Python trading runtime. Repository LICENSE warns that original SDK header licenses are not changed; require provenance/legal review before reuse."
+      "integration_note": "The repository LICENSE grants MIT for its code but explicitly states it does not change original SDK header/artifact licenses. Review provenance and applicable SDK terms before copying generated artifacts."
     },
     {
       "repo": "drewnoakes/metadata-extractor-dotnet",
@@ -6777,14 +6777,14 @@
       "runtime_install": "NOT_INSTALLED",
       "provider_authentication": "NOT_APPLICABLE",
       "capital_authority": false,
-      "license": "GPL-2.0 (README identifies GPLv2; inspect COPYING before any reuse)",
+      "license": "GPL-2.0-or-later",
       "capabilities": [
         "EXIF",
         "IPTC",
         "XMP",
         "ICC metadata read/write"
       ],
-      "integration_note": "GPL licensing is incompatible with casual embedding in a proprietary AURELIA runtime absent a separate legal review or commercial licence. No installation."
+      "integration_note": "Upstream LICENSE.txt identifies GPL-2.0-or-later. Do not embed or redistribute without a legal decision or suitable commercial licence."
     },
     {
       "repo": "icsharpcode/ILSpy",
