@@ -523,6 +523,7 @@ class AgentWorkerSupervisor:
                     await self.federation.heartbeat(
                         spec.agent, worker_id=worker_id, origin="WORKER"
                     )
+                    await self.federation.recover_stale_tasks()
                     task = await self.federation.claim_task(
                         spec.agent,
                         worker_id=worker_id,
@@ -533,7 +534,7 @@ class AgentWorkerSupervisor:
 
                     claimed_task = task
                     if self._contains_field(task.payload, SENSITIVE_INPUT_FIELDS):
-                        await self.federation.complete_task(
+                        completed = await self.federation.complete_task(
                             task.task_id,
                             agent=spec.agent,
                             status="BLOCKED",
@@ -541,12 +542,14 @@ class AgentWorkerSupervisor:
                             worker_id=worker_id,
                             claim_token=task.claim_token,
                         )
+                        if not completed:
+                            raise WorkerProtocolError("WORKER_TASK_COMPLETION_REJECTED")
                         claimed_task = None
                         continue
                     try:
                         json.dumps(task.payload, allow_nan=False)
                     except (TypeError, ValueError):
-                        await self.federation.complete_task(
+                        completed = await self.federation.complete_task(
                             task.task_id,
                             agent=spec.agent,
                             status="BLOCKED",
@@ -554,6 +557,8 @@ class AgentWorkerSupervisor:
                             worker_id=worker_id,
                             claim_token=task.claim_token,
                         )
+                        if not completed:
+                            raise WorkerProtocolError("WORKER_TASK_COMPLETION_REJECTED")
                         claimed_task = None
                         continue
 
@@ -597,13 +602,15 @@ class AgentWorkerSupervisor:
                             raise WorkerProtocolError("WORKER_TASK_COMPLETION_REJECTED")
                         claimed_task = None
                     except WorkerProtocolError as exc:
-                        await self.federation.requeue_task(
+                        released = await self.federation.requeue_task(
                             task.task_id,
                             agent=spec.agent,
                             reason=exc.code,
                             worker_id=worker_id,
                             claim_token=task.claim_token,
                         )
+                        if not released:
+                            raise WorkerProtocolError("WORKER_TASK_REQUEUE_REJECTED") from exc
                         claimed_task = None
                         raise
 
