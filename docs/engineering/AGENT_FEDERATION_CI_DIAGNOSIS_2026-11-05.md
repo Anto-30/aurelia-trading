@@ -63,3 +63,44 @@ The current retarget therefore creates a genuine branch-integration problem. Do 
 `DERIV_ORDERS_SUBMITTED=0`
 
 This diagnosis authorizes no capital movement and does not change any release gate.
+
+
+## Post-integration update — 2026-11-05
+
+The PR branches were reconciled using explicit two-parent Git merge commits. No force-push was used.
+
+### PR #174 — updated exact head
+
+- New head: `b5ce60ee1baf51ebdf5ceb82f1dc5ad28ad8bc43`
+- Base: PR #256 branch at `c83d16ec25be3f7a8bea813687ab76bbe9695d9b`
+- GitHub reports `mergeable=true`.
+- Fresh exact-head AURELIA Assurance run [42040416288](https://github.com/Anto-30/aurelia-trading/actions/runs/42040416288): **success**; all 24 steps completed.
+- Fresh gstack Workflow Federation Assurance run [42040416323](https://github.com/Anto-30/aurelia-trading/actions/runs/42040416323): **success**.
+- Agent Federation Audit and Continuity Watchdog did not retrigger on this stacked branch because their workflow PR filters target `main`; previous results on older heads are not substituted.
+
+### PR #184 — updated exact head
+
+- New head: `6990459f4338250fa415f8ec9d5530ecfb202518`
+- Base: PR #174 updated branch at `b5ce60ee1baf51ebdf5ceb82f1dc5ad28ad8bc43`.
+- New commit is a two-parent merge with PR #174's updated branch as parent one and PR #184's previous head `d95ae72ad67d45f0e1450a7ba0817f215feb3d33` as parent two.
+- The merge tree preserves PR #184's 10 changed files, including the routing schema, blocked DeepSeek delegation, validators, and regression tests, while incorporating the PR #256 credential-isolated baseline and PR #174 governance role.
+- GitHub compare now reports `status=ahead`, `ahead_by=23`, `behind_by=0`; PR #184 reports `mergeable=true`.
+- Fresh exact-head AURELIA Assurance run [42040511297](https://github.com/Anto-30/aurelia-trading/actions/runs/42040511297): **success**; all 24 steps completed.
+- Fresh gstack Workflow Federation Assurance run [42040511166](https://github.com/Anto-30/aurelia-trading/actions/runs/42040511166): **success**.
+- Agent Federation Audit and Continuity Watchdog did not retrigger because their PR workflow filters target `main`; old-head results are not represented as current-head verification.
+
+### PR #265 — security integration regression tests
+
+- Exact head: `0906d53ce1dab556107ebef26c387b66b4c8b354`.
+- Exact-head Assurance run [42040030034](https://github.com/Anto-30/aurelia-trading/actions/runs/42040030034): **success**; all 24 steps completed.
+- The three new tests passed: general Assurance credential isolation, public account-evidence workflow credential isolation, and canonical live-lock fail-closed invariants.
+- The same full job ran compile, research, assurance, runtime, secret, hardening and container checks. Repository certification remained `NOT_READY` because real evidence artifacts are still absent; the workflow preserved the blocked state.
+
+### Remaining limits
+
+- All three PRs remain draft/open and require independent human review and normal repository integration.
+- PR #256 still has no independent GitHub review record.
+- PR #174/#184 passing Assurance establishes repository test results, not a running DeepSeek, Claude, Hermes, Kimi or Dev worker.
+- The Vercel `github-repo-audit` check failure is separate from AURELIA Assurance and does not represent a trading-runtime deployment.
+- No reviewer identity was supplied, so no reviewer was assigned.
+- Credential revocation, host provisioning, strategy OOS qualification, 3,600-second soak and final human release authorization remain outstanding.
