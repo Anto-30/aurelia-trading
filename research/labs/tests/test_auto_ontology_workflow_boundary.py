@@ -40,6 +40,7 @@ class ResearchCiBoundaryTests(unittest.TestCase):
         self.assertIn("AURELIA_PRIVILEGED_CREDENTIAL_JOBS_ENABLED == 'true'", block)
         self.assertIn("AURELIA_MAIN_BRANCH_PROTECTION_VERIFIED == 'true'", block)
         self.assertIn("AURELIA_PRODUCTION_ENVIRONMENT_REVIEWER_GATE_VERIFIED == 'true'", block)
+        self.assertIn("AURELIA_DERIV_CREDENTIAL_ROTATION_VERIFIED == 'true'", block)
         self.assertIn("environment: production", block)
 
 
