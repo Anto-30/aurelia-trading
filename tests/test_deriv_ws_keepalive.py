@@ -23,6 +23,7 @@ class FakeWebSocket:
         if payload.get("ping") == 1:
             await self.incoming.put(json.dumps({
                 "msg_type": "ping",
+                "ping": "pong",
                 "req_id": payload["req_id"],
             }))
 
