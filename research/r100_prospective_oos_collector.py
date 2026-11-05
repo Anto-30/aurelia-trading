@@ -236,17 +236,11 @@ def build_signal_id(timestamp_utc: str, quote: float, direction: str) -> str:
         {"timestamp_utc": timestamp_utc, "quote": quote, "direction": direction}
     )[:24]
 
-def observe_tick(
-    *,
-    hunter: AutonomousSignalHunter,
-    state: dict[str, Any],
+def validate_tick_input(
     quote: float,
     received_at: datetime,
-    emit_candidate: bool = True,
-) -> None:
-    # Validate event data before it can age or settle pending signals. The
-    # collector is research-only, but corrupt market input must not alter
-    # forward observations or become part of the campaign archive.
+) -> tuple[float, datetime]:
+    """Validate and normalize a public tick before strategy-state mutation."""
     if isinstance(quote, bool):
         raise ValueError("R100_TICK_QUOTE_INVALID")
     try:
@@ -256,14 +250,21 @@ def observe_tick(
     if not math.isfinite(quote_value) or quote_value <= 0:
         raise ValueError("R100_TICK_QUOTE_INVALID")
 
-    if (
-        received_at.tzinfo is None
-        or received_at.utcoffset() is None
-    ):
+    if received_at.tzinfo is None or received_at.utcoffset() is None:
         raise ValueError("R100_TICK_TIMESTAMP_TIMEZONE_REQUIRED")
 
-    quote = quote_value
-    received_at = received_at.astimezone(timezone.utc)
+    return quote_value, received_at.astimezone(timezone.utc)
+
+
+def observe_tick(
+    *,
+    hunter: AutonomousSignalHunter,
+    state: dict[str, Any],
+    quote: float,
+    received_at: datetime,
+    emit_candidate: bool = True,
+) -> None:
+    quote, received_at = validate_tick_input(quote, received_at)
 
     pending = state["pending"]
     settled: list[dict[str, Any]] = []
