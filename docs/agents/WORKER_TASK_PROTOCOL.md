@@ -41,6 +41,7 @@ Supervisor sends one task at a time:
       "agent":"ClaudeCode",
       "worker_id":"agent-worker:ClaudeCode:...",
       "session_nonce":"...",
+      "claim_token":"<one-time-worker-claim-capability>",
       "task":{
         "task_id":"task:...",
         "task_type":"ENGINEERING_REVIEW",
@@ -54,7 +55,7 @@ Supervisor sends one task at a time:
       }
     }
 
-Input payloads with obvious credential-bearing field names (token, secret, password, API key, authorization, cookie, private key, credential, OTP, login ID or account token) are blocked before dispatch. The supervisor does not intentionally pass broker credentials.
+Input payloads with obvious credential-bearing field names (token, secret, password, API key, authorization, cookie, private key, credential, OTP, login ID or account token) are blocked before dispatch. The supervisor does not intentionally pass broker credentials. The top-level claim_token is a separate random, one-time capability for this exact task claim; it is not a broker or provider credential. It is not included in the nested task payload, task journal or durable task record. A SHA-256 verifier and worker ID are stored with the claim. The capability is invalidated when the task is completed, requeued or recovered after lease expiry.
 
 ## Task result
 
@@ -68,12 +69,13 @@ Worker replies:
       "session_nonce":"...",
       "task_id":"task:...",
       "correlation_id":"corr-...",
+      "claim_token":"<same-one-time-worker-claim-capability>",
       "status":"COMPLETED",
       "evidence_ref":"worker-output/review.json",
       "result":{"summary":"Review artifact written","artifact_type":"application/json"}
     }
 
-The response must contain exactly the documented fields. Allowed status values are COMPLETED, FAILED and BLOCKED. Summary is limited to 4,096 characters and artifact_type to 128 characters. Worker-supplied free-form summaries are not persisted as authoritative findings; only the artifact type is retained in task metadata.
+The response must contain exactly the documented fields, including the original claim_token. A mismatched, missing or stale claim token is rejected even when the agent, worker ID, task ID, correlation ID and process nonce match. An unrecognized worker ID cannot renew, requeue or complete another worker claim. Allowed status values are COMPLETED, FAILED and BLOCKED. Summary is limited to 4,096 characters and artifact_type to 128 characters. Worker-supplied free-form summaries are not persisted as authoritative findings; only the artifact type is retained in task metadata.
 
 COMPLETED requires evidence_ref to be a relative path resolving to a regular file under AURELIA_EVIDENCE_ROOT. Absolute paths, traversal, missing files and symlink escapes are rejected. The artifact is hashed for evidence lineage. A file's existence is not proof that its content is correct or that tests passed.
 
