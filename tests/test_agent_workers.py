@@ -145,7 +145,7 @@ async def test_worker_jsonl_protocol_completes_only_correlated_task_with_evidenc
         assert await _wait_for_status(federation, task.task_id, "COMPLETED")
         stored = next(x for x in federation._load_tasks() if x["task_id"] == task.task_id)
         assert stored["evidence_ref"] == "worker-evidence.json"
-        assert stored["result"]["summary"] == "fixture completed"
+        assert stored["result"]["artifact_type"] == "test/evidence"
         assert "ClaudeCode" in federation.active_agents()
     finally:
         await supervisor.stop()
