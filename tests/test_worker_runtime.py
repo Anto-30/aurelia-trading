@@ -32,11 +32,15 @@ class SupervisedWorkerTests(unittest.IsolatedAsyncioTestCase):
                 source_hash="src",
                 lease_seconds=3,
             )
+            evidence_root = federation.lease_path.parent / "evidence"
+            evidence_root.mkdir(parents=True)
+            federation.performance_evaluator.evidence_root = evidence_root
             seen = []
 
             async def handler(task):
                 seen.append(task.task_id)
-                return {"accepted": True}
+                (evidence_root / "worker-result.json").write_text("evidence", encoding="utf-8")
+                return {"accepted": True, "evidence_ref": "worker-result.json"}
 
             worker = SupervisedAgentWorker(
                 federation,
@@ -63,6 +67,7 @@ class SupervisedWorkerTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(seen, [task.task_id])
             rows = federation._load_tasks()
             self.assertEqual(rows[0]["status"], "COMPLETED")
+            self.assertEqual(rows[0]["evidence_ref"], "worker-result.json")
             await worker.stop()
             self.assertEqual(worker.status.state, "STOPPED")
 
