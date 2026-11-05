@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.repo_agent_routing.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-05",
   "purpose": "Deterministically route every federated external repository to the agents best suited to consume its engineering, research, security, multimodal, browser, deployment, or orchestration capabilities. Includes security-first routing for LLM gateway and Freebuff-related reference sources.",
   "admission_policy": {
     "assignment_required": true,
@@ -127,6 +127,34 @@
     }
   },
   "routing_rules": [
+    {
+      "priority": 102,
+      "when": {
+        "category_contains_any": [
+          "metadata-provenance",
+          "data-catalogue",
+          "semantic-metadata",
+          "artifact-provenance",
+          "lineage-standard",
+          "chain-metadata",
+          "media-file-metadata",
+          "sql-query-metadata",
+          "container-build-metadata",
+          "dependency-update-metadata",
+          "coding-agent-harness"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "GoogleAgentSkills",
+        "JEV",
+        "KimiK3",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "Metadata, provenance and agent-harness sources are reviewed by engineering first, with security/governance, evidence and quantitative support. Per-repository mode overrides this conservative default. No external source receives production, secret or capital authority."
+    },
     {
       "priority": 101,
       "when": {
