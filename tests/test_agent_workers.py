@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import os
-
 import pytest
 
 from runtime.agent_federation import PersistentAgentFederation
@@ -57,3 +55,23 @@ async def test_configured_worker_emits_live_worker_lease(tmp_path, monkeypatch):
     await asyncio.sleep(0.15)
     assert "ClaudeCode" in federation.active_agents()
     await supervisor.stop()
+
+
+def test_agent_worker_probe_only_requires_configured_workers(monkeypatch):
+    from scripts.agent_worker_probe import probe_worker_state
+
+    monkeypatch.delenv("AURELIA_AGENT_CLAUDECODE_COMMAND", raising=False)
+    configured, missing, unexpected = probe_worker_state(
+        active=set(), advisory_workers=("ClaudeCode",)
+    )
+    assert configured == set()
+    assert missing == set()
+    assert unexpected == set()
+
+    monkeypatch.setenv("AURELIA_AGENT_CLAUDECODE_COMMAND", "claude")
+    configured, missing, unexpected = probe_worker_state(
+        active=set(), advisory_workers=("ClaudeCode",)
+    )
+    assert configured == {"ClaudeCode"}
+    assert missing == {"ClaudeCode"}
+    assert unexpected == set()
