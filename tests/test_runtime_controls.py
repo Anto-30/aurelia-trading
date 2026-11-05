@@ -90,14 +90,16 @@ def dec(probability: float = 0.60, stake: float = 2.0) -> Decision:
 
 class TestControls(unittest.TestCase):
     def test_probability_no_clipping(self):
-        self.assertTrue(probability_is_valid(0.50))
+        self.assertFalse(probability_is_valid(0.50))
+        self.assertFalse(probability_is_valid(0.549999))
         self.assertTrue(probability_is_valid(0.55))
         self.assertTrue(probability_is_valid(0.75))
-        self.assertFalse(probability_is_valid(0.49))
+        self.assertFalse(probability_is_valid(0.750001))
         self.assertFalse(probability_is_valid(0.76))
         self.assertFalse(probability_is_valid(0.82))
         self.assertFalse(probability_is_valid(True))
         self.assertFalse(probability_is_valid(float("nan")))
+        self.assertFalse(probability_is_valid(float("inf")))
 
     def test_low_balance_is_not_readiness_blocker(self):
         from assurance.aurelia_invariants import capital_readiness_blocker_for_balance

@@ -46,16 +46,96 @@ class StakeSizingPolicyTests(unittest.TestCase):
         self.assertFalse(size_stake_for_balance(100, maximum_risk_fraction=10**10000).allowed)
         self.assertFalse(size_stake_for_balance(100, minimum_stake=10**10000).allowed)
 
-    def test_probability_band_is_50_to_75_percent_without_clipping(self):
-        self.assertEqual(MIN_PROBABILITY, 0.50)
+    def test_probability_band_is_55_to_75_percent_without_clipping(self):
+        self.assertEqual(MIN_PROBABILITY, 0.55)
         self.assertEqual(MAX_PROBABILITY, 0.75)
-        self.assertTrue(probability_is_valid(0.50))
+        self.assertFalse(probability_is_valid(0.549999))
+        self.assertTrue(probability_is_valid(0.55))
         self.assertTrue(probability_is_valid(0.75))
-        self.assertFalse(probability_is_valid(0.4999))
-        self.assertFalse(probability_is_valid(0.7501))
-        self.assertFalse(probability_is_valid(float("nan")))
-        self.assertFalse(probability_is_valid(float("inf")))
-        self.assertFalse(probability_is_valid(10**10000))
+        for invalid in (0.750001, 0.82, float("nan"), float("inf"), 10**10000, True):
+            with self.subTest(invalid=invalid):
+                self.assertFalse(probability_is_valid(invalid))
+
+    def test_probability_range_does_not_override_independent_authority_gates(self):
+        account = AccountIdentity("VERIFY_ONLY", "real", "USD", "real")
+        capital = CapitalSnapshot(
+            balance=2.00,
+            currency="USD",
+            available_balance=2.00,
+            captured_at=utc_now(),
+            source="verified-test-snapshot",
+            account=account,
+        )
+        for probability in (0.55, 0.75):
+            decision = Decision(
+                decision_id=f"probability-boundary-{probability}",
+                strategy_id="test-strategy",
+                strategy_version="1",
+                strategy_hash="sha256:test-strategy",
+                symbol="TEST",
+                direction="CALL",
+                probability=probability,
+                decision_time=utc_now(),
+                market_snapshot_hash="sha256:test-market",
+                risk_requested_stake=1.00,
+            )
+            gate, context = authorization_gate(
+                decision=decision,
+                account=account,
+                capital=capital,
+                config_hash="config-digest",
+                runtime_config_hash="config-digest",
+                kill_switch_off=False,
+                risk_approved=True,
+                firewall_approved=True,
+                reconciliation_healthy=True,
+                final_execution_authorization=False,
+                live_trading_enabled=False,
+                probability_calibrated=True,
+                probability_fresh=True,
+                probability_drift_ok=True,
+                market_data_validated=True,
+                exposure_approved=True,
+                execution_mode="VERIFY_ONLY",
+            )
+            self.assertTrue(gate.allowed, gate.reason_codes)
+            self.assertIsNotNone(context)
+
+        decision = Decision(
+            decision_id="probability-without-calibration",
+            strategy_id="test-strategy",
+            strategy_version="1",
+            strategy_hash="sha256:test-strategy",
+            symbol="TEST",
+            direction="CALL",
+            probability=0.55,
+            decision_time=utc_now(),
+            market_snapshot_hash="sha256:test-market",
+            risk_requested_stake=1.00,
+        )
+        gate, context = authorization_gate(
+            decision=decision,
+            account=account,
+            capital=capital,
+            config_hash="config-digest",
+            runtime_config_hash="config-digest",
+            kill_switch_off=False,
+            risk_approved=True,
+            firewall_approved=True,
+            reconciliation_healthy=True,
+            final_execution_authorization=False,
+            live_trading_enabled=False,
+            probability_calibrated=False,
+            probability_fresh=True,
+            probability_drift_ok=True,
+            market_data_validated=True,
+            exposure_approved=True,
+            execution_mode="VERIFY_ONLY",
+        )
+        self.assertFalse(gate.allowed)
+        self.assertIsNone(context)
+        self.assertIn("PROBABILITY_NOT_CALIBRATED", gate.reason_codes)
+
 
     def test_live_authorization_uses_balance_scaled_stake(self):
         account = AccountIdentity(

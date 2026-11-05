@@ -17,7 +17,7 @@ class ProductionAcceptanceAuditTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("AURELIA_PRODUCTION_ACCEPTANCE=AUDIT_PASS", result.stdout)
-        self.assertIn("PROBABILITY_POLICY_RANGE=0.50..0.75", result.stdout)
+        self.assertIn("PROBABILITY_POLICY_RANGE=0.55..0.75", result.stdout)
         self.assertIn("CAPITAL_MOVEMENT_PERMITTED=false", result.stdout)
         self.assertIn("LIVE_EXECUTION=BLOCKED", result.stdout)
 
