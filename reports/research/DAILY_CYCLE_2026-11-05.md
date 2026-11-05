@@ -346,3 +346,19 @@ Claude Code, DeepSeek Harness, Hermes and Kimi K3 were searched for as callable 
 `REAL_ORDERS=0`
 
 No live order, authenticated account request, credential read, production deployment or strategy promotion was performed in this closeout. The next safe technical sequence is: obtain exact-head CI on #256/#258 repairs; independently review and integrate the credential-plane workflow; port #253 onto that baseline; then collect and freeze the missing R_100 evidence before any strategy qualification decision.
+
+
+### 10.8 New credential exposure found in connected ShareWatch document — critical owner action
+
+During retrieval of the previously requested ShareWatch handoff document (`deriv app id `, ShareWatch handoff `SW-B8VS6PYB`, version 50), the document content was found to contain a raw Deriv PAT, multiple Deriv application IDs, and an account identifier fragment.
+
+**The raw credential was not copied into this repository, echoed in comments, tested, or used for authentication.** The document is treated as an active credential exposure. Prior statements that rotation was merely unverified must now be escalated: assume the PAT is compromised until it is revoked.
+
+Required owner actions:
+1. Revoke the exposed PAT in Deriv immediately; issue a new credential only after the OAuth/PAT choice and least-privilege scope are resolved.
+2. Remove the raw credential from the Google Doc and any other copies, but assume revision history/backups may retain it; revocation is the security control, not document editing alone.
+3. Audit Google Drive sharing/access and any copies or exports of that document.
+4. Do not paste the replacement credential into ChatGPT, GitHub source, PR comments, issue text, or logs. Store it only in the protected secret manager/environment.
+5. Re-verify the production environment and workflow secret boundary before any authenticated verification.
+
+The TimelinesAI WhatsApp-account inventory request could not be completed: the connected API returned HTTP 403 `plan_feature_unavailable` because public API access is not enabled on the current plan. No account list or connection status is claimed.
