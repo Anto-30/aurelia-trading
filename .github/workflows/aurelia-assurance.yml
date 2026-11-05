@@ -61,9 +61,9 @@ jobs:
       - name: Verify protected Deriv authentication prerequisites
         if: always()
         env:
-          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
+          DERIV_AUTH_TOKEN_PRESENT: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && 'true' || 'false' }}
+          DERIV_APP_ID_PRESENT: ${{ (secrets.DERIV_APP_ID || '') != '' && 'true' || 'false' }}
+          DERIV_EXPECTED_LOGINID_PRESENT: ${{ (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && 'true' || 'false' }}
         run: python scripts/deriv_auth_prerequisites.py
 
       - name: Upload Deriv authentication prerequisite evidence
