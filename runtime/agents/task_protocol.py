@@ -141,6 +141,12 @@ def validate_hello(message: dict[str, Any], *, expected_agent: str) -> dict[str,
         raise ProtocolError("PROTOCOL_VERSION_UNSUPPORTED")
     if message.get("agent") != expected_agent:
         raise ProtocolError("WORKER_IDENTITY_MISMATCH")
+    # A worker must explicitly acknowledge every non-authority boundary.
+    # Missing values are not interpreted as false.
+    for key in AUTHORITY_KEYS:
+        if key not in message or message[key] is not False:
+            raise ProtocolError("WORKER_AUTHORITY_ACK_REQUIRED")
+    _reject_sensitive_keys(message)
     _reject_authority_claims(message)
     return message
 
