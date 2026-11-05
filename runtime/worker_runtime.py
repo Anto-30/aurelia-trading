@@ -265,5 +265,6 @@ class SupervisedAgentWorker:
                     pass
         self._task = None
         self._heartbeat_task = None
+        await self.federation.revoke_lease(self.agent, worker_id=self.worker_id)
         self._state = "STOPPED"
         return self.status
