@@ -204,8 +204,6 @@ for raw in sys.stdin:
     print(json.dumps(response, separators=(",", ":")), flush=True)
 '''
         command = f"{shlex.quote(sys.executable)} -u -c {shlex.quote(worker_script)}"
-        environment = dict(os.environ)
-        environment["AURELIA_AGENT_CLAUDECODE_COMMAND"] = command
         await self.federation.enqueue_task(
             task_type="ENGINEERING_REVIEW",
             payload={"scope": "protocol integration test"},
@@ -220,17 +218,18 @@ for raw in sys.stdin:
             task_timeout_seconds=2,
             evidence_root=self.root,
         )
-        supervisor.start()
-        deadline = time.monotonic() + 4
         stored = []
-        try:
-            while time.monotonic() < deadline:
-                stored = self.federation._load_tasks()
-                if stored and stored[0].get("status") in {"COMPLETED", "FAILED", "BLOCKED"}:
-                    break
-                await asyncio.sleep(0.05)
-        finally:
-            await supervisor.stop()
+        with patch.dict(os.environ, {"AURELIA_AGENT_CLAUDECODE_COMMAND": command}):
+            supervisor.start()
+            deadline = time.monotonic() + 4
+            try:
+                while time.monotonic() < deadline:
+                    stored = self.federation._load_tasks()
+                    if stored and stored[0].get("status") in {"COMPLETED", "FAILED", "BLOCKED"}:
+                        break
+                    await asyncio.sleep(0.05)
+            finally:
+                await supervisor.stop()
 
         self.assertEqual(stored[0]["status"], "COMPLETED")
         self.assertTrue(
