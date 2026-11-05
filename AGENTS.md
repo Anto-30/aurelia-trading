@@ -37,3 +37,8 @@ The following model-agnostic engineering skills are vendored under `.agents/skil
 - `.agents/skills/matt-pocock-tdd/SKILL.md`
 - `.agents/skills/matt-pocock-code-review/SKILL.md`
 - `.agents/skills/matt-pocock-codebase-design/SKILL.md`
+
+
+## External trading repository intake
+
+Before any agent clones, imports, installs, executes, or assigns an external trading/quant/agent repository or skill, it must read `.agents/skills/aurelia-trading-repo-intake/SKILL.md` and `docs/engineering/EXTERNAL_TRADING_REPOSITORY_ASSESSMENT_2026-11-05.md`. Apply this workflow to every agent role, including ClaudeCode, KimiK3, GrokBot, JEV, ChatGPT supervisory work, and any subsequently verified agent runtime. This is a universal repository-safety requirement, not a blanket instruction to invoke every provider or plugin on every task. Select all relevant, available tools and skills by task; verify connection and permissions at runtime; never claim unavailable tools ran. Least privilege and AURELIA's deterministic capital boundary take precedence over broad tool use.
