@@ -80,6 +80,34 @@ def _strip_operational_campaign_fields(node: ast.AST) -> ast.AST:
     return node
 
 
+def _strip_operational_input_validation(node: ast.AST) -> ast.AST:
+    """Exclude the explicit tick-input guard from the frozen strategy AST.
+
+    The validation wrapper protects data integrity but does not define signal
+    selection or outcome rules. Its behavior has independent regression tests.
+    Only the exact first-statement delegation is excluded; strategy statements
+    remain part of the source-integrity hash.
+    """
+    if getattr(node, "name", None) != "observe_tick":
+        return node
+
+    expected = ast.parse(
+        "quote, received_at = validate_tick_input(quote, received_at)"
+    ).body[0]
+    matches = [
+        index
+        for index, statement in enumerate(node.body)
+        if ast.dump(statement, include_attributes=False)
+        == ast.dump(expected, include_attributes=False)
+    ]
+    if not matches:
+        return node
+    if matches != [0]:
+        raise ValueError("R100_INPUT_VALIDATION_WRAPPER_POSITION_INVALID")
+    node.body = node.body[1:]
+    return node
+
+
 def _selected_ast(source: str, *, path: str) -> dict[str, str]:
     tree = ast.parse(source, filename=path)
     selected: dict[str, str] = {}
@@ -94,6 +122,8 @@ def _selected_ast(source: str, *, path: str) -> dict[str, str]:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             if node.name not in wanted_nodes:
                 continue
+            if node.name == "observe_tick":
+                node = _strip_operational_input_validation(node)
             if node.name in {"initial_state", "evaluation"}:
                 node = _strip_operational_campaign_fields(node)
             selected[node.name] = ast.dump(node, include_attributes=False)
