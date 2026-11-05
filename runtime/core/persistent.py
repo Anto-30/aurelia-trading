@@ -235,3 +235,117 @@ class PersistentLedger:
     def events(self) -> list[LedgerEvent]:
         with self._lock:
             return list(self._events.values())
+
+
+# Identity binding delegates to a pre-existing durable AURELIA store.
+# This adapter intentionally has no cache or default in-memory fallback.
+from typing import Protocol, runtime_checkable
+from .models import CompositeAccountIdentity
+
+
+@runtime_checkable
+class ExistingAccountBindingStore(Protocol):
+    """Required contract for an AURELIA-owned durable account-binding store."""
+
+    def bind_account(self, identity: CompositeAccountIdentity) -> None: ...
+
+    def get_binding_by_aurelia_uuid(
+        self, aurelia_uuid: str
+    ) -> CompositeAccountIdentity | None: ...
+
+    def get_binding_by_deriv_account_id(
+        self, account_id: str
+    ) -> CompositeAccountIdentity | None: ...
+
+    def get_binding_by_deriv_loginid(
+        self, deriv_loginid: str
+    ) -> CompositeAccountIdentity | None: ...
+
+
+class BrokerUUIDToLoginBinding:
+    """Bind the composite broker identity through an injected existing store.
+
+    No persistence is implemented here. Durability, encryption, locking and
+    restart recovery remain the responsibility of the injected store. Missing
+    persistence capability is a construction-time error, not a silent cache.
+    """
+
+    def __init__(self, existing_binding_store: ExistingAccountBindingStore):
+        if existing_binding_store is None:
+            raise ValueError("EXISTING_ACCOUNT_BINDING_STORE_REQUIRED")
+        required_methods = (
+            "bind_account",
+            "get_binding_by_aurelia_uuid",
+            "get_binding_by_deriv_account_id",
+            "get_binding_by_deriv_loginid",
+        )
+        if any(not callable(getattr(existing_binding_store, name, None)) for name in required_methods):
+            raise TypeError("EXISTING_ACCOUNT_BINDING_STORE_INTERFACE_INVALID")
+        self.existing_store = existing_binding_store
+
+    def bind_complete_identity(self, identity: CompositeAccountIdentity) -> None:
+        if not isinstance(identity, CompositeAccountIdentity) or identity.validate_integrity() is not True:
+            raise ValueError("IDENTITY_INTEGRITY_VALIDATION_FAILED")
+        self.existing_store.bind_account(identity)
+
+    def get_binding_by_aurelia_uuid(
+        self, aurelia_uuid: str
+    ) -> CompositeAccountIdentity | None:
+        identity = self.existing_store.get_binding_by_aurelia_uuid(aurelia_uuid)
+        if identity is None:
+            return None
+        if not isinstance(identity, CompositeAccountIdentity) or identity.validate_integrity() is not True:
+            raise ValueError("STORED_IDENTITY_INTEGRITY_VALIDATION_FAILED")
+        if identity.aurelia.internal_uuid != aurelia_uuid:
+            raise ValueError("STORED_AURELIA_IDENTITY_KEY_MISMATCH")
+        return identity
+
+    def get_binding_by_deriv_account_id(
+        self, account_id: str
+    ) -> CompositeAccountIdentity | None:
+        identity = self.existing_store.get_binding_by_deriv_account_id(account_id)
+        if identity is None:
+            return None
+        if not isinstance(identity, CompositeAccountIdentity) or identity.validate_integrity() is not True:
+            raise ValueError("STORED_IDENTITY_INTEGRITY_VALIDATION_FAILED")
+        if identity.deriv_account.account_id != account_id:
+            raise ValueError("STORED_DERIV_ACCOUNT_ID_KEY_MISMATCH")
+        return identity
+
+    def get_binding_by_deriv_loginid(
+        self, deriv_loginid: str
+    ) -> CompositeAccountIdentity | None:
+        identity = self.existing_store.get_binding_by_deriv_loginid(deriv_loginid)
+        if identity is None:
+            return None
+        if not isinstance(identity, CompositeAccountIdentity) or identity.validate_integrity() is not True:
+            raise ValueError("STORED_IDENTITY_INTEGRITY_VALIDATION_FAILED")
+        if identity.deriv_account.legacy_loginid != deriv_loginid:
+            raise ValueError("STORED_LEGACY_DERIV_LOGINID_KEY_MISMATCH")
+        return identity
+
+
+    def _delegate_oauth_store(self, method_name: str, **kwargs):
+        method = getattr(self.existing_store, method_name, None)
+        if not callable(method):
+            raise TypeError("ENCRYPTED_OAUTH_BINDING_STORE_INTERFACE_REQUIRED")
+        return method(**kwargs)
+
+    def create_pending_oauth_authorization(self, **kwargs):
+        return self._delegate_oauth_store("create_pending_oauth_authorization", **kwargs)
+
+    def consume_pending_oauth_authorization(self, **kwargs):
+        return self._delegate_oauth_store("consume_pending_oauth_authorization", **kwargs)
+
+    def store_oauth_access_token(self, **kwargs):
+        return self._delegate_oauth_store("store_oauth_access_token", **kwargs)
+
+    def get_oauth_access_token(self, **kwargs):
+        return self._delegate_oauth_store("get_oauth_access_token", **kwargs)
+
+    def delete_oauth_access_token(self, **kwargs):
+        return self._delegate_oauth_store("delete_oauth_access_token", **kwargs)
+
+    def validate_binding_integrity(self, aurelia_uuid: str) -> bool:
+        identity = self.get_binding_by_aurelia_uuid(aurelia_uuid)
+        return identity is not None and identity.validate_integrity() is True

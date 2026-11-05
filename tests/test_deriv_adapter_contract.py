@@ -1,5 +1,6 @@
 import os
 import unittest
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from runtime.adapters.deriv_adapter import DerivAdapter, DerivProtocolError
@@ -63,6 +64,161 @@ class TestDerivAdapterContract(unittest.TestCase):
             ):
                 asyncio.run(adapter.connect())
         transport.connect.assert_not_awaited()
+
+    def test_generic_request_rejects_all_capital_actions_before_transport(self):
+        import asyncio
+
+        transport = SimpleNamespace(request=AsyncMock(return_value={}))
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+            expected_currency="USD",
+        )
+        adapter.transport = transport
+
+        async def exercise():
+            for payload in (
+                {"buy": "PROPOSAL-1", "price": 1.0},
+                {"sell": "CONTRACT-1", "price": 1.0},
+                {"cancel": "CONTRACT-1"},
+                {"contract_update": 1, "contract_id": 1},
+            ):
+                with self.subTest(payload=payload):
+                    with self.assertRaisesRegex(
+                        DerivProtocolError,
+                        "CAPITAL_ACTION_REQUIRES_EXECUTOR_AUTHORITY",
+                    ):
+                        await adapter.request(payload)
+
+        asyncio.run(exercise())
+        transport.request.assert_not_awaited()
+
+    def test_direct_order_submission_requires_executor_bound_capability(self):
+        import asyncio
+        from runtime.core.models import AccountIdentity
+
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+            expected_loginid="CRREAL",
+            expected_currency="USD",
+        )
+        adapter.authorized = True
+        adapter.account = AccountIdentity("CRREAL", "real", "USD", "real")
+        transport = SimpleNamespace(request=AsyncMock(return_value={
+            "req_id": 1,
+            "buy": {"transaction_id": "TX-1", "contract_id": "C-1"},
+        }))
+        adapter.transport = transport
+
+        with self.assertRaisesRegex(
+            DerivProtocolError,
+            "BROKER_EXECUTOR_CAPABILITY_REQUIRED",
+        ):
+            asyncio.run(adapter.submit_authorized_order(
+                {"proposal_id": "PROPOSAL-1", "stake": 1.0},
+                executor_capability=object(),
+            ))
+
+        transport.request.assert_not_awaited()
+
+    def test_demo_oauth_connection_uses_existing_transport_and_binds_modern_account_id(self):
+        import asyncio
+        from types import SimpleNamespace
+
+        demo_session = SimpleNamespace(
+            account=SimpleNamespace(
+                account_id="DOT90004580",
+                account_type="demo",
+                status="active",
+                currency="USD",
+            ),
+            websocket_url=(
+                "wss://api.derivws.com/trading/v1/options/ws/demo?otp=single-use-demo-otp"
+            ),
+        )
+        extension = SimpleNamespace(
+            adapter=None,
+            create_authenticated_demo_session=lambda **kwargs: demo_session,
+        )
+        adapter = DerivAdapter(
+            ws_url="",
+            environment="demo",
+            expected_currency="USD",
+        )
+        extension.adapter = adapter
+        adapter.attach_oauth_extension(extension)
+
+        transport = SimpleNamespace(
+            request=AsyncMock(return_value={
+                "req_id": 1,
+                "balance": {"balance": 1000.0, "currency": "USD"},
+            }),
+            connect=AsyncMock(),
+            close=AsyncMock(),
+            reconnect=AsyncMock(),
+        )
+        with patch(
+            "runtime.adapters.deriv_adapter.DerivWebSocketTransport",
+            return_value=transport,
+        ) as factory:
+            account = asyncio.run(adapter.connect_demo_with_oauth(
+                account_id="DOT90004580",
+                expected_currency="USD",
+            ))
+
+        factory.assert_called_once()
+        transport.connect.assert_awaited_once()
+        self.assertEqual(account.account_type, "demo")
+        self.assertEqual(account.environment, "demo")
+        self.assertEqual(account.account_id, "DOT90004580")
+        self.assertIsNone(account.loginid)
+        self.assertTrue(adapter.authorized)
+        self.assertNotIn("single-use-demo-otp", adapter.connection_fingerprint)
+
+    def test_live_order_submission_rejects_demo_account_even_with_executor_capability(self):
+        import asyncio
+        from runtime.core.models import AccountIdentity
+
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/demo",
+            environment="demo",
+            expected_currency="USD",
+        )
+        capability = object()
+        adapter._bind_executor_capability(capability)
+        adapter.authorized = True
+        adapter.account = AccountIdentity(
+            None, "demo", "USD", "demo", account_id="DOT90004580"
+        )
+        with self.assertRaisesRegex(
+            DerivProtocolError, "LIVE_ORDER_REQUIRES_REAL_ACCOUNT"
+        ):
+            asyncio.run(adapter.submit_authorized_order(
+                {"proposal_id": "PROPOSAL-1", "stake": 1.0},
+                executor_capability=capability,
+            ))
+
+    def test_generic_request_rejects_unknown_or_ambiguous_actions(self):
+        import asyncio
+
+        transport = SimpleNamespace(request=AsyncMock(return_value={}))
+        adapter = DerivAdapter(
+            ws_url="wss://api.derivws.com/trading/v1/options/ws/real",
+            expected_currency="USD",
+        )
+        adapter.transport = transport
+
+        async def exercise():
+            for payload in (
+                {"unknown_action": 1},
+                {"balance": 1, "portfolio": 1},
+                {"proposal": 1, "buy": "PROPOSAL-1"},
+            ):
+                with self.subTest(payload=payload):
+                    with self.assertRaises(DerivProtocolError):
+                        await adapter.request(payload)
+
+        asyncio.run(exercise())
+        transport.request.assert_not_awaited()
 
     def test_legacy_generic_token_is_not_loaded_as_oauth(self):
         with patch.dict(

@@ -49,16 +49,19 @@ class DerivWebSocketTransport:
         self._lock = asyncio.Lock()
 
     async def connect(self) -> None:
-        if self.ws is not None:
-            return
-        self.ws = await connect(
-            self.url,
-            ping_interval=self.ping_interval,
-            ping_timeout=self.ping_interval,
-            close_timeout=5,
-            max_size=2_000_000,
-        )
-        self._reader_task = asyncio.create_task(self._reader_loop())
+        # Serialize connection creation so concurrent callers cannot establish
+        # duplicate sockets for the same canonical transport instance.
+        async with self._lock:
+            if self.ws is not None:
+                return
+            self.ws = await connect(
+                self.url,
+                ping_interval=self.ping_interval,
+                ping_timeout=self.ping_interval,
+                close_timeout=5,
+                max_size=2_000_000,
+            )
+            self._reader_task = asyncio.create_task(self._reader_loop())
 
     async def _reader_loop(self) -> None:
         assert self.ws is not None
@@ -195,7 +198,7 @@ class DerivWebSocketTransport:
             key: subscription.payload.copy()
             for key, subscription in self._subscriptions.items()
         }
-        await self.close()
+        await self.close(preserve_subscriptions=True)
         if fresh_url:
             self.url = fresh_url
         await self.connect()
@@ -211,7 +214,11 @@ class DerivWebSocketTransport:
                 json.dumps({**payload, "req_id": subscription.request_id})
             )
 
-    async def close(self) -> None:
+    async def close(self, *, preserve_subscriptions: bool = False) -> None:
+        # Capture the socket before cancelling the reader: _reader_loop clears
+        # self.ws in its finally block, so inspecting self.ws after awaiting the
+        # task can otherwise skip the actual WebSocket close.
+        ws = self.ws
         reader = self._reader_task
         self._reader_task = None
         if reader is not None:
@@ -221,9 +228,18 @@ class DerivWebSocketTransport:
             except asyncio.CancelledError:
                 pass
 
-        if self.ws is not None:
-            await self.ws.close()
+        if ws is not None:
+            await ws.close()
         self.ws = None
         self._fail_pending(DerivTransportError("BROKER_SESSION_CLOSED"))
-
         self._subscription_by_request_id.clear()
+
+        if not preserve_subscriptions:
+            # Wake every consumer before discarding subscription state. Without
+            # this terminal event, an async iterator can remain blocked forever
+            # on queue.get() after an explicit transport shutdown.
+            for subscription in self._subscriptions.values():
+                subscription.queue.put_nowait(
+                    {"error": {"code": "BROKER_SESSION_CLOSED"}}
+                )
+            self._subscriptions.clear()

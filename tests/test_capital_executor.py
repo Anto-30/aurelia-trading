@@ -208,6 +208,56 @@ async def bound_intent(executor, authorization, *, mode="LIVE"):
     )
 
 
+class BrokerSubmissionCapabilityTests(unittest.IsolatedAsyncioTestCase):
+    async def test_executor_binds_and_supplies_broker_submission_capability(self):
+        class CapabilityBroker(FakeBroker):
+            _requires_executor_capability = True
+
+            def __init__(self):
+                super().__init__()
+                self.bound_capability = None
+                self.received_capability = None
+
+            def _bind_executor_capability(self, capability):
+                self.bound_capability = capability
+
+            async def submit_authorized_order(
+                self, payload, *, executor_capability=None
+            ):
+                self.received_capability = executor_capability
+                if executor_capability is not self.bound_capability:
+                    raise AssertionError("executor capability mismatch")
+                return await super().submit_authorized_order(payload)
+
+        with tempfile.TemporaryDirectory() as td:
+            lock = Path(td) / "LIVE_LOCK.yaml"
+            CapitalExecutorHardeningTests.write_live_release(lock)
+            broker = CapabilityBroker()
+            executor = make_executor(lock, broker)
+
+            self.assertIsNotNone(broker.bound_capability)
+            self.assertIs(
+                broker.bound_capability,
+                executor._broker_submission_capability,
+            )
+
+            executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
+            authorization = context()
+            self.assertTrue(executor.clear_kill_switch_with_fresh_authorization(authorization))
+            intent = await bound_intent(executor, authorization)
+            outcome = await executor.execute(
+                intent,
+                authorization,
+                executor.fence.acquire("broker-capability-test"),
+            )
+
+            self.assertEqual(outcome.status, "ACCEPTED")
+            self.assertIs(
+                broker.received_capability,
+                executor._broker_submission_capability,
+            )
+
+
 class CapitalExecutorHardeningTests(unittest.IsolatedAsyncioTestCase):
     @staticmethod
     def write_live_release(path: Path):
