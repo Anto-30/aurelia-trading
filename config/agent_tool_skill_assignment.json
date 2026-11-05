@@ -101,7 +101,11 @@
         "evidence-reconciliation",
         "security-review",
         "ci-diagnostics",
-        "browser-e2e"
+        "browser-e2e",
+        "matt-pocock-diagnosing-bugs",
+        "matt-pocock-tdd",
+        "matt-pocock-code-review",
+        "matt-pocock-codebase-design"
       ],
       "plugins": [
         "superpowers",
