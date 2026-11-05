@@ -40,7 +40,12 @@ class SupervisedWorkerTests(unittest.IsolatedAsyncioTestCase):
             async def handler(task):
                 seen.append(task.task_id)
                 (evidence_root / "worker-result.json").write_text("evidence", encoding="utf-8")
-                return {"accepted": True, "evidence_ref": "worker-result.json"}
+                return {
+                    "accepted": True,
+                    "evidence_ref": "worker-result.json",
+                    "artifact_type": "application/json",
+                    "access_token": "must-not-be-persisted",
+                }
 
             worker = SupervisedAgentWorker(
                 federation,
@@ -69,6 +74,22 @@ class SupervisedWorkerTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(rows[0]["status"], "COMPLETED")
             self.assertEqual(rows[0]["evidence_ref"], "worker-result.json")
             self.assertEqual(rows[0]["completed_by_worker_id"], "claude-real-worker-test")
+            self.assertEqual(rows[0]["result"], {"artifact_type": "application/json"})
+            self.assertNotIn("access_token", str(rows[0]))
+            acknowledgements = [
+                message for message in federation.messages_for("AURELIA")
+                if message["message_type"] == "WORKER_ACK"
+                and message["payload"]["task_id"] == task.task_id
+            ]
+            self.assertEqual(len(acknowledgements), 1)
+            self.assertEqual(
+                acknowledgements[0]["payload"]["result"],
+                {"artifact_type": "application/json"},
+            )
+            self.assertNotIn(
+                "must-not-be-persisted",
+                (tmp_path / "journal.ndjson").read_text(encoding="utf-8"),
+            )
             await worker.stop()
             self.assertEqual(worker.status.state, "STOPPED")
 
@@ -102,12 +123,18 @@ class SupervisedWorkerTests(unittest.IsolatedAsyncioTestCase):
                 await __import__("asyncio").sleep(0.05)
 
             self.assertEqual(federation._load_tasks()[0]["status"], "FAILED")
+            self.assertEqual(
+                federation._load_tasks()[0]["result"],
+                {"error_class": "RuntimeError"},
+            )
             failures = [
                 m for m in federation.messages_for("AURELIA")
                 if m["message_type"] == "WORKER_FAILURE"
                 and m["payload"]["task_id"] == task.task_id
             ]
             self.assertEqual(len(failures), 1)
+            self.assertEqual(failures[0]["payload"]["error_class"], "RuntimeError")
+            self.assertNotIn("provider unavailable", str(failures[0]["payload"]))
             await worker.stop()
 
 
