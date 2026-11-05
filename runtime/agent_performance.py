@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 import os
+import tempfile
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -176,12 +177,69 @@ class AgentPerformanceEvaluator:
         self.evidence_root = Path(evidence_root or os.getenv("AURELIA_EVIDENCE_ROOT", "/var/lib/aurelia/evidence"))
 
     def _resolve_evidence(self, ref: str) -> Path | None:
-        if not ref or ref == "MISSING":
+        """Resolve evidence only when the final path remains inside evidence_root."""
+        if not isinstance(ref, str) or not ref.strip() or ref == "MISSING":
             return None
-        path = Path(ref)
-        if not path.is_absolute():
-            path = self.evidence_root / path
-        return path if path.is_file() else None
+        try:
+            root = self.evidence_root.expanduser().resolve(strict=True)
+            candidate = Path(ref)
+            if candidate.is_absolute():
+                return None
+            resolved = (root / candidate).resolve(strict=True)
+            resolved.relative_to(root)
+        except (OSError, RuntimeError, ValueError):
+            return None
+        return resolved if resolved.is_file() else None
+
+    def snapshot_evidence(self, ref: str) -> tuple[str, str, int] | None:
+        """Copy submitted evidence into a content-addressed archive under evidence_root."""
+        source = self._resolve_evidence(ref)
+        if source is None:
+            return None
+        try:
+            raw = source.read_bytes()
+            digest = hashlib.sha256(raw).hexdigest()
+            root = self.evidence_root.expanduser().resolve(strict=True)
+            archive_dir = root / "agent-tasks"
+            if archive_dir.is_symlink():
+                return None
+            archive_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+            resolved_dir = archive_dir.resolve(strict=True)
+            resolved_dir.relative_to(root)
+            destination = resolved_dir / f"{digest}.artifact"
+            if destination.is_symlink():
+                return None
+            if destination.exists():
+                if not destination.is_file() or destination.read_bytes() != raw:
+                    return None
+            else:
+                fd, temporary_name = tempfile.mkstemp(
+                    prefix=f".{digest}.",
+                    suffix=".tmp",
+                    dir=resolved_dir,
+                )
+                try:
+                    with os.fdopen(fd, "wb") as handle:
+                        handle.write(raw)
+                        handle.flush()
+                        os.fsync(handle.fileno())
+                    try:
+                        os.link(temporary_name, destination)
+                    except FileExistsError:
+                        if (
+                            destination.is_symlink()
+                            or not destination.is_file()
+                            or destination.read_bytes() != raw
+                        ):
+                            return None
+                finally:
+                    try:
+                        os.unlink(temporary_name)
+                    except FileNotFoundError:
+                        pass
+            return f"agent-tasks/{digest}.artifact", digest, len(raw)
+        except (OSError, RuntimeError, ValueError):
+            return None
 
     def evaluate(self, *, task_id: str, agent: str, status: str, evidence_ref: str = "",
                  result: dict[str, Any] | None = None, evaluation_id: str | None = None) -> dict[str, Any]:
@@ -189,13 +247,18 @@ class AgentPerformanceEvaluator:
         evidence_path = self._resolve_evidence(evidence_ref)
         evidence_ok = evidence_path is not None
         completed, failed, blocked = status == "COMPLETED", status == "FAILED", status == "BLOCKED"
-        scores = {"correctness": 25.0 if completed and evidence_ok and result.get("verified") else 0.0,
-                  "evidence_quality": 20.0 if evidence_ok else 0.0,
-                  "task_outcome": 20.0 if completed and evidence_ok else 0.0,
-                  "robustness": 15.0 if completed and evidence_ok and result.get("regression_free") else 0.0,
-                  "reproducibility": 10.0 if completed and evidence_ok and result.get("reproducible") else 0.0,
-                  "efficiency": 5.0 if completed and evidence_ok and result.get("efficient") else 0.0,
-                  "collaboration": 5.0 if completed and evidence_ok and result.get("handoff_clean") else 0.0}
+        # A worker-submitted artifact is a handoff, not independent validation.
+        # Never award quality points from worker-supplied booleans or file existence
+        # alone. A separate deterministic validation pipeline must award scores.
+        scores = {
+            "correctness": 0.0,
+            "evidence_quality": 0.0,
+            "task_outcome": 0.0,
+            "robustness": 0.0,
+            "reproducibility": 0.0,
+            "efficiency": 0.0,
+            "collaboration": 0.0,
+        }
         penalty = -20.0 if failed else (-5.0 if blocked else 0.0)
         penalty_reason = "FAILED_TASK" if failed else ("BLOCKED_TASK" if blocked else "")
         for reason, value in self.PENALTIES.items():
@@ -208,7 +271,11 @@ class AgentPerformanceEvaluator:
         evaluation = self.ledger.award(agent=agent, task_id=task_id, category_scores=scores,
             penalty=penalty, status=status, evidence_ref=evidence_ref or "MISSING",
             evaluation_id=evaluation_id, evidence_sha256=sha256, evidence_size_bytes=size)
-        return asdict(evaluation) | {"total_points": evaluation.total_points, "penalty_reason": penalty_reason}
+        return asdict(evaluation) | {
+            "total_points": evaluation.total_points,
+            "penalty_reason": penalty_reason,
+            "verification_state": "SUBMISSION_ONLY_NOT_QUALIFIED",
+        }
 
 
 class PersistentAgentPerformance:

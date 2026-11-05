@@ -1,7 +1,7 @@
 {
   "schema": "aurelia.agent_skill_inventory.v1",
   "generated": "2026-10-04",
-  "total_skills": 497,
+  "total_skills": 498,
   "global_rule": "Every installed skill is catalogued and role-assigned; skills never grant capital authority.",
   "items": [
     {
@@ -5429,6 +5429,24 @@
         "ClaudeCode",
         "GrokBot",
         "GLM"
+      ],
+      "capital_authority": false
+    },
+    {
+      "uri": "skills://aurelia/metadata-provenance",
+      "description": "Govern metadata, lineage, evidence provenance, software artifacts, agent harnesses and repository integrations for AURELIA.",
+      "plugin": "aurelia-internal-skills",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "GoogleAgentSkills",
+        "GLM",
+        "PlaywrightCLI",
+        "JEV",
+        "AURELIA",
+        "ChatGPT",
+        "Dev"
       ],
       "capital_authority": false
     }

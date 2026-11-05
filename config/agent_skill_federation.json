@@ -3366,6 +3366,36 @@
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
       "security_review_status": "PENDING",
       "source_url": "https://github.com/lessweb/deepcode-cli"
+    },
+    {
+      "name": "aurelia-metadata-provenance",
+      "owner": "Anto-30",
+      "repo": "Anto-30/aurelia-trading",
+      "pinned_commit": "02d39d964768660957d437705a09ed5da058037f",
+      "trust": "INTERNAL_CANONICAL",
+      "capabilities": [
+        "metadata-governance",
+        "evidence-lineage",
+        "artifact-provenance",
+        "agent-harness-security",
+        "repository-integration-review"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "GoogleAgentSkills",
+        "GLM",
+        "PlaywrightCLI",
+        "JEV",
+        "AURELIA",
+        "ChatGPT",
+        "Dev"
+      ],
+      "capital_authority": false,
+      "install_status": "REPOSITORY_SKILL_SOURCE",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/Anto-30/aurelia-trading/tree/main/skills/metadata-provenance"
     }
   ],
   "last_sync": {

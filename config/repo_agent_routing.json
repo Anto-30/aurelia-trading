@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.repo_agent_routing.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-05",
   "purpose": "Deterministically route every federated external repository to the agents best suited to consume its engineering, research, security, multimodal, browser, deployment, or orchestration capabilities. Includes security-first routing for LLM gateway and Freebuff-related reference sources.",
   "admission_policy": {
     "assignment_required": true,
@@ -25,6 +25,9 @@
         "integration",
         "deployment-engineering",
         "general-toolchain"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "KimiK3": {
@@ -37,6 +40,9 @@
         "market-modeling",
         "algorithmic-trading-research",
         "data-analysis"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "GrokBot": {
@@ -49,6 +55,9 @@
         "workflow-composition",
         "external-research",
         "cross-agent-coordination"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "PlaywrightCLI": {
@@ -59,6 +68,9 @@
         "network-testing",
         "responsive-testing",
         "desktop-ui-verification"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "GLM": {
@@ -68,6 +80,9 @@
         "document-analysis",
         "multimodal-inspection",
         "visual-analysis"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "GoogleAgentSkills": {
@@ -78,6 +93,9 @@
         "cloud-architecture",
         "multi-agent-security",
         "agentic-analytics"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "JEV": {
@@ -89,6 +107,9 @@
         "draft-verification",
         "tool-call-gating",
         "agent-workflow-optimization"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "AURELIA": {
@@ -98,6 +119,9 @@
         "policy-evaluation",
         "cross-agent-coordination",
         "capital-plane-policy-enforcement"
+      ],
+      "skills": [
+        "metadata-provenance"
       ]
     },
     "ChatGPT": {
@@ -110,7 +134,10 @@
         "source-provenance",
         "risk-boundary-review"
       ],
-      "runtime_status": "CURRENT_CHAT_SESSION_ONLY"
+      "runtime_status": "CURRENT_CHAT_SESSION_ONLY",
+      "skills": [
+        "metadata-provenance"
+      ]
     },
     "Dev": {
       "role": "implementation_and_runtime_operations_when_connected",
@@ -123,10 +150,61 @@
         "browser-e2e"
       ],
       "runtime_status": "NOT_CONNECTED",
-      "activation_gate": "Authorized host must be connected and runtime identity verified before tool execution."
+      "activation_gate": "Authorized host must be connected and runtime identity verified before tool execution.",
+      "skills": [
+        "metadata-provenance"
+      ]
     }
   },
   "routing_rules": [
+    {
+      "priority": 102,
+      "when": {
+        "category_contains_any": [
+          "metadata-provenance",
+          "data-catalogue",
+          "semantic-metadata",
+          "artifact-provenance",
+          "lineage-standard",
+          "chain-metadata",
+          "media-file-metadata",
+          "sql-query-metadata",
+          "container-build-metadata",
+          "dependency-update-metadata",
+          "coding-agent-harness"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "GoogleAgentSkills",
+        "JEV",
+        "KimiK3",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "Metadata, provenance and agent-harness sources are reviewed by engineering first, with security/governance, evidence and quantitative support. Per-repository mode overrides this conservative default. No external source receives production, secret or capital authority."
+    },
+    {
+      "priority": 101,
+      "when": {
+        "category_contains_any": [
+          "multi-agent-trading-research",
+          "tradingagents",
+          "tradingagents-cn",
+          "tradingagents-astock",
+          "tradingagents-ashare"
+        ]
+      },
+      "primary_agent": "ClaudeCode",
+      "supporting_agents": [
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode_default": "RESEARCH_ONLY",
+      "rationale": "ClaudeCode owns bounded AURELIA integration through the existing worker protocol; KimiK3 performs quantitative challenge, GrokBot adversarially reviews orchestration, and JEV verifies evidence/schema. External TradingAgents code is not imported into capital/execution paths."
+    },
     {
       "priority": 100,
       "when": {

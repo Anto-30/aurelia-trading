@@ -1,8 +1,8 @@
 {
   "schema": "aurelia.agent_plugin_inventory.v1",
   "generated": "2026-10-04",
-  "plugin_groups": 54,
-  "total_skill_entries": 497,
+  "plugin_groups": 55,
+  "total_skill_entries": 498,
   "global_rule": "Plugin capability availability does not grant capital authority. Connector/account authentication is separate from plugin installation.",
   "plugins": [
     {
@@ -1204,6 +1204,27 @@
       "capital_authority": false,
       "skill_uris": [
         "skills://plugins/windsor-ai/windsor"
+      ]
+    },
+    {
+      "plugin": "aurelia-internal-skills",
+      "skill_count": 1,
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "GoogleAgentSkills",
+        "GLM",
+        "PlaywrightCLI",
+        "JEV",
+        "AURELIA",
+        "ChatGPT",
+        "Dev"
+      ],
+      "installed_via": "repository_canonical_skill_registry",
+      "capital_authority": false,
+      "skill_uris": [
+        "skills://aurelia/metadata-provenance"
       ]
     }
   ]

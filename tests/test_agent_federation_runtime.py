@@ -1,6 +1,8 @@
 import asyncio
+import hashlib
 import tempfile
 import unittest
+from pathlib import Path
 
 from runtime.agent_federation import PersistentAgentFederation
 
@@ -63,6 +65,10 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
                 source_hash="src",
             )
             federation = PersistentAgentFederation(**kwargs)
+            evidence_root = federation.lease_path.parent / "evidence"
+            evidence_root.mkdir(parents=True)
+            federation.performance_evaluator.evidence_root = evidence_root
+            (evidence_root / "fixture.json").write_text("evidence", encoding="utf-8")
             first = await federation.enqueue_task(
                 task_type="RESEARCH",
                 payload={"x": 1},
@@ -86,10 +92,21 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
             )
             self.assertEqual(first.task_id, duplicate.task_id)
             self.assertEqual(federation.pending_tasks()[0]["task_id"], high.task_id)
-            claimed = await federation.claim_task("GoogleAgentSkills")
+            claimed = await federation.claim_task(
+                "GoogleAgentSkills",
+                worker_id="google-agent-skills-test-worker",
+            )
             self.assertIsNotNone(claimed)
             self.assertEqual(claimed.task_id, high.task_id)
-            self.assertTrue(await federation.complete_task(high.task_id, agent="GoogleAgentSkills"))
+            self.assertTrue(
+                await federation.complete_task(
+                    high.task_id,
+                    agent="GoogleAgentSkills",
+                    evidence_ref="fixture.json",
+                    worker_id=claimed.worker_id,
+                    claim_token=claimed.claim_token,
+                )
+            )
             self.assertEqual(len(federation.pending_tasks()), 1)
 
             restored = PersistentAgentFederation(**kwargs)
@@ -150,8 +167,12 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
                 correlation_id="recover-1",
                 assigned_agent="ClaudeCode",
             )
-            claimed = await federation.claim_task("ClaudeCode")
+            claimed = await federation.claim_task(
+                "ClaudeCode",
+                worker_id="recovery-worker-one",
+            )
             self.assertEqual(claimed.task_id, task.task_id)
+            self.assertTrue(claimed.claim_token)
             tasks = federation._load_tasks()
             tasks[0]["claimed_at"] = "2000-01-01T00:00:00+00:00"
             federation._save_tasks(tasks)
@@ -159,6 +180,82 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
             recovered = await federation.recover_stale_tasks()
             self.assertEqual(recovered, (task.task_id,))
             self.assertEqual(federation.pending_tasks()[0]["task_id"], task.task_id)
+            stored = federation._load_tasks()[0]
+            self.assertNotIn("claim_worker_id", stored)
+            self.assertNotIn("claim_token_sha256", stored)
+
+            replacement = await federation.claim_task(
+                "ClaudeCode",
+                worker_id="recovery-worker-two",
+            )
+            self.assertIsNotNone(replacement)
+            self.assertNotEqual(replacement.claim_token, claimed.claim_token)
+            self.assertFalse(
+                await federation.complete_task(
+                    task.task_id,
+                    agent="ClaudeCode",
+                    status="FAILED",
+                    worker_id="recovery-worker-one",
+                    claim_token=claimed.claim_token,
+                )
+            )
+            self.assertTrue(
+                await federation.complete_task(
+                    task.task_id,
+                    agent="ClaudeCode",
+                    status="FAILED",
+                    worker_id="recovery-worker-two",
+                    claim_token=replacement.claim_token,
+                )
+            )
+
+    async def test_corrupt_unbound_claim_cannot_be_completed(self):
+        with tempfile.TemporaryDirectory() as td:
+            evidence_root = Path(td) / "evidence"
+            evidence_root.mkdir()
+            federation = PersistentAgentFederation(
+                journal_path=f"{td}/events.ndjson",
+                lease_path=f"{td}/leases.json",
+                task_path=f"{td}/tasks.json",
+                config_hash="cfg",
+                source_hash="src",
+            )
+            federation.performance_evaluator.evidence_root = evidence_root
+            task = await federation.enqueue_task(
+                task_type="ENGINEERING",
+                payload={},
+                correlation_id="corrupt-unbound-claim",
+                assigned_agent="ClaudeCode",
+            )
+            claimed = await federation.claim_task(
+                "ClaudeCode",
+                worker_id="worker-one",
+            )
+            self.assertIsNotNone(claimed)
+            (evidence_root / "evidence.json").write_text("evidence", encoding="utf-8")
+
+            # Simulate a legacy/corrupted CLAIMED record with its capability
+            # verifier and worker binding removed. It must not be completable
+            # through an unauthenticated call.
+            rows = federation._load_tasks()
+            selected = next(row for row in rows if row["task_id"] == task.task_id)
+            selected.pop("claim_worker_id", None)
+            selected.pop("claim_token_sha256", None)
+            federation._save_tasks(rows)
+
+            self.assertFalse(
+                await federation.complete_task(
+                    task.task_id,
+                    agent="ClaudeCode",
+                    evidence_ref="evidence.json",
+                )
+            )
+            self.assertEqual(
+                next(row for row in federation._load_tasks()
+                     if row["task_id"] == task.task_id)["status"],
+                "CLAIMED",
+            )
+            self.assertFalse((evidence_root / "agent-tasks").exists())
 
     async def test_stale_agent_is_detectable_after_lease_expiry(self):
         with tempfile.TemporaryDirectory() as td:
@@ -227,6 +324,112 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
                 }
             })
             self.assertEqual(federation.active_agents(), ())
+
+
+    async def test_task_completion_requires_matching_worker_claim_capability(self):
+        with tempfile.TemporaryDirectory() as td:
+            evidence_root = Path(td) / "evidence"
+            evidence_root.mkdir()
+            federation = PersistentAgentFederation(
+                journal_path=f"{td}/events.ndjson",
+                lease_path=f"{td}/leases.json",
+                task_path=f"{td}/tasks.json",
+                config_hash="cfg",
+                source_hash="src",
+                lease_seconds=5,
+            )
+            federation.performance_evaluator.evidence_root = evidence_root
+            task = await federation.enqueue_task(
+                task_type="ENGINEERING_REVIEW",
+                payload={"scope": "claim binding"},
+                correlation_id="claim-capability-binding",
+                assigned_agent="ClaudeCode",
+            )
+            claim = await federation.claim_task(
+                "ClaudeCode",
+                worker_id="worker-one",
+            )
+            self.assertIsNotNone(claim)
+            self.assertTrue(claim.claim_token)
+
+            stored = next(
+                row for row in federation._load_tasks()
+                if row["task_id"] == task.task_id
+            )
+            self.assertNotIn(claim.claim_token, str(stored))
+            self.assertNotIn(
+                claim.claim_token,
+                (Path(td) / "events.ndjson").read_text(encoding="utf-8"),
+            )
+
+            artifact = evidence_root / "claim-evidence.json"
+            artifact.write_text('{"claim":"bound"}', encoding="utf-8")
+            self.assertTrue(
+                await federation.renew_task_claim(
+                    task.task_id,
+                    agent="ClaudeCode",
+                    worker_id="worker-one",
+                    claim_token=claim.claim_token,
+                )
+            )
+            self.assertFalse(
+                await federation.renew_task_claim(
+                    task.task_id,
+                    agent="ClaudeCode",
+                    worker_id="worker-two",
+                    claim_token=claim.claim_token,
+                )
+            )
+            self.assertFalse(
+                await federation.complete_task(
+                    task.task_id,
+                    agent="ClaudeCode",
+                    worker_id="worker-two",
+                    claim_token=claim.claim_token,
+                    evidence_ref="claim-evidence.json",
+                )
+            )
+            self.assertFalse(
+                await federation.complete_task(
+                    task.task_id,
+                    agent="ClaudeCode",
+                    worker_id="worker-one",
+                    claim_token="wrong-capability",
+                    evidence_ref="claim-evidence.json",
+                )
+            )
+            self.assertEqual(
+                next(row for row in federation._load_tasks()
+                     if row["task_id"] == task.task_id)["status"],
+                "CLAIMED",
+            )
+            self.assertFalse((evidence_root / "agent-tasks").exists())
+            self.assertTrue(
+                await federation.complete_task(
+                    task.task_id,
+                    agent="ClaudeCode",
+                    worker_id="worker-one",
+                    claim_token=claim.claim_token,
+                    evidence_ref="claim-evidence.json",
+                )
+            )
+            completed = next(
+                row for row in federation._load_tasks()
+                if row["task_id"] == task.task_id
+            )
+            self.assertEqual(completed["status"], "COMPLETED")
+            self.assertEqual(completed["completed_by_worker_id"], "worker-one")
+            self.assertNotIn("claim_token_sha256", completed)
+            self.assertEqual(completed["submitted_evidence_ref"], "claim-evidence.json")
+            expected_hash = hashlib.sha256(b'{"claim":"bound"}').hexdigest()
+            self.assertEqual(
+                completed["evidence_ref"],
+                f"agent-tasks/{expected_hash}.artifact",
+            )
+            archived = evidence_root / completed["evidence_ref"]
+            self.assertEqual(archived.read_bytes(), b'{"claim":"bound"}')
+            artifact.write_text('{"claim":"tampered"}', encoding="utf-8")
+            self.assertEqual(archived.read_bytes(), b'{"claim":"bound"}')
 
 
 if __name__ == "__main__":

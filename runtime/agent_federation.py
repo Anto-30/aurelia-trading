@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import hmac
 import json
-from dataclasses import dataclass
+import secrets
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -63,6 +66,8 @@ class AgentTask:
     correlation_id: str
     status: str = "PENDING"
     claimed_at: datetime | None = None
+    worker_id: str | None = None
+    claim_token: str | None = field(default=None, repr=False, compare=False)
 
     def as_payload(self) -> dict[str, Any]:
         return {
@@ -75,6 +80,7 @@ class AgentTask:
             "correlation_id": self.correlation_id,
             "status": self.status,
             "claimed_at": self.claimed_at.isoformat() if self.claimed_at else None,
+            "worker_id": self.worker_id,
         }
 
 
@@ -215,7 +221,16 @@ class PersistentAgentFederation:
         self._append("AGENT_TASK_ENQUEUED", task.as_payload(), task.correlation_id)
         return task
 
-    async def claim_task(self, agent: str) -> AgentTask | None:
+    async def claim_task(
+        self,
+        agent: str,
+        *,
+        worker_id: str | None = None,
+    ) -> AgentTask | None:
+        normalized_worker_id = str(worker_id).strip() if worker_id is not None else ""
+        if not normalized_worker_id:
+            raise ValueError("WORKER_ID_REQUIRED")
+
         async with self._lock:
             tasks = self._load_tasks()
             candidates = [
@@ -227,11 +242,26 @@ class PersistentAgentFederation:
                 return None
             candidates.sort(key=lambda x: (-int(x.get("priority", 50)), x.get("created_at", "")))
             selected = candidates[0]
+            claim_token = secrets.token_urlsafe(32) if normalized_worker_id else None
             selected["status"] = "CLAIMED"
             selected["assigned_agent"] = agent
             selected["claimed_at"] = datetime.now(timezone.utc).isoformat()
+            if claim_token:
+                selected["claim_worker_id"] = normalized_worker_id
+                selected["claim_token_sha256"] = hashlib.sha256(
+                    claim_token.encode("utf-8")
+                ).hexdigest()
+            else:
+                selected.pop("claim_worker_id", None)
+                selected.pop("claim_token_sha256", None)
             self._save_tasks(tasks)
-        self._append("AGENT_TASK_CLAIMED", selected, selected["correlation_id"])
+
+        # Never persist the bearer capability or its verifier in the event journal.
+        event_payload = {
+            key: value for key, value in selected.items()
+            if key != "claim_token_sha256"
+        }
+        self._append("AGENT_TASK_CLAIMED", event_payload, selected["correlation_id"])
         return AgentTask(
             task_id=selected["task_id"],
             task_type=selected["task_type"],
@@ -246,7 +276,126 @@ class PersistentAgentFederation:
                 if selected.get("claimed_at")
                 else None
             ),
+            worker_id=normalized_worker_id,
+            claim_token=claim_token,
         )
+
+    @staticmethod
+    def _claim_matches(
+        selected: dict[str, Any],
+        *,
+        agent: str,
+        worker_id: str | None,
+        claim_token: str | None,
+    ) -> bool:
+        if selected.get("status") != "CLAIMED" or selected.get("assigned_agent") != agent:
+            return False
+        stored_hash = selected.get("claim_token_sha256")
+        # Every claim is created with a worker ID and one-time capability.
+        # Legacy, incomplete, or corrupted claim records have no authority to
+        # complete, renew, or requeue work; stale recovery must requeue them.
+        if not isinstance(stored_hash, str) or len(stored_hash) != 64:
+            return False
+        if (
+            not isinstance(worker_id, str)
+            or not worker_id.strip()
+            or not isinstance(claim_token, str)
+            or not claim_token
+            or selected.get("claim_worker_id") != worker_id
+        ):
+            return False
+        supplied_hash = hashlib.sha256(claim_token.encode("utf-8")).hexdigest()
+        return hmac.compare_digest(str(stored_hash), supplied_hash)
+
+    async def renew_task_claim(
+        self,
+        task_id: str,
+        *,
+        agent: str,
+        worker_id: str | None = None,
+        claim_token: str | None = None,
+    ) -> bool:
+        """Renew a claim only when its owner (and capability, if bound) matches."""
+        claimed_at = datetime.now(timezone.utc)
+        async with self._lock:
+            tasks = self._load_tasks()
+            selected = next((x for x in tasks if x.get("task_id") == task_id), None)
+            if selected is None or not self._claim_matches(
+                selected,
+                agent=agent,
+                worker_id=worker_id,
+                claim_token=claim_token,
+            ):
+                return False
+            selected["claimed_at"] = claimed_at.isoformat()
+            self._save_tasks(tasks)
+        self._append(
+            "AGENT_TASK_CLAIM_RENEWED",
+            {
+                "task_id": task_id,
+                "agent": agent,
+                "worker_id": worker_id,
+                "claimed_at": claimed_at.isoformat(),
+            },
+            task_id,
+        )
+        return True
+
+    async def requeue_task(
+        self,
+        task_id: str,
+        *,
+        agent: str,
+        reason: str,
+        worker_id: str | None = None,
+        claim_token: str | None = None,
+    ) -> bool:
+        """Return a task to PENDING only for the current claim owner."""
+        if not reason or len(reason) > 96:
+            raise ValueError("INVALID_TASK_REQUEUE_REASON")
+        async with self._lock:
+            tasks = self._load_tasks()
+            selected = next((x for x in tasks if x.get("task_id") == task_id), None)
+            if selected is None or not self._claim_matches(
+                selected,
+                agent=agent,
+                worker_id=worker_id,
+                claim_token=claim_token,
+            ):
+                return False
+            selected["status"] = "PENDING"
+            selected["assigned_agent"] = None
+            selected.pop("claimed_at", None)
+            selected.pop("claim_worker_id", None)
+            selected.pop("claim_token_sha256", None)
+            self._save_tasks(tasks)
+        self._append(
+            "AGENT_TASK_REQUEUED",
+            {
+                "task_id": task_id,
+                "agent": agent,
+                "worker_id": worker_id,
+                "reason": reason,
+            },
+            task_id,
+        )
+        return True
+
+    async def revoke_lease(self, agent: str, *, worker_id: str) -> bool:
+        """Remove a lease only when it belongs to the worker being stopped."""
+        async with self._lock:
+            leases = self._load_leases()
+            current = leases.get(agent)
+            if not current or current.get("worker_id") != worker_id:
+                return False
+            leases.pop(agent, None)
+            self._save_leases(leases)
+        self._append(
+            "AGENT_LEASE_REVOKED",
+            {"agent": agent, "worker_id": worker_id},
+            f"agent:{agent}:worker:{worker_id}",
+        )
+        return True
 
     async def complete_task(
         self,
@@ -256,25 +405,54 @@ class PersistentAgentFederation:
         status: str = "COMPLETED",
         evidence_ref: str = "",
         result: dict[str, Any] | None = None,
+        worker_id: str | None = None,
+        claim_token: str | None = None,
     ) -> bool:
         if status not in {"COMPLETED", "FAILED", "BLOCKED"}:
             raise ValueError("INVALID_TASK_STATUS")
+        submitted_evidence_ref = evidence_ref
+        evidence_sha256: str | None = None
+        evidence_size_bytes: int | None = None
         async with self._lock:
             tasks = self._load_tasks()
             selected = next((x for x in tasks if x.get("task_id") == task_id), None)
-            if selected is None or selected.get("assigned_agent") != agent or selected.get("status") != "CLAIMED":
+            if selected is None or not self._claim_matches(
+                selected,
+                agent=agent,
+                worker_id=worker_id,
+                claim_token=claim_token,
+            ):
                 return False
+            completed_by_worker_id = selected.get("claim_worker_id")
+            if status == "COMPLETED":
+                snapshot = self.performance_evaluator.snapshot_evidence(evidence_ref)
+                if snapshot is None:
+                    raise ValueError("COMPLETED_TASK_REQUIRES_VERIFIABLE_EVIDENCE")
+                evidence_ref, evidence_sha256, evidence_size_bytes = snapshot
             selected["status"] = status
             if evidence_ref:
                 selected["evidence_ref"] = evidence_ref
+            if submitted_evidence_ref:
+                selected["submitted_evidence_ref"] = submitted_evidence_ref
+            if evidence_sha256:
+                selected["evidence_sha256"] = evidence_sha256
+                selected["evidence_size_bytes"] = evidence_size_bytes
             if result is not None:
                 selected["result"] = dict(result)
+            if completed_by_worker_id:
+                selected["completed_by_worker_id"] = completed_by_worker_id
+            selected.pop("claim_worker_id", None)
+            selected.pop("claim_token_sha256", None)
             self._save_tasks(tasks)
         payload = {
             "task_id": task_id,
             "agent": agent,
+            "worker_id": completed_by_worker_id,
             "status": status,
             "evidence_ref": evidence_ref,
+            "submitted_evidence_ref": submitted_evidence_ref,
+            "evidence_sha256": evidence_sha256,
+            "evidence_size_bytes": evidence_size_bytes,
             "result": result or {},
         }
         self._append("AGENT_TASK_COMPLETED", payload, task_id)
@@ -307,6 +485,8 @@ class PersistentAgentFederation:
                 task["status"] = "PENDING"
                 task["assigned_agent"] = None
                 task.pop("claimed_at", None)
+                task.pop("claim_worker_id", None)
+                task.pop("claim_token_sha256", None)
                 recovered.append(str(task.get("task_id")))
                 changed = True
             if changed:

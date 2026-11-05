@@ -110,6 +110,7 @@ def main() -> None:
         "browser-e2e",
         "ci-diagnostics",
         "evidence-inspection",
+        "metadata-provenance",
     }
     for root in required_dirs:
         names = {p.name for p in (ROOT / root).iterdir() if p.is_dir()}

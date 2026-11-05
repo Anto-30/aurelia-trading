@@ -78,6 +78,45 @@ class SupervisedAgentWorker:
             except asyncio.TimeoutError:
                 pass
 
+    async def _invoke_handler(self, task: AgentTask) -> dict[str, Any]:
+        result = self.handler(task) if self.handler else {}
+        if inspect.isawaitable(result):
+            result = await result
+        return result if isinstance(result, dict) else {"result": result}
+
+    async def _keep_claim_alive(self, task: AgentTask) -> None:
+        cadence = max(0.25, min(self.federation.lease_seconds / 3.0, 10.0))
+        while True:
+            await asyncio.sleep(cadence)
+            renewed = await self.federation.renew_task_claim(
+                task.task_id,
+                agent=self.agent,
+                worker_id=self.worker_id,
+                claim_token=task.claim_token,
+            )
+            if not renewed:
+                raise RuntimeError("WORKER_TASK_CLAIM_LOST")
+
+    async def _invoke_with_claim_renewal(self, task: AgentTask) -> dict[str, Any]:
+        handler_task = asyncio.create_task(self._invoke_handler(task))
+        keeper_task = asyncio.create_task(self._keep_claim_alive(task))
+        try:
+            done, _pending = await asyncio.wait(
+                {handler_task, keeper_task},
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            if keeper_task in done:
+                error = keeper_task.exception()
+                if error is not None:
+                    raise error
+                raise RuntimeError("WORKER_TASK_KEEPALIVE_STOPPED")
+            return handler_task.result()
+        finally:
+            for pending in (handler_task, keeper_task):
+                if not pending.done():
+                    pending.cancel()
+            await asyncio.gather(handler_task, keeper_task, return_exceptions=True)
+
     async def _run(self) -> None:
         while not self._stop.is_set():
             recovered = await self.federation.recover_stale_tasks()
@@ -95,7 +134,7 @@ class SupervisedAgentWorker:
                     priority=85,
                 )
 
-            task = await self.federation.claim_task(self.agent)
+            task = await self.federation.claim_task(self.agent, worker_id=self.worker_id)
             if task is None:
                 self._state = "WAITING_FOR_EVENT"
                 try:
@@ -105,28 +144,42 @@ class SupervisedAgentWorker:
                 continue
 
             self._state = "ACTIVE"
-            await self.federation.publish(
-                sender=self.agent,
-                recipients=("AURELIA",),
-                message_type="WORKER_PROGRESS",
-                payload={
-                    "worker_id": self.worker_id,
-                    "task_id": task.task_id,
-                    "state": "RUNNING",
-                    "capital_authority": False,
-                },
-                correlation_id=task.correlation_id,
-                priority=60,
-            )
             try:
-                result = self.handler(task) if self.handler else {}
-                if inspect.isawaitable(result):
-                    result = await result
-                if not isinstance(result, dict):
-                    result = {"result": result}
-                await self.federation.complete_task(
-                    task.task_id, agent=self.agent, status="COMPLETED"
+                await self.federation.publish(
+                    sender=self.agent,
+                    recipients=("AURELIA",),
+                    message_type="WORKER_PROGRESS",
+                    payload={
+                        "worker_id": self.worker_id,
+                        "task_id": task.task_id,
+                        "state": "RUNNING",
+                        "capital_authority": False,
+                    },
+                    correlation_id=task.correlation_id,
+                    priority=60,
                 )
+                result = await self._invoke_with_claim_renewal(task)
+                evidence_ref = result.get("evidence_ref", "")
+                artifact_type = result.get("artifact_type", "")
+                if (
+                    not isinstance(evidence_ref, str)
+                    or len(evidence_ref) > 512
+                    or not isinstance(artifact_type, str)
+                    or len(artifact_type) > 128
+                ):
+                    raise ValueError("WORKER_RESULT_METADATA_INVALID")
+                safe_result = {"artifact_type": artifact_type} if artifact_type else {}
+                completed = await self.federation.complete_task(
+                    task.task_id,
+                    agent=self.agent,
+                    status="COMPLETED",
+                    evidence_ref=evidence_ref,
+                    result=safe_result,
+                    worker_id=self.worker_id,
+                    claim_token=task.claim_token,
+                )
+                if not completed:
+                    raise RuntimeError("WORKER_TASK_COMPLETION_REJECTED")
                 await self.federation.publish(
                     sender=self.agent,
                     recipients=("AURELIA",),
@@ -135,19 +188,31 @@ class SupervisedAgentWorker:
                         "worker_id": self.worker_id,
                         "task_id": task.task_id,
                         "state": "COMPLETED",
-                        "result": result,
+                        "result": safe_result,
                         "capital_authority": False,
                     },
                     correlation_id=task.correlation_id,
                     priority=70,
                 )
             except asyncio.CancelledError:
+                await self.federation.requeue_task(
+                    task.task_id,
+                    agent=self.agent,
+                    reason="WORKER_STOPPED",
+                    worker_id=self.worker_id,
+                    claim_token=task.claim_token,
+                )
                 raise
             except Exception as exc:
-                self._last_error = f"{type(exc).__name__}: {exc}"
+                self._last_error = type(exc).__name__
                 self._state = "DEGRADED"
                 await self.federation.complete_task(
-                    task.task_id, agent=self.agent, status="FAILED"
+                    task.task_id,
+                    agent=self.agent,
+                    status="FAILED",
+                    result={"error_class": self._last_error},
+                    worker_id=self.worker_id,
+                    claim_token=task.claim_token,
                 )
                 await self.federation.publish(
                     sender=self.agent,
@@ -157,7 +222,7 @@ class SupervisedAgentWorker:
                         "worker_id": self.worker_id,
                         "task_id": task.task_id,
                         "state": "FAILED",
-                        "error": self._last_error,
+                        "error_class": self._last_error,
                         "capital_authority": False,
                     },
                     correlation_id=task.correlation_id,
@@ -200,5 +265,6 @@ class SupervisedAgentWorker:
                     pass
         self._task = None
         self._heartbeat_task = None
+        await self.federation.revoke_lease(self.agent, worker_id=self.worker_id)
         self._state = "STOPPED"
         return self.status
