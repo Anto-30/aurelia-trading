@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -370,6 +371,15 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(completed["status"], "COMPLETED")
             self.assertEqual(completed["completed_by_worker_id"], "worker-one")
             self.assertNotIn("claim_token_sha256", completed)
+            expected_hash = hashlib.sha256(b'{"claim":"bound"}').hexdigest()
+            self.assertEqual(
+                completed["evidence_ref"],
+                f"agent-tasks/{expected_hash}.json",
+            )
+            archived = evidence_root / completed["evidence_ref"]
+            self.assertEqual(archived.read_bytes(), b'{"claim":"bound"}')
+            artifact.write_text('{"claim":"tampered"}', encoding="utf-8")
+            self.assertEqual(archived.read_bytes(), b'{"claim":"bound"}')
 
 
 if __name__ == "__main__":
