@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import asyncio
+import math
 import os
+import time
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
@@ -140,20 +143,157 @@ class DerivAdapter:
         self.auth_token = ""
         return await self.connect()
 
-    async def connect_public(self) -> int:
+    async def probe_public_market_data(
+        self,
+        *,
+        symbol: str | None = None,
+        minimum_ticks: int = 2,
+        timeout_seconds: float = 45.0,
+    ) -> dict[str, Any]:
+        """Verify the unauthenticated public API and, optionally, a real tick stream.
+
+        No account-scoped request is sent. When a symbol is supplied, the probe
+        requires an active-symbol match and at least minimum_ticks valid,
+        ordered tick messages before reporting the stream as verified.
+        """
+        if symbol is not None and (not isinstance(symbol, str) or not symbol.strip()):
+            raise DerivProtocolError("DERIV_PUBLIC_SYMBOL_INVALID")
+        if (
+            isinstance(minimum_ticks, bool)
+            or not isinstance(minimum_ticks, int)
+            or minimum_ticks < 1
+        ):
+            raise DerivProtocolError("DERIV_PUBLIC_MINIMUM_TICKS_INVALID")
+        if (
+            isinstance(timeout_seconds, bool)
+            or not isinstance(timeout_seconds, (int, float))
+            or not math.isfinite(float(timeout_seconds))
+            or timeout_seconds <= 0
+        ):
+            raise DerivProtocolError("DERIV_PUBLIC_TICK_TIMEOUT_INVALID")
+
+        selected_symbol = symbol.strip() if symbol is not None else None
         transport = DerivWebSocketTransport(
             PUBLIC_WS_URL,
             timeout_seconds=self.timeout_seconds,
         )
-        await transport.connect()
         previous_transport = self.transport
+        iterator = None
         self.transport = transport
+        started = time.monotonic()
         try:
-            reply = await self._tracked_request("active_symbols", {"active_symbols": "brief"})
-            return len(reply.get("active_symbols") or [])
+            await transport.connect()
+            ping = await self._tracked_request("ping", {"ping": 1})
+            if ping.get("msg_type") != "ping" or ping.get("ping") != "pong":
+                raise DerivProtocolError("DERIV_PUBLIC_PING_INVALID")
+
+            reply = await self._tracked_request(
+                "active_symbols",
+                {"active_symbols": "brief"},
+            )
+            active_symbols = list(reply.get("active_symbols") or [])
+            result: dict[str, Any] = {
+                "schema": "aurelia.deriv_public_market_data_probe.v1",
+                "endpoint": PUBLIC_WS_URL,
+                "ping_verified": True,
+                "active_symbol_count": len(active_symbols),
+                "capital_authority_granted": False,
+                "order_submission_permitted": False,
+            }
+
+            if selected_symbol is not None:
+                available = {
+                    str(row.get("underlying_symbol") or row.get("symbol") or "")
+                    for row in active_symbols
+                    if isinstance(row, dict)
+                }
+                if selected_symbol not in available:
+                    raise DerivProtocolError("DERIV_PUBLIC_SYMBOL_NOT_ACTIVE")
+
+                stream = transport.subscribe(
+                    f"ticks:{selected_symbol}",
+                    {"ticks": selected_symbol},
+                )
+                iterator = stream.__aiter__()
+                deadline = started + float(timeout_seconds)
+                first_epoch: int | None = None
+                last_epoch: int | None = None
+                ticks_received = 0
+
+                while ticks_received < minimum_ticks:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise DerivProtocolError("DERIV_PUBLIC_TICK_STREAM_TIMEOUT")
+                    try:
+                        message = await asyncio.wait_for(
+                            iterator.__anext__(),
+                            timeout=remaining,
+                        )
+                    except asyncio.TimeoutError as exc:
+                        raise DerivProtocolError(
+                            "DERIV_PUBLIC_TICK_STREAM_TIMEOUT"
+                        ) from exc
+                    except StopAsyncIteration as exc:
+                        raise DerivProtocolError(
+                            "DERIV_PUBLIC_TICK_STREAM_ENDED"
+                        ) from exc
+
+                    if not isinstance(message, dict) or message.get("msg_type") != "tick":
+                        raise DerivProtocolError("DERIV_PUBLIC_TICK_MESSAGE_INVALID")
+                    tick = message.get("tick")
+                    if not isinstance(tick, dict):
+                        raise DerivProtocolError("DERIV_PUBLIC_TICK_PAYLOAD_INVALID")
+                    tick_symbol = str(tick.get("symbol") or selected_symbol)
+                    if tick_symbol != selected_symbol:
+                        raise DerivProtocolError("DERIV_PUBLIC_TICK_SYMBOL_MISMATCH")
+
+                    quote = tick.get("quote")
+                    if (
+                        isinstance(quote, bool)
+                        or not isinstance(quote, (int, float))
+                        or not math.isfinite(float(quote))
+                    ):
+                        raise DerivProtocolError("DERIV_PUBLIC_TICK_QUOTE_INVALID")
+
+                    epoch = tick.get("epoch")
+                    if (
+                        isinstance(epoch, bool)
+                        or not isinstance(epoch, (int, float))
+                        or not math.isfinite(float(epoch))
+                        or epoch <= 0
+                        or not float(epoch).is_integer()
+                    ):
+                        raise DerivProtocolError("DERIV_PUBLIC_TICK_EPOCH_INVALID")
+                    normalized_epoch = int(epoch)
+                    if last_epoch is not None and normalized_epoch < last_epoch:
+                        raise DerivProtocolError("DERIV_PUBLIC_TICK_TIME_REGRESSION")
+
+                    if first_epoch is None:
+                        first_epoch = normalized_epoch
+                    last_epoch = normalized_epoch
+                    ticks_received += 1
+
+                result["tick_stream"] = {
+                    "symbol": selected_symbol,
+                    "ticks_received": ticks_received,
+                    "first_epoch": first_epoch,
+                    "last_epoch": last_epoch,
+                    "elapsed_ms": round((time.monotonic() - started) * 1000, 3),
+                }
+            return result
         finally:
-            await transport.close()
-            self.transport = previous_transport
+            try:
+                if iterator is not None:
+                    await iterator.aclose()
+            finally:
+                try:
+                    await transport.close()
+                finally:
+                    self.transport = previous_transport
+
+    async def connect_public(self) -> int:
+        result = await self.probe_public_market_data()
+        return int(result["active_symbol_count"])
 
     async def reconnect(self, fresh_ws_url: str | None = None) -> None:
         if self.transport is None:

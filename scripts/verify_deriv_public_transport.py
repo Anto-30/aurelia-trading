@@ -17,7 +17,15 @@ from runtime.core.events import sha256
 
 async def main() -> int:
     adapter = DerivAdapter()
-    count = await adapter.connect_public()
+    symbol = os.getenv("DERIV_PUBLIC_TICK_SYMBOL", "R_100").strip() or "R_100"
+    minimum_ticks = int(os.getenv("DERIV_PUBLIC_TICK_MINIMUM", "2"))
+    timeout_seconds = float(os.getenv("DERIV_PUBLIC_TICK_TIMEOUT_SECONDS", "90"))
+    probe = await adapter.probe_public_market_data(
+        symbol=symbol,
+        minimum_ticks=minimum_ticks,
+        timeout_seconds=timeout_seconds,
+    )
+    count = int(probe["active_symbol_count"])
     source_sha = os.getenv("GITHUB_SHA", "").strip() or os.getenv("AURELIA_SOURCE_SHA", "").strip() or "LOCAL_UNPINNED"
     evidence = {
         "schema": "aurelia.deriv_public_transport.v1",
@@ -25,6 +33,8 @@ async def main() -> int:
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "endpoint": PUBLIC_WS_URL,
         "active_symbol_count": count,
+        "ping_verified": bool(probe["ping_verified"]),
+        "tick_stream": probe["tick_stream"],
         "capital_authority_granted": False,
         "order_submission_permitted": False,
     }
@@ -42,6 +52,8 @@ async def main() -> int:
         "component": "AURELIA",
         "probe": "DERIV_PUBLIC_MARKET_DATA",
         "active_symbol_count": count,
+        "ping_verified": bool(probe["ping_verified"]),
+        "tick_stream": probe["tick_stream"],
         "evidence_path": str(output),
         "source_sha": source_sha,
         "record_hash": evidence["record_hash"],
