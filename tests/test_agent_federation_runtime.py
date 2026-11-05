@@ -63,6 +63,10 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
                 source_hash="src",
             )
             federation = PersistentAgentFederation(**kwargs)
+            evidence_root = federation.lease_path.parent / "evidence"
+            evidence_root.mkdir(parents=True)
+            federation.performance_evaluator.evidence_root = evidence_root
+            (evidence_root / "fixture.json").write_text("evidence", encoding="utf-8")
             first = await federation.enqueue_task(
                 task_type="RESEARCH",
                 payload={"x": 1},
