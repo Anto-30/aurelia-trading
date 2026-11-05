@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-05",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -6321,6 +6321,68 @@
         "developer-experience-reference"
       ],
       "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "deriv-com/deriv-api",
+      "category": "legacy-deriv-websocket-sdk-reference",
+      "domain": "broker_api_reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/deriv-com/deriv-api",
+      "head_commit": "fbf51f6ed7698e6c6164fb0eda4183bb27253546",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-05",
+      "capital_authority": false,
+      "production_deployment_authority": false,
+      "live_order_authority": false,
+      "secret_reading": false,
+      "secret_logging": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "OFFICIAL",
+      "capabilities": [
+        "legacy_websocket_v3_api_reference",
+        "request_contract_reference",
+        "migration_comparison"
+      ],
+      "intake_note": "Official SDK reference only. README and package examples use wss://ws.derivws.com/websockets/v3; AURELIA production integration is pinned to the modern api.derivws.com Options REST + OTP + WebSocket contract. Do not add this SDK to the production adapter."
+    },
+    {
+      "repo": "deriv-bots/digitlens-pro",
+      "category": "synthetic-index-tick-statistics-reference",
+      "domain": "trading_research",
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/deriv-bots/digitlens-pro",
+      "head_commit": "68866a42bd7bd1a3e4ce4d170c7438d34a1c6402",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-05",
+      "capital_authority": false,
+      "production_deployment_authority": false,
+      "live_order_authority": false,
+      "secret_reading": false,
+      "secret_logging": false,
+      "broker_transaction_write": false,
+      "physical_runtime_install": "NOT_CLAIMED",
+      "security_review_status": "PENDING",
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "capabilities": [
+        "public_tick_stream_reference",
+        "digit_frequency_statistics",
+        "rolling_window_analysis",
+        "research_hypothesis_generation"
+      ],
+      "intake_note": "Research-only. The inspected single-file implementation calculates rolling tick-digit frequencies and heuristic deviation scores; no independently calibrated probability, positive net expectancy, backtest, risk sizing, or order lifecycle was evidenced. Do not execute code as an AURELIA strategy or promote displayed confidence to probability."
     }
   ],
   "pin_policy": {
@@ -6745,6 +6807,61 @@
       "physical_runtime_install": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
       "security_review_status": "PENDING",
       "date": "2026-10-11"
+    },
+    "latest_intake_2026_11_05": {
+      "completed_at": "2026-11-05",
+      "source": "User-supplied repository list; public GitHub default-branch commits queried through GitHub integration",
+      "repositories_added_or_refreshed": [
+        {
+          "repo": "deriv-com/deriv-api",
+          "head_commit": "fbf51f6ed7698e6c6164fb0eda4183bb27253546",
+          "mode": "REFERENCE_ONLY",
+          "assigned_agents": [
+            "ClaudeCode",
+            "GoogleAgentSkills",
+            "JEV",
+            "ChatGPT"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        },
+        {
+          "repo": "deriv-bots/digitlens-pro",
+          "head_commit": "68866a42bd7bd1a3e4ce4d170c7438d34a1c6402",
+          "mode": "RESEARCH_ONLY",
+          "assigned_agents": [
+            "KimiK3",
+            "ClaudeCode",
+            "GrokBot",
+            "JEV",
+            "ChatGPT"
+          ],
+          "physical_runtime_install": "NOT_CLAIMED"
+        }
+      ],
+      "rejected_or_deferred": [
+        {
+          "repo": "dan-da/hd-wallet-derive",
+          "status": "REJECTED_OUT_OF_SCOPE",
+          "reason": "BIP32/BIP39 cryptocurrency wallet address and private-key derivation; no role in Deriv account authentication. It accepts sensitive mnemonic/extended-key material and must never be fed AURELIA production secrets."
+        },
+        {
+          "repo": "digiemployeeautomation/deriv-oauth-reflector",
+          "status": "REJECTED_UNSAFE_AUTH_PATTERN",
+          "reason": "Reflects token1 and all query parameters into HTML using innerHTML; does not implement current Authorization Code + PKCE state validation and backend token exchange. Do not deploy or enter AURELIA auth path."
+        },
+        {
+          "repo": "colin-kiegel/rust-derive-builder",
+          "status": "REJECTED_OUT_OF_SCOPE",
+          "reason": "Rust procedural macro for builder-pattern boilerplate; AURELIA runtime is Python and no Rust dependency need was identified."
+        },
+        {
+          "repo": "JelteF/derive_more",
+          "status": "REJECTED_OUT_OF_SCOPE",
+          "reason": "Rust procedural macros for deriving common traits; AURELIA runtime is Python and no Rust dependency need was identified."
+        }
+      ],
+      "registry_write_scope": "Only the official legacy SDK as REFERENCE_ONLY and DigitLens as RESEARCH_ONLY. No external code copied or installed.",
+      "all_external_authority": false
     }
   }
 }
