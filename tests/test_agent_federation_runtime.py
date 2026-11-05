@@ -91,10 +91,21 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
             )
             self.assertEqual(first.task_id, duplicate.task_id)
             self.assertEqual(federation.pending_tasks()[0]["task_id"], high.task_id)
-            claimed = await federation.claim_task("GoogleAgentSkills")
+            claimed = await federation.claim_task(
+                "GoogleAgentSkills",
+                worker_id="google-agent-skills-test-worker",
+            )
             self.assertIsNotNone(claimed)
             self.assertEqual(claimed.task_id, high.task_id)
-            self.assertTrue(await federation.complete_task(high.task_id, agent="GoogleAgentSkills", evidence_ref="fixture.json"))
+            self.assertTrue(
+                await federation.complete_task(
+                    high.task_id,
+                    agent="GoogleAgentSkills",
+                    evidence_ref="fixture.json",
+                    worker_id=claimed.worker_id,
+                    claim_token=claimed.claim_token,
+                )
+            )
             self.assertEqual(len(federation.pending_tasks()), 1)
 
             restored = PersistentAgentFederation(**kwargs)
@@ -155,8 +166,12 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
                 correlation_id="recover-1",
                 assigned_agent="ClaudeCode",
             )
-            claimed = await federation.claim_task("ClaudeCode")
+            claimed = await federation.claim_task(
+                "ClaudeCode",
+                worker_id="recovery-worker-one",
+            )
             self.assertEqual(claimed.task_id, task.task_id)
+            self.assertTrue(claimed.claim_token)
             tasks = federation._load_tasks()
             tasks[0]["claimed_at"] = "2000-01-01T00:00:00+00:00"
             federation._save_tasks(tasks)
@@ -164,6 +179,34 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
             recovered = await federation.recover_stale_tasks()
             self.assertEqual(recovered, (task.task_id,))
             self.assertEqual(federation.pending_tasks()[0]["task_id"], task.task_id)
+            stored = federation._load_tasks()[0]
+            self.assertNotIn("claim_worker_id", stored)
+            self.assertNotIn("claim_token_sha256", stored)
+
+            replacement = await federation.claim_task(
+                "ClaudeCode",
+                worker_id="recovery-worker-two",
+            )
+            self.assertIsNotNone(replacement)
+            self.assertNotEqual(replacement.claim_token, claimed.claim_token)
+            self.assertFalse(
+                await federation.complete_task(
+                    task.task_id,
+                    agent="ClaudeCode",
+                    status="FAILED",
+                    worker_id="recovery-worker-one",
+                    claim_token=claimed.claim_token,
+                )
+            )
+            self.assertTrue(
+                await federation.complete_task(
+                    task.task_id,
+                    agent="ClaudeCode",
+                    status="FAILED",
+                    worker_id="recovery-worker-two",
+                    claim_token=replacement.claim_token,
+                )
+            )
 
     async def test_stale_agent_is_detectable_after_lease_expiry(self):
         with tempfile.TemporaryDirectory() as td:
