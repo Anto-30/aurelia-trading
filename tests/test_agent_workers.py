@@ -10,7 +10,9 @@ from runtime.agent_workers import AgentWorkerSupervisor
 
 
 @pytest.mark.asyncio
-async def test_worker_heartbeat_requires_real_configured_command(tmp_path):
+async def test_unconfigured_worker_does_not_emit_a_phantom_lease_or_claim_work(
+    tmp_path, monkeypatch
+):
     federation = PersistentAgentFederation(
         journal_path=tmp_path / "journal.ndjson",
         lease_path=tmp_path / "leases.json",
@@ -19,12 +21,21 @@ async def test_worker_heartbeat_requires_real_configured_command(tmp_path):
         source_hash="src",
         lease_seconds=2,
     )
+    monkeypatch.delenv("AURELIA_AGENT_CLAUDECODE_COMMAND", raising=False)
+    task = await federation.enqueue_task(
+        task_type="ENGINEERING_REVIEW",
+        payload={"target": "AURELIA"},
+        correlation_id="unconfigured-agent-test",
+        assigned_agent="ClaudeCode",
+    )
     supervisor = AgentWorkerSupervisor(
         federation, agents=("ClaudeCode",), interval_seconds=0.05
     )
     supervisor.start()
     await asyncio.sleep(0.15)
-    assert "ClaudeCode" in federation.active_agents()
+    assert "ClaudeCode" not in federation.active_agents()
+    stored = next(x for x in federation._load_tasks() if x["task_id"] == task.task_id)
+    assert stored["status"] == "PENDING"
     await supervisor.stop()
 
 
