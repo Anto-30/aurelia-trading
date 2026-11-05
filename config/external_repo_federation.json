@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-05",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -6373,6 +6373,524 @@
       "license": "MIXED: Apache-2.0 upstream portions + PolyForm Noncommercial 1.0 additions/modifications",
       "research_scope": "A-share multi-agent workflow and product architecture as non-code reference only",
       "license_restrictions": "Do not copy new API/frontend or significantly modified core components into commercial AURELIA absent explicit commercial permission."
+    },
+    {
+      "repo": "can1357/oh-my-pi",
+      "category": "coding-agent-harness",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/can1357/oh-my-pi",
+      "head_commit": "96e4d8eb5ba1212d2d6018f242de266284cffab9",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "MIT",
+      "capabilities": [
+        "multi-provider coding-agent",
+        "subagent orchestration",
+        "tool runtime",
+        "browser and desktop automation"
+      ],
+      "integration_note": "High-privilege agent harness with shell, persistent execution, browser and desktop control. Reference only until independently isolated and permission-audited; never replace AURELIA's supervisor or worker boundary."
+    },
+    {
+      "repo": "ethereum-lists/chains",
+      "category": "blockchain-chain-metadata",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/ethereum-lists/chains",
+      "head_commit": "e17474286275730fb6b0490b1d7ea1c64a36ed9e",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "MIT",
+      "capabilities": [
+        "EVM chain IDs",
+        "CAIP-2 chain metadata",
+        "network and native-currency metadata"
+      ],
+      "integration_note": "Only for future EVM integrations. Does not describe Deriv synthetic indices or provide broker instrument metadata."
+    },
+    {
+      "repo": "open-metadata/OpenMetadata",
+      "category": "data-catalogue-and-governance",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT",
+        "GLM"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/open-metadata/OpenMetadata",
+      "head_commit": "a3012259ca604141e3f778aa3f259d827371470a",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "data catalog",
+        "governance",
+        "lineage",
+        "quality",
+        "MCP context"
+      ],
+      "integration_note": "Architecture reference for evidence cataloguing and governed data context. Do not deploy a new service or add its dependency tree without a separate cost/security/ops decision."
+    },
+    {
+      "repo": "drewnoakes/metadata-extractor",
+      "category": "media-file-metadata",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "Dev"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/drewnoakes/metadata-extractor",
+      "head_commit": "4d5cd46935c1987d8b19bfb49f3a24eb1d832e53",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "Java EXIF",
+        "IPTC",
+        "XMP",
+        "ICC",
+        "image/audio/video metadata"
+      ],
+      "integration_note": "Not relevant to current Python trading runtime; use only if media-file evidence ingestion becomes a real requirement."
+    },
+    {
+      "repo": "ronmamo/reflections",
+      "category": "java-runtime-reflection",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "Dev"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/ronmamo/reflections",
+      "head_commit": "f5514b125c4f4b58e92beb0979a40ddce48d5be1",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "WTFPL (GitHub SPDX metadata; LICENSE file not found in root)",
+      "capabilities": [
+        "Java classpath scanning",
+        "runtime annotation/type discovery"
+      ],
+      "integration_note": "Upstream README states the project is not actively maintained and last release was 2021. No runtime adoption; verify exact license text before copying."
+    },
+    {
+      "repo": "microsoft/reflect-metadata",
+      "category": "typescript-legacy-reflection",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "Dev"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/microsoft/reflect-metadata",
+      "head_commit": "acdeee445509ea05c8fab270f73928f7bb2c50f1",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "TypeScript legacy experimental decorators metadata"
+      ],
+      "integration_note": "Legacy TypeScript decorator compatibility only; not part of the AURELIA Python runtime. TC39 standard decorator metadata supersedes the proposal for new projects."
+    },
+    {
+      "repo": "apache/ossie",
+      "category": "semantic-metadata-specification",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT",
+        "KimiK3"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/apache/ossie",
+      "head_commit": "172a3e566f2fc9c0a733ebbb470e97c33d2bd8b1",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "Apache-2.0 (Apache incubating project)",
+      "capabilities": [
+        "semantic model interchange",
+        "JSON/YAML semantic schema",
+        "model validation"
+      ],
+      "integration_note": "Evaluate the specification for canonical metric and strategy semantics; no converter or runtime package adopted yet."
+    },
+    {
+      "repo": "grafeas/grafeas",
+      "category": "software-artifact-provenance",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "Dev"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/grafeas/grafeas",
+      "head_commit": "4a8bf366a01f0e509b9118b9f8afd64f211e64c6",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "artifact metadata API",
+        "notes and occurrences",
+        "supply-chain attestations"
+      ],
+      "integration_note": "Use as a provenance/evidence model reference. Do not add a Grafeas server or make its records authoritative for AURELIA release approval."
+    },
+    {
+      "repo": "docker/metadata-action",
+      "category": "container-build-metadata",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "Dev",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/docker/metadata-action",
+      "head_commit": "1ec73021df0717d8bef7700a897c064453280439",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "Git ref and event metadata",
+        "Docker image tags and labels"
+      ],
+      "integration_note": "CI-only candidate for immutable image labels and release tags; not an application runtime dependency."
+    },
+    {
+      "repo": "google/ml-metadata",
+      "category": "ml-experiment-provenance",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/google/ml-metadata",
+      "head_commit": "7efdb25a3390cd1547372792ece6390e5b4364d1",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "ML workflow metadata",
+        "artifact/execution/context tracking"
+      ],
+      "integration_note": "Reference for experiment and model lineage. Existing AURELIA evidence store remains canonical; no MLMD service/database introduced."
+    },
+    {
+      "repo": "microsoft/win32metadata",
+      "category": "windows-api-metadata",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "Dev"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/microsoft/win32metadata",
+      "head_commit": "ae66c067ff3e9516fcc9cda09204bf72a9d57e56",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "NOASSERTION; upstream Windows SDK header/artifact terms remain applicable",
+      "capabilities": [
+        "Win32 API metadata",
+        "language projection generation"
+      ],
+      "integration_note": "Windows-specific and irrelevant to current Linux/Python trading runtime. Repository LICENSE warns that original SDK header licenses are not changed; require provenance/legal review before reuse."
+    },
+    {
+      "repo": "drewnoakes/metadata-extractor-dotnet",
+      "category": "dotnet-media-file-metadata",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "Dev"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/drewnoakes/metadata-extractor-dotnet",
+      "head_commit": "cb71a8ad84a15dbf64ddb25a77c17cd855adfef4",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "Apache-2.0",
+      "capabilities": [
+        ".NET EXIF",
+        "IPTC",
+        "XMP",
+        "ICC",
+        "image/audio/video metadata"
+      ],
+      "integration_note": "Not relevant to current Python runtime; optional only for future .NET media evidence tooling."
+    },
+    {
+      "repo": "macbre/sql-metadata",
+      "category": "sql-query-metadata",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/macbre/sql-metadata",
+      "head_commit": "e48f1595cffaf409cef51fe1dfff21519da36ee5",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "MIT",
+      "capabilities": [
+        "SQL table/column extraction",
+        "alias resolution",
+        "query normalization"
+      ],
+      "integration_note": "Use only if SQL lineage or audit query analysis becomes a requirement; parser metadata is not a substitute for database query plans or execution evidence."
+    },
+    {
+      "repo": "berachain/metadata",
+      "category": "berachain-ecosystem-metadata",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/berachain/metadata",
+      "head_commit": "1cd819a51e50ec2d603f2409f382232c99ec1de0",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "MIT",
+      "capabilities": [
+        "Berachain token lists",
+        "vault metadata",
+        "validator metadata"
+      ],
+      "integration_note": "Chain-specific ecosystem list. Not a source of truth for Deriv instruments or general EVM chain configuration."
+    },
+    {
+      "repo": "Exiv2/exiv2",
+      "category": "media-file-metadata-toolkit",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GLM",
+        "Dev"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Exiv2/exiv2",
+      "head_commit": "ef4e79590c53cdef48bbed5629cdb81065b42287",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "GPL-2.0 (README identifies GPLv2; inspect COPYING before any reuse)",
+      "capabilities": [
+        "EXIF",
+        "IPTC",
+        "XMP",
+        "ICC metadata read/write"
+      ],
+      "integration_note": "GPL licensing is incompatible with casual embedding in a proprietary AURELIA runtime absent a separate legal review or commercial licence. No installation."
+    },
+    {
+      "repo": "icsharpcode/ILSpy",
+      "category": "dotnet-assembly-inspection",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "Dev",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/icsharpcode/ILSpy",
+      "head_commit": "695f7aced9626eb5bffdf9a04a835cd984b9b5ce",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "MIT",
+      "capabilities": [
+        ".NET assembly browsing",
+        "decompilation",
+        "metadata inspection"
+      ],
+      "integration_note": "Forensic/developer utility only; do not use to bypass licensing, access controls or secrets. No AURELIA runtime dependency."
+    },
+    {
+      "repo": "jekyll/github-metadata",
+      "category": "jekyll-github-site-metadata",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "Dev"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/jekyll/github-metadata",
+      "head_commit": "c26a5d4574785fa79ecbccc1df890f3f9909a02d",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "MIT",
+      "capabilities": [
+        "GitHub Pages/Jekyll site metadata"
+      ],
+      "integration_note": "Website publishing plugin unrelated to AURELIA runtime; retained as a reference only."
+    },
+    {
+      "repo": "OpenLineage/OpenLineage",
+      "category": "data-job-lineage-standard",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT",
+        "KimiK3"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/OpenLineage/OpenLineage",
+      "head_commit": "dd64b09365f08ee02a3a0653ddda0e62d8cc76f2",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "run/job/dataset lineage model",
+        "extensible facets",
+        "runtime lineage events"
+      ],
+      "integration_note": "Strong candidate for mapping AURELIA research/validation runs to provenance events. Adopt concepts/schema selectively; no external lineage backend introduced."
+    },
+    {
+      "repo": "dependabot/fetch-metadata",
+      "category": "dependency-update-metadata",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "Dev",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/dependabot/fetch-metadata",
+      "head_commit": "57721ba1e64f4a53fe9300b820eeee8398b772fb",
+      "pin_source": "github_api_default_branch_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_APPLICABLE",
+      "capital_authority": false,
+      "license": "MIT",
+      "capabilities": [
+        "Dependabot PR dependency metadata",
+        "version and update information"
+      ],
+      "integration_note": "CI-only candidate for dependency policy checks. Does not approve, merge or deploy dependency updates."
     }
   ],
   "pin_policy": {
