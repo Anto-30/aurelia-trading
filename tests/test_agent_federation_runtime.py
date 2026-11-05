@@ -315,6 +315,14 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
 
             artifact = evidence_root / "claim-evidence.json"
             artifact.write_text('{"claim":"bound"}', encoding="utf-8")
+            self.assertTrue(
+                await federation.renew_task_claim(
+                    task.task_id,
+                    agent="ClaudeCode",
+                    worker_id="worker-one",
+                    claim_token=claim.claim_token,
+                )
+            )
             self.assertFalse(
                 await federation.renew_task_claim(
                     task.task_id,
