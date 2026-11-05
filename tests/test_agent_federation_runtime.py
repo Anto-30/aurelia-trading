@@ -355,6 +355,7 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
                      if row["task_id"] == task.task_id)["status"],
                 "CLAIMED",
             )
+            self.assertFalse((evidence_root / "agent-tasks").exists())
             self.assertTrue(
                 await federation.complete_task(
                     task.task_id,
