@@ -24,8 +24,8 @@ jobs:
       DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
       DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
       DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
-      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
+      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY == 'USD' && 'USD' || 'INVALID' }}
+      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE == '' && 'pat' || vars.DERIV_AUTH_MODE == 'pat' && 'pat' || vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'INVALID' }}
       DERIV_ENVIRONMENT: ${{ inputs.environment }}
       FINAL_EXECUTION_AUTHORIZATION: "false"
       LIVE_EXECUTION: "BLOCKED"
