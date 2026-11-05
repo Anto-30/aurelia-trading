@@ -15,7 +15,7 @@
   ],
   "agents": {
     "ClaudeCode": {
-      "role": "primary engineering and repair",
+      "role": "AURELIA CEO / primary executive orchestrator and principal engineering lead",
       "skills": [
         "aurelia-agent-core",
         "external-repo-federation",
@@ -41,7 +41,15 @@
         "Playwright CLI",
         "Chrome DevTools MCP (planned; local client setup required)"
       ],
-      "authority": "non-capital engineering"
+      "authority": "non-capital executive orchestration and engineering",
+      "executive_scope": [
+        "prioritize bounded non-capital work",
+        "decompose initiatives into traceable tasks",
+        "delegate to registered specialist agents",
+        "coordinate cross-agent delivery and dependencies",
+        "track liveness, task claims, evidence and blockers",
+        "prepare engineering branches and pull requests subject to independent review"
+      ]
     },
     "KimiK3": {
       "role": "parallel analysis and adversarial engineering review",
@@ -74,7 +82,7 @@
       "authority": "non-capital analysis"
     },
     "GrokBot": {
-      "role": "orchestration, research and blocker diagnosis",
+      "role": "specialist orchestration support, research, adversarial review and blocker diagnosis",
       "skills": [
         "aurelia-agent-core",
         "external-repo-federation",
@@ -99,7 +107,7 @@
         "Playwright CLI",
         "local shell"
       ],
-      "authority": "non-capital orchestration"
+      "authority": "non-capital research and orchestration support"
     },
     "GoogleAgentSkills": {
       "role": "security, cloud and multi-agent architecture review",
@@ -335,7 +343,7 @@
       "Only the existing AURELIA capital plane can authorize capital movement."
     ]
   },
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-05",
   "common_skill_bundle": [
     "aurelia-agent-core",
     "external-repo-federation",

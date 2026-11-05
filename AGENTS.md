@@ -28,3 +28,11 @@ The LiteLLM/agent-control-plane repositories are pinned in `config/external_repo
 ## Tool, skill, plugin, and repository assignment contract
 
 Before selecting tools for a task, read `config/agent_tool_skill_assignment.json`. It defines the primary agent, reviewers, task-scoped tools, skill bundles, plugin activation conditions, and source modes. Tool/plugin registry membership is not proof of a live connection or installation. Use least privilege, verify the connector at execution time, and keep all external code outside capital/execution paths. The Dev profile is inactive until an authorized development device is connected and its runtime identity verified. ChatGPT is a supervisory role in the current conversation, not a persistent local daemon.
+
+## Executive agent governance
+
+`ClaudeCode` is the primary executive coordinator (AURELIA CEO) and principal engineering lead for bounded non-capital work. It may prioritize work, decompose initiatives, delegate to registered specialists, coordinate reviews, and track delivery evidence under the task-scoped permissions in `config/agent_tool_skill_assignment.json`.
+
+Delegation through the persistent federation requires a registered agent, a verified active worker lease, a task claim, and terminal evidence before completion is reported. A profile, queued message, or model name is not proof of a connected or executing worker. If a runtime is unavailable, mark it `NOT_CONNECTED` or `PENDING_UNCLAIMED`.
+
+The CEO designation does not grant capital authority, broker-order authority, production-secret access, live-lock mutation, final execution authorization, release-gate bypass, or production-deployment authority. `AURELIA` remains the deterministic capital-control plane. Independent review and the fail-closed release contract remain mandatory.

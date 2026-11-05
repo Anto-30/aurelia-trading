@@ -18,18 +18,26 @@
       "capital_authority": false
     },
     "ClaudeCode": {
-      "role": "engineering/review/repair",
+      "role": "AURELIA CEO / executive orchestrator and principal engineering lead",
       "may": [
         "inspect",
         "modify_code",
         "run_tests",
         "review",
-        "document"
+        "document",
+        "decompose_prioritize_non_capital_work",
+        "delegate_registered_agent_tasks",
+        "coordinate_agent_reviews",
+        "track_delivery_evidence",
+        "prepare_engineering_branches_and_pull_requests"
       ],
       "may_not": [
         "authorize_capital",
         "submit_orders",
-        "flip_live_lock"
+        "flip_live_lock",
+        "read_or_route_production_secrets",
+        "bypass_independent_review_or_CI",
+        "perform_unapproved_production_deployment"
       ],
       "capital_authority": false
     },
@@ -141,7 +149,7 @@
       "runtime_status": "NOT_CONNECTED"
     },
     "GrokBot": {
-      "role": "orchestration/research/blocker diagnosis",
+      "role": "specialist orchestration support/research/adversarial review/blocker diagnosis",
       "may": [
         "decompose",
         "research",
@@ -181,6 +189,9 @@
     "Simulation evidence must never be relabeled as authenticated broker, transaction, production, or live evidence.",
     "Every repair must be smallest-change, test-backed, and lineage-verifiable.",
     "ChatGPT and Dev are non-capital roles; Dev tools remain inactive until a user-controlled host is connected and verified.",
-    "Tool, skill, plugin, and repository assignments describe eligible use; they do not prove physical installation or a live authenticated connector."
+    "Tool, skill, plugin, and repository assignments describe eligible use; they do not prove physical installation or a live authenticated connector.",
+    "ClaudeCode is the primary executive coordinator for non-capital work; its CEO designation grants no capital, secret, live-lock, or release-gate authority.",
+    "Delegate only to registered agents with task-scoped capability and verified active worker leases; otherwise mark NOT_CONNECTED or PENDING_UNCLAIMED.",
+    "The CEO cannot self-approve material changes; independent review and evidence reconciliation remain mandatory."
   ]
 }

@@ -32,6 +32,23 @@ def main() -> None:
     assert assignment["runtime_connection_snapshot"]["desktop_commander_device_count"] == 0
     assert assignment["runtime_connection_snapshot"]["dev_runtime"] == "NOT_CONNECTED"
 
+    executive = assignment["executive_governance"]
+    assert executive["executive_agent"] == "ClaudeCode"
+    assert executive["role"] == "AURELIA CEO / Chief Executive Orchestrator"
+    assert executive["require_registered_agent"] is True
+    assert executive["require_active_worker_lease"] is True
+    assert executive["ceo_may_self_approve_material_changes"] is False
+    assert executive["capital_authority"] is False
+    assert executive["can_mutate_live_lock"] is False
+    assert executive["can_change_final_execution_authorization"] is False
+    assert executive["can_submit_orders"] is False
+    assert executive["can_read_production_secrets"] is False
+    assert executive["production_deployment_authority"] is False
+    assert executive["delegation_targets"]
+    external_interfaces = {item["name"]: item["status"] for item in executive["external_runtime_interfaces"]}
+    for name in ("OpenClaw", "Cursor IDE", "Codex", "DeepSeek Harness", "Hermes"):
+        assert external_interfaces.get(name) == "NOT_CONNECTED", name
+
     profiles = assignment["agents"]
     canonical = set(profiles)
     assert canonical == set(matrix["agents"]), "assignment and capability-matrix agents differ"
@@ -46,6 +63,8 @@ def main() -> None:
         else:
             assert profile.get("capital_authority") is True
     assert profiles["Dev"]["status"] == "NOT_CONNECTED"
+    assert "CEO" in profiles["ClaudeCode"]["role"]
+    assert profiles["ClaudeCode"]["capital_authority"] is False
     assert router["agents"]["Dev"]["runtime_status"] == "NOT_CONNECTED"
     assert boundary["actors"]["ChatGPT"]["capital_authority"] is False
     assert boundary["actors"]["Dev"]["capital_authority"] is False
@@ -97,6 +116,8 @@ def main() -> None:
     assert skill_inventory["total_skills"] > 0
     print("AGENT_TOOL_SKILL_ASSIGNMENT_AUDIT=PASS")
     print(f"AGENT_PROFILES={len(profiles)}")
+    print("EXECUTIVE_AGENT=ClaudeCode")
+    print("EXECUTIVE_CAPITAL_AUTHORITY=FALSE")
     print(f"INTAKE_REPOSITORIES={len(intake_sources)}")
     print(f"REGISTERED_EXTERNAL_REPOSITORIES={len(repo_registry['repositories'])}")
     print(f"REGISTERED_SKILL_SOURCES={len(skill_registry['sources'])}")

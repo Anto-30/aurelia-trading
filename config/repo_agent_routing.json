@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.repo_agent_routing.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-05",
   "purpose": "Deterministically route every federated external repository to the agents best suited to consume its engineering, research, security, multimodal, browser, deployment, or orchestration capabilities. Includes security-first routing for LLM gateway and Freebuff-related reference sources.",
   "admission_policy": {
     "assignment_required": true,
@@ -16,7 +16,7 @@
   },
   "agents": {
     "ClaudeCode": {
-      "role": "principal_implementation_and_code_review",
+      "role": "executive_orchestration_and_principal_implementation",
       "capabilities": [
         "software-engineering",
         "refactoring",
@@ -24,7 +24,10 @@
         "security-review",
         "integration",
         "deployment-engineering",
-        "general-toolchain"
+        "general-toolchain",
+        "executive-planning",
+        "agent-task-delegation",
+        "cross-agent-delivery-oversight"
       ]
     },
     "KimiK3": {
@@ -40,7 +43,7 @@
       ]
     },
     "GrokBot": {
-      "role": "orchestration_adversarial_review_and_external_intelligence",
+      "role": "research_adversarial_review_and_orchestration_support",
       "capabilities": [
         "agent-orchestration",
         "adversarial-review",
@@ -260,13 +263,15 @@
           "agent-orchestration"
         ]
       },
-      "primary_agent": "GrokBot",
+      "primary_agent": "ClaudeCode",
       "supporting_agents": [
-        "ClaudeCode",
-        "KimiK3"
+        "GrokBot",
+        "KimiK3",
+        "GoogleAgentSkills",
+        "JEV"
       ],
       "mode_default": "SANDBOX_ONLY",
-      "rationale": "Agent orchestration and workflow sources are primarily intelligence/orchestration inputs, not capital-plane authorities."
+      "rationale": "ClaudeCode owns executive task coordination and delivery accountability. GrokBot supplies specialist orchestration, adversarial review and external intelligence; security and validation specialists retain their independent review lanes."
     },
     {
       "priority": 70,
