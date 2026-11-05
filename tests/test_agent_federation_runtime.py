@@ -371,10 +371,11 @@ class AgentFederationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(completed["status"], "COMPLETED")
             self.assertEqual(completed["completed_by_worker_id"], "worker-one")
             self.assertNotIn("claim_token_sha256", completed)
+            self.assertEqual(completed["submitted_evidence_ref"], "claim-evidence.json")
             expected_hash = hashlib.sha256(b'{"claim":"bound"}').hexdigest()
             self.assertEqual(
                 completed["evidence_ref"],
-                f"agent-tasks/{expected_hash}.json",
+                f"agent-tasks/{expected_hash}.artifact",
             )
             archived = evidence_root / completed["evidence_ref"]
             self.assertEqual(archived.read_bytes(), b'{"claim":"bound"}')
