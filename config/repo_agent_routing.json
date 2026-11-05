@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.repo_agent_routing.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-10-20",
   "purpose": "Deterministically route every federated external repository to the agents best suited to consume its engineering, research, security, multimodal, browser, deployment, or orchestration capabilities. Includes security-first routing for LLM gateway and Freebuff-related reference sources.",
   "admission_policy": {
     "assignment_required": true,
@@ -124,9 +124,48 @@
       ],
       "runtime_status": "NOT_CONNECTED",
       "activation_gate": "Authorized host must be connected and runtime identity verified before tool execution."
+    },
+    "DeepSeekHarness": {
+      "role": "independent_quantitative_and_code_validation",
+      "capabilities": [
+        "quant-research",
+        "backtest-audit",
+        "walk-forward-validation",
+        "lookahead-and-leakage-detection",
+        "data-quality-review",
+        "net-expectancy-and-cost-review",
+        "test-design",
+        "code-review",
+        "reproducibility-audit"
+      ],
+      "authority": "research_and_sandbox_only",
+      "runtime_status": "NOT_CONNECTED",
+      "activation_state": "REGISTERED_SHADOW_ONLY",
+      "capital_authority": false,
+      "live_order_authority": false,
+      "secret_reading": false,
+      "production_deployment_authority": false,
+      "note": "Governed role definition only. No model runtime or DSH plugin is installed or connected."
     }
   },
   "routing_rules": [
+    {
+      "priority": 97,
+      "when": {
+        "category_contains_any": [
+          "deepseek-harness-ecosystem-catalogue"
+        ]
+      },
+      "primary_agent": "DeepSeekHarness",
+      "supporting_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "mode_default": "REFERENCE_ONLY",
+      "rationale": "DeepSeekHarness owns the independent quantitative/code-validation review of the DSH ecosystem catalogue; its source remains reference-only and has no runtime or capital authority."
+    },
     {
       "priority": 100,
       "when": {
