@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_delegation_tasks.v1",
-  "generated": "2026-10-11",
+  "generated": "2026-10-24",
   "orchestrator": "ClaudeCode",
   "purpose": "One explicit delegated engineering/verification task per registered agent role. Unconnected or non-persistent roles may be assigned or blocked, while runtime execution proof remains false until attributable lifecycle evidence exists.",
   "execution_proof_policy": {
@@ -15,18 +15,24 @@
     {
       "task_id": "AGT-CLAUDE-001",
       "agent": "ClaudeCode",
-      "status": "assigned",
+      "status": "blocked",
       "objective": "Repair and certify the agent delegation proof chain, including inventory validation and continuity evidence.",
       "acceptance_criteria": [
         "inventory validator passes",
-        "all ten agents have exactly one task",
+        "all registered agents have exactly one task",
         "delegation evidence is attributable"
       ],
       "evidence_path": "artifacts/agent-delegation/claudecode.json",
       "runtime_proof": {
         "required_event": "subagent.started",
         "execution_proof": false
-      }
+      },
+      "blocked_reason": "ClaudeCode external runtime identity and authenticated capability probe are not verified in this session; do not claim a delegated run.",
+      "unblock_evidence_required": [
+        "Reachable authorized ClaudeCode runtime identity",
+        "Successful authenticated capability probe with timestamp and read-only scope",
+        "Attributable subagent.started lifecycle event and task-specific result"
+      ]
     },
     {
       "task_id": "AGT-KIMI-001",
@@ -50,7 +56,7 @@
       "status": "assigned",
       "objective": "Coordinate the federated task queue and identify any blocked or unassigned agent work.",
       "acceptance_criteria": [
-        "all ten tasks visible",
+        "all registered tasks visible",
         "blocked work explicitly reported",
         "results routed back to ClaudeCode"
       ],
@@ -172,7 +178,31 @@
         "required_event": "subagent.started",
         "execution_proof": false
       }
+    },
+    {
+      "task_id": "AGT-DEEPSEEK-001",
+      "agent": "DeepSeekHarness",
+      "status": "blocked",
+      "objective": "Prepare an independent adversarial review of agent federation configuration, external repository intake, and CI evidence. Execution is blocked until an authenticated DeepSeek model/runtime is connected and verified.",
+      "acceptance_criteria": [
+        "Do not start or claim review until an authenticated runtime capability probe succeeds",
+        "Review the agent assignment contract for privilege mismatches",
+        "Verify CI evidence is tied to the exact commit and distinguish workflow success from release readiness",
+        "Record findings in a review artifact or pull-request comment after authorized execution",
+        "Do not mutate production controls or access secrets"
+      ],
+      "evidence_path": "artifacts/agent-delegation/deepseek-harness.json",
+      "runtime_proof": {
+        "required_event": "subagent.started",
+        "execution_proof": false
+      },
+      "blocked_reason": "No authenticated DeepSeek model-completion/runtime probe is currently available; the instant connection exposes web search/fetch only.",
+      "unblock_evidence_required": [
+        "Authenticated provider/runtime identity and successful model-completion probe",
+        "Timestamped permission scope showing read-only repository/CI access and no production secrets",
+        "Independent review output tied to the exact pull-request head SHA"
+      ]
     }
   ],
-  "revision": 3
+  "revision": 5
 }

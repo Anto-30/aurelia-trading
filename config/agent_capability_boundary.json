@@ -170,6 +170,24 @@
         "read_production_secrets"
       ],
       "capital_authority": false
+    },
+    "DeepSeekHarness": {
+      "role": "independent harness/code review and adversarial research",
+      "may": [
+        "inspect_code",
+        "review_changes",
+        "analyze_ci_evidence",
+        "propose_repairs",
+        "cross_check_assumptions"
+      ],
+      "may_not": [
+        "authorize_capital",
+        "submit_orders",
+        "flip_live_lock",
+        "read_or_print_production_secrets",
+        "claim_unverified_runtime_install"
+      ],
+      "capital_authority": false
     }
   },
   "non_negotiables": [

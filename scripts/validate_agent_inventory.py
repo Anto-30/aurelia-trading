@@ -1,21 +1,14 @@
 from __future__ import annotations
 
+# These validators use assert-based invariants; -O strips them and can create false PASS reports.
+if not __debug__:
+    raise SystemExit("Refusing optimized Python mode: validator assertions would be disabled")
+
 import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-AGENTS = {
-    "ClaudeCode",
-    "KimiK3",
-    "GrokBot",
-    "GoogleAgentSkills",
-    "GLM",
-    "PlaywrightCLI",
-    "JEV",
-    "AURELIA",
-    "ChatGPT",
-    "Dev",
-}
+AGENTS: set[str] = set()
 
 
 def load(path: str) -> dict:
@@ -26,6 +19,9 @@ def load(path: str) -> dict:
 
 
 def main() -> None:
+    global AGENTS
+    assignment = load("config/agent_tool_skill_assignment.json")
+    AGENTS = set(assignment["agents"])
     tools = load("config/agent_tool_inventory.json")
     skills = load("config/agent_skill_inventory.json")
     plugins = load("config/agent_plugin_inventory.json")
@@ -64,7 +60,7 @@ def main() -> None:
         assert all(agent in AGENTS for agent in plugin["assigned_agents"])
         assert plugin["capital_authority"] is False
 
-    assert set(matrix["agents"]) == AGENTS
+    assert set(matrix["agents"]) == AGENTS, "assignment and capability-matrix agents differ"
     assert delegation["schema"] == "aurelia.agent_delegation_tasks.v1"
     tasks = delegation["tasks"]
     assert isinstance(tasks, list) and tasks
