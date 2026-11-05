@@ -60,5 +60,82 @@ class SessionManagerContractTests(unittest.TestCase):
             manager.validate_binding(loginid="CRREAL", environment="demo")
 
 
+    def test_oauth_account_list_omits_pat_only_app_id_header(self):
+        import json
+        import os
+        from unittest.mock import patch
+
+        from runtime.adapters.session_manager import ACCOUNTS_ENDPOINT
+
+        captured = {}
+
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self):
+                return json.dumps({"data": []}).encode("utf-8")
+
+        def fake_urlopen(request, timeout):
+            captured["request"] = request
+            captured["timeout"] = timeout
+            return Response()
+
+        manager = DerivSessionManager(expected_environment="real", expected_currency="USD")
+        with patch.dict(os.environ, {"DERIV_AUTH_MODE": "oauth"}, clear=False):
+            with patch("runtime.adapters.session_manager.urlopen", side_effect=fake_urlopen):
+                self.assertEqual(
+                    manager.list_accounts(bearer_token="opaque-token", app_id="12345"),
+                    [],
+                )
+
+        request = captured["request"]
+        self.assertEqual(request.full_url, ACCOUNTS_ENDPOINT)
+        self.assertIsNone(request.get_header("Deriv-app-id"))
+        self.assertEqual(request.get_header("Authorization"), "Bearer opaque-token")
+
+    def test_pat_account_list_includes_app_id_header(self):
+        import json
+        import os
+        from unittest.mock import patch
+
+        captured = {}
+
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self):
+                return json.dumps({"data": []}).encode("utf-8")
+
+        def fake_urlopen(request, timeout):
+            captured["request"] = request
+            return Response()
+
+        manager = DerivSessionManager(expected_environment="real", expected_currency="USD")
+        with patch.dict(os.environ, {"DERIV_AUTH_MODE": "pat"}, clear=False):
+            with patch("runtime.adapters.session_manager.urlopen", side_effect=fake_urlopen):
+                manager.list_accounts(bearer_token="opaque-token", app_id="12345")
+
+        self.assertEqual(captured["request"].get_header("Deriv-app-id"), "12345")
+
+    def test_unknown_auth_mode_fails_closed_before_account_request(self):
+        import os
+        from unittest.mock import patch
+
+        manager = DerivSessionManager(expected_environment="real", expected_currency="USD")
+        with patch.dict(os.environ, {"DERIV_AUTH_MODE": "unknown"}, clear=False):
+            with patch("runtime.adapters.session_manager.urlopen") as mocked_urlopen:
+                with self.assertRaisesRegex(DerivSessionManagerError, "UNSUPPORTED_AUTH_MODE"):
+                    manager.list_accounts(bearer_token="opaque-token", app_id="12345")
+        mocked_urlopen.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
