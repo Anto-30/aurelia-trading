@@ -149,6 +149,9 @@ class DerivAdapter:
         previous_transport = self.transport
         self.transport = transport
         try:
+            ping = await self._tracked_request("ping", {"ping": 1})
+            if ping.get("msg_type") != "ping" or ping.get("ping") != "pong":
+                raise DerivProtocolError("DERIV_PUBLIC_PING_INVALID")
             reply = await self._tracked_request("active_symbols", {"active_symbols": "brief"})
             return len(reply.get("active_symbols") or [])
         finally:
