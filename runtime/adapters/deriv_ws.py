@@ -12,6 +12,29 @@ class DerivTransportError(RuntimeError):
     pass
 
 
+class DerivTransportReaderError(DerivTransportError):
+    RETRYABLE_ERROR_CLASSES = frozenset({
+        "ConnectionClosed",
+        "ConnectionClosedOK",
+        "ConnectionClosedError",
+        "ConnectionResetError",
+        "ConnectionAbortedError",
+        "BrokenPipeError",
+        "TimeoutError",
+        "OSError",
+        "IncompleteReadError",
+    })
+
+    def __init__(self, error_class: str, close_code: int | None = None):
+        self.error_class = str(error_class)
+        self.close_code = close_code if isinstance(close_code, int) and not isinstance(close_code, bool) else None
+        self.retryable = self.error_class in self.RETRYABLE_ERROR_CLASSES
+        detail = f"TRANSPORT_READER_FAILED:{self.error_class}"
+        if self.close_code is not None:
+            detail += f":CLOSE_CODE_{self.close_code}"
+        super().__init__(detail)
+
+
 @dataclass
 class Subscription:
     key: str
@@ -85,13 +108,25 @@ class DerivWebSocketTransport:
         except asyncio.CancelledError:
             raise
         except Exception as exc:
-            self._fail_pending(exc)
+            close_code = getattr(exc, "code", None)
+            failure = DerivTransportReaderError(type(exc).__name__, close_code)
+            self._fail_pending(failure)
+            error_payload = {
+                "code": "TRANSPORT_READER_FAILED",
+                "error_class": failure.error_class,
+            }
+            if failure.close_code is not None:
+                error_payload["close_code"] = failure.close_code
             for subscription in self._subscriptions.values():
-                subscription.queue.put_nowait(
-                    {"error": {"code": "TRANSPORT_READER_FAILED"}}
-                )
+                subscription.queue.put_nowait({"error": error_payload})
         finally:
+            connection = self.ws
             self.ws = None
+            if connection is not None:
+                try:
+                    await connection.close()
+                except Exception:
+                    pass
 
     def _fail_pending(self, exc: Exception) -> None:
         for future in self._pending.values():
@@ -162,7 +197,13 @@ class DerivWebSocketTransport:
             while True:
                 message = await subscription.queue.get()
                 if "error" in message:
-                    raise DerivTransportError(str(message["error"]))
+                    error = message["error"]
+                    if isinstance(error, dict) and error.get("code") == "TRANSPORT_READER_FAILED":
+                        raise DerivTransportReaderError(
+                            str(error.get("error_class") or "UnknownError"),
+                            error.get("close_code"),
+                        )
+                    raise DerivTransportError(str(error))
                 yield message
         finally:
             if self.ws is not None and subscription.request_id is not None:

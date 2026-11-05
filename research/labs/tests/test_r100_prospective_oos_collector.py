@@ -275,5 +275,75 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertGreater(HORIZON_TICKS, 0)
 
 
+    def test_collect_once_reconnects_after_retryable_websocket_reader_failure(self):
+        import research.r100_prospective_oos_collector as collector
+        from runtime.adapters.deriv_ws import DerivTransportReaderError
+
+        class Stream:
+            def __init__(self, fail_once):
+                self.fail_once = fail_once
+                self.yielded = False
+
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                if self.fail_once:
+                    self.fail_once = False
+                    raise DerivTransportReaderError("ConnectionClosedOK", 1000)
+                if not self.yielded:
+                    self.yielded = True
+                    return {
+                        "tick": {
+                            "quote": 100.0,
+                            "epoch": int(datetime.now(timezone.utc).timestamp()),
+                        }
+                    }
+                await asyncio.Future()
+
+        class FakeTransport:
+            def __init__(self):
+                self.connect_calls = 0
+                self.subscribe_calls = 0
+                self.close_calls = 0
+
+            async def connect(self):
+                self.connect_calls += 1
+
+            def subscribe(self, key, payload):
+                self.subscribe_calls += 1
+                return Stream(fail_once=self.subscribe_calls == 1)
+
+            async def close(self):
+                self.close_calls += 1
+
+        instances = []
+        def transport_factory(*args, **kwargs):
+            instance = FakeTransport()
+            instances.append(instance)
+            return instance
+
+        state = initial_state()
+        with (
+            patch.object(collector, "DerivWebSocketTransport", side_effect=transport_factory),
+            patch.object(collector, "COLLECTION_SECONDS", 0.2),
+            patch.object(collector, "RECONNECT_BASE_DELAY_SECONDS", 0.01),
+            patch.object(collector, "RECONNECT_MAX_DELAY_SECONDS", 0.02),
+            patch.object(collector, "MAX_STREAM_RECONNECTS", 2),
+        ):
+            asyncio.run(collector.collect_once(state))
+
+        self.assertEqual(len(instances), 1)
+        self.assertEqual(instances[0].connect_calls, 2)
+        self.assertEqual(instances[0].subscribe_calls, 2)
+        self.assertGreaterEqual(instances[0].close_calls, 2)
+        self.assertEqual(len(state["transport_reconnects"]), 1)
+        self.assertEqual(
+            state["transport_reconnects"][0]["error_class"],
+            "ConnectionClosedOK",
+        )
+        self.assertEqual(state["last_price"], 100.0)
+        self.assertTrue(state["last_run_completed_at_utc"])
+
 if __name__ == "__main__":
     unittest.main()

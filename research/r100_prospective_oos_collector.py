@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from runtime.adapters.deriv_ws import DerivWebSocketTransport
+from runtime.adapters.deriv_ws import DerivTransportReaderError, DerivWebSocketTransport
 from runtime.strategy.autonomous_signal_engine import AutonomousSignalHunter
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
@@ -26,6 +26,9 @@ STRATEGY_ID = "R100_TICK_MOMENTUM_PROSPECTIVE_V0.2.0"
 STRATEGY_VERSION = "0.2.0"
 REGIME = "ALL_MARKET"
 COLLECTION_SECONDS = int(os.getenv("AURELIA_R100_COLLECTION_SECONDS", "540"))
+MAX_STREAM_RECONNECTS = int(os.getenv("AURELIA_R100_MAX_STREAM_RECONNECTS", "5"))
+RECONNECT_BASE_DELAY_SECONDS = float(os.getenv("AURELIA_R100_RECONNECT_BASE_DELAY_SECONDS", "1.0"))
+RECONNECT_MAX_DELAY_SECONDS = float(os.getenv("AURELIA_R100_RECONNECT_MAX_DELAY_SECONDS", "15.0"))
 HORIZON_TICKS = int(os.getenv("AURELIA_R100_HORIZON_TICKS", "10"))
 STATE_PATH = Path(os.getenv("AURELIA_R100_STATE_PATH", ".research_state/aurelia_r100_state.json"))
 MIN_TRADE_PROBABILITY = 0.55
@@ -150,6 +153,7 @@ def initial_state() -> dict[str, Any]:
         "observations": [],
         "pending": [],
         "quote_observations": [],
+        "transport_reconnects": [],
         "last_run_started_at_utc": None,
         "last_run_completed_at_utc": None,
         "last_price": None,
@@ -204,6 +208,20 @@ def load_state(path: Path) -> dict[str, Any]:
         manifest["config_hash"] = expected_config_hash
     return state
 
+def add_runtime_provenance(report: dict[str, Any], state: dict[str, Any]) -> dict[str, Any]:
+    manifest = state.get("manifest") or {}
+    report["strategy_code_commit"] = manifest.get("code_commit")
+    report["collector_code_commit"] = (
+        os.getenv("AURELIA_COLLECTOR_CODE_COMMIT", "").strip()
+        or os.getenv("GITHUB_SHA", "").strip()
+        or "LOCAL_UNPINNED"
+    )
+    report["strategy_source_hash"] = (
+        os.getenv("AURELIA_VERIFIED_STRATEGY_SOURCE_HASH", "").strip() or None
+    )
+    return report
+
+
 def save_state(path: Path, state: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_suffix(path.suffix + ".tmp")
@@ -218,6 +236,26 @@ def build_signal_id(timestamp_utc: str, quote: float, direction: str) -> str:
         {"timestamp_utc": timestamp_utc, "quote": quote, "direction": direction}
     )[:24]
 
+def validate_tick_input(
+    quote: float,
+    received_at: datetime,
+) -> tuple[float, datetime]:
+    """Validate and normalize a public tick before strategy-state mutation."""
+    if isinstance(quote, bool):
+        raise ValueError("R100_TICK_QUOTE_INVALID")
+    try:
+        quote_value = float(quote)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("R100_TICK_QUOTE_INVALID") from exc
+    if not math.isfinite(quote_value) or quote_value <= 0:
+        raise ValueError("R100_TICK_QUOTE_INVALID")
+
+    if received_at.tzinfo is None or received_at.utcoffset() is None:
+        raise ValueError("R100_TICK_TIMESTAMP_TIMEZONE_REQUIRED")
+
+    return quote_value, received_at.astimezone(timezone.utc)
+
+
 def observe_tick(
     *,
     hunter: AutonomousSignalHunter,
@@ -226,6 +264,8 @@ def observe_tick(
     received_at: datetime,
     emit_candidate: bool = True,
 ) -> None:
+    quote, received_at = validate_tick_input(quote, received_at)
+
     pending = state["pending"]
     settled: list[dict[str, Any]] = []
 
@@ -521,6 +561,7 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         "live_execution": False,
         "archive_hash": archive_hash,
         "campaign_complete": campaign_complete,
+        "transport_reconnect_count": len(state.get("transport_reconnects", [])),
         "retuning_after_seal": False,
     }
 
@@ -542,13 +583,48 @@ async def collect_once(state: dict[str, Any]) -> None:
     stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
     iterator = stream.__aiter__()
     deadline = asyncio.get_running_loop().time() + COLLECTION_SECONDS
+    reconnect_attempts = 0
     try:
         while asyncio.get_running_loop().time() < deadline:
             remaining = deadline - asyncio.get_running_loop().time()
             try:
-                message = await asyncio.wait_for(iterator.__anext__(), timeout=max(1.0, remaining))
+                message = await asyncio.wait_for(
+                    iterator.__anext__(),
+                    timeout=max(0.1, remaining),
+                )
             except asyncio.TimeoutError:
                 break
+            except DerivTransportReaderError as exc:
+                if not exc.retryable:
+                    raise
+                reconnect_attempts += 1
+                if reconnect_attempts > MAX_STREAM_RECONNECTS:
+                    raise
+                delay = min(
+                    RECONNECT_MAX_DELAY_SECONDS,
+                    RECONNECT_BASE_DELAY_SECONDS * (2 ** (reconnect_attempts - 1)),
+                )
+                reconnect_events = state.setdefault("transport_reconnects", [])
+                if not isinstance(reconnect_events, list):
+                    raise ValueError("R100_TRANSPORT_RECONNECT_STATE_INVALID")
+                reconnect_events.append({
+                    "at_utc": iso(utc_now()),
+                    "attempt": reconnect_attempts,
+                    "error_class": exc.error_class,
+                    "close_code": exc.close_code,
+                    "delay_seconds": delay,
+                })
+                await transport.close()
+                remaining_after_close = deadline - asyncio.get_running_loop().time()
+                if remaining_after_close <= 0:
+                    break
+                await asyncio.sleep(min(delay, remaining_after_close))
+                if asyncio.get_running_loop().time() >= deadline:
+                    break
+                await transport.connect()
+                stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
+                iterator = stream.__aiter__()
+                continue
             tick = message.get("tick") or {}
             try:
                 quote = float(tick["quote"])
@@ -608,9 +684,17 @@ async def main() -> int:
         state["last_run_error_type"] = type(exc).__name__
         state["last_run_error_at_utc"] = iso(utc_now())
         save_state(STATE_PATH, state)
-        report = evaluation(state)
+        report = add_runtime_provenance(evaluation(state), state)
         report["collection_status"] = "FAILED_RETRYABLE"
         report["collection_error_type"] = type(exc).__name__
+        error_details = {}
+        if isinstance(exc, DerivTransportReaderError):
+            error_details = {
+                "collection_error_class": exc.error_class,
+                "collection_error_close_code": exc.close_code,
+                "collection_error_retryable": exc.retryable,
+            }
+            report.update(error_details)
         report_path.write_text(
             json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
             encoding="utf-8",
@@ -618,6 +702,9 @@ async def main() -> int:
         print(json.dumps({
             "R100_PROSPECTIVE_COLLECTION": "RETRYABLE_FAILURE",
             "ERROR_TYPE": type(exc).__name__,
+            "ERROR_CLASS": error_details.get("collection_error_class"),
+            "CLOSE_CODE": error_details.get("collection_error_close_code"),
+            "RETRYABLE": error_details.get("collection_error_retryable"),
             "OBSERVATIONS_PRESERVED": report["observations_total"],
             "EXECUTION_AUTHORIZED": False,
             "CAPITAL_AUTHORITY": False,
@@ -626,7 +713,7 @@ async def main() -> int:
 
     state.pop("last_run_error_type", None)
     state.pop("last_run_error_at_utc", None)
-    report = evaluation(state)
+    report = add_runtime_provenance(evaluation(state), state)
     report["collection_status"] = "PASS"
     save_state(STATE_PATH, state)
     report_path.write_text(
