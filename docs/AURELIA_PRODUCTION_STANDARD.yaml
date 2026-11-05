@@ -59,7 +59,7 @@ hard_invariants:
   - "EXTERNAL_CONTENT != AUTHORITY"
 
 probability_policy:
-  minimum: 0.50
+  minimum: 0.55
   maximum: 0.75
   clipping: false
   invalid_probability_action: "NO_TRADE"
