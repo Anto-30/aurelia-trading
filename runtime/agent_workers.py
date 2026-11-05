@@ -132,7 +132,9 @@ class AgentWorkerSupervisor:
         env = {
             key: value
             for key, value in os.environ.items()
-            if key != spec.command_env
+            if not (
+                key.startswith("AURELIA_AGENT_") and key.endswith("_COMMAND")
+            )
             and not any(marker in key.upper() for marker in secret_markers)
         }
         env.update(
@@ -197,9 +199,18 @@ class AgentWorkerSupervisor:
             raise WorkerProtocolError("WORKER_RESPONSE_EOF")
         if len(line) > max_bytes:
             raise WorkerProtocolError("WORKER_RESPONSE_FRAME_TOO_LARGE")
+        def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+            value: dict[str, Any] = {}
+            for key, item in pairs:
+                if key in value:
+                    raise ValueError("DUPLICATE_JSON_KEY")
+                value[key] = item
+            return value
+
         try:
             value = json.loads(
                 line.decode("utf-8"),
+                object_pairs_hook=unique_object,
                 parse_constant=lambda _value: (_ for _ in ()).throw(
                     ValueError("NON_FINITE_JSON_NUMBER")
                 ),
@@ -221,6 +232,10 @@ class AgentWorkerSupervisor:
     ) -> None:
         if cls._contains_field(response, AUTHORITY_FIELDS):
             raise WorkerProtocolError("WORKER_AUTHORITY_FIELD_FORBIDDEN")
+        if set(response) != {
+            "protocol", "type", "agent", "worker_id", "session_nonce"
+        }:
+            raise WorkerProtocolError("WORKER_HANDSHAKE_SCHEMA_INVALID")
         if (
             response.get("protocol") != WORKER_PROTOCOL
             or response.get("type") != "READY"
@@ -241,6 +256,19 @@ class AgentWorkerSupervisor:
     ) -> tuple[str, str, dict[str, str]]:
         if self._contains_field(response, AUTHORITY_FIELDS):
             raise WorkerProtocolError("WORKER_AUTHORITY_FIELD_FORBIDDEN")
+        if set(response) != {
+            "protocol",
+            "type",
+            "agent",
+            "worker_id",
+            "session_nonce",
+            "task_id",
+            "correlation_id",
+            "status",
+            "evidence_ref",
+            "result",
+        }:
+            raise WorkerProtocolError("WORKER_TASK_RESULT_SCHEMA_INVALID")
         if (
             response.get("protocol") != WORKER_PROTOCOL
             or response.get("type") != "TASK_RESULT"
@@ -559,7 +587,9 @@ class AgentWorkerSupervisor:
             if not self._running:
                 break
             restart_count += 1
-            await asyncio.sleep(restart_delay)
+            await asyncio.sleep(
+                min(60.0, restart_delay * (2 ** min(restart_count - 1, 6)))
+            )
 
     def start(self) -> None:
         if self._running:
