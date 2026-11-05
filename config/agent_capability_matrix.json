@@ -26,7 +26,8 @@
         "chrome-devtools-mcp",
         "candlestick-pattern-validation",
         "trading-repository-audit",
-        "tradingagents-research"
+        "tradingagents-research",
+        "metadata-provenance"
       ],
       "plugins": [
         "aurelia-federation",
@@ -57,7 +58,8 @@
         "crypto-strategy-research",
         "lookahead-bias-audit",
         "ML-calibration",
-        "tradingagents-research"
+        "tradingagents-research",
+        "metadata-provenance"
       ],
       "plugins": [
         "aurelia-federation",
@@ -86,7 +88,8 @@
         "browser-e2e",
         "browser-investigation-orchestration",
         "external-trading-source-adversarial-review",
-        "tradingagents-research"
+        "tradingagents-research",
+        "metadata-provenance"
       ],
       "plugins": [
         "aurelia-federation",
@@ -112,7 +115,8 @@
         "external-repo-federation",
         "research-intelligence",
         "MCP-browser-security-review",
-        "external-tool-permission-review"
+        "external-tool-permission-review",
+        "metadata-provenance"
       ],
       "plugins": [
         "github",
@@ -130,7 +134,8 @@
         "aurelia-agent-core",
         "evidence-reconciliation",
         "research-intelligence",
-        "security-review"
+        "security-review",
+        "metadata-provenance"
       ],
       "plugins": [
         "github"
@@ -152,7 +157,8 @@
         "security-review",
         "chrome-devtools-mcp",
         "network-inspection",
-        "performance-tracing"
+        "performance-tracing",
+        "metadata-provenance"
       ],
       "plugins": [
         "github",
@@ -178,7 +184,8 @@
         "browser-evidence-validation",
         "candlestick-library-regression-tests",
         "trading-source-provenance",
-        "tradingagents-research"
+        "tradingagents-research",
+        "metadata-provenance"
       ],
       "plugins": [
         "aurelia-federation",
@@ -201,7 +208,8 @@
         "aurelia-agent-core",
         "evidence-reconciliation",
         "security-review",
-        "risk-and-capital-controls"
+        "risk-and-capital-controls",
+        "metadata-provenance"
       ],
       "plugins": [
         "aurelia-federation"
@@ -222,7 +230,8 @@
         "evidence-reconciliation",
         "security-review",
         "ci-diagnostics",
-        "research-intelligence"
+        "research-intelligence",
+        "metadata-provenance"
       ],
       "plugins": [
         "data-analytics",
@@ -250,7 +259,8 @@
         "evidence-reconciliation",
         "security-review",
         "ci-diagnostics",
-        "browser-e2e"
+        "browser-e2e",
+        "metadata-provenance"
       ],
       "plugins": [
         "superpowers",
@@ -605,6 +615,107 @@
       "ClaudeCode",
       "KimiK3",
       "GrokBot",
+      "JEV"
+    ],
+    "can1357/oh-my-pi": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "GrokBot",
+      "JEV"
+    ],
+    "ethereum-lists/chains": [
+      "ClaudeCode",
+      "KimiK3",
+      "JEV",
+      "ChatGPT"
+    ],
+    "open-metadata/OpenMetadata": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "JEV",
+      "ChatGPT",
+      "GLM"
+    ],
+    "drewnoakes/metadata-extractor": [
+      "ClaudeCode",
+      "GLM",
+      "Dev"
+    ],
+    "ronmamo/reflections": [
+      "ClaudeCode",
+      "Dev"
+    ],
+    "microsoft/reflect-metadata": [
+      "ClaudeCode",
+      "Dev"
+    ],
+    "apache/ossie": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "JEV",
+      "ChatGPT",
+      "KimiK3"
+    ],
+    "grafeas/grafeas": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "JEV",
+      "Dev"
+    ],
+    "docker/metadata-action": [
+      "ClaudeCode",
+      "Dev",
+      "JEV"
+    ],
+    "google/ml-metadata": [
+      "ClaudeCode",
+      "KimiK3",
+      "JEV",
+      "ChatGPT"
+    ],
+    "microsoft/win32metadata": [
+      "ClaudeCode",
+      "Dev"
+    ],
+    "drewnoakes/metadata-extractor-dotnet": [
+      "ClaudeCode",
+      "GLM",
+      "Dev"
+    ],
+    "macbre/sql-metadata": [
+      "ClaudeCode",
+      "KimiK3",
+      "JEV"
+    ],
+    "berachain/metadata": [
+      "ClaudeCode",
+      "KimiK3",
+      "JEV"
+    ],
+    "Exiv2/exiv2": [
+      "ClaudeCode",
+      "GLM",
+      "Dev"
+    ],
+    "icsharpcode/ILSpy": [
+      "ClaudeCode",
+      "Dev",
+      "JEV"
+    ],
+    "jekyll/github-metadata": [
+      "ClaudeCode",
+      "Dev"
+    ],
+    "OpenLineage/OpenLineage": [
+      "ClaudeCode",
+      "GoogleAgentSkills",
+      "JEV",
+      "ChatGPT",
+      "KimiK3"
+    ],
+    "dependabot/fetch-metadata": [
+      "ClaudeCode",
+      "Dev",
       "JEV"
     ]
   },
@@ -996,6 +1107,221 @@
       "install_status": "PINNED_REFERENCE_ONLY",
       "mode": "RESEARCH_ONLY",
       "security": "No runtime dependency or source checkout execution. Use only through Layer 9 and the existing JSONL worker protocol. No secrets, broker access, capital authority or order submission. License restrictions and market compatibility are documented in docs/integrations/TRADINGAGENTS_RESEARCH_FEDERATION.md."
+    },
+    "can1357/oh-my-pi": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "GrokBot",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "SANDBOX_ONLY",
+      "capital_authority": false,
+      "security": "High-privilege agent harness with shell, persistent execution, browser and desktop control. Reference only until independently isolated and permission-audited; never replace AURELIA's supervisor or worker boundary."
+    },
+    "ethereum-lists/chains": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Only for future EVM integrations. Does not describe Deriv synthetic indices or provide broker instrument metadata."
+    },
+    "open-metadata/OpenMetadata": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT",
+        "GLM"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Architecture reference for evidence cataloguing and governed data context. Do not deploy a new service or add its dependency tree without a separate cost/security/ops decision."
+    },
+    "drewnoakes/metadata-extractor": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GLM",
+        "Dev"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Not relevant to current Python trading runtime; use only if media-file evidence ingestion becomes a real requirement."
+    },
+    "ronmamo/reflections": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "Dev"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Upstream README states the project is not actively maintained and last release was 2021. No runtime adoption; verify exact license text before copying."
+    },
+    "microsoft/reflect-metadata": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "Dev"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Legacy TypeScript decorator compatibility only; not part of the AURELIA Python runtime. TC39 standard decorator metadata supersedes the proposal for new projects."
+    },
+    "apache/ossie": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT",
+        "KimiK3"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Evaluate the specification for canonical metric and strategy semantics; no converter or runtime package adopted yet."
+    },
+    "grafeas/grafeas": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "JEV",
+        "Dev"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Use as a provenance/evidence model reference. Do not add a Grafeas server or make its records authoritative for AURELIA release approval."
+    },
+    "docker/metadata-action": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "Dev",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security": "CI-only candidate for immutable image labels and release tags; not an application runtime dependency."
+    },
+    "google/ml-metadata": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Reference for experiment and model lineage. Existing AURELIA evidence store remains canonical; no MLMD service/database introduced."
+    },
+    "microsoft/win32metadata": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "Dev"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Windows-specific and irrelevant to current Linux/Python trading runtime. Repository LICENSE warns that original SDK header licenses are not changed; require provenance/legal review before reuse."
+    },
+    "drewnoakes/metadata-extractor-dotnet": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GLM",
+        "Dev"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Not relevant to current Python runtime; optional only for future .NET media evidence tooling."
+    },
+    "macbre/sql-metadata": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "KimiK3",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Use only if SQL lineage or audit query analysis becomes a requirement; parser metadata is not a substitute for database query plans or execution evidence."
+    },
+    "berachain/metadata": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "KimiK3",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Chain-specific ecosystem list. Not a source of truth for Deriv instruments or general EVM chain configuration."
+    },
+    "Exiv2/exiv2": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GLM",
+        "Dev"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "GPL licensing is incompatible with casual embedding in a proprietary AURELIA runtime absent a separate legal review or commercial licence. No installation."
+    },
+    "icsharpcode/ILSpy": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "Dev",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Forensic/developer utility only; do not use to bypass licensing, access controls or secrets. No AURELIA runtime dependency."
+    },
+    "jekyll/github-metadata": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "Dev"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Website publishing plugin unrelated to AURELIA runtime; retained as a reference only."
+    },
+    "OpenLineage/OpenLineage": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT",
+        "KimiK3"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "REFERENCE_ONLY",
+      "capital_authority": false,
+      "security": "Strong candidate for mapping AURELIA research/validation runs to provenance events. Adopt concepts/schema selectively; no external lineage backend introduced."
+    },
+    "dependabot/fetch-metadata": {
+      "primary": "ClaudeCode",
+      "supporting": [
+        "Dev",
+        "JEV"
+      ],
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "mode": "TOOLCHAIN_ONLY",
+      "capital_authority": false,
+      "security": "CI-only candidate for dependency policy checks. Does not approve, merge or deploy dependency updates."
     }
   }
 }
