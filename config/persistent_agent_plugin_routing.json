@@ -1,0 +1,75 @@
+{
+  "schema": "aurelia.persistent_agent_plugin_routing.v1",
+  "updated_utc": "2026-10-24",
+  "objective": "Keep the intended ChatGPT, ClaudeCode, and DeepSeekHarness tool/skill/plugin assignments in a version-controlled registry and require task-start preflight on every material task.",
+  "guarantee_boundary": {
+    "repository_policy_persists": true,
+    "runtime_plugin_installation_or_authentication_guaranteed_by_registry": false,
+    "automatic_external_provider_connection_from_chatgpt": false,
+    "reason": "Provider accounts, plugin installation, connector consent, API credentials, and runtime processes are controlled by their respective platforms and cannot be created or kept alive by a repository file or ChatGPT conversation.",
+    "report_unavailable_capability_as": "BLOCKED_NOT_CONNECTED",
+    "never_claim_connection_without": [
+      "provider/runtime identity",
+      "successful authenticated capability probe",
+      "timestamped evidence",
+      "permission scope"
+    ]
+  },
+  "task_start_contract": [
+    "Resolve canonical repository and exact branch/commit before material work.",
+    "Load this routing registry plus AGENTS.md, agent_tool_skill_assignment.json, agent_capability_matrix.json, agent_plugin_inventory.json, and LIVE_LOCK.yaml when repository access is available.",
+    "For each agent, verify the actual runtime is reachable and its assigned plugin/connector is installed and authenticated before routing work.",
+    "Use the agent's own scoped plugin set; do not treat registry membership as proof of installation, authentication, or authorization.",
+    "Select tools/plugins by task relevance and least privilege; do not indiscriminately invoke every plugin for every task.",
+    "Record task ID, agent, plugin/connector, capability probe, permission scope, evidence timestamp, and outcome.",
+    "If an agent or plugin is unavailable, continue only with an available authorized substitute and explicitly report the missing delegation; do not simulate a tool call.",
+    "Never send secrets, PATs, OAuth tokens, OTPs, or production credentials to an LLM, plugin, repository, log, or evidence artifact.",
+    "No external agent or plugin may authorize capital, submit live orders, modify LIVE_LOCK, or set FINAL_EXECUTION_AUTHORIZATION."
+  ],
+  "agents": {
+    "ChatGPT": {
+      "role": "supervisory orchestrator, evidence reconciliation, independent review",
+      "intended_plugins": [
+        "GitHub",
+        "data-analytics",
+        "web research",
+        "Python/sandbox",
+        "connected task-relevant ChatGPT apps"
+      ],
+      "runtime_status": "AVAILABLE_IN_CURRENT_CHAT_CONTEXT_ONLY",
+      "persistence_status": "NO_PERSISTENT_CHATGPT_WORKER_VERIFIED",
+      "activation_rule": "Use currently exposed and authorized tools for this conversation; verify each relevant connector at task time. Do not claim a background worker or always-on connection."
+    },
+    "ClaudeCode": {
+      "role": "primary engineering and repair",
+      "intended_plugins": [
+        "aurelia-federation",
+        "GitHub",
+        "spec-kit",
+        "promptkit"
+      ],
+      "runtime_status": "EXTERNAL_RUNTIME_NOT_VERIFIED_BY_THIS_CHAT",
+      "persistence_status": "NOT_PROVEN",
+      "activation_rule": "Keep blocked until a reachable authorized runtime identity and authenticated capability probe with timestamp and permission scope are verified."
+    },
+    "DeepSeekHarness": {
+      "role": "independent harness/code review, adversarial validation, CI/evidence critique",
+      "intended_plugins": [
+        "data-analytics",
+        "mcp-precheck",
+        "Hugging Face where relevant",
+        "GitHub read",
+        "CI logs/artifacts read-only"
+      ],
+      "runtime_status": "REGISTERED_SHADOW_ONLY_NOT_CONNECTED",
+      "persistence_status": "NOT_PROVEN",
+      "activation_rule": "Keep shadow-only until a real authorized endpoint/runtime is configured and verified. Do not invent an endpoint or credentials."
+    }
+  },
+  "governance": {
+    "live_execution": "BLOCKED",
+    "final_execution_authorization": false,
+    "live_lock_mutation_by_external_agents": false,
+    "external_agents_capital_authority": false
+  }
+}
