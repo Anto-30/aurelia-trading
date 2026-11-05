@@ -261,15 +261,24 @@
       "category": "multi-agent-trading-research",
       "domain": "research",
       "assigned_agents": [
+        "ClaudeCode",
         "KimiK3",
         "GrokBot",
-        "ClaudeCode",
         "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/TauricResearch/TradingAgents",
-      "head_commit": "1394a3f72aa4393e1a98f51b382434c4b4c2d972",
-      "pin_source": "github_default_branch_ref_checked_2026-10-08"
+      "head_commit": "9fa1196fffbcfd9de5146d2dd2869df84ab99838",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_VERIFIED",
+      "capital_authority": false,
+      "license": "Apache-2.0",
+      "research_scope": "upstream multi-agent research framework; provider-neutral analyst/debate/portfolio research patterns",
+      "license_restrictions": "Research-only; no external portfolio manager or simulated-exchange execution path may be connected to AURELIA capital execution."
     },
     {
       "repo": "HKUDS/Vibe-Trading",
@@ -306,15 +315,24 @@
       "category": "multi-agent-trading-research",
       "domain": "research",
       "assigned_agents": [
+        "ClaudeCode",
         "KimiK3",
         "GrokBot",
-        "ClaudeCode",
         "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/hsliuping/TradingAgents-CN",
       "head_commit": "51060a7682cf51810b4bc3a704829438d18cd8dc",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09"
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_VERIFIED",
+      "capital_authority": false,
+      "license": "HYBRID: Apache-2.0 scoped directories + proprietary source-available app/frontend/core",
+      "research_scope": "A-share research roles, data-source adapters, Chinese-market research workflow",
+      "license_restrictions": "Only clearly Apache-2.0 scoped components may be evaluated for reuse after path-level license audit. Do not copy app/, frontend/, or core/ into commercial AURELIA without a commercial licence."
     },
     {
       "repo": "Superalgos/Superalgos",
@@ -411,17 +429,27 @@
     },
     {
       "repo": "simonlin1212/TradingAgents-astock",
-      "category": "equity-research",
+      "category": "multi-agent-trading-research",
       "domain": "research",
       "assigned_agents": [
+        "ClaudeCode",
         "KimiK3",
         "GrokBot",
         "JEV"
       ],
       "mode": "RESEARCH_ONLY",
       "source_url": "https://github.com/simonlin1212/TradingAgents-astock",
-      "head_commit": "7fc142e5a622a16dcfce8c2544c771fc251f5dce",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09"
+      "head_commit": "3a9171182304e87042743dde245c64922e04ed96",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-05",
+      "primary_agent": "ClaudeCode",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_VERIFIED",
+      "capital_authority": false,
+      "license": "Apache-2.0",
+      "research_scope": "A-share analyst specializations, market-specific data-source and calendar/rule adaptation patterns",
+      "license_restrictions": "Research-only. Validate data rights, source reliability, timestamp semantics and market-specific assumptions before reuse."
     },
     {
       "repo": "pst-group/pysystemtrade",
@@ -6321,6 +6349,30 @@
         "developer-experience-reference"
       ],
       "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "KylinMountain/TradingAgents-AShare",
+      "category": "multi-agent-trading-research",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GrokBot",
+        "JEV"
+      ],
+      "primary_agent": "ClaudeCode",
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/KylinMountain/TradingAgents-AShare",
+      "head_commit": "63b25eda444377366ab6e4e265228454c51713f3",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-05",
+      "integration_status": "PINNED_REFERENCE_ONLY",
+      "runtime_dependency": false,
+      "runtime_install": "NOT_INSTALLED",
+      "provider_authentication": "NOT_VERIFIED",
+      "capital_authority": false,
+      "license": "MIXED: Apache-2.0 upstream portions + PolyForm Noncommercial 1.0 additions/modifications",
+      "research_scope": "A-share multi-agent workflow and product architecture as non-code reference only",
+      "license_restrictions": "Do not copy new API/frontend or significantly modified core components into commercial AURELIA absent explicit commercial permission."
     }
   ],
   "pin_policy": {
