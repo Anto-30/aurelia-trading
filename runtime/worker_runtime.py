@@ -124,8 +124,13 @@ class SupervisedAgentWorker:
                     result = await result
                 if not isinstance(result, dict):
                     result = {"result": result}
+                evidence_ref = result.get("evidence_ref", "")
                 await self.federation.complete_task(
-                    task.task_id, agent=self.agent, status="COMPLETED"
+                    task.task_id,
+                    agent=self.agent,
+                    status="COMPLETED",
+                    evidence_ref=evidence_ref,
+                    result=result,
                 )
                 await self.federation.publish(
                     sender=self.agent,
