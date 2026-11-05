@@ -1,0 +1,46 @@
+{
+  "schema": "aurelia.vendored_engineering_skills.v1",
+  "source_repository": "https://github.com/mattpocock/skills",
+  "pinned_commit": "4ae2317ddb22b046e26455e4f9c9b3aaaf62212d",
+  "license": "MIT",
+  "imported_at": "2026-11-05",
+  "skills": [
+    {
+      "name": "diagnosing-bugs",
+      "destination": ".agents/skills/matt-pocock-diagnosing-bugs/SKILL.md",
+      "authority": "ENGINEERING_GUIDANCE_ONLY",
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode"
+      ]
+    },
+    {
+      "name": "tdd",
+      "destination": ".agents/skills/matt-pocock-tdd/SKILL.md",
+      "authority": "ENGINEERING_GUIDANCE_ONLY",
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode"
+      ]
+    },
+    {
+      "name": "code-review",
+      "destination": ".agents/skills/matt-pocock-code-review/SKILL.md",
+      "authority": "ENGINEERING_GUIDANCE_ONLY",
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode"
+      ]
+    },
+    {
+      "name": "codebase-design",
+      "destination": ".agents/skills/matt-pocock-codebase-design/SKILL.md",
+      "authority": "ENGINEERING_GUIDANCE_ONLY",
+      "capital_authority": false,
+      "assigned_agents": [
+        "ClaudeCode"
+      ]
+    }
+  ],
+  "update_policy": "Review upstream diff, pin a new commit, scan instructions, update copies and license together, then run AURELIA CI. No automatic upstream code execution."
+}

@@ -7,6 +7,7 @@ remains fail-closed.
 """
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 import sys
@@ -15,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_FILES = (
     "config/LIVE_LOCK.yaml",
+    "AURELIA_SOURCE_OF_TRUTH.json",
     "docs/AURELIA_PRODUCTION_STANDARD.yaml",
     "docs/AURELIA_TEST_ORACLE_MATRIX.yaml",
     "docs/PRODUCTION_READINESS.md",
@@ -88,6 +90,7 @@ def main() -> int:
         runtime_min = re.search(r"(?m)^MIN_PROBABILITY\s*=\s*([0-9.]+)\s*$", authority)
         runtime_max = re.search(r"(?m)^MAX_PROBABILITY\s*=\s*([0-9.]+)\s*$", authority)
         readme = read("README.md")
+        source_of_truth = json.loads(read("AURELIA_SOURCE_OF_TRUTH.json"))
         try:
             policy_values = (
                 float(documented_min.group(1)) if documented_min else None,
@@ -99,6 +102,8 @@ def main() -> int:
             policy_values = (None, None, None, None)
         if policy_values != (0.55, 0.75, 0.55, 0.75):
             failures.append("PROBABILITY_POLICY_RANGE_MISMATCH_EXPECTED_0.55_TO_0.75")
+        if source_of_truth.get("probability_min") != 0.55 or source_of_truth.get("probability_max") != 0.75:
+            failures.append("SOURCE_OF_TRUTH_PROBABILITY_POLICY_RANGE_MISMATCH")
         if "hard probability band is **55%–75%**" not in readme:
             failures.append("README_PROBABILITY_POLICY_RANGE_MISMATCH")
 
