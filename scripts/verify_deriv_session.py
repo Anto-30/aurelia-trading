@@ -190,6 +190,8 @@ async def run() -> int:
     except Exception as exc:
         print("DERIV_AUTH_SESSION=FAILED")
         print(f"DERIV_AUTH_SESSION_REASON={type(exc).__name__}")
+        for frame in safe_exception_frames(exc, root=ROOT):
+            print(f"DERIV_AUTH_SESSION_FRAME={frame}")
         return 1
     finally:
         if adapter is not None:
