@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import unittest
 from pathlib import Path
 
 
@@ -35,17 +36,20 @@ def test_scheduled_deriv_verifier_keeps_capital_authority_blocked() -> None:
     assert 'echo "DERIV_ORDERS_SUBMITTED=0"' in workflow
 
 
-def test_assurance_workflow_exposes_only_sanitized_auth_mode() -> None:
-    assurance = ROOT / ".github" / "workflows" / "aurelia-assurance.yml"
-    workflow = assurance.read_text(encoding="utf-8")
-    safe_binding = (
-        "${{ (vars.DERIV_AUTH_MODE == '' || vars.DERIV_AUTH_MODE == 'pat') "
-        "&& 'pat' || (vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'invalid') }}"
-    )
 
-    auth_mode_bindings = [
-        line.strip() for line in workflow.splitlines()
-        if line.strip().startswith("DERIV_AUTH_MODE:")
-    ]
-    assert auth_mode_bindings == [f"DERIV_AUTH_MODE: {safe_binding}"]
-    assert "vars.DERIV_AUTH_MODE || 'pat'" not in workflow
+
+class TestAssuranceWorkflowAuthMode(unittest.TestCase):
+    def test_assurance_workflow_exposes_only_sanitized_auth_mode(self) -> None:
+        assurance = ROOT / ".github" / "workflows" / "aurelia-assurance.yml"
+        workflow = assurance.read_text(encoding="utf-8")
+        safe_binding = (
+            "${{ (vars.DERIV_AUTH_MODE == '' || vars.DERIV_AUTH_MODE == 'pat') "
+            "&& 'pat' || (vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'invalid') }}"
+        )
+
+        auth_mode_bindings = [
+            line.strip() for line in workflow.splitlines()
+            if line.strip().startswith("DERIV_AUTH_MODE:")
+        ]
+        self.assertEqual(auth_mode_bindings, [f"DERIV_AUTH_MODE: {safe_binding}"])
+        self.assertNotIn("vars.DERIV_AUTH_MODE || 'pat'", workflow)
