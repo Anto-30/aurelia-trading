@@ -158,7 +158,7 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
         self.env.pop("DERIV_AUTH_MODE", None)
         self.env["PROVISIONER_TEST_EXISTING_VARIABLE_NAMES"] = "DERIV_AUTH_MODE"
         self.env["PROVISIONER_TEST_EXISTING_VARIABLE_VALUE"] = "pat"
-        self.env["PROVISIONER_TEST_EXISTING_NAMES"] = "\\n".join(
+        self.env["PROVISIONER_TEST_EXISTING_NAMES"] = "\n".join(
             [
                 "DERIV_PAT",
                 "DERIV_APP_ID",
