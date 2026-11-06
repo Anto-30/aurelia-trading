@@ -16,7 +16,7 @@ jobs:
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
       DERIV_AUTH_CONFIGURED: "false"
-      ACCOUNT_DERIV_AUTH_MODE: "oauth"
+      ACCOUNT_DERIV_AUTH_MODE: "none"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
