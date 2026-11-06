@@ -34,7 +34,7 @@ class FailClosedStartupTests(unittest.TestCase):
              patch.object(main_module, "start_continuous_runtime", new=AsyncMock()) as start_runtime:
             with self.assertRaisesRegex(
                 SecretsError,
-                "GENERIC_TOKEN_FALLBACK_BLOCKED",
+                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
             ):
                 asyncio.run(main_module.main())
 
