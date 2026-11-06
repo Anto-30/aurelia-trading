@@ -22,8 +22,10 @@ def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object
     # Membership checks inspect only whether a credential key is present;
     # they never retrieve or compare secret values.
     credentials_present = any(name in env for name in ACCOUNT_CREDENTIAL_ENV_NAMES)
-    mode_value = str(env.get("ACCOUNT_DERIV_AUTH_MODE", "oauth")).strip().lower()
-    mode = mode_value if mode_value in {"oauth", "none"} else "invalid"
+    mode_value = str(env.get("ACCOUNT_DERIV_AUTH_MODE", "none")).strip().lower()
+    # This worker never configures an account-auth mode. Any value other than
+    # explicit "none" is reported as invalid and remains blocked.
+    mode = "none" if mode_value == "none" else "invalid"
 
     return {
         "schema_version": "3",
