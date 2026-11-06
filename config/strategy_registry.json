@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.strategy_registry.v1",
-  "registry_version": "2026-10-10.1",
+  "registry_version": "2026-11-06.1",
   "capital_authority": false,
   "execution_authority": false,
   "policy": {
@@ -402,6 +402,60 @@
       "rejection_reasons": [
         "Existing strategy identity retained; implementation not verified in canonical main checkout.",
         "No verified qualification evidence"
+      ]
+    },
+    {
+      "strategy_id": "R100_TICK_MOMENTUM_PROSPECTIVE_V0.2.0",
+      "version": "0.2.0",
+      "implementation_path": "research/r100_prospective_oos_collector.py",
+      "implementation_entrypoint": "main",
+      "implementation_status": "RESEARCH_ONLY",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [
+        "DERIV_SYNTHETIC_INDEX"
+      ],
+      "verified_instrument_ids": [],
+      "timeframe_status": "TICK_STREAM_RESEARCH_ONLY",
+      "timeframes": [
+        "TICK"
+      ],
+      "data_requirements": [
+        "public_R_100_tick_stream",
+        "prospective_collection_only",
+        "chronological_tick_timestamps",
+        "source_bound_code_commit_and_config_hash",
+        "no_historical_backfill"
+      ],
+      "risk_profile": "No capital authority; no orders; public research only; no account credentials.",
+      "execution_assumptions": [
+        "public_non_executing_proposal_quotes_only",
+        "no_buy_or_order_submission",
+        "no_account_authentication",
+        "quoted_economics_not_realized_execution_economics"
+      ],
+      "qualification_status": "RESEARCH_ONLY_UNQUALIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "NOT_MEASURED",
+      "out_of_sample_status": "PROSPECTIVE_CAMPAIGN_NOT_EVIDENCED",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_VALIDATED",
+      "net_economics_status": "NOT_MEASURED",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "CAMPAIGN_CONFIGURED_NOT_EVIDENCED",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "RESEARCH_ONLY_NO_CAPITAL_AUTHORITY",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "Prospective collector identity is registered for lineage only.",
+        "No current campaign state, report, or manifest is present in canonical main.",
+        "No raw observations or independently reproduced OOS result.",
+        "No realized execution-cost or slippage evidence.",
+        "No validated calibration, walk-forward, or statistical-uncertainty evidence.",
+        "No account-data access or capital authority."
       ]
     }
   ]
