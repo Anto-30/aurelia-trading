@@ -309,6 +309,7 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
             self.assertEqual(report["collection_error_type"], "RuntimeError")
             self.assertFalse(report["execution_authorized"])
             self.assertFalse(report["capital_authority"])
+            self.assertIn("collection_error_details", report)
 
     def test_horizon_is_positive(self):
         self.assertGreater(HORIZON_TICKS, 0)

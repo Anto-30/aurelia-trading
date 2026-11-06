@@ -424,7 +424,12 @@ def quoted_contract_economics(
     }
 
 
-def evaluation(state: dict[str, Any]) -> dict[str, Any]:
+def evaluation(
+    state: dict[str, Any],
+    *,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    evaluated_at = now or utc_now()
     manifest = state["manifest"]
     oos_start = datetime.fromisoformat(manifest["oos_start_at_utc"].replace("Z", "+00:00"))
     rows = state["observations"]
@@ -436,6 +441,7 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         row for row in rows
         if datetime.fromisoformat(row["signal_timestamp_utc"].replace("Z", "+00:00")) >= oos_start
     ]
+
     def strategy_return(row: dict[str, Any]) -> float:
         raw = float(row["raw_return"])
         if row["direction"] == "CALL":
@@ -475,17 +481,39 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
     else:
         qualification_status = "RESEARCH_QUALIFIED"
 
-    campaign_complete = (
-        utc_now() >= datetime.fromisoformat(
-            manifest["campaign_end_at_utc"].replace("Z", "+00:00")
-        )
-        and not state["pending"]
+    campaign_end = datetime.fromisoformat(
+        manifest["campaign_end_at_utc"].replace("Z", "+00:00")
     )
-    state["manifest"]["sealed"] = bool(campaign_complete)
+    campaign_window_ended = evaluated_at >= campaign_end
+    pending_count = len(state["pending"])
+    if campaign_window_ended:
+        if not manifest.get("sealed"):
+            manifest["sealed_at_utc"] = iso(evaluated_at)
+            manifest["seal_reason"] = "CAMPAIGN_WINDOW_ENDED"
+        manifest["sealed"] = True
+        manifest["unresolved_pending_count"] = pending_count
+        if pending_count and qualification_status == "RESEARCH_QUALIFIED":
+            qualification_status = "INCOMPLETE_PENDING_OUTCOMES"
+
+    pending_resolution_status = (
+        "UNRESOLVED_NO_BACKFILL"
+        if campaign_window_ended and pending_count
+        else "PENDING"
+        if pending_count
+        else "RESOLVED"
+    )
+    campaign_terminal_status = (
+        "SEALED_WITH_UNRESOLVED_PENDING"
+        if campaign_window_ended and pending_count
+        else "SEALED"
+        if campaign_window_ended
+        else "ACTIVE"
+    )
     archive_hash = canonical_hash({
-        "manifest": state["manifest"],
+        "manifest": manifest,
         "observations": rows,
         "quote_observations": state["quote_observations"],
+        "pending": state["pending"],
     })
     return {
         "schema": "aurelia.r100.prospective_oos.report.v1",
@@ -520,33 +548,43 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         "capital_authority": False,
         "live_execution": False,
         "archive_hash": archive_hash,
-        "campaign_complete": campaign_complete,
+        "campaign_complete": campaign_window_ended,
+        "pending_count": pending_count,
+        "pending_resolution_status": pending_resolution_status,
+        "campaign_terminal_status": campaign_terminal_status,
         "retuning_after_seal": False,
     }
 
 async def collect_once(state: dict[str, Any]) -> None:
     start = utc_now()
     state["last_run_started_at_utc"] = iso(start)
-
-    transport = DerivWebSocketTransport(PUBLIC_WS_URL, timeout_seconds=10.0)
     campaign_end = datetime.fromisoformat(
         state["manifest"]["campaign_end_at_utc"].replace("Z", "+00:00")
     )
+    if start >= campaign_end:
+        state["last_run_completed_at_utc"] = iso(start)
+        return
+
+    transport = DerivWebSocketTransport(PUBLIC_WS_URL, timeout_seconds=10.0)
     hunter = AutonomousSignalHunter(
         window=64,
         min_observations=20,
         threshold=1.5,
         cooldown_seconds=30.0,
     )
-    await transport.connect()
-    stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
-    iterator = stream.__aiter__()
-    deadline = asyncio.get_running_loop().time() + COLLECTION_SECONDS
+    stream = None
     try:
+        await transport.connect()
+        stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
+        iterator = stream.__aiter__()
+        deadline = asyncio.get_running_loop().time() + COLLECTION_SECONDS
         while asyncio.get_running_loop().time() < deadline:
             remaining = deadline - asyncio.get_running_loop().time()
             try:
-                message = await asyncio.wait_for(iterator.__anext__(), timeout=max(1.0, remaining))
+                message = await asyncio.wait_for(
+                    iterator.__anext__(),
+                    timeout=max(1.0, remaining),
+                )
             except asyncio.TimeoutError:
                 break
             tick = message.get("tick") or {}
@@ -592,10 +630,17 @@ async def collect_once(state: dict[str, Any]) -> None:
                         "captured_at_utc": iso(received_at),
                         "quote_status": "UNAVAILABLE",
                         "error_type": type(exc).__name__,
+                        "error_code": getattr(exc, "code", None),
                     })
     finally:
-        await transport.close()
-    state["last_run_completed_at_utc"] = iso(utc_now())
+        try:
+            if stream is not None:
+                await stream.aclose()
+        finally:
+            try:
+                await transport.close()
+            finally:
+                state["last_run_completed_at_utc"] = iso(utc_now())
 
 async def main() -> int:
     state = load_state(STATE_PATH)
@@ -611,6 +656,8 @@ async def main() -> int:
         report = evaluation(state)
         report["collection_status"] = "FAILED_RETRYABLE"
         report["collection_error_type"] = type(exc).__name__
+        report["collection_error_code"] = getattr(exc, "code", None)
+        report["collection_error_details"] = getattr(exc, "details", {}) or {}
         report_path.write_text(
             json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
             encoding="utf-8",
@@ -618,6 +665,8 @@ async def main() -> int:
         print(json.dumps({
             "R100_PROSPECTIVE_COLLECTION": "RETRYABLE_FAILURE",
             "ERROR_TYPE": type(exc).__name__,
+            "ERROR_CODE": getattr(exc, "code", None),
+            "ERROR_DETAILS": getattr(exc, "details", {}) or {},
             "OBSERVATIONS_PRESERVED": report["observations_total"],
             "EXECUTION_AUTHORIZED": False,
             "CAPITAL_AUTHORITY": False,

@@ -49,14 +49,20 @@ jobs:
           gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}/zip" \
             > .research_state/previous/archive.zip
           unzip -oq .research_state/previous/archive.zip -d .research_state/previous/extracted
-          state_file="$(find .research_state/previous/extracted -name aurelia_r100_state.json -type f | head -n 1)"
+          state_file="$(find .research_state/previous/extracted -name aurelia_r100_state.json -type f ! -path '*/sealed-*/*' ! -path '*/incompatible-*/*' | head -n 1)"
           if [ -z "$state_file" ]; then
-            echo "Prior archive did not contain aurelia_r100_state.json" >&2
+            echo "Prior archive did not contain an active aurelia_r100_state.json" >&2
             exit 1
           fi
           mkdir -p "$(dirname "${AURELIA_R100_STATE_PATH}")"
           cp "$state_file" "${AURELIA_R100_STATE_PATH}"
+          report_file="$(find .research_state/previous/extracted -name aurelia_r100_report.json -type f ! -path '*/sealed-*/*' ! -path '*/incompatible-*/*' | head -n 1)"
+          if [ -n "$report_file" ]; then
+            cp "$report_file" "$(dirname "${AURELIA_R100_STATE_PATH}")/aurelia_r100_report.json"
+          fi
           echo "Recovered prospective archive artifact ${artifact_id}."
+      - name: Seal ended campaign without historical backfill
+        run: python -m research.r100_prospective_oos_sealer
       - name: Select frozen campaign or roll incompatible campaign
         shell: bash
         run: |
@@ -72,7 +78,10 @@ jobs:
             archive_dir=".research_state/sealed-$(date -u +%Y%m%dT%H%M%SZ)"
             mkdir -p "$archive_dir"
             cp "${AURELIA_R100_STATE_PATH}" "$archive_dir/aurelia_r100_state.json"
-            rm -f "${AURELIA_R100_STATE_PATH}"
+            if [ -f ".research_state/aurelia_r100_report.json" ]; then
+              cp ".research_state/aurelia_r100_report.json" "$archive_dir/aurelia_r100_report.json"
+            fi
+            rm -f "${AURELIA_R100_STATE_PATH}" ".research_state/aurelia_r100_report.json"
             echo "R100_CAMPAIGN_SELECTION=NEW_AFTER_SEAL"
             echo "AURELIA_RESEARCH_CODE_COMMIT=${GITHUB_SHA}" >> "$GITHUB_ENV"
             exit 0
@@ -94,7 +103,10 @@ jobs:
             archive_dir=".research_state/incompatible-$(date -u +%Y%m%dT%H%M%SZ)"
             mkdir -p "$archive_dir"
             cp "${AURELIA_R100_STATE_PATH}" "$archive_dir/aurelia_r100_state.json"
-            rm -f "${AURELIA_R100_STATE_PATH}"
+            if [ -f ".research_state/aurelia_r100_report.json" ]; then
+              cp ".research_state/aurelia_r100_report.json" "$archive_dir/aurelia_r100_report.json"
+            fi
+            rm -f "${AURELIA_R100_STATE_PATH}" ".research_state/aurelia_r100_report.json"
             git checkout --detach "${GITHUB_SHA}"
             echo "R100_CAMPAIGN_SELECTION=ROLLED_OVER_INCOMPATIBLE"
             echo "R100_ARCHIVED_STATE=$archive_dir/aurelia_r100_state.json"
@@ -137,6 +149,10 @@ jobs:
           assert report["live_execution"] is False
           assert report["strategy_live_eligible"] is False
           assert report["execution_economics"]["status"] == "UNDETERMINED_PRODUCTION"
+          assert report["pending_count"] == len(state["pending"])
+          if report["campaign_complete"] and report["pending_count"]:
+              assert report["pending_resolution_status"] == "UNRESOLVED_NO_BACKFILL"
+              assert state["manifest"]["sealed"] is True
           assert all(0.55 <= float(row["probability"]) <= 0.75 for row in state["observations"])
           assert all(row.get("quote_status") in {"OBSERVED", "UNAVAILABLE"} for row in state["quote_observations"])
           print(
@@ -154,5 +170,9 @@ jobs:
           path: |
             .research_state/aurelia_r100_state.json
             .research_state/aurelia_r100_report.json
+            .research_state/sealed-*/aurelia_r100_state.json
+            .research_state/sealed-*/aurelia_r100_report.json
+            .research_state/incompatible-*/aurelia_r100_state.json
+            .research_state/incompatible-*/aurelia_r100_report.json
           if-no-files-found: error
           retention-days: 30

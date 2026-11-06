@@ -9,7 +9,16 @@ from websockets.asyncio.client import ClientConnection, connect
 
 
 class DerivTransportError(RuntimeError):
-    pass
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str | None = None,
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.code = code or str(message)
+        self.details = dict(details or {})
 
 
 @dataclass
@@ -18,6 +27,7 @@ class Subscription:
     payload: dict[str, Any]
     queue: asyncio.Queue[dict[str, Any]]
     request_id: int | None = None
+    subscription_id: str | None = None
 
 
 class DerivWebSocketTransport:
@@ -46,6 +56,8 @@ class DerivWebSocketTransport:
         self._pending: dict[int, asyncio.Future[dict[str, Any]]] = {}
         self._subscriptions: dict[str, Subscription] = {}
         self._subscription_by_request_id: dict[int, str] = {}
+        self._subscription_by_id: dict[str, str] = {}
+        self.last_reader_error: dict[str, Any] | None = None
         self._lock = asyncio.Lock()
 
     async def connect(self) -> None:
@@ -60,38 +72,106 @@ class DerivWebSocketTransport:
         )
         self._reader_task = asyncio.create_task(self._reader_loop())
 
+    @staticmethod
+    def _reader_error_details(exc: Exception) -> dict[str, Any]:
+        if isinstance(exc, DerivTransportError):
+            details = {"code": exc.code, "exception_type": type(exc).__name__}
+            details.update(exc.details)
+            return details
+        details: dict[str, Any] = {
+            "code": "TRANSPORT_READER_FAILED",
+            "exception_type": type(exc).__name__,
+        }
+        close_code = getattr(exc, "code", None)
+        if close_code is not None:
+            details["websocket_close_code"] = close_code
+        if isinstance(exc, json.JSONDecodeError):
+            details["json_line"] = exc.lineno
+            details["json_column"] = exc.colno
+        return details
+
     async def _reader_loop(self) -> None:
-        assert self.ws is not None
+        ws = self.ws
+        if ws is None:
+            return
         try:
             while True:
-                raw = await self.ws.recv()
+                raw = await ws.recv()
                 message = json.loads(raw)
+                if not isinstance(message, dict):
+                    raise DerivTransportError(
+                        "WEBSOCKET_MESSAGE_NOT_OBJECT",
+                        code="WEBSOCKET_MESSAGE_NOT_OBJECT",
+                    )
+
                 request_id = message.get("req_id")
                 if isinstance(request_id, int) and request_id in self._pending:
                     future = self._pending[request_id]
                     if not future.done():
                         if "error" in message:
-                            future.set_exception(
-                                DerivTransportError(str(message["error"]))
-                            )
+                            broker_error = message["error"]
+                            if isinstance(broker_error, dict):
+                                code = str(broker_error.get("code") or "BROKER_REQUEST_FAILED")
+                                future.set_exception(
+                                    DerivTransportError(code, code=code, details=broker_error)
+                                )
+                            else:
+                                future.set_exception(DerivTransportError(str(broker_error)))
                         else:
                             future.set_result(message)
                     continue
 
-                if isinstance(request_id, int):
-                    key = self._subscription_by_request_id.get(request_id)
-                    if key is not None:
-                        self._subscriptions[key].queue.put_nowait(message)
+                key = (
+                    self._subscription_by_request_id.get(request_id)
+                    if isinstance(request_id, int)
+                    else None
+                )
+                if key is not None:
+                    subscription = self._subscriptions.get(key)
+                    if subscription is not None:
+                        subscription_meta = message.get("subscription")
+                        subscription_id = (
+                            subscription_meta.get("id")
+                            if isinstance(subscription_meta, dict)
+                            else None
+                        )
+                        if subscription_id is not None:
+                            subscription.subscription_id = str(subscription_id)
+                            self._subscription_by_id[str(subscription_id)] = key
+                        subscription.queue.put_nowait(message)
+                    continue
+
+                subscription_meta = message.get("subscription")
+                subscription_id = (
+                    subscription_meta.get("id")
+                    if isinstance(subscription_meta, dict)
+                    else None
+                )
+                if subscription_id is not None:
+                    key = self._subscription_by_id.get(str(subscription_id))
+                    subscription = self._subscriptions.get(key) if key is not None else None
+                    if subscription is not None:
+                        subscription.queue.put_nowait(message)
         except asyncio.CancelledError:
             raise
         except Exception as exc:
-            self._fail_pending(exc)
-            for subscription in self._subscriptions.values():
-                subscription.queue.put_nowait(
-                    {"error": {"code": "TRANSPORT_READER_FAILED"}}
-                )
+            details = self._reader_error_details(exc)
+            self.last_reader_error = details
+            transport_error = DerivTransportError(
+                "TRANSPORT_READER_FAILED",
+                code="TRANSPORT_READER_FAILED",
+                details=details,
+            )
+            self._fail_pending(transport_error)
+            for subscription in list(self._subscriptions.values()):
+                subscription.queue.put_nowait({"error": details})
         finally:
-            self.ws = None
+            if self.ws is ws:
+                self.ws = None
+            try:
+                await ws.close()
+            except Exception:
+                pass
 
     def _fail_pending(self, exc: Exception) -> None:
         for future in self._pending.values():
@@ -162,7 +242,11 @@ class DerivWebSocketTransport:
             while True:
                 message = await subscription.queue.get()
                 if "error" in message:
-                    raise DerivTransportError(str(message["error"]))
+                    broker_error = message["error"]
+                    if isinstance(broker_error, dict):
+                        code = str(broker_error.get("code") or "BROKER_SUBSCRIPTION_FAILED")
+                        raise DerivTransportError(code, code=code, details=broker_error)
+                    raise DerivTransportError(str(broker_error))
                 yield message
         finally:
             if self.ws is not None and subscription.request_id is not None:
@@ -178,6 +262,8 @@ class DerivWebSocketTransport:
                 except Exception:
                     pass
             self._subscription_by_request_id.pop(subscription.request_id, None)
+            if subscription.subscription_id is not None:
+                self._subscription_by_id.pop(subscription.subscription_id, None)
             self._subscriptions.pop(key, None)
 
     def _next_request_id(self) -> int:
@@ -227,3 +313,4 @@ class DerivWebSocketTransport:
         self._fail_pending(DerivTransportError("BROKER_SESSION_CLOSED"))
 
         self._subscription_by_request_id.clear()
+        self._subscription_by_id.clear()
