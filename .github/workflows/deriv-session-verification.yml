@@ -10,7 +10,7 @@ jobs:
   account-evidence-gate:
     runs-on: ubuntu-latest
     env:
-      ACCOUNT_DERIV_AUTH_MODE: "oauth"
+      ACCOUNT_DERIV_AUTH_MODE: "none"
       FINAL_EXECUTION_AUTHORIZATION: "false"
       LIVE_EXECUTION: "BLOCKED"
     steps:
