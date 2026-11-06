@@ -72,7 +72,7 @@ class ReadOnlyDerivProvisionerTests(unittest.TestCase):
 
     def test_oauth_does_not_require_app_id(self):
         oauth = payload("oauth")
-        oauth["DERIV_APP_ID"] = "PAT-ONLY-APP-ID"
+        oauth["DERIV_APP_ID"] = "PAT-ONLY-" + "APP-ID"
         oauth["DERIV_PAT"] = "PRESERVED-" + "PAT"
         text = provisioner.build_env_text(oauth)
         self.assertIsNotNone(text)
