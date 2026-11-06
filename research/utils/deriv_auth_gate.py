@@ -42,7 +42,7 @@ class DerivPublicClient:
         self.environ = os.environ if environ is None else environ
         present = [
             name for name in ACCOUNT_CREDENTIAL_ENV_NAMES
-            if str(self.environ.get(name, "")).strip()
+            if name in self.environ
         ]
         if present:
             raise SecurityError("RESEARCH_PLANE_ACCOUNT_CREDENTIALS_PRESENT")
@@ -51,10 +51,7 @@ class DerivPublicClient:
         self._transport: DerivWebSocketTransport | None = None
 
     def _reject_account_credentials(self) -> None:
-        if any(
-            str(self.environ.get(name, "")).strip()
-            for name in ACCOUNT_CREDENTIAL_ENV_NAMES
-        ):
+        if any(name in self.environ for name in ACCOUNT_CREDENTIAL_ENV_NAMES):
             raise SecurityError("RESEARCH_PLANE_ACCOUNT_CREDENTIALS_PRESENT")
 
     def validate_request(self, payload: dict[str, Any]) -> None:
