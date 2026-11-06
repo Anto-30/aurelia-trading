@@ -84,7 +84,7 @@ def test_secret_presence_workflow_maps_no_secrets_or_production_environment() ->
     assert "environment: production" not in workflow
     assert "${{ secrets." not in workflow
     assert "secrets." not in workflow
-    assert 'ACCOUNT_DERIV_AUTH_MODE: "oauth"' in workflow
+    assert 'ACCOUNT_DERIV_AUTH_MODE: "none"' in workflow
     assert 'FINAL_EXECUTION_AUTHORIZATION: "false"' in workflow
     assert 'LIVE_EXECUTION: "BLOCKED"' in workflow
 
