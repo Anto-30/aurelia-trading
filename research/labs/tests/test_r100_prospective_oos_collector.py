@@ -14,6 +14,7 @@ from research.r100_prospective_oos_collector import (
     STRATEGY_ID,
     build_signal_id,
     initial_state,
+    iso,
     probability_metrics,
     quoted_contract_economics,
     evaluation,
@@ -197,10 +198,10 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertEqual(report["qualification_status"], "ECONOMICS_INCOMPLETE")
         self.assertFalse(report["strategy_live_eligible"])
 
-    def test_campaign_end_does_not_seal_with_unresolved_pending(self):
+    def test_campaign_window_seals_with_explicit_unresolved_pending(self):
         state = initial_state()
         state["manifest"]["campaign_end_at_utc"] = "2026-10-06T20:00:00Z"
-        state["pending"] = [{
+        pending = {
             "signal_id": "pending",
             "signal_timestamp_utc": "2026-10-06T19:59:00Z",
             "entry_quote": 100.0,
@@ -208,10 +209,100 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
             "probability": 0.60,
             "score": 1.5,
             "age_ticks": 0,
-        }]
+        }
+        state["pending"] = [pending]
         report = evaluation(state)
-        self.assertFalse(report["campaign_complete"])
-        self.assertFalse(state["manifest"]["sealed"])
+        self.assertTrue(report["campaign_complete"])
+        self.assertTrue(state["manifest"]["sealed"])
+        self.assertEqual(state["pending"], [pending])
+        self.assertEqual(report["pending_count"], 1)
+        self.assertEqual(report["pending_resolution_status"], "UNRESOLVED_NO_BACKFILL")
+        self.assertEqual(report["campaign_terminal_status"], "SEALED_WITH_UNRESOLVED_PENDING")
+
+    def test_expired_campaign_does_not_open_a_public_client_or_backfill_pending(self):
+        from research.r100_prospective_oos_collector import collect_once
+
+        state = initial_state()
+        state["manifest"]["campaign_end_at_utc"] = "2026-10-06T20:00:00Z"
+        pending = {
+            "signal_id": "pending",
+            "signal_timestamp_utc": "2026-10-06T19:59:00Z",
+            "entry_quote": 100.0,
+            "direction": "CALL",
+            "probability": 0.60,
+            "score": 1.5,
+            "age_ticks": 0,
+        }
+        state["pending"] = [pending]
+        with patch("research.r100_prospective_oos_collector.DerivAuthenticationGate") as gate:
+            asyncio.run(collect_once(state))
+        gate.assert_not_called()
+        self.assertEqual(state["pending"], [pending])
+
+    def test_tick_at_or_after_campaign_end_does_not_resolve_pending_signal(self):
+        import research.r100_prospective_oos_collector as collector
+
+        start = datetime(2026, 10, 6, 19, 0, 0, tzinfo=timezone.utc)
+        campaign_end = start.replace(second=1)
+        late_epoch = int(start.replace(second=2).timestamp())
+
+        class OneLateTick:
+            def __init__(self):
+                self.sent = False
+                self.closed = False
+
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                if not self.sent:
+                    self.sent = True
+                    return {
+                        "msg_type": "tick",
+                        "tick": {"symbol": "R_100", "quote": 101.0, "epoch": late_epoch},
+                    }
+                await asyncio.sleep(5)
+                raise StopAsyncIteration
+
+            async def aclose(self):
+                self.closed = True
+
+        stream = OneLateTick()
+        transport = type("FakeTransport", (), {
+            "connect": AsyncMock(),
+            "subscribe": lambda self, key, payload: stream,
+            "request": AsyncMock(),
+            "close": AsyncMock(),
+        })()
+        state = initial_state()
+        state["manifest"]["campaign_end_at_utc"] = iso(campaign_end)
+        pending = {
+            "signal_id": "pending-after-window",
+            "signal_timestamp_utc": iso(start),
+            "entry_quote": 100.0,
+            "direction": "CALL",
+            "probability": 0.60,
+            "score": 1.5,
+            "age_ticks": HORIZON_TICKS - 1,
+        }
+        state["pending"] = [pending]
+
+        from unittest.mock import Mock
+        gate = Mock()
+        gate.get_client.return_value = transport
+        with (
+            patch.object(collector, "utc_now", return_value=start),
+            patch.object(collector, "DerivAuthenticationGate", return_value=gate),
+            patch.object(collector, "COLLECTION_SECONDS", 1),
+        ):
+            asyncio.run(collector.collect_once(state))
+
+        gate.get_client.assert_called_once_with()
+        self.assertEqual(state["pending"], [pending])
+        self.assertEqual(state["observations"], [])
+        transport.request.assert_not_awaited()
+        transport.close.assert_awaited_once()
+        self.assertTrue(stream.closed)
 
     def test_campaign_end_stops_new_signal_emission_but_settles_pending(self):
         class NoEmitHunter:
@@ -270,6 +361,7 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
             self.assertEqual(report["collection_error_type"], "RuntimeError")
             self.assertFalse(report["execution_authorized"])
             self.assertFalse(report["capital_authority"])
+            self.assertIn("collection_error_details", report)
 
     def test_horizon_is_positive(self):
         self.assertGreater(HORIZON_TICKS, 0)
