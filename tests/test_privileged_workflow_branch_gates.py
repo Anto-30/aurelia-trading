@@ -32,13 +32,16 @@ class PrivilegedWorkflowBranchGateTests(unittest.TestCase):
         self.assertEqual(job.get("if"), MAIN_ONLY)
         self.assertEqual(job.get("environment"), "production")
 
-    def test_whatsapp_secret_job_is_main_only(self):
-        job = self._job("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
-        self.assertEqual(job.get("if"), MAIN_ONLY)
-        env = job.get("env", {})
-        self.assertIn("TWILIO_ACCOUNT_SID", env)
-        self.assertIn("TWILIO_AUTH_TOKEN", env)
-        self.assertIn("TWILIO_API_SECRET", env)
+    def test_free_runtime_does_not_load_notification_secrets(self):
+        workflow = yaml.safe_load(
+            (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
+        )
+        jobs = workflow.get("jobs", {})
+        self.assertNotIn("whatsapp-alert-smoke", jobs)
+        source = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
+        self.assertNotIn("secrets.TWILIO_", source)
+        self.assertNotIn("TWILIO_AUTH_TOKEN", source)
+        self.assertNotIn("TWILIO_API_SECRET", source)
 
 
 if __name__ == "__main__":
