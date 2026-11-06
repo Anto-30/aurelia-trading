@@ -2,7 +2,7 @@
 
 **Audit date:** 2026-11-06  
 **Baseline:** `main` at `d04564aca0648201feff0326fe9af0fbcee92e94`  
-**Disposition:** Security remediation proposed; CI execution of the repository audit script is required before this report can be marked fully verified.
+**Disposition:** Remediation implemented on a review branch; exact-head CI and independent human review remain required before integration.
 
 ## Executive finding
 
@@ -23,7 +23,8 @@ The workflow content inspected used GitHub secret references rather than literal
 - Inspected workflow triggers, job environments, Deriv credential references, and declared GitHub Actions token permissions.
 - Distinguished scheduled automation from manual, environment-protected operator workflows.
 - Added `scripts/audit_legacy_auth.sh` and a dedicated GitHub Actions workflow so the static checks run against the actual branch content.
-- The executable audit does not print matched credential strings; it reports only finding codes and file/line locations.
+- The executable audit reports finding codes and file/line locations only; it does not print workflow contents or secret values.
+- The static detector is intentionally limited: it detects known token-like literal formats, direct secret references in scheduled/PR-triggered workflow definitions, and broad token permissions. It is not a general-purpose secret scanner and does not prove absence of indirect variable aliases, runtime data-flow leaks, or historical exposure.
 
 ## Findings requiring separate treatment
 
@@ -38,15 +39,18 @@ The workflow content inspected used GitHub secret references rather than literal
 - Replace `aurelia-free-runtime.yml` with the PR #279 credential-isolated form: public Deriv research remains unauthenticated; account-evidence checks remain blocked without injecting account credentials; live execution remains blocked.
 - Replace `aurelia-assurance.yml` with the PR #279 credential-free assurance form so pull-request and general CI jobs do not load Deriv account secrets.
 - Remove the six-hour schedule from `deriv-auth-evidence.yml` and convert it into a manual, no-credential prerequisite-status check. It records account evidence as blocked because a genuinely read-only account scope is not established.
-- Add a static audit script and CI workflow. The audit fails on scheduled Deriv credential injection, pull-request Deriv credential injection, credential-like literals, and likely credential logging. Manual protected credential workflows are reported for review rather than being misrepresented as automatically safe.
+- Add a static audit script and CI workflow. The audit fails on scheduled Deriv credential injection, pull-request Deriv credential injection, known credential-like literals, and broad write-all permissions. Manual protected credential workflows are reported for review rather than being misrepresented as automatically safe. Dynamic logging paths remain subject to human review.
 - Preserve `LIVE_EXECUTION=BLOCKED`, `FINAL_EXECUTION_AUTHORIZATION=false`, and `capital_plane_mode=VERIFY_ONLY`.
 
 ## Verification status
 
 - Baseline workflow inventory and configuration review: completed through the connected GitHub repository interface.
-- Remediation branch exact-head static audit: pending its GitHub Actions run.
+- First static-audit run failed because its overly broad output-pattern check treated a fail-closed message naming a missing credential variable as if it printed the credential value. The detector was corrected to avoid that false positive; it intentionally does not claim comprehensive runtime data-flow analysis.
+- First remediation Assurance run failed before the regression suite because its command referenced a nonexistent `test_deriv_auth_gate.py` test file. The workflow now invokes the existing prerequisite and evidence-contract test files.
+- A later static-audit run completed successfully on an earlier remediation-branch commit. New changes to the report generator and its CI smoke test require their own exact-head run before this PR can be considered verified.
 - Historical Actions-log and GitHub audit-log review: not performed by this repository-file audit.
-- Deriv credential rotation/revocation: not performed.
+- Deriv credential rotation/revocation: not performed; this source audit alone does not establish that exposure occurred.
+- Main-branch workflows have not been disabled or changed by this pull request. The proposed file changes take effect only after review and merge. Until then, the two legacy schedules identified above can still run on main.
 - Production deployment, account verification, proposal requests and order submission: not performed.
 
 **Completion rule:** this audit is not marked fully verified until the new CI audit passes on the remediation branch and a human reviewer examines the remaining manual protected workflows.
