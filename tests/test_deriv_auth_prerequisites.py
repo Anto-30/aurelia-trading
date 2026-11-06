@@ -14,7 +14,7 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
             "DERIV_EXPECTED_CURRENCY": "USD",
         })
         self.assertTrue(evidence["configured"])
-        self.assertEqual(evidence["auth_mode"], "pat")
+        self.assertEqual(evidence["auth_mode"], "invalid")
         self.assertEqual(evidence["expected_currency"], "USD")
         encoded = json.dumps(evidence)
         for raw in ("test-token-do-not-persist", "12345", "CR123456"):
@@ -53,7 +53,7 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
             {
                 "token_present": False,
                 "expected_loginid_present": False,
-                "auth_mode_valid": True,
+                "auth_mode_valid": False,
                 "app_id_present_when_pat": False,
                 "expected_currency_present": False,
             },
@@ -70,6 +70,16 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
         self.assertEqual(evidence["expected_currency"], "USD")
         self.assertTrue(evidence["requirements"]["app_id_present_when_pat"])
 
+    def test_missing_auth_mode_is_not_implicitly_promoted_to_pat(self):
+        evidence = build_evidence({
+            "DERIV_AUTH_TOKEN": "dummy-token",
+            "DERIV_APP_ID": "12345",
+            "DERIV_EXPECTED_LOGINID": "dummy-account",
+            "DERIV_EXPECTED_CURRENCY": "USD",
+        })
+        self.assertEqual(evidence["auth_mode"], "invalid")
+        self.assertFalse(evidence["configured"])
+        self.assertFalse(evidence["requirements"]["auth_mode_valid"])
 
 if __name__ == "__main__":
     unittest.main()
