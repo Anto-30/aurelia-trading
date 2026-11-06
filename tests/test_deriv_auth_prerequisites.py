@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import unittest
 
 from runtime.security.deriv_auth_gate import ACCOUNT_CREDENTIAL_ENV_NAMES
