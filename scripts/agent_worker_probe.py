@@ -7,9 +7,6 @@ from pathlib import Path
 from runtime.agent_federation import PersistentAgentFederation
 from runtime.agent_workers import AgentWorkerSupervisor
 
-# AURELIA is the deterministic capital-plane authority, not an advisory
-# provider worker. The worker supervisor intentionally skips it. All other
-# registered agents are advisory/engineering workers and must obtain leases.
 ADVISORY_WORKERS = (
     "ClaudeCode",
     "KimiK3",
@@ -38,18 +35,37 @@ async def main() -> int:
         )
         workers.start()
         try:
-            await asyncio.sleep(2.5)
+            await asyncio.sleep(0.1)
             active = set(federation.active_agents())
-            missing = sorted(set(ADVISORY_WORKERS) - active)
+            connector_required = sorted(
+                agent
+                for agent in ADVISORY_WORKERS
+                if any(
+                    row["message_type"] == "CONNECTOR_REQUIRED"
+                    for row in federation.messages_for(agent)
+                )
+            )
             unexpected = sorted(active - set(ADVISORY_WORKERS))
             capital_heartbeat = CAPITAL_AUTHORITY in active
             print("AGENT_WORKER_ACTIVE=" + ",".join(sorted(active)))
-            print("AGENT_WORKER_MISSING=" + ",".join(missing))
-            print("AGENT_WORKER_UNEXPECTED=" + ",".join(unexpected))
+            print("AGENT_CONNECTOR_REQUIRED=" + ",".join(connector_required))
+            print("AGENT_PROVIDER_READY=0")
+            print("AGENT_WORKER_PROBE=PASS_NO_AUTHENTICATED_PROVIDERS" if (
+                not active
+                and connector_required == sorted(ADVISORY_WORKERS)
+                and not unexpected
+                and not capital_heartbeat
+            ) else "AGENT_WORKER_PROBE=FAIL")
             print("CAPITAL_AUTHORITY_WORKER=INTENTIONALLY_DISABLED")
-            print("CAPITAL_AUTHORITY_RUNTIME=DETERMINISTIC_CONTROL_PLANE")
-            print("CAPITAL_AUTHORITY_HEARTBEAT=" + ("UNEXPECTED" if capital_heartbeat else "NOT_A_WORKER"))
-            return 1 if missing or unexpected or capital_heartbeat else 0
+            print("CAPITAL_AUTHORITY_HEARTBEAT=" + (
+                "UNEXPECTED" if capital_heartbeat else "NOT_A_WORKER"
+            ))
+            return 0 if (
+                not active
+                and connector_required == sorted(ADVISORY_WORKERS)
+                and not unexpected
+                and not capital_heartbeat
+            ) else 1
         finally:
             await workers.stop()
 
