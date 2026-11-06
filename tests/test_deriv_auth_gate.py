@@ -160,6 +160,13 @@ class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
                 },
             ).get_client()
 
+    def test_account_plane_without_oauth_token_uses_the_same_scope_blocker(self):
+        with self.assertRaisesRegex(SecurityError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"):
+            DerivAuthenticationGate(
+                plane="account",
+                environ={"ACCOUNT_DERIV_AUTH_MODE": "oauth"},
+            ).get_client()
+
     def test_unknown_plane_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "UNKNOWN_DERIV_AUTH_PLANE"):
             DerivAuthenticationGate(plane="live", environ={}).get_client()
