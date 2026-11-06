@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import subprocess
+import sys
 import unittest
+from pathlib import Path
 from unittest.mock import AsyncMock
 
 from scripts.verify_deriv_public_transport import verify_public_r100
@@ -48,6 +51,30 @@ class FakePublicClient:
 
 
 class DerivPublicTransportProbeTests(unittest.IsolatedAsyncioTestCase):
+    def test_cli_module_bootstraps_repository_root_when_run_from_scripts_directory(self):
+        script = Path(__file__).resolve().parents[1] / "scripts" / "verify_deriv_public_transport.py"
+        runner = (
+            "import runpy, sys; "
+            "from pathlib import Path; "
+            "script = Path(sys.argv[1]).resolve(); "
+            "root = script.parents[1]; "
+            "sys.path[:] = [entry for entry in sys.path "
+            "if Path(entry or '.').resolve() != root]; "
+            "sys.path.insert(0, str(script.parent)); "
+            "runpy.run_path(str(script), run_name='public_probe_import_test')"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", runner, str(script)],
+            cwd=script.parent,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("ModuleNotFoundError", result.stderr)
+
+
     async def test_probe_uses_public_client_and_requires_two_real_r100_ticks(self):
         client = FakePublicClient()
         result = await verify_public_r100(client_factory=lambda: client)

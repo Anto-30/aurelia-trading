@@ -5,9 +5,17 @@ import json
 import math
 import os
 import re
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
+
+# Running `python scripts/verify_deriv_public_transport.py` sets sys.path[0]
+# to the scripts directory, not the repository root. Bootstrap the project root
+# before importing the research and runtime packages.
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from research.utils.deriv_auth_gate import DerivAuthenticationGate, PUBLIC_RESEARCH_WS_URL
 from runtime.core.events import sha256
