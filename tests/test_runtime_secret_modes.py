@@ -67,7 +67,7 @@ class RuntimeSecretModeTests(unittest.TestCase):
             "AURELIA_VERIFY_DERIV_PUBLIC": "false",
             "AURELIA_VERIFY_DERIV_AUTH": "false",
             "AURELIA_CONTINUOUS_RUNTIME": "false",
-            "DERIV_PAT": "UNEXPECTED_PAT_SENTINEL",
+            "DERIV_PAT": "",
         }
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaisesRegex(
@@ -94,7 +94,7 @@ class RuntimeSecretModeTests(unittest.TestCase):
             "LIVE_EXECUTION": "BLOCKED",
             "AURELIA_AUTONOMOUS_LOOP": "false",
             "AURELIA_VERIFY_DERIV_AUTH": "false",
-            "DERIV_OAUTH_ACCESS_TOKEN": "UNEXPECTED_OAUTH_SENTINEL",
+            "DERIV_OAUTH_ACCESS_TOKEN": "",
         }
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaisesRegex(
@@ -103,7 +103,23 @@ class RuntimeSecretModeTests(unittest.TestCase):
             ):
                 validate_secrets_at_startup()
 
-    def test_verify_only_account_auth_is_blocked_even_with_distinct_oauth(self):
+    def test_verify_only_auth_flag_rejects_credential_key_without_reading_value(self):
+        env = NoSecretValueReads({
+            "AURELIA_DEPLOYMENT_MODE": "VERIFY_ONLY",
+            "FINAL_EXECUTION_AUTHORIZATION": "false",
+            "LIVE_EXECUTION": "BLOCKED",
+            "AURELIA_AUTONOMOUS_LOOP": "false",
+            "AURELIA_VERIFY_DERIV_AUTH": "true",
+            "DERIV_OAUTH_ACCESS_TOKEN": "",
+        })
+        with patch.object(secrets_module.os, "environ", env):
+            with self.assertRaisesRegex(
+                SecretsError,
+                "VERIFY_ONLY_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED",
+            ):
+                validate_secrets_at_startup()
+
+    def test_verify_only_rejects_account_credential_keys_before_account_auth(self):
         env = {
             "AURELIA_DEPLOYMENT_MODE": "VERIFY_ONLY",
             "FINAL_EXECUTION_AUTHORIZATION": "false",
@@ -111,7 +127,7 @@ class RuntimeSecretModeTests(unittest.TestCase):
             "AURELIA_AUTONOMOUS_LOOP": "false",
             "AURELIA_VERIFY_DERIV_AUTH": "true",
             "ACCOUNT_DERIV_AUTH_MODE": "oauth",
-            "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SENTINEL",
+            "DERIV_OAUTH_ACCESS_TOKEN": "",
             "DERIV_EXPECTED_LOGINID": "CR123",
             "DERIV_EXPECTED_CURRENCY": "USD",
             "DERIV_ENVIRONMENT": "real",
@@ -119,7 +135,7 @@ class RuntimeSecretModeTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaisesRegex(
                 SecretsError,
-                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
+                "VERIFY_ONLY_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED",
             ):
                 validate_secrets_at_startup()
 
@@ -135,7 +151,7 @@ class RuntimeSecretModeTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaisesRegex(
                 SecretsError,
-                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
+                "VERIFY_ONLY_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED",
             ):
                 validate_secrets_at_startup()
 
@@ -147,11 +163,11 @@ class RuntimeSecretModeTests(unittest.TestCase):
             "AURELIA_AUTONOMOUS_LOOP": "false",
             "AURELIA_VERIFY_DERIV_AUTH": "true",
             "ACCOUNT_DERIV_AUTH_MODE": "oauth",
-            "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SENTINEL",
-            "DERIV_PAT": "PAT_SENTINEL",
+            "DERIV_OAUTH_ACCESS_TOKEN": "",
+            "DERIV_PAT": "",
         }
         with patch.dict(os.environ, env, clear=True):
-            with self.assertRaisesRegex(SecretsError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"):
+            with self.assertRaisesRegex(SecretsError, "VERIFY_ONLY_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED"):
                 validate_secrets_at_startup()
 
     def test_verify_only_account_auth_blocks_when_generic_token_is_present(self):
@@ -162,17 +178,17 @@ class RuntimeSecretModeTests(unittest.TestCase):
             "AURELIA_AUTONOMOUS_LOOP": "false",
             "AURELIA_VERIFY_DERIV_AUTH": "true",
             "ACCOUNT_DERIV_AUTH_MODE": "oauth",
-            "DERIV_AUTH_TOKEN": "GENERIC_SENTINEL",
+            "DERIV_AUTH_TOKEN": "",
         }
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaisesRegex(
                 SecretsError,
-                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
+                "VERIFY_ONLY_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED",
             ):
                 validate_secrets_at_startup()
 
     def test_verify_only_account_auth_blocks_without_comparing_credentials(self):
-        marker = "SAME_SECRET_SENTINEL"
+        marker = ""
         env = {
             "AURELIA_DEPLOYMENT_MODE": "VERIFY_ONLY",
             "FINAL_EXECUTION_AUTHORIZATION": "false",
@@ -184,7 +200,7 @@ class RuntimeSecretModeTests(unittest.TestCase):
             "DERIV_PAT": marker,
         }
         with patch.dict(os.environ, env, clear=True):
-            with self.assertRaisesRegex(SecretsError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"):
+            with self.assertRaisesRegex(SecretsError, "VERIFY_ONLY_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED"):
                 validate_secrets_at_startup()
 
     def test_verify_only_account_auth_blocks_when_refresh_token_is_present(self):
@@ -195,13 +211,13 @@ class RuntimeSecretModeTests(unittest.TestCase):
             "AURELIA_AUTONOMOUS_LOOP": "false",
             "AURELIA_VERIFY_DERIV_AUTH": "true",
             "ACCOUNT_DERIV_AUTH_MODE": "oauth",
-            "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SENTINEL",
-            "DERIV_OAUTH_REFRESH_TOKEN": "REFRESH_SENTINEL",
+            "DERIV_OAUTH_ACCESS_TOKEN": "",
+            "DERIV_OAUTH_REFRESH_TOKEN": "",
         }
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaisesRegex(
                 SecretsError,
-                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
+                "VERIFY_ONLY_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED",
             ):
                 validate_secrets_at_startup()
 
@@ -224,7 +240,7 @@ class RuntimeSecretModeTests(unittest.TestCase):
         env = {
             "AURELIA_DEPLOYMENT_MODE": "LIVE",
             "ACCOUNT_DERIV_AUTH_MODE": "oauth",
-            "DERIV_PAT": "PAT_SENTINEL",
+            "DERIV_PAT": "",
             "DERIV_EXPECTED_LOGINID": "CR123",
             "DERIV_EXPECTED_CURRENCY": "USD",
             "DERIV_ENVIRONMENT": "real",
@@ -237,7 +253,7 @@ class RuntimeSecretModeTests(unittest.TestCase):
         env = {
             "AURELIA_DEPLOYMENT_MODE": "LIVE",
             "ACCOUNT_DERIV_AUTH_MODE": "oauth",
-            "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SENTINEL",
+            "DERIV_OAUTH_ACCESS_TOKEN": "",
         }
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaisesRegex(
