@@ -39,23 +39,28 @@ The LiteLLM project currently has high/critical upstream advisories. The federat
 6. Run the gateway and coding-agent plugins in a dedicated sandbox, inspect transitive dependencies, and perform negative tests for SSRF, arbitrary file reads, auth bypass, tool invocation and log redaction.
 7. Require a human review and passing CI before promoting an adapter into AURELIA's ordinary engineering dependencies. No automatic promotion or capital-plane access.
 
-## Supported Deriv secret-provisioning path
+## Deriv account authorization boundary — current blocker
 
-The GitHub connector used for repository edits cannot write Actions environment secrets. Do not try to get around this by putting tokens in source code, workflow inputs, issues, commits, artifacts or a temporary public service.
+Deriv's documented account-list endpoint and authenticated OTP endpoint require OAuth `trade` scope. The documented OAuth scopes do not include a genuinely read-only account-data scope. OAuth is an authentication mechanism; it does not make an account endpoint read-only.
 
-For a secure local route, run `bash scripts/provision_deriv_github_secrets.sh` on a trusted machine where GitHub CLI (`gh`) is authenticated to `Anto-30/aurelia-trading` with permission to write secrets for the `production` environment. The script first lists secret names only, then preserves any existing token/account/App ID/currency/mode aliases without overwriting them. It prompts with hidden input only for missing values, sends new values to GitHub's protected environment-secret API through `gh secret set` via stdin, verifies secret names only, and never prints values. It does not delete/revoke or overwrite existing secrets or modify the live lock. Do not use a shared/untrusted machine.
+Therefore:
+- Do **not** provision, enable, or pass a trade-scoped OAuth token or PAT to an AURELIA `VERIFY_ONLY` account-verification worker.
+- Keep account identity, balance, permissions, stake affordability, broker lifecycle, and transaction evidence blocked with `DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE`.
+- Do not invoke the authenticated account-list or OTP endpoints to attempt verification.
+- Do not treat public market-data access or a public proposal quote as evidence of account identity, balance, permissions, execution readiness, or realized economics.
+- Public research uses only `DerivAuthenticationGate(plane="research").get_client()` and the credential-free public WebSocket endpoint. This client must reject account credentials in its process environment and enforce its public action whitelist.
+- Reconsider account verification only if Deriv documents a genuinely read-only account-data endpoint/scope and an independent security review approves a design that keeps trade-capable permissions outside the research and VERIFY_ONLY processes.
 
-The provisioner cannot infer which of multiple saved token candidates is currently valid. Use the intended Deriv token and account binding from your own secure record; the next authenticated workflow is the validity check. A green secret-presence report means only that names/values are present, not that broker authentication is proven.
+The previous secret-provisioning instructions for Deriv account OAuth/PAT are superseded and must not be used for this workflow. Do not paste tokens into chat, source code, workflow inputs, issues, commits, artifacts, or a temporary public service. The GitHub connector does not need to access or modify protected Actions secrets for public market-data research.
 
-## Verification after configuration
+## Verification
 
-1. Run `AURELIA Deriv Verify-Only Evidence` from GitHub Actions.
-2. Require `DERIV_AUTH_SESSION=VERIFIED`, exact real-account login ID/currency/environment match, and a fresh valid balance snapshot.
-3. Require broker-side account evidence and verify-only lifecycle evidence. Confirm no order submission and no capital authority was granted.
-4. Re-run current assurance. Strategy OOS, calibration, production economics, production host/recovery and explicit release authorization remain separate gates.
+1. Verify public market data independently: R_100 appears in `active_symbols`, the public client retrieves valid 1-minute candles, and a live tick subscription returns at least two ordered R_100 ticks.
+2. Record this as `PUBLIC_MARKET_DATA_VERIFIED` only. Store the source SHA, endpoint, timestamps, schema, tick/candle counts, no-auth boundary, and evidence hash. Do not include account secrets or account data.
+3. Keep account evidence `BLOCKED` until a genuine read-only account-data API/scope exists and is independently approved.
+4. Strategy OOS, calibration, production economics, durable runtime/recovery, security audit, and release authorization remain separate gates.
 
-The release control remains `live_trading_enabled: false`, `FINAL_EXECUTION_AUTHORIZATION: false`, `LIVE_EXECUTION: BLOCKED` until independent evidence and release authority say otherwise.
-
+The canonical release controls remain `live_trading_enabled: false`, `FINAL_EXECUTION_AUTHORIZATION: false`, `LIVE_EXECUTION: BLOCKED`, and `capital_plane_mode: VERIFY_ONLY`.
 
 ## Freebuff-related sources
 

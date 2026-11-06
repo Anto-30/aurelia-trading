@@ -28,3 +28,10 @@ The LiteLLM/agent-control-plane repositories are pinned in `config/external_repo
 ## Tool, skill, plugin, and repository assignment contract
 
 Before selecting tools for a task, read `config/agent_tool_skill_assignment.json`. It defines the primary agent, reviewers, task-scoped tools, skill bundles, plugin activation conditions, and source modes. Tool/plugin registry membership is not proof of a live connection or installation. Use least privilege, verify the connector at execution time, and keep all external code outside capital/execution paths. The Dev profile is inactive until an authorized development device is connected and its runtime identity verified. ChatGPT is a supervisory role in the current conversation, not a persistent local daemon.
+
+
+## Deriv authorization boundary — mandatory
+
+Deriv documents the account-list and authenticated OTP endpoints as requiring OAuth `trade` scope. OAuth therefore is not a read-only scope for those account endpoints. Never configure, test, or use a trade-scoped OAuth token or PAT inside AURELIA's `VERIFY_ONLY` account-verification worker. Keep authenticated account evidence blocked with `DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE` unless Deriv documents a genuinely read-only account-data API/scope and that method is independently approved.
+
+Public market research must use `DerivAuthenticationGate(plane="research").get_client()` and the credential-free public WebSocket endpoint. The public client must reject any account credential in its process environment and must enforce its public-action whitelist. A successful public feed proves public market-data access only; it does not prove account identity, balance, permissions, stake affordability, or broker execution readiness.
