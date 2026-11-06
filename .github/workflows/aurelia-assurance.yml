@@ -65,7 +65,7 @@ jobs:
       - name: Verify Deriv public-research and blocked account-plane prerequisites
         if: always()
         env:
-          ACCOUNT_DERIV_AUTH_MODE: "oauth"
+          ACCOUNT_DERIV_AUTH_MODE: "none"
         run: python scripts/deriv_auth_prerequisites.py
 
       - name: Upload Deriv authentication prerequisite evidence
