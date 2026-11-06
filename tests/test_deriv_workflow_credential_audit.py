@@ -64,6 +64,18 @@ class DerivWorkflowCredentialAuditTests(unittest.TestCase):
             _count, findings = audit_workflows(root)
         self.assertIn("DERIV_ACCOUNT_INPUT_BINDING", {item[2] for item in findings})
 
+    def test_does_not_flag_shell_unset_assertions(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "assertions.yml").write_text(
+                "jobs:\n  verify:\n    steps:\n      - run: |\n"
+                "          test -z \"${{DERIV_PAT:-}}\"\n"
+                "          test -z \"${{DERIV_OAUTH_ACCESS_TOKEN:-}}\"\n",
+                encoding="utf-8",
+            )
+            _count, findings = audit_workflows(root)
+        self.assertEqual(findings, [])
+
     def test_ignores_commented_out_examples(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
