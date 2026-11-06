@@ -39,6 +39,7 @@ def build_env_text(payload: dict[str, Any]) -> str | None:
         raise ReadOnlyProvisioningError("INPUT_MUST_BE_JSON_OBJECT")
     names = (
         "DERIV_AUTH_TOKEN",
+        "DERIV_PAT",
         "DERIV_APP_ID",
         "DERIV_EXPECTED_LOGINID",
         "DERIV_EXPECTED_CURRENCY",
@@ -47,29 +48,30 @@ def build_env_text(payload: dict[str, Any]) -> str | None:
     )
     values = {name: _value(payload, name) for name in names}
     # No credential/account binding means public-data-only VERIFY_ONLY mode.
-    # Currency may be configured independently and is not sufficient to attempt auth.
-    if not values["DERIV_AUTH_TOKEN"] and not values["DERIV_EXPECTED_LOGINID"]:
+    # Currency alone is not sufficient to attempt authentication.
+    if not (values["DERIV_AUTH_TOKEN"] or values["DERIV_PAT"]) and not values["DERIV_EXPECTED_LOGINID"]:
         return None
-    required = ("DERIV_AUTH_TOKEN", "DERIV_EXPECTED_LOGINID", "DERIV_EXPECTED_CURRENCY", "DERIV_ENVIRONMENT", "DERIV_AUTH_MODE")
-    missing = [name for name in required if not values[name]]
-    if missing:
-        raise ReadOnlyProvisioningError("PARTIAL_READ_ONLY_CONFIG_MISSING:" + ",".join(missing))
     mode = values["DERIV_AUTH_MODE"].lower()
     if mode not in {"pat", "oauth"}:
         raise ReadOnlyProvisioningError("DERIV_AUTH_MODE_INVALID")
+    token_name = "DERIV_AUTH_TOKEN" if mode == "oauth" else "DERIV_PAT"
+    required = (token_name, "DERIV_EXPECTED_LOGINID", "DERIV_EXPECTED_CURRENCY", "DERIV_ENVIRONMENT", "DERIV_AUTH_MODE")
+    missing = [name for name in required if not values[name]]
+    if missing:
+        raise ReadOnlyProvisioningError("PARTIAL_READ_ONLY_CONFIG_MISSING:" + ",".join(missing))
     if values["DERIV_ENVIRONMENT"].lower() not in {"real", "demo"}:
         raise ReadOnlyProvisioningError("DERIV_ENVIRONMENT_INVALID")
     if mode == "pat" and not values["DERIV_APP_ID"]:
         raise ReadOnlyProvisioningError("DERIV_APP_ID_REQUIRED_FOR_PAT")
 
     ordered = [
-        ("DERIV_AUTH_TOKEN", values["DERIV_AUTH_TOKEN"]),
+        (token_name, values[token_name]),
         ("DERIV_EXPECTED_LOGINID", values["DERIV_EXPECTED_LOGINID"]),
         ("DERIV_EXPECTED_CURRENCY", values["DERIV_EXPECTED_CURRENCY"]),
         ("DERIV_ENVIRONMENT", values["DERIV_ENVIRONMENT"].lower()),
         ("DERIV_AUTH_MODE", mode),
     ]
-    if values["DERIV_APP_ID"]:
+    if mode == "pat":
         ordered.insert(1, ("DERIV_APP_ID", values["DERIV_APP_ID"]))
     return "".join(f"{name}={value}\n" for name, value in ordered)
 

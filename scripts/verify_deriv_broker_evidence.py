@@ -52,8 +52,8 @@ def _safe_transaction(row: dict) -> dict:
 
 
 async def run() -> int:
-    token = get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")
-    app_id = get_optional_secret("DERIV_APP_ID")
+    token = None
+    app_id = None
     expected_loginid = (
         os.getenv("DERIV_EXPECTED_LOGINID")
         or os.getenv("DERIV_AUTHORIZED_ACCOUNT_ID")
@@ -61,7 +61,12 @@ async def run() -> int:
     )
     expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper()
     environment = os.getenv("DERIV_ENVIRONMENT", "real").strip().lower()
-    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
+    auth_mode = os.getenv("DERIV_AUTH_MODE", "").strip().lower()
+    if auth_mode not in {"pat", "oauth"}:
+        return fail("UNSUPPORTED_AUTH_MODE")
+    token_name = "DERIV_AUTH_TOKEN" if auth_mode == "oauth" else "DERIV_PAT"
+    token = get_optional_secret(token_name)
+    app_id = get_optional_secret("DERIV_APP_ID") if auth_mode == "pat" else None
     source_hash = os.getenv("GITHUB_SHA", "").strip() or os.getenv("AURELIA_SOURCE_SHA", "").strip() or "LOCAL_UNPINNED"
 
     if not token:
@@ -72,8 +77,6 @@ async def run() -> int:
         return fail("EXPECTED_ACCOUNT_CURRENCY_MISSING")
     if environment != "real":
         return fail("REAL_ACCOUNT_REQUIRED")
-    if auth_mode not in {"pat", "oauth"}:
-        return fail("UNSUPPORTED_AUTH_MODE")
     if auth_mode == "pat" and not app_id:
         return fail("DERIV_APP_ID_REQUIRED_FOR_PAT")
 

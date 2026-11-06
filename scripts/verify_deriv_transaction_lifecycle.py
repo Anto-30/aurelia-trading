@@ -60,13 +60,20 @@ async def run() -> int:
     ):
         return fail("LIVE_RELEASE_GATE_NOT_ENABLED")
 
-    token = get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")
+    auth_mode = os.getenv("DERIV_AUTH_MODE", "").strip().lower()
+    if auth_mode not in {"pat", "oauth"}:
+        return fail("UNSUPPORTED_AUTH_MODE")
+    token_name = "DERIV_AUTH_TOKEN" if auth_mode == "oauth" else "DERIV_PAT"
+    token = get_optional_secret(token_name)
+    app_id = get_optional_secret("DERIV_APP_ID") if auth_mode == "pat" else None
+    if auth_mode == "pat" and not app_id:
+        return fail("DERIV_APP_ID_REQUIRED_FOR_PAT")
     expected_loginid = os.getenv("DERIV_EXPECTED_LOGINID") or os.getenv(
         "DERIV_AUTHORIZED_ACCOUNT_ID", ""
     )
     expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper()
     if not token:
-        return fail("REQUIRED_SECRET_OR_BINDING_MISSING:DERIV_AUTH_TOKEN_OR_DERIV_PAT")
+        return fail("REQUIRED_SECRET_OR_BINDING_MISSING:AUTH_TOKEN_FOR_SELECTED_MODE")
     if not expected_loginid:
         return fail("REQUIRED_SECRET_OR_BINDING_MISSING:DERIV_EXPECTED_LOGINID_OR_DERIV_AUTHORIZED_ACCOUNT_ID")
     if not expected_currency:
@@ -88,7 +95,7 @@ async def run() -> int:
         )
         bootstrap = manager.bootstrap(
             bearer_token=token,
-            app_id=get_optional_secret("DERIV_APP_ID") or None,
+            app_id=app_id,
         )
         adapter = DerivAdapter(
             ws_url=bootstrap.websocket.url,

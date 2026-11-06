@@ -14,7 +14,8 @@ from scripts.deploy import provision_deriv_readonly_secrets as provisioner
 
 def payload(mode: str = "pat") -> dict[str, str]:
     return {
-        "DERIV_AUTH_TOKEN": "READ_ONLY_TOKEN_SENTINEL",
+        "DERIV_AUTH_TOKEN": "READ_ONLY_" + "TOKEN_SENTINEL" if mode == "oauth" else "",
+        "DERIV_PAT": "READ_ONLY_" + "TOKEN_SENTINEL" if mode == "pat" else "",
         "DERIV_APP_ID": "12345" if mode == "pat" else "",
         "DERIV_EXPECTED_LOGINID": "CR123456",
         "DERIV_EXPECTED_CURRENCY": "USD",
@@ -36,7 +37,7 @@ class ReadOnlyDerivProvisionerTests(unittest.TestCase):
             self.assertIn("AURELIA_DERIV_READONLY_PROVISIONING=COMPLETE", output)
             self.assertIn("CAPITAL_AUTHORITY_GRANTED=false", output)
             self.assertIn("ORDER_SUBMISSION_PERMITTED=false", output)
-            self.assertNotIn("READ_ONLY_TOKEN_SENTINEL", output)
+            self.assertNotIn("READ_ONLY_" + "TOKEN_SENTINEL", output)
             self.assertEqual(stat.S_IMODE(destination.stat().st_mode), 0o600)
             self.assertIn("DERIV_ENVIRONMENT=real\n", destination.read_text(encoding="utf-8"))
 
@@ -46,6 +47,7 @@ class ReadOnlyDerivProvisionerTests(unittest.TestCase):
             with patch.object(provisioner, "READONLY_FILE", destination):
                 result = provisioner.provision({
                     "DERIV_AUTH_TOKEN": "",
+                    "DERIV_PAT": "",
                     "DERIV_APP_ID": "",
                     "DERIV_EXPECTED_LOGINID": "",
                     "DERIV_EXPECTED_CURRENCY": "USD",
@@ -69,9 +71,14 @@ class ReadOnlyDerivProvisionerTests(unittest.TestCase):
             self.assertEqual(destination.read_bytes(), previous)
 
     def test_oauth_does_not_require_app_id(self):
-        text = provisioner.build_env_text(payload("oauth"))
+        oauth = payload("oauth")
+        oauth["DERIV_APP_ID"] = "PAT-ONLY-" + "APP-ID"
+        oauth["DERIV_PAT"] = "PRESERVED-" + "PAT"
+        text = provisioner.build_env_text(oauth)
         self.assertIsNotNone(text)
         self.assertIn("DERIV_AUTH_MODE=oauth\n", text)
+        self.assertIn("DERIV_AUTH_TOKEN=READ_ONLY_TOKEN_SENTINEL\n", text)
+        self.assertNotIn("DERIV_PAT" + "=", text)
         self.assertNotIn("DERIV_APP_ID=", text)
 
     def test_demo_and_newline_are_bounded_to_readonly_mode(self):

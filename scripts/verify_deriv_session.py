@@ -29,24 +29,70 @@ OUTPUT = Path(
 )
 
 
+SAFE_DERIV_FAILURE_CODES = frozenset({
+    "ACCOUNT_ENVIRONMENT_MISMATCH",
+    "REAL_ACCOUNT_BINDING_REQUIRED",
+    "ACCOUNT_LOGINID_MISMATCH",
+    "DERIV_WS_URL_MISSING",
+    "LEGACY_OR_UNSUPPORTED_DERIV_WS_ENDPOINT",
+    "DERIV_OPTIONS_WS_PATH_INVALID",
+    "UNKNOWN_DERIV_WS_ENVIRONMENT",
+    "AUTHENTICATED_URL_ENVIRONMENT_MISMATCH",
+    "ACCOUNT_ID_REQUIRED",
+    "OTP_REQUEST_FAILED",
+    "OTP_RESPONSE_MISSING_WS_URL",
+    "DERIV_BEARER_TOKEN_MISSING",
+    "DERIV_ACCOUNT_REQUEST_FAILED",
+    "DERIV_ACCOUNT_RESPONSE_INVALID",
+    "DERIV_ACCOUNT_LIST_MISSING",
+    "EXPECTED_CURRENCY_REQUIRED",
+    "ACCOUNT_CURRENCY_UNVERIFIED",
+    "NO_EXACT_DERIV_ACCOUNT_MATCH",
+    "MULTIPLE_REAL_ACCOUNTS_REQUIRE_EXPLICIT_BINDING",
+    "OTP_WS_ENVIRONMENT_MISMATCH",
+    "ACCOUNT_CURRENCY_MISMATCH",
+    "CONNECTED_ACCOUNT_IDENTITY_MISMATCH",
+    "CONNECTED_ACCOUNT_ENVIRONMENT_MISMATCH",
+    "CONNECTED_ACCOUNT_TYPE_MISMATCH",
+    "CAPITAL_SNAPSHOT_INVALID",
+    "UNSUPPORTED_AUTH_MODE",
+})
+
+
+def safe_failure_code(exc: BaseException) -> str:
+    """Return only a pre-approved diagnostic token; never echo raw exception text."""
+    current: BaseException | None = exc
+    for _ in range(3):
+        if current is None:
+            break
+        candidate = str(current).strip()
+        if candidate in SAFE_DERIV_FAILURE_CODES:
+            return candidate
+        current = current.__cause__ or current.__context__
+    return "UNCLASSIFIED"
+
+
 async def run() -> int:
     started = datetime.now(timezone.utc)
     # Accept the canonical AURELIA names plus the operator-facing aliases
     # used by the protected deployment environment. Values are never logged.
-    token = get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")
-    app_id = get_optional_secret("DERIV_APP_ID")
+    token = None
+    app_id = None
     expected_loginid = os.getenv("DERIV_EXPECTED_LOGINID") or os.getenv(
         "DERIV_AUTHORIZED_ACCOUNT_ID", ""
     )
     expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper()
     expected_environment = os.getenv("DERIV_ENVIRONMENT", "real").lower()
-    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
-    source_hash = os.getenv("GITHUB_SHA", "").strip() or os.getenv("AURELIA_SOURCE_SHA", "").strip() or "LOCAL_UNPINNED"
-
+    auth_mode = os.getenv("DERIV_AUTH_MODE", "").strip().lower()
     if auth_mode not in {"pat", "oauth"}:
         print("DERIV_AUTH_SESSION=BLOCKED")
         print("DERIV_AUTH_SESSION_REASON=UNSUPPORTED_AUTH_MODE")
         return 3
+    token_name = "DERIV_AUTH_TOKEN" if auth_mode == "oauth" else "DERIV_PAT"
+    token = get_optional_secret(token_name)
+    app_id = get_optional_secret("DERIV_APP_ID") if auth_mode == "pat" else None
+    source_hash = os.getenv("GITHUB_SHA", "").strip() or os.getenv("AURELIA_SOURCE_SHA", "").strip() or "LOCAL_UNPINNED"
+
     if auth_mode == "pat" and not app_id:
         print("DERIV_AUTH_SESSION=NOT_CONFIGURED")
         print("DERIV_AUTH_SESSION_REASON=DERIV_APP_ID_MISSING_FOR_PAT")
@@ -188,6 +234,7 @@ async def run() -> int:
     except Exception as exc:
         print("DERIV_AUTH_SESSION=FAILED")
         print(f"DERIV_AUTH_SESSION_REASON={type(exc).__name__}")
+        print(f"DERIV_AUTH_SESSION_REASON_CODE={safe_failure_code(exc)}")
         return 1
     finally:
         if adapter is not None:
