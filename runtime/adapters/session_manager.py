@@ -135,11 +135,16 @@ class DerivSessionManager:
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> list[dict[str, Any]]:
-        token = bearer_token if bearer_token is not None else (get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT"))
-        application_id = app_id if app_id is not None else get_optional_secret("DERIV_APP_ID")
-        auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+        auth_mode = os.getenv("DERIV_AUTH_MODE", "").strip().lower()
         if auth_mode not in {"pat", "oauth"}:
             raise DerivSessionManagerError("UNSUPPORTED_AUTH_MODE")
+        token_name = "DERIV_AUTH_TOKEN" if auth_mode == "oauth" else "DERIV_PAT"
+        token = bearer_token if bearer_token is not None else get_optional_secret(token_name)
+        application_id = (
+            app_id if app_id is not None
+            else get_optional_secret("DERIV_APP_ID") if auth_mode == "pat"
+            else None
+        )
         if not token:
             raise DerivSessionManagerError("DERIV_BEARER_TOKEN_MISSING")
         payload = self._request_json(

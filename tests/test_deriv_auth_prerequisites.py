@@ -7,14 +7,14 @@ from scripts.deriv_auth_prerequisites import build_evidence
 class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
     def test_valid_pat_configuration_persists_only_safe_values(self):
         evidence = build_evidence({
-            "DERIV_AUTH_TOKEN": "test-token-do-not-persist",
+            "DERIV_PAT": "test-token-do-not-persist",
             "DERIV_APP_ID": "12345",
             "DERIV_EXPECTED_LOGINID": "CR123456",
             "DERIV_AUTH_MODE": "pat",
             "DERIV_EXPECTED_CURRENCY": "USD",
         })
         self.assertTrue(evidence["configured"])
-        self.assertEqual(evidence["auth_mode"], "invalid")
+        self.assertEqual(evidence["auth_mode"], "pat")
         self.assertEqual(evidence["expected_currency"], "USD")
         encoded = json.dumps(evidence)
         for raw in ("test-token-do-not-persist", "12345", "CR123456"):
@@ -46,7 +46,7 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
     def test_missing_configuration_fails_closed_without_raw_values(self):
         evidence = build_evidence({})
         self.assertFalse(evidence["configured"])
-        self.assertEqual(evidence["auth_mode"], "pat")
+        self.assertEqual(evidence["auth_mode"], "invalid")
         self.assertEqual(evidence["expected_currency"], "missing")
         self.assertEqual(
             evidence["requirements"],
@@ -74,6 +74,7 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
         evidence = build_evidence({
             "DERIV_AUTH_TOKEN": "dummy-token",
             "DERIV_APP_ID": "12345",
+            "DERIV_PAT": "separate-pat-token",
             "DERIV_EXPECTED_LOGINID": "dummy-account",
             "DERIV_EXPECTED_CURRENCY": "USD",
         })

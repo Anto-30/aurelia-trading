@@ -33,20 +33,23 @@ async def run() -> int:
     started = datetime.now(timezone.utc)
     # Accept the canonical AURELIA names plus the operator-facing aliases
     # used by the protected deployment environment. Values are never logged.
-    token = get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")
-    app_id = get_optional_secret("DERIV_APP_ID")
+    token = None
+    app_id = None
     expected_loginid = os.getenv("DERIV_EXPECTED_LOGINID") or os.getenv(
         "DERIV_AUTHORIZED_ACCOUNT_ID", ""
     )
     expected_currency = os.getenv("DERIV_EXPECTED_CURRENCY", "").strip().upper()
     expected_environment = os.getenv("DERIV_ENVIRONMENT", "real").lower()
-    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
-    source_hash = os.getenv("GITHUB_SHA", "").strip() or os.getenv("AURELIA_SOURCE_SHA", "").strip() or "LOCAL_UNPINNED"
-
+    auth_mode = os.getenv("DERIV_AUTH_MODE", "").strip().lower()
     if auth_mode not in {"pat", "oauth"}:
         print("DERIV_AUTH_SESSION=BLOCKED")
         print("DERIV_AUTH_SESSION_REASON=UNSUPPORTED_AUTH_MODE")
         return 3
+    token_name = "DERIV_AUTH_TOKEN" if auth_mode == "oauth" else "DERIV_PAT"
+    token = get_optional_secret(token_name)
+    app_id = get_optional_secret("DERIV_APP_ID") if auth_mode == "pat" else None
+    source_hash = os.getenv("GITHUB_SHA", "").strip() or os.getenv("AURELIA_SOURCE_SHA", "").strip() or "LOCAL_UNPINNED"
+
     if auth_mode == "pat" and not app_id:
         print("DERIV_AUTH_SESSION=NOT_CONFIGURED")
         print("DERIV_AUTH_SESSION_REASON=DERIV_APP_ID_MISSING_FOR_PAT")

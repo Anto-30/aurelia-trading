@@ -11,6 +11,7 @@ class DerivTransactionLifecycleCurrencyTests(unittest.IsolatedAsyncioTestCase):
     async def test_unsupported_currency_blocks_before_broker_bootstrap(self):
         env = {
             "DERIV_LIFECYCLE_MODE": "VERIFY_ONLY",
+            "DERIV_AUTH_MODE": "oauth",
             "DERIV_AUTH_TOKEN": "test-token",
             "DERIV_EXPECTED_LOGINID": "CRTEST",
             "DERIV_EXPECTED_CURRENCY": "EUR",

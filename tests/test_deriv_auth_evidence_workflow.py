@@ -29,6 +29,14 @@ class DerivAuthWorkflowContractTests(unittest.TestCase):
         self.assertIn("vars.DERIV_AUTH_MODE == 'oauth'", workflow)
         self.assertNotIn("DERIV_APP_ID", workflow)
 
+    def test_provisioner_requires_explicit_mode_and_separates_token_aliases(self):
+        script = (ROOT / "scripts" / "provision_deriv_github_secrets.sh").read_text(encoding="utf-8")
+        self.assertIn("DERIV_AUTH_MODE_REQUIRED", script)
+        self.assertIn('token_name="DERIV_AUTH_TOKEN"', script)
+        self.assertIn('token_name="DERIV_PAT"', script)
+        self.assertNotIn('mode="${mode:-pat}"', script)
+        self.assertNotIn('token="${DERIV_AUTH_TOKEN:-${DERIV_PAT:-}}"', script)
+
     def test_scheduled_deriv_verifier_uses_oauth_token_only(self):
         workflow = WORKFLOWS[1].read_text(encoding="utf-8")
         self.assertIn("DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}", workflow)
