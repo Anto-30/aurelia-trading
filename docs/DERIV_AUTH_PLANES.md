@@ -2,42 +2,43 @@
 
 ## State
 
-- Layer 9 research: public unauthenticated market-data transport.
-- Layer 6 account evidence: disabled until Deriv documents and exposes a verifiable read-only permission for the account APIs AURELIA requires.
+- Layer 9 research uses the unauthenticated public market-data plane only.
+- Layer 6 account evidence is unavailable and remains blocked.
+- `ACCOUNT_DERIV_AUTH_MODE` is `none` in every research, assurance, and account-prerequisite workflow.
 - `LIVE_EXECUTION` remains `BLOCKED`.
 - `FINAL_EXECUTION_AUTHORIZATION` remains `false`.
-- No account credential is injected into research CI or the public market-data collector.
+- No Deriv account credential is mapped into a research, assurance, account-prerequisite, or VERIFY_ONLY worker.
 
 ## Layer 9 — public research
 
-The research client connects to Deriv's current public market-data WebSocket:
+The research client connects only to Deriv's public market-data WebSocket:
 
-```text
-wss://api.derivws.com/trading/v1/options/ws/public
-```
+`wss://api.derivws.com/trading/v1/options/ws/public`
 
-No app ID, Authorization header, bearer token, PAT, cookie, or OAuth token is sent. It rejects a process environment containing any account credential variable, and rechecks that boundary before each request.
+It sends no app ID, Authorization header, bearer token, PAT, cookie, OAuth token, or account metadata. It rejects a process environment containing any name in the canonical account-credential denylist, checking key presence without reading values, and rechecks the boundary before each request.
 
-Allowed request families are limited to public market data and non-executing proposal quotes: active symbols, contract metadata, proposals, ticks, and tick history. The request validator also enforces an action-specific field allowlist. It rejects account authorization, buy/sell, and all unrecognized request fields.
+Allowed actions are restricted to public market-data reads and non-executing price-quote requests. The action-specific field allowlist rejects account authorization, buy/sell, order submission, and unrecognized request fields. A quote request is not a purchase proposal and is never followed by a buy action.
 
-`scripts/verify_deriv_public_transport.py` performs a live R_100 M1 historical-candle probe and writes hashed, non-secret evidence. A successful CI step is required before describing the endpoint as verified; the static prerequisite report alone only means the public plane is configured.
+`scripts/verify_deriv_public_transport.py` verifies R_100 active-symbol availability, M1 candles, and ordered live ticks over the credential-free public endpoint. A successful exact-head CI run and its hashed artifact are required before describing public transport as verified.
 
 ## Layer 6 — account evidence
 
-The account guard requires `ACCOUNT_DERIV_AUTH_MODE=oauth` and never falls back to `DERIV_PAT` or `DERIV_AUTH_TOKEN`. If both OAuth and PAT values are present and equal, the guard raises `OAUTH_TOKEN_EQUALS_PAT`. Any PAT presence, generic token fallback, or unsupported refresh-token input is rejected.
+There is no supported authenticated account mode in AURELIA's VERIFY_ONLY/account-evidence workers. The only accepted configuration value is `ACCOUNT_DERIV_AUTH_MODE=none`. The prerequisite reporter defaults to `none` and reports any `oauth`, `pat`, or other non-`none` value as invalid. This setting does not read, validate, or consume any token.
 
-Even a distinct OAuth access token is not sufficient. Current Deriv documentation does not expose a `read` scope for the required account endpoints; the account-list and OTP operations require the `trade` scope. A token with that permission cannot satisfy AURELIA's read-only account-evidence requirement. Therefore the account guard does not issue a client, and the session, broker-evidence, and transaction-lifecycle verifiers fail closed before any account request.
+The required account-list and authenticated OTP endpoints are documented as requiring Deriv `trade` scope. No genuinely read-only account scope for these endpoints is documented. A trade-scoped OAuth token or PAT is therefore not an acceptable substitute and must never be configured, activated, tested, or used by a VERIFY_ONLY/account-verification worker.
 
-The GitHub Actions workflows do not map account tokens into the public research or assurance jobs. The GitHub secret provisioner, host read-only credential provisioner, and LIVE runtime credential provisioner are disabled. Existing secrets are not read, overwritten, or deleted by this change.
+`DerivAuthenticationGate(plane="account").get_client()` fails before any account request with `DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE`. The session, account-evidence, and transaction-lifecycle verifiers remain blocked. The public research process rejects all account credential environment keys; the account-prerequisite reporter checks key membership only and never retrieves values.
+
+The GitHub workflows do not map Deriv credentials into research, assurance, account-prerequisite, or VERIFY_ONLY jobs. Existing GitHub secrets are not read, overwritten, rotated, or deleted by this change.
 
 ## Reopening account evidence
 
-The account plane can be reconsidered only when all of the following are documented and tested:
+Account evidence can be reconsidered only after all of the following are independently established:
 
-1. Deriv supports a genuinely read-only scope for the exact account endpoints required.
-2. The OAuth authorization response or a broker-supported introspection operation proves that scope, and binds the expected login ID and account environment.
-3. CI maps the OAuth credential only to the isolated account-evidence job; no generic-token or PAT alias is present.
-4. Integration tests prove that a PAT copied into the OAuth variable is rejected, and a genuine OAuth session is read-only.
-5. Independent security review approves the change.
+1. Deriv documents and exposes a genuinely read-only scope for the exact required account endpoints; `trade` scope is explicitly excluded.
+2. Official broker documentation or a broker-supported introspection operation proves the effective read-only scope and account binding.
+3. A separately designed, credential-isolated account-evidence component is reviewed; the public research and VERIFY_ONLY workers remain credential-free.
+4. Tests prove that PAT, generic-token, refresh-token, and trade-scope credentials cannot enter or be consumed by the account-evidence path.
+5. Independent security review approves the design and its least-privilege boundary.
 
-Until those conditions are met, authenticated account verification and LIVE deployment remain blocked.
+Until those conditions are met, account-data access, authenticated lifecycle verification, strategy release, and LIVE deployment remain blocked.
