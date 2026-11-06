@@ -80,7 +80,7 @@ class SessionManagerContractTests(unittest.TestCase):
             ):
                 manager.list_accounts()
 
-    def test_list_accounts_rejects_pat_even_when_oauth_is_selected(self):
+    def test_list_accounts_always_blocks_without_read_only_account_scope(self):
         manager = DerivSessionManager(expected_loginid="CRREAL", expected_environment="real", expected_currency="USD")
         with patch.dict(
             "os.environ",
@@ -91,7 +91,7 @@ class SessionManagerContractTests(unittest.TestCase):
             },
             clear=True,
         ):
-            with self.assertRaisesRegex(DerivSessionManagerError, "ACCOUNT_PLANE_PAT_PRESENT"):
+            with self.assertRaisesRegex(DerivSessionManagerError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"):
                 manager.list_accounts()
 
 
