@@ -1,14 +1,31 @@
 from __future__ import annotations
 
-"""Fail CI if any GitHub Actions workflow injects a Deriv account secret."""
+"""Fail CI if a GitHub Actions workflow exposes any Deriv account-plane input."""
 
 import re
 import sys
 from pathlib import Path
 
-SECRET_REFERENCE = re.compile(r"\bsecrets\s*\.\s*DERIV_[A-Z0-9_]+\b", re.IGNORECASE)
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
+
+from runtime.security.deriv_auth_gate import ACCOUNT_CREDENTIAL_ENV_NAMES
+
+DERIV_SECRET_REFERENCE = re.compile(
+    r"\bsecrets\s*(?:\.\s*DERIV_[A-Z0-9_]+|\[\s*['\"]DERIV_[A-Z0-9_]+['\"]\s*\])",
+    re.IGNORECASE,
+)
+DERIV_DYNAMIC_SECRET_REFERENCE = re.compile(
+    r"\bsecrets\s*\[[^]\n]*\bDERIV_[A-Z0-9_]+\b[^]\n]*\]",
+    re.IGNORECASE,
+)
+_CREDENTIAL_NAMES = "|".join(
+    re.escape(name)
+    for name in sorted(ACCOUNT_CREDENTIAL_ENV_NAMES, key=len, reverse=True)
+)
 CREDENTIAL_ENV_KEY = re.compile(
-    r"^\s*DERIV_(?:AUTH_TOKEN|PAT|OAUTH_ACCESS_TOKEN|OAUTH_REFRESH_TOKEN|REFRESH_TOKEN)\s*:",
+    rf"(?:^\s*|[{{,]\s*)(?:{_CREDENTIAL_NAMES})\s*:",
     re.IGNORECASE,
 )
 
@@ -24,18 +41,20 @@ def audit_workflows(workflow_dir: Path) -> tuple[int, list[tuple[str, int, str]]
     findings: list[tuple[str, int, str]] = []
     for path in paths:
         for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            # Ignore YAML comments, but never print the matched line or value.
+            # Ignore YAML comments; never print matched workflow text or values.
             source = line.split("#", 1)[0]
-            if SECRET_REFERENCE.search(source):
+            if (
+                DERIV_SECRET_REFERENCE.search(source)
+                or DERIV_DYNAMIC_SECRET_REFERENCE.search(source)
+            ):
                 findings.append((path.name, line_number, "DERIV_SECRET_REFERENCE"))
-            if CREDENTIAL_ENV_KEY.match(source):
-                findings.append((path.name, line_number, "DERIV_CREDENTIAL_ENV_BINDING"))
+            if CREDENTIAL_ENV_KEY.search(source):
+                findings.append((path.name, line_number, "DERIV_ACCOUNT_INPUT_BINDING"))
     return len(paths), findings
 
 
 def main() -> int:
-    repository_root = Path(__file__).resolve().parents[1]
-    workflow_dir = repository_root / ".github" / "workflows"
+    workflow_dir = REPOSITORY_ROOT / ".github" / "workflows"
     workflow_count, findings = audit_workflows(workflow_dir)
     print(f"DERIV_WORKFLOW_AUDIT_FILES={workflow_count}")
     if findings:
