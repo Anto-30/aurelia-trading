@@ -75,7 +75,7 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertNotIn("environment: production", presence_workflow)
         self.assertNotIn("secrets.", presence_workflow)
-        self.assertIn('ACCOUNT_DERIV_AUTH_MODE: "oauth"', presence_workflow)
+        self.assertIn('ACCOUNT_DERIV_AUTH_MODE: "none"', presence_workflow)
         self.assertIn('FINAL_EXECUTION_AUTHORIZATION: "false"', presence_workflow)
         self.assertIn('LIVE_EXECUTION: "BLOCKED"', presence_workflow)
 
