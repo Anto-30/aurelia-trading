@@ -101,6 +101,18 @@ class DerivWorkflowCredentialAuditTests(unittest.TestCase):
         self.assertEqual(count, 1)
         self.assertEqual(findings, [])
 
+    def test_free_runtime_does_not_map_notification_secrets(self):
+        workflow = (
+            Path(__file__).resolve().parents[1]
+            / ".github"
+            / "workflows"
+            / "aurelia-free-runtime.yml"
+        )
+        source = workflow.read_text(encoding="utf-8")
+        self.assertNotIn("secrets.TWILIO_", source)
+        self.assertNotIn("TWILIO_AUTH_TOKEN", source)
+        self.assertNotIn("TWILIO_API_SECRET", source)
+
     def test_missing_workflow_directory_fails_closed(self):
         with TemporaryDirectory() as directory:
             missing = Path(directory) / "missing"
