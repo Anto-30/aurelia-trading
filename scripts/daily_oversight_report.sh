@@ -21,8 +21,8 @@ mkdir -p "$(dirname "$OUTPUT")"
   echo
   echo "**Date:** $DATE_UTC"
   echo "**Repository:** $REPO"
-  echo "**Source commit:** `$SOURCE_SHA`"
-  echo "**Governance:** `LIVE_EXECUTION=BLOCKED` | `FINAL_EXECUTION_AUTHORIZATION=false`"
+  echo "**Source commit:** $SOURCE_SHA"
+  echo "**Governance:** LIVE_EXECUTION=BLOCKED | FINAL_EXECUTION_AUTHORIZATION=false"
   echo
   echo "## 1. Governance and release lock"
   echo
@@ -81,7 +81,7 @@ mkdir -p "$(dirname "$OUTPUT")"
   echo "|---|---|"
   for name in broker_lifecycle.json recovery_matrix.json soak_3600s.json prospective_oos.json calibration.json execution_economics.json security_audit.json deployment.json strategy_eligibility.json; do
     if test -s "evidence/$name"; then state="PRESENT — CONTENT REQUIRES VALIDATION"; else state="MISSING"; fi
-    echo "| `evidence/$name` | $state |"
+    echo "| evidence/$name | $state |"
   done
   echo
   echo "## 6. R_100 research inputs"
@@ -90,16 +90,16 @@ mkdir -p "$(dirname "$OUTPUT")"
   echo "|---|---|"
   for path in data/raw/r100_1m.csv data/frozen/r100_dual_resolution_manifest.json config/costs.yaml; do
     if test -s "$path"; then state="PRESENT — PROVENANCE/CONTENT NOT VERIFIED BY THIS REPORT"; else state="MISSING"; fi
-    echo "| `$path` | $state |"
+    echo "| $path | $state |"
   done
   echo
   echo "## 7. Strategy campaign disposition"
   echo
   seal="research/campaigns/SEALED_$(date -u +%Y%m%d)/CAMPAIGN_SEAL.md"
   if test -s "$seal"; then
-    echo "Campaign seal present at `$seal`. Read the complete seal before interpreting strategy eligibility."
+    echo "Campaign seal present at $seal. Read the complete seal before interpreting strategy eligibility."
   elif test -s "research/campaigns/SEALED_20261106/CAMPAIGN_SEAL.md"; then
-    echo "Campaign seal present at `research/campaigns/SEALED_20261106/CAMPAIGN_SEAL.md`. Read the complete seal before interpreting strategy eligibility."
+    echo "Campaign seal present at research/campaigns/SEALED_20261106/CAMPAIGN_SEAL.md. Read the complete seal before interpreting strategy eligibility."
   else
     echo "No campaign seal found in this checked-out revision."
   fi
@@ -113,7 +113,7 @@ mkdir -p "$(dirname "$OUTPUT")"
   echo "- A PR with no human review remains unapproved regardless of AI or CI results."
   echo "- No broker orders, proposals, capital operations, secret rotations, deployments or LIVE_LOCK changes are performed by this report."
   echo
-  echo "**Required governance state:** `LIVE_EXECUTION=BLOCKED`, `FINAL_EXECUTION_AUTHORIZATION=false`, `capital_plane_mode=VERIFY_ONLY`."
+  echo "**Required governance state:** LIVE_EXECUTION=BLOCKED, FINAL_EXECUTION_AUTHORIZATION=false, capital_plane_mode=VERIFY_ONLY."
 } > "$OUTPUT"
 
 echo "OVERSIGHT_REPORT=$OUTPUT"
