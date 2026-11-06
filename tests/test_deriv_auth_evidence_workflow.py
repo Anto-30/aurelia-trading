@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import unittest
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = (
@@ -9,42 +9,60 @@ WORKFLOWS = (
     ROOT / ".github" / "workflows" / "deriv-auth-evidence.yml",
     ROOT / ".github" / "workflows" / "deriv-verify-only-lifecycle.yml",
 )
-SAFE_AUTH_MODE_BINDING = (
-    "${{ (vars.DERIV_AUTH_MODE == '' || vars.DERIV_AUTH_MODE == 'pat') "
-    "&& 'pat' || (vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'invalid') }}"
-)
+SAFE_AUTH_MODE_BINDING = "${{ vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'invalid' }}"
 
 
-def test_all_deriv_auth_workflows_sanitize_auth_mode_before_runner_exposure() -> None:
-    for path in WORKFLOWS:
-        workflow = path.read_text(encoding="utf-8")
-        assert f"DERIV_AUTH_MODE: {SAFE_AUTH_MODE_BINDING}" in workflow, path.name
-        assert workflow.count("DERIV_AUTH_MODE:") == 1, path.name
-        assert "secrets.DERIV_AUTH_MODE" not in workflow, path.name
-        assert "vars.DERIV_AUTH_MODE || 'pat'" not in workflow, path.name
+class DerivAuthWorkflowContractTests(unittest.TestCase):
+    def test_all_deriv_workflows_expose_only_oauth_or_invalid(self):
+        for path in WORKFLOWS:
+            workflow = path.read_text(encoding="utf-8")
+            bindings = [
+                line.strip() for line in workflow.splitlines()
+                if line.strip().startswith("DERIV_AUTH_MODE:")
+            ]
+            self.assertEqual(bindings, [f"DERIV_AUTH_MODE: {SAFE_AUTH_MODE_BINDING}"], path.name)
+            self.assertNotIn("vars.DERIV_AUTH_MODE || 'pat'", workflow)
+            self.assertNotIn("secrets.DERIV_AUTH_MODE", workflow)
+
+    def test_assurance_auth_configuration_requires_explicit_oauth(self):
+        workflow = WORKFLOWS[0].read_text(encoding="utf-8")
+        self.assertIn("vars.DERIV_AUTH_MODE == 'oauth'", workflow)
+        self.assertNotIn("DERIV_APP_ID", workflow)
+
+    def test_provisioner_requires_explicit_mode_and_separates_token_aliases(self):
+        script = (ROOT / "scripts" / "provision_deriv_github_secrets.sh").read_text(encoding="utf-8")
+        self.assertIn("DERIV_AUTH_MODE_REQUIRED", script)
+        self.assertIn('token_name="DERIV_AUTH_TOKEN"', script)
+        self.assertIn('token_name="DERIV_PAT"', script)
+        self.assertNotIn('mode="${mode:-pat}"', script)
+        self.assertNotIn('token="${DERIV_AUTH_TOKEN:-${DERIV_PAT:-}}"', script)
+
+    def test_scheduled_deriv_verifier_uses_oauth_token_only(self):
+        workflow = WORKFLOWS[1].read_text(encoding="utf-8")
+        self.assertIn("DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}", workflow)
+        self.assertNotIn("secrets.DERIV_PAT", workflow)
+        self.assertNotIn("DERIV_APP_ID", workflow)
+        self.assertIn("test \"$auth_mode\" = \"oauth\"", workflow)
+        self.assertIn("DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}", workflow)
+
+    def test_scheduled_workflow_generates_read_only_broker_account_evidence(self):
+        workflow = WORKFLOWS[1].read_text(encoding="utf-8")
+        self.assertIn("python scripts/verify_deriv_broker_evidence.py", workflow)
+        self.assertIn("artifacts/deriv_broker_account_evidence.json", workflow)
+
+    def test_scheduled_deriv_verifier_keeps_capital_authority_blocked(self):
+        workflow = WORKFLOWS[1].read_text(encoding="utf-8")
+        self.assertIn('FINAL_EXECUTION_AUTHORIZATION: "false"', workflow)
+        self.assertIn('LIVE_EXECUTION: "BLOCKED"', workflow)
+        self.assertIn('echo "DERIV_ORDERS_SUBMITTED=0"', workflow)
+
+    def test_lifecycle_workflow_requires_oauth_and_verify_only(self):
+        workflow = WORKFLOWS[2].read_text(encoding="utf-8")
+        self.assertIn('DERIV_LIFECYCLE_MODE: "VERIFY_ONLY"', workflow)
+        self.assertIn('test "$auth_mode" = "oauth"', workflow)
+        self.assertNotIn("secrets.DERIV_PAT", workflow)
+        self.assertNotIn("DERIV_APP_ID", workflow)
 
 
-def test_scheduled_deriv_verifier_loads_production_environment_secrets() -> None:
-    workflow = WORKFLOWS[1].read_text(encoding="utf-8")
-
-    assert "environment: production" in workflow
-    assert "DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}" in workflow
-    assert "DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}" in workflow
-    assert "DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}" in workflow
-    assert "DERIV_AUTH_SESSION=BLOCKED_EXPECTED_CURRENCY_MISSING" in workflow
-    assert "DERIV_AUTH_SESSION=BLOCKED_UNSUPPORTED_CURRENCY" in workflow
-    assert "secrets.DERIV_EXPECTED_CURRENCY || 'USD'" not in workflow
-
-
-def test_scheduled_workflow_generates_read_only_broker_account_evidence() -> None:
-    workflow = WORKFLOWS[1].read_text(encoding="utf-8")
-    assert "python scripts/verify_deriv_broker_evidence.py" in workflow
-    assert "artifacts/deriv_broker_account_evidence.json" in workflow
-
-
-def test_scheduled_deriv_verifier_keeps_capital_authority_blocked() -> None:
-    workflow = WORKFLOWS[1].read_text(encoding="utf-8")
-
-    assert 'FINAL_EXECUTION_AUTHORIZATION: "false"' in workflow
-    assert 'LIVE_EXECUTION: "BLOCKED"' in workflow
-    assert 'echo "DERIV_ORDERS_SUBMITTED=0"' in workflow
+if __name__ == "__main__":
+    unittest.main()

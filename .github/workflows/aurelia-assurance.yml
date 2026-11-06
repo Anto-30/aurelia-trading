@@ -16,9 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
-      DERIV_AUTH_CONFIGURED: ${{ (secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') == 'USD' && (vars.DERIV_AUTH_MODE == '' || vars.DERIV_AUTH_MODE == 'pat' || vars.DERIV_AUTH_MODE == 'oauth') && (vars.DERIV_AUTH_MODE == 'oauth' || ((vars.DERIV_AUTH_MODE == '' || vars.DERIV_AUTH_MODE == 'pat') && (secrets.DERIV_APP_ID || '') != '')) }}
-      # Never expose the raw repository variable to runner diagnostics or shell steps.
-      DERIV_AUTH_MODE: ${{ (vars.DERIV_AUTH_MODE == '' || vars.DERIV_AUTH_MODE == 'pat') && 'pat' || (vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'invalid') }}
+      DERIV_AUTH_CONFIGURED: ${{ secrets.DERIV_AUTH_TOKEN != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && secrets.DERIV_EXPECTED_CURRENCY == 'USD' && vars.DERIV_AUTH_MODE == 'oauth' }}
+      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE == 'oauth' && 'oauth' || 'invalid' }}
       DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
     steps:
       - uses: actions/checkout@v7
@@ -62,8 +61,7 @@ jobs:
       - name: Verify protected Deriv authentication prerequisites
         if: always()
         env:
-          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
         run: python scripts/deriv_auth_prerequisites.py
 
@@ -78,8 +76,7 @@ jobs:
       - name: Verify authenticated Deriv real-account session
         if: env.DERIV_AUTH_CONFIGURED == 'true'
         env:
-          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: "real"
@@ -90,8 +87,7 @@ jobs:
       - name: Verify authenticated Deriv broker account evidence (read-only)
         if: env.DERIV_AUTH_CONFIGURED == 'true'
         env:
-          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: "real"
@@ -101,8 +97,7 @@ jobs:
       - name: Verify authenticated Deriv verify-only transaction lifecycle
         if: env.DERIV_AUTH_CONFIGURED == 'true'
         env:
-          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
+          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN }}
           DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
           DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
           DERIV_ENVIRONMENT: "real"
@@ -133,7 +128,7 @@ jobs:
         if: env.DERIV_AUTH_CONFIGURED != 'true'
         run: |
           echo "DERIV_AUTH_SESSION=NOT_CONFIGURED"
-          echo "Configure DERIV_AUTH_TOKEN (or DERIV_PAT) and DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID) as GitHub Actions secrets to run real-account session evidence."
+          echo "Configure DERIV_AUTH_TOKEN and DERIV_EXPECTED_LOGINID (or DERIV_AUTHORIZED_ACCOUNT_ID) as GitHub Actions secrets to run real-account session evidence."
 
       - name: Upload authenticated Deriv evidence
         if: always() && hashFiles('artifacts/deriv_authenticated_session.json') != ''

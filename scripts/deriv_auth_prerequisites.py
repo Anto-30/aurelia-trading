@@ -19,14 +19,15 @@ DEFAULT_OUTPUT = Path("artifacts/deriv_auth_prerequisites.json")
 def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object]:
     env = os.environ if environ is None else environ
 
-    token_present = bool(env.get("DERIV_AUTH_TOKEN", "").strip())
     loginid_present = bool(
         env.get("DERIV_EXPECTED_LOGINID", "").strip()
         or env.get("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()
     )
-    raw_mode = env.get("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
+    raw_mode = env.get("DERIV_AUTH_MODE", "").strip().lower()
     mode_valid = raw_mode in SUPPORTED_AUTH_MODES
     safe_mode = raw_mode if mode_valid else "invalid"
+    token_name = "DERIV_AUTH_TOKEN" if safe_mode == "oauth" else "DERIV_PAT" if safe_mode == "pat" else ""
+    token_present = bool(env.get(token_name, "").strip()) if token_name else False
     app_id_present = bool(env.get("DERIV_APP_ID", "").strip())
 
     raw_currency = env.get("DERIV_EXPECTED_CURRENCY", "").strip().upper()
