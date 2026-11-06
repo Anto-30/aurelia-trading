@@ -69,8 +69,8 @@ class DerivWorkflowCredentialAuditTests(unittest.TestCase):
             root = Path(directory)
             (root / "assertions.yml").write_text(
                 "jobs:\n  verify:\n    steps:\n      - run: |\n"
-                "          test -z \"${{DERIV_PAT:-}}\"\n"
-                "          test -z \"${{DERIV_OAUTH_ACCESS_TOKEN:-}}\"\n",
+                "          test -z \"${DERIV_PAT:-}\"\n"
+                "          test -z \"${DERIV_OAUTH_ACCESS_TOKEN:-}\"\n",
                 encoding="utf-8",
             )
             _count, findings = audit_workflows(root)
@@ -100,6 +100,17 @@ class DerivWorkflowCredentialAuditTests(unittest.TestCase):
             count, findings = audit_workflows(root)
         self.assertEqual(count, 1)
         self.assertEqual(findings, [])
+
+    def test_all_explicit_account_auth_modes_are_none(self):
+        workflow_dir = Path(__file__).resolve().parents[1] / ".github" / "workflows"
+        for workflow in sorted([*workflow_dir.glob("*.yml"), *workflow_dir.glob("*.yaml")]):
+            for line_number, line in enumerate(workflow.read_text(encoding="utf-8").splitlines(), 1):
+                if "ACCOUNT_DERIV_AUTH_MODE:" in line:
+                    self.assertIn(
+                        'ACCOUNT_DERIV_AUTH_MODE: "none"',
+                        line,
+                        f"{workflow.name}:{line_number} must not configure OAuth or PAT mode",
+                    )
 
     def test_free_runtime_does_not_map_notification_secrets(self):
         workflow = (
