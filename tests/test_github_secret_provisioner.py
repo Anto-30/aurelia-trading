@@ -154,6 +154,26 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
         self.assertNotIn("/dev/tty: No such device", result.stderr)
         self.assertFalse(self.record.exists())
 
+    def test_existing_pat_mode_is_not_implicitly_selected_without_explicit_input(self) -> None:
+        self.env.pop("DERIV_AUTH_MODE", None)
+        self.env["PROVISIONER_TEST_EXISTING_VARIABLE_NAMES"] = "DERIV_AUTH_MODE"
+        self.env["PROVISIONER_TEST_EXISTING_VARIABLE_VALUE"] = "pat"
+        self.env["PROVISIONER_TEST_EXISTING_NAMES"] = "\\n".join(
+            [
+                "DERIV_PAT",
+                "DERIV_APP_ID",
+                "DERIV_EXPECTED_LOGINID",
+                "DERIV_EXPECTED_CURRENCY",
+            ]
+        )
+        for name in ("DERIV_PAT", "DERIV_APP_ID", "DERIV_EXPECTED_LOGINID", "DERIV_EXPECTED_CURRENCY"):
+            self.env.pop(name, None)
+        result = self.run_provisioner()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("DERIV_AUTH_MODE_REQUIRED_NONINTERACTIVE", result.stderr)
+        self.assertFalse(self.record.exists())
+        self.assertFalse(self.variable_record.exists())
+
     def test_missing_currency_is_not_synthesized_or_partially_written(self) -> None:
         self.env.pop("DERIV_EXPECTED_CURRENCY", None)
         result = self.run_provisioner()
