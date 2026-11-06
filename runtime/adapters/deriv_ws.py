@@ -338,14 +338,33 @@ class DerivWebSocketTransport:
                     error = message["error"]
                     raw_code = error.get("code") if isinstance(error, dict) else None
                     safe_code = _safe_code(raw_code, "BROKER_SUBSCRIPTION_FAILED")
-                    failure_type = error.get("failure_type") if isinstance(error, dict) else None
-                    close_code = error.get("close_code") if isinstance(error, dict) else None
+                    raw_failure_type = (
+                        error.get("failure_type") or error.get("exception_type")
+                        if isinstance(error, dict)
+                        else None
+                    )
+                    failure_type = (
+                        raw_failure_type
+                        if isinstance(raw_failure_type, str)
+                        and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,127}", raw_failure_type)
+                        else None
+                    )
+                    raw_close_code = (
+                        error.get("close_code", error.get("websocket_close_code"))
+                        if isinstance(error, dict)
+                        else None
+                    )
+                    close_code = (
+                        raw_close_code
+                        if isinstance(raw_close_code, int) and not isinstance(raw_close_code, bool)
+                        else None
+                    )
                     raise DerivTransportError(
                         safe_code,
                         code=safe_code,
                         details={"code": safe_code},
-                        failure_type=_safe_code(failure_type.upper(), "UNKNOWN") if isinstance(failure_type, str) else None,
-                        close_code=close_code if isinstance(close_code, int) and not isinstance(close_code, bool) else None,
+                        failure_type=failure_type,
+                        close_code=close_code,
                     )
                 yield message
         finally:

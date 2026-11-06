@@ -13,6 +13,16 @@ from research.utils.deriv_auth_gate import DerivAuthenticationGate, PUBLIC_RESEA
 from runtime.core.events import sha256
 
 
+class PublicProbeError(RuntimeError):
+    """A probe validation failure carrying a bounded, non-sensitive reason code."""
+
+    def __init__(self, code: str) -> None:
+        if not re.fullmatch(r"[A-Z][A-Z0-9_]{0,63}", code):
+            raise ValueError("PUBLIC_PROBE_ERROR_CODE_INVALID")
+        super().__init__(code)
+        self.code = code
+
+
 def _safe_reason(exc: BaseException) -> str:
     code = getattr(exc, "code", None)
     if isinstance(code, str) and re.fullmatch(r"[A-Z][A-Z0-9_]{0,63}", code):
@@ -39,30 +49,30 @@ async def verify_public_r100(
         symbols_response = await client.request({"active_symbols": "brief"})
         active_symbols = symbols_response.get("active_symbols")
         if not isinstance(active_symbols, list):
-            raise RuntimeError("DERIV_PUBLIC_ACTIVE_SYMBOLS_INVALID")
+            raise PublicProbeError("DERIV_PUBLIC_ACTIVE_SYMBOLS_INVALID")
         active_codes = {
             str(row.get("symbol") or row.get("underlying_symbol") or "")
             for row in active_symbols
             if isinstance(row, dict)
         }
         if "R_100" not in active_codes:
-            raise RuntimeError("DERIV_PUBLIC_R100_SYMBOL_NOT_AVAILABLE")
+            raise PublicProbeError("DERIV_PUBLIC_R100_SYMBOL_NOT_AVAILABLE")
 
         candles = await client.historical_candles(
             "R_100", granularity=60, count=10, end="latest"
         )
         if not candles:
-            raise RuntimeError("DERIV_PUBLIC_R100_M1_HISTORY_EMPTY")
+            raise PublicProbeError("DERIV_PUBLIC_R100_M1_HISTORY_EMPTY")
         required = {"epoch", "open", "high", "low", "close"}
         if any(not required.issubset(row) for row in candles):
-            raise RuntimeError("DERIV_PUBLIC_R100_M1_SCHEMA_INVALID")
+            raise PublicProbeError("DERIV_PUBLIC_R100_M1_SCHEMA_INVALID")
         for row in candles:
             for key in ("open", "high", "low", "close"):
                 value = float(row[key])
                 if not math.isfinite(value) or value <= 0:
-                    raise RuntimeError("DERIV_PUBLIC_R100_M1_PRICE_INVALID")
+                    raise PublicProbeError("DERIV_PUBLIC_R100_M1_PRICE_INVALID")
             if isinstance(row["epoch"], bool) or not isinstance(row["epoch"], (int, float)):
-                raise RuntimeError("DERIV_PUBLIC_R100_M1_EPOCH_INVALID")
+                raise PublicProbeError("DERIV_PUBLIC_R100_M1_EPOCH_INVALID")
 
         stream = client.subscribe("ticks:R_100", {"ticks": "R_100"})
         iterator = stream.__aiter__()
@@ -76,17 +86,17 @@ async def verify_public_r100(
             message = await asyncio.wait_for(iterator.__anext__(), timeout=remaining)
             tick = message.get("tick") if isinstance(message, dict) else None
             if not isinstance(tick, dict):
-                raise RuntimeError("DERIV_PUBLIC_R100_TICK_SCHEMA_INVALID")
+                raise PublicProbeError("DERIV_PUBLIC_R100_TICK_SCHEMA_INVALID")
             if str(tick.get("symbol") or "") != "R_100":
-                raise RuntimeError("DERIV_PUBLIC_R100_TICK_SYMBOL_MISMATCH")
+                raise PublicProbeError("DERIV_PUBLIC_R100_TICK_SYMBOL_MISMATCH")
             quote = tick.get("quote")
             epoch = tick.get("epoch")
             if isinstance(quote, bool) or not isinstance(quote, (int, float)) or not math.isfinite(float(quote)) or float(quote) <= 0:
-                raise RuntimeError("DERIV_PUBLIC_R100_TICK_QUOTE_INVALID")
+                raise PublicProbeError("DERIV_PUBLIC_R100_TICK_QUOTE_INVALID")
             if isinstance(epoch, bool) or not isinstance(epoch, int) or epoch <= 0:
-                raise RuntimeError("DERIV_PUBLIC_R100_TICK_EPOCH_INVALID")
+                raise PublicProbeError("DERIV_PUBLIC_R100_TICK_EPOCH_INVALID")
             if previous_epoch is not None and epoch <= previous_epoch:
-                raise RuntimeError("DERIV_PUBLIC_R100_TICK_TIME_REGRESSION")
+                raise PublicProbeError("DERIV_PUBLIC_R100_TICK_TIME_REGRESSION")
             previous_epoch = epoch
             observed.append({"quote": float(quote), "epoch": epoch})
 
