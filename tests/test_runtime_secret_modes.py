@@ -72,7 +72,7 @@ class RuntimeSecretModeTests(unittest.TestCase):
             ):
                 validate_secrets_at_startup()
 
-    def test_verify_only_read_only_auth_fails_without_credentials(self):
+    def test_verify_only_account_auth_blocks_without_read_only_scope(self):
         env = {
             "AURELIA_DEPLOYMENT_MODE": "VERIFY_ONLY",
             "FINAL_EXECUTION_AUTHORIZATION": "false",
@@ -84,11 +84,11 @@ class RuntimeSecretModeTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaisesRegex(
                 SecretsError,
-                "DERIV_OAUTH_ACCESS_TOKEN_MISSING",
+                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
             ):
                 validate_secrets_at_startup()
 
-    def test_verify_only_rejects_pat_even_if_oauth_is_selected(self):
+    def test_verify_only_account_auth_blocks_when_pat_is_present(self):
         env = {
             "AURELIA_DEPLOYMENT_MODE": "VERIFY_ONLY",
             "FINAL_EXECUTION_AUTHORIZATION": "false",
@@ -100,10 +100,10 @@ class RuntimeSecretModeTests(unittest.TestCase):
             "DERIV_PAT": "PAT_SENTINEL",
         }
         with patch.dict(os.environ, env, clear=True):
-            with self.assertRaisesRegex(SecretsError, "ACCOUNT_PLANE_PAT_PRESENT"):
+            with self.assertRaisesRegex(SecretsError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"):
                 validate_secrets_at_startup()
 
-    def test_verify_only_rejects_generic_token_fallback(self):
+    def test_verify_only_account_auth_blocks_when_generic_token_is_present(self):
         env = {
             "AURELIA_DEPLOYMENT_MODE": "VERIFY_ONLY",
             "FINAL_EXECUTION_AUTHORIZATION": "false",
@@ -116,11 +116,11 @@ class RuntimeSecretModeTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaisesRegex(
                 SecretsError,
-                "GENERIC_TOKEN_FALLBACK_BLOCKED",
+                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
             ):
                 validate_secrets_at_startup()
 
-    def test_verify_only_rejects_identical_oauth_and_pat(self):
+    def test_verify_only_account_auth_blocks_without_comparing_credentials(self):
         marker = "SAME_SECRET_SENTINEL"
         env = {
             "AURELIA_DEPLOYMENT_MODE": "VERIFY_ONLY",
@@ -133,10 +133,10 @@ class RuntimeSecretModeTests(unittest.TestCase):
             "DERIV_PAT": marker,
         }
         with patch.dict(os.environ, env, clear=True):
-            with self.assertRaisesRegex(SecretsError, "OAUTH_TOKEN_EQUALS_PAT"):
+            with self.assertRaisesRegex(SecretsError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"):
                 validate_secrets_at_startup()
 
-    def test_verify_only_rejects_unsupported_refresh_token(self):
+    def test_verify_only_account_auth_blocks_when_refresh_token_is_present(self):
         env = {
             "AURELIA_DEPLOYMENT_MODE": "VERIFY_ONLY",
             "FINAL_EXECUTION_AUTHORIZATION": "false",
@@ -150,7 +150,7 @@ class RuntimeSecretModeTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaisesRegex(
                 SecretsError,
-                "DERIV_OAUTH_REFRESH_TOKEN_UNSUPPORTED",
+                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
             ):
                 validate_secrets_at_startup()
 
