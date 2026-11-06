@@ -1,0 +1,22 @@
+name: Legacy Authentication Static Audit
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-auth-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate audit script syntax
+        run: bash -n scripts/audit_legacy_auth.sh
+      - name: Audit workflow credential boundaries
+        run: bash scripts/audit_legacy_auth.sh
