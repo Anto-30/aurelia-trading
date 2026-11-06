@@ -2,13 +2,15 @@ from __future__ import annotations
 
 """Offline terminal sealing for an expired R_100 prospective campaign.
 
-This module never connects to Deriv, never backfills data, and never changes
-strategy parameters. It freezes the original state and explicitly preserves
-any unresolved pending signals.
+This module never connects to Deriv, never backfills data, and never re-scores
+an existing campaign under a different source commit. It preserves the last
+report as a historical snapshot and appends terminal archival metadata only.
 """
 
+import hashlib
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -16,17 +18,29 @@ from research.r100_prospective_oos_collector import (
     STATE_PATH,
     STRATEGY_ID,
     STRATEGY_VERSION,
-    evaluation,
     iso,
     save_state,
     utc_now,
 )
 
 
+def _archive_hash(state: dict[str, Any]) -> str:
+    payload = {
+        "manifest": state["manifest"],
+        "observations": state.get("observations", []),
+        "quote_observations": state.get("quote_observations", []),
+        "pending": state.get("pending", []),
+    }
+    encoded = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def seal_expired_campaign(
     state_path: Path = STATE_PATH,
     *,
-    now=None,
+    now: datetime | None = None,
 ) -> dict[str, Any]:
     if not state_path.exists():
         return {"status": "NO_STATE", "sealed": False}
@@ -46,45 +60,86 @@ def seal_expired_campaign(
             "experiment_id": manifest.get("experiment_id"),
         }
 
-    evaluated_at = now or utc_now()
-    campaign_end = __import__("datetime").datetime.fromisoformat(
+    sealed_at = now or utc_now()
+    campaign_end = datetime.fromisoformat(
         manifest["campaign_end_at_utc"].replace("Z", "+00:00")
     )
-    if evaluated_at < campaign_end:
+    if sealed_at < campaign_end:
         return {
             "status": "NOT_DUE",
             "sealed": False,
             "campaign_end_at_utc": manifest["campaign_end_at_utc"],
         }
 
-    report = evaluation(state, now=evaluated_at)
     pending_count = len(state.get("pending", []))
+    manifest["sealed"] = True
+    manifest["sealed_at_utc"] = iso(sealed_at)
+    manifest["seal_reason"] = "CAMPAIGN_WINDOW_ENDED"
+    manifest["unresolved_pending_count"] = pending_count
+    manifest["pending_resolution_status"] = (
+        "UNRESOLVED_NO_BACKFILL" if pending_count else "RESOLVED"
+    )
+    archive_hash = _archive_hash(state)
+
+    report_path = state_path.with_name("aurelia_r100_report.json")
+    if report_path.exists():
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    else:
+        report = {
+            "schema": "aurelia.r100.prospective_oos.report.v1",
+            "experiment_id": manifest.get("experiment_id"),
+            "strategy_id": STRATEGY_ID,
+            "strategy_version": STRATEGY_VERSION,
+            "observations_total": len(state.get("observations", [])),
+            "execution_economics": {"status": "UNDETERMINED_PRODUCTION"},
+        }
+
+    # Do not overwrite the historical metrics: they were calculated by the
+    # campaign's frozen code. Explicitly mark them as the last collection
+    # snapshot, not a new evaluation made by this sealer.
+    report["last_collection_qualification_status"] = report.get(
+        "qualification_status"
+    )
+    report["qualification_status"] = "NOT_RECALCULATED_AFTER_EXPIRY"
+    report["evaluation_snapshot_status"] = "LAST_COLLECTION_SNAPSHOT_PRESERVED"
+    report["sealing_note"] = (
+        "Historical metrics were preserved unchanged. The sealer does not "
+        "re-evaluate the frozen campaign under the current source code."
+    )
     report["collection_status"] = "SEALED_AFTER_CAMPAIGN_WINDOW"
+    report["campaign_complete"] = True
+    report["campaign_terminal_status"] = (
+        "SEALED_WITH_UNRESOLVED_PENDING" if pending_count else "SEALED"
+    )
     report["pending_resolution_status"] = (
         "UNRESOLVED_NO_BACKFILL" if pending_count else "RESOLVED"
     )
     report["pending_count"] = pending_count
-    report["collection_error_type"] = state.get("last_run_error_type")
-    report["collection_error_code"] = state.get("last_run_error_code")
+    report["archive_hash"] = archive_hash
+    report["sealed_at_utc"] = manifest["sealed_at_utc"]
+    report["retuning_after_seal"] = False
+    report["strategy_live_eligible"] = False
+    report["execution_authorized"] = False
+    report["capital_authority"] = False
+    report["live_execution"] = False
 
-    save_state(state_path, state)
-    report_path = state_path.with_name("aurelia_r100_report.json")
-    temp = report_path.with_suffix(report_path.suffix + ".tmp")
-    temp.write_text(
+    report_temp = report_path.with_suffix(report_path.suffix + ".tmp")
+    report_temp.write_text(
         json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
         encoding="utf-8",
     )
-    temp.replace(report_path)
+    report_temp.replace(report_path)
+    save_state(state_path, state)
+
     return {
         "status": "SEALED_WITH_UNRESOLVED_PENDING" if pending_count else "SEALED",
         "sealed": True,
         "experiment_id": manifest.get("experiment_id"),
-        "observations_total": report["observations_total"],
-        "oos_observations": report["oos_observations"],
+        "observations_total": len(state.get("observations", [])),
         "pending_count": pending_count,
         "pending_resolution_status": report["pending_resolution_status"],
         "qualification_status": report["qualification_status"],
-        "archive_hash": report["archive_hash"],
+        "archive_hash": archive_hash,
         "report_path": str(report_path),
     }
 

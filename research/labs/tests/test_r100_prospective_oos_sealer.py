@@ -27,6 +27,13 @@ class R100ProspectiveSealerTest(unittest.TestCase):
             }
             state["pending"] = [pending]
             save_state(path, state)
+            report_path = path.with_name("aurelia_r100_report.json")
+            report_path.write_text(json.dumps({
+                "qualification_status": "LAST_CAPTURED_SNAPSHOT",
+                "oos_mean_strategy_return": 0.123,
+                "execution_authorized": False,
+                "capital_authority": False,
+            }))
             result = seal_expired_campaign(
                 path,
                 now=datetime(2026, 10, 7, tzinfo=timezone.utc),
@@ -40,6 +47,10 @@ class R100ProspectiveSealerTest(unittest.TestCase):
             self.assertEqual(report["pending_count"], 1)
             self.assertFalse(report["execution_authorized"])
             self.assertFalse(report["capital_authority"])
+            self.assertEqual(report["last_collection_qualification_status"], "LAST_CAPTURED_SNAPSHOT")
+            self.assertEqual(report["qualification_status"], "NOT_RECALCULATED_AFTER_EXPIRY")
+            self.assertEqual(report["oos_mean_strategy_return"], 0.123)
+            self.assertEqual(report["evaluation_snapshot_status"], "LAST_COLLECTION_SNAPSHOT_PRESERVED")
 
     def test_active_campaign_is_not_sealed_early(self):
         with tempfile.TemporaryDirectory() as tmp:
