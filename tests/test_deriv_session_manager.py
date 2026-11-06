@@ -153,6 +153,29 @@ class SessionManagerContractTests(unittest.TestCase):
                     )
         mocked_urlopen.assert_not_called()
 
+    def test_missing_auth_mode_fails_closed_before_account_request(self):
+        import os
+        from unittest.mock import patch
+
+        manager = DerivSessionManager(expected_environment="real", expected_currency="USD")
+        with patch.dict(os.environ, {}, clear=True):
+            with patch("runtime.adapters.session_manager.urlopen") as mocked_urlopen:
+                with self.assertRaisesRegex(DerivSessionManagerError, "UNSUPPORTED_AUTH_MODE"):
+                    manager.list_accounts(bearer_token="opaque-token", app_id="12345")
+        mocked_urlopen.assert_not_called()
+
+    def test_missing_auth_mode_fails_closed_before_otp_network_request(self):
+        import os
+        from unittest.mock import patch
+        from runtime.adapters.deriv_session import get_authenticated_ws_url
+
+        with patch.dict(os.environ, {}, clear=True):
+            with patch("runtime.adapters.deriv_session.urlopen") as mocked_urlopen:
+                with self.assertRaisesRegex(DerivSessionError, "UNSUPPORTED_AUTH_MODE"):
+                    get_authenticated_ws_url(
+                        "CR123456", bearer_token="opaque-token", app_id="12345"
+                    )
+        mocked_urlopen.assert_not_called()
 
 if __name__ == "__main__":
     unittest.main()
