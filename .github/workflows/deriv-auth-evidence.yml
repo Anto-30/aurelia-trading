@@ -16,7 +16,7 @@ jobs:
   verify-public-and-account-scope:
     runs-on: ubuntu-latest
     env:
-      ACCOUNT_DERIV_AUTH_MODE: "oauth"
+      ACCOUNT_DERIV_AUTH_MODE: "none"
       FINAL_EXECUTION_AUTHORIZATION: "false"
       LIVE_EXECUTION: "BLOCKED"
       DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT: artifacts/deriv_public_transport.json
