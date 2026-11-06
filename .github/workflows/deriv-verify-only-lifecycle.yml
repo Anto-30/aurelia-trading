@@ -10,7 +10,7 @@ jobs:
   lifecycle-gate:
     runs-on: ubuntu-latest
     env:
-      ACCOUNT_DERIV_AUTH_MODE: "oauth"
+      ACCOUNT_DERIV_AUTH_MODE: "none"
       DERIV_LIFECYCLE_MODE: "VERIFY_ONLY"
       FINAL_EXECUTION_AUTHORIZATION: "false"
       LIVE_EXECUTION: "BLOCKED"
