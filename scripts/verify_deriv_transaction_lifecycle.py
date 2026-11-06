@@ -630,6 +630,8 @@ async def run() -> int:
     except Exception as exc:
         print("DERIV_TRANSACTION_LIFECYCLE=FAILED")
         print(f"REASON={type(exc).__name__}")
+        for frame in safe_exception_frames(exc, root=ROOT):
+            print(f"DERIV_TRANSACTION_LIFECYCLE_FRAME={frame}")
         return 1
     finally:
         if adapter is not None:
