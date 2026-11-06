@@ -594,6 +594,10 @@ async def collect_once(state: dict[str, Any]) -> None:
             except (KeyError, TypeError, ValueError):
                 continue
             received_at = datetime.fromtimestamp(epoch, tz=timezone.utc)
+            # The campaign cutoff is a hard data boundary. Do not settle,
+            # backfill, or otherwise consume pending outcomes using later ticks.
+            if received_at >= campaign_end:
+                break
             prior_pending = len(state["pending"])
             observe_tick(
                 hunter=hunter,

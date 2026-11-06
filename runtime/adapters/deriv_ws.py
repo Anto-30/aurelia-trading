@@ -249,12 +249,14 @@ class DerivWebSocketTransport:
                     raise DerivTransportError(str(broker_error))
                 yield message
         finally:
-            if self.ws is not None and subscription.request_id is not None:
+            # Deriv's forget endpoint requires the broker-issued subscription.id,
+            # not the local req_id used to create the subscription.
+            if self.ws is not None and subscription.subscription_id is not None:
                 try:
                     await self.ws.send(
                         json.dumps(
                             {
-                                "forget": [subscription.request_id],
+                                "forget": subscription.subscription_id,
                                 "req_id": self._next_request_id(),
                             }
                         )
