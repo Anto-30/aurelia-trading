@@ -11,15 +11,15 @@ from runtime.core.models import BrokerOutcome
 
 
 class SessionLifecycleTests(unittest.TestCase):
-    def test_otp_requires_explicit_account_oauth_mode(self):
+    def test_otp_always_blocks_without_read_only_account_scope(self):
         with patch.dict("os.environ", {}, clear=True):
             with self.assertRaisesRegex(
                 DerivSessionError,
-                "ACCOUNT_PLANE_REQUIRES_EXPLICIT_OAUTH_MODE",
+                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
             ):
                 get_authenticated_ws_url("CR123")
 
-    def test_otp_rejects_identical_oauth_and_pat(self):
+    def test_otp_does_not_compare_oauth_and_pat_values(self):
         marker = "SAME_SECRET_SENTINEL"
         with patch.dict(
             "os.environ",
@@ -30,10 +30,10 @@ class SessionLifecycleTests(unittest.TestCase):
             },
             clear=True,
         ):
-            with self.assertRaisesRegex(DerivSessionError, "OAUTH_TOKEN_EQUALS_PAT"):
+            with self.assertRaisesRegex(DerivSessionError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"):
                 get_authenticated_ws_url("CR123")
 
-    def test_otp_does_not_use_generic_token_fallback(self):
+    def test_otp_never_uses_generic_token_fallback(self):
         with patch.dict(
             "os.environ",
             {
@@ -42,7 +42,7 @@ class SessionLifecycleTests(unittest.TestCase):
             },
             clear=True,
         ):
-            with self.assertRaisesRegex(DerivSessionError, "GENERIC_TOKEN_FALLBACK_BLOCKED"):
+            with self.assertRaisesRegex(DerivSessionError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"):
                 get_authenticated_ws_url("CR123")
 
     def test_otp_fails_closed_for_oauth_without_read_only_scope(self):
