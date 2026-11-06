@@ -78,7 +78,7 @@ if [[ -n "$existing_mode" && -n "$mode" && "$mode" != "$existing_mode" ]]; then
   fail "LOCAL_AUTH_MODE_MISMATCH_WITH_EXISTING_ENVIRONMENT_VARIABLE"
 fi
 if [[ -z "$mode" ]]; then
-  [[ -r /dev/tty ]] || fail "DERIV_AUTH_MODE_REQUIRED_NONINTERACTIVE"
+  [[ -t 0 ]] || fail "DERIV_AUTH_MODE_REQUIRED_NONINTERACTIVE"
   read -r -p "Deriv auth mode to use [oauth/pat; no default]: " mode </dev/tty || fail "DERIV_AUTH_MODE_REQUIRED"
   [[ -n "$mode" ]] || fail "DERIV_AUTH_MODE_REQUIRED"
   mode="$(printf '%s' "$mode" | tr '[:upper:]' '[:lower:]')"
@@ -111,6 +111,7 @@ if [[ "$mode" == "oauth" ]]; then
   else
     token="${DERIV_AUTH_TOKEN:-}"
     if [[ -z "$token" ]]; then
+      [[ -t 0 ]] || fail "DERIV_AUTH_TOKEN_REQUIRED_NONINTERACTIVE"
       read -r -s -p "Enter the OAuth access token (hidden input): " token </dev/tty
       printf '\n'
     fi
@@ -125,6 +126,7 @@ else
   else
     token="${DERIV_PAT:-}"
     if [[ -z "$token" ]]; then
+      [[ -t 0 ]] || fail "DERIV_PAT_REQUIRED_NONINTERACTIVE"
       read -r -s -p "Enter the Deriv PAT (hidden input): " token </dev/tty
       printf '\n'
     fi
