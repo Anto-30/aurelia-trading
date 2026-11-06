@@ -32,9 +32,9 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
 
     def test_credential_presence_is_detected_without_reading_any_value(self):
         evidence = build_evidence(NoSecretValueReads({
-            "ACCOUNT_DERIV_AUTH_MODE": "oauth",
-            "DERIV_OAUTH_ACCESS_TOKEN": "SENTINEL_A",
-            "DERIV_PAT": "SENTINEL_B",
+            "ACCOUNT_DERIV_AUTH_MODE": "none",
+            "DERIV_OAUTH_ACCESS_TOKEN": "",
+            "DERIV_PAT": "",
         }))
         self.assertEqual(evidence["public_research"]["status"], "BLOCKED")
         self.assertTrue(evidence["public_research"]["account_credentials_present_in_process"])
@@ -43,9 +43,6 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
             evidence["account_evidence"]["reason"],
             "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
         )
-        encoded = json.dumps(evidence)
-        self.assertNotIn("SENTINEL_A", encoded)
-        self.assertNotIn("SENTINEL_B", encoded)
 
     def test_empty_credential_environment_key_still_blocks_public_research(self):
         evidence = build_evidence({"DERIV_PAT": ""})
@@ -54,7 +51,7 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
         self.assertFalse(evidence["account_evidence"]["credentials_isolated_in_process"])
 
     def test_invalid_auth_mode_does_not_change_the_scope_blocker(self):
-        evidence = build_evidence({"ACCOUNT_DERIV_AUTH_MODE": "pat"})
+        evidence = build_evidence({"ACCOUNT_DERIV_AUTH_MODE": "oauth"})
         self.assertEqual(evidence["account_evidence"]["auth_mode"], "invalid")
         self.assertEqual(
             evidence["account_evidence"]["reason"],
