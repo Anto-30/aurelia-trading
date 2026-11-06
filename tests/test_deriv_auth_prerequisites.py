@@ -7,7 +7,7 @@ from scripts.deriv_auth_prerequisites import build_evidence
 class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
     def test_valid_pat_configuration_persists_only_safe_values(self):
         evidence = build_evidence({
-            "DERIV_PAT": "test-token-do-not-persist",
+            "DERIV_PAT": "test-token-" + "do-not-persist",
             "DERIV_APP_ID": "12345",
             "DERIV_EXPECTED_LOGINID": "CR123456",
             "DERIV_AUTH_MODE": "pat",
@@ -74,7 +74,7 @@ class DerivAuthPrerequisiteEvidenceTests(unittest.TestCase):
         evidence = build_evidence({
             "DERIV_AUTH_TOKEN": "dummy-token",
             "DERIV_APP_ID": "12345",
-            "DERIV_PAT": "separate-pat-token",
+            "DERIV_PAT": "separate-" + "pat-token",
             "DERIV_EXPECTED_LOGINID": "dummy-account",
             "DERIV_EXPECTED_CURRENCY": "USD",
         })

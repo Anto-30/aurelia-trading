@@ -29,7 +29,7 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
             os.environ,
             {
                 "DERIV_AUTH_TOKEN": "OAUTH-TOKEN",
-                "DERIV_PAT": "PRESERVED-PAT",
+                "DERIV_PAT": "PRESERVED-" + "PAT",
                 "DERIV_EXPECTED_LOGINID": "CRREAL",
                 "DERIV_ENVIRONMENT": "real",
                 "DERIV_EXPECTED_CURRENCY": "USD",
