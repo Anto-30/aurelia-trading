@@ -31,11 +31,27 @@ class StrategyRegistryTests(unittest.TestCase):
         ids = registry.strategy_ids()
         for required in ("MSNR_LIQUIDITY_SWEEP", "VWAP_PULLBACK_RECLAIM", "OPENING_RANGE_BREAKOUT",
                          "S7_LRL_IFVG", "S6_LIQUIDITY_SWEEP", "S3_DONCHIAN_LWTI",
-                         "CRT", "MICRO_SCALP_R100_TICK_MOM"):
+                         "CRT", "MICRO_SCALP_R100_TICK_MOM", "R100_TICK_MOMENTUM_PROSPECTIVE_V0.2.0"):
             self.assertIn(required, ids)
         for strategy_id in ids:
             row = registry.get(strategy_id)
             self.assertFalse(registry.eligibility(strategy_id, row["version"], "R_100")["eligible"])
+
+    def test_r100_prospective_identity_is_registered_but_unqualified(self):
+        registry = StrategyQualificationRegistry.from_file()
+        row = registry.get("R100_TICK_MOMENTUM_PROSPECTIVE_V0.2.0")
+        self.assertIsNotNone(row)
+        self.assertEqual(row["version"], "0.2.0")
+        self.assertEqual(row["implementation_path"], "research/r100_prospective_oos_collector.py")
+        self.assertEqual(row["qualification_status"], "RESEARCH_ONLY_UNQUALIFIED")
+        self.assertIsNone(row["strategy_hash"])
+        result = registry.eligibility(
+            "R100_TICK_MOMENTUM_PROSPECTIVE_V0.2.0", "0.2.0", "R_100"
+        )
+        self.assertFalse(result["eligible"])
+        self.assertIn("STRATEGY_NOT_QUALIFIED_FOR_LIVE", result["reasons"])
+        self.assertIn("STRATEGY_HASH_MISSING", result["reasons"])
+        self.assertIn("INSTRUMENT_NOT_VERIFIED_FOR_STRATEGY", result["reasons"])
 
     def test_unknown_strategy_and_version_mismatch_block(self):
         registry = StrategyQualificationRegistry.from_mapping(qualified_document())
