@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from runtime.core.safe_diagnostics import safe_exception_frames
+
 from runtime.core.secrets import get_optional_secret
 
 from assurance.evidence_writer import build_evidence, payload_sha256, write_evidence
