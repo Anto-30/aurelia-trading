@@ -197,7 +197,37 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertEqual(report["qualification_status"], "ECONOMICS_INCOMPLETE")
         self.assertFalse(report["strategy_live_eligible"])
 
-    def test_campaign_end_does_not_seal_with_unresolved_pending(self):
+    def test_campaign_window_seals_with_explicit_unresolved_pending(self):
+        state = initial_state()
+        state["manifest"]["campaign_end_at_utc"] = "2026-10-06T20:00:00Z"
+        pending = {
+            "signal_id": "pending",
+            "signal_timestamp_utc": "2026-10-06T19:59:00Z",
+            "entry_quote": 100.0,
+            "direction": "CALL",
+            "probability": 0.60,
+            "score": 1.5,
+            "age_ticks": 0,
+        }
+        state["pending"] = [pending]
+        report = evaluation(state)
+        self.assertTrue(report["campaign_complete"])
+        self.assertTrue(state["manifest"]["sealed"])
+        self.assertEqual(state["pending"], [pending])
+        self.assertEqual(report["pending_count"], 1)
+        self.assertEqual(report["pending_resolution_status"], "UNRESOLVED_NO_BACKFILL")
+        self.assertEqual(report["campaign_terminal_status"], "SEALED_WITH_UNRESOLVED_PENDING")
+
+    def test_expired_campaign_does_not_open_a_new_stream_or_backfill_pending(self):
+        from unittest.mock import Mock
+        from research.r100_prospective_oos_collector import collect_once
+
+        class EmptyStream:
+            def __aiter__(self):
+                return self
+            async def __anext__(self):
+                raise StopAsyncIteration
+
         state = initial_state()
         state["manifest"]["campaign_end_at_utc"] = "2026-10-06T20:00:00Z"
         state["pending"] = [{
@@ -209,9 +239,18 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
             "score": 1.5,
             "age_ticks": 0,
         }]
-        report = evaluation(state)
-        self.assertFalse(report["campaign_complete"])
-        self.assertFalse(state["manifest"]["sealed"])
+        transport = type("FakeTransport", (), {
+            "connect": AsyncMock(),
+            "subscribe": Mock(return_value=EmptyStream()),
+            "close": AsyncMock(),
+        })()
+        with patch("research.r100_prospective_oos_collector.DerivWebSocketTransport", return_value=transport), patch(
+            "research.r100_prospective_oos_collector.COLLECTION_SECONDS", 0
+        ):
+            asyncio.run(collect_once(state))
+        transport.connect.assert_not_awaited()
+        transport.close.assert_not_awaited()
+        self.assertEqual(len(state["pending"]), 1)
 
     def test_campaign_end_stops_new_signal_emission_but_settles_pending(self):
         class NoEmitHunter:
