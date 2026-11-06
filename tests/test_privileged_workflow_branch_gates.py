@@ -20,10 +20,12 @@ class PrivilegedWorkflowBranchGateTests(unittest.TestCase):
         self.assertIsInstance(job, dict, f"{filename} is missing job {job_name}")
         return job
 
-    def test_production_secret_presence_job_is_main_only(self):
+    def test_non_secret_presence_report_is_main_only_and_has_no_environment_secrets(self):
         job = self._job("secret-presence-report.yml", "report")
         self.assertEqual(job.get("if"), MAIN_ONLY)
-        self.assertEqual(job.get("environment"), "production")
+        self.assertIsNone(job.get("environment"))
+        workflow = (WORKFLOWS / "secret-presence-report.yml").read_text(encoding="utf-8")
+        self.assertNotIn("secrets.", workflow)
 
     def test_self_hosted_deployment_job_is_main_only_before_environment_secrets(self):
         job = self._job("self-hosted-runtime-deploy.yml", "deploy")
