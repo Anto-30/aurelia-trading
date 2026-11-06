@@ -7,23 +7,31 @@ from unittest.mock import patch
 from scripts.verify_deriv_transaction_lifecycle import run
 
 
-class DerivTransactionLifecycleCurrencyTests(unittest.IsolatedAsyncioTestCase):
-    async def test_unsupported_currency_blocks_before_broker_bootstrap(self):
-        env = {
-            "DERIV_LIFECYCLE_MODE": "VERIFY_ONLY",
-            "DERIV_AUTH_TOKEN": "test-token",
-            "DERIV_EXPECTED_LOGINID": "CRTEST",
-            "DERIV_EXPECTED_CURRENCY": "EUR",
-            "DERIV_ENVIRONMENT": "real",
-        }
-        with patch.dict(os.environ, env, clear=True), patch(
-            "scripts.verify_deriv_transaction_lifecycle.get_optional_secret",
-            return_value="test-token",
-        ), patch(
-            "scripts.verify_deriv_transaction_lifecycle.DerivSessionManager.bootstrap"
-        ) as bootstrap:
+class DerivTransactionLifecycleGateTests(unittest.IsolatedAsyncioTestCase):
+    async def test_account_lifecycle_is_blocked_even_for_oauth_until_scope_is_proven(self):
+        with patch.dict(
+            os.environ,
+            {
+                "ACCOUNT_DERIV_AUTH_MODE": "oauth",
+                "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SENTINEL",
+                "DERIV_LIFECYCLE_MODE": "VERIFY_ONLY",
+            },
+            clear=True,
+        ):
             self.assertEqual(await run(), 2)
-            bootstrap.assert_not_called()
+
+    async def test_equal_pat_and_oauth_credentials_are_blocked(self):
+        marker = "SAME_CREDENTIAL_SENTINEL"
+        with patch.dict(
+            os.environ,
+            {
+                "ACCOUNT_DERIV_AUTH_MODE": "oauth",
+                "DERIV_OAUTH_ACCESS_TOKEN": marker,
+                "DERIV_PAT": marker,
+            },
+            clear=True,
+        ):
+            self.assertEqual(await run(), 2)
 
 
 if __name__ == "__main__":

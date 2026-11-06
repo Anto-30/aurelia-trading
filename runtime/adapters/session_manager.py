@@ -1,26 +1,21 @@
 from __future__ import annotations
 
-import json
 import os
 from dataclasses import dataclass
-from typing import Any
-from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
-from urllib.request import Request, urlopen
+from typing import Any
 
-from runtime.core.secrets import get_optional_secret
-
+from runtime.security.deriv_auth_gate import (
+    AuthModeMismatchError,
+    DerivAuthenticationGate,
+    SecurityError,
+)
 from runtime.adapters.deriv_session import (
     AuthenticatedWebSocketUrl,
     DerivSessionError,
-    get_authenticated_ws_url,
+    derive_ws_environment as derive_ws_environment_from_adapter,
     validate_modern_options_ws_url,
 )
-
-OTP_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts/{account_id}/otp"
-MODERN_OPTIONS_WS_HOST = "api.derivws.com"
-MODERN_OPTIONS_WS_PREFIX = "/trading/v1/options/ws/"
-ACCOUNTS_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts"
 
 
 class DerivSessionManagerError(RuntimeError):
@@ -59,26 +54,11 @@ def redact_ws_url(url: str) -> str:
 
 
 def derive_ws_environment(url: str) -> str:
-    """Extract and validate the Deriv environment from an authenticated WS URL.
-    
-    Args:
-        url: WebSocket URL from OTP response
-    
-    Returns:
-        Environment name ('real' or 'demo')
-    
-    Raises:
-        DerivSessionError: If URL is invalid or environment is unknown
-    """
-    if not isinstance(url, str) or not url:
-        raise DerivSessionError("DERIV_WS_URL_MISSING")
-    validate_modern_options_ws_url(url)
-    path = urlsplit(url).path.lower().rstrip("/")
-    return path.rsplit("/", 1)[-1]
+    return derive_ws_environment_from_adapter(url)
 
 
 class DerivSessionManager:
-    """Authentication/session bootstrap only; no capital authorization or order submission."""
+    """Account session bootstrap that fails closed without read-only scope."""
 
     def __init__(
         self,
@@ -94,7 +74,11 @@ class DerivSessionManager:
             else os.getenv("DERIV_EXPECTED_LOGINID", "")
         )
         self.expected_environment = expected_environment.lower()
-        configured_currency = expected_currency if expected_currency is not None else os.getenv("DERIV_EXPECTED_CURRENCY", "")
+        configured_currency = (
+            expected_currency
+            if expected_currency is not None
+            else os.getenv("DERIV_EXPECTED_CURRENCY", "")
+        )
         self.expected_currency = str(configured_currency).strip().upper()
         self.timeout_seconds = timeout_seconds
 
@@ -108,49 +92,17 @@ class DerivSessionManager:
             raise ValueError("ACCOUNT_LOGINID_MISMATCH")
         return True
 
-    def _request_json(
-        self,
-        *,
-        method: str,
-        url: str,
-        bearer_token: str,
-        app_id: str | None,
-    ) -> dict[str, Any]:
-        headers = {"Authorization": f"Bearer {bearer_token}"}
-        if app_id:
-            headers["Deriv-App-ID"] = app_id
-        request = Request(url, method=method, headers=headers)
-        try:
-            with urlopen(request, timeout=self.timeout_seconds) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-        except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
-            raise DerivSessionManagerError("DERIV_ACCOUNT_REQUEST_FAILED") from exc
-        if not isinstance(payload, dict):
-            raise DerivSessionManagerError("DERIV_ACCOUNT_RESPONSE_INVALID")
-        return payload
-
     def list_accounts(
         self,
         *,
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> list[dict[str, Any]]:
-        token = bearer_token if bearer_token is not None else (get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT"))
-        application_id = app_id if app_id is not None else get_optional_secret("DERIV_APP_ID")
-        if not token:
-            raise DerivSessionManagerError("DERIV_BEARER_TOKEN_MISSING")
-        payload = self._request_json(
-            method="GET",
-            url=ACCOUNTS_ENDPOINT,
-            bearer_token=token,
-            app_id=application_id,
-        )
-        data = payload.get("data")
-        if isinstance(data, list):
-            return [dict(item) for item in data if isinstance(item, dict)]
-        if isinstance(data, dict):
-            return [dict(data)]
-        raise DerivSessionManagerError("DERIV_ACCOUNT_LIST_MISSING")
+        try:
+            DerivAuthenticationGate(plane="account").get_client()
+        except (AuthModeMismatchError, SecurityError) as exc:
+            raise DerivSessionManagerError(str(exc)) from exc
+        raise DerivSessionManagerError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
 
     def select_account(self, accounts: list[dict[str, Any]]) -> DerivAccountBinding:
         if not self.expected_currency:
@@ -172,7 +124,10 @@ class DerivSessionManager:
                 environment = str(row["environment"]).lower()
             if environment == "virtual":
                 environment = "demo"
-            targeted_row = environment == self.expected_environment and (not self.expected_loginid or loginid == self.expected_loginid)
+            targeted_row = (
+                environment == self.expected_environment
+                and (not self.expected_loginid or loginid == self.expected_loginid)
+            )
             if targeted_row and not currency:
                 raise DerivSessionManagerError("ACCOUNT_CURRENCY_UNVERIFIED")
             if not currency:
@@ -215,31 +170,8 @@ class DerivSessionManager:
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> DerivSessionBootstrap:
-        token = bearer_token if bearer_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
-        application_id = app_id if app_id is not None else os.getenv("DERIV_APP_ID", "")
-        accounts = self.list_accounts(
-            bearer_token=token,
-            app_id=application_id,
-        )
-        binding = self.select_account(accounts)
         try:
-            websocket = get_authenticated_ws_url(
-                binding.loginid,
-                bearer_token=token,
-                app_id=application_id,
-                timeout_seconds=self.timeout_seconds,
-            )
-        except DerivSessionError as exc:
+            DerivAuthenticationGate(plane="account").get_client()
+        except (AuthModeMismatchError, SecurityError) as exc:
             raise DerivSessionManagerError(str(exc)) from exc
-
-        actual_environment = derive_ws_environment(websocket.url)
-        self.validate_binding(
-            loginid=binding.loginid,
-            environment=actual_environment,
-        )
-        if actual_environment != self.expected_environment:
-            raise DerivSessionManagerError("OTP_WS_ENVIRONMENT_MISMATCH")
-        return DerivSessionBootstrap(
-            binding=binding,
-            websocket=websocket,
-        )
+        raise DerivSessionManagerError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")

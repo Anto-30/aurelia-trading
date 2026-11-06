@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import json
-import os
 from dataclasses import dataclass
-from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
-from urllib.request import Request, urlopen
 
-from runtime.core.secrets import get_optional_secret
+from runtime.security.deriv_auth_gate import (
+    AuthModeMismatchError,
+    DerivAuthenticationGate,
+    SecurityError,
+)
 
 OTP_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts/{account_id}/otp"
 MODERN_OPTIONS_WS_HOST = "api.derivws.com"
@@ -15,8 +15,7 @@ MODERN_OPTIONS_WS_PREFIX = "/trading/v1/options/ws/"
 
 
 class DerivSessionError(ValueError):
-    """Deriv session validation error - inherits from ValueError for test compatibility."""
-    pass
+    """Deriv session validation error."""
 
 
 @dataclass(frozen=True)
@@ -26,7 +25,7 @@ class AuthenticatedWebSocketUrl:
     source: str = "deriv:options:otp"
 
     def safe_url(self) -> str:
-        return self.url.split("?otp=", 1)[0] if "?otp=" in self.url else self.url
+        return redact_ws_url(self.url)
 
 
 def redact_ws_url(url: str) -> str:
@@ -43,19 +42,9 @@ def redact_ws_url(url: str) -> str:
 
 
 def derive_ws_environment(url: str) -> str:
-    """Extract and validate the Deriv environment from an authenticated WS URL.
-    
-    Args:
-        url: WebSocket URL from OTP response
-    
-    Returns:
-        Environment name ('real' or 'demo')
-    
-    Raises:
-        ValueError: If URL is invalid or environment is unknown
-    """
+    """Extract and validate the environment from a Deriv authenticated URL."""
     if not isinstance(url, str) or not url:
-        raise ValueError("DERIV_WS_URL_MISSING")
+        raise DerivSessionError("DERIV_WS_URL_MISSING")
     validate_modern_options_ws_url(url)
     path = urlsplit(url).path.lower().rstrip("/")
     return path.rsplit("/", 1)[-1]
@@ -66,18 +55,7 @@ def validate_modern_options_ws_url(
     *,
     expected_environment: str | None = None,
 ) -> bool:
-    """Require the current Deriv Options WebSocket host and path.
-    
-    Args:
-        url: WebSocket URL to validate
-        expected_environment: Optional environment to verify against
-    
-    Returns:
-        True if valid
-    
-    Raises:
-        ValueError (via DerivSessionError): If URL is invalid
-    """
+    """Require the current Deriv Options WebSocket host and path."""
     if not isinstance(url, str) or not url:
         raise DerivSessionError("DERIV_WS_URL_MISSING")
     parts = urlsplit(url)
@@ -102,55 +80,15 @@ def get_authenticated_ws_url(
     app_id: str | None = None,
     timeout_seconds: float = 10.0,
 ) -> AuthenticatedWebSocketUrl:
-    """Request an authenticated WebSocket URL from Deriv OTP endpoint.
-    
-    Args:
-        account_id: Deriv account ID
-        bearer_token: Authentication token (or DERIV_AUTH_TOKEN env var)
-        app_id: Deriv app ID for PAT auth mode (or DERIV_APP_ID env var)
-        timeout_seconds: Request timeout
-    
-    Returns:
-        AuthenticatedWebSocketUrl with account_id and validated ws URL
-    
-    Raises:
-        DerivSessionError: If validation or request fails
+    """Fail closed until Deriv offers read-only permissions for account OTP.
+
+    The parameters remain for API compatibility only. They are never read,
+    logged, forwarded, or used as a fallback credential.
     """
-    token = (
-        bearer_token
-        if bearer_token is not None
-        else get_optional_secret("DERIV_AUTH_TOKEN")
-    )
-    application_id = (
-        app_id
-        if app_id is not None
-        else get_optional_secret("DERIV_APP_ID")
-    )
-    auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower()
     if not account_id:
         raise DerivSessionError("ACCOUNT_ID_REQUIRED")
-    if not token:
-        raise DerivSessionError("DERIV_BEARER_TOKEN_MISSING")
-    if auth_mode == "pat" and not application_id:
-        raise DerivSessionError("DERIV_APP_ID_MISSING")
-
-    headers = {"Authorization": f"Bearer {token}"}
-    if auth_mode == "pat":
-        headers["Deriv-App-ID"] = application_id
-
-    request = Request(
-        OTP_ENDPOINT.format(account_id=account_id),
-        method="POST",
-        headers=headers,
-    )
     try:
-        with urlopen(request, timeout=timeout_seconds) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
-        raise DerivSessionError("OTP_REQUEST_FAILED") from exc
-
-    url = ((payload.get("data") or {}).get("url") if isinstance(payload, dict) else None)
-    if not isinstance(url, str) or not url.startswith("wss://"):
-        raise DerivSessionError("OTP_RESPONSE_MISSING_WS_URL")
-    validate_modern_options_ws_url(url)
-    return AuthenticatedWebSocketUrl(account_id=account_id, url=url)
+        DerivAuthenticationGate(plane="account").get_client()
+    except (AuthModeMismatchError, SecurityError) as exc:
+        raise DerivSessionError(str(exc)) from exc
+    raise DerivSessionError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")

@@ -1,186 +1,58 @@
+from __future__ import annotations
+
 import os
 import unittest
-from datetime import datetime, timezone
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
-from runtime.core.models import AccountIdentity, CapitalSnapshot
-from scripts.verify_deriv_session import run
-from assurance.evidence_writer import payload_sha256
+from scripts.verify_deriv_session import OUTPUT, run
 
 
 class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
-    async def test_missing_token_is_not_verified(self):
+    async def test_account_evidence_is_blocked_without_read_only_scope(self):
         with patch.dict(
             os.environ,
-            {
-                "DERIV_AUTH_TOKEN": "",
-                "DERIV_EXPECTED_LOGINID": "CRREAL",
-                "DERIV_ENVIRONMENT": "real",
-                "DERIV_EXPECTED_CURRENCY": "USD",
-            },
+            {"ACCOUNT_DERIV_AUTH_MODE": "oauth"},
             clear=True,
         ):
-            self.assertEqual(await run(), 2)
-
-    async def test_missing_currency_is_not_verified_before_broker_calls(self):
-        with patch.dict(
-            os.environ,
-            {
-                "DERIV_AUTH_TOKEN": "TOKEN",
-                "DERIV_APP_ID": "APP-ID-TEST",
-                "DERIV_EXPECTED_LOGINID": "CRREAL",
-                "DERIV_ENVIRONMENT": "real",
-            },
-            clear=True,
-        ), patch("scripts.verify_deriv_session.DerivSessionManager.bootstrap") as bootstrap:
-            self.assertEqual(await run(), 2)
-            bootstrap.assert_not_called()
-
-    async def test_unsupported_currency_is_blocked_before_broker_calls(self):
-        with patch.dict(
-            os.environ,
-            {
-                "DERIV_AUTH_TOKEN": "TOKEN",
-                "DERIV_APP_ID": "APP-ID-TEST",
-                "DERIV_EXPECTED_LOGINID": "CRREAL",
-                "DERIV_ENVIRONMENT": "real",
-                "DERIV_EXPECTED_CURRENCY": "EUR",
-            },
-            clear=True,
-        ), patch("scripts.verify_deriv_session.DerivSessionManager.bootstrap") as bootstrap:
             self.assertEqual(await run(), 3)
-            bootstrap.assert_not_called()
 
-    async def test_real_session_verifies_without_authorizing_capital(self):
-        account = AccountIdentity(
-            loginid="CRREAL",
-            account_type="real",
-            currency="USD",
-            environment="real",
-        )
-        snapshot = CapitalSnapshot(
-            balance=8.01,
-            currency="USD",
-            available_balance=8.01,
-            captured_at=datetime.now(timezone.utc),
-            source="deriv:balance",
-            account=account,
-        )
-        bootstrap = SimpleNamespace(
-            binding=account,
-            websocket=SimpleNamespace(
-                url="wss://api.derivws.com/trading/v1/options/ws/real?otp=SECRET",
-                source="deriv:options:otp",
-            ),
-            safe_websocket_url="wss://api.derivws.com/trading/v1/options/ws/real",
-        )
-
-        captured = {}
-
+    async def test_generic_token_fallback_is_rejected(self):
         with patch.dict(
             os.environ,
             {
-                "DERIV_AUTH_TOKEN": "TOKEN",
-                "DERIV_APP_ID": "APP-ID-TEST",
-                "DERIV_EXPECTED_LOGINID": "CRREAL",
-                "DERIV_ENVIRONMENT": "real",
-                "DERIV_EXPECTED_CURRENCY": "USD",
-                "GITHUB_SHA": "TEST",
-                "DERIV_EVIDENCE_OUT": "/tmp/aurelia-test-evidence.json",
+                "ACCOUNT_DERIV_AUTH_MODE": "oauth",
+                "DERIV_AUTH_TOKEN": "GENERIC_TOKEN_SENTINEL",
             },
             clear=True,
-        ), patch(
-            "scripts.verify_deriv_session.DerivSessionManager.bootstrap",
-            return_value=bootstrap,
-        ), patch(
-            "scripts.verify_deriv_session.DerivAdapter.connect",
-            new=AsyncMock(return_value=account),
-        ), patch(
-            "scripts.verify_deriv_session.DerivAdapter.get_balance",
-            new=AsyncMock(return_value=snapshot),
-        ), patch(
-            "scripts.verify_deriv_session.DerivAdapter.close",
-            new=AsyncMock(),
-        ), patch(
-            "scripts.verify_deriv_session.write_evidence",
-            side_effect=lambda path, record: captured.update(record=dict(record)),
         ):
-            result = await run()
+            self.assertEqual(await run(), 3)
 
-        self.assertEqual(result, 0)
-        record = captured["record"]
-        self.assertEqual(
-            record["record_hash"],
-            payload_sha256({key: value for key, value in record.items() if key != "record_hash"}),
-        )
-        self.assertFalse(record["capital_authority_granted"])
-        self.assertEqual(record["orders_submitted"], 0)
-        self.assertEqual(record["provenance"]["origin"], "ci")
-        self.assertEqual(record["provenance"]["source_commit"], "TEST")
-
-
-    async def test_demo_session_verifies_without_authorizing_capital(self):
-        account = AccountIdentity(
-            loginid="CRDEMO",
-            account_type="demo",
-            currency="USD",
-            environment="demo",
-        )
-        snapshot = CapitalSnapshot(
-            balance=10000.0,
-            currency="USD",
-            available_balance=10000.0,
-            captured_at=datetime.now(timezone.utc),
-            source="deriv:balance",
-            account=account,
-        )
-        bootstrap = SimpleNamespace(
-            binding=account,
-            websocket=SimpleNamespace(
-                url="wss://api.derivws.com/trading/v1/options/ws/demo?otp=SECRET",
-                source="deriv:options:otp",
-            ),
-            safe_websocket_url="wss://api.derivws.com/trading/v1/options/ws/demo",
-        )
-        captured = {}
-
+    async def test_identical_oauth_and_pat_are_rejected_without_echoing_values(self):
+        marker = "SAME_CREDENTIAL_SENTINEL"
         with patch.dict(
             os.environ,
             {
-                "DERIV_AUTH_TOKEN": "TOKEN",
-                "DERIV_APP_ID": "APP-ID-TEST",
-                "DERIV_EXPECTED_LOGINID": "CRDEMO",
-                "DERIV_ENVIRONMENT": "demo",
-                "DERIV_EXPECTED_CURRENCY": "USD",
-                "GITHUB_SHA": "TEST-DEMO",
-                "DERIV_EVIDENCE_OUT": "/tmp/aurelia-demo-test-evidence.json",
+                "ACCOUNT_DERIV_AUTH_MODE": "oauth",
+                "DERIV_OAUTH_ACCESS_TOKEN": marker,
+                "DERIV_PAT": marker,
             },
             clear=True,
-        ), patch(
-            "scripts.verify_deriv_session.DerivSessionManager.bootstrap",
-            return_value=bootstrap,
-        ), patch(
-            "scripts.verify_deriv_session.DerivAdapter.connect",
-            new=AsyncMock(return_value=account),
-        ), patch(
-            "scripts.verify_deriv_session.DerivAdapter.get_balance",
-            new=AsyncMock(return_value=snapshot),
-        ), patch(
-            "scripts.verify_deriv_session.DerivAdapter.close",
-            new=AsyncMock(),
-        ), patch(
-            "scripts.verify_deriv_session.write_evidence",
-            side_effect=lambda path, record: captured.update(record=dict(record)),
         ):
-            result = await run()
+            self.assertEqual(await run(), 3)
 
-        self.assertEqual(result, 0)
-        record = captured["record"]
-        self.assertEqual(record["verification_scope"], "AUTHENTICATED_DERIV_DEMO_SESSION")
-        self.assertFalse(record["capital_authority_granted"])
-        self.assertFalse(record["order_submission_permitted"])
-        self.assertEqual(record["orders_submitted"], 0)
+    async def test_oauth_token_does_not_claim_read_only_scope(self):
+        with patch.dict(
+            os.environ,
+            {
+                "ACCOUNT_DERIV_AUTH_MODE": "oauth",
+                "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SENTINEL",
+            },
+            clear=True,
+        ):
+            self.assertEqual(await run(), 3)
+
+    def test_evidence_path_is_stable_and_not_secret_dependent(self):
+        self.assertTrue(str(OUTPUT).endswith("deriv_authenticated_session.json"))
 
 
 if __name__ == "__main__":

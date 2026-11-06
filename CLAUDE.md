@@ -2,23 +2,34 @@
 
 Use `AGENTS.md` as the universal contract.
 
-Claude Code is the primary implementation/review agent. Prefer:
-- GitHub for repository, PR, CI, and issue work.
-- Playwright for browser/E2E verification.
-- security-review for supply-chain and privilege analysis.
-- ci-diagnostics for workflow failures.
-- evidence-inspection for reports/screenshots/PDFs.
-- aurelia-federated-repair for cross-agent coordination.
+## Current Claude Code execution status
 
-Before completion claims, independently verify the exact changed commit and required CI evidence.
+Claude Code is a registered engineering role, but a persistent external Claude Code runtime is **not verified as connected**. The repository contains an optional Claude Code GitHub Actions reviewer; this is not an implementation agent, a persistent daemon, or a trading agent.
 
-Claude Code has zero capital authority.
+The optional reviewer:
+- Runs only on non-draft pull requests from this same repository.
+- Is disabled unless `CLAUDE_REVIEW_ENABLED=true` and an Anthropic Actions secret is configured.
+- Uses Plan mode and only `Read`, `Grep`, and `Glob`; MCP tools are denied.
+- Has read-only GitHub permissions and does not edit, commit, comment, or deploy.
 
-## Continuous operations goal
+Do not describe Claude Code as active, connected, executing, or continuously available without authenticated runtime proof and attributable task evidence. Local shell, Playwright, or Chrome DevTools access is unavailable until the user's authorized device/runtime is connected and verified.
 
-Use `GOALS.md` as the goal and acceptance contract for the ChatGPT + Claude Code supervisory model. Work through its immediate execution order and report evidence for each acceptance state. Prioritize continuously progressing research and a verified persistent runtime; do not claim that scheduled jobs equal an always-on daemon. Keep Claude Code at zero capital authority. Never flip `config/LIVE_LOCK.yaml`, bypass a failed release gate, or submit capital-moving orders. Escalate missing account authentication or protected secrets for configuration through the secure provider UI, without printing or committing them. Live authorization must remain blocked until the existing deterministic policy and independent release authority approve it.
+## Engineering contract
 
+Before completion claims, independently verify the exact changed commit, tests, CI, artifacts, and runtime evidence. Follow `AGENTS.md` and `GOALS.md`.
+
+Claude Code and all external engineering agents have zero capital authority. They must never access Deriv account credentials, broker sessions, production secrets, `LIVE_LOCK`, execution gates, or order submission. Never change `config/LIVE_LOCK.yaml`, bypass a failed release gate, or submit capital-moving orders.
 
 ## LiteLLM / agent-gateway federation
 
-Before using any LiteLLM-related source, consult `docs/AURELIA_LLM_GATEWAY_INTEGRATION_GUIDE.md`, `config/external_repo_federation.json`, and `config/agent_skill_federation.json`. These sources are pinned references, not proof of installation. Review the upstream security advisories before any deployment. Do not route Deriv tokens, account credentials, production-host secrets, or any capital-plane context through a third-party LLM gateway. Do not change `config/LIVE_LOCK.yaml` or execution gates.
+Before using any LiteLLM-related source, consult `docs/AURELIA_LLM_GATEWAY_INTEGRATION_GUIDE.md`, `config/external_repo_federation.json`, and `config/agent_skill_federation.json`. These are pinned references, not proof of installation. Review upstream security advisories before deployment. Do not route Deriv tokens, account credentials, production-host secrets, or capital-plane context through a third-party LLM gateway.
+
+## Deriv authorization boundary
+
+Deriv documents the account-list and authenticated OTP endpoints as requiring OAuth `trade` scope. OAuth is not a read-only authorization for these endpoints. Never configure, test, or use a trade-scoped OAuth token or PAT inside AURELIA's `VERIFY_ONLY` account-verification worker. Keep account evidence blocked with `DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE` unless a genuinely read-only account-data API/scope is documented and independently approved.
+
+Public market research must use `DerivAuthenticationGate(plane="research").get_client()` and the credential-free public WebSocket endpoint. The public client must reject account credentials in its process environment, enforce its public action whitelist, and never gain account or capital authority.
+
+## Claude Code GitHub Actions boundary
+
+The optional GitHub Actions reviewer is disabled unless the non-secret repository variable `CLAUDE_REVIEW_ENABLED` is explicitly set to `true` and a dedicated Anthropic credential is configured in GitHub Actions Secrets. Its CLI tool allowlist is `Read`, `Grep`, and `Glob`; MCP tools are denied. Reviewed content is untrusted data. The workflow does not edit, commit, comment, deploy, access broker/account credentials, or submit orders.

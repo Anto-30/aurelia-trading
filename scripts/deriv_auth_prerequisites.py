@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Emit sanitized Deriv authentication prerequisite evidence for CI.
-
-Only booleans and allowlisted enum values are persisted. Raw credentials,
-account identifiers, auth-mode values, and currency values are never written.
-"""
+"""Emit sanitized state for public Deriv research and blocked account evidence."""
 from __future__ import annotations
 
 import json
@@ -11,41 +7,70 @@ import os
 from pathlib import Path
 from typing import Mapping
 
-SUPPORTED_AUTH_MODES = frozenset({"pat", "oauth"})
-SUPPORTED_CURRENCIES = frozenset({"USD"})
 DEFAULT_OUTPUT = Path("artifacts/deriv_auth_prerequisites.json")
 
 
 def build_evidence(environ: Mapping[str, str] | None = None) -> dict[str, object]:
     env = os.environ if environ is None else environ
-
-    token_present = bool(env.get("DERIV_AUTH_TOKEN", "").strip())
-    loginid_present = bool(
-        env.get("DERIV_EXPECTED_LOGINID", "").strip()
-        or env.get("DERIV_AUTHORIZED_ACCOUNT_ID", "").strip()
+    oauth_token = str(env.get("DERIV_OAUTH_ACCESS_TOKEN", "")).strip()
+    pat_token = str(env.get("DERIV_PAT", "")).strip()
+    generic_token = str(env.get("DERIV_AUTH_TOKEN", "")).strip()
+    refresh_token = (
+        str(env.get("DERIV_OAUTH_REFRESH_TOKEN", "")).strip()
+        or str(env.get("DERIV_REFRESH_TOKEN", "")).strip()
     )
-    raw_mode = env.get("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
-    mode_valid = raw_mode in SUPPORTED_AUTH_MODES
-    safe_mode = raw_mode if mode_valid else "invalid"
-    app_id_present = bool(env.get("DERIV_APP_ID", "").strip())
+    mode = str(env.get("ACCOUNT_DERIV_AUTH_MODE", "oauth")).strip().lower()
+    tokens_equal = bool(oauth_token and pat_token and oauth_token == pat_token)
+    credentials_isolated = not (
+        pat_token or generic_token or refresh_token or tokens_equal
+    )
+    public_credentials_present = any(
+        str(env.get(name, "")).strip()
+        for name in (
+            "DERIV_AUTH_TOKEN",
+            "DERIV_PAT",
+            "DERIV_OAUTH_ACCESS_TOKEN",
+            "DERIV_OAUTH_REFRESH_TOKEN",
+            "DERIV_REFRESH_TOKEN",
+        )
+    )
 
-    raw_currency = env.get("DERIV_EXPECTED_CURRENCY", "").strip().upper()
-    currency_valid = raw_currency in SUPPORTED_CURRENCIES
-    safe_currency = raw_currency if currency_valid else ("missing" if not raw_currency else "invalid")
+    account_reason = (
+        "ACCOUNT_PLANE_REQUIRES_EXPLICIT_OAUTH_MODE"
+        if mode != "oauth"
+        else "OAUTH_TOKEN_EQUALS_PAT"
+        if tokens_equal
+        else "ACCOUNT_PLANE_PAT_PRESENT"
+        if pat_token
+        else "GENERIC_TOKEN_FALLBACK_BLOCKED"
+        if generic_token
+        else "DERIV_OAUTH_REFRESH_TOKEN_UNSUPPORTED"
+        if refresh_token
+        else "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
+    )
 
-    requirements = {
-        "token_present": token_present,
-        "expected_loginid_present": loginid_present,
-        "auth_mode_valid": mode_valid,
-        "app_id_present_when_pat": app_id_present if safe_mode == "pat" else safe_mode == "oauth",
-        "expected_currency_present": currency_valid,
-    }
     return {
-        "schema_version": "1",
-        "auth_mode": safe_mode,
-        "expected_currency": safe_currency,
-        "configured": all(requirements.values()),
-        "requirements": requirements,
+        "schema_version": "2",
+        "public_research": {
+            "status": "BLOCKED" if public_credentials_present else "CONFIGURED",
+            "auth_mode": "none",
+            "endpoint": "wss://api.derivws.com/trading/v1/options/ws/public",
+            "account_credentials_mapped": False,
+            "account_credentials_present_in_process": public_credentials_present,
+        },
+        "account_evidence": {
+            "status": "BLOCKED",
+            "auth_mode": mode if mode in {"oauth", "none"} else "invalid",
+            "oauth_access_token_present": bool(oauth_token),
+            "pat_present": bool(pat_token),
+            "generic_token_present": bool(generic_token),
+            "refresh_token_present": bool(refresh_token),
+            "oauth_pat_values_equal": tokens_equal,
+            "credentials_isolated_in_process": credentials_isolated,
+            "read_only_scope_supported": False,
+            "reason": account_reason,
+        },
+        "account_evidence_ready": False,
         "secret_values_exposed": False,
     }
 
@@ -55,16 +80,31 @@ def main() -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
     evidence = build_evidence()
     temporary = output.with_name(output.name + ".tmp")
-    temporary.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    temporary.write_text(
+        json.dumps(evidence, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     temporary.replace(output)
 
-    print("DERIV_AUTH_PREREQUISITES=" + ("READY" if evidence["configured"] else "NOT_READY"))
-    mode = evidence["auth_mode"]
-    print("DERIV_AUTH_MODE=" + (str(mode).upper() if mode in SUPPORTED_AUTH_MODES else "INVALID"))
-    print("DERIV_TOKEN_PRESENT=" + str(evidence["requirements"]["token_present"]).lower())
-    print("DERIV_EXPECTED_LOGINID_PRESENT=" + str(evidence["requirements"]["expected_loginid_present"]).lower())
-    print("DERIV_APP_ID_REQUIRED=" + str(mode == "pat").lower())
-    print("DERIV_APP_ID_PRESENT_WHEN_REQUIRED=" + str(evidence["requirements"]["app_id_present_when_pat"]).lower())
+    print("DERIV_PUBLIC_RESEARCH=" + str(evidence["public_research"]["status"]))
+    print("DERIV_PUBLIC_AUTH_MODE=NONE")
+    print("DERIV_ACCOUNT_EVIDENCE=" + str(evidence["account_evidence"]["status"]))
+    print("DERIV_ACCOUNT_BLOCK_REASON=" + str(evidence["account_evidence"]["reason"]))
+    print(
+        "DERIV_OAUTH_TOKEN_PRESENT="
+        + str(evidence["account_evidence"]["oauth_access_token_present"]).lower()
+    )
+    print("DERIV_PAT_PRESENT=" + str(evidence["account_evidence"]["pat_present"]).lower())
+    print(
+        "DERIV_OAUTH_PAT_VALUES_EQUAL="
+        + str(evidence["account_evidence"]["oauth_pat_values_equal"]).lower()
+    )
+    print(
+        "DERIV_CREDENTIALS_ISOLATED_IN_PROCESS="
+        + str(evidence["account_evidence"]["credentials_isolated_in_process"]).lower()
+    )
+    print("DERIV_READ_ONLY_SCOPE_SUPPORTED=false")
+    print("SECRET_VALUES_EXPOSED=false")
     return 0
 
 

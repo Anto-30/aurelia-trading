@@ -1,51 +1,37 @@
-name: AURELIA Deriv Authenticated Session Verification
+name: AURELIA Deriv Account Evidence Gate (Fail Closed)
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: "Deriv account environment to verify"
-        required: true
-        default: "demo"
-        type: choice
-        options:
-          - real
-          - demo
 
 permissions:
   contents: read
 
 jobs:
-  verify:
-    # Credentials may be stored as production environment-scoped Actions secrets.
-    environment: production
+  account-evidence-gate:
     runs-on: ubuntu-latest
     env:
-      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-      DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
-      DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
-      DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
-      DERIV_ENVIRONMENT: ${{ inputs.environment }}
+      ACCOUNT_DERIV_AUTH_MODE: "oauth"
       FINAL_EXECUTION_AUTHORIZATION: "false"
       LIVE_EXECUTION: "BLOCKED"
     steps:
       - uses: actions/checkout@v7
-
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-
       - name: Install runtime dependencies
         run: pip install -r requirements.txt
-
-      - name: Verify authenticated Deriv session and fresh balance
-        run: python scripts/verify_deriv_session.py
-
-      - name: Assert no capital authorization occurred
+      - name: Verify documented account scope and credential isolation
+        run: python scripts/deriv_auth_prerequisites.py
+      - name: Assert fail-closed account evidence status
         run: |
           test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
           test "$LIVE_EXECUTION" = "BLOCKED"
-          echo "FINAL_EXECUTION_AUTHORIZATION=false"
-          echo "LIVE_EXECUTION=BLOCKED"
-          test ! -f artifacts/deriv_authenticated_session.json || jq -e '.orders_submitted == 0 and .capital_authority_granted == false and .order_submission_permitted == false' artifacts/deriv_authenticated_session.json >/dev/null
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          evidence = json.loads(Path("artifacts/deriv_auth_prerequisites.json").read_text())
+          assert evidence["account_evidence"]["status"] == "BLOCKED"
+          assert evidence["account_evidence"]["read_only_scope_supported"] is False
+          assert evidence["account_evidence_ready"] is False
+          print("DERIV_ACCOUNT_EVIDENCE=BLOCKED_READ_ONLY_SCOPE_UNAVAILABLE")
+          PY

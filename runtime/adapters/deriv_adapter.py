@@ -6,6 +6,11 @@ from typing import Any, AsyncIterator
 
 from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_ws_url, validate_modern_options_ws_url
 from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
+from runtime.security.deriv_auth_gate import (
+    AuthModeMismatchError,
+    DerivAuthenticationGate,
+    SecurityError,
+)
 from runtime.core.circuit import CircuitBreaker
 from runtime.core.events import sha256
 from runtime.core.request_ledger import RequestLedger, RequestState
@@ -40,9 +45,9 @@ class DerivAdapter:
         timeout_seconds: float = 10.0,
     ):
         self.ws_url = ws_url or os.getenv("DERIV_WS_URL", "")
-        self.auth_token = (
-            auth_token if auth_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
-        )
+        # Account authentication is disabled until a verifiable read-only
+        # broker permission exists. Do not retain credential material here.
+        self.auth_token = ""
         self.expected_loginid = (
             expected_loginid or get_optional_secret("DERIV_EXPECTED_LOGINID")
         )
@@ -77,49 +82,10 @@ class DerivAdapter:
         if not self.expected_currency:
             raise DerivProtocolError("EXPECTED_ACCOUNT_CURRENCY_REQUIRED")
         try:
-            self.transport = DerivWebSocketTransport(
-                self.ws_url,
-                timeout_seconds=self.timeout_seconds,
-            )
-            await self.transport.connect()
-
-            if self.auth_token:
-                reply = await self._tracked_request("authorize", {"authorize": self.auth_token})
-                identity_payload = reply.get("authorize") or {}
-            else:
-                reply = await self._tracked_request("balance", {"balance": 1})
-                identity_payload = reply.get("balance") or {}
-
-            loginid = str(
-                identity_payload.get("loginid")
-                or identity_payload.get("login_id")
-                or ""
-            )
-            currency = str(identity_payload.get("currency") or "").strip().upper()
-            if not loginid:
-                raise DerivProtocolError("ACCOUNT_IDENTITY_UNVERIFIED")
-            if self.expected_loginid and loginid != self.expected_loginid:
-                raise DerivProtocolError("ACCOUNT_IDENTITY_MISMATCH")
-            if not currency:
-                raise DerivProtocolError("ACCOUNT_CURRENCY_UNVERIFIED")
-            if currency != self.expected_currency:
-                raise DerivProtocolError("CURRENCY_MISMATCH")
-
-            account_type = (
-                "demo" if self.environment.lower() in {"demo", "virtual"} else "real"
-            )
-            self.account = AccountIdentity(
-                loginid=loginid,
-                account_type=account_type,
-                currency=currency,
-                environment=self.environment,
-            )
-            self.authorized = True
-            self.circuit.record_success()
-            return self.account
-        except (DerivTransportError, DerivProtocolError):
-            await self.close()
-            raise
+            DerivAuthenticationGate(plane="account").get_client()
+        except (AuthModeMismatchError, SecurityError) as exc:
+            raise DerivProtocolError(str(exc)) from exc
+        raise DerivProtocolError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
 
     async def connect_from_otp(
         self,

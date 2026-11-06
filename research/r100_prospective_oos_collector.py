@@ -16,10 +16,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from runtime.adapters.deriv_ws import DerivWebSocketTransport
+from research.utils.deriv_auth_gate import DerivAuthenticationGate
 from runtime.strategy.autonomous_signal_engine import AutonomousSignalHunter
 
-PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
 SYMBOL = "R_100"
 CURRENCY = "USD"
 STRATEGY_ID = "R100_TICK_MOMENTUM_PROSPECTIVE_V0.2.0"
@@ -34,6 +33,22 @@ CALIBRATION_MIN_BUCKETS = 3
 CALIBRATION_MIN_BUCKET_SAMPLES = 10
 CALIBRATION_MAX_RELIABILITY_GAP = 0.05
 LEGACY_DEFAULT_COLLECTION_SECONDS = 540
+
+
+def build_proposal_request(direction: str) -> dict[str, Any]:
+    """Build a public, non-executing Deriv proposal request."""
+    if direction not in {"CALL", "PUT"}:
+        raise ValueError("R100_PROPOSAL_DIRECTION_INVALID")
+    return {
+        "proposal": 1,
+        "amount": 1.0,
+        "basis": "stake",
+        "contract_type": direction,
+        "currency": CURRENCY,
+        "duration": HORIZON_TICKS,
+        "duration_unit": "t",
+        "underlying_symbol": SYMBOL,
+    }
 
 @dataclass(frozen=True)
 class PendingSignal:
@@ -247,7 +262,7 @@ def observe_tick(
             "signal_id": item["signal_id"],
             "strategy_id": STRATEGY_ID,
             "strategy_version": STRATEGY_VERSION,
-            "symbol": SYMBOL,
+            "underlying_symbol": SYMBOL,
             "regime": REGIME,
             "signal_timestamp_utc": item["signal_timestamp_utc"],
             "entry_quote": entry,
@@ -424,7 +439,12 @@ def quoted_contract_economics(
     }
 
 
-def evaluation(state: dict[str, Any]) -> dict[str, Any]:
+def evaluation(
+    state: dict[str, Any],
+    *,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    evaluated_at = now or utc_now()
     manifest = state["manifest"]
     oos_start = datetime.fromisoformat(manifest["oos_start_at_utc"].replace("Z", "+00:00"))
     rows = state["observations"]
@@ -436,6 +456,7 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         row for row in rows
         if datetime.fromisoformat(row["signal_timestamp_utc"].replace("Z", "+00:00")) >= oos_start
     ]
+
     def strategy_return(row: dict[str, Any]) -> float:
         raw = float(row["raw_return"])
         if row["direction"] == "CALL":
@@ -475,17 +496,39 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
     else:
         qualification_status = "RESEARCH_QUALIFIED"
 
-    campaign_complete = (
-        utc_now() >= datetime.fromisoformat(
-            manifest["campaign_end_at_utc"].replace("Z", "+00:00")
-        )
-        and not state["pending"]
+    campaign_end = datetime.fromisoformat(
+        manifest["campaign_end_at_utc"].replace("Z", "+00:00")
     )
-    state["manifest"]["sealed"] = bool(campaign_complete)
+    campaign_window_ended = evaluated_at >= campaign_end
+    pending_count = len(state["pending"])
+    if campaign_window_ended:
+        if not manifest.get("sealed"):
+            manifest["sealed_at_utc"] = iso(evaluated_at)
+            manifest["seal_reason"] = "CAMPAIGN_WINDOW_ENDED"
+        manifest["sealed"] = True
+        manifest["unresolved_pending_count"] = pending_count
+        if pending_count and qualification_status == "RESEARCH_QUALIFIED":
+            qualification_status = "INCOMPLETE_PENDING_OUTCOMES"
+
+    pending_resolution_status = (
+        "UNRESOLVED_NO_BACKFILL"
+        if campaign_window_ended and pending_count
+        else "PENDING"
+        if pending_count
+        else "RESOLVED"
+    )
+    campaign_terminal_status = (
+        "SEALED_WITH_UNRESOLVED_PENDING"
+        if campaign_window_ended and pending_count
+        else "SEALED"
+        if campaign_window_ended
+        else "ACTIVE"
+    )
     archive_hash = canonical_hash({
-        "manifest": state["manifest"],
+        "manifest": manifest,
         "observations": rows,
         "quote_observations": state["quote_observations"],
+        "pending": state["pending"],
     })
     return {
         "schema": "aurelia.r100.prospective_oos.report.v1",
@@ -520,33 +563,46 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         "capital_authority": False,
         "live_execution": False,
         "archive_hash": archive_hash,
-        "campaign_complete": campaign_complete,
+        "campaign_complete": campaign_window_ended,
+        "pending_count": pending_count,
+        "pending_resolution_status": pending_resolution_status,
+        "campaign_terminal_status": campaign_terminal_status,
         "retuning_after_seal": False,
     }
 
 async def collect_once(state: dict[str, Any]) -> None:
     start = utc_now()
     state["last_run_started_at_utc"] = iso(start)
-
-    transport = DerivWebSocketTransport(PUBLIC_WS_URL, timeout_seconds=10.0)
     campaign_end = datetime.fromisoformat(
         state["manifest"]["campaign_end_at_utc"].replace("Z", "+00:00")
     )
+    if start >= campaign_end:
+        state["last_run_completed_at_utc"] = iso(start)
+        return
+
+    transport = DerivAuthenticationGate(plane="research").get_client()
     hunter = AutonomousSignalHunter(
         window=64,
         min_observations=20,
         threshold=1.5,
         cooldown_seconds=30.0,
     )
-    await transport.connect()
-    stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
-    iterator = stream.__aiter__()
-    deadline = asyncio.get_running_loop().time() + COLLECTION_SECONDS
+    stream = None
     try:
+        await transport.connect()
+        stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
+        iterator = stream.__aiter__()
+        deadline = asyncio.get_running_loop().time() + COLLECTION_SECONDS
         while asyncio.get_running_loop().time() < deadline:
             remaining = deadline - asyncio.get_running_loop().time()
+            campaign_remaining = (campaign_end - utc_now()).total_seconds()
+            if remaining <= 0 or campaign_remaining <= 0:
+                break
             try:
-                message = await asyncio.wait_for(iterator.__anext__(), timeout=max(1.0, remaining))
+                message = await asyncio.wait_for(
+                    iterator.__anext__(),
+                    timeout=min(remaining, campaign_remaining),
+                )
             except asyncio.TimeoutError:
                 break
             tick = message.get("tick") or {}
@@ -556,6 +612,10 @@ async def collect_once(state: dict[str, Any]) -> None:
             except (KeyError, TypeError, ValueError):
                 continue
             received_at = datetime.fromtimestamp(epoch, tz=timezone.utc)
+            # The campaign cutoff is a hard data boundary. Do not settle,
+            # backfill, or otherwise consume pending outcomes using later ticks.
+            if received_at >= campaign_end:
+                break
             prior_pending = len(state["pending"])
             observe_tick(
                 hunter=hunter,
@@ -592,10 +652,17 @@ async def collect_once(state: dict[str, Any]) -> None:
                         "captured_at_utc": iso(received_at),
                         "quote_status": "UNAVAILABLE",
                         "error_type": type(exc).__name__,
+                        "error_code": getattr(exc, "code", None),
                     })
     finally:
-        await transport.close()
-    state["last_run_completed_at_utc"] = iso(utc_now())
+        try:
+            if stream is not None:
+                await stream.aclose()
+        finally:
+            try:
+                await transport.close()
+            finally:
+                state["last_run_completed_at_utc"] = iso(utc_now())
 
 async def main() -> int:
     state = load_state(STATE_PATH)
@@ -611,6 +678,8 @@ async def main() -> int:
         report = evaluation(state)
         report["collection_status"] = "FAILED_RETRYABLE"
         report["collection_error_type"] = type(exc).__name__
+        report["collection_error_code"] = getattr(exc, "code", None)
+        report["collection_error_details"] = getattr(exc, "details", {}) or {}
         report_path.write_text(
             json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
             encoding="utf-8",
@@ -618,6 +687,8 @@ async def main() -> int:
         print(json.dumps({
             "R100_PROSPECTIVE_COLLECTION": "RETRYABLE_FAILURE",
             "ERROR_TYPE": type(exc).__name__,
+            "ERROR_CODE": getattr(exc, "code", None),
+            "ERROR_DETAILS": getattr(exc, "details", {}) or {},
             "OBSERVATIONS_PRESERVED": report["observations_total"],
             "EXECUTION_AUTHORIZED": False,
             "CAPITAL_AUTHORITY": False,
