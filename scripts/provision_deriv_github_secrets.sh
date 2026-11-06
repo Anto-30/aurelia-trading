@@ -72,7 +72,7 @@ if has_variable "DERIV_AUTH_MODE"; then
     || fail "EXISTING_DERIV_AUTH_MODE_INVALID"
 fi
 
-mode="${DERIV_AUTH_MODE:-$existing_mode}"
+mode="${DERIV_AUTH_MODE:-}"
 mode="$(printf '%s' "$mode" | tr '[:upper:]' '[:lower:]')"
 if [[ -n "$existing_mode" && -n "$mode" && "$mode" != "$existing_mode" ]]; then
   fail "LOCAL_AUTH_MODE_MISMATCH_WITH_EXISTING_ENVIRONMENT_VARIABLE"
