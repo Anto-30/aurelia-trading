@@ -51,8 +51,6 @@ class FailClosedStartupTests(unittest.TestCase):
             "AURELIA_VERIFY_DERIV_PUBLIC": "false",
             "AURELIA_VERIFY_DERIV_AUTH": "false",
             "AURELIA_CONTINUOUS_RUNTIME": "false",
-            "DERIV_AUTH_TOKEN": "",
-            "DERIV_APP_ID": "",
         }
         with patch.dict(os.environ, sealed, clear=True):
             validate_secrets_at_startup()
