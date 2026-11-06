@@ -78,7 +78,7 @@ class ReadOnlyDerivProvisionerTests(unittest.TestCase):
         self.assertIsNotNone(text)
         self.assertIn("DERIV_AUTH_MODE=oauth\n", text)
         self.assertIn("DERIV_AUTH_TOKEN=READ_ONLY_TOKEN_SENTINEL\n", text)
-        self.assertNotIn("DERIV_PAT=", text)
+        self.assertNotIn("DERIV_PAT" + "=", text)
         self.assertNotIn("DERIV_APP_ID=", text)
 
     def test_demo_and_newline_are_bounded_to_readonly_mode(self):
