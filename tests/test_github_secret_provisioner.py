@@ -81,7 +81,7 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
                 "PROVISIONER_TEST_RECORD": str(self.record),
                 "PROVISIONER_TEST_VARIABLE_RECORD": str(self.variable_record),
                 "DERIV_AUTH_MODE": "pat",
-                "DERIV_AUTH_TOKEN": "TEST_TOKEN_NEVER_PRINT",
+                "DERIV_PAT": "TEST_TOKEN_NEVER_PRINT",
                 "DERIV_APP_ID": "TEST_APP_ID_NEVER_PRINT",
                 "DERIV_EXPECTED_LOGINID": "TEST_LOGINID_NEVER_PRINT",
                 "DERIV_EXPECTED_CURRENCY": "USD",
@@ -119,7 +119,7 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
         self.assertEqual(
             written_names,
             [
-                "DERIV_AUTH_TOKEN",
+                "DERIV_PAT",
                 "DERIV_APP_ID",
                 "DERIV_EXPECTED_LOGINID",
                 "DERIV_EXPECTED_CURRENCY",
@@ -129,6 +129,50 @@ class GitHubSecretProvisionerTest(unittest.TestCase):
             self.variable_record.read_text(encoding="utf-8").splitlines(),
             ["DERIV_AUTH_MODE"],
         )
+
+    def test_oauth_mode_uses_only_oauth_token_and_does_not_require_app_id(self) -> None:
+        self.env["DERIV_AUTH_MODE"] = "oauth"
+        self.env["PROVISIONER_TEST_EXISTING_VARIABLE_VALUE"] = "oauth"
+        self.env["DERIV_AUTH_TOKEN"] = "OAUTH_TOKEN_NEVER_PRINT"
+        self.env.pop("DERIV_PAT", None)
+        self.env.pop("DERIV_APP_ID", None)
+        result = self.run_provisioner()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("DERIV_SECRET_PROVISIONING=COMPLETE", result.stdout)
+        self.assertEqual(
+            self.record.read_text(encoding="utf-8").splitlines(),
+            ["DERIV_AUTH_TOKEN", "DERIV_EXPECTED_LOGINID", "DERIV_EXPECTED_CURRENCY"],
+        )
+        self.assertNotIn("OAUTH_TOKEN_NEVER_PRINT", result.stdout + result.stderr)
+
+    def test_missing_auth_mode_fails_closed_without_interactive_tty(self) -> None:
+        self.env.pop("DERIV_AUTH_MODE", None)
+        self.env["PROVISIONER_TEST_EXISTING_VARIABLE_NAMES"] = ""
+        result = self.run_provisioner()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("DERIV_AUTH_MODE_REQUIRED_NONINTERACTIVE", result.stderr)
+        self.assertNotIn("/dev/tty: No such device", result.stderr)
+        self.assertFalse(self.record.exists())
+
+    def test_existing_pat_mode_is_not_implicitly_selected_without_explicit_input(self) -> None:
+        self.env.pop("DERIV_AUTH_MODE", None)
+        self.env["PROVISIONER_TEST_EXISTING_VARIABLE_NAMES"] = "DERIV_AUTH_MODE"
+        self.env["PROVISIONER_TEST_EXISTING_VARIABLE_VALUE"] = "pat"
+        self.env["PROVISIONER_TEST_EXISTING_NAMES"] = "\n".join(
+            [
+                "DERIV_PAT",
+                "DERIV_APP_ID",
+                "DERIV_EXPECTED_LOGINID",
+                "DERIV_EXPECTED_CURRENCY",
+            ]
+        )
+        for name in ("DERIV_PAT", "DERIV_APP_ID", "DERIV_EXPECTED_LOGINID", "DERIV_EXPECTED_CURRENCY"):
+            self.env.pop(name, None)
+        result = self.run_provisioner()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("DERIV_AUTH_MODE_REQUIRED_NONINTERACTIVE", result.stderr)
+        self.assertFalse(self.record.exists())
+        self.assertFalse(self.variable_record.exists())
 
     def test_missing_currency_is_not_synthesized_or_partially_written(self) -> None:
         self.env.pop("DERIV_EXPECTED_CURRENCY", None)

@@ -72,14 +72,15 @@ if has_variable "DERIV_AUTH_MODE"; then
     || fail "EXISTING_DERIV_AUTH_MODE_INVALID"
 fi
 
-mode="${DERIV_AUTH_MODE:-$existing_mode}"
+mode="${DERIV_AUTH_MODE:-}"
 mode="$(printf '%s' "$mode" | tr '[:upper:]' '[:lower:]')"
 if [[ -n "$existing_mode" && -n "$mode" && "$mode" != "$existing_mode" ]]; then
   fail "LOCAL_AUTH_MODE_MISMATCH_WITH_EXISTING_ENVIRONMENT_VARIABLE"
 fi
 if [[ -z "$mode" ]]; then
-  read -r -p "Deriv auth mode to use for this setup [pat/oauth; default pat]: " mode </dev/tty
-  mode="${mode:-pat}"
+  [[ -t 0 ]] || fail "DERIV_AUTH_MODE_REQUIRED_NONINTERACTIVE"
+  read -r -p "Deriv auth mode to use [oauth/pat; no default]: " mode </dev/tty || fail "DERIV_AUTH_MODE_REQUIRED"
+  [[ -n "$mode" ]] || fail "DERIV_AUTH_MODE_REQUIRED"
   mode="$(printf '%s' "$mode" | tr '[:upper:]' '[:lower:]')"
 fi
 [[ "$mode" == "pat" || "$mode" == "oauth" ]] || fail "INVALID_AUTH_MODE"
@@ -101,22 +102,37 @@ if ! has_secret "DERIV_EXPECTED_CURRENCY"; then
   [[ "$currency" == "USD" ]] || fail "UNEXPECTED_CURRENCY_FOR_THIS_CONFIGURATION"
 fi
 
-# Preserve either configured token alias. Only ask for/store a token if neither exists.
-token_name="DERIV_AUTH_TOKEN"
-if has_secret "DERIV_AUTH_TOKEN"; then
-  printf 'PRESERVED_EXISTING_SECRET_NAME=DERIV_AUTH_TOKEN\n'
-  token=""
-elif has_secret "DERIV_PAT"; then
-  printf 'PRESERVED_EXISTING_SECRET_NAME=DERIV_PAT\n'
-  token=""
-else
-  token="${DERIV_AUTH_TOKEN:-${DERIV_PAT:-}}"
-  if [[ -z "$token" ]]; then
-    read -r -s -p "Enter the intended Deriv token/PAT (hidden input): " token </dev/tty
-    printf '\n'
+# Select the credential by the explicit auth mode. Never fall back between aliases.
+if [[ "$mode" == "oauth" ]]; then
+  token_name="DERIV_AUTH_TOKEN"
+  if has_secret "$token_name"; then
+    printf 'PRESERVED_EXISTING_SECRET_NAME=%s\n' "$token_name"
+    token=""
+  else
+    token="${DERIV_AUTH_TOKEN:-}"
+    if [[ -z "$token" ]]; then
+      [[ -t 0 ]] || fail "DERIV_AUTH_TOKEN_REQUIRED_NONINTERACTIVE"
+      read -r -s -p "Enter the OAuth access token (hidden input): " token </dev/tty
+      printf '\n'
+    fi
+    [[ -n "$token" ]] || fail "DERIV_AUTH_TOKEN_MISSING_FOR_OAUTH"
+    set_secret_if_missing "$token_name" "$token"
   fi
-  [[ -n "$token" ]] || fail "DERIV_TOKEN_MISSING"
-  set_secret_if_missing "$token_name" "$token"
+else
+  token_name="DERIV_PAT"
+  if has_secret "$token_name"; then
+    printf 'PRESERVED_EXISTING_SECRET_NAME=%s\n' "$token_name"
+    token=""
+  else
+    token="${DERIV_PAT:-}"
+    if [[ -z "$token" ]]; then
+      [[ -t 0 ]] || fail "DERIV_PAT_REQUIRED_NONINTERACTIVE"
+      read -r -s -p "Enter the Deriv PAT (hidden input): " token </dev/tty
+      printf '\n'
+    fi
+    [[ -n "$token" ]] || fail "DERIV_PAT_MISSING_FOR_PAT_MODE"
+    set_secret_if_missing "$token_name" "$token"
+  fi
 fi
 
 # For PAT auth an App ID is required. Never overwrite an already configured App ID.
@@ -165,7 +181,7 @@ fi
 # Verify presence of either supported token and account aliases, plus currency/mode.
 names="$(gh secret list --env "$environment" --repo "$repo" --json name --jq '.[].name' 2>/dev/null)" \
   || fail "GITHUB_SECRET_NAME_VERIFICATION_FAILED"
-has_secret "DERIV_AUTH_TOKEN" || has_secret "DERIV_PAT" || fail "TOKEN_SECRET_NAME_NOT_VISIBLE"
+has_secret "$token_name" || fail "TOKEN_SECRET_NAME_NOT_VISIBLE_FOR_SELECTED_MODE"
 has_secret "DERIV_EXPECTED_LOGINID" || has_secret "DERIV_AUTHORIZED_ACCOUNT_ID" || fail "ACCOUNT_SECRET_NAME_NOT_VISIBLE"
 has_secret DERIV_EXPECTED_CURRENCY || fail "SECRET_NAME_NOT_VISIBLE_DERIV_EXPECTED_CURRENCY"
 variables="$(gh variable list --env "$environment" --repo "$repo" --json name --jq '.[].name' 2>/dev/null)" \
