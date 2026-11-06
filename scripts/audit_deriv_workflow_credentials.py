@@ -25,7 +25,8 @@ _CREDENTIAL_NAMES = "|".join(
     for name in sorted(ACCOUNT_CREDENTIAL_ENV_NAMES, key=len, reverse=True)
 )
 CREDENTIAL_ENV_KEY = re.compile(
-    rf"(?:^\s*|[{{,]\s*)(?:{_CREDENTIAL_NAMES})\s*:",
+    rf"^\s*(?:{_CREDENTIAL_NAMES})\s*:|"
+    rf"^\s*[A-Za-z0-9_-]+\s*:\s*\{{[^#]*?\b(?:{_CREDENTIAL_NAMES})\s*:",
     re.IGNORECASE,
 )
 
