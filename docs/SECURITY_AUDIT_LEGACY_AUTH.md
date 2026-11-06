@@ -15,7 +15,13 @@ The baseline contained two scheduled workflow paths that mapped Deriv account cr
 
 The baseline `.github/workflows/aurelia-assurance.yml` also ran on branch pushes and pull requests while declaring the `production` environment and mapping Deriv account-secret references into the assurance job. It was not a scheduled workflow, but it mixed general CI with the authenticated account plane.
 
-The workflow content inspected used GitHub secret references rather than literal credential values. This repository-level review is not a scan of historical Actions logs, GitHub audit logs, Deriv account activity, or external copies. It therefore does **not** prove that a credential was or was not previously disclosed.
+The workflow content inspected used GitHub secret references rather than literal credential values. This repository-level review is not a general scan of historical Actions logs, GitHub audit logs, Deriv account activity, or external copies. It therefore does **not** prove that a credential was or was not exfiltrated.
+
+### Additional live CI observation (2026-11-06)
+
+The legacy main-branch `AURELIA Assurance` workflow was observed executing for PR #281. Its job log recorded `DERIV_AUTH_CONFIGURED=true`, `DERIV_AUTH_MODE=pat`, and the presence of masked Deriv credential/account environment values during the PR-triggered job. The authenticated session verification step then failed with the sanitized reason class `ValueError`; the underlying exception detail was not emitted. The same run reported `LIVE_EXECUTION=BLOCKED` and `DERIV_ORDERS_SUBMITTED=0`. The inspected log does not show a raw credential value, so this is evidence of credential injection into a PR-triggered job, not proof that a credential value was exposed in the log or exfiltrated.
+
+The remediation branch's replacement Assurance workflow was subsequently observed with `DERIV_AUTH_CONFIGURED=false` and no Deriv credentials mapped into the job. Its account-evidence status remained blocked. The test suite's fixture output that includes sample `DERIV_AUTH_SESSION=VERIFIED` lines is test output and is not being counted as live broker evidence.
 
 ## Scope and method
 
@@ -50,7 +56,7 @@ The workflow content inspected used GitHub secret references rather than literal
 - A later static-audit run completed successfully on an earlier remediation-branch commit. New changes to the report generator and its CI smoke test require their own exact-head run before this PR can be considered verified.
 - Historical Actions-log and GitHub audit-log review: not performed by this repository-file audit.
 - Deriv credential rotation/revocation: not performed; this source audit alone does not establish that exposure occurred.
-- Main-branch workflows have not been disabled or changed by this pull request. The proposed file changes take effect only after review and merge. Until then, the two legacy schedules identified above can still run on main.
+- Main-branch workflows have not been changed by this pull request. The proposed file changes take effect only after review and merge. Until then, the two legacy schedules and the credential-bearing main Assurance job remain enabled unless separately disabled through GitHub Actions. A disable-workflow UI operation was started but no terminal confirmation has yet been received; do not assume those workflows are disabled.
 - Production deployment, account verification, proposal requests and order submission: not performed.
 
 **Completion rule:** this audit is not marked fully verified until the new CI audit passes on the remediation branch and a human reviewer examines the remaining manual protected workflows.
