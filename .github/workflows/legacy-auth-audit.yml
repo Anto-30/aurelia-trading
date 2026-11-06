@@ -9,14 +9,27 @@ on:
 
 permissions:
   contents: read
+  actions: read
+  pull-requests: read
 
 jobs:
   static-auth-audit:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
-      - name: Validate audit script syntax
-        run: bash -n scripts/audit_legacy_auth.sh
+      - name: Validate security and oversight scripts
+        run: |
+          bash -n scripts/audit_legacy_auth.sh
+          bash -n scripts/daily_oversight_report.sh
       - name: Audit workflow credential boundaries
         run: bash scripts/audit_legacy_auth.sh
+      - name: Smoke-test read-only daily oversight report
+        run: bash scripts/daily_oversight_report.sh /tmp/aurelia-daily-oversight-smoke.md
+      - name: Verify report output exists and contains governance controls
+        run: |
+          test -s /tmp/aurelia-daily-oversight-smoke.md
+          grep -q "LIVE_EXECUTION=BLOCKED" /tmp/aurelia-daily-oversight-smoke.md
+          grep -q "FINAL_EXECUTION_AUTHORIZATION=false" /tmp/aurelia-daily-oversight-smoke.md
