@@ -14,6 +14,7 @@ from research.r100_prospective_oos_collector import (
     STRATEGY_ID,
     build_signal_id,
     initial_state,
+    iso,
     probability_metrics,
     quoted_contract_economics,
     evaluation,
