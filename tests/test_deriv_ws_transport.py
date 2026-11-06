@@ -12,6 +12,7 @@ class FakeWebSocket:
         self.frames = list(frames or [])
         self.error = error
         self.closed = False
+        self.sent = []
 
     async def recv(self):
         if self.frames:
@@ -21,7 +22,7 @@ class FakeWebSocket:
         raise asyncio.CancelledError()
 
     async def send(self, payload):
-        return None
+        self.sent.append(payload)
 
     async def close(self):
         self.closed = True
@@ -69,6 +70,40 @@ class DerivWebSocketTransportTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(second["tick"]["quote"], 101.0)
         self.assertEqual(transport._subscription_by_id["sub-7"], "ticks:R_100")
         self.assertTrue(ws.closed)
+
+    async def test_subscription_close_forgets_server_subscription_id(self):
+        ws = FakeWebSocket()
+        transport = DerivWebSocketTransport("wss://example.invalid")
+        transport.ws = ws
+        stream = transport.subscribe("ticks:R_100", {"ticks": "R_100"})
+        next_message = asyncio.create_task(stream.__anext__())
+
+        for _ in range(10):
+            if ws.sent:
+                break
+            await asyncio.sleep(0)
+        self.assertEqual(json.loads(ws.sent[0]), {
+            "ticks": "R_100",
+            "subscribe": 1,
+            "req_id": 1,
+        })
+
+        subscription = transport._subscriptions["ticks:R_100"]
+        subscription.subscription_id = "server-stream-id-12345678901234567890123456789012"
+        subscription.queue.put_nowait({
+            "msg_type": "tick",
+            "tick": {"symbol": "R_100", "quote": 100.0},
+            "subscription": {"id": subscription.subscription_id},
+        })
+        self.assertEqual((await next_message)["tick"]["quote"], 100.0)
+        await stream.aclose()
+
+        forget = json.loads(ws.sent[-1])
+        self.assertEqual(
+            forget["forget"],
+            "server-stream-id-12345678901234567890123456789012",
+        )
+        self.assertEqual(forget["req_id"], 2)
 
     async def test_reader_failure_preserves_exception_type_and_close_code(self):
         ws = FakeWebSocket(error=FakeConnectionClosed(1006))

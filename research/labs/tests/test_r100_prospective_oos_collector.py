@@ -252,6 +252,67 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         transport.close.assert_not_awaited()
         self.assertEqual(len(state["pending"]), 1)
 
+    def test_tick_at_or_after_campaign_end_does_not_resolve_pending_signal(self):
+        import research.r100_prospective_oos_collector as collector
+
+        start = datetime(2026, 10, 6, 19, 0, 0, tzinfo=timezone.utc)
+        campaign_end = start.replace(second=1)
+        late_epoch = int(start.replace(second=2).timestamp())
+
+        class OneLateTick:
+            def __init__(self):
+                self.sent = False
+                self.closed = False
+
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                if not self.sent:
+                    self.sent = True
+                    return {
+                        "msg_type": "tick",
+                        "tick": {"symbol": "R_100", "quote": 101.0, "epoch": late_epoch},
+                    }
+                await asyncio.sleep(5)
+                raise StopAsyncIteration
+
+            async def aclose(self):
+                self.closed = True
+
+        stream = OneLateTick()
+        transport = type("FakeTransport", (), {
+            "connect": AsyncMock(),
+            "subscribe": lambda self, key, payload: stream,
+            "request": AsyncMock(),
+            "close": AsyncMock(),
+        })()
+        state = initial_state()
+        state["manifest"]["campaign_end_at_utc"] = iso(campaign_end)
+        pending = {
+            "signal_id": "pending-after-window",
+            "signal_timestamp_utc": iso(start),
+            "entry_quote": 100.0,
+            "direction": "CALL",
+            "probability": 0.60,
+            "score": 1.5,
+            "age_ticks": HORIZON_TICKS - 1,
+        }
+        state["pending"] = [pending]
+
+        with (
+            patch.object(collector, "utc_now", return_value=start),
+            patch.object(collector, "DerivWebSocketTransport", return_value=transport),
+            patch.object(collector, "COLLECTION_SECONDS", 1),
+        ):
+            asyncio.run(collector.collect_once(state))
+
+        self.assertEqual(state["pending"], [pending])
+        self.assertEqual(state["observations"], [])
+        transport.request.assert_not_awaited()
+        transport.close.assert_awaited_once()
+        self.assertTrue(stream.closed)
+
     def test_campaign_end_stops_new_signal_emission_but_settles_pending(self):
         class NoEmitHunter:
             def __init__(self):
