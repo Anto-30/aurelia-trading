@@ -56,9 +56,8 @@ class DerivAuthenticationGate:
             raise AuthModeMismatchError("GENERIC_TOKEN_FALLBACK_BLOCKED")
         if refresh_token:
             raise SecurityError("DERIV_OAUTH_REFRESH_TOKEN_UNSUPPORTED")
-        if not oauth_token:
-            raise AuthModeMismatchError("DERIV_OAUTH_ACCESS_TOKEN_MISSING")
-        # Token inequality and token shape do not establish authorization
-        # scope. Deriv currently requires `trade` for the account-list and OTP
-        # endpoints used here, so no account client is issued.
+        # Token presence, token shape, and OAuth/PAT distinction do not prove
+        # a read-only scope. Deriv's required account-list and OTP endpoints
+        # currently require `trade`; no account client is issued whether the
+        # OAuth token is absent or present.
         raise SecurityError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
