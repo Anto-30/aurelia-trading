@@ -151,7 +151,7 @@ class RuntimeSecretModeTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaisesRegex(
                 SecretsError,
-                "VERIFY_ONLY_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED",
+                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
             ):
                 validate_secrets_at_startup()
 
