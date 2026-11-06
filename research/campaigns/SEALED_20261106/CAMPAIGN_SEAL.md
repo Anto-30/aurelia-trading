@@ -74,3 +74,71 @@ research_capital_authority: false
 ```
 
 **Final disposition:** retain this campaign as a negative research result. Do not retune it for qualification and do not use it to authorize capital.
+
+
+## Provenance addendum — recovered Actions artifact (2026-11-07)
+
+The source summary's provenance gaps have been narrowed using the existing research artifact; the original negative metrics and seal disposition above are preserved unchanged.
+
+### Recovered artifact identity
+
+- GitHub Actions run: `41420980026` (scheduled R_100 prospective collection run #342).
+- Artifact ID: `13130052450`.
+- Artifact file: `r100-prospective-oos-run-342.zip`.
+- ZIP SHA-256: `a433bbc8a257e4abc22ef1713cbb1cf1b533541d3624528eedbd4ac90be242ed`.
+- Embedded state: `aurelia_r100_state.json`, 548,286 bytes.
+- Embedded state SHA-256: `e120937647ccf31a954a7ba38bb1366845468714f1d4750c9ceab3eefeb31058` (matches the archive hash recorded in PR #253).
+- Experiment: `R100-PROSPECTIVE-20261008T192038Z`.
+- Hypothesis: `H-R100-TICK-MOMENTUM-001`.
+- Strategy: `R100_TICK_MOMENTUM_PROSPECTIVE_V0.2.0`, version `0.2.0`.
+- Instrument: all 783 observation rows identify `R_100`; each uses a 10-tick horizon. The manifest is tick-stream research, not M1/M15 candle evidence.
+- Frozen source commit: `67922e738acd06e9f77d434819df1a56aa11974d`.
+- Config hash: `cca748c28c1253bf047743c46a208e114c6ade2601fb5aa5bbedcc2dcfa2ad15`.
+- Manifest: one predeclared trial, zero search degrees of freedom, zero OOS reuse; parameters were window 64, minimum observations 20, threshold 1.5, cooldown 30 seconds, horizon 10 ticks.
+
+### Source-state completeness
+
+- Campaign start: `2026-10-08T19:20:38.482344Z`.
+- OOS start: `2026-10-09T19:20:38.482344Z`.
+- Planned campaign end: `2026-10-15T19:20:38.482344Z`.
+- Last collector completion: `2026-10-15T16:28:53.295927Z`, approximately 2h 51m 45s before the planned end.
+- Settled observations: 783 total (170 pre-OOS, 613 OOS).
+- Proposal quote observations: 784.
+- Pending observations: 1.
+- The recovered source manifest has `sealed=false`. This artifact is a terminal collection snapshot, not an already sealed campaign. The pending signal must remain `UNRESOLVED_NO_BACKFILL`; do not extend or backfill the campaign.
+
+### Independent recalculation from the recovered OOS observations
+
+| Metric | Recalculated value |
+|---|---:|
+| OOS wins / observations | 311 / 613 |
+| OOS hit rate | 50.7341% |
+| Mean predicted probability | 64.7157% |
+| Brier score | 0.270921 |
+| Constant-base-rate Brier | 0.249946 |
+| Mean direction-adjusted underlying return | +0.01265% per observation |
+| Quoted payout / stake | 1.95 |
+| Quoted break-even probability | 51.2821% |
+| Mean quoted net return / stake | -1.0685% |
+
+The positive direction-adjusted underlying return is not realized contract profit and does not override the negative quoted contract expectancy.
+
+A naive independent-Bernoulli 95% Wilson interval for the hit rate is approximately 46.78%–54.67%; it includes the quoted break-even rate. A naive iid normal interval for mean quoted net return is approximately -8.79% to +6.66%. These intervals are descriptive only: serial dependence and overlapping signal horizons were not adjusted, so they are not qualification-grade uncertainty estimates.
+
+### Calibration policy reconciliation
+
+The recovered campaign manifest and frozen collector specify:
+- minimum 3 qualifying buckets;
+- minimum 10 observations per bucket;
+- maximum reliability gap 5%.
+
+Recomputed buckets:
+- 0.60–0.65: 396 observations; mean probability 63.5914%; realized rate 51.7677%; gap 11.8237 percentage points.
+- 0.65–0.70: 209 observations; mean probability 66.6161%; realized rate 49.2823%; gap 17.3338 percentage points.
+- 0.70–0.75: 8 observations; below the 10-observation minimum, so not qualifying; observed gap 33.2224 percentage points.
+
+Only 2 of 3 buckets qualify. The 17.3338-point maximum gap among qualifying buckets exceeds the campaign's configured 5% ceiling by 12.3338 points. The original summary's 10% threshold is retained as originally supplied; the recovered manifest/code establish that the actual campaign policy was stricter at 5%.
+
+### Disposition
+
+The recovered artifact independently reproduces the negative headline metrics from the saved observations and narrows the lineage gaps. It does not provide the original full tick tape, an independently verified Deriv source export, a completed campaign seal, or dependence-adjusted confidence intervals. Keep the strategy retired from qualification. Preserve the one pending observation as unresolved, run only the offline snapshot-preserving sealer after its source code is reviewed, and do not retune this campaign or reuse its OOS observations.
