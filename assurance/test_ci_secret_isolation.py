@@ -50,7 +50,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         for workflow, job in cases:
             with self.subTest(workflow=workflow, job=job):
                 block = _job_block(workflow, job)
-                job_conditions = re.findall(r"^    if:\\s*(.+)$", block, flags=re.MULTILINE)
+                job_conditions = re.findall(r"^    if:\s*(.+)$", block, flags=re.MULTILINE)
                 self.assertEqual(
                     len(job_conditions),
                     1,
@@ -66,7 +66,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
 
     def test_secret_presence_report_is_main_only(self):
         block = _job_block("secret-presence-report.yml", "report")
-        job_conditions = re.findall(r"^    if:\\s*(.+)$", block, flags=re.MULTILINE)
+        job_conditions = re.findall(r"^    if:\s*(.+)$", block, flags=re.MULTILINE)
         self.assertEqual(
             job_conditions,
             ["${{ github.ref == 'refs/heads/main' }}"],
