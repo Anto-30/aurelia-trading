@@ -65,9 +65,9 @@
 - Produces:
   - `ThreeSixtyNineMSNRConfig` with explicit instrument id, tick size, price scale, MSNR config, displacement toggle, EMA/ATR filter toggle, and minimum gross R defaulting to 3.0.
   - `ThreeSixtyNineMSNRCandidate` with signal close timestamp, next-bar entry timestamp/price when supplied, stop, selected 369 target, gross R, variant id, and research-only authority flags.
-  - `evaluate_369_msnr_candidate(bars: Sequence[StrategyBar], *, config: ThreeSixtyNineMSNRConfig) -> ThreeSixtyNineMSNRCandidate | None`
+  - `evaluate_369_msnr_candidate(bars: Sequence[StrategyBar], *, timeframe_seconds: int, protected_swing: ProtectedSwing, config: ThreeSixtyNineMSNRConfig) -> ThreeSixtyNineMSNRCandidate | None`\n  - `ProtectedSwing` is an immutable, caller-supplied confirmed swing record containing direction, anchor price, pivot timestamp, confirmation timestamp, source-rule id, and the last input-bar timestamp used to confirm it. The candidate builder rejects unconfirmed, future-dated, or provenance-incomplete swings; it does not invent a swing algorithm.
 
-- [ ] **Step 1: Write failing tests** for MSNR candidate composition, close-window gating, next-bar-open price, long/short 369 target selection, displacement body > 1.5 × prior-three-body mean, no future-bar use, 3R inclusion/rejection, and authority flags fixed false.
+- [ ] **Step 1: Write failing tests** for MSNR candidate composition using only the signal prefix, explicit confirmed-swing provenance, timeframe-derived signal close, close-window gating, next-bar-open price from the following bar, long/short 369 target selection, displacement body > 1.5 × prior-three-body mean, no future-bar use, 3R inclusion/rejection, and authority flags fixed false.
 - [ ] **Step 2: Run the focused tests** and confirm expected failures.
 - [ ] **Step 3: Implement candidate construction** while reusing the existing MSNR detector; preserve separate baseline, displacement, and EMA/ATR variant identifiers.
 - [ ] **Step 4: Run focused tests** and verify candidate behavior.
