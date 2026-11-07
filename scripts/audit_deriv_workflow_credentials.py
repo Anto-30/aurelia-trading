@@ -30,9 +30,10 @@ CREDENTIAL_ENV_KEY = re.compile(
     re.IGNORECASE,
 )
 PRODUCTION_ENVIRONMENT = re.compile(
-    r"(?im)^\s{4}environment\s*:\s*(?:['\"]?production['\"]?|"
-    r"\{\s*name\s*:\s*['\"]?production['\"]?)\s*(?:#.*)?$|"
-    r"(?im)^\s{4}environment\s*:\s*\n\s{6}name\s*:\s*['\"]?production['\"]?\s*(?:#.*)?$"
+    r"^[ \t]{4}environment[ \t]*:[ \t]*(?:['\"]?production['\"]?|"
+    r"\\{[ \t]*name[ \t]*:[ \t]*['\"]?production['\"]?)[ \t]*(?:#.*)?$|"
+    r"^[ \t]{4}environment[ \t]*:[ \t]*\\r?\\n[ \t]{6}name[ \t]*:[ \t]*['\"]?production['\"]?[ \t]*(?:#.*)?$",
+    re.IGNORECASE | re.MULTILINE,
 )
 PULL_REQUEST_TRIGGER = re.compile(r"(?m)^\s{2}pull_request(?:_target)?\s*:")
 SCHEDULE_TRIGGER = re.compile(r"(?m)^\s{2}schedule\s*:")
