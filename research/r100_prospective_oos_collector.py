@@ -2,8 +2,8 @@ from __future__ import annotations
 
 """Prospective R_100 research collector for AURELIA.
 
-Uses only Deriv public market-data/proposal surfaces. It never authorizes,
-submits, or reconciles a capital-moving transaction.
+Uses only Deriv public market-data surfaces. It never requests contract
+proposals, authorizes, submits, or reconciles a capital-moving transaction.
 """
 
 import asyncio
@@ -34,21 +34,6 @@ CALIBRATION_MIN_BUCKET_SAMPLES = 10
 CALIBRATION_MAX_RELIABILITY_GAP = 0.05
 LEGACY_DEFAULT_COLLECTION_SECONDS = 540
 
-
-def build_proposal_request(direction: str) -> dict[str, Any]:
-    """Build a public, non-executing Deriv proposal request."""
-    if direction not in {"CALL", "PUT"}:
-        raise ValueError("R100_PROPOSAL_DIRECTION_INVALID")
-    return {
-        "proposal": 1,
-        "amount": 1.0,
-        "basis": "stake",
-        "contract_type": direction,
-        "currency": CURRENCY,
-        "duration": HORIZON_TICKS,
-        "duration_unit": "t",
-        "underlying_symbol": SYMBOL,
-    }
 
 @dataclass(frozen=True)
 class PendingSignal:
@@ -626,34 +611,15 @@ async def collect_once(state: dict[str, Any]) -> None:
             )
             if len(state["pending"]) > prior_pending:
                 new_signal = state["pending"][-1]
-                try:
-                    proposal = await transport.request({
-                        "proposal": 1,
-                        "amount": 1.0,
-                        "basis": "stake",
-                        "contract_type": new_signal["direction"],
-                        "currency": CURRENCY,
-                        "duration": HORIZON_TICKS,
-                        "duration_unit": "t",
-                        "underlying_symbol": SYMBOL,
-                    })
-                    proposal_payload = proposal.get("proposal") or {}
-                    state["quote_observations"].append({
-                        "signal_id": new_signal["signal_id"],
-                        "captured_at_utc": iso(received_at),
-                        "ask_price": proposal_payload.get("ask_price"),
-                        "payout": proposal_payload.get("payout"),
-                        "proposal_id": proposal_payload.get("id"),
-                        "quote_status": "OBSERVED",
-                    })
-                except Exception as exc:
-                    state["quote_observations"].append({
-                        "signal_id": new_signal["signal_id"],
-                        "captured_at_utc": iso(received_at),
-                        "quote_status": "UNAVAILABLE",
-                        "error_type": type(exc).__name__,
-                        "error_code": getattr(exc, "code", None),
-                    })
+                # Contract proposal/quote requests are disabled by policy.
+                # Preserve the signal without making any proposal API call.
+                state["quote_observations"].append({
+                    "signal_id": new_signal["signal_id"],
+                    "captured_at_utc": iso(received_at),
+                    "quote_status": "UNAVAILABLE",
+                    "error_type": "PolicyBlocked",
+                    "error_code": "R100_PUBLIC_PROPOSAL_QUOTES_DISABLED_BY_POLICY",
+                })
     finally:
         try:
             if stream is not None:
