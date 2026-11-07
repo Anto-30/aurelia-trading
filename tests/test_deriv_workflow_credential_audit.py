@@ -13,8 +13,8 @@ class DerivWorkflowCredentialAuditTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "assurance.yml").write_text(
-                "on:\\n  pull_request:\\n"
-                "jobs:\\n  assurance:\\n    environment: production\\n",
+                "on:\n  pull_request:\n"
+                "jobs:\n  assurance:\n    environment: production\n",
                 encoding="utf-8",
             )
             _count, findings = audit_workflows(root)
@@ -27,9 +27,9 @@ class DerivWorkflowCredentialAuditTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "deriv-session-verification.yml").write_text(
-                "on:\\n  workflow_dispatch:\\n"
-                "jobs:\\n  verify:\\n    environment:\\n"
-                "      name: production\\n",
+                "on:\n  workflow_dispatch:\n"
+                "jobs:\n  verify:\n    environment:\n"
+                "      name: production\n",
                 encoding="utf-8",
             )
             _count, findings = audit_workflows(root)
@@ -42,8 +42,8 @@ class DerivWorkflowCredentialAuditTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "self-hosted-runtime-deploy.yml").write_text(
-                "on:\\n  workflow_dispatch:\\n"
-                "jobs:\\n  deploy:\\n    environment: production\\n",
+                "on:\n  workflow_dispatch:\n"
+                "jobs:\n  deploy:\n    environment: production\n",
                 encoding="utf-8",
             )
             _count, findings = audit_workflows(root)
