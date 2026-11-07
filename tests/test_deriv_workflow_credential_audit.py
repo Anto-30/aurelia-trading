@@ -9,6 +9,46 @@ from scripts.audit_deriv_workflow_credentials import audit_workflows
 
 
 class DerivWorkflowCredentialAuditTests(unittest.TestCase):
+    def test_rejects_pull_request_production_environment_without_explicit_secret_mapping(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "assurance.yml").write_text(
+                "on:\\n  pull_request:\\n"
+                "jobs:\\n  assurance:\\n    environment: production\\n",
+                encoding="utf-8",
+            )
+            _count, findings = audit_workflows(root)
+        self.assertIn(
+            "PULL_REQUEST_PRODUCTION_ENVIRONMENT_ACCESS",
+            {item[2] for item in findings},
+        )
+
+    def test_rejects_manual_deriv_account_workflow_with_production_environment(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "deriv-session-verification.yml").write_text(
+                "on:\\n  workflow_dispatch:\\n"
+                "jobs:\\n  verify:\\n    environment:\\n"
+                "      name: production\\n",
+                encoding="utf-8",
+            )
+            _count, findings = audit_workflows(root)
+        self.assertIn(
+            "DERIV_ACCOUNT_PRODUCTION_ENVIRONMENT_ACCESS",
+            {item[2] for item in findings},
+        )
+
+    def test_allows_manual_non_deriv_deploy_production_environment(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "self-hosted-runtime-deploy.yml").write_text(
+                "on:\\n  workflow_dispatch:\\n"
+                "jobs:\\n  deploy:\\n    environment: production\\n",
+                encoding="utf-8",
+            )
+            _count, findings = audit_workflows(root)
+        self.assertEqual(findings, [])
+
     def test_rejects_scheduled_secret_injection(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
