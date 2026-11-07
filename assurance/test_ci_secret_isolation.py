@@ -28,41 +28,40 @@ def _job_block(workflow_name: str, job_name: str) -> str:
 
 
 class ProductionSecretIsolationTests(unittest.TestCase):
-    def test_pull_request_assurance_job_has_no_production_secrets(self):
-        block = _job_block("aurelia-assurance.yml", "assurance")
-        self.assertNotIn("environment: production", block)
-        self.assertNotRegex(block, r"\$\{\{\s*secrets\.")
-        self.assertNotIn("DERIV_AUTH_CONFIGURED", block)
-        self.assertNotIn("verify_deriv_session.py", block)
+    def test_general_assurance_has_no_production_environment_or_secrets(self):
+        text = (WORKFLOWS / "aurelia-assurance.yml").read_text(encoding="utf-8")
+        self.assertNotIn("environment: production", text)
+        self.assertNotRegex(text, r"\$\{\{\s*secrets\.")
+        self.assertNotIn("DERIV_AUTH_CONFIGURED", text)
+        self.assertNotIn("verify_deriv_session.py", text)
+        self.assertNotIn("deriv-auth-verification:", text)
 
-    def test_deriv_auth_job_is_restricted_to_main_push(self):
-        block = _job_block("aurelia-assurance.yml", "deriv-auth-verification")
-        self.assertIn(
-            "if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}",
-            block,
-        )
-        self.assertIn("environment: production", block)
-        self.assertRegex(block, r"\$\{\{\s*secrets\.DERIV_AUTH_TOKEN")
-
-    def test_manual_and_scheduled_secret_workflows_are_main_only(self):
+    def test_all_protected_secret_workflows_require_manual_main_dispatch(self):
         cases = (
-            ("deriv-auth-evidence.yml", "verify", True),
-            ("deriv-session-verification.yml", "verify", True),
-            ("deriv-verify-only-lifecycle.yml", "verify-only", True),
-            ("self-hosted-runtime-deploy.yml", "deploy", True),
-            ("aurelia-free-runtime.yml", "authenticated-deriv-evidence", True),
-            ("aurelia-free-runtime.yml", "deriv-lifecycle-verify-only", True),
-            ("aurelia-free-runtime.yml", "whatsapp-alert-smoke", False),
-            ("secret-presence-report.yml", "report", True),
+            ("deriv-auth-evidence.yml", "verify"),
+            ("deriv-session-verification.yml", "verify"),
+            ("deriv-verify-only-lifecycle.yml", "verify-only"),
+            ("self-hosted-runtime-deploy.yml", "deploy"),
+            ("aurelia-free-runtime.yml", "authenticated-deriv-evidence"),
+            ("aurelia-free-runtime.yml", "deriv-lifecycle-verify-only"),
+            ("aurelia-free-runtime.yml", "whatsapp-alert-smoke"),
         )
-        expected = "if: ${{ github.ref == 'refs/heads/main' }}"
-        for workflow, job, uses_environment in cases:
+        expected = "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}"
+        for workflow, job in cases:
             with self.subTest(workflow=workflow, job=job):
                 block = _job_block(workflow, job)
                 self.assertIn(expected, block)
                 self.assertRegex(block, r"\$\{\{\s*secrets\.")
-                if uses_environment:
-                    self.assertIn("environment:", block)
+
+    def test_auth_evidence_is_not_scheduled(self):
+        text = (WORKFLOWS / "deriv-auth-evidence.yml").read_text(encoding="utf-8")
+        self.assertIn("workflow_dispatch:", text)
+        self.assertNotIn("schedule:", text)
+
+    def test_secret_presence_report_is_main_only(self):
+        block = _job_block("secret-presence-report.yml", "report")
+        self.assertIn("if: ${{ github.ref == 'refs/heads/main' }}", block)
+        self.assertRegex(block, r"\$\{\{\s*secrets\.")
 
     def test_pull_request_trigger_remains_available_without_secret_access(self):
         text = (WORKFLOWS / "aurelia-assurance.yml").read_text(encoding="utf-8")
