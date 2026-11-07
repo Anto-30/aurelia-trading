@@ -73,11 +73,11 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         presence_workflow = (
             ROOT / ".github" / "workflows" / "secret-presence-report.yml"
         ).read_text(encoding="utf-8")
-        self.assertIn(
-            "DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}",
-            presence_workflow,
-        )
-        self.assertNotIn("secrets.DERIV_EXPECTED_CURRENCY || 'USD'", presence_workflow)
+        self.assertNotIn("environment: production", presence_workflow)
+        self.assertNotIn("secrets.", presence_workflow)
+        self.assertIn('ACCOUNT_DERIV_AUTH_MODE: "none"', presence_workflow)
+        self.assertIn('FINAL_EXECUTION_AUTHORIZATION: "false"', presence_workflow)
+        self.assertIn('LIVE_EXECUTION: "BLOCKED"', presence_workflow)
 
     def test_live_deployment_requires_release_gate(self):
         workflow = (ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml").read_text(

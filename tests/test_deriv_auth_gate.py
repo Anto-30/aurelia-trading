@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from research.utils.deriv_auth_gate import (
     PUBLIC_RESEARCH_WS_URL,
-    AuthModeMismatchError,
+    ACCOUNT_CREDENTIAL_ENV_NAMES,
     DerivAuthenticationGate,
     SecurityError,
 )
@@ -118,47 +118,41 @@ class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(SecurityError, "PUBLIC_RESEARCH_ACTION_NOT_ALLOWED"):
             client.validate_request({"buy": "proposal-id", "price": 1})
 
-    def test_identical_oauth_and_pat_values_are_a_critical_security_error(self):
-        with self.assertRaisesRegex(SecurityError, "OAUTH_TOKEN_EQUALS_PAT"):
-            DerivAuthenticationGate(
-                plane="account",
-                environ={
-                    "ACCOUNT_DERIV_AUTH_MODE": "oauth",
-                    "DERIV_OAUTH_ACCESS_TOKEN": "same-secret",
-                    "DERIV_PAT": "same-secret",
-                },
-            ).get_client()
+    def test_account_plane_always_blocks_without_reading_environment_values(self):
+        class UnreadableEnvironment:
+            def get(self, key, default=None):
+                raise AssertionError("account gate must not read environment values")
 
-    def test_account_plane_rejects_pat_even_if_value_differs(self):
-        with self.assertRaisesRegex(SecurityError, "ACCOUNT_PLANE_PAT_PRESENT"):
-            DerivAuthenticationGate(
-                plane="account",
-                environ={
-                    "ACCOUNT_DERIV_AUTH_MODE": "oauth",
-                    "DERIV_OAUTH_ACCESS_TOKEN": "oauth-secret",
-                    "DERIV_PAT": "different-pat",
-                },
-            ).get_client()
+            def __contains__(self, key):
+                raise AssertionError("account gate must not inspect credential presence")
 
-    def test_account_plane_rejects_legacy_generic_token_fallback(self):
-        with self.assertRaisesRegex(AuthModeMismatchError, "GENERIC_TOKEN_FALLBACK_BLOCKED"):
-            DerivAuthenticationGate(
-                plane="account",
-                environ={
-                    "ACCOUNT_DERIV_AUTH_MODE": "oauth",
-                    "DERIV_AUTH_TOKEN": "ambiguous-token",
-                },
-            ).get_client()
-
-    def test_account_plane_fails_closed_when_read_only_scope_is_unavailable(self):
         with self.assertRaisesRegex(SecurityError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"):
             DerivAuthenticationGate(
                 plane="account",
-                environ={
-                    "ACCOUNT_DERIV_AUTH_MODE": "oauth",
-                    "DERIV_OAUTH_ACCESS_TOKEN": "oauth-secret",
-                },
+                environ=UnreadableEnvironment(),
             ).get_client()
+
+    def test_account_plane_blocks_all_auth_modes_and_credential_shapes(self):
+        environments = (
+            {},
+            {"ACCOUNT_DERIV_AUTH_MODE": "none"},
+            {"ACCOUNT_DERIV_AUTH_MODE": "pat", "DERIV_PAT": "test-sentinel"},
+            {"ACCOUNT_DERIV_AUTH_MODE": "oauth", "DERIV_OAUTH_ACCESS_TOKEN": "test-sentinel"},
+            {"ACCOUNT_DERIV_AUTH_MODE": "oauth", "DERIV_AUTH_TOKEN": "test-sentinel"},
+        )
+        for environ in environments:
+            with self.subTest(keys=tuple(environ)):
+                with self.assertRaisesRegex(SecurityError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"):
+                    DerivAuthenticationGate(plane="account", environ=environ).get_client()
+
+    def test_public_client_rejects_empty_account_credential_keys(self):
+        for name in ACCOUNT_CREDENTIAL_ENV_NAMES:
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(SecurityError, "RESEARCH_PLANE_ACCOUNT_CREDENTIALS_PRESENT"):
+                    DerivAuthenticationGate(
+                        plane="research",
+                        environ={name: ""},
+                    ).get_client()
 
     def test_unknown_plane_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "UNKNOWN_DERIV_AUTH_PLANE"):

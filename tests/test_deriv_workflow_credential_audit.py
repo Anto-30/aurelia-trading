@@ -1,0 +1,176 @@
+from __future__ import annotations
+
+from pathlib import Path
+from tempfile import TemporaryDirectory
+import unittest
+
+from runtime.security.deriv_auth_gate import ACCOUNT_CREDENTIAL_ENV_NAMES
+from scripts.audit_deriv_workflow_credentials import audit_workflows
+
+
+class DerivWorkflowCredentialAuditTests(unittest.TestCase):
+    def test_rejects_pull_request_production_environment_without_explicit_secret_mapping(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "assurance.yml").write_text(
+                "on:\n  pull_request:\n"
+                "jobs:\n  assurance:\n    environment: production\n",
+                encoding="utf-8",
+            )
+            _count, findings = audit_workflows(root)
+        self.assertIn(
+            "PULL_REQUEST_PRODUCTION_ENVIRONMENT_ACCESS",
+            {item[2] for item in findings},
+        )
+
+    def test_rejects_manual_deriv_account_workflow_with_production_environment(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "deriv-session-verification.yml").write_text(
+                "on:\n  workflow_dispatch:\n"
+                "jobs:\n  verify:\n    environment:\n"
+                "      name: production\n",
+                encoding="utf-8",
+            )
+            _count, findings = audit_workflows(root)
+        self.assertIn(
+            "DERIV_ACCOUNT_PRODUCTION_ENVIRONMENT_ACCESS",
+            {item[2] for item in findings},
+        )
+
+    def test_allows_manual_non_deriv_deploy_production_environment(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "self-hosted-runtime-deploy.yml").write_text(
+                "on:\n  workflow_dispatch:\n"
+                "jobs:\n  deploy:\n    environment: production\n",
+                encoding="utf-8",
+            )
+            _count, findings = audit_workflows(root)
+        self.assertEqual(findings, [])
+
+    def test_rejects_scheduled_secret_injection(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "scheduled.yml").write_text(
+                "on:\n  schedule:\n    - cron: '*/15 * * * *'\njobs:\n"
+                "  verify:\n    env:\n"
+                "      DERIV_AUTH_TOKEN: ${{ secrets.DERIV_PAT }}\n",
+                encoding="utf-8",
+            )
+            count, findings = audit_workflows(root)
+        self.assertEqual(count, 1)
+        self.assertIn("DERIV_SECRET_REFERENCE", {item[2] for item in findings})
+        self.assertIn("DERIV_ACCOUNT_INPUT_BINDING", {item[2] for item in findings})
+
+    def test_rejects_bracket_notation_deriv_secret_reference(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "manual.yml").write_text(
+                "jobs:\n  verify:\n    env:\n"
+                "      DERIV_AUTH_TOKEN: ${{ secrets['DERIV_PAT'] }}\n",
+                encoding="utf-8",
+            )
+            _count, findings = audit_workflows(root)
+        self.assertIn("DERIV_SECRET_REFERENCE", {item[2] for item in findings})
+
+    def test_rejects_dynamic_secret_lookup_that_mentions_deriv(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "dynamic.yml").write_text(
+                "jobs:\n  verify:\n    env:\n"
+                "      TOKEN: ${{ secrets[vars.DERIV_SECRET_NAME] }}\n",
+                encoding="utf-8",
+            )
+            _count, findings = audit_workflows(root)
+        self.assertIn("DERIV_SECRET_REFERENCE", {item[2] for item in findings})
+
+    def test_rejects_every_account_plane_environment_key(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            content = "jobs:\n  verify:\n    env:\n"
+            content += "".join(f'      {name}: ""\n' for name in ACCOUNT_CREDENTIAL_ENV_NAMES)
+            (root / "account-inputs.yml").write_text(content, encoding="utf-8")
+            _count, findings = audit_workflows(root)
+        self.assertIn("DERIV_ACCOUNT_INPUT_BINDING", {item[2] for item in findings})
+
+    def test_rejects_inline_account_input_mapping(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "inline.yml").write_text(
+                'jobs:\n  verify:\n    env: { DERIV_APP_ID: "public-app" }\n',
+                encoding="utf-8",
+            )
+            _count, findings = audit_workflows(root)
+        self.assertIn("DERIV_ACCOUNT_INPUT_BINDING", {item[2] for item in findings})
+
+    def test_does_not_flag_shell_unset_assertions(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "assertions.yml").write_text(
+                "jobs:\n  verify:\n    steps:\n      - run: |\n"
+                "          test -z \"${DERIV_PAT:-}\"\n"
+                "          test -z \"${DERIV_OAUTH_ACCESS_TOKEN:-}\"\n",
+                encoding="utf-8",
+            )
+            _count, findings = audit_workflows(root)
+        self.assertEqual(findings, [])
+
+    def test_ignores_commented_out_examples(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "comments.yml").write_text(
+                "# DERIV_PAT: ${{ secrets.DERIV_PAT }}\n"
+                'env:\n  ACCOUNT_DERIV_AUTH_MODE: "none"\n',
+                encoding="utf-8",
+            )
+            _count, findings = audit_workflows(root)
+        self.assertEqual(findings, [])
+
+    def test_allows_explicit_blocked_account_plane_without_credentials(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "safe.yml").write_text(
+                'env:\n'
+                '  ACCOUNT_DERIV_AUTH_MODE: "none"\n'
+                '  DERIV_ACCOUNT_EVIDENCE: "BLOCKED"\n'
+                '  DERIV_ACCOUNT_BLOCK_REASON: "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"\n',
+                encoding="utf-8",
+            )
+            count, findings = audit_workflows(root)
+        self.assertEqual(count, 1)
+        self.assertEqual(findings, [])
+
+    def test_all_explicit_account_auth_modes_are_none(self):
+        workflow_dir = Path(__file__).resolve().parents[1] / ".github" / "workflows"
+        for workflow in sorted([*workflow_dir.glob("*.yml"), *workflow_dir.glob("*.yaml")]):
+            for line_number, line in enumerate(workflow.read_text(encoding="utf-8").splitlines(), 1):
+                if "ACCOUNT_DERIV_AUTH_MODE:" in line:
+                    self.assertIn(
+                        'ACCOUNT_DERIV_AUTH_MODE: "none"',
+                        line,
+                        f"{workflow.name}:{line_number} must not configure OAuth or PAT mode",
+                    )
+
+    def test_free_runtime_does_not_map_notification_secrets(self):
+        workflow = (
+            Path(__file__).resolve().parents[1]
+            / ".github"
+            / "workflows"
+            / "aurelia-free-runtime.yml"
+        )
+        source = workflow.read_text(encoding="utf-8")
+        self.assertNotIn("secrets.TWILIO_", source)
+        self.assertNotIn("TWILIO_AUTH_TOKEN", source)
+        self.assertNotIn("TWILIO_API_SECRET", source)
+
+    def test_missing_workflow_directory_fails_closed(self):
+        with TemporaryDirectory() as directory:
+            missing = Path(directory) / "missing"
+            count, findings = audit_workflows(missing)
+        self.assertEqual(count, 0)
+        self.assertEqual(findings[0][2], "WORKFLOW_DIRECTORY_MISSING")
+
+
+if __name__ == "__main__":
+    unittest.main()

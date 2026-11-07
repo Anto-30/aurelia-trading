@@ -34,7 +34,7 @@ class FailClosedStartupTests(unittest.TestCase):
              patch.object(main_module, "start_continuous_runtime", new=AsyncMock()) as start_runtime:
             with self.assertRaisesRegex(
                 SecretsError,
-                "GENERIC_TOKEN_FALLBACK_BLOCKED",
+                "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
             ):
                 asyncio.run(main_module.main())
 
@@ -51,8 +51,6 @@ class FailClosedStartupTests(unittest.TestCase):
             "AURELIA_VERIFY_DERIV_PUBLIC": "false",
             "AURELIA_VERIFY_DERIV_AUTH": "false",
             "AURELIA_CONTINUOUS_RUNTIME": "false",
-            "DERIV_AUTH_TOKEN": "",
-            "DERIV_APP_ID": "",
         }
         with patch.dict(os.environ, sealed, clear=True):
             validate_secrets_at_startup()

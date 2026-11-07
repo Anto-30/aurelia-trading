@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from functools import lru_cache
 
 
@@ -28,6 +29,15 @@ def redact(value: str, visible_chars: int = 4) -> str:
     return "*" * (len(value) - visible_chars) + value[-visible_chars:]
 
 
+def account_credential_keys_present(
+    environ: Mapping[str, str] | None = None,
+) -> bool:
+    """Check forbidden account-credential key presence without reading values."""
+    from runtime.security.deriv_auth_gate import ACCOUNT_CREDENTIAL_ENV_NAMES
+
+    source = os.environ if environ is None else environ
+    return any(name in source for name in ACCOUNT_CREDENTIAL_ENV_NAMES)
+
 def validate_secrets_at_startup() -> None:
     """Fail fast unless this is an explicitly sealed non-production soak."""
     if os.getenv("AURELIA_NON_PRODUCTION_SOAK", "").strip().lower() == "true":
@@ -47,9 +57,9 @@ def validate_secrets_at_startup() -> None:
             ).strip().lower() == "false",
         }
         if all(sealed_flags.values()):
-            from runtime.security.deriv_auth_gate import ACCOUNT_CREDENTIAL_ENV_NAMES
+            
 
-            if any(os.getenv(name, "").strip() for name in ACCOUNT_CREDENTIAL_ENV_NAMES):
+            if account_credential_keys_present():
                 raise SecretsError(
                     "NON_PRODUCTION_SOAK_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED"
                 )
@@ -77,15 +87,15 @@ def validate_secrets_at_startup() -> None:
             raise SecretsError(
                 "VERIFY_ONLY_RUNTIME_NOT_SEALED: " + ",".join(failed)
             )
-        # Public research is credential-free. Account authentication is not
-        # available until Deriv documents a genuine read-only permission.
+        # VERIFY_ONLY is strictly credential-free, regardless of the auth
+        # verification flag. Inspect environment key membership only; never
+        # retrieve token, PAT, refresh-token, or account metadata values.
+        if account_credential_keys_present():
+            raise SecretsError(
+                "VERIFY_ONLY_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED"
+            )
+        # No documented read-only scope exists for the required account APIs.
         if os.getenv("AURELIA_VERIFY_DERIV_AUTH", "").strip().lower() != "true":
-            from runtime.security.deriv_auth_gate import ACCOUNT_CREDENTIAL_ENV_NAMES
-
-            if any(os.getenv(name, "").strip() for name in ACCOUNT_CREDENTIAL_ENV_NAMES):
-                raise SecretsError(
-                    "VERIFY_ONLY_ACCOUNT_CREDENTIALS_MUST_NOT_BE_LOADED"
-                )
             return
 
     from runtime.security.deriv_auth_gate import (

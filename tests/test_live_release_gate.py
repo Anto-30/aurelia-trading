@@ -48,7 +48,7 @@ class LiveReleaseGateTests(unittest.TestCase):
             ):
                 gate.check_environment()
 
-    def test_generic_token_fallback_is_rejected_in_oauth_account_plane(self):
+    def test_account_plane_blocks_even_when_generic_token_is_present(self):
         env = {
             "DERIV_AUTH_TOKEN": "GENERIC_SENTINEL",
             "DERIV_EXPECTED_LOGINID": "CRTEST",
@@ -57,10 +57,10 @@ class LiveReleaseGateTests(unittest.TestCase):
             "ACCOUNT_DERIV_AUTH_MODE": "oauth",
         }
         with patch.dict(os.environ, env, clear=False):
-            with self.assertRaisesRegex(RuntimeError, "GENERIC_TOKEN_FALLBACK_BLOCKED"):
+            with self.assertRaisesRegex(RuntimeError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"):
                 gate.check_environment()
 
-    def test_pat_is_rejected_in_oauth_account_plane(self):
+    def test_account_plane_blocks_even_when_pat_is_present(self):
         env = {
             "DERIV_OAUTH_ACCESS_TOKEN": "OAUTH_SENTINEL",
             "DERIV_PAT": "PAT_SENTINEL",
@@ -70,7 +70,7 @@ class LiveReleaseGateTests(unittest.TestCase):
             "ACCOUNT_DERIV_AUTH_MODE": "oauth",
         }
         with patch.dict(os.environ, env, clear=False):
-            with self.assertRaisesRegex(RuntimeError, "ACCOUNT_PLANE_PAT_PRESENT"):
+            with self.assertRaisesRegex(RuntimeError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"):
                 gate.check_environment()
 
     def test_readiness_is_recomputed_and_never_trusted_from_a_snapshot(self):

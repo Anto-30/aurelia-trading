@@ -16,7 +16,7 @@ jobs:
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
       DERIV_AUTH_CONFIGURED: "false"
-      ACCOUNT_DERIV_AUTH_MODE: "oauth"
+      ACCOUNT_DERIV_AUTH_MODE: "none"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -28,6 +28,10 @@ jobs:
         run: python -m compileall -q runtime research tests assurance
       - name: Run static production acceptance audit
         run: python scripts/production_acceptance_audit.py
+      - name: Enforce workflow-wide Deriv credential boundary
+        run: |
+          python scripts/audit_deriv_workflow_credentials.py
+          python -m unittest discover -s tests -p 'test_deriv_workflow_credential_audit.py' -v
       - name: Validate deployment and secret-provisioning script syntax
         run: |
           bash -n scripts/deploy/bootstrap_and_deploy.sh
@@ -61,7 +65,7 @@ jobs:
       - name: Verify Deriv public-research and blocked account-plane prerequisites
         if: always()
         env:
-          ACCOUNT_DERIV_AUTH_MODE: "oauth"
+          ACCOUNT_DERIV_AUTH_MODE: "none"
         run: python scripts/deriv_auth_prerequisites.py
 
       - name: Upload Deriv authentication prerequisite evidence

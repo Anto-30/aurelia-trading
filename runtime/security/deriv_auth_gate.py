@@ -4,12 +4,18 @@ from collections.abc import Mapping
 import os
 
 
+# These names are forbidden in the public research process. Presence is
+# sufficient to reject the process; values are never read.
 ACCOUNT_CREDENTIAL_ENV_NAMES = (
     "DERIV_AUTH_TOKEN",
     "DERIV_PAT",
     "DERIV_OAUTH_ACCESS_TOKEN",
     "DERIV_OAUTH_REFRESH_TOKEN",
     "DERIV_REFRESH_TOKEN",
+    "DERIV_APP_ID",
+    "DERIV_EXPECTED_LOGINID",
+    "DERIV_AUTHORIZED_ACCOUNT_ID",
+    "DERIV_EXPECTED_CURRENCY",
 )
 
 
@@ -35,30 +41,8 @@ class DerivAuthenticationGate:
         self.environ = os.environ if environ is None else environ
 
     def get_client(self):
-        env = self.environ
-        mode = str(env.get("ACCOUNT_DERIV_AUTH_MODE", "none")).strip().lower()
-        if mode != "oauth":
-            raise AuthModeMismatchError("ACCOUNT_PLANE_REQUIRES_EXPLICIT_OAUTH_MODE")
-
-        oauth_token = str(env.get("DERIV_OAUTH_ACCESS_TOKEN", "")).strip()
-        pat_token = str(env.get("DERIV_PAT", "")).strip()
-        generic_token = str(env.get("DERIV_AUTH_TOKEN", "")).strip()
-        refresh_token = (
-            str(env.get("DERIV_OAUTH_REFRESH_TOKEN", "")).strip()
-            or str(env.get("DERIV_REFRESH_TOKEN", "")).strip()
-        )
-
-        if oauth_token and pat_token and oauth_token == pat_token:
-            raise SecurityError("OAUTH_TOKEN_EQUALS_PAT")
-        if pat_token:
-            raise SecurityError("ACCOUNT_PLANE_PAT_PRESENT")
-        if generic_token:
-            raise AuthModeMismatchError("GENERIC_TOKEN_FALLBACK_BLOCKED")
-        if refresh_token:
-            raise SecurityError("DERIV_OAUTH_REFRESH_TOKEN_UNSUPPORTED")
-        if not oauth_token:
-            raise AuthModeMismatchError("DERIV_OAUTH_ACCESS_TOKEN_MISSING")
-        # Token inequality and token shape do not establish authorization
-        # scope. Deriv currently requires `trade` for the account-list and OTP
-        # endpoints used here, so no account client is issued.
+        # The required account-list and authenticated OTP endpoints require
+        # trade scope. No documented read-only account scope is available.
+        # Do not inspect or consume any token, PAT, refresh token, or account
+        # metadata before failing closed.
         raise SecurityError("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
