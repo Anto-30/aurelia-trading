@@ -29,6 +29,14 @@ CREDENTIAL_ENV_KEY = re.compile(
     rf"^\s*[A-Za-z0-9_-]+\s*:\s*\{{[^#]*?\b(?:{_CREDENTIAL_NAMES})\s*:",
     re.IGNORECASE,
 )
+PRODUCTION_ENVIRONMENT = re.compile(
+    r"(?im)^\s{4}environment\s*:\s*(?:['\"]?production['\"]?|"
+    r"\{\s*name\s*:\s*['\"]?production['\"]?)\s*(?:#.*)?$|"
+    r"(?im)^\s{4}environment\s*:\s*\n\s{6}name\s*:\s*['\"]?production['\"]?\s*(?:#.*)?$"
+)
+PULL_REQUEST_TRIGGER = re.compile(r"(?m)^\s{2}pull_request(?:_target)?\s*:")
+SCHEDULE_TRIGGER = re.compile(r"(?m)^\s{2}schedule\s*:")
+DERIV_ACCOUNT_WORKFLOW = re.compile(r"(?i)^(?:deriv|account|broker)[-_]")
 
 
 def audit_workflows(workflow_dir: Path) -> tuple[int, list[tuple[str, int, str]]]:
@@ -41,7 +49,35 @@ def audit_workflows(workflow_dir: Path) -> tuple[int, list[tuple[str, int, str]]
 
     findings: list[tuple[str, int, str]] = []
     for path in paths:
-        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        text = path.read_text(encoding="utf-8")
+        lines = text.splitlines()
+        # A protected environment exposes its scoped secrets to the job even
+        # when no explicit secrets.* expression appears in the YAML. General
+        # PR/scheduled CI and Deriv account-verification workflows must not
+        # select production.
+        production_line = next(
+            (
+                i
+                for i, line in enumerate(lines, 1)
+                if re.match(r"^\s{4}environment\s*:", line, re.IGNORECASE)
+            ),
+            0,
+        )
+        if production_line and PRODUCTION_ENVIRONMENT.search(text):
+            if PULL_REQUEST_TRIGGER.search(text):
+                findings.append(
+                    (path.name, production_line, "PULL_REQUEST_PRODUCTION_ENVIRONMENT_ACCESS")
+                )
+            if SCHEDULE_TRIGGER.search(text):
+                findings.append(
+                    (path.name, production_line, "SCHEDULED_PRODUCTION_ENVIRONMENT_ACCESS")
+                )
+            if DERIV_ACCOUNT_WORKFLOW.match(path.stem):
+                findings.append(
+                    (path.name, production_line, "DERIV_ACCOUNT_PRODUCTION_ENVIRONMENT_ACCESS")
+                )
+
+        for line_number, line in enumerate(lines, 1):
             # Ignore YAML comments; never print matched workflow text or values.
             source = line.split("#", 1)[0]
             if (
