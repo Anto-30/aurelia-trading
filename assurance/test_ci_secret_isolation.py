@@ -50,7 +50,13 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         for workflow, job in cases:
             with self.subTest(workflow=workflow, job=job):
                 block = _job_block(workflow, job)
-                self.assertIn(expected, block)
+                job_conditions = re.findall(r"^    if:\\s*(.+)$", block, flags=re.MULTILINE)
+                self.assertEqual(
+                    len(job_conditions),
+                    1,
+                    f"{workflow}:{job} must have exactly one job-level if condition",
+                )
+                self.assertEqual(job_conditions[0], expected.removeprefix("if: "))
                 self.assertRegex(block, r"\$\{\{\s*secrets\.")
 
     def test_auth_evidence_is_not_scheduled(self):
@@ -60,7 +66,12 @@ class ProductionSecretIsolationTests(unittest.TestCase):
 
     def test_secret_presence_report_is_main_only(self):
         block = _job_block("secret-presence-report.yml", "report")
-        self.assertIn("if: ${{ github.ref == 'refs/heads/main' }}", block)
+        job_conditions = re.findall(r"^    if:\\s*(.+)$", block, flags=re.MULTILINE)
+        self.assertEqual(
+            job_conditions,
+            ["${{ github.ref == 'refs/heads/main' }}"],
+            "Secret-presence report must have exactly one main-only job condition",
+        )
         self.assertRegex(block, r"\$\{\{\s*secrets\.")
 
     def test_pull_request_trigger_remains_available_without_secret_access(self):
