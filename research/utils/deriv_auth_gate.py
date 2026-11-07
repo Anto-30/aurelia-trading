@@ -17,11 +17,6 @@ PUBLIC_RESEARCH_ACTION_FIELDS = {
     "active_symbols": {"active_symbols", "req_id", "passthrough"},
     "contracts_for": {"contracts_for", "currency", "req_id", "passthrough"},
     "contracts_list": {"contracts_list", "product_type", "req_id", "passthrough"},
-    "proposal": {
-        "proposal", "amount", "basis", "contract_type", "currency",
-        "duration", "duration_unit", "underlying_symbol", "barrier", "date_expiry",
-        "req_id", "passthrough",
-    },
     "ticks": {"ticks", "subscribe", "req_id", "passthrough"},
     "ticks_history": {
         "ticks_history", "adjust_start_time", "count", "end", "start",
