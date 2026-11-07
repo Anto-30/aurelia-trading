@@ -126,8 +126,9 @@ def _candidate_fixture(*, start_minute=40, entry_open=101.0, signal_close=101.1)
         (entry_open, entry_open + 1.0, entry_open - 1.0, entry_open + 0.5),
     ]
     bars = []
+    start = datetime(2026, 1, 15, 9, start_minute, tzinfo=ny)
     for index, (opened, high, low, close) in enumerate(rows):
-        local = datetime(2026, 1, 15, 9, start_minute + index, tzinfo=ny)
+        local = start + timedelta(minutes=index)
         stamp = local.astimezone(timezone.utc).isoformat()
         bars.append(StrategyBar(stamp, opened, high, low, close))
     swing = ProtectedSwing(
