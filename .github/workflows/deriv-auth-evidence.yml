@@ -2,8 +2,6 @@ name: AURELIA Deriv Verify-Only Evidence
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17 */6 * * *"
 
 permissions:
   contents: read
@@ -14,7 +12,7 @@ concurrency:
 
 jobs:
   verify:
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
     # This workflow must opt into the same protected environment as the other
     # Deriv verification workflows; environment-scoped secrets are unavailable
     # to jobs that omit this declaration.
