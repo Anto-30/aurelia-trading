@@ -363,6 +363,81 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
             self.assertFalse(report["capital_authority"])
             self.assertIn("collection_error_details", report)
 
+    def test_collector_never_requests_public_contract_proposals(self):
+        import research.r100_prospective_oos_collector as collector
+        from types import SimpleNamespace
+
+        start = datetime(2026, 10, 6, 19, 0, 0, tzinfo=timezone.utc)
+
+        class OneTickThenWait:
+            def __init__(self):
+                self.sent = False
+                self.closed = False
+
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                if not self.sent:
+                    self.sent = True
+                    return {
+                        "msg_type": "tick",
+                        "tick": {
+                            "symbol": "R_100",
+                            "quote": 100.0,
+                            "epoch": int(start.timestamp()) + 1,
+                        },
+                    }
+                await asyncio.sleep(1)
+                raise StopAsyncIteration
+
+            async def aclose(self):
+                self.closed = True
+
+        class FakeHunter:
+            def observe(self, **kwargs):
+                return SimpleNamespace(
+                    probability=0.65,
+                    probability_status="UNCALIBRATED_RESEARCH_ONLY",
+                    direction="CALL",
+                    score=1.6,
+                )
+
+        stream = OneTickThenWait()
+
+        class FakeTransport:
+            def __init__(self):
+                self.connect = AsyncMock()
+                self.request = AsyncMock()
+                self.close = AsyncMock()
+
+            def subscribe(self, key, payload):
+                return stream
+
+        transport = FakeTransport()
+        gate = type("Gate", (), {"get_client": lambda self: transport})()
+        state = initial_state()
+        state["manifest"]["campaign_end_at_utc"] = "2026-10-06T20:00:00Z"
+
+        with (
+            patch.object(collector, "utc_now", return_value=start),
+            patch.object(collector, "COLLECTION_SECONDS", 0.01),
+            patch.object(collector, "DerivAuthenticationGate", return_value=gate),
+            patch.object(collector, "AutonomousSignalHunter", return_value=FakeHunter()),
+        ):
+            asyncio.run(collector.collect_once(state))
+
+        transport.request.assert_not_awaited()
+        self.assertEqual(len(state["pending"]), 1)
+        self.assertEqual(len(state["quote_observations"]), 1)
+        self.assertEqual(state["quote_observations"][0]["quote_status"], "UNAVAILABLE")
+        self.assertEqual(
+            state["quote_observations"][0]["error_code"],
+            "R100_PUBLIC_PROPOSAL_QUOTES_DISABLED_BY_POLICY",
+        )
+        self.assertTrue(stream.closed)
+        transport.close.assert_awaited_once()
+
     def test_horizon_is_positive(self):
         self.assertGreater(HORIZON_TICKS, 0)
 

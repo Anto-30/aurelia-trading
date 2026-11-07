@@ -17,7 +17,7 @@ The research client connects only to Deriv's public market-data WebSocket:
 
 It sends no app ID, Authorization header, bearer token, PAT, cookie, OAuth token, or account metadata. It rejects a process environment containing any name in the canonical account-credential denylist, checking key presence without reading values, and rechecks the boundary before each request.
 
-Allowed actions are restricted to public market-data reads and non-executing price-quote requests. The action-specific field allowlist rejects account authorization, buy/sell, order submission, and unrecognized request fields. A quote request is not a purchase proposal and is never followed by a buy action.
+Allowed actions are restricted to public market-data and contract-metadata reads. Contract proposal/quote requests are disabled by policy; the research client rejects the `proposal` action as well as account authorization, buy/sell, order submission, and unrecognized request fields. Historical quote observations may be analyzed offline, but the prospective collector makes no new proposal requests.
 
 `scripts/verify_deriv_public_transport.py` verifies R_100 active-symbol availability, M1 candles, and ordered live ticks over the credential-free public endpoint. A successful exact-head CI run and its hashed artifact are required before describing public transport as verified.
 

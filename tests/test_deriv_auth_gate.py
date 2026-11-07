@@ -9,7 +9,6 @@ from research.utils.deriv_auth_gate import (
     DerivAuthenticationGate,
     SecurityError,
 )
-from research.r100_prospective_oos_collector import build_proposal_request
 
 
 class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
@@ -83,33 +82,28 @@ class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
         ):
             client.validate_request({"ticks_history": "R_100"})
 
-    def test_prospective_collector_builds_schema_valid_public_proposal(self):
-        payload = build_proposal_request("CALL")
-        self.assertEqual(payload["underlying_symbol"], "R_100")
-        self.assertNotIn("symbol", payload)
-        DerivAuthenticationGate(plane="research", environ={}).get_client().validate_request(payload)
-        with self.assertRaisesRegex(ValueError, "R100_PROPOSAL_DIRECTION_INVALID"):
-            build_proposal_request("BUY")
-
-    def test_public_proposal_request_with_bounded_parameters_is_allowed(self):
+    def test_public_contract_proposal_quotes_are_disabled_by_policy(self):
         client = DerivAuthenticationGate(plane="research", environ={}).get_client()
-        client.validate_request({
-            "proposal": 1,
-            "amount": 1.0,
-            "basis": "stake",
-            "contract_type": "CALL",
-            "currency": "USD",
-            "duration": 10,
-            "duration_unit": "t",
-            "underlying_symbol": "R_100",
-        })
-
-    def test_public_proposal_rejects_unknown_or_capital_moving_fields(self):
-        client = DerivAuthenticationGate(plane="research", environ={}).get_client()
-        with self.assertRaisesRegex(SecurityError, "PUBLIC_RESEARCH_REQUEST_FIELD_NOT_ALLOWED"):
+        with self.assertRaisesRegex(
+            SecurityError,
+            "PUBLIC_RESEARCH_ACTION_NOT_ALLOWED",
+        ):
             client.validate_request({
                 "proposal": 1,
                 "amount": 1.0,
+                "basis": "stake",
+                "contract_type": "CALL",
+                "currency": "USD",
+                "duration": 10,
+                "duration_unit": "t",
+                "underlying_symbol": "R_100",
+            })
+
+    def test_allowed_market_data_action_rejects_capital_moving_fields(self):
+        client = DerivAuthenticationGate(plane="research", environ={}).get_client()
+        with self.assertRaisesRegex(SecurityError, "PUBLIC_RESEARCH_REQUEST_FIELD_NOT_ALLOWED"):
+            client.validate_request({
+                "ticks": "R_100",
                 "buy": "proposal-id",
             })
 
