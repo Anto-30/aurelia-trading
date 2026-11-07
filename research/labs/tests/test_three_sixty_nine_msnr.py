@@ -119,7 +119,7 @@ def _candidate_fixture(*, start_minute=40, entry_open=101.0, signal_close=101.1)
     ny = ZoneInfo("America/New_York")
     rows = [
         (100.0, 101.0, 99.0, 100.0),
-        (100.0, 100.5, 98.0, 99.0),
+        (100.0, 102.5, 98.0, 99.0),
         (99.0, 101.0, 98.5, 100.0),
         (100.0, 100.7, 99.0, 100.0),
         (100.0, 101.15, 97.0, signal_close),
@@ -199,17 +199,15 @@ class ThreeSixtyNineCandidateTests(unittest.TestCase):
         self.assertIsNone(evaluate_369_msnr_candidate(
             bars, timeframe_seconds=60, protected_swing=future_swing, config=config
         ))
-        incomplete = ProtectedSwing(
-            direction=swing.direction,
-            anchor_price=swing.anchor_price,
-            pivot_timestamp_utc=swing.pivot_timestamp_utc,
-            confirmation_timestamp_utc=swing.confirmation_timestamp_utc,
-            source_rule_id="",
-            last_input_bar_timestamp_utc=swing.last_input_bar_timestamp_utc,
-        )
-        self.assertIsNone(evaluate_369_msnr_candidate(
-            bars, timeframe_seconds=60, protected_swing=incomplete, config=config
-        ))
+        with self.assertRaisesRegex(ValueError, "PROTECTED_SWING_SOURCE_RULE_REQUIRED"):
+            ProtectedSwing(
+                direction=swing.direction,
+                anchor_price=swing.anchor_price,
+                pivot_timestamp_utc=swing.pivot_timestamp_utc,
+                confirmation_timestamp_utc=swing.confirmation_timestamp_utc,
+                source_rule_id="",
+                last_input_bar_timestamp_utc=swing.last_input_bar_timestamp_utc,
+            )
 
     def test_candidate_rejects_swing_direction_mismatch(self):
         bars, swing, config = _candidate_fixture()
