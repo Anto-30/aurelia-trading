@@ -99,12 +99,11 @@ class DerivAuthenticationGateTests(unittest.IsolatedAsyncioTestCase):
                 "underlying_symbol": "R_100",
             })
 
-    def test_public_proposal_rejects_unknown_or_capital_moving_fields(self):
+    def test_allowed_market_data_action_rejects_capital_moving_fields(self):
         client = DerivAuthenticationGate(plane="research", environ={}).get_client()
         with self.assertRaisesRegex(SecurityError, "PUBLIC_RESEARCH_REQUEST_FIELD_NOT_ALLOWED"):
             client.validate_request({
-                "proposal": 1,
-                "amount": 1.0,
+                "ticks": "R_100",
                 "buy": "proposal-id",
             })
 
