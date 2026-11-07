@@ -52,6 +52,49 @@ class R100ProspectiveSealerTest(unittest.TestCase):
             self.assertEqual(report["oos_mean_strategy_return"], 0.123)
             self.assertEqual(report["evaluation_snapshot_status"], "LAST_COLLECTION_SNAPSHOT_PRESERVED")
 
+    def test_post_expiry_observation_is_rejected_without_mutating_archive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "aurelia_r100_state.json"
+            state = initial_state()
+            state["manifest"]["campaign_end_at_utc"] = "2026-10-06T20:00:00Z"
+            state["observations"] = [{
+                "signal_timestamp_utc": "2026-10-06T19:59:00Z",
+                "exit_timestamp_utc": "2026-10-06T20:00:01Z",
+            }]
+            save_state(path, state)
+            original = path.read_bytes()
+
+            with self.assertRaisesRegex(ValueError, "R100_POST_EXPIRY_DATA_PRESENT"):
+                seal_expired_campaign(
+                    path,
+                    now=datetime(2026, 10, 7, tzinfo=timezone.utc),
+                )
+
+            self.assertEqual(path.read_bytes(), original)
+            self.assertFalse(path.with_name("aurelia_r100_report.json").exists())
+
+    def test_post_expiry_quote_is_rejected_without_mutating_archive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "aurelia_r100_state.json"
+            state = initial_state()
+            state["manifest"]["campaign_end_at_utc"] = "2026-10-06T20:00:00Z"
+            state["quote_observations"] = [{
+                "signal_id": "quote-after-cutoff",
+                "captured_at_utc": "2026-10-06T20:00:00Z",
+                "quote_status": "UNAVAILABLE",
+            }]
+            save_state(path, state)
+            original = path.read_bytes()
+
+            with self.assertRaisesRegex(ValueError, "R100_POST_EXPIRY_DATA_PRESENT"):
+                seal_expired_campaign(
+                    path,
+                    now=datetime(2026, 10, 7, tzinfo=timezone.utc),
+                )
+
+            self.assertEqual(path.read_bytes(), original)
+            self.assertFalse(path.with_name("aurelia_r100_report.json").exists())
+
     def test_active_campaign_is_not_sealed_early(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "aurelia_r100_state.json"
