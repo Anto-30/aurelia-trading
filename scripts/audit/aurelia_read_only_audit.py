@@ -16,6 +16,8 @@ import os
 import re
 import subprocess
 import sys
+import socket
+import ssl
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -215,6 +217,25 @@ def check_data_readiness(root: Path, data_path: Path = DATA_PATH) -> dict[str, s
     return {"status": "PASS", "message": f"R_100 M15 dataset structurally valid; latest UTC bar: {utc_index[-1].isoformat()}"}
 
 
+
+def check_deriv_connectivity() -> dict[str, str]:
+    """Verify TLS reachability of the current Deriv API host without credentials."""
+    host = "api.derivws.com"
+    try:
+        raw = socket.create_connection((host, 443), timeout=5)
+        with raw:
+            context = ssl.create_default_context()
+            with context.wrap_socket(raw, server_hostname=host) as tls:
+                certificate = tls.getpeercert()
+                if not certificate:
+                    return {"status": "FAIL", "message": "Deriv API TLS peer certificate unavailable"}
+                return {
+                    "status": "PASS",
+                    "message": "Modern Deriv API host TLS handshake verified; no authentication or account data requested",
+                }
+    except (OSError, ssl.SSLError) as exc:
+        return {"status": "FAIL", "message": f"Modern Deriv API host TLS connectivity failed: {exc}"}
+
 def run_audit(root: Path = ROOT) -> int:
     audit = Audit()
     checks = {
@@ -227,14 +248,8 @@ def run_audit(root: Path = ROOT) -> int:
     for name, result in checks.items():
         audit.record(name, result["status"], result["message"])
 
-    # Deliberately no legacy Binary WS v3 request: AURELIA documents that endpoint
-    # as diagnostic-only. This audit does not authenticate or call broker endpoints.
-    audit.record(
-        "Deriv_Connectivity",
-        "UNKNOWN",
-        "Not probed: legacy ws.binaryws.com is not an approved production path; "
-        "use the separately governed modern Deriv verifier when explicitly authorized.",
-    )
+    deriv = check_deriv_connectivity()
+    audit.record("Deriv_Connectivity", deriv["status"], deriv["message"])
     payload = audit.summary()
     print(json.dumps(payload, indent=2, sort_keys=True))
     return audit.exit_code
