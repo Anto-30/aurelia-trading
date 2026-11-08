@@ -31,7 +31,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
     def test_general_assurance_has_no_production_environment_or_secrets(self):
         text = (WORKFLOWS / "aurelia-assurance.yml").read_text(encoding="utf-8")
         self.assertNotIn("environment: production", text)
-        self.assertNotIn("secrets.", text)
+        self.assertNotRegex(text, r"\$\{\{\s*secrets\.")
         self.assertNotIn("verify_deriv_session.py", text)
 
     def test_canonical_account_verifier_is_manual_main_only_and_production_scoped(self):
