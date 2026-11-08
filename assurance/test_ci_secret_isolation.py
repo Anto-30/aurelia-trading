@@ -58,7 +58,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
     def test_credentials_are_scoped_to_canonical_verifier_step_only(self):
         block = _job_block("deriv-auth-evidence.yml", "verify")
         pre_steps = block.split("steps:", 1)[0]
-        self.assertNotRegex(text, r"\$\{\{\s*secrets\.")
+        self.assertNotRegex(pre_steps, r"\$\{\{\s*secrets\.")
         for key in SECRET_ENV_KEYS:
             self.assertRegex(block, rf"(?m)^\s+{key}: \$\{{\{{ secrets\.")
 
