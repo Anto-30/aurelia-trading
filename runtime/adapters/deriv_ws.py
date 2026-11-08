@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 from dataclasses import dataclass
 from typing import Any, AsyncIterator
 
@@ -50,6 +51,7 @@ class DerivWebSocketTransport:
         self.ping_interval = ping_interval
         self.application_ping_interval_seconds = float(application_ping_interval_seconds)
         self.ws: ClientConnection | None = None
+        self._socket: ClientConnection | None = None
         self._reader_task: asyncio.Task[None] | None = None
         self._keepalive_task: asyncio.Task[None] | None = None
         self._reader_error_class: str | None = None
@@ -70,6 +72,7 @@ class DerivWebSocketTransport:
             close_timeout=5,
             max_size=2_000_000,
         )
+        self._socket = self.ws
         self._reader_task = asyncio.create_task(self._reader_loop())
         self._keepalive_task = asyncio.create_task(self._application_keepalive_loop())
 
@@ -244,7 +247,7 @@ class DerivWebSocketTransport:
             )
 
     async def close(self) -> None:
-        socket = self.ws
+        socket = self._socket or self.ws
         keepalive = self._keepalive_task
         reader = self._reader_task
         self._keepalive_task = None
@@ -263,5 +266,6 @@ class DerivWebSocketTransport:
         if socket is not None:
             await socket.close()
         self.ws = None
+        self._socket = None
         self._fail_pending(DerivTransportError("BROKER_SESSION_CLOSED"))
         self._subscription_by_request_id.clear()
