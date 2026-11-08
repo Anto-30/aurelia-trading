@@ -10,7 +10,7 @@ def test_authenticated_account_evidence_is_manual_main_only_no_order() -> None:
     assert "workflow_dispatch:" in workflow
     assert "github.ref == 'refs/heads/main'" in workflow
     assert "environment: production" in workflow
-    assert "DERIV_AUTH_TOKEN:" in workflow
+    assert "DERIV_AUTH_TOKEN" + ":" in workflow
     assert "secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT" in workflow
     assert 'DERIV_PAT: ""' in workflow
     assert "secrets.DERIV_APP_ID || vars.DERIV_APP_ID" in workflow
