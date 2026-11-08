@@ -82,11 +82,31 @@ class HistoricalCandleCollectorTests(unittest.IsolatedAsyncioTestCase):
         transport = FakeTransport([
             {"msg_type": "error", "error": {"code": "InvalidSymbol", "message": "SYNTHETIC_SECRET"}},
         ])
-        with self.assertRaisesRegex(RuntimeError, "RESPONSE_TYPE_INVALID"):
+        with self.assertRaisesRegex(RuntimeError, "API_REJECTED:InvalidSymbol"):
             await collect_timeframe(
                 transport, symbol="R_100", start_epoch=600, end_epoch=660,
                 granularity=60, chunk_bars=3, request_delay_seconds=0,
             )
+
+    def test_safe_diagnostics_preserve_only_fixed_reason_codes(self):
+        from research.labs.deriv_historical_candle_collector import safe_historical_error_reason
+
+        self.assertEqual(
+            safe_historical_error_reason(RuntimeError("HISTORICAL_WINDOW_INVALID")),
+            "HISTORICAL_WINDOW_INVALID",
+        )
+        self.assertEqual(
+            safe_historical_error_reason(RuntimeError("DERIV_HISTORICAL_API_REJECTED:InvalidSymbol")),
+            "DERIV_HISTORICAL_API_REJECTED:InvalidSymbol",
+        )
+
+    def test_safe_diagnostics_mask_arbitrary_exception_text(self):
+        from research.labs.deriv_historical_candle_collector import safe_historical_error_reason
+
+        private = "SYNTHETIC_TOKEN_OR_ACCOUNT_DATA"
+        result = safe_historical_error_reason(RuntimeError(private))
+        self.assertEqual(result, "UNCLASSIFIED_RUNTIMEERROR")
+        self.assertNotIn(private, result)
 
     async def test_public_collection_writes_manifest_and_hashes(self):
         responses = [

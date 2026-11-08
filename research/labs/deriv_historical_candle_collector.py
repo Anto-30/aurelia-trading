@@ -98,7 +98,18 @@ async def collect_timeframe(
             raise RuntimeError(
                 "DERIV_HISTORICAL_REQUEST_FAILED:" + type(exc).__name__
             ) from None
-        if not isinstance(response, dict) or response.get("msg_type") != "candles":
+        if not isinstance(response, dict):
+            raise RuntimeError("DERIV_HISTORICAL_RESPONSE_SHAPE_INVALID")
+        if "error" in response:
+            error = response.get("error")
+            code = error.get("code") if isinstance(error, dict) else None
+            if not isinstance(code, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,63}", code):
+                code = "UNKNOWN_CODE"
+            raise RuntimeError("DERIV_HISTORICAL_API_REJECTED:" + code)
+        if response.get("msg_type") != "candles":
+            message_type = response.get("msg_type")
+            if isinstance(message_type, str) and message_type in {"history", "tick", "ohlc", "candles"}:
+                raise RuntimeError("DERIV_HISTORICAL_RESPONSE_TYPE_INVALID:" + message_type)
             raise RuntimeError("DERIV_HISTORICAL_RESPONSE_TYPE_INVALID")
         candles = response.get("candles")
         if not isinstance(candles, list):
@@ -253,6 +264,36 @@ def _parse_timeframes(raw: str) -> tuple[int, ...]:
     return values
 
 
+def safe_historical_error_reason(exc: Exception) -> str:
+    """Expose only fixed internal reasons and syntactically valid public API codes."""
+    args = getattr(exc, "args", ())
+    if len(args) == 1 and isinstance(args[0], str):
+        reason = args[0]
+        if re.fullmatch(r"HISTORICAL_[A-Z0-9_]+", reason):
+            return reason
+        if re.fullmatch(r"DERIV_HISTORICAL_[A-Z0-9_]+", reason):
+            return reason
+        match = re.fullmatch(
+            r"DERIV_HISTORICAL_REQUEST_FAILED:([A-Za-z][A-Za-z0-9_]{0,63})",
+            reason,
+        )
+        if match:
+            return reason
+        match = re.fullmatch(
+            r"DERIV_HISTORICAL_API_REJECTED:([A-Za-z][A-Za-z0-9_]{0,63})",
+            reason,
+        )
+        if match:
+            return reason
+        match = re.fullmatch(
+            r"DERIV_HISTORICAL_RESPONSE_TYPE_INVALID:(history|tick|ohlc|candles)",
+            reason,
+        )
+        if match:
+            return reason
+    return "UNCLASSIFIED_" + type(exc).__name__.upper()
+
+
 def main() -> int:
     import os
 
@@ -275,7 +316,7 @@ def main() -> int:
         ))
     except Exception as exc:
         print("R100_HISTORICAL_COLLECTION=FAILED")
-        print("REASON=" + type(exc).__name__)
+        print("REASON=" + safe_historical_error_reason(exc))
         return 2
     total = sum(x["bar_count"] for x in manifest["datasets"])
     print("R100_HISTORICAL_COLLECTION=COMPLETE")
