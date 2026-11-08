@@ -34,6 +34,7 @@ def test_report_is_boolean_only_and_preserves_capital_lock() -> None:
         DERIV_EXPECTED_LOGINID=fake_login,
         DERIV_EXPECTED_CURRENCY="USD",
         DERIV_AUTH_MODE="pat",
+        DERIV_ENVIRONMENT="real",
         AURELIA_HOST="host.example.invalid",
         AURELIA_USER="runtime-user",
         AURELIA_SSH_KEY="PRIVATE_KEY_SENTINEL_DO_NOT_PRINT",
@@ -52,6 +53,8 @@ def test_report_is_boolean_only_and_preserves_capital_lock() -> None:
     assert "DERIV_EXPECTED_CURRENCY_PRESENT=true" in result.stdout
     assert "DERIV_EXPECTED_CURRENCY_SUPPORTED=true" in result.stdout
     assert "DERIV_AUTH_CONFIGURED=true" in result.stdout
+    assert "DERIV_ENVIRONMENT_VALID=true" in result.stdout
+    assert "DERIV_ENVIRONMENT_EFFECTIVE=REAL" in result.stdout
     assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
     assert "LIVE_EXECUTION=BLOCKED" in result.stdout
     assert "CAPITAL_MOVEMENT_PERMITTED=false" in result.stdout
@@ -197,3 +200,36 @@ def test_short_operator_reset_signing_key_blocks_deployment_prerequisites() -> N
     assert "LIVE_EXECUTION=BLOCKED" in result.stdout
     assert "PRIVATE_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
     assert "SIGNING_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
+
+
+def test_invalid_deriv_environment_blocks_configuration_without_echoing_value() -> None:
+    marker = "production-ish"
+    result = run_report(
+        DERIV_AUTH_TOKEN="FAKE_TOKEN",
+        DERIV_APP_ID="12345",
+        DERIV_EXPECTED_LOGINID="CRTEST",
+        DERIV_EXPECTED_CURRENCY="USD",
+        DERIV_AUTH_MODE="pat",
+        DERIV_ENVIRONMENT=marker,
+    )
+    assert result.returncode == 0
+    assert marker not in result.stdout
+    assert "DERIV_ENVIRONMENT_VALID=false" in result.stdout
+    assert "DERIV_ENVIRONMENT_EFFECTIVE=INVALID" in result.stdout
+    assert "DERIV_AUTH_CONFIGURED=false" in result.stdout
+
+
+def test_presence_workflow_uses_production_vars_and_never_treats_token_as_variable() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "secret-presence-report.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "workflow_dispatch:" in workflow
+    assert "environment: production" in workflow
+    assert "secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT" in workflow
+    assert "vars.DERIV_APP_ID" in workflow
+    assert "vars.DERIV_EXPECTED_LOGINID" in workflow
+    assert "vars.DERIV_EXPECTED_CURRENCY" in workflow
+    assert "vars.DERIV_AUTH_MODE" in workflow
+    assert "vars.DERIV_ENVIRONMENT" in workflow
+    assert "vars.DERIV_AUTH_TOKEN" not in workflow
+    assert "vars.DERIV_PAT" not in workflow
