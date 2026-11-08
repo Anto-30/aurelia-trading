@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from runtime.core.secrets import get_optional_secret
+from scripts.verify_deriv_session import safe_deriv_error_reason
 
 from assurance.evidence_writer import build_evidence, payload_sha256, write_evidence
 from runtime.adapters.deriv_adapter import DerivAdapter
@@ -627,7 +628,7 @@ async def run() -> int:
         return 0
     except Exception as exc:
         print("DERIV_TRANSACTION_LIFECYCLE=FAILED")
-        print(f"REASON={type(exc).__name__}")
+        print(f"REASON={safe_deriv_error_reason(exc)}")
         return 1
     finally:
         if adapter is not None:
