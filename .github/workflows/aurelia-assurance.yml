@@ -31,6 +31,33 @@ jobs:
           bash -n scripts/provision_deriv_github_secrets.sh
       - name: Run research-plane tests
         run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
+      - name: Smoke-test public R100 M1 and M15 historical candles
+        if: github.event_name == 'push' && github.ref == 'refs/heads/research/369-msnr-wfo-20261108'
+        run: |
+          python -m research.labs.deriv_historical_candle_collector \
+            --symbol R_100 \
+            --start-epoch 1666310400 \
+            --end-epoch 1666314000 \
+            --timeframes 60,900 \
+            --output-dir artifacts/r100-historical-smoke
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("artifacts/r100-historical-smoke/manifest.json").read_text())
+          assert data["authentication_used"] is False
+          assert data["capital_authority"] is False
+          assert data["order_submission_permitted"] is False
+          assert [(row["timeframe"], row["bar_count"]) for row in data["datasets"]] == [("M1", 60), ("M15", 4)]
+          print("R100_HISTORICAL_PUBLIC_SMOKE=PASS")
+          PY
+      - name: Upload public R100 historical smoke evidence
+        if: always() && hashFiles('artifacts/r100-historical-smoke/manifest.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-r100-historical-smoke-${{ github.run_id }}
+          path: artifacts/r100-historical-smoke/
+          if-no-files-found: error
+          retention-days: 30
       - name: Run assurance tests
         run: python -m unittest discover -s assurance -p 'test_*.py' -v
       - name: Run runtime tests
