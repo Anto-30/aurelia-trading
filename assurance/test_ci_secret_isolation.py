@@ -80,7 +80,6 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         block = _job_block("secret-presence-report.yml", "report")
         conditions = re.findall(r"^    if:\s*(.+)$", block, flags=re.MULTILINE)
         self.assertEqual(conditions, ["${{ github.ref == 'refs/heads/main' }}"])
-            self.assertRegex(block, rf"(?m)^\s+{key}: \$\{{\{{ secrets\.")
 
     def test_whatsapp_smoke_remains_main_only_and_separate_from_deriv(self):
         block = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
