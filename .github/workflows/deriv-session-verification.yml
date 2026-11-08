@@ -1,4 +1,4 @@
-name: AURELIA Deriv Account Session Verification (Alias)
+name: AURELIA Deriv Account Session Verification (Alias Guidance)
 
 on:
   workflow_dispatch:
@@ -11,10 +11,11 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Use the canonical account evidence workflow
+      - name: Report that this alias does not execute verification
         run: |
-          echo "DERIV_SESSION_VERIFICATION=ROUTED_TO_DERIV_AUTH_EVIDENCE"
-          echo "RUN_AURELIA_DERIV_ACCOUNT_IDENTITY_EVIDENCE_ON_MAIN=true"
+          echo "DERIV_SESSION_VERIFICATION=NOT_EXECUTED"
+          echo "NEXT_STEP=MANUALLY_DISPATCH_DERIV_AUTH_EVIDENCE_ON_MAIN"
+          echo "DERIV_CREDENTIALS_READ=false"
           echo "DERIV_ORDERS_SUBMITTED=0"
           echo "LIVE_EXECUTION=BLOCKED"
           echo "FINAL_EXECUTION_AUTHORIZATION=false"

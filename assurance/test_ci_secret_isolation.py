@@ -48,12 +48,14 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertNotIn("schedule:", text)
         self.assertNotIn("pull_request:", text)
 
-    def test_session_verification_alias_cannot_access_credentials(self):
+    def test_session_verification_alias_is_explicitly_non_executing_and_credential_free(self):
         text = (WORKFLOWS / "deriv-session-verification.yml").read_text(encoding="utf-8")
-        self.assertIn("RUN_AURELIA_DERIV_ACCOUNT_IDENTITY_EVIDENCE_ON_MAIN=true", text)
+        self.assertIn("DERIV_SESSION_VERIFICATION=NOT_EXECUTED", text)
+        self.assertIn("NEXT_STEP=MANUALLY_DISPATCH_DERIV_AUTH_EVIDENCE_ON_MAIN", text)
         self.assertNotIn("environment: production", text)
         self.assertNotRegex(text, r"\$\{\{\s*secrets\.")
         self.assertNotIn("DERIV_AUTH_TOKEN", text)
+        self.assertNotIn("RUN_AURELIA_DERIV_ACCOUNT_IDENTITY_EVIDENCE_ON_MAIN=true", text)
 
     def test_credentials_are_scoped_to_canonical_verifier_step_only(self):
         block = _job_block("deriv-auth-evidence.yml", "verify")
