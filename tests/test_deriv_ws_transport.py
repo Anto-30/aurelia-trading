@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from runtime.adapters.deriv_ws import DerivWebSocketTransport
 
@@ -25,14 +25,17 @@ class FakeWebSocket:
     async def recv(self):
         if self.reader_error.is_set():
             raise ConnectionResetError("SYNTHETIC_PRIVATE_TRANSPORT_DETAIL")
-        return await self.incoming.get()
+        raw = await self.incoming.get()
+        if self.reader_error.is_set():
+            raise ConnectionResetError("SYNTHETIC_PRIVATE_TRANSPORT_DETAIL")
+        return raw
 
     async def close(self):
         self.closed = True
 
     def break_reader(self):
         self.reader_error.set()
-        self.incoming.put_nowait(json.dumps({"msg_type": "disconnect"}))
+        self.incoming.put_nowait(None)
 
 
 class DerivWebSocketKeepaliveTests(unittest.IsolatedAsyncioTestCase):
@@ -40,7 +43,7 @@ class DerivWebSocketKeepaliveTests(unittest.IsolatedAsyncioTestCase):
         socket = FakeWebSocket()
         with patch(
             "runtime.adapters.deriv_ws.connect",
-            return_value=socket,
+            new=AsyncMock(return_value=socket),
         ):
             transport = DerivWebSocketTransport(
                 "wss://api.derivws.com/trading/v1/options/ws/public",
