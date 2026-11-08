@@ -191,6 +191,7 @@ class HistoricalCandleCollectorTests(unittest.IsolatedAsyncioTestCase):
                 transport_factory=factory,
             )
         self.assertEqual(created[0][0], LEGACY_PUBLIC_WS_URL)
+        self.assertEqual(manifest["datasets"][0]["source_endpoint"], LEGACY_PUBLIC_WS_URL)
         self.assertEqual(manifest["api_variant"], "legacy")
         self.assertFalse(manifest["authentication_used"])
         self.assertFalse(manifest["capital_authority"])
@@ -221,6 +222,7 @@ class HistoricalCandleCollectorTests(unittest.IsolatedAsyncioTestCase):
             self.assertFalse(manifest["capital_authority"])
             self.assertFalse(manifest["order_submission_permitted"])
             self.assertEqual(created[0][0], PUBLIC_WS_URL)
+            self.assertTrue(all(x["source_endpoint"] == PUBLIC_WS_URL for x in manifest["datasets"]))
             self.assertEqual(created[0][1]["application_ping_interval_seconds"], 30.0)
             self.assertTrue(instances[0].connected)
             self.assertTrue(instances[0].closed)
