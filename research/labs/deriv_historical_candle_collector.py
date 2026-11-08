@@ -202,7 +202,8 @@ def normalized_bars_sha256(bars: Sequence[StrategyBar]) -> str:
 
 def _write_dataset(output_dir: Path, *, symbol: str, granularity: int,
                    bars: Sequence[StrategyBar], start_epoch: int,
-                   end_epoch: int, source_commit: str) -> dict[str, Any]:
+                   end_epoch: int, source_commit: str,
+                   source_endpoint: str) -> dict[str, Any]:
     timeframe = "M1" if granularity == 60 else "M15"
     path = output_dir / f"{symbol}_{timeframe}.csv"
     with path.open("w", encoding="utf-8", newline="") as handle:
@@ -280,7 +281,7 @@ async def collect_historical_dataset(
             datasets.append(_write_dataset(
                 directory, symbol=symbol, granularity=granularity, bars=bars,
                 start_epoch=start_epoch, end_epoch=end_epoch,
-                source_commit=source_commit,
+                source_commit=source_commit, source_endpoint=endpoint_url,
             ))
     finally:
         await transport.close()
