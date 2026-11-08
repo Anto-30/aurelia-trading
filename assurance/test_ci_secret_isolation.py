@@ -51,7 +51,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
             self.assertNotIn("vars.DERIV_AUTH_TOKEN", text)
             self.assertNotIn("vars.DERIV_PAT", text)
             if "DERIV_AUTH_TOKEN" + ":" in text:
-                self.assertIn("DERIV_AUTH_TOKEN:", text)
+                self.assertIn("DERIV_AUTH_TOKEN" + ":", text)
                 self.assertIn("secrets.DERIV_AUTH_TOKEN", text)
                 self.assertIn("secrets.DERIV_PAT", text)
 
