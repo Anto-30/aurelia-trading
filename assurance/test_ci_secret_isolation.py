@@ -87,6 +87,37 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertIn("TWILIO_AUTH_TOKEN", block)
         self.assertNotIn("DERIV_AUTH_TOKEN", block)
 
+    def test_self_hosted_deployment_credentials_are_live_lock_gated_and_main_only(self):
+        workflow = (WORKFLOWS / "self-hosted-runtime-deploy.yml").read_text(encoding="utf-8")
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertNotIn("pull_request:", workflow)
+        self.assertNotIn("schedule:", workflow)
+        self.assertIn(
+            "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'",
+            workflow,
+        )
+        deploy_job = _job_block("self-hosted-runtime-deploy.yml", "deploy")
+        job_env = deploy_job.split("steps:", 1)[0]
+        self.assertNotRegex(job_env, r"\$\{\{\s*secrets\.")
+        lock_gate = workflow.index("name: Verify source revision and deployment lock")
+        first_deriv_secret = min(
+            workflow.index(marker)
+            for marker in (
+                "secrets.DERIV_AUTH_TOKEN",
+                "secrets.DERIV_PAT",
+                "secrets.DERIV_EXPECTED_LOGINID",
+            )
+        )
+        self.assertLess(lock_gate, first_deriv_secret)
+        for block in deploy_job.split("      - name: ")[1:]:
+            if "secrets.DERIV_AUTH_TOKEN" in block or "secrets.DERIV_PAT" in block:
+                self.assertIn("if: inputs.deployment_mode == 'LIVE'", block)
+        lock = (ROOT / "config" / "LIVE_LOCK.yaml").read_text(encoding="utf-8")
+        self.assertIn("live_trading_enabled: false", lock)
+        self.assertIn("FINAL_EXECUTION_AUTHORIZATION: false", lock)
+        self.assertIn("LIVE_EXECUTION: BLOCKED", lock)
+        self.assertIn("capital_plane_mode: VERIFY_ONLY", lock)
+
     def test_pull_request_trigger_remains_credential_free(self):
         text = (WORKFLOWS / "aurelia-assurance.yml").read_text(encoding="utf-8")
         self.assertIn("pull_request:", text)
