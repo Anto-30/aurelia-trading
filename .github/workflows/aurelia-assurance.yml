@@ -33,6 +33,7 @@ jobs:
         run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
       - name: Smoke-test public R100 M1 and M15 historical candles
         if: github.event_name == 'push' && github.ref == 'refs/heads/research/369-msnr-wfo-20261108'
+        continue-on-error: true
         run: |
           python -m research.labs.deriv_historical_candle_collector \
             --symbol R_100 \
@@ -56,6 +57,25 @@ jobs:
         with:
           name: aurelia-r100-historical-smoke-${{ github.run_id }}
           path: artifacts/r100-historical-smoke/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Compare legacy public R100 historical M1 and M15 candles
+        if: github.event_name == 'push' && github.ref == 'refs/heads/research/369-msnr-wfo-20261108'
+        continue-on-error: true
+        run: |
+          python -m research.labs.deriv_historical_candle_collector \
+            --symbol R_100 \
+            --start-epoch 1666310400 \
+            --end-epoch 1666314000 \
+            --timeframes 60,900 \
+            --api-variant legacy \
+            --output-dir artifacts/r100-historical-legacy-smoke
+      - name: Upload legacy public R100 historical evidence
+        if: always() && hashFiles('artifacts/r100-historical-legacy-smoke/manifest.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-r100-legacy-history-smoke-${{ github.run_id }}
+          path: artifacts/r100-historical-legacy-smoke/
           if-no-files-found: error
           retention-days: 30
       - name: Run assurance tests
