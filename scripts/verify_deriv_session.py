@@ -146,6 +146,10 @@ async def run() -> int:
 
         adapter = DerivAdapter(
             ws_url=bootstrap.websocket.url,
+            # The OTP WebSocket URL already authenticates this exact account.
+            # Passing an empty token prevents the adapter's environment fallback
+            # from sending a second authorize command over an OTP-authenticated socket.
+            auth_token="",
             expected_loginid=expected_loginid,
             expected_currency=expected_currency,
             environment=expected_environment,
