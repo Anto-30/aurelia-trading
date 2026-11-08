@@ -236,7 +236,7 @@ def _write_dataset(output_dir: Path, *, symbol: str, granularity: int,
         "csv_sha256": file_digest.hexdigest(),
         "normalized_bars_sha256": normalized_bars_sha256(bars),
         "source": "Deriv public ticks_history (style=candles), unauthenticated",
-        "source_endpoint": endpoint_url,
+        "source_endpoint": source_endpoint,
         "source_commit": source_commit,
     }
 
