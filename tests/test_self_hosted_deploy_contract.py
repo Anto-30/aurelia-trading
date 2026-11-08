@@ -74,10 +74,11 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
             ROOT / ".github" / "workflows" / "secret-presence-report.yml"
         ).read_text(encoding="utf-8")
         self.assertIn(
-            "DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}",
+            "DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || vars.DERIV_EXPECTED_CURRENCY }}",
             presence_workflow,
         )
         self.assertNotIn("secrets.DERIV_EXPECTED_CURRENCY || 'USD'", presence_workflow)
+        self.assertNotIn("DERIV_EXPECTED_CURRENCY: 'USD'", presence_workflow)
 
     def test_live_deployment_requires_release_gate(self):
         workflow = (ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml").read_text(
