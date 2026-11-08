@@ -94,6 +94,9 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
             "scripts.verify_deriv_session.DerivSessionManager.bootstrap",
             return_value=bootstrap,
         ), patch(
+            "scripts.verify_deriv_session.DerivAdapter.__init__",
+            return_value=None,
+        ) as adapter_init, patch(
             "scripts.verify_deriv_session.DerivAdapter.connect",
             new=AsyncMock(return_value=account),
         ), patch(
@@ -109,6 +112,11 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
             result = await run()
 
         self.assertEqual(result, 0)
+        self.assertEqual(
+            adapter_init.call_args.kwargs.get("auth_token"),
+            "",
+            "An OTP URL already authenticates the Options WebSocket; never send the PAT again over that socket.",
+        )
         record = captured["record"]
         self.assertEqual(
             record["record_hash"],
