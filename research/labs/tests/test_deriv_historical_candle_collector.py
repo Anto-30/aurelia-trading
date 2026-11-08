@@ -68,6 +68,19 @@ class HistoricalCandleCollectorTests(unittest.IsolatedAsyncioTestCase):
                 granularity=60, chunk_bars=3, request_delay_seconds=0,
             )
 
+    async def test_reversed_response_order_is_normalized_only_if_complete(self):
+        transport = FakeTransport([
+            {"msg_type": "candles", "candles": [candle(720), candle(660), candle(600)]},
+        ])
+        bars = await collect_timeframe(
+            transport, symbol="R_100", start_epoch=600, end_epoch=780,
+            granularity=60, chunk_bars=3, request_delay_seconds=0,
+        )
+        self.assertEqual(
+            [int(datetime.fromisoformat(x.timestamp_utc).timestamp()) for x in bars],
+            [600, 660, 720],
+        )
+
     async def test_invalid_candle_ohlc_fails_closed(self):
         transport = FakeTransport([
             {"msg_type": "candles", "candles": [candle(600, high=99.0)]},
@@ -99,6 +112,16 @@ class HistoricalCandleCollectorTests(unittest.IsolatedAsyncioTestCase):
             safe_historical_error_reason(RuntimeError("DERIV_HISTORICAL_API_REJECTED:InvalidSymbol")),
             "DERIV_HISTORICAL_API_REJECTED:InvalidSymbol",
         )
+
+    def test_safe_diagnostics_preserve_timestamp_only_gap_evidence(self):
+        from research.labs.deriv_historical_candle_collector import safe_historical_error_reason
+
+        reason = (
+            "DERIV_HISTORICAL_GAP_OR_TRUNCATION_DETECTED:"
+            "expected_count=60:actual_count=2:expected_first=1666310400:"
+            "expected_last=1666313940:actual_first=1666310460:actual_last=1666310520"
+        )
+        self.assertEqual(safe_historical_error_reason(RuntimeError(reason)), reason)
 
     def test_safe_diagnostics_mask_arbitrary_exception_text(self):
         from research.labs.deriv_historical_candle_collector import safe_historical_error_reason

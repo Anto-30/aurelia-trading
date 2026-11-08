@@ -117,7 +117,21 @@ async def collect_timeframe(
         chunk = tuple(_parse_candle(row, granularity=granularity) for row in candles)
         epochs = [int(datetime.fromisoformat(x.timestamp_utc).timestamp()) for x in chunk]
         if epochs != expected_epochs:
-            raise RuntimeError("DERIV_HISTORICAL_GAP_OR_TRUNCATION_DETECTED")
+            if len(epochs) == len(expected_epochs) and len(set(epochs)) == len(epochs) and sorted(epochs) == expected_epochs:
+                chunk = tuple(sorted(chunk, key=lambda x: x.timestamp_utc))
+                epochs = expected_epochs
+            else:
+                actual_first = epochs[0] if epochs else 0
+                actual_last = epochs[-1] if epochs else 0
+                raise RuntimeError(
+                    "DERIV_HISTORICAL_GAP_OR_TRUNCATION_DETECTED:"
+                    f"expected_count={len(expected_epochs)}:"
+                    f"actual_count={len(epochs)}:"
+                    f"expected_first={expected_epochs[0]}:"
+                    f"expected_last={expected_epochs[-1]}:"
+                    f"actual_first={actual_first}:"
+                    f"actual_last={actual_last}"
+                )
         if bars and chunk and epochs[0] <= int(
             datetime.fromisoformat(bars[-1].timestamp_utc).timestamp()
         ):
@@ -287,6 +301,15 @@ def safe_historical_error_reason(exc: Exception) -> str:
             return reason
         match = re.fullmatch(
             r"DERIV_HISTORICAL_RESPONSE_TYPE_INVALID:(history|tick|ohlc|candles)",
+            reason,
+        )
+        if match:
+            return reason
+        match = re.fullmatch(
+            r"DERIV_HISTORICAL_GAP_OR_TRUNCATION_DETECTED:"
+            r"expected_count=[0-9]+:actual_count=[0-9]+:"
+            r"expected_first=[0-9]+:expected_last=[0-9]+:"
+            r"actual_first=[0-9]+:actual_last=[0-9]+",
             reason,
         )
         if match:
