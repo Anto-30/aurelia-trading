@@ -32,6 +32,7 @@ jobs:
       - name: Run research-plane tests
         run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
       - name: Smoke-test public R100 M1 and M15 historical candles
+        id: historical_public_smoke
         if: github.event_name == 'push' && github.ref == 'refs/heads/research/369-msnr-wfo-20261108'
         continue-on-error: true
         run: |
@@ -60,6 +61,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
       - name: Compare legacy public R100 historical M1 and M15 candles
+        id: historical_legacy_smoke
         if: github.event_name == 'push' && github.ref == 'refs/heads/research/369-msnr-wfo-20261108'
         continue-on-error: true
         run: |
@@ -151,3 +153,14 @@ jobs:
           test "$status" -eq 2
           echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
           echo "$output" | grep -q "REASON="
+      - name: Enforce historical dataset smoke result
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/research/369-msnr-wfo-20261108'
+        env:
+          PUBLIC_SMOKE_OUTCOME: ${{ steps.historical_public_smoke.outcome }}
+        run: |
+          if [ "$PUBLIC_SMOKE_OUTCOME" != "success" ]; then
+            echo "R100_HISTORICAL_DATASET_GATE=BLOCKED"
+            echo "The exact historical M1/M15 source window was not verified; a green unit-test suite is not historical-data evidence."
+            exit 1
+          fi
+          echo "R100_HISTORICAL_DATASET_GATE=PASS"
