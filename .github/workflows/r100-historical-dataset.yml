@@ -1,6 +1,9 @@
 name: AURELIA R100 Historical OHLC Acquisition
 
 on:
+  push:
+    branches: ["research/369-msnr-wfo-20261108"]
+    paths: [".github/workflows/r100-historical-dataset.yml"]
   workflow_dispatch:
     inputs:
       symbol:
@@ -28,18 +31,22 @@ permissions:
   contents: read
 
 concurrency:
-  group: aurelia-r100-historical-${ github.ref }
+  group: aurelia-r100-historical-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   collect:
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/research/369-msnr-wfo-20261108'
+    if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || github.ref == 'refs/heads/research/369-msnr-wfo-20261108'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
       contents: read
     env:
       PYTHONPATH: "."
+      R100_SYMBOL: ${{ inputs.symbol || 'R_100' }}
+      R100_START_EPOCH: ${{ inputs.start_epoch || '1666310400' }}
+      R100_END_EPOCH: ${{ inputs.end_epoch || '1666314000' }}
+      R100_TIMEFRAMES: ${{ inputs.timeframes || '60,900' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -50,10 +57,10 @@ jobs:
       - name: Collect public historical OHLC
         run: |
           python -m research.labs.deriv_historical_candle_collector \
-            --symbol "${ inputs.symbol }" \
-            --start-epoch "${ inputs.start_epoch }" \
-            --end-epoch "${ inputs.end_epoch }" \
-            --timeframes "${ inputs.timeframes }" \
+            --symbol "$R100_SYMBOL" \
+            --start-epoch "$R100_START_EPOCH" \
+            --end-epoch "$R100_END_EPOCH" \
+            --timeframes "$R100_TIMEFRAMES" \
             --output-dir artifacts/r100-historical
       - name: Verify collected data manifest
         run: |
@@ -76,7 +83,7 @@ jobs:
       - name: Upload public historical OHLC evidence
         uses: actions/upload-artifact@v4
         with:
-          name: aurelia-r100-historical-${ github.run_id }
+          name: aurelia-r100-historical-${{ github.run_id }}
           path: artifacts/r100-historical/
           if-no-files-found: error
           retention-days: 30
