@@ -7,7 +7,7 @@ import tempfile
 import unittest
 
 from research.labs.deriv_historical_candle_collector import (
-    PUBLIC_WS_URL, collect_historical_dataset, collect_timeframe,
+    LEGACY_PUBLIC_WS_URL, PUBLIC_WS_URL, collect_historical_dataset, collect_timeframe,
     normalized_bars_sha256,
 )
 from research.labs.deterministic_intraday_strategies import StrategyBar
@@ -171,6 +171,30 @@ class HistoricalCandleCollectorTests(unittest.IsolatedAsyncioTestCase):
         result = safe_historical_error_reason(RuntimeError(private))
         self.assertEqual(result, "UNCLASSIFIED_RUNTIMEERROR")
         self.assertNotIn(private, result)
+
+    async def test_legacy_public_endpoint_is_explicit_and_unauthenticated(self):
+        responses = [
+            {"msg_type": "candles", "candles": [candle(600), candle(660), candle(720)]},
+        ]
+        created = []
+
+        def factory(url, **kwargs):
+            created.append((url, kwargs))
+            return FakeTransport(responses)
+
+        with tempfile.TemporaryDirectory() as directory:
+            manifest = await collect_historical_dataset(
+                symbol="R_100", start_epoch=600, end_epoch=780,
+                granularities=(60,), output_dir=directory,
+                source_commit="a" * 40, chunk_bars=3,
+                request_delay_seconds=0, api_variant="legacy",
+                transport_factory=factory,
+            )
+        self.assertEqual(created[0][0], LEGACY_PUBLIC_WS_URL)
+        self.assertEqual(manifest["api_variant"], "legacy")
+        self.assertFalse(manifest["authentication_used"])
+        self.assertFalse(manifest["capital_authority"])
+        self.assertFalse(manifest["order_submission_permitted"])
 
     async def test_public_collection_writes_manifest_and_hashes(self):
         responses = [

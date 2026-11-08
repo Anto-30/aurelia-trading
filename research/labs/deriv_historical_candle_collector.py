@@ -18,7 +18,9 @@ from runtime.adapters.deriv_ws import DerivWebSocketTransport
 
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
+LEGACY_PUBLIC_WS_URL = "wss://ws.derivws.com/websockets/v3?app_id=1089"
 SUPPORTED_GRANULARITIES = (60, 900)
+API_VARIANTS = {"new": PUBLIC_WS_URL, "legacy": LEGACY_PUBLIC_WS_URL}
 CSV_COLUMNS = ("timestamp_utc", "open", "high", "low", "close")
 
 
@@ -233,7 +235,7 @@ def _write_dataset(output_dir: Path, *, symbol: str, granularity: int,
         "csv_sha256": file_digest.hexdigest(),
         "normalized_bars_sha256": normalized_bars_sha256(bars),
         "source": "Deriv public ticks_history (style=candles), unauthenticated",
-        "source_endpoint": PUBLIC_WS_URL,
+        "source_endpoint": endpoint_url,
         "source_commit": source_commit,
     }
 
@@ -243,6 +245,7 @@ async def collect_historical_dataset(
     granularities: Sequence[int], output_dir: str | Path,
     source_commit: str, chunk_bars: int = 900,
     request_delay_seconds: float = 0.35,
+    api_variant: str = "new",
     transport_factory: Callable[..., Any] = DerivWebSocketTransport,
 ) -> dict[str, Any]:
     """Collect timeframes on one unauthenticated public WebSocket connection."""
@@ -254,11 +257,14 @@ async def collect_historical_dataset(
         raise ValueError("HISTORICAL_TIMEFRAMES_INVALID")
     if len(set(granularities)) != len(granularities):
         raise ValueError("HISTORICAL_TIMEFRAMES_DUPLICATED")
+    if api_variant not in API_VARIANTS:
+        raise ValueError("HISTORICAL_API_VARIANT_INVALID")
+    endpoint_url = API_VARIANTS[api_variant]
 
     directory = Path(output_dir)
     directory.mkdir(parents=True, exist_ok=True)
     transport = transport_factory(
-        PUBLIC_WS_URL, timeout_seconds=45.0,
+        endpoint_url, timeout_seconds=45.0,
         application_ping_interval_seconds=30.0,
     )
     datasets: list[dict[str, Any]] = []
@@ -286,6 +292,7 @@ async def collect_historical_dataset(
         "end_epoch_exclusive": end_epoch,
         "collected_at_utc": datetime.now(timezone.utc).isoformat(),
         "source_commit": source_commit,
+        "api_variant": api_variant,
         "authentication_used": False,
         "capital_authority": False,
         "order_submission_permitted": False,
@@ -366,6 +373,7 @@ def main() -> int:
     parser.add_argument("--output-dir", default="artifacts/r100-historical")
     parser.add_argument("--chunk-bars", type=int, default=900)
     parser.add_argument("--request-delay-seconds", type=float, default=0.35)
+    parser.add_argument("--api-variant", choices=tuple(API_VARIANTS), default="new")
     args = parser.parse_args()
     try:
         manifest = asyncio.run(collect_historical_dataset(
@@ -374,6 +382,7 @@ def main() -> int:
             source_commit=os.environ.get("GITHUB_SHA", ""),
             chunk_bars=args.chunk_bars,
             request_delay_seconds=args.request_delay_seconds,
+            api_variant=args.api_variant,
         ))
     except Exception as exc:
         print("R100_HISTORICAL_COLLECTION=FAILED")
