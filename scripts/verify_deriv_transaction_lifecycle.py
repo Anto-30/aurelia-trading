@@ -44,6 +44,8 @@ def fail(message: str) -> int:
 
 
 async def run() -> int:
+    return fail("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
+
     mode = os.getenv("DERIV_LIFECYCLE_MODE", "LIVE").strip().upper()
     if mode not in {"LIVE", "VERIFY_ONLY"}:
         return fail("INVALID_DERIV_LIFECYCLE_MODE")

@@ -30,6 +30,11 @@ OUTPUT = Path(
 
 
 async def run() -> int:
+    # Fail closed before reading production credentials or making account calls.
+    print("DERIV_AUTH_SESSION=BLOCKED")
+    print("DERIV_AUTH_SESSION_REASON=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
+    return 3
+
     started = datetime.now(timezone.utc)
     # Accept the canonical AURELIA names plus the operator-facing aliases
     # used by the protected deployment environment. Values are never logged.

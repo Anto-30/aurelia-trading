@@ -52,6 +52,8 @@ def _safe_transaction(row: dict) -> dict:
 
 
 async def run() -> int:
+    return fail("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")
+
     token = get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT")
     app_id = get_optional_secret("DERIV_APP_ID")
     expected_loginid = (
