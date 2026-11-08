@@ -39,23 +39,28 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertNotIn("DERIV_AUTH_CONFIGURED", text)
         self.assertNotIn("verify_deriv_session.py", text)
 
-    def test_account_session_verifiers_are_manual_main_only(self):
-        for filename in ("deriv-auth-evidence.yml", "deriv-session-verification.yml"):
-            text = (WORKFLOWS / filename).read_text(encoding="utf-8")
-            self.assertIn("workflow_dispatch:", text)
-            self.assertIn("github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'", text)
-            self.assertIn("environment: production", text)
-            self.assertIn("run: python scripts/verify_deriv_session.py", text)
-            self.assertNotIn("schedule:", text)
-            self.assertNotIn("pull_request:", text)
+    def test_canonical_account_verifier_is_manual_main_only(self):
+        text = (WORKFLOWS / "deriv-auth-evidence.yml").read_text(encoding="utf-8")
+        self.assertIn("workflow_dispatch:", text)
+        self.assertIn("github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'", text)
+        self.assertIn("environment: production", text)
+        self.assertIn("run: python scripts/verify_deriv_session.py", text)
+        self.assertNotIn("schedule:", text)
+        self.assertNotIn("pull_request:", text)
 
-    def test_account_credentials_are_scoped_to_verifier_step(self):
-        for filename in ("deriv-auth-evidence.yml", "deriv-session-verification.yml"):
-            block = _job_block(filename, "verify")
-            pre_steps = block.split("steps:", 1)[0]
-            self.assertNotRegex(pre_steps, r"\$\{\{\s*secrets\.")
-            for key in SECRET_ENV_KEYS:
-                self.assertRegex(block, rf"(?m)^\s+{key}: \$\{{\{{ secrets\.")
+    def test_session_verification_alias_cannot_access_credentials(self):
+        text = (WORKFLOWS / "deriv-session-verification.yml").read_text(encoding="utf-8")
+        self.assertIn("RUN_AURELIA_DERIV_ACCOUNT_IDENTITY_EVIDENCE_ON_MAIN=true", text)
+        self.assertNotIn("environment: production", text)
+        self.assertNotRegex(text, r"\\$\\{\\{\\s*secrets\\.")
+        self.assertNotIn("DERIV_AUTH_TOKEN", text)
+
+    def test_credentials_are_scoped_to_canonical_verifier_step_only(self):
+        block = _job_block("deriv-auth-evidence.yml", "verify")
+        pre_steps = block.split("steps:", 1)[0]
+        self.assertNotRegex(pre_steps, r"\\$\\{\\{\\s*secrets\\.")
+        for key in SECRET_ENV_KEYS:
+            self.assertRegex(block, rf"(?m)^\\s+{key}: \\$\\{{\\{{ secrets\\.")
 
     def test_public_runtime_has_no_deriv_credentials(self):
         text = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")

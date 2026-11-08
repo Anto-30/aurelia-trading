@@ -45,7 +45,10 @@ class TestDerivAdapterContract(unittest.TestCase):
         self.assertEqual(account.currency, "USD")
         transport.connect.assert_awaited_once()
         transport.request.assert_awaited_once()
-        self.assertEqual(transport.request.await_args.args[0], {"balance": 1})
+        self.assertEqual(
+            transport.request.await_args.args[0],
+            {"balance": 1, "req_id": 1},
+        )
 
     def test_missing_broker_currency_fails_closed(self):
         transport = SimpleNamespace(
