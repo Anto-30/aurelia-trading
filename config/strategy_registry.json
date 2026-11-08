@@ -403,6 +403,65 @@
         "Existing strategy identity retained; implementation not verified in canonical main checkout.",
         "No verified qualification evidence"
       ]
+    },
+    {
+      "strategy_id": "THREE_SIXTY_NINE_MSNR",
+      "version": "0.1.0",
+      "implementation_path": "research/labs/three_sixty_nine_msnr.py",
+      "implementation_entrypoint": "evaluate_369_msnr_candidate",
+      "simulator_path": "research/labs/three_sixty_nine_simulator.py",
+      "walk_forward_path": "research/labs/three_sixty_nine_walk_forward.py",
+      "implementation_status": "RESEARCH_ONLY",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [],
+      "verified_instrument_ids": [],
+      "timeframe_status": "CONFIGURATION_REQUIRED",
+      "timeframes": [
+        "M1",
+        "M15"
+      ],
+      "data_requirements": [
+        "verified_source_historical_ohlc_m1_or_m15",
+        "strictly_contiguous_timezone_aware_bars",
+        "confirmed_protected_swing_with_source_rule_provenance",
+        "verified_instrument_tick_size_and_price_scale",
+        "time_aligned_historical_spread_slippage_commission_and_fee_profiles",
+        "sealed_out_of_sample_dataset_hash"
+      ],
+      "risk_profile": "Research-only; no capital authority. Any future qualification must use Layer 6 verified maximum-loss economics and <=1% planned risk by default, with <=2% absolute ceiling.",
+      "execution_assumptions": [
+        "signal_close_in_America_New_York_0945_to_1000_half_open_window",
+        "next_bar_open_entry",
+        "minimum_3R_gross_target_distance_is_not_a_guaranteed_realized_return",
+        "conservative_stop_first_ohlc_ambiguity",
+        "underlying_price_return_simulation_is_not_Deriv_contract_payout"
+      ],
+      "qualification_status": "RESEARCH_ONLY_UNQUALIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "UNKNOWN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "IMPLEMENTED_NOT_STRATEGY_SPECIFIC",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "No verified instrument mapping or tick/price-scale source",
+        "Protected-swing anchor and confirmation rule not independently validated",
+        "No normalized historical M1/M15 dataset with source provenance supplied",
+        "No time-aligned historical cost profile series supplied",
+        "Walk-forward and untouched OOS have not been executed",
+        "Per-regime minimum-trade and performance gates have not passed",
+        "No independent reviewer qualification",
+        "Capital and order execution authority are false"
+      ]
     }
   ]
 }
