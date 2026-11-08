@@ -12,6 +12,7 @@ from runtime.core.secrets import get_optional_secret
 
 from runtime.adapters.deriv_session import (
     AuthenticatedWebSocketUrl,
+    DERIV_ACCOUNT_SCOPE_BLOCK_REASON,
     DerivSessionError,
     get_authenticated_ws_url,
     validate_modern_options_ws_url,
@@ -135,6 +136,8 @@ class DerivSessionManager:
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> list[dict[str, Any]]:
+        raise DerivSessionManagerError(DERIV_ACCOUNT_SCOPE_BLOCK_REASON)
+
         token = bearer_token if bearer_token is not None else (get_optional_secret("DERIV_AUTH_TOKEN") or get_optional_secret("DERIV_PAT"))
         application_id = app_id if app_id is not None else get_optional_secret("DERIV_APP_ID")
         if not token:
@@ -215,6 +218,8 @@ class DerivSessionManager:
         bearer_token: str | None = None,
         app_id: str | None = None,
     ) -> DerivSessionBootstrap:
+        raise DerivSessionManagerError(DERIV_ACCOUNT_SCOPE_BLOCK_REASON)
+
         token = bearer_token if bearer_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
         application_id = app_id if app_id is not None else os.getenv("DERIV_APP_ID", "")
         accounts = self.list_accounts(

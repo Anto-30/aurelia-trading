@@ -10,6 +10,7 @@ from urllib.request import Request, urlopen
 from runtime.core.secrets import get_optional_secret
 
 OTP_ENDPOINT = "https://api.derivws.com/trading/v1/options/accounts/{account_id}/otp"
+DERIV_ACCOUNT_SCOPE_BLOCK_REASON = "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
 MODERN_OPTIONS_WS_HOST = "api.derivws.com"
 MODERN_OPTIONS_WS_PREFIX = "/trading/v1/options/ws/"
 
@@ -116,6 +117,11 @@ def get_authenticated_ws_url(
     Raises:
         DerivSessionError: If validation or request fails
     """
+    # Current Options account discovery and OTP APIs require the trade scope.
+    # AURELIA has no approved read-only account scope, so fail closed before
+    # reading any credential value or making an authenticated broker request.
+    raise DerivSessionError(DERIV_ACCOUNT_SCOPE_BLOCK_REASON)
+
     token = (
         bearer_token
         if bearer_token is not None

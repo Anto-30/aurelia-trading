@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
 from runtime.adapters.deriv_session import (
+    DERIV_ACCOUNT_SCOPE_BLOCK_REASON,
     DerivSessionError,
     get_authenticated_ws_url,
     validate_modern_options_ws_url,
@@ -44,12 +45,10 @@ class DerivAdapter:
         timeout_seconds: float = 10.0,
     ):
         self.ws_url = ws_url or os.getenv("DERIV_WS_URL", "")
-        self.auth_token = (
-            auth_token if auth_token is not None else os.getenv("DERIV_AUTH_TOKEN", "")
-        )
-        self.expected_loginid = (
-            expected_loginid or get_optional_secret("DERIV_EXPECTED_LOGINID")
-        )
+        # Authenticated account sessions are disabled until Deriv documents
+        # an approved read-only account scope. Do not implicitly load credentials.
+        self.auth_token = auth_token or ""
+        self.expected_loginid = expected_loginid or ""
         configured_currency = expected_currency if expected_currency is not None else os.getenv("DERIV_EXPECTED_CURRENCY", "")
         self.expected_currency = str(configured_currency).strip().upper()
         self.environment = environment
@@ -75,6 +74,8 @@ class DerivAdapter:
             raise DerivProtocolError(str(exc)) from exc
 
     async def connect(self) -> AccountIdentity:
+        raise DerivProtocolError(DERIV_ACCOUNT_SCOPE_BLOCK_REASON)
+
         if not self.ws_url:
             raise DerivProtocolError("DERIV_AUTHENTICATED_WS_URL_MISSING")
         self._validate_environment_url(self.ws_url)

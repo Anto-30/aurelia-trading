@@ -4,6 +4,9 @@ import asyncio
 import json
 from dataclasses import dataclass
 from typing import Any, AsyncIterator
+from urllib.parse import urlsplit
+
+from runtime.adapters.deriv_session import DERIV_ACCOUNT_SCOPE_BLOCK_REASON
 from websockets.asyncio.client import ClientConnection, connect
 
 
@@ -48,6 +51,17 @@ class DerivWebSocketTransport:
         self._lock = asyncio.Lock()
 
     async def connect(self) -> None:
+        parts = urlsplit(self.url)
+        if (
+            parts.scheme == "wss"
+            and parts.hostname == "api.derivws.com"
+            and parts.path.rstrip("/")
+            in {
+                "/trading/v1/options/ws/real",
+                "/trading/v1/options/ws/demo",
+            }
+        ):
+            raise DerivTransportError(DERIV_ACCOUNT_SCOPE_BLOCK_REASON)
         if self.ws is not None:
             return
         self.ws = await connect(
