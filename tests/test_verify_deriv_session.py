@@ -1,5 +1,8 @@
+import hashlib
+import io
 import os
 import unittest
+from contextlib import redirect_stdout
 from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
@@ -105,9 +108,17 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
             "scripts.verify_deriv_session.write_evidence",
             side_effect=lambda path, record: captured.update(record=dict(record)),
         ):
-            result = await run()
+            output = io.StringIO()
+            with redirect_stdout(output):
+                result = await run()
 
         self.assertEqual(result, 0)
+        self.assertNotIn("CRREAL", output.getvalue())
+        self.assertIn(
+            "DERIV_ACCOUNT_LOGINID_SHA256="
+            + hashlib.sha256(b"CRREAL").hexdigest(),
+            output.getvalue(),
+        )
         record = captured["record"]
         self.assertEqual(
             record["record_hash"],
