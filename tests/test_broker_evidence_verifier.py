@@ -7,34 +7,28 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class BrokerEvidenceVerifierContractTests(unittest.TestCase):
-    def test_verifier_is_read_only_and_account_scoped(self):
+    def test_broker_evidence_verifier_is_held_until_no_order_audit(self):
         source = (ROOT / "scripts" / "verify_deriv_broker_evidence.py").read_text(
             encoding="utf-8"
         )
         tree = ast.parse(source)
-
-        called = {
-            node.func.attr
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-        }
-
-        self.assertIn("statement", called)
-        self.assertIn("portfolio", called)
-        self.assertIn("get_balance", called)
+        run = next(
+            node for node in tree.body
+            if isinstance(node, ast.AsyncFunctionDef) and node.name == "run"
+        )
+        first_statement = run.body[0]
+        self.assertIsInstance(first_statement, ast.Return)
         self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", source)
+
+    def test_held_verifier_returns_before_secret_reads(self):
+        source = (ROOT / "scripts" / "verify_deriv_broker_evidence.py").read_text(
+            encoding="utf-8"
+        )
         self.assertLess(
-            source.index("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"),
+            source.index('return fail("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE")'),
             source.index('get_optional_secret("DERIV_AUTH_TOKEN")'),
         )
-        self.assertNotIn("submit_authorized_order", called)
-        self.assertNotIn("buy", called)
-
-    def test_verifier_requires_explicit_currency_before_broker_calls(self):
-        source = (ROOT / "scripts" / "verify_deriv_broker_evidence.py").read_text(encoding="utf-8")
-        self.assertIn("EXPECTED_ACCOUNT_CURRENCY_MISSING", source)
-        self.assertIn("DERIV_EXPECTED_CURRENCY", source)
+        self.assertNotIn("submit_authorized_order", source)
 
     def test_verifier_declares_no_capital_authority(self):
         source = (ROOT / "scripts" / "verify_deriv_broker_evidence.py").read_text(
