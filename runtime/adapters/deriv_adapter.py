@@ -4,7 +4,12 @@ import os
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
-from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_ws_url, validate_modern_options_ws_url
+from runtime.adapters.deriv_session import (
+    DERIV_ACCOUNT_SCOPE_BLOCK_REASON,
+    DerivSessionError,
+    get_authenticated_ws_url,
+    validate_modern_options_ws_url,
+)
 from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
 from runtime.core.circuit import CircuitBreaker
 from runtime.core.events import sha256
@@ -71,6 +76,11 @@ class DerivAdapter:
             raise DerivProtocolError(str(exc)) from exc
 
     async def connect(self) -> AccountIdentity:
+        # Authenticated real/demo account sessions use the trade-scoped Options
+        # API. Keep this adapter fail-closed until a genuine read-only scope is
+        # documented and approved.
+        raise DerivProtocolError(DERIV_ACCOUNT_SCOPE_BLOCK_REASON)
+
         if not self.ws_url:
             raise DerivProtocolError("DERIV_AUTHENTICATED_WS_URL_MISSING")
         self._validate_environment_url(self.ws_url)
