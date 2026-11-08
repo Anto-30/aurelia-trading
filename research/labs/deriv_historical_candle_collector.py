@@ -38,6 +38,29 @@ def _validate_window(*, symbol: str, start_epoch: int, end_epoch: int,
         raise ValueError("HISTORICAL_CHUNK_SIZE_INVALID")
 
 
+def _validate_echo_request(
+    response: dict[str, Any],
+    request: dict[str, Any],
+) -> None:
+    """Require Deriv to echo the requested historical query verbatim."""
+    echo = response.get("echo_req")
+    if not isinstance(echo, dict):
+        raise RuntimeError("DERIV_HISTORICAL_ECHO_REQUEST_MISSING")
+
+    fields = ("ticks_history", "style", "granularity", "start", "end", "count")
+    for field in fields:
+        expected = request[field]
+        actual = echo.get(field)
+        if field in {"granularity", "start", "count"}:
+            try:
+                if isinstance(actual, bool) or int(actual) != int(expected):
+                    raise RuntimeError("DERIV_HISTORICAL_ECHO_REQUEST_MISMATCH")
+            except (TypeError, ValueError, OverflowError):
+                raise RuntimeError("DERIV_HISTORICAL_ECHO_REQUEST_MISMATCH") from None
+        elif actual != expected:
+            raise RuntimeError("DERIV_HISTORICAL_ECHO_REQUEST_MISMATCH")
+
+
 def _parse_candle(raw: dict[str, Any], *, granularity: int) -> StrategyBar:
     if not isinstance(raw, dict):
         raise ValueError("HISTORICAL_CANDLE_SHAPE_INVALID")
@@ -106,6 +129,7 @@ async def collect_timeframe(
             if not isinstance(code, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,63}", code):
                 code = "UNKNOWN_CODE"
             raise RuntimeError("DERIV_HISTORICAL_API_REJECTED:" + code)
+        _validate_echo_request(response, request)
         if response.get("msg_type") != "candles":
             message_type = response.get("msg_type")
             if isinstance(message_type, str) and message_type in {"history", "tick", "ohlc", "candles"}:
@@ -116,6 +140,12 @@ async def collect_timeframe(
             raise RuntimeError("DERIV_HISTORICAL_CANDLES_MISSING")
         chunk = tuple(_parse_candle(row, granularity=granularity) for row in candles)
         epochs = [int(datetime.fromisoformat(x.timestamp_utc).timestamp()) for x in chunk]
+        if epochs and (min(epochs) < cursor or max(epochs) > chunk_end):
+            raise RuntimeError(
+                "DERIV_HISTORICAL_SOURCE_RETURNED_OUT_OF_RANGE_CANDLES:"
+                f"requested_start={cursor}:requested_end={chunk_end}:"
+                f"actual_first={min(epochs)}:actual_last={max(epochs)}"
+            )
         if epochs != expected_epochs:
             if len(epochs) == len(expected_epochs) and len(set(epochs)) == len(epochs) and sorted(epochs) == expected_epochs:
                 chunk = tuple(sorted(chunk, key=lambda x: x.timestamp_utc))
@@ -301,6 +331,14 @@ def safe_historical_error_reason(exc: Exception) -> str:
             return reason
         match = re.fullmatch(
             r"DERIV_HISTORICAL_RESPONSE_TYPE_INVALID:(history|tick|ohlc|candles)",
+            reason,
+        )
+        if match:
+            return reason
+        match = re.fullmatch(
+            r"DERIV_HISTORICAL_SOURCE_RETURNED_OUT_OF_RANGE_CANDLES:"
+            r"requested_start=[0-9]+:requested_end=[0-9]+:"
+            r"actual_first=[0-9]+:actual_last=[0-9]+",
             reason,
         )
         if match:

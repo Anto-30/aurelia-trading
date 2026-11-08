@@ -27,7 +27,10 @@ class FakeTransport:
         self.requests.append(dict(payload))
         if not self.responses:
             raise AssertionError("unexpected request")
-        return self.responses.pop(0)
+        response = self.responses.pop(0)
+        if isinstance(response, dict) and "echo_req" not in response:
+            response = {**response, "echo_req": dict(payload)}
+        return response
 
     async def close(self):
         self.closed = True
@@ -63,6 +66,34 @@ class HistoricalCandleCollectorTests(unittest.IsolatedAsyncioTestCase):
             {"msg_type": "candles", "candles": [candle(600), candle(720)]},
         ])
         with self.assertRaisesRegex(RuntimeError, "GAP_OR_TRUNCATION"):
+            await collect_timeframe(
+                transport, symbol="R_100", start_epoch=600, end_epoch=780,
+                granularity=60, chunk_bars=3, request_delay_seconds=0,
+            )
+
+    async def test_source_returning_latest_data_for_old_window_fails_as_out_of_range(self):
+        transport = FakeTransport([
+            {"msg_type": "candles", "candles": [candle(1794144780 + i * 60) for i in range(60)]},
+        ])
+        with self.assertRaisesRegex(RuntimeError, "SOURCE_RETURNED_OUT_OF_RANGE_CANDLES"):
+            await collect_timeframe(
+                transport, symbol="R_100", start_epoch=1666310400,
+                end_epoch=1666314000, granularity=60,
+                chunk_bars=900, request_delay_seconds=0,
+            )
+
+    async def test_echo_request_mismatch_fails_closed(self):
+        transport = FakeTransport([
+            {
+                "msg_type": "candles",
+                "candles": [candle(600), candle(660), candle(720)],
+                "echo_req": {
+                    "ticks_history": "R_100", "style": "candles",
+                    "granularity": 60, "start": 600, "end": "780", "count": 3
+                },
+            },
+        ])
+        with self.assertRaisesRegex(RuntimeError, "ECHO_REQUEST_MISMATCH"):
             await collect_timeframe(
                 transport, symbol="R_100", start_epoch=600, end_epoch=780,
                 granularity=60, chunk_bars=3, request_delay_seconds=0,
@@ -112,6 +143,16 @@ class HistoricalCandleCollectorTests(unittest.IsolatedAsyncioTestCase):
             safe_historical_error_reason(RuntimeError("DERIV_HISTORICAL_API_REJECTED:InvalidSymbol")),
             "DERIV_HISTORICAL_API_REJECTED:InvalidSymbol",
         )
+
+    def test_safe_diagnostics_preserve_source_range_failure_evidence(self):
+        from research.labs.deriv_historical_candle_collector import safe_historical_error_reason
+
+        reason = (
+            "DERIV_HISTORICAL_SOURCE_RETURNED_OUT_OF_RANGE_CANDLES:"
+            "requested_start=1666310400:requested_end=1666313940:"
+            "actual_first=1794144780:actual_last=1794148320"
+        )
+        self.assertEqual(safe_historical_error_reason(RuntimeError(reason)), reason)
 
     def test_safe_diagnostics_preserve_timestamp_only_gap_evidence(self):
         from research.labs.deriv_historical_candle_collector import safe_historical_error_reason
