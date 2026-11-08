@@ -67,7 +67,7 @@ class DerivWebSocketKeepaliveTests(unittest.IsolatedAsyncioTestCase):
         socket = FakeWebSocket()
         with patch(
             "runtime.adapters.deriv_ws.connect",
-            return_value=socket,
+            new=AsyncMock(return_value=socket),
         ):
             transport = DerivWebSocketTransport(
                 "wss://api.derivws.com/trading/v1/options/ws/public",
