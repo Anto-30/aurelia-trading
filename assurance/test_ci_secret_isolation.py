@@ -52,15 +52,15 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         text = (WORKFLOWS / "deriv-session-verification.yml").read_text(encoding="utf-8")
         self.assertIn("RUN_AURELIA_DERIV_ACCOUNT_IDENTITY_EVIDENCE_ON_MAIN=true", text)
         self.assertNotIn("environment: production", text)
-        self.assertNotRegex(text, r"\\$\\{\\{\\s*secrets\\.")
+        self.assertNotRegex(text, r"\$\{\{\s*secrets\.")
         self.assertNotIn("DERIV_AUTH_TOKEN", text)
 
     def test_credentials_are_scoped_to_canonical_verifier_step_only(self):
         block = _job_block("deriv-auth-evidence.yml", "verify")
         pre_steps = block.split("steps:", 1)[0]
-        self.assertNotRegex(pre_steps, r"\\$\\{\\{\\s*secrets\\.")
+        self.assertNotRegex(text, r"\$\{\{\s*secrets\.")
         for key in SECRET_ENV_KEYS:
-            self.assertRegex(block, rf"(?m)^\\s+{key}: \\$\\{{\\{{ secrets\\.")
+            self.assertRegex(block, rf"(?m)^\s+{key}: \$\{{\{{ secrets\.")
 
     def test_public_runtime_has_no_deriv_credentials(self):
         text = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
@@ -80,7 +80,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         block = _job_block("secret-presence-report.yml", "report")
         conditions = re.findall(r"^    if:\s*(.+)$", block, flags=re.MULTILINE)
         self.assertEqual(conditions, ["${{ github.ref == 'refs/heads/main' }}"])
-        self.assertRegex(block, r"\$\{\{\s*secrets\.")
+            self.assertRegex(block, rf"(?m)^\s+{key}: \$\{{\{{ secrets\.")
 
     def test_whatsapp_smoke_remains_main_only_and_separate_from_deriv(self):
         block = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
