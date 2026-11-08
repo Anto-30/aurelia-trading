@@ -1,0 +1,289 @@
+from __future__ import annotations
+
+"""Unauthenticated, provenance-preserving Deriv historical OHLC acquisition."""
+
+import argparse
+import asyncio
+import csv
+from datetime import datetime, timezone
+import hashlib
+import json
+import math
+from pathlib import Path
+import re
+from typing import Any, Callable, Sequence
+
+from research.labs.deterministic_intraday_strategies import StrategyBar
+from runtime.adapters.deriv_ws import DerivWebSocketTransport
+
+
+PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
+SUPPORTED_GRANULARITIES = (60, 900)
+CSV_COLUMNS = ("timestamp_utc", "open", "high", "low", "close")
+
+
+def _validate_window(*, symbol: str, start_epoch: int, end_epoch: int,
+                     granularity: int, chunk_bars: int) -> None:
+    if not isinstance(symbol, str) or not re.fullmatch(r"[A-Z0-9_]{2,30}", symbol):
+        raise ValueError("HISTORICAL_SYMBOL_INVALID")
+    if type(granularity) is not int or granularity not in SUPPORTED_GRANULARITIES:
+        raise ValueError("HISTORICAL_GRANULARITY_UNSUPPORTED")
+    if type(start_epoch) is not int or type(end_epoch) is not int:
+        raise ValueError("HISTORICAL_EPOCH_INVALID")
+    if start_epoch < 0 or end_epoch <= start_epoch:
+        raise ValueError("HISTORICAL_WINDOW_INVALID")
+    if start_epoch % granularity or end_epoch % granularity:
+        raise ValueError("HISTORICAL_WINDOW_NOT_GRANULARITY_ALIGNED")
+    if type(chunk_bars) is not int or not 2 <= chunk_bars <= 1000:
+        raise ValueError("HISTORICAL_CHUNK_SIZE_INVALID")
+
+
+def _parse_candle(raw: dict[str, Any], *, granularity: int) -> StrategyBar:
+    if not isinstance(raw, dict):
+        raise ValueError("HISTORICAL_CANDLE_SHAPE_INVALID")
+    epoch = raw.get("epoch")
+    if type(epoch) is not int or epoch < 0 or epoch % granularity:
+        raise ValueError("HISTORICAL_CANDLE_EPOCH_INVALID")
+    values: dict[str, float] = {}
+    for field in ("open", "high", "low", "close"):
+        value = raw.get(field)
+        if isinstance(value, bool):
+            raise ValueError("HISTORICAL_CANDLE_PRICE_INVALID")
+        try:
+            number = float(value)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("HISTORICAL_CANDLE_PRICE_INVALID") from exc
+        if not math.isfinite(number) or number <= 0:
+            raise ValueError("HISTORICAL_CANDLE_PRICE_INVALID")
+        values[field] = number
+    if values["high"] < max(values["open"], values["close"], values["low"]):
+        raise ValueError("HISTORICAL_CANDLE_OHLC_INVARIANT_FAILED")
+    if values["low"] > min(values["open"], values["close"], values["high"]):
+        raise ValueError("HISTORICAL_CANDLE_OHLC_INVARIANT_FAILED")
+    stamp = datetime.fromtimestamp(epoch, tz=timezone.utc).isoformat()
+    return StrategyBar(timestamp_utc=stamp, **values)
+
+
+async def collect_timeframe(
+    transport: Any, *, symbol: str, start_epoch: int, end_epoch: int,
+    granularity: int, chunk_bars: int = 900,
+    request_delay_seconds: float = 0.35,
+) -> tuple[StrategyBar, ...]:
+    """Fetch exact contiguous candle chunks; missing bars abort the dataset."""
+    _validate_window(symbol=symbol, start_epoch=start_epoch, end_epoch=end_epoch,
+                     granularity=granularity, chunk_bars=chunk_bars)
+    if (isinstance(request_delay_seconds, bool)
+        or not isinstance(request_delay_seconds, (int, float))
+        or not math.isfinite(float(request_delay_seconds))
+        or request_delay_seconds < 0):
+        raise ValueError("HISTORICAL_REQUEST_DELAY_INVALID")
+
+    bars: list[StrategyBar] = []
+    cursor = start_epoch
+    while cursor < end_epoch:
+        chunk_end = min(end_epoch - granularity,
+                        cursor + granularity * (chunk_bars - 1))
+        expected_epochs = list(range(cursor, chunk_end + 1, granularity))
+        request = {
+            "ticks_history": symbol,
+            "style": "candles",
+            "granularity": granularity,
+            "start": cursor,
+            "end": str(chunk_end),
+            "count": len(expected_epochs),
+        }
+        try:
+            response = await transport.request(request)
+        except Exception as exc:
+            raise RuntimeError(
+                "DERIV_HISTORICAL_REQUEST_FAILED:" + type(exc).__name__
+            ) from None
+        if not isinstance(response, dict) or response.get("msg_type") != "candles":
+            raise RuntimeError("DERIV_HISTORICAL_RESPONSE_TYPE_INVALID")
+        candles = response.get("candles")
+        if not isinstance(candles, list):
+            raise RuntimeError("DERIV_HISTORICAL_CANDLES_MISSING")
+        chunk = tuple(_parse_candle(row, granularity=granularity) for row in candles)
+        epochs = [int(datetime.fromisoformat(x.timestamp_utc).timestamp()) for x in chunk]
+        if epochs != expected_epochs:
+            raise RuntimeError("DERIV_HISTORICAL_GAP_OR_TRUNCATION_DETECTED")
+        if bars and chunk and epochs[0] <= int(
+            datetime.fromisoformat(bars[-1].timestamp_utc).timestamp()
+        ):
+            raise RuntimeError("DERIV_HISTORICAL_CHUNK_OVERLAP_DETECTED")
+        bars.extend(chunk)
+        cursor = chunk_end + granularity
+        if cursor < end_epoch and request_delay_seconds:
+            await asyncio.sleep(float(request_delay_seconds))
+
+    if len(bars) != (end_epoch - start_epoch) // granularity:
+        raise RuntimeError("DERIV_HISTORICAL_FINAL_BAR_COUNT_MISMATCH")
+    return tuple(bars)
+
+
+def normalized_bars_sha256(bars: Sequence[StrategyBar]) -> str:
+    """Hash the same canonical normalized-bar representation as the WFO engine."""
+    digest = hashlib.sha256()
+    digest.update(b"[")
+    for index, bar in enumerate(bars):
+        if index:
+            digest.update(b",")
+        row = {
+            "timestamp_utc": bar.timestamp_utc,
+            "open": float(bar.open),
+            "high": float(bar.high),
+            "low": float(bar.low),
+            "close": float(bar.close),
+            "volume": None if bar.volume is None else float(bar.volume),
+            "session_id": bar.session_id,
+        }
+        digest.update(json.dumps(row, sort_keys=True, separators=(",", ":"),
+                                 allow_nan=False).encode("utf-8"))
+    digest.update(b"]")
+    return digest.hexdigest()
+
+
+def _write_dataset(output_dir: Path, *, symbol: str, granularity: int,
+                   bars: Sequence[StrategyBar], start_epoch: int,
+                   end_epoch: int, source_commit: str) -> dict[str, Any]:
+    timeframe = "M1" if granularity == 60 else "M15"
+    path = output_dir / f"{symbol}_{timeframe}.csv"
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=CSV_COLUMNS, lineterminator="\n")
+        writer.writeheader()
+        for bar in bars:
+            writer.writerow({
+                "timestamp_utc": bar.timestamp_utc,
+                "open": format(bar.open, ".15g"),
+                "high": format(bar.high, ".15g"),
+                "low": format(bar.low, ".15g"),
+                "close": format(bar.close, ".15g"),
+            })
+    file_digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            file_digest.update(block)
+    return {
+        "symbol": symbol,
+        "timeframe": timeframe,
+        "granularity_seconds": granularity,
+        "start_epoch_inclusive": start_epoch,
+        "end_epoch_exclusive": end_epoch,
+        "start_utc": datetime.fromtimestamp(start_epoch, timezone.utc).isoformat(),
+        "end_utc": datetime.fromtimestamp(end_epoch, timezone.utc).isoformat(),
+        "bar_count": len(bars),
+        "expected_bar_count": (end_epoch - start_epoch) // granularity,
+        "gap_count": 0,
+        "csv_file": path.name,
+        "csv_sha256": file_digest.hexdigest(),
+        "normalized_bars_sha256": normalized_bars_sha256(bars),
+        "source": "Deriv public ticks_history (style=candles), unauthenticated",
+        "source_endpoint": PUBLIC_WS_URL,
+        "source_commit": source_commit,
+    }
+
+
+async def collect_historical_dataset(
+    *, symbol: str, start_epoch: int, end_epoch: int,
+    granularities: Sequence[int], output_dir: str | Path,
+    source_commit: str, chunk_bars: int = 900,
+    request_delay_seconds: float = 0.35,
+    transport_factory: Callable[..., Any] = DerivWebSocketTransport,
+) -> dict[str, Any]:
+    """Collect timeframes on one unauthenticated public WebSocket connection."""
+    if not re.fullmatch(r"[0-9a-f]{40}", source_commit):
+        raise ValueError("HISTORICAL_SOURCE_COMMIT_INVALID")
+    if not granularities or any(
+        type(g) is not int or g not in SUPPORTED_GRANULARITIES for g in granularities
+    ):
+        raise ValueError("HISTORICAL_TIMEFRAMES_INVALID")
+    if len(set(granularities)) != len(granularities):
+        raise ValueError("HISTORICAL_TIMEFRAMES_DUPLICATED")
+
+    directory = Path(output_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    transport = transport_factory(
+        PUBLIC_WS_URL, timeout_seconds=45.0,
+        application_ping_interval_seconds=30.0,
+    )
+    datasets: list[dict[str, Any]] = []
+    await transport.connect()
+    try:
+        for granularity in granularities:
+            bars = await collect_timeframe(
+                transport, symbol=symbol, start_epoch=start_epoch,
+                end_epoch=end_epoch, granularity=granularity,
+                chunk_bars=chunk_bars,
+                request_delay_seconds=request_delay_seconds,
+            )
+            datasets.append(_write_dataset(
+                directory, symbol=symbol, granularity=granularity, bars=bars,
+                start_epoch=start_epoch, end_epoch=end_epoch,
+                source_commit=source_commit,
+            ))
+    finally:
+        await transport.close()
+
+    manifest = {
+        "schema": "aurelia.deriv.historical_ohlc_manifest.v1",
+        "symbol": symbol,
+        "start_epoch_inclusive": start_epoch,
+        "end_epoch_exclusive": end_epoch,
+        "collected_at_utc": datetime.now(timezone.utc).isoformat(),
+        "source_commit": source_commit,
+        "authentication_used": False,
+        "capital_authority": False,
+        "order_submission_permitted": False,
+        "datasets": datasets,
+    }
+    (directory / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    return manifest
+
+
+def _parse_timeframes(raw: str) -> tuple[int, ...]:
+    try:
+        values = tuple(int(x.strip()) for x in raw.split(",") if x.strip())
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("timeframes must be comma-separated seconds") from exc
+    if not values or any(x not in SUPPORTED_GRANULARITIES for x in values):
+        raise argparse.ArgumentTypeError("only 60 and 900 second timeframes are supported")
+    return values
+
+
+def main() -> int:
+    import os
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--symbol", default="R_100")
+    parser.add_argument("--start-epoch", type=int, required=True)
+    parser.add_argument("--end-epoch", type=int, required=True)
+    parser.add_argument("--timeframes", type=_parse_timeframes, default=(60, 900))
+    parser.add_argument("--output-dir", default="artifacts/r100-historical")
+    parser.add_argument("--chunk-bars", type=int, default=900)
+    parser.add_argument("--request-delay-seconds", type=float, default=0.35)
+    args = parser.parse_args()
+    try:
+        manifest = asyncio.run(collect_historical_dataset(
+            symbol=args.symbol, start_epoch=args.start_epoch, end_epoch=args.end_epoch,
+            granularities=args.timeframes, output_dir=args.output_dir,
+            source_commit=os.environ.get("GITHUB_SHA", ""),
+            chunk_bars=args.chunk_bars,
+            request_delay_seconds=args.request_delay_seconds,
+        ))
+    except Exception as exc:
+        print("R100_HISTORICAL_COLLECTION=FAILED")
+        print("REASON=" + type(exc).__name__)
+        return 2
+    total = sum(x["bar_count"] for x in manifest["datasets"])
+    print("R100_HISTORICAL_COLLECTION=COMPLETE")
+    print(f"R100_HISTORICAL_SYMBOL={args.symbol}")
+    print(f"R100_HISTORICAL_BARS={total}")
+    print(f"R100_HISTORICAL_MANIFEST={Path(args.output_dir) / 'manifest.json'}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
