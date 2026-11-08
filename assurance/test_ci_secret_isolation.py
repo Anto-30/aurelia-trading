@@ -21,10 +21,10 @@ def _job_block(workflow_name: str, job_name: str) -> str:
         raise AssertionError(f"Required job {job_name!r} missing from {workflow_name}") from exc
     end = len(lines)
     for index in range(start + 1, len(lines)):
-        if re.match(r"^  [A-Za-z0-9_-]+:\\s*$", lines[index]):
+        if re.match(r"^  [A-Za-z0-9_-]+:\s*$", lines[index]):
             end = index
             break
-    return "\\n".join(lines[start:end])
+    return "\n".join(lines[start:end])
 
 
 class ProductionSecretIsolationTests(unittest.TestCase):
