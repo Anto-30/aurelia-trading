@@ -23,6 +23,11 @@ class BrokerEvidenceVerifierContractTests(unittest.TestCase):
         self.assertIn("statement", called)
         self.assertIn("portfolio", called)
         self.assertIn("get_balance", called)
+        self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", source)
+        self.assertLess(
+            source.index("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"),
+            source.index('get_optional_secret("DERIV_AUTH_TOKEN")'),
+        )
         self.assertNotIn("submit_authorized_order", called)
         self.assertNotIn("buy", called)
 

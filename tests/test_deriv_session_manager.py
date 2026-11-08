@@ -59,6 +59,17 @@ class SessionManagerContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             manager.validate_binding(loginid="CRREAL", environment="demo")
 
+    def test_list_accounts_is_blocked_before_reading_credentials(self):
+        from unittest.mock import patch
+
+        manager = DerivSessionManager(expected_loginid="CRREAL", expected_environment="real")
+        with patch("runtime.adapters.session_manager.get_optional_secret") as secret_reader:
+            with self.assertRaisesRegex(
+                DerivSessionManagerError, "DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
+            ):
+                manager.list_accounts()
+            secret_reader.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

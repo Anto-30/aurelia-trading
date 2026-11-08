@@ -1,4 +1,4 @@
-"""Regression tests for protecting production secrets from untrusted Git refs."""
+"""Regression tests for PR secret isolation and Deriv account-scope policy."""
 from __future__ import annotations
 
 import re
@@ -8,6 +8,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
+DERIV_SECRET_MARKERS = (
+    "DERIV_AUTH_TOKEN",
+    "DERIV_PAT",
+    "DERIV_APP_ID",
+    "DERIV_EXPECTED_LOGINID",
+    "DERIV_AUTHORIZED_ACCOUNT_ID",
+    "DERIV_EXPECTED_CURRENCY",
+)
 
 
 def _job_block(workflow_name: str, job_name: str) -> str:
@@ -36,33 +44,36 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertNotIn("verify_deriv_session.py", text)
         self.assertNotIn("deriv-auth-verification:", text)
 
-    def test_all_protected_secret_workflows_require_manual_main_dispatch(self):
-        cases = (
-            ("deriv-auth-evidence.yml", "verify"),
-            ("deriv-session-verification.yml", "verify"),
-            ("deriv-verify-only-lifecycle.yml", "verify-only"),
-            ("self-hosted-runtime-deploy.yml", "deploy"),
-            ("aurelia-free-runtime.yml", "authenticated-deriv-evidence"),
-            ("aurelia-free-runtime.yml", "deriv-lifecycle-verify-only"),
-            ("aurelia-free-runtime.yml", "whatsapp-alert-smoke"),
-        )
-        expected = "if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}"
-        for workflow, job in cases:
-            with self.subTest(workflow=workflow, job=job):
-                block = _job_block(workflow, job)
-                job_conditions = re.findall(r"^    if:\s*(.+)$", block, flags=re.MULTILINE)
-                self.assertEqual(
-                    len(job_conditions),
-                    1,
-                    f"{workflow}:{job} must have exactly one job-level if condition",
-                )
-                self.assertEqual(job_conditions[0], expected.removeprefix("if: "))
-                self.assertRegex(block, r"\$\{\{\s*secrets\.")
+    def test_account_verification_workflows_are_blocked_and_credential_free(self):
+        for filename in (
+            "deriv-auth-evidence.yml",
+            "deriv-session-verification.yml",
+            "deriv-verify-only-lifecycle.yml",
+        ):
+            with self.subTest(workflow=filename):
+                text = (WORKFLOWS / filename).read_text(encoding="utf-8")
+                self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", text)
+                self.assertNotIn("environment: production", text)
+                self.assertNotRegex(text, r"\$\{\{\s*secrets\.")
+                for marker in DERIV_SECRET_MARKERS:
+                    self.assertNotIn(marker, text)
 
-    def test_auth_evidence_is_not_scheduled(self):
-        text = (WORKFLOWS / "deriv-auth-evidence.yml").read_text(encoding="utf-8")
-        self.assertIn("workflow_dispatch:", text)
-        self.assertNotIn("schedule:", text)
+    def test_free_runtime_retains_only_public_deriv_probe(self):
+        text = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
+        self.assertIn("python scripts/verify_deriv_public_transport.py", text)
+        self.assertIn('AURELIA_VERIFY_DERIV_AUTH: "false"', text)
+        self.assertNotIn("DERIV_AUTH_CONFIGURED", text)
+        self.assertNotIn("verify_deriv_session.py", text)
+        self.assertNotIn("verify_deriv_transaction_lifecycle.py", text)
+        self.assertNotIn("environment: production", text)
+        for marker in DERIV_SECRET_MARKERS:
+            self.assertNotIn(marker, text)
+
+    def test_whatsapp_smoke_remains_main_only_and_separate_from_deriv(self):
+        block = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
+        self.assertIn("if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}", block)
+        self.assertIn("TWILIO_AUTH_TOKEN", block)
+        self.assertNotIn("DERIV_AUTH_TOKEN", block)
 
     def test_secret_presence_report_is_main_only(self):
         block = _job_block("secret-presence-report.yml", "report")

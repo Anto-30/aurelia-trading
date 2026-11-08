@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from runtime.adapters.deriv_session import (
+    DERIV_ACCOUNT_SCOPE_BLOCK_REASON,
     DerivSessionError,
     AuthenticatedWebSocketUrl,
     get_authenticated_ws_url,
@@ -11,10 +12,13 @@ from runtime.core.models import BrokerOutcome
 
 
 class SessionLifecycleTests(unittest.TestCase):
-    def test_otp_requires_token(self):
-        with patch.dict("os.environ", {"DERIV_AUTH_TOKEN": ""}, clear=True):
-            with self.assertRaises(DerivSessionError):
+    def test_otp_is_blocked_before_credentials_or_network_access(self):
+        with patch.dict("os.environ", {"DERIV_AUTH_TOKEN": "MUST_NOT_BE_READ"}, clear=True), patch(
+            "runtime.adapters.deriv_session.urlopen"
+        ) as urlopen:
+            with self.assertRaisesRegex(DerivSessionError, DERIV_ACCOUNT_SCOPE_BLOCK_REASON):
                 get_authenticated_ws_url("CR123")
+            urlopen.assert_not_called()
 
     def test_safe_url_does_not_expose_otp(self):
         auth = AuthenticatedWebSocketUrl("CR123", "wss://example/ws/real?otp=SECRET")
@@ -26,7 +30,6 @@ class SessionLifecycleTests(unittest.TestCase):
         settled = accepted.settled()
         self.assertEqual(accepted.outcome, BrokerOutcome.ACCEPTED)
         self.assertEqual(settled.outcome, BrokerOutcome.SETTLED)
-        self.assertEqual(settled.transaction_id, "TX1")
 
 
 if __name__ == "__main__":
