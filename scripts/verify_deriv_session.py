@@ -29,6 +29,58 @@ OUTPUT = Path(
 )
 
 
+SAFE_DERIV_SESSION_REASONS = frozenset(
+    {
+        "DERIV_WS_URL_MISSING",
+        "LEGACY_OR_UNSUPPORTED_DERIV_WS_ENDPOINT",
+        "DERIV_OPTIONS_WS_PATH_INVALID",
+        "UNKNOWN_DERIV_WS_ENVIRONMENT",
+        "AUTHENTICATED_URL_ENVIRONMENT_MISMATCH",
+        "ACCOUNT_ID_REQUIRED",
+        "DERIV_BEARER_TOKEN_MISSING",
+        "DERIV_APP_ID_MISSING",
+        "OTP_REQUEST_FAILED",
+        "OTP_RESPONSE_MISSING_WS_URL",
+        "ACCOUNT_ENVIRONMENT_MISMATCH",
+        "REAL_ACCOUNT_BINDING_REQUIRED",
+        "ACCOUNT_LOGINID_MISMATCH",
+        "DERIV_ACCOUNT_REQUEST_FAILED",
+        "DERIV_ACCOUNT_RESPONSE_INVALID",
+        "DERIV_ACCOUNT_LIST_MISSING",
+        "EXPECTED_CURRENCY_REQUIRED",
+        "ACCOUNT_CURRENCY_UNVERIFIED",
+        "NO_EXACT_DERIV_ACCOUNT_MATCH",
+        "MULTIPLE_REAL_ACCOUNTS_REQUIRE_EXPLICIT_BINDING",
+        "OTP_WS_ENVIRONMENT_MISMATCH",
+        "DERIV_AUTHENTICATED_WS_URL_MISSING",
+        "EXPECTED_ACCOUNT_CURRENCY_REQUIRED",
+        "ACCOUNT_IDENTITY_UNVERIFIED",
+        "ACCOUNT_IDENTITY_MISMATCH",
+        "CURRENCY_MISMATCH",
+        "CONNECTED_ACCOUNT_IDENTITY_MISMATCH",
+        "CONNECTED_ACCOUNT_ENVIRONMENT_MISMATCH",
+        "CONNECTED_ACCOUNT_TYPE_MISMATCH",
+        "CAPITAL_SNAPSHOT_INVALID",
+    }
+)
+
+
+def safe_deriv_error_reason(exc: Exception) -> str:
+    """Return a known internal error code or a class-only fallback.
+
+    Exception messages are deliberately never emitted: a transport/provider
+    exception may contain account data, credentials, OTP material or URLs.
+    """
+    args = getattr(exc, "args", ())
+    if (
+        len(args) == 1
+        and isinstance(args[0], str)
+        and args[0] in SAFE_DERIV_SESSION_REASONS
+    ):
+        return args[0]
+    return "UNCLASSIFIED_" + type(exc).__name__.upper()
+
+
 async def run() -> int:
     started = datetime.now(timezone.utc)
     # Accept the canonical AURELIA names plus the operator-facing aliases
@@ -187,7 +239,7 @@ async def run() -> int:
         return 0
     except Exception as exc:
         print("DERIV_AUTH_SESSION=FAILED")
-        print(f"DERIV_AUTH_SESSION_REASON={type(exc).__name__}")
+        print(f"DERIV_AUTH_SESSION_REASON={safe_deriv_error_reason(exc)}")
         return 1
     finally:
         if adapter is not None:

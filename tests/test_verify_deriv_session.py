@@ -5,7 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from runtime.core.models import AccountIdentity, CapitalSnapshot
-from scripts.verify_deriv_session import run
+from scripts.verify_deriv_session import run, safe_deriv_error_reason
 from assurance.evidence_writer import payload_sha256
 
 
@@ -181,6 +181,65 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(record["capital_authority_granted"])
         self.assertFalse(record["order_submission_permitted"])
         self.assertEqual(record["orders_submitted"], 0)
+
+
+    def test_safe_error_reason_preserves_allowlisted_internal_code(self):
+        self.assertEqual(
+            safe_deriv_error_reason(ValueError("ACCOUNT_ENVIRONMENT_MISMATCH")),
+            "ACCOUNT_ENVIRONMENT_MISMATCH",
+        )
+
+    def test_safe_error_reason_preserves_allowlisted_otp_code(self):
+        self.assertEqual(
+            safe_deriv_error_reason(RuntimeError("OTP_REQUEST_FAILED")),
+            "OTP_REQUEST_FAILED",
+        )
+
+    def test_safe_error_reason_masks_unrecognized_value_error_message(self):
+        private_text = "SYNTHETIC_SECRET_VALUE_DO_NOT_LOG"
+        result = safe_deriv_error_reason(ValueError(private_text))
+        self.assertEqual(result, "UNCLASSIFIED_VALUEERROR")
+        self.assertNotIn(private_text, result)
+
+    def test_safe_error_reason_masks_multiple_exception_arguments(self):
+        result = safe_deriv_error_reason(
+            ValueError("ACCOUNT_ENVIRONMENT_MISMATCH", "SYNTHETIC_ACCOUNT_IDENTIFIER")
+        )
+        self.assertEqual(result, "UNCLASSIFIED_VALUEERROR")
+        self.assertNotIn("SYNTHETIC_ACCOUNT_IDENTIFIER", result)
+
+    async def test_failed_session_output_never_prints_unrecognized_exception_details(self):
+        import io
+        from contextlib import redirect_stdout
+
+        private_text = "SYNTHETIC_SECRET_VALUE_DO_NOT_LOG"
+        output = io.StringIO()
+        with patch.dict(
+            os.environ,
+            {
+                "DERIV_AUTH_TOKEN": "SYNTHETIC_TOKEN_VALUE",
+                "DERIV_APP_ID": "SYNTHETIC_APP_ID",
+                "DERIV_EXPECTED_LOGINID": "SYNTHETIC_ACCOUNT_ID",
+                "DERIV_ENVIRONMENT": "real",
+                "DERIV_EXPECTED_CURRENCY": "USD",
+            },
+            clear=True,
+        ), patch(
+            "scripts.verify_deriv_session.DerivSessionManager.bootstrap",
+            side_effect=ValueError(private_text),
+        ), redirect_stdout(output):
+            result = await run()
+
+        rendered = output.getvalue()
+        self.assertEqual(result, 1)
+        self.assertIn("DERIV_AUTH_SESSION=FAILED", rendered)
+        self.assertIn(
+            "DERIV_AUTH_SESSION_REASON=UNCLASSIFIED_VALUEERROR",
+            rendered,
+        )
+        self.assertNotIn(private_text, rendered)
+        self.assertNotIn("SYNTHETIC_TOKEN_VALUE", rendered)
+        self.assertNotIn("SYNTHETIC_ACCOUNT_ID", rendered)
 
 
 if __name__ == "__main__":
