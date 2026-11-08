@@ -1,4 +1,4 @@
-name: AURELIA Deriv Account Session Verification (Blocked)
+name: AURELIA Deriv Account Session Verification (Alias)
 
 on:
   workflow_dispatch:
@@ -7,15 +7,14 @@ permissions:
   contents: read
 
 jobs:
-  blocked:
+  held:
     if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Report account-scope policy block
+      - name: Use the canonical account evidence workflow
         run: |
-          echo "DERIV_AUTH_SESSION=BLOCKED"
-          echo "DERIV_AUTH_SESSION_REASON=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
-          echo "DERIV_CREDENTIALS_READ=false"
+          echo "DERIV_SESSION_VERIFICATION=ROUTED_TO_DERIV_AUTH_EVIDENCE"
+          echo "RUN_AURELIA_DERIV_ACCOUNT_IDENTITY_EVIDENCE_ON_MAIN=true"
           echo "DERIV_ORDERS_SUBMITTED=0"
           echo "LIVE_EXECUTION=BLOCKED"
           echo "FINAL_EXECUTION_AUTHORIZATION=false"

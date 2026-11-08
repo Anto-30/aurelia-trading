@@ -1,4 +1,4 @@
-name: AURELIA Deriv Verify-Only Lifecycle (Blocked)
+name: AURELIA Deriv Verify-Only Lifecycle (Held)
 
 on:
   workflow_dispatch:
@@ -7,15 +7,14 @@ permissions:
   contents: read
 
 jobs:
-  blocked:
+  held:
     if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Report account-scope policy block
+      - name: Explain lifecycle gate
         run: |
-          echo "DERIV_TRANSACTION_LIFECYCLE=BLOCKED"
-          echo "REASON=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
-          echo "DERIV_PROPOSALS_REQUESTED=0"
+          echo "DERIV_TRANSACTION_LIFECYCLE=HELD"
+          echo "REASON=VERIFY_ONLY_LIFECYCLE_REQUIRES_SEPARATE_NO_ORDER_ACTION_AUDIT"
           echo "DERIV_ORDERS_SUBMITTED=0"
           echo "LIVE_EXECUTION=BLOCKED"
           echo "FINAL_EXECUTION_AUTHORIZATION=false"
