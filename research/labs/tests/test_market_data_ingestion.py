@@ -75,7 +75,7 @@ class StandardCSVIngestionTests(unittest.TestCase):
             ambiguous, symbol="EURUSD", asset_class="financial",
             granularity_seconds=60, source_timezone="America/New_York",
         )
-        self.assertIn("AMBIGUOUS_LOCAL_TIMESTAMP_DST", result_a.audit.issue_codes)
+        self.assertIn("AMBIGUOUS_LOCAL_TIMESTAMP_DST_REQUIRES_EXPLICIT_OFFSET", result_a.audit.issue_codes)
 
         nonexistent = self._csv(
             "datetime,open,high,low,close\n"
@@ -157,6 +157,14 @@ class StandardCSVIngestionTests(unittest.TestCase):
         self.assertEqual(result.audit.gap_count, 1)
         self.assertGreater(result.audit.maximum_gap_seconds, 900)
 
+    def test_empty_standard_csv_is_quarantined_with_explicit_reason(self):
+        path = self._csv("datetime,open,high,low,close\\n")
+        result = ingest_standard_csv(
+            path, symbol="R_100", asset_class="synthetic", granularity_seconds=60,
+        )
+        self.assertFalse(result.eligible_for_research)
+        self.assertIn("NO_VALID_ROWS", result.audit.issue_codes)
+
     def test_unknown_timezone_fails_as_configuration_error(self):
         path = self._csv(
             "datetime,open,high,low,close\n"
@@ -225,7 +233,7 @@ class DerivIngestionTests(unittest.TestCase):
             payload, symbol="R_100", asset_class="synthetic", granularity_seconds=60,
         )
         self.assertTrue(result.eligible_for_research)
-        self.assertEqual(result.audit.source_type, "DERIV_TICK_EXPORT_RECORDS")
+        self.assertEqual(result.audit.source_type, "DERIV_TICK_EXPORT_RECORDS_CALLER_SYMBOL_ASSERTED")
         self.assertEqual(result.tick_counts_by_bar, (2, 1))
 
     def test_json_file_source_hash_is_exact_file_hash(self):
@@ -266,14 +274,6 @@ class DerivIngestionTests(unittest.TestCase):
         self.assertEqual(result.audit.source_type, "DERIV_CANDLES_HISTORY_RESPONSE")
         self.assertEqual(result.audit.source_sha256, hashlib.sha256(raw).hexdigest())
         self.assertTrue(result.eligible_for_research)
-
-    def test_empty_standard_csv_is_quarantined_with_explicit_reason(self):
-        path = self._csv("datetime,open,high,low,close\\n")
-        result = ingest_standard_csv(
-            path, symbol="R_100", asset_class="synthetic", granularity_seconds=60,
-        )
-        self.assertFalse(result.eligible_for_research)
-        self.assertIn("NO_VALID_ROWS", result.audit.issue_codes)
 
     def test_out_of_order_ticks_quarantine_resampled_output(self):
         payload = [
