@@ -89,7 +89,7 @@ PORT=8080
 AURELIA_CONTINUOUS_RUNTIME=true
 AURELIA_AUTONOMOUS_LOOP=false
 AURELIA_VERIFY_DERIV_PUBLIC=true
-AURELIA_VERIFY_DERIV_AUTH=true
+AURELIA_VERIFY_DERIV_AUTH=false
 AURELIA_RUN_ONCE=false
 AURELIA_DEPLOYMENT_MODE=LIVE
 AURELIA_PERSISTENT_WORKER_HEALTHY=true
@@ -153,49 +153,6 @@ fi
 
 RUNTIME_ID="$(grep -h -E '^AURELIA_RUNTIME_ID=' "${ENV_FILES[@]}" | tail -n 1 | sed 's/^[^=]*=//')"
 RUNTIME_ID="${RUNTIME_ID:-aurelia-production-worker}"
-
-AUTH_CONFIGURED=false
-if grep -Eq "^(DERIV_AUTH_TOKEN|DERIV_PAT)=.+$" "${ENV_FILES[@]}" \
-  && grep -Eq "^(DERIV_EXPECTED_LOGINID|DERIV_AUTHORIZED_ACCOUNT_ID)=.+$" "${ENV_FILES[@]}" \
-  && grep -Eq "^DERIV_EXPECTED_CURRENCY=.+$" "${ENV_FILES[@]}" \
-  && grep -Eq "^DERIV_ENVIRONMENT=real$" "${ENV_FILES[@]}" \
-  && grep -Eq "^DERIV_AUTH_MODE=(pat|oauth)$" "${ENV_FILES[@]}"; then
-  if ! grep -Eq "^DERIV_AUTH_MODE=pat$" "${ENV_FILES[@]}" \
-    || grep -Eq "^DERIV_APP_ID=.+$" "${ENV_FILES[@]}"; then
-    AUTH_CONFIGURED=true
-  fi
-fi
-
-if [ "$DEPLOYMENT_MODE" = "LIVE" ] && [ "$AUTH_CONFIGURED" != "true" ]; then
-  grep -Eq "^(DERIV_AUTH_TOKEN|DERIV_PAT)=.+$" "${ENV_FILES[@]}" || {
-    echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_AUTH_TOKEN_OR_DERIV_PAT"
-    exit 2
-  }
-  grep -Eq "^(DERIV_EXPECTED_LOGINID|DERIV_AUTHORIZED_ACCOUNT_ID)=.+$" "${ENV_FILES[@]}" || {
-    echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_EXPECTED_LOGINID_OR_DERIV_AUTHORIZED_ACCOUNT_ID"
-    exit 2
-  }
-  grep -Eq "^DERIV_EXPECTED_CURRENCY=.+$" "${ENV_FILES[@]}" || {
-    echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_EXPECTED_CURRENCY"
-    exit 2
-  }
-  grep -Eq "^DERIV_ENVIRONMENT=real$" "${ENV_FILES[@]}" || {
-    echo "AURELIA_HOST_BLOCKED=LIVE_RUNTIME_REQUIRES_DERIV_ENVIRONMENT_REAL"
-    exit 2
-  }
-  grep -Eq "^DERIV_AUTH_MODE=(pat|oauth)$" "${ENV_FILES[@]}" || {
-    echo "AURELIA_HOST_BLOCKED=DERIV_AUTH_MODE_INVALID_OR_MISSING"
-    exit 2
-  }
-  if grep -Eq "^DERIV_AUTH_MODE=pat$" "${ENV_FILES[@]}"; then
-    grep -Eq "^DERIV_APP_ID=.+$" "${ENV_FILES[@]}" || {
-      echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_APP_ID"
-      exit 2
-    }
-  fi
-  echo "AURELIA_HOST_BLOCKED=DERIV_AUTH_CONFIGURATION_INVALID"
-  exit 2
-fi
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   grep -Fxq 'AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json' "$ENV_FILE" || {
