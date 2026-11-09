@@ -79,7 +79,6 @@ jobs:
           LIVE_EXECUTION: "BLOCKED"
           AURELIA_VERIFY_DERIV_PUBLIC: "false"
           AURELIA_VERIFY_DERIV_AUTH: "false"
-          AURELIA_VERIFY_DERIV_AUTH: "false"
           AURELIA_CONTINUOUS_RUNTIME: "false"
           AURELIA_RUN_ONCE: "false"
         run: |
