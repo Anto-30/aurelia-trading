@@ -46,6 +46,15 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertNotIn("DERIV_PAT", text)
         self.assertNotIn("verify_deriv_session.py", text)
 
+    def test_verifier_script_never_reads_secrets_or_constructs_authenticated_session(self):
+        source = (ROOT / "scripts" / "verify_deriv_session.py").read_text(encoding="utf-8")
+        self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", source)
+        self.assertNotIn("get_optional_secret", source)
+        self.assertNotIn("DerivSessionManager", source)
+        self.assertNotIn("DerivAdapter", source)
+        self.assertNotIn("DERIV_AUTH_TOKEN", source)
+        self.assertNotIn("DERIV_PAT", source)
+
     def test_bearer_tokens_are_used_only_in_live_gated_deployment_steps(self):
         text = (WORKFLOWS / "self-hosted-runtime-deploy.yml").read_text(encoding="utf-8")
         self.assertNotIn("vars.DERIV_AUTH_TOKEN", text)
