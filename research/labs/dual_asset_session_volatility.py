@@ -663,7 +663,12 @@ def prepare_candidate_for_research_simulation(
         raise ValueError("RESEARCH_CANDIDATE_CAPITAL_AUTHORITY_FORBIDDEN")
     if getattr(candidate, "order_submission_permitted", False) is not False:
         raise ValueError("RESEARCH_CANDIDATE_ORDER_SUBMISSION_FORBIDDEN")
-    if not hasattr(candidate, "research_only") or getattr(candidate, "research_only") is not True:
+    research_only = getattr(candidate, "research_only", None)
+    if research_only is not True:
+        payload_builder = getattr(candidate, "as_payload", None)
+        payload = payload_builder() if callable(payload_builder) else None
+        research_only = payload.get("research_only") if isinstance(payload, dict) else None
+    if research_only is not True:
         raise ValueError("CANDIDATE_MUST_DECLARE_RESEARCH_ONLY")
     if isinstance(entry_bar_index, bool) or not isinstance(entry_bar_index, int):
         raise ValueError("ENTRY_BAR_INDEX_INVALID")
