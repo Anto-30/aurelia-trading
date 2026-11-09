@@ -345,7 +345,7 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         with (
             patch.object(collector,"utc_now",return_value=start),
             patch.object(collector,"COLLECTION_SECONDS",10.0),
-            patch.object(collector,"DerivAuthenticationGate",return_value=gate),
+            patch.object(collector,"DerivAuthenticationGate",return_value=gate) as gate_factory,
             patch.object(collector,"AutonomousSignalHunter",return_value=FakeHunter()),
         ):
             asyncio.run(collector.collect_once(state))
@@ -354,7 +354,8 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertEqual(state["quote_observations"][0]["quote_status"],"UNAVAILABLE")
         self.assertEqual(state["quote_observations"][0]["error_code"],"R100_PUBLIC_PROPOSAL_QUOTES_DISABLED_BY_POLICY")
         transport.close.assert_awaited_once()
-        gate.assert_called_once_with(plane="research")
+        gate_factory.assert_called_once_with(plane="research")
+        gate.get_client.assert_called_once_with()
 
     def test_expired_campaign_censors_pending_signals_and_seals_without_connecting(self):
         import research.r100_prospective_oos_collector as collector
@@ -448,13 +449,14 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         with (
             patch.object(collector,"utc_now",return_value=start),
             patch.object(collector,"COLLECTION_SECONDS",10.0),
-            patch.object(collector,"DerivAuthenticationGate",return_value=gate),
+            patch.object(collector,"DerivAuthenticationGate",return_value=gate) as gate_factory,
             patch.object(collector,"AutonomousSignalHunter",return_value=NoSignalHunter()),
         ):
             with self.assertRaisesRegex(ValueError,"R100_TICK_ORDER_INVALID"):
                 asyncio.run(collector.collect_once(state))
         transport.close.assert_awaited_once()
-        gate.assert_called_once_with(plane="research")
+        gate_factory.assert_called_once_with(plane="research")
+        gate.get_client.assert_called_once_with()
 
 
 if __name__ == "__main__":
