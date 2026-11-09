@@ -140,6 +140,15 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertIn("Provision LIVE runtime secrets to root-only host store", token_blocks[0])
         self.assertIn("if: inputs.deployment_mode == 'LIVE'", token_blocks[0])
 
+    def test_verify_only_runtime_never_loads_legacy_trade_scoped_readonly_file(self):
+        source = (ROOT / "scripts" / "deploy" / "bootstrap_and_deploy.sh").read_text(encoding="utf-8")
+        self.assertIn('sudo rm -f "$READONLY_SECRET_FILE"', source)
+        self.assertNotIn('ENV_FILES+=("$READONLY_SECRET_FILE")', source)
+        self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', source)
+        self.assertNotIn('VERIFY_DERIV_AUTH="$AUTH_CONFIGURED"', source)
+        self.assertIn("VERIFY_DERIV_AUTH=false", source)
+        self.assertNotIn("provision_deriv_readonly_secrets.py", source)
+
     def test_public_runtime_has_no_deriv_credentials_or_account_settings(self):
         text = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
         self.assertIn("python scripts/verify_deriv_public_transport.py", text)
