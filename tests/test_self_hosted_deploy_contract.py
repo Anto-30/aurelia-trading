@@ -68,8 +68,10 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("os.replace(temporary, destination)", provisioner)
         self.assertIn('CAPITAL_AUTHORITY_GRANTED=false', provisioner)
         self.assertIn('READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"', deploy)
-        self.assertIn('elif [ -f "$READONLY_SECRET_FILE" ]', deploy)
-        self.assertIn('CAPITAL_AUTHORITY_GRANTED=false', readonly_provisioner)
+        self.assertIn('sudo rm -f "$READONLY_SECRET_FILE"', deploy)
+        self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', deploy)
+        self.assertNotIn('ENV_FILES+=( "$READONLY_SECRET_FILE" )', deploy)
+        self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", readonly_provisioner)
         presence_workflow = (
             ROOT / ".github" / "workflows" / "secret-presence-report.yml"
         ).read_text(encoding="utf-8")
