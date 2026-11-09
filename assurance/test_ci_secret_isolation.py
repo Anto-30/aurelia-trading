@@ -120,7 +120,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         )
         token_refs = [
             match.start()
-            for match in re.finditer(r"secrets\\.(?:DERIV_AUTH_TOKEN|DERIV_PAT)", workflow)
+            for match in re.finditer(r"secrets\.(?:DERIV_AUTH_TOKEN|DERIV_PAT)", workflow)
         ]
         self.assertTrue(token_refs)
         self.assertTrue(all(index > blocked_at for index in token_refs))
