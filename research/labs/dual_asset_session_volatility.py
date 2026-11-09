@@ -141,7 +141,7 @@ def apply_session_filter(
 def is_kill_zone(
     frame: Any,
     session: str = "LONDON",
-    buffer_minutes: int = 0,
+    buffer_minutes: int = 15,
     *,
     asset_class: str = "financial",
     timestamp_column: str | None = None,
