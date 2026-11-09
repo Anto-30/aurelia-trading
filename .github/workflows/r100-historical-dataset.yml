@@ -1,0 +1,89 @@
+name: AURELIA R100 Historical OHLC Acquisition
+
+on:
+  push:
+    branches: ["research/369-msnr-wfo-20261108"]
+    paths: [".github/workflows/r100-historical-dataset.yml"]
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: Deriv synthetic index symbol
+        required: true
+        default: R_100
+        type: string
+      start_epoch:
+        description: Inclusive UTC candle-open epoch
+        required: true
+        default: "1666310400"
+        type: string
+      end_epoch:
+        description: Exclusive UTC epoch boundary
+        required: true
+        default: "1729468800"
+        type: string
+      timeframes:
+        description: Candle granularities in seconds
+        required: true
+        default: "60,900"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aurelia-r100-historical-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || github.ref == 'refs/heads/research/369-msnr-wfo-20261108'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    env:
+      PYTHONPATH: "."
+      R100_SYMBOL: ${{ inputs.symbol || 'R_100' }}
+      R100_START_EPOCH: ${{ inputs.start_epoch || '1666310400' }}
+      R100_END_EPOCH: ${{ inputs.end_epoch || '1666314000' }}
+      R100_TIMEFRAMES: ${{ inputs.timeframes || '60,900' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+      - name: Collect public historical OHLC
+        run: |
+          python -m research.labs.deriv_historical_candle_collector \
+            --symbol "$R100_SYMBOL" \
+            --start-epoch "$R100_START_EPOCH" \
+            --end-epoch "$R100_END_EPOCH" \
+            --timeframes "$R100_TIMEFRAMES" \
+            --output-dir artifacts/r100-historical
+      - name: Verify collected data manifest
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("artifacts/r100-historical/manifest.json")
+          data = json.loads(path.read_text())
+          assert data["authentication_used"] is False
+          assert data["capital_authority"] is False
+          assert data["order_submission_permitted"] is False
+          assert data["datasets"]
+          for item in data["datasets"]:
+              assert item["gap_count"] == 0
+              assert item["bar_count"] == item["expected_bar_count"]
+              assert len(item["csv_sha256"]) == 64
+              assert len(item["normalized_bars_sha256"]) == 64
+          print("R100_HISTORICAL_MANIFEST=VALID")
+          PY
+      - name: Upload public historical OHLC evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-r100-historical-${{ github.run_id }}
+          path: artifacts/r100-historical/
+          if-no-files-found: error
+          retention-days: 30
