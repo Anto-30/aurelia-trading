@@ -12,7 +12,7 @@ import hashlib
 import json
 import math
 from collections import defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Sequence
@@ -229,6 +229,8 @@ def _finish(
             if delta > granularity_seconds:
                 gaps.append(delta)
         previous = stamp
+    if not ordered and not issues:
+        issues = [IngestionIssue(None, "NO_VALID_ROWS", "source yielded no valid observations")]
     codes = tuple(sorted({issue.code for issue in issues}))
     status = "PASS" if not issues and ordered else "QUARANTINED"
     bars_hash = _canonical_data_hash(ordered, tick_counts) if ordered else None
@@ -309,6 +311,11 @@ def ingest_standard_csv(
     """
     _validate_scope(symbol, asset_class, granularity_seconds)
     file_path = Path(path)
+    if source_timezone is not None:
+        try:
+            ZoneInfo(source_timezone)
+        except (ZoneInfoNotFoundError, ValueError) as exc:
+            raise MarketDataIngestionError("SOURCE_TIMEZONE_NOT_IANA") from exc
     try:
         raw = file_path.read_bytes()
         text = raw.decode("utf-8-sig")
@@ -338,6 +345,9 @@ def ingest_standard_csv(
 
     for row_number, raw_row in enumerate(reader, start=2):
         rows_seen += 1
+        if None in raw_row:
+            issues.append(IngestionIssue(row_number, "CSV_ROW_HAS_EXTRA_FIELDS", "unexpected columns beyond header"))
+            continue
         row = {mapping.get(key.strip().lower(), key.strip().lower()): value for key, value in raw_row.items() if key is not None}
         try:
             if "epoch" in row and str(row["epoch"]).strip():
@@ -403,7 +413,7 @@ def _tick_rows(payload: Any, *, symbol: str) -> tuple[list[tuple[int, float]], s
         source_type = "DERIV_TICKS_HISTORY_RESPONSE"
     elif isinstance(payload, list):
         raw_rows = payload
-        source_type = "DERIV_TICK_EXPORT_RECORDS"
+        source_type = "DERIV_TICK_EXPORT_RECORDS_CALLER_SYMBOL_ASSERTED"
     else:
         raise MarketDataIngestionError("DERIV_TICK_PAYLOAD_SHAPE_UNSUPPORTED")
 
@@ -507,18 +517,26 @@ def ingest_deriv_json_file(
 
     # Keep the exact file bytes as source provenance by routing through the
     # payload parser, then replacing its source hash with the on-disk hash.
-    result = ingest_deriv_tick_payload(
-        payload,
-        symbol=symbol,
-        asset_class=asset_class,
-        granularity_seconds=granularity_seconds,
-    )
-    audit = IngestionAudit(
-        **{
-            **asdict(result.audit),
-            "source_sha256": _sha256(raw),
-        }
-    )
+    try:
+        if isinstance(payload, dict) and isinstance(payload.get("candles"), list):
+            result = ingest_deriv_candle_payload(
+                payload,
+                symbol=symbol,
+                asset_class=asset_class,
+                granularity_seconds=granularity_seconds,
+            )
+        else:
+            result = ingest_deriv_tick_payload(
+                payload,
+                symbol=symbol,
+                asset_class=asset_class,
+                granularity_seconds=granularity_seconds,
+            )
+    except (ValueError, TypeError) as exc:
+        if isinstance(exc, MarketDataIngestionError):
+            raise
+        raise MarketDataIngestionError("MARKET_DATA_JSON_PAYLOAD_INVALID") from exc
+    audit = replace(result.audit, source_sha256=_sha256(raw))
     return IngestionResult(result.bars, audit, result.tick_counts_by_bar)
 
 
