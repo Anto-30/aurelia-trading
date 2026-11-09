@@ -64,6 +64,7 @@ jobs:
 
   whatsapp-alert-smoke:
     if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -81,6 +82,8 @@ jobs:
       TWILIO_HTTP_TIMEOUT_SECONDS: "8"
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
