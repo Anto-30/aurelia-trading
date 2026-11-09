@@ -15,7 +15,16 @@ class BrokerEvidenceVerifierContractTests(unittest.TestCase):
             node for node in tree.body
             if isinstance(node, ast.AsyncFunctionDef) and node.name == "run"
         )
-        self.assertIsInstance(run.body[0], ast.Return)
+        self.assertTrue(ast.get_docstring(run))
+        executable = next(
+            node for node in run.body
+            if not (
+                isinstance(node, ast.Expr)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            )
+        )
+        self.assertIsInstance(executable, ast.Return)
         self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", source)
         self.assertNotIn("get_optional_secret", source)
         self.assertNotIn("DerivSessionManager", source)
