@@ -2,15 +2,25 @@ name: AURELIA Non-Production 3600s Soak
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "research/deriv-multipliers-and-public-soak-20261108"
+    paths:
+      - "runtime/**"
+      - "scripts/deriv_public_ws_soak_3600.py"
+      - "scripts/probe_deriv_historical_semantics.py"
+      - "assurance/test_soak_protocol.py"
+      - "requirements.txt"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: aurelia-non-production-soak-${{ github.sha }}
-  cancel-in-progress: true
+  # Serialize non-production soak runs globally. Never cancel an active soak;
+  # GitHub keeps one running and at most one pending run for this concurrency group.
+  group: aurelia-non-production-3600s-soak
+  cancel-in-progress: false
 
 jobs:
   soak:
@@ -26,10 +36,47 @@ jobs:
       AURELIA_VERIFY_DERIV_AUTH: "false"
       AURELIA_RUN_ONCE: "false"
       SOAK_SECONDS: "3600"
+      SOAK_SYMBOL: "R_100"
+      SOAK_RECONNECT_INTERVAL_SECONDS: "900"
+      SOAK_RECOVERY_TIMEOUT_SECONDS: "60"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up host Python for the public WebSocket probe
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install host-side runtime dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -c "import websockets; print('HOST_WEBSOCKETS_VERSION=' + websockets.__version__)"
+
+      - name: Probe public Deriv historical request boundaries
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          mkdir -p artifacts/r100-history-semantics
+          set +e
+          python scripts/probe_deriv_historical_semantics.py \
+            --symbol "$SOAK_SYMBOL" \
+            --start-epoch 1666310400 \
+            --end-epoch 1666313940 \
+            --output artifacts/r100-history-semantics/summary.json
+          probe_status=$?
+          set -e
+          printf '%s\n' "$probe_status" > artifacts/r100-history-semantics/exit-code.txt
+          if [ "$probe_status" -eq 0 ]; then
+            echo "R100_HISTORICAL_BOUNDARY_PROBE=PASS"
+          else
+            echo "R100_HISTORICAL_BOUNDARY_PROBE=BLOCKED_OR_UNAVAILABLE"
+          fi
 
       - name: Build runtime image
         run: docker build --tag aurelia-non-production-soak .
@@ -90,6 +137,24 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          # Keep the read-only WebSocket probe in this same step so the
+          # runner does not reap a background child when an Actions step exits.
+          mkdir -p artifacts/deriv-public-ws-soak
+          (
+            set +e
+            python scripts/deriv_public_ws_soak_3600.py \
+              --symbol "$SOAK_SYMBOL" \
+              --duration-seconds "$SOAK_SECONDS" \
+              --reconnect-interval-seconds "$SOAK_RECONNECT_INTERVAL_SECONDS" \
+              --recovery-timeout-seconds "$SOAK_RECOVERY_TIMEOUT_SECONDS" \
+              --output-dir artifacts/deriv-public-ws-soak \
+              > artifacts/deriv-public-ws-soak/console.log 2>&1
+            result=$?
+            printf '%s\n' "$result" > artifacts/deriv-public-ws-soak/exit-code.txt
+            exit 0
+          ) &
+          public_ws_pid=$!
 
           start_epoch="$(date +%s)"
           end_epoch=$((start_epoch + SOAK_SECONDS))
@@ -178,6 +243,25 @@ jobs:
           test "$duration" -ge 3600
           test "$failures" -eq 0
 
+          if wait "$public_ws_pid"; then
+            echo "PUBLIC_WS_SOAK_PROCESS_FINISHED"
+          else
+            echo "PUBLIC_WS_SOAK_PROCESS_FAILED"
+            cat artifacts/deriv-public-ws-soak/console.log 2>/dev/null || true
+            exit 1
+          fi
+          test -f artifacts/deriv-public-ws-soak/exit-code.txt
+          cat artifacts/deriv-public-ws-soak/console.log
+          test "$(cat artifacts/deriv-public-ws-soak/exit-code.txt)" = "0"
+          jq -e '
+            (.status == "PASS") and
+            (.target_duration_seconds == 3600) and
+            (.observed_duration_seconds >= 3600) and
+            (.authentication_used == false) and
+            (.capital_authority == false) and
+            (.order_submission_permitted == false)
+          ' artifacts/deriv-public-ws-soak/summary.json >/dev/null
+
       - name: Assert capital protection
         if: always()
         run: |
@@ -203,6 +287,8 @@ jobs:
             aurelia-3600s-soak-evidence.json
             aurelia-runtime.log
             aurelia-runtime-inspect.json
+            artifacts/deriv-public-ws-soak/
+            artifacts/r100-history-semantics/
             /tmp/aurelia-source-identity.env
             /tmp/aurelia-startup-health.json
             /tmp/aurelia-startup-health.err
