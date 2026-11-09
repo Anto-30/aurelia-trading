@@ -152,6 +152,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertNotIn('ENV_FILES+=("$READONLY_SECRET_FILE")', source)
         self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', source)
         self.assertNotIn('VERIFY_DERIV_AUTH="$AUTH_CONFIGURED"', source)
+        self.assertNotIn("VERIFY_DERIV_AUTH=true", source)
         self.assertIn("VERIFY_DERIV_AUTH=false", source)
         self.assertNotIn("provision_deriv_readonly_secrets.py", source)
 
