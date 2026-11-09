@@ -126,7 +126,15 @@ def apply_session_filter(
         labels = ["SYNTHETIC_BYPASS"] * len(timestamps)
     else:
         labels = [classify_session(value, normalized) for value in timestamps]
-    output["session_label"] = labels
+    try:
+        import pandas as pd
+        output["session_label"] = pd.Categorical(
+            labels,
+            categories=sorted(SESSIONS),
+            ordered=False,
+        )
+    except ImportError:
+        output["session_label"] = labels
     return output
 
 
@@ -224,7 +232,14 @@ class VolatilitySizingConfig:
             raise ValueError("VOLATILITY_ESTIMATOR_INVALID")
         if not 0 < self.ewma_lambda < 1:
             raise ValueError("EWMA_LAMBDA_MUST_BE_IN_(0,1)")
-        if not 0 < self.min_multiplier <= self.max_multiplier:
+        # These are hard policy bounds, not freely tunable hyperparameters.
+        # A caller may tighten the range but cannot force a minimum above base
+        # risk or permit a multiplier above 3.0x.
+        if not 0.10 <= self.min_multiplier <= 1.0:
+            raise ValueError("VOLATILITY_MIN_MULTIPLIER_OUTSIDE_HARD_BOUNDS")
+        if not 1.0 <= self.max_multiplier <= 3.0:
+            raise ValueError("VOLATILITY_MAX_MULTIPLIER_OUTSIDE_HARD_BOUNDS")
+        if self.min_multiplier > self.max_multiplier:
             raise ValueError("VOLATILITY_MULTIPLIER_BOUNDS_INVALID")
         if not 0 < self.max_risk_pct <= 0.02:
             raise ValueError("VOLATILITY_RISK_CAP_MUST_BE_IN_(0,0.02]")
@@ -672,9 +687,19 @@ def prepare_candidate_for_research_simulation(
         raise ValueError("ENTRY_BAR_INDEX_INVALID")
     if not 0 <= entry_bar_index < len(volatility_schedule):
         raise IndexError("ENTRY_BAR_INDEX_OUT_OF_RANGE")
+    candidate_timestamp = (
+        getattr(candidate, "signal_close_timestamp_utc", None)
+        or getattr(candidate, "signal_timestamp_utc", None)
+    )
+    if not isinstance(candidate_timestamp, str) or not candidate_timestamp.strip():
+        raise ValueError("CANDIDATE_SIGNAL_TIMESTAMP_REQUIRED")
+    supplied_stamp = _aware_datetime(signal_timestamp)
+    candidate_stamp = _aware_datetime(candidate_timestamp)
+    if supplied_stamp.astimezone(ZoneInfo("UTC")) != candidate_stamp.astimezone(ZoneInfo("UTC")):
+        raise ValueError("CANDIDATE_SIGNAL_TIMESTAMP_MISMATCH")
     point = volatility_schedule[entry_bar_index]
     controls = evaluate_research_entry_controls(
-        signal_timestamp=signal_timestamp,
+        signal_timestamp=candidate_timestamp,
         asset_class=asset_class,
         volatility_point=point,
         required_session=required_session,
