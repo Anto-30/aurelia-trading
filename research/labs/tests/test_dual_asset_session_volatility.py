@@ -53,7 +53,7 @@ class DualAssetSessionTests(unittest.TestCase):
 
     def test_asian_and_dead_windows(self):
         asian = datetime(2026, 1, 15, 0, 30, tzinfo=timezone.utc)
-        dead = datetime(2026, 1, 15, 23, 30, tzinfo=timezone.utc)
+        dead = datetime(2026, 1, 15, 10, 30, tzinfo=timezone.utc)
         self.assertEqual(classify_session(asian, "financial"), "ASIAN")
         self.assertEqual(classify_session(dead, "financial"), "DEAD")
 
@@ -75,7 +75,7 @@ class DualAssetSessionTests(unittest.TestCase):
             {"timestamp_utc": [
                 "2026-01-15T07:30:00Z",
                 "2026-01-15T13:30:00Z",
-                "2026-01-15T23:30:00Z",
+                "2026-01-15T10:30:00Z",
             ]},
             index=[0, 1, 2],
         )
