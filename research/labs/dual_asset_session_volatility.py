@@ -400,3 +400,216 @@ def evaluate_research_entry_controls(
     if label != target:
         return EntryControlDecision(False, normalized, label, volatility_point, "OUTSIDE_REQUIRED_FINANCIAL_SESSION")
     return EntryControlDecision(True, normalized, label, volatility_point, "SESSION_AND_VOLATILITY_CONTROLS_PASS")
+
+
+def _profit_factor(trades: Sequence[float]) -> float | None:
+    gains = sum(value for value in trades if value > 0)
+    losses = -sum(value for value in trades if value < 0)
+    if losses == 0:
+        return math.inf if gains > 0 else None
+    return gains / losses
+
+
+def _moving_block_bootstrap_mean_ci(
+    daily_trades: Sequence[Sequence[float]],
+    *,
+    replications: int,
+    block_days: int,
+    seed: int,
+) -> tuple[float, float, float]:
+    """Bootstrap expectancy per trade by resampling contiguous day blocks."""
+    import random
+
+    day_count = len(daily_trades)
+    if day_count < 2 or block_days < 1 or block_days > day_count:
+        raise ValueError("SESSION_BOOTSTRAP_DAY_BLOCK_INVALID")
+    rng = random.Random(seed)
+
+    def expectancy(day_indexes: Sequence[int]) -> float | None:
+        sample = [
+            float(value)
+            for day_index in day_indexes
+            for value in daily_trades[day_index]
+        ]
+        return statistics.fmean(sample) if sample else None
+
+    observed = expectancy(tuple(range(day_count)))
+    if observed is None:
+        raise ValueError("SESSION_BOOTSTRAP_HAS_NO_TRADES")
+    bootstrapped: list[float] = []
+    blocks_needed = math.ceil(day_count / block_days)
+    for _ in range(replications):
+        indexes: list[int] = []
+        for _block in range(blocks_needed):
+            start = rng.randrange(day_count)
+            indexes.extend((start + offset) % day_count for offset in range(block_days))
+        result = expectancy(indexes[:day_count])
+        if result is not None and math.isfinite(result):
+            bootstrapped.append(result)
+    minimum_valid = math.ceil(replications * 0.95)
+    if len(bootstrapped) < minimum_valid:
+        raise ValueError("SESSION_BOOTSTRAP_VALID_REPLICATIONS_INSUFFICIENT")
+    bootstrapped.sort()
+    lower_index = max(0, math.floor(0.025 * (len(bootstrapped) - 1)))
+    upper_index = min(len(bootstrapped) - 1, math.ceil(0.975 * (len(bootstrapped) - 1)))
+    return observed, bootstrapped[lower_index], bootstrapped[upper_index]
+
+
+def test_c_session_edge(
+    *,
+    asset_class: str,
+    day_ids: Sequence[str],
+    daily_trade_r: dict[str, dict[str, Sequence[float]]],
+    replications: int = 2000,
+    block_days: int = 5,
+    minimum_trades: int = 100,
+    minimum_days: int = 30,
+    seed: int = 369,
+) -> dict[str, Any]:
+    """Falsify the London-session hypothesis using chronological daily blocks.
+
+    daily_trade_r maps session -> ISO day -> net R values for trades closed on
+    that day. Include days with no trades as empty lists. The 95% rule is
+    deliberately conservative: London's lower CI must exceed both the
+    baseline upper CI and the Asian upper CI. This is not a claim that London
+    wins; it is an empirical test result for one registered strategy/data set.
+    """
+    normalized = str(asset_class).strip().lower()
+    if normalized == "synthetic":
+        return {
+            "verdict": "SKIPPED",
+            "reason": "SESSION_EDGE_NOT_APPLICABLE_TO_SYNTHETIC_INDICES",
+            "asset_class": normalized,
+            "capital_authority": False,
+            "live_execution": "BLOCKED",
+        }
+    if normalized != "financial":
+        raise ValueError("ASSET_CLASS_MUST_BE_FINANCIAL_OR_SYNTHETIC")
+    if len(day_ids) < minimum_days or list(day_ids) != sorted(set(day_ids)):
+        return {
+            "verdict": "FAIL",
+            "reason": "SESSION_EDGE_DAILY_SAMPLE_INSUFFICIENT_OR_UNORDERED",
+            "day_count": len(day_ids),
+            "capital_authority": False,
+            "live_execution": "BLOCKED",
+        }
+    if isinstance(replications, bool) or replications < 500:
+        raise ValueError("SESSION_BOOTSTRAP_REPLICATIONS_MUST_BE_AT_LEAST_500")
+    if isinstance(minimum_trades, bool) or minimum_trades < 1:
+        raise ValueError("SESSION_MINIMUM_TRADES_INVALID")
+
+    required = ("LONDON", "NY_AM", "ASIAN", "BASELINE")
+    results: dict[str, dict[str, Any]] = {}
+    daily_by_session: dict[str, list[list[float]]] = {}
+    for session in required:
+        day_map = daily_trade_r.get(session)
+        if not isinstance(day_map, dict):
+            return {
+                "verdict": "FAIL",
+                "reason": f"SESSION_EDGE_DATA_MISSING:{session}",
+                "capital_authority": False,
+                "live_execution": "BLOCKED",
+            }
+        daily = [list(day_map.get(day, ())) for day in day_ids]
+        trades = [float(value) for day in daily for value in day]
+        if any(not math.isfinite(value) for value in trades):
+            raise ValueError(f"SESSION_EDGE_NONFINITE_R:{session}")
+        if len(trades) < minimum_trades:
+            return {
+                "verdict": "FAIL",
+                "reason": f"SESSION_EDGE_TRADE_COUNT_INSUFFICIENT:{session}",
+                "trade_count": len(trades),
+                "minimum_trades": minimum_trades,
+                "capital_authority": False,
+                "live_execution": "BLOCKED",
+            }
+        observed, lower, upper = _moving_block_bootstrap_mean_ci(
+            daily,
+            replications=replications,
+            block_days=block_days,
+            seed=seed + required.index(session),
+        )
+        daily_by_session[session] = daily
+        results[session] = {
+            "trade_count": len(trades),
+            "active_day_count": sum(bool(day) for day in daily),
+            "expectancy_r": observed,
+            "expectancy_ci95_lower": lower,
+            "expectancy_ci95_upper": upper,
+            "profit_factor": _profit_factor(trades),
+        }
+
+    london = results["LONDON"]
+    baseline = results["BASELINE"]
+    asian = results["ASIAN"]
+    passed = (
+        london["expectancy_ci95_lower"] > baseline["expectancy_ci95_upper"]
+        and london["expectancy_ci95_lower"] > asian["expectancy_ci95_upper"]
+        and london["expectancy_ci95_lower"] > 0.0
+    )
+    return {
+        "verdict": "PASS" if passed else "FAIL",
+        "reason": "LONDON_95_PERCENT_CI_EXCEEDS_BASELINE_AND_ASIAN"
+        if passed else "LONDON_EDGE_NOT_ESTABLISHED",
+        "asset_class": normalized,
+        "sessions": results,
+        "london_expectancy_ci95_lower": london["expectancy_ci95_lower"],
+        "non_overlapping_95_percent_ci": passed,
+        "block_bootstrap": {
+            "replications": replications,
+            "block_days": block_days,
+            "day_count": len(day_ids),
+            "seed": seed,
+        },
+        "capital_authority": False,
+        "order_submission_permitted": False,
+        "live_execution": "BLOCKED",
+    }
+
+
+def select_volatility_estimator_from_dsr(
+    *,
+    rolling_dsr: float | None,
+    ewma_dsr: float | None,
+    rolling_trade_count: int,
+    ewma_trade_count: int,
+    configurations_tested: int,
+    minimum_trades: int = 100,
+    relative_improvement_required: float = 0.02,
+) -> dict[str, Any]:
+    """Choose only from externally calculated DSR values; never calculate a fake DSR.
+
+    The current repository does not expose a canonical Deflated Sharpe Ratio
+    calculator. Callers must pass values from the registered research metric
+    implementation with the full configuration/trial count. Incomplete inputs
+    return NOT_RUN rather than selecting an estimator.
+    """
+    values = (rolling_dsr, ewma_dsr)
+    if any(value is None for value in values):
+        return {"status": "NOT_RUN", "reason": "CANONICAL_DSR_VALUES_UNAVAILABLE", "selected_estimator": None}
+    if any(
+        isinstance(value, bool) or not isinstance(value, (int, float))
+        or not math.isfinite(float(value)) or not 0.0 <= float(value) <= 1.0
+        for value in values
+    ):
+        raise ValueError("DSR_VALUE_INVALID")
+    if configurations_tested < 2:
+        raise ValueError("DSR_CONFIGURATION_COUNT_MUST_INCLUDE_BOTH_ESTIMATORS")
+    if min(rolling_trade_count, ewma_trade_count) < minimum_trades:
+        return {"status": "NOT_RUN", "reason": "ESTIMATOR_TRADE_COUNT_INSUFFICIENT", "selected_estimator": None}
+    rolling, ewma = float(rolling_dsr), float(ewma_dsr)
+    improvement = (ewma - rolling) / max(abs(rolling), 1e-12)
+    selected = "ewma" if improvement > relative_improvement_required else "rolling"
+    return {
+        "status": "RESEARCH_SELECTION_ONLY",
+        "selected_estimator": selected,
+        "rolling_dsr": rolling,
+        "ewma_dsr": ewma,
+        "ewma_relative_dsr_improvement": improvement,
+        "relative_improvement_required": relative_improvement_required,
+        "configurations_tested": configurations_tested,
+        "rolling_trade_count": rolling_trade_count,
+        "ewma_trade_count": ewma_trade_count,
+        "capital_authority": False,
+        "live_execution": "BLOCKED",
+    }
