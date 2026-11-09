@@ -29,6 +29,27 @@ This catalogue records the user-supplied GitHub candidates for a controlled revi
 - Hermes skill catalogues and third-party skill packs may contain arbitrary executable scripts, network calls, and prompt instructions. Review each individual skill; never bulk-install a catalogue.
 - Agent Vault, memory capture, browser extensions, mobile clients, orchestration dashboards, and model gateways create different data-exposure surfaces. Evaluate separately rather than enabling a broad shared permission set.
 
+## Immutable reference snapshots — 2026-11-09
+
+The following current default-branch heads were resolved through GitHub and recorded in `config/external_repo_federation.json`. These are provenance pins for review, **not installation approvals or proof of secure execution**. The pinned snapshot may become stale; updates require a new review and pin.
+
+| Repository | Commit | License metadata | Status |
+|---|---|---|---|
+| `NousResearch/hermes-agent` | `6cff782b8d081a0ed382eaf75c432d452cd452cc` | MIT | Official runtime; reference-only |
+| `NVIDIA/NemoClaw` | `4d5d613f73b96d51a92e7ae88df5da5103836067` | Apache-2.0 | Official sandbox stack; reference-only; host prerequisites unverified |
+| `kerpopule/hermes-jev-skills` | `8316358bf60e98a21477582af829ef11c9cf52fb` | MIT | Community skills; reference-only; per-skill review required |
+| `ZeroPointRepo/awesome-hermes-skills` | `9fb166c3548ca7befb579c525991255bb6daac83` | MIT | Discovery catalogue; reference-only; no bulk installs |
+| `mnemosyne-oss/mnemosyne` | `e249583dddb29c198ba1b6cf38eabdfd4905ffdf` | MIT | Local memory candidate; reference-only |
+| `getpaseo/paseo` | `e0f545fed485d244fcd3e6308c36e5a6397eaa2e` | NOASSERTION | License confirmation required; reference-only |
+| `iOfficeAI/AionUi` | `e108b6b56b1a6eb99a00904878d0582f657b2908` | Apache-2.0 | Desktop agent UI; reference-only |
+| `Hy4ri/hermes-mobile` | `93daabfbb66f4539862bb704f832a4a9d624056d` | Apache-2.0 | Android client; reference-only; pairing/auth review required |
+| `thedotmack/claude-mem` | `989a98a2fb7978354497df46c4e17101f54ba9a3` | Apache-2.0 | Memory plugin; reference-only |
+| `semgrep/mythos-bench` | `800cc53ab155a9059a69a3f7b1cec4785002b4cb` | NOASSERTION | License confirmation required; security benchmark reference-only |
+| `je-suis-tm/quant-trading` | `611b73f2c3f577ac5b28aaa19ac8c43d3236c7a5` | Apache-2.0 | Existing registry pin reconfirmed; research-only; upstream README says tests omit trading frictions |
+| `ZhuLinsen/daily_stock_analysis` | `15c7cdc0ca07bd71158e268fb8596f3ae356ad9b` | MIT | Listed-equity research only; not Deriv strategy evidence |
+
+`Infisical/agent-vault` was not added as an adoption candidate because its own README says this repository is no longer the recommended setup path and directs new users to the current Infisical Agent Vault product documentation. `kristianvast/hermes-claude-auth` remains rejected because it describes an OAuth bypass. Neither is approved for installation.
+
 ## Review queue
 
 | Priority | Candidates | Review objective | Initial disposition |
