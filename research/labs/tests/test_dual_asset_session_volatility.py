@@ -11,6 +11,7 @@ from research.labs.dual_asset_session_volatility import (
     classify_session,
     evaluate_research_entry_controls,
     is_kill_zone,
+    prepare_candidate_for_research_simulation,
     select_volatility_estimator_from_dsr,
     test_c_session_edge,
 )
@@ -232,6 +233,61 @@ class EntryControlTests(unittest.TestCase):
         )
         self.assertFalse(decision.allowed)
         self.assertEqual(decision.reason, "VOLATILITY_SIZER_NOT_READY")
+
+
+class ResearchCandidateIntegrationTests(unittest.TestCase):
+    class Candidate:
+        research_only = True
+        capital_authority = False
+        order_submission_permitted = False
+
+    def _schedule(self):
+        returns = [0.01 if i % 2 == 0 else -0.01 for i in range(25)]
+        sizer = VolatilitySizer(VolatilitySizingConfig(
+            periods_per_year=1, target_vol_annual=0.01, window=20
+        ))
+        return sizer.build_schedule(returns)
+
+    def test_candidate_adapter_applies_financial_session_and_lagged_size(self):
+        result = prepare_candidate_for_research_simulation(
+            self.Candidate(),
+            signal_timestamp="2026-01-15T07:30:00Z",
+            asset_class="financial",
+            volatility_schedule=self._schedule(),
+            entry_bar_index=20,
+            required_session="LONDON",
+        )
+        self.assertTrue(result.decision.allowed)
+        self.assertEqual(result.decision.session_label, "LONDON")
+        self.assertIsNotNone(result.effective_risk_pct)
+        self.assertFalse(result.audit_record(candidate_id="candidate-1")["order_submission_permitted"])
+
+    def test_candidate_adapter_bypasses_financial_session_for_synthetics(self):
+        result = prepare_candidate_for_research_simulation(
+            self.Candidate(),
+            signal_timestamp="2026-01-15T23:30:00Z",
+            asset_class="synthetic",
+            volatility_schedule=self._schedule(),
+            entry_bar_index=20,
+            required_session="LONDON",
+        )
+        self.assertTrue(result.decision.allowed)
+        self.assertEqual(result.decision.session_label, "SYNTHETIC_BYPASS")
+
+    def test_candidate_adapter_rejects_non_research_or_authoritative_candidate(self):
+        class UnsafeCandidate:
+            research_only = True
+            capital_authority = True
+            order_submission_permitted = False
+
+        with self.assertRaisesRegex(ValueError, "CAPITAL_AUTHORITY_FORBIDDEN"):
+            prepare_candidate_for_research_simulation(
+                UnsafeCandidate(),
+                signal_timestamp="2026-01-15T07:30:00Z",
+                asset_class="financial",
+                volatility_schedule=self._schedule(),
+                entry_bar_index=20,
+            )
 
 
 class FalsificationTestTests(unittest.TestCase):
