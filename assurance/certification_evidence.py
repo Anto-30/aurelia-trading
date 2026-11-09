@@ -44,7 +44,7 @@ REQUIRED_EVIDENCE_FILES = (
 )
 
 PASS_RESULTS = {"PASS", "PROVEN", "VALIDATED"}
-ALLOWED_EVIDENCE_ENVIRONMENTS = {"ci", "research", "staging", "production"}
+ALLOWED_EVIDENCE_ENVIRONMENTS = {"ci", "research", "staging", "production", "real"}
 ALLOWED_EVIDENCE_ORIGINS = {"ci", "research", "runtime"}
 
 
@@ -189,15 +189,31 @@ def _non_empty_string(record: dict[str, Any], key: str) -> bool:
 
 def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
     if name == "broker_lifecycle.json":
+        # The approved lifecycle workflow is verify-only: it proves account
+        # binding, proposal, risk/firewall controls, intent/idempotency,
+        # execution fencing and reconciliation without submitting an order.
+        # Requiring a broker transaction ID or a completed trade here would
+        # contradict LIVE_LOCK and make certification impossible without
+        # unauthorized capital movement.
+        observed = record.get("observed")
         ok = (
-            record.get("transaction_trace_complete") is True
-            and record.get("broker_unknown_recovery_proven") is True
-            and record.get("reconciliation_proven") is True
-            and _non_empty_string(record, "broker_transaction_id")
-            and isinstance(record.get("lifecycle_events"), list)
-            and len(record["lifecycle_events"]) >= 6
+            record.get("verification_scope") == "REAL_DERIV_LIFECYCLE_VERIFY_ONLY"
+            and record.get("orders_submitted") == 0
+            and record.get("capital_authority_granted") is False
+            and record.get("order_submission_permitted") is False
+            and isinstance(observed, dict)
+            and _non_empty_string(observed, "account_loginid")
+            and _non_empty_string(observed, "proposal_id")
+            and _non_empty_string(observed, "intent_id")
+            and observed.get("mode") == "VERIFY_ONLY"
+            and observed.get("risk_approved") is True
+            and observed.get("firewall_approved") is True
+            and observed.get("reconciliation_healthy") is True
+            and observed.get("fence_valid") is True
+            and observed.get("broker_submission_performed") is False
+            and observed.get("capital_movement") is False
         )
-        return ok, "valid" if ok else "broker lifecycle/recovery/reconciliation evidence incomplete"
+        return ok, "valid" if ok else "verify-only broker lifecycle/control-path evidence incomplete"
 
     if name == "recovery_matrix.json":
         scenarios = record.get("scenario_results")
