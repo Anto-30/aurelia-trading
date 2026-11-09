@@ -2,8 +2,8 @@ from __future__ import annotations
 
 """Prospective R_100 research collector for AURELIA.
 
-Uses only Deriv public market-data/proposal surfaces. It never authorizes,
-submits, or reconciles a capital-moving transaction.
+Uses only Deriv public market-data surfaces. It never requests contract
+proposals, authorizes, submits, or reconciles a capital-moving transaction.
 """
 
 import asyncio
@@ -16,10 +16,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from runtime.adapters.deriv_ws import DerivWebSocketTransport
+from research.utils.deriv_auth_gate import DerivAuthenticationGate
 from runtime.strategy.autonomous_signal_engine import AutonomousSignalHunter
 
-PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
 SYMBOL = "R_100"
 CURRENCY = "USD"
 STRATEGY_ID = "R100_TICK_MOMENTUM_PROSPECTIVE_V0.2.0"
@@ -77,6 +76,10 @@ def research_config_hash() -> str:
         "calibration_min_buckets": CALIBRATION_MIN_BUCKETS,
         "calibration_min_bucket_samples": CALIBRATION_MIN_BUCKET_SAMPLES,
         "calibration_max_reliability_gap": CALIBRATION_MAX_RELIABILITY_GAP,
+        "coverage_min_fraction": 0.50,
+        "coverage_max_gap_seconds": 1800,
+        "coverage_min_windows": 24,
+        "coverage_max_tick_gap_seconds": 30,
     })
 
 def legacy_research_config_hash() -> str:
@@ -134,6 +137,14 @@ def initial_state() -> dict[str, Any]:
             "regime_policy": "single predeclared ALL_MARKET cell; no data-mined regime segmentation in this campaign",
             "model_version": STRATEGY_VERSION,
             "code_commit": research_code_commit(),
+            "producer": {
+                "workflow_path": ".github/workflows/r100-prospective-oos.yml",
+                "workflow_id": os.getenv("AURELIA_R100_WORKFLOW_ID", ""),
+                "workflow_run_id": os.getenv("GITHUB_RUN_ID", ""),
+                "event": os.getenv("GITHUB_EVENT_NAME", ""),
+                "head_branch": os.getenv("GITHUB_REF_NAME", ""),
+                "head_sha": os.getenv("GITHUB_SHA", ""),
+            },
             "config_hash": research_config_hash(),
             "calibration_policy": {
                 "min_buckets": CALIBRATION_MIN_BUCKETS,
@@ -149,6 +160,7 @@ def initial_state() -> dict[str, Any]:
         },
         "observations": [],
         "pending": [],
+        "censored_signals": [],
         "quote_observations": [],
         "last_run_started_at_utc": None,
         "last_run_completed_at_utc": None,
@@ -424,6 +436,118 @@ def quoted_contract_economics(
     }
 
 
+def oos_data_coverage_metrics(
+    windows: list[dict[str, Any]],
+    oos_start: datetime,
+    campaign_end: datetime,
+) -> dict[str, Any]:
+    total_seconds = max(0.0, (campaign_end - oos_start).total_seconds())
+    intervals: list[tuple[datetime, datetime]] = []
+    max_tick_gap_seconds = 0.0
+    for window in windows:
+        try:
+            if int(window.get("tick_count", 0)) < 2:
+                continue
+            first = datetime.fromisoformat(
+                str(window["first_tick_at_utc"]).replace("Z", "+00:00")
+            ).astimezone(timezone.utc)
+            last = datetime.fromisoformat(
+                str(window["last_tick_at_utc"]).replace("Z", "+00:00")
+            ).astimezone(timezone.utc)
+            tick_gap = float(window.get("max_tick_gap_seconds", 0.0))
+        except (KeyError, TypeError, ValueError):
+            continue
+        if last <= first or not math.isfinite(tick_gap) or tick_gap < 0:
+            continue
+        max_tick_gap_seconds = max(max_tick_gap_seconds, tick_gap)
+        clipped_start = max(first, oos_start)
+        clipped_end = min(last, campaign_end)
+        if clipped_end > clipped_start:
+            intervals.append((clipped_start, clipped_end))
+
+    intervals.sort(key=lambda item: item[0])
+    merged: list[list[datetime]] = []
+    for start, end in intervals:
+        if not merged or start > merged[-1][1]:
+            merged.append([start, end])
+        elif end > merged[-1][1]:
+            merged[-1][1] = end
+
+    covered_seconds = sum((end - start).total_seconds() for start, end in merged)
+    gaps: list[float] = []
+    cursor = oos_start
+    for start, end in merged:
+        gaps.append(max(0.0, (start - cursor).total_seconds()))
+        cursor = max(cursor, end)
+    if total_seconds > 0:
+        gaps.append(max(0.0, (campaign_end - cursor).total_seconds()))
+    max_gap = max(gaps) if gaps else total_seconds
+    coverage_fraction = covered_seconds / total_seconds if total_seconds > 0 else 0.0
+    valid = (
+        len(merged) >= 24
+        and coverage_fraction >= 0.50
+        and max_gap <= 1800
+        and max_tick_gap_seconds <= 30
+    )
+    return {
+        "collection_window_count": len(merged),
+        "covered_seconds": covered_seconds,
+        "oos_window_seconds": total_seconds,
+        "data_coverage_fraction": coverage_fraction,
+        "max_observation_gap_seconds": max_gap,
+        "max_tick_gap_seconds": max_tick_gap_seconds,
+        "data_coverage_valid": valid,
+    }
+
+
+def censor_pending_signals(
+    state: dict[str, Any],
+    campaign_end: datetime,
+) -> int:
+    """Move unresolved horizon signals into an explicit non-outcome archive."""
+    pending = state.get("pending")
+    censored = state.setdefault("censored_signals", [])
+    if not isinstance(pending, list) or not isinstance(censored, list):
+        raise ValueError("R100_PENDING_OR_CENSORED_COLLECTION_INVALID")
+
+    existing_ids = {
+        str(row.get("signal_id"))
+        for row in censored
+        if isinstance(row, dict)
+    }
+    newly_censored = []
+    for item in pending:
+        if not isinstance(item, dict) or not isinstance(item.get("signal_id"), str):
+            raise ValueError("R100_PENDING_SIGNAL_INVALID")
+        signal_time = datetime.fromisoformat(
+            str(item.get("signal_timestamp_utc", "")).replace("Z", "+00:00")
+        ).astimezone(timezone.utc)
+        if signal_time >= campaign_end:
+            raise ValueError("R100_PENDING_SIGNAL_AT_OR_AFTER_CUTOFF")
+        signal_id = item["signal_id"]
+        if signal_id in existing_ids:
+            raise ValueError("R100_DUPLICATE_CENSORED_SIGNAL")
+        existing_ids.add(signal_id)
+        newly_censored.append({
+            "signal_id": signal_id,
+            "strategy_id": STRATEGY_ID,
+            "strategy_version": STRATEGY_VERSION,
+            "symbol": SYMBOL,
+            "regime": REGIME,
+            "signal_timestamp_utc": iso(signal_time),
+            "censored_at_utc": iso(campaign_end),
+            "censor_reason": "HORIZON_NOT_REACHED_BEFORE_CAMPAIGN_CUTOFF",
+            "direction": item.get("direction"),
+            "probability": item.get("probability"),
+            "score": item.get("score"),
+            "horizon_ticks": HORIZON_TICKS,
+            "age_ticks": item.get("age_ticks"),
+        })
+    censored.extend(newly_censored)
+    state["pending"] = []
+    return len(newly_censored)
+
+
 def evaluation(state: dict[str, Any]) -> dict[str, Any]:
     manifest = state["manifest"]
     oos_start = datetime.fromisoformat(manifest["oos_start_at_utc"].replace("Z", "+00:00"))
@@ -462,6 +586,27 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
     )
     min_cell_trades = len(oos_rows)
 
+    campaign_end = datetime.fromisoformat(
+        manifest["campaign_end_at_utc"].replace("Z", "+00:00")
+    )
+    evaluation_time = utc_now()
+    if evaluation_time >= campaign_end and state.get("pending"):
+        censor_pending_signals(state, campaign_end)
+    campaign_complete = evaluation_time >= campaign_end and not state.get("pending")
+    state["manifest"]["sealed"] = bool(campaign_complete)
+    if campaign_complete and not manifest.get("sealed_at_utc"):
+        state["manifest"]["sealed_at_utc"] = iso(evaluation_time)
+        state["manifest"]["seal_reason"] = (
+            "CAMPAIGN_WINDOW_ENDED_PENDING_SIGNALS_CENSORED"
+            if state.get("censored_signals")
+            else "CAMPAIGN_WINDOW_ENDED"
+        )
+    data_coverage = oos_data_coverage_metrics(
+        manifest.get("data_windows", []),
+        oos_start,
+        campaign_end,
+    )
+
     if min_cell_trades < 100:
         qualification_status = "INSUFFICIENT_SAMPLE"
     elif mean_strategy_oos is None or mean_strategy_oos <= 0:
@@ -472,20 +617,16 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         qualification_status = "ECONOMICS_FAILED"
     elif calibration["calibration_status"] != "VALIDATED_RESEARCH":
         qualification_status = "CALIBRATION_INCOMPLETE"
+    elif not data_coverage["data_coverage_valid"]:
+        qualification_status = "OOS_COLLECTION_COVERAGE_INCOMPLETE"
     else:
         qualification_status = "RESEARCH_QUALIFIED"
 
-    campaign_complete = (
-        utc_now() >= datetime.fromisoformat(
-            manifest["campaign_end_at_utc"].replace("Z", "+00:00")
-        )
-        and not state["pending"]
-    )
-    state["manifest"]["sealed"] = bool(campaign_complete)
     archive_hash = canonical_hash({
         "manifest": state["manifest"],
         "observations": rows,
         "quote_observations": state["quote_observations"],
+        "censored_signals": state.get("censored_signals", []),
     })
     return {
         "schema": "aurelia.r100.prospective_oos.report.v1",
@@ -495,6 +636,7 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         "symbol": SYMBOL,
         "regime": REGIME,
         "observations_total": len(rows),
+        "censored_signal_count": len(state.get("censored_signals", [])),
         "in_sample_observations": len(is_rows),
         "oos_observations": len(oos_rows),
         "min_trades_per_strategy_symbol_regime": min_cell_trades,
@@ -521,27 +663,74 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         "live_execution": False,
         "archive_hash": archive_hash,
         "campaign_complete": campaign_complete,
+        "data_coverage": data_coverage,
+        "data_coverage_valid": data_coverage["data_coverage_valid"],
+        "data_coverage_fraction": data_coverage["data_coverage_fraction"],
+        "max_observation_gap_seconds": data_coverage["max_observation_gap_seconds"],
+        "collection_window_count": data_coverage["collection_window_count"],
         "retuning_after_seal": False,
     }
+
+def parse_public_tick(message: Any) -> tuple[float, datetime]:
+    """Validate a public Deriv tick without coercing malformed JSON types.
+
+    The API schema makes the tick-level symbol optional. The request is tied to
+    one R_100 subscription; when a symbol is supplied, it must match it.
+    """
+    if not isinstance(message, dict) or message.get("msg_type") != "tick":
+        raise ValueError("R100_TICK_RESPONSE_TYPE_INVALID")
+    tick = message.get("tick")
+    if not isinstance(tick, dict):
+        raise ValueError("R100_TICK_OBJECT_INVALID")
+    echoed_symbol = tick.get("symbol")
+    if echoed_symbol is not None and echoed_symbol != SYMBOL:
+        raise ValueError("R100_TICK_SYMBOL_MISMATCH")
+    quote = tick.get("quote")
+    if (
+        isinstance(quote, bool)
+        or not isinstance(quote, (int, float))
+        or not math.isfinite(float(quote))
+        or float(quote) <= 0
+    ):
+        raise ValueError("R100_TICK_QUOTE_INVALID")
+    epoch = tick.get("epoch")
+    if type(epoch) is not int or epoch < 0:
+        raise ValueError("R100_TICK_EPOCH_INVALID")
+    try:
+        received_at = datetime.fromtimestamp(epoch, tz=timezone.utc)
+    except (OverflowError, OSError, ValueError) as exc:
+        raise ValueError("R100_TICK_EPOCH_INVALID") from exc
+    return float(quote), received_at
+
 
 async def collect_once(state: dict[str, Any]) -> None:
     start = utc_now()
     state["last_run_started_at_utc"] = iso(start)
 
-    transport = DerivWebSocketTransport(PUBLIC_WS_URL, timeout_seconds=10.0)
     campaign_end = datetime.fromisoformat(
         state["manifest"]["campaign_end_at_utc"].replace("Z", "+00:00")
     )
+    remaining_seconds = (campaign_end - start).total_seconds()
+    if remaining_seconds <= 0:
+        censor_pending_signals(state, campaign_end)
+        state["last_run_completed_at_utc"] = iso(start)
+        return
+    # Enforce the credential-free public plane and action allowlist at runtime.
+    transport = DerivAuthenticationGate(plane="research").get_client()
     hunter = AutonomousSignalHunter(
         window=64,
         min_observations=20,
         threshold=1.5,
         cooldown_seconds=30.0,
     )
+    tick_count = 0
+    first_tick_at: datetime | None = None
+    last_tick_at: datetime | None = None
+    max_tick_gap_seconds = 0.0
     await transport.connect()
     stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
     iterator = stream.__aiter__()
-    deadline = asyncio.get_running_loop().time() + COLLECTION_SECONDS
+    deadline = asyncio.get_running_loop().time() + min(COLLECTION_SECONDS, remaining_seconds)
     try:
         while asyncio.get_running_loop().time() < deadline:
             remaining = deadline - asyncio.get_running_loop().time()
@@ -549,13 +738,19 @@ async def collect_once(state: dict[str, Any]) -> None:
                 message = await asyncio.wait_for(iterator.__anext__(), timeout=max(1.0, remaining))
             except asyncio.TimeoutError:
                 break
-            tick = message.get("tick") or {}
-            try:
-                quote = float(tick["quote"])
-                epoch = int(tick["epoch"])
-            except (KeyError, TypeError, ValueError):
-                continue
-            received_at = datetime.fromtimestamp(epoch, tz=timezone.utc)
+            quote, received_at = parse_public_tick(message)
+            if received_at >= campaign_end:
+                censor_pending_signals(state, campaign_end)
+                break
+            tick_count += 1
+            if first_tick_at is None:
+                first_tick_at = received_at
+            if last_tick_at is not None:
+                tick_gap = (received_at - last_tick_at).total_seconds()
+                if tick_gap < 0:
+                    raise ValueError("R100_TICK_ORDER_INVALID")
+                max_tick_gap_seconds = max(max_tick_gap_seconds, tick_gap)
+            last_tick_at = received_at
             prior_pending = len(state["pending"])
             observe_tick(
                 hunter=hunter,
@@ -566,36 +761,31 @@ async def collect_once(state: dict[str, Any]) -> None:
             )
             if len(state["pending"]) > prior_pending:
                 new_signal = state["pending"][-1]
-                try:
-                    proposal = await transport.request({
-                        "proposal": 1,
-                        "amount": 1.0,
-                        "basis": "stake",
-                        "contract_type": new_signal["direction"],
-                        "currency": CURRENCY,
-                        "duration": HORIZON_TICKS,
-                        "duration_unit": "t",
-                        "underlying_symbol": SYMBOL,
-                    })
-                    proposal_payload = proposal.get("proposal") or {}
-                    state["quote_observations"].append({
-                        "signal_id": new_signal["signal_id"],
-                        "captured_at_utc": iso(received_at),
-                        "ask_price": proposal_payload.get("ask_price"),
-                        "payout": proposal_payload.get("payout"),
-                        "proposal_id": proposal_payload.get("id"),
-                        "quote_status": "OBSERVED",
-                    })
-                except Exception as exc:
-                    state["quote_observations"].append({
-                        "signal_id": new_signal["signal_id"],
-                        "captured_at_utc": iso(received_at),
-                        "quote_status": "UNAVAILABLE",
-                        "error_type": type(exc).__name__,
-                    })
+                # Public research policy disables prospective proposal actions.
+                state["quote_observations"].append({
+                    "signal_id": new_signal["signal_id"],
+                    "captured_at_utc": iso(received_at),
+                    "quote_status": "UNAVAILABLE",
+                    "error_type": "PolicyBlocked",
+                    "error_code": "R100_PUBLIC_PROPOSAL_QUOTES_DISABLED_BY_POLICY",
+                })
     finally:
-        await transport.close()
-    state["last_run_completed_at_utc"] = iso(utc_now())
+        try:
+            await transport.close()
+        finally:
+            completed = utc_now()
+            if completed >= campaign_end and state.get("pending"):
+                censor_pending_signals(state, campaign_end)
+            state["last_run_completed_at_utc"] = iso(completed)
+            state["manifest"].setdefault("data_windows", []).append({
+                "run_started_at_utc": iso(start),
+                "run_completed_at_utc": iso(completed),
+                "first_tick_at_utc": iso(first_tick_at) if first_tick_at else None,
+                "last_tick_at_utc": iso(last_tick_at) if last_tick_at else None,
+                "tick_count": tick_count,
+                "max_tick_gap_seconds": max_tick_gap_seconds,
+                "actual_collection_seconds": max(0.0, (completed - start).total_seconds()),
+            })
 
 async def main() -> int:
     state = load_state(STATE_PATH)

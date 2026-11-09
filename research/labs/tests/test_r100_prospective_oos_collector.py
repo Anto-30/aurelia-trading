@@ -5,8 +5,8 @@ import json
 import os
 import tempfile
 import unittest
-from unittest.mock import AsyncMock, patch
-from datetime import datetime, timezone
+from unittest.mock import AsyncMock, Mock, patch
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from research.r100_prospective_oos_collector import (
@@ -22,6 +22,7 @@ from research.r100_prospective_oos_collector import (
     legacy_research_config_hash,
     research_config_hash,
     observe_tick,
+    oos_data_coverage_metrics,
 )
 
 
@@ -66,6 +67,43 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertGreaterEqual(metrics["brier_score"], 0.0)
         self.assertGreaterEqual(metrics["log_loss"], 0.0)
         self.assertIsInstance(metrics["reliability_buckets"], list)
+
+    def test_oos_collection_coverage_passes_only_with_sustained_observed_windows(self):
+        start = datetime(2026, 11, 1, tzinfo=timezone.utc)
+        end = start + timedelta(days=1)
+        windows = []
+        for index in range(96):
+            first = start + timedelta(minutes=15 * index)
+            last = min(first + timedelta(seconds=599), end)
+            windows.append({
+                "first_tick_at_utc": first.isoformat(),
+                "last_tick_at_utc": last.isoformat(),
+                "tick_count": 600,
+                "max_tick_gap_seconds": 1.0,
+            })
+        metrics = oos_data_coverage_metrics(windows, start, end)
+        self.assertTrue(metrics["data_coverage_valid"])
+        self.assertGreaterEqual(metrics["collection_window_count"], 24)
+        self.assertGreaterEqual(metrics["data_coverage_fraction"], 0.50)
+        self.assertLessEqual(metrics["max_observation_gap_seconds"], 1800)
+
+    def test_oos_collection_coverage_rejects_sparse_windows_and_large_tick_gaps(self):
+        start = datetime(2026, 11, 1, tzinfo=timezone.utc)
+        end = start + timedelta(days=1)
+        sparse_windows = []
+        for index in range(8):
+            first = start + timedelta(hours=3 * index)
+            sparse_windows.append({
+                "first_tick_at_utc": first.isoformat(),
+                "last_tick_at_utc": (first + timedelta(seconds=599)).isoformat(),
+                "tick_count": 600,
+                "max_tick_gap_seconds": 45.0,
+            })
+        metrics = oos_data_coverage_metrics(sparse_windows, start, end)
+        self.assertFalse(metrics["data_coverage_valid"])
+        self.assertLess(metrics["data_coverage_fraction"], 0.50)
+        self.assertGreater(metrics["max_observation_gap_seconds"], 1800)
+        self.assertGreater(metrics["max_tick_gap_seconds"], 30)
 
     def test_probability_policy_is_not_clipped_outside_range(self):
         self.assertFalse(0.54 >= 0.55 and 0.54 <= 0.75)
@@ -197,8 +235,12 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertEqual(report["qualification_status"], "ECONOMICS_INCOMPLETE")
         self.assertFalse(report["strategy_live_eligible"])
 
-    def test_campaign_end_does_not_seal_with_unresolved_pending(self):
+    def test_campaign_before_cutoff_does_not_seal_while_pending(self):
+        import research.r100_prospective_oos_collector as collector
+        now = datetime(2026, 10, 6, 19, 59, 30, tzinfo=timezone.utc)
         state = initial_state()
+        state["manifest"]["started_at_utc"] = (now - timedelta(days=8)).isoformat()
+        state["manifest"]["oos_start_at_utc"] = (now - timedelta(days=7)).isoformat()
         state["manifest"]["campaign_end_at_utc"] = "2026-10-06T20:00:00Z"
         state["pending"] = [{
             "signal_id": "pending",
@@ -209,11 +251,13 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
             "score": 1.5,
             "age_ticks": 0,
         }]
-        report = evaluation(state)
+        with patch.object(collector, "utc_now", return_value=now):
+            report = evaluation(state)
         self.assertFalse(report["campaign_complete"])
         self.assertFalse(state["manifest"]["sealed"])
+        self.assertEqual(len(state["pending"]), 1)
 
-    def test_campaign_end_stops_new_signal_emission_but_settles_pending(self):
+    def test_emit_candidate_false_settles_mature_pending_without_new_signal(self):
         class NoEmitHunter:
             def __init__(self):
                 self.calls = 0
@@ -273,6 +317,146 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
 
     def test_horizon_is_positive(self):
         self.assertGreater(HORIZON_TICKS, 0)
+
+    def test_collector_never_requests_public_contract_proposals(self):
+        import research.r100_prospective_oos_collector as collector
+        from types import SimpleNamespace
+        start = datetime(2026, 10, 6, 19, 0, 0, tzinfo=timezone.utc)
+        class OneTickThenTimeout:
+            def __init__(self): self.sent = False
+            def __aiter__(self): return self
+            async def __anext__(self):
+                if self.sent: raise asyncio.TimeoutError()
+                self.sent = True
+                return {"msg_type":"tick","tick":{"symbol":"R_100","quote":100.0,"epoch":int(start.timestamp())+1}}
+        class FakeHunter:
+            def observe(self, **kwargs):
+                return SimpleNamespace(probability=0.65, probability_status="UNCALIBRATED_RESEARCH_ONLY",direction="CALL",score=1.6)
+        stream = OneTickThenTimeout()
+        class FakeTransport:
+            def __init__(self):
+                self.connect,self.request,self.close=AsyncMock(),AsyncMock(),AsyncMock()
+            def subscribe(self,key,payload): return stream
+        transport=FakeTransport()
+        gate=Mock()
+        gate.get_client.return_value=transport
+        state=initial_state()
+        state["manifest"]["campaign_end_at_utc"]="2026-10-06T20:00:00Z"
+        with (
+            patch.object(collector,"utc_now",return_value=start),
+            patch.object(collector,"COLLECTION_SECONDS",10.0),
+            patch.object(collector,"DerivAuthenticationGate",return_value=gate) as gate_factory,
+            patch.object(collector,"AutonomousSignalHunter",return_value=FakeHunter()),
+        ):
+            asyncio.run(collector.collect_once(state))
+        transport.request.assert_not_awaited()
+        self.assertEqual(len(state["pending"]),1)
+        self.assertEqual(state["quote_observations"][0]["quote_status"],"UNAVAILABLE")
+        self.assertEqual(state["quote_observations"][0]["error_code"],"R100_PUBLIC_PROPOSAL_QUOTES_DISABLED_BY_POLICY")
+        transport.close.assert_awaited_once()
+        gate_factory.assert_called_once_with(plane="research")
+        gate.get_client.assert_called_once_with()
+
+    def test_expired_campaign_censors_pending_signals_and_seals_without_connecting(self):
+        import research.r100_prospective_oos_collector as collector
+        now = datetime(2026, 10, 6, 19, 0, 0, tzinfo=timezone.utc)
+        state = initial_state()
+        campaign_end = now - timedelta(seconds=1)
+        state["manifest"]["started_at_utc"] = (now - timedelta(days=8)).isoformat()
+        state["manifest"]["oos_start_at_utc"] = (now - timedelta(days=7)).isoformat()
+        state["manifest"]["campaign_end_at_utc"] = campaign_end.isoformat()
+        state["pending"] = [{
+            "signal_id": "pending-at-expiry",
+            "signal_timestamp_utc": (campaign_end - timedelta(seconds=30)).isoformat(),
+            "entry_quote": 100.0,
+            "direction": "CALL",
+            "probability": 0.60,
+            "score": 1.5,
+            "age_ticks": HORIZON_TICKS - 1,
+        }]
+        with (
+            patch.object(collector, "utc_now", return_value=now),
+            patch.object(collector, "DerivAuthenticationGate") as factory,
+        ):
+            asyncio.run(collector.collect_once(state))
+            report = collector.evaluation(state)
+        factory.assert_not_called()
+        self.assertEqual(state["pending"], [])
+        self.assertEqual(len(state["censored_signals"]), 1)
+        self.assertEqual(state["censored_signals"][0]["censor_reason"],
+            "HORIZON_NOT_REACHED_BEFORE_CAMPAIGN_CUTOFF")
+        self.assertEqual(state["observations"], [])
+        self.assertTrue(state["manifest"]["sealed"])
+        self.assertTrue(report["campaign_complete"])
+        self.assertEqual(report["censored_signal_count"], 1)
+
+    def test_public_tick_parser_rejects_coercion_and_wrong_symbol(self):
+        from research.r100_prospective_oos_collector import parse_public_tick
+        valid = {
+            "msg_type": "tick",
+            "tick": {"quote": 100.25, "epoch": 1791313200},
+        }
+        quote, timestamp = parse_public_tick(valid)
+        self.assertEqual(quote, 100.25)
+        self.assertEqual(timestamp.tzinfo, timezone.utc)
+
+        invalid_cases = [
+            ({"msg_type":"tick","tick":{"symbol":"V_100","quote":100.0,"epoch":1791313200}}, "R100_TICK_SYMBOL_MISMATCH"),
+            ({"msg_type":"tick","tick":{"quote":"100.0","epoch":1791313200}}, "R100_TICK_QUOTE_INVALID"),
+            ({"msg_type":"tick","tick":{"quote":True,"epoch":1791313200}}, "R100_TICK_QUOTE_INVALID"),
+            ({"msg_type":"tick","tick":{"quote":100.0,"epoch":True}}, "R100_TICK_EPOCH_INVALID"),
+            ({"msg_type":"tick","tick":{"quote":100.0,"epoch":"1791313200"}}, "R100_TICK_EPOCH_INVALID"),
+            ({"msg_type":"ohlc","tick":{"quote":100.0,"epoch":1791313200}}, "R100_TICK_RESPONSE_TYPE_INVALID"),
+        ]
+        for message, reason in invalid_cases:
+            with self.subTest(reason=reason, message=message):
+                with self.assertRaisesRegex(ValueError, reason):
+                    parse_public_tick(message)
+
+    def test_collector_rejects_out_of_order_ticks(self):
+        import research.r100_prospective_oos_collector as collector
+        start = datetime(2026, 10, 6, 19, 0, 0, tzinfo=timezone.utc)
+
+        class TwoTicks:
+            def __init__(self):
+                self.items = iter([
+                    {"msg_type":"tick","tick":{"symbol":"R_100","quote":100.0,"epoch":int(start.timestamp())+2}},
+                    {"msg_type":"tick","tick":{"symbol":"R_100","quote":100.1,"epoch":int(start.timestamp())+1}},
+                ])
+            def __aiter__(self):
+                return self
+            async def __anext__(self):
+                try:
+                    return next(self.items)
+                except StopIteration:
+                    raise StopAsyncIteration
+
+        class NoSignalHunter:
+            def observe(self, **kwargs):
+                return None
+
+        class FakeTransport:
+            def __init__(self):
+                self.connect, self.close = AsyncMock(), AsyncMock()
+            def subscribe(self, key, payload):
+                return TwoTicks()
+
+        state = initial_state()
+        state["manifest"]["campaign_end_at_utc"] = "2026-10-06T20:00:00Z"
+        transport = FakeTransport()
+        gate = Mock()
+        gate.get_client.return_value = transport
+        with (
+            patch.object(collector,"utc_now",return_value=start),
+            patch.object(collector,"COLLECTION_SECONDS",10.0),
+            patch.object(collector,"DerivAuthenticationGate",return_value=gate) as gate_factory,
+            patch.object(collector,"AutonomousSignalHunter",return_value=NoSignalHunter()),
+        ):
+            with self.assertRaisesRegex(ValueError,"R100_TICK_ORDER_INVALID"):
+                asyncio.run(collector.collect_once(state))
+        transport.close.assert_awaited_once()
+        gate_factory.assert_called_once_with(plane="research")
+        gate.get_client.assert_called_once_with()
 
 
 if __name__ == "__main__":

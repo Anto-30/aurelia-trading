@@ -79,6 +79,10 @@ class CertificationEvidenceTest(unittest.TestCase):
             "strategy_version": "S-TEST",
             "oos_window": "2026-01-01/2026-01-31",
             "min_trades_per_strategy_symbol_regime": 100,
+            "data_coverage_valid": True,
+            "data_coverage_fraction": 0.62,
+            "max_observation_gap_seconds": 900,
+            "collection_window_count": 576,
             "calibration_validated": True,
             "drift_monitoring": True,
             "sample_count": 1000,
@@ -180,6 +184,22 @@ class CertificationEvidenceTest(unittest.TestCase):
             status, detail = validate_evidence_bundle(root)
             self.assertEqual(status, "BLOCKED")
             self.assertIn("calibration or drift", detail)
+
+    def test_oos_collection_coverage_is_required(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            path = root / "evidence/prospective_oos.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record["data_coverage_valid"] = False
+            record["max_observation_gap_seconds"] = 3600
+            record["record_hash"] = payload_sha256(
+                {key: value for key, value in record.items() if key != "record_hash"}
+            )
+            path.write_text(json.dumps(record), encoding="utf-8")
+            status, detail = validate_evidence_bundle(root)
+            self.assertEqual(status, "BLOCKED")
+            self.assertIn("collection coverage incomplete", detail)
 
     def test_nonfinite_calibration_metric_blocks(self):
         with tempfile.TemporaryDirectory() as d:

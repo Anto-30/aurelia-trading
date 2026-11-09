@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   collect-and-evaluate:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -33,30 +34,110 @@ jobs:
         run: pip install -r requirements.txt
       - name: Run prospective collector tests
         run: python -m unittest research/labs/tests/test_r100_prospective_oos_collector.py -v
-      - name: Recover latest prospective archive
+      - name: Resolve trusted workflow identity
+        id: trusted_workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          workflow_id="$(gh api "/repos/${GITHUB_REPOSITORY}/actions/workflows/r100-prospective-oos.yml" --jq '.id')"
+          test "$workflow_id" -gt 0
+          echo "AURELIA_R100_WORKFLOW_ID=$workflow_id" >> "$GITHUB_ENV"
+
+      - name: Recover only a trusted prospective archive
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p .research_state/previous
-          artifact_id="$(
-            gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts?name=aurelia-r100-prospective-oos&per_page=100" \
-              --jq '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | last.id // empty'
-          )"
-          if [ -z "$artifact_id" ]; then
-            echo "No prior prospective archive found; starting fresh campaign."
+          artifacts_json="$(gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts?name=aurelia-r100-prospective-oos&per_page=100")"
+          mapfile -t artifact_ids < <(printf '%s' "$artifacts_json" | jq -r '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | reverse | .[].id')
+          recovered=0
+          for artifact_id in "${artifact_ids[@]}"; do
+            artifact_meta="$(printf '%s' "$artifacts_json" | jq -c --argjson id "$artifact_id" '.artifacts[] | select(.id == $id)')"
+            artifact_run_id="$(printf '%s' "$artifact_meta" | jq -r '.workflow_run.id // empty')"
+            artifact_sha="$(printf '%s' "$artifact_meta" | jq -r '.workflow_run.head_sha // empty')"
+            test -n "$artifact_run_id" || continue
+            artifact_run="$(gh api "/repos/${GITHUB_REPOSITORY}/actions/runs/$artifact_run_id")"
+            if ! printf '%s' "$artifact_run" | jq -e \
+              --arg repo "$GITHUB_REPOSITORY" --arg sha "$artifact_sha" \
+              --argjson workflow_id "$AURELIA_R100_WORKFLOW_ID" '
+                .workflow_id == $workflow_id
+                and .path == ".github/workflows/r100-prospective-oos.yml"
+                and .head_branch == "main" and .head_sha == $sha
+                and (.head_sha | test("^[0-9a-f]{40}$"))
+                and .head_repository.full_name == $repo
+                and .status == "completed" and .conclusion == "success"
+                and (.event == "schedule" or .event == "push" or .event == "workflow_dispatch")
+              ' >/dev/null; then
+              continue
+            fi
+            extract_dir=".research_state/previous/extracted-$artifact_id"
+            rm -rf "$extract_dir"; mkdir -p "$extract_dir"
+            archive_zip=".research_state/previous/archive-$artifact_id.zip"
+            gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts/$artifact_id/zip" > "$archive_zip"
+            expected_digest="$(printf '%s' "$artifact_meta" | jq -r '.digest // empty')"
+            if [[ ! "$expected_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+              continue
+            fi
+            actual_digest="sha256:$(sha256sum "$archive_zip" | awk '{print $1}')"
+            test "$actual_digest" = "$expected_digest" || continue
+            unzip -oq "$archive_zip" -d "$extract_dir"
+            mapfile -t state_files < <(
+              find "$extract_dir" -type f -name aurelia_r100_state.json ! -path '*/sealed-*/*' ! -path '*/incompatible-*/*' -print
+            )
+            mapfile -t report_files < <(
+              find "$extract_dir" -type f -name aurelia_r100_report.json ! -path '*/sealed-*/*' ! -path '*/incompatible-*/*' -print
+            )
+            test "${#state_files[@]}" -eq 1 || continue
+            test "${#report_files[@]}" -eq 1 || continue
+            state_file="${state_files[0]}"
+            report_file="${report_files[0]}"
+            origin_run_id="$(jq -r '.manifest.producer.workflow_run_id // empty' "$state_file")"
+            origin_workflow_id="$(jq -r '.manifest.producer.workflow_id // empty' "$state_file")"
+            origin_path="$(jq -r '.manifest.producer.workflow_path // empty' "$state_file")"
+            origin_branch="$(jq -r '.manifest.producer.head_branch // empty' "$state_file")"
+            origin_event="$(jq -r '.manifest.producer.event // empty' "$state_file")"
+            origin_sha="$(jq -r '.manifest.producer.head_sha // empty' "$state_file")"
+            test -n "$origin_run_id" && test "$origin_run_id" -gt 0 || continue
+            test "$origin_workflow_id" = "$AURELIA_R100_WORKFLOW_ID" || continue
+            test "$origin_path" = ".github/workflows/r100-prospective-oos.yml" || continue
+            test "$origin_branch" = "main" || continue
+            case "$origin_event" in schedule|push|workflow_dispatch) ;; *) continue ;; esac
+            [[ "$origin_sha" =~ ^[0-9a-f]{40}$ ]] || continue
+            origin_run="$(gh api "/repos/${GITHUB_REPOSITORY}/actions/runs/$origin_run_id")"
+            if ! printf '%s' "$origin_run" | jq -e \
+              --arg repo "$GITHUB_REPOSITORY" --arg sha "$origin_sha" \
+              --arg event "$origin_event" --argjson workflow_id "$AURELIA_R100_WORKFLOW_ID" '
+                .workflow_id == $workflow_id
+                and .path == ".github/workflows/r100-prospective-oos.yml"
+                and .head_branch == "main" and .head_sha == $sha
+                and (.head_sha | test("^[0-9a-f]{40}$"))
+                and .head_repository.full_name == $repo
+                and .event == $event
+                and .status == "completed" and .conclusion == "success"
+              ' >/dev/null; then
+              continue
+            fi
+            mkdir -p "$(dirname "${AURELIA_R100_STATE_PATH}")"
+            mkdir -p "$(dirname "${AURELIA_R100_STATE_PATH}")"
+            cp "$state_file" "${AURELIA_R100_STATE_PATH}"
+            cp "$report_file" "$(dirname "${AURELIA_R100_STATE_PATH}")/aurelia_r100_report.json"
+            echo "Recovered trusted campaign archive artifact=$artifact_id origin_run=$origin_run_id."
+            recovered=1
+            break
+          done
+          if [ "$recovered" -ne 1 ]; then
+            echo "No trusted prospective archive found; no unverified artifact was consumed."
+          fi
+      - name: Seal expired R100 campaign without backfill or re-evaluation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f "${AURELIA_R100_STATE_PATH}" ]; then
+            echo "R100_OFFLINE_SEAL=NO_STATE"
             exit 0
           fi
-          gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}/zip" \
-            > .research_state/previous/archive.zip
-          unzip -oq .research_state/previous/archive.zip -d .research_state/previous/extracted
-          state_file="$(find .research_state/previous/extracted -name aurelia_r100_state.json -type f | head -n 1)"
-          if [ -z "$state_file" ]; then
-            echo "Prior archive did not contain aurelia_r100_state.json" >&2
-            exit 1
-          fi
-          mkdir -p "$(dirname "${AURELIA_R100_STATE_PATH}")"
-          cp "$state_file" "${AURELIA_R100_STATE_PATH}"
-          echo "Recovered prospective archive artifact ${artifact_id}."
+          python -m research.r100_prospective_oos_sealer
+
       - name: Select frozen campaign or roll incompatible campaign
         shell: bash
         run: |
@@ -72,7 +153,11 @@ jobs:
             archive_dir=".research_state/sealed-$(date -u +%Y%m%dT%H%M%SZ)"
             mkdir -p "$archive_dir"
             cp "${AURELIA_R100_STATE_PATH}" "$archive_dir/aurelia_r100_state.json"
-            rm -f "${AURELIA_R100_STATE_PATH}"
+            report_path="$(dirname "${AURELIA_R100_STATE_PATH}")/aurelia_r100_report.json"
+            if [ -f "$report_path" ]; then
+              cp "$report_path" "$archive_dir/aurelia_r100_report.json"
+            fi
+            rm -f "${AURELIA_R100_STATE_PATH}" "$report_path"
             echo "R100_CAMPAIGN_SELECTION=NEW_AFTER_SEAL"
             echo "AURELIA_RESEARCH_CODE_COMMIT=${GITHUB_SHA}" >> "$GITHUB_ENV"
             exit 0
@@ -94,7 +179,11 @@ jobs:
             archive_dir=".research_state/incompatible-$(date -u +%Y%m%dT%H%M%SZ)"
             mkdir -p "$archive_dir"
             cp "${AURELIA_R100_STATE_PATH}" "$archive_dir/aurelia_r100_state.json"
-            rm -f "${AURELIA_R100_STATE_PATH}"
+            report_path="$(dirname "${AURELIA_R100_STATE_PATH}")/aurelia_r100_report.json"
+            if [ -f "$report_path" ]; then
+              cp "$report_path" "$archive_dir/aurelia_r100_report.json"
+            fi
+            rm -f "${AURELIA_R100_STATE_PATH}" "$report_path"
             git checkout --detach "${GITHUB_SHA}"
             echo "R100_CAMPAIGN_SELECTION=ROLLED_OVER_INCOMPATIBLE"
             echo "R100_ARCHIVED_STATE=$archive_dir/aurelia_r100_state.json"
@@ -146,6 +235,79 @@ jobs:
               "qualification=", report["qualification_status"],
           )
           PY
+      - name: Adapt only completed and qualified OOS snapshots
+        env:
+          PYTHONPATH: "."
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts evidence
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          state_path = Path(".research_state/aurelia_r100_state.json")
+          report_path = Path(".research_state/aurelia_r100_report.json")
+          status_path = Path("artifacts/r100-evidence-adapter-status.json")
+          status_path.unlink(missing_ok=True)
+          for stale in (Path("evidence/prospective_oos.json"), Path("evidence/calibration.json")):
+              stale.unlink(missing_ok=True)
+
+          if not state_path.exists() or not report_path.exists():
+              state, report = {}, {}
+              reason = "CURRENT_CAMPAIGN_STATE_OR_REPORT_MISSING"
+          else:
+              state = json.loads(state_path.read_text(encoding="utf-8"))
+              report = json.loads(report_path.read_text(encoding="utf-8"))
+              if state.get("manifest", {}).get("sealed") is not True:
+                  reason = "CAMPAIGN_NOT_SEALED"
+              elif report.get("campaign_complete") is not True:
+                  reason = "CAMPAIGN_NOT_COMPLETE"
+              elif report.get("qualification_status") != "RESEARCH_QUALIFIED":
+                  reason = "CAMPAIGN_NOT_RESEARCH_QUALIFIED"
+              elif state.get("pending"):
+                  reason = "PENDING_SIGNALS_REMAIN"
+              elif report.get("collection_status") != "PASS":
+                  reason = "COLLECTION_STATUS_NOT_PASS"
+              else:
+                  reason = ""
+
+          if reason:
+              result = {
+                  "status": "NOT_ADAPTED",
+                  "reason": reason,
+                  "campaign_sealed": state.get("manifest", {}).get("sealed") is True,
+                  "campaign_complete": report.get("campaign_complete") is True,
+                  "qualification_status": report.get("qualification_status"),
+                  "pending_count": len(state.get("pending", [])) if isinstance(state.get("pending", []), list) else None,
+                  "capital_authority": False,
+                  "execution_authorized": False,
+                  "live_execution": False,
+              }
+              status_path.write_text(
+                  json.dumps(result, sort_keys=True, separators=(",", ":")) + "\n",
+                  encoding="utf-8",
+              )
+              print(json.dumps(result, sort_keys=True))
+              raise SystemExit(0)
+          PY
+          if [ -s artifacts/r100-evidence-adapter-status.json ]; then
+            exit 0
+          fi
+          python -m assurance.r100_evidence_adapter
+          cat artifacts/r100-evidence-adapter-status.json
+
+      - name: Upload sealed OOS certification evidence
+        if: always() && hashFiles('evidence/prospective_oos.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-r100-certification-evidence
+          path: |
+            evidence/prospective_oos.json
+            evidence/calibration.json
+            artifacts/r100-evidence-adapter-status.json
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Upload prospective research archive
         if: always()
         uses: actions/upload-artifact@v4
@@ -154,5 +316,10 @@ jobs:
           path: |
             .research_state/aurelia_r100_state.json
             .research_state/aurelia_r100_report.json
+            .research_state/sealed-*/aurelia_r100_state.json
+            .research_state/sealed-*/aurelia_r100_report.json
+            .research_state/incompatible-*/aurelia_r100_state.json
+            .research_state/incompatible-*/aurelia_r100_report.json
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 30
