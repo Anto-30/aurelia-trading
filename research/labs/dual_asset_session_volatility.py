@@ -613,3 +613,72 @@ def select_volatility_estimator_from_dsr(
         "capital_authority": False,
         "live_execution": "BLOCKED",
     }
+
+
+@dataclass(frozen=True)
+class ResearchCandidateSizing:
+    candidate: Any
+    decision: EntryControlDecision
+    effective_risk_pct: float | None
+    effective_multiplier: float | None
+
+    def audit_record(self, *, candidate_id: str) -> dict[str, Any]:
+        point = self.decision.volatility_point
+        return {
+            "event_type": "RESEARCH_CANDIDATE_SIZING_DECISION",
+            "candidate_id": candidate_id,
+            "allowed": self.decision.allowed,
+            "asset_class": self.decision.asset_class,
+            "session_label": self.decision.session_label,
+            "reason": self.decision.reason,
+            "effective_risk_pct": self.effective_risk_pct,
+            "effective_multiplier": self.effective_multiplier,
+            "volatility_estimator": point.estimator if point else None,
+            "realized_vol_annualized": point.realized_vol_annualized if point else None,
+            "capital_authority_granted": False,
+            "order_submission_permitted": False,
+            "live_execution": "BLOCKED",
+        }
+
+
+def prepare_candidate_for_research_simulation(
+    candidate: Any,
+    *,
+    signal_timestamp: datetime | str,
+    asset_class: str,
+    volatility_schedule: Sequence[VolatilitySizePoint],
+    entry_bar_index: int,
+    required_session: str = "LONDON",
+) -> ResearchCandidateSizing:
+    """Attach conditional session/volatility gates to an existing MSNR candidate.
+
+    This is a research pre-simulation adapter, not an execution engine. It
+    consumes the repository's existing candidate object rather than creating a
+    duplicate MSNR detector or CapitalPlaneExecutor. The trade's entry-bar
+    sizing point must already be lagged by VolatilitySizer.build_schedule().
+    """
+    if candidate is None:
+        raise ValueError("RESEARCH_CANDIDATE_REQUIRED")
+    if getattr(candidate, "capital_authority", False) is not False:
+        raise ValueError("RESEARCH_CANDIDATE_CAPITAL_AUTHORITY_FORBIDDEN")
+    if getattr(candidate, "order_submission_permitted", False) is not False:
+        raise ValueError("RESEARCH_CANDIDATE_ORDER_SUBMISSION_FORBIDDEN")
+    if not hasattr(candidate, "research_only") or getattr(candidate, "research_only") is not True:
+        raise ValueError("CANDIDATE_MUST_DECLARE_RESEARCH_ONLY")
+    if isinstance(entry_bar_index, bool) or not isinstance(entry_bar_index, int):
+        raise ValueError("ENTRY_BAR_INDEX_INVALID")
+    if not 0 <= entry_bar_index < len(volatility_schedule):
+        raise IndexError("ENTRY_BAR_INDEX_OUT_OF_RANGE")
+    point = volatility_schedule[entry_bar_index]
+    controls = evaluate_research_entry_controls(
+        signal_timestamp=signal_timestamp,
+        asset_class=asset_class,
+        volatility_point=point,
+        required_session=required_session,
+    )
+    return ResearchCandidateSizing(
+        candidate=candidate,
+        decision=controls,
+        effective_risk_pct=point.effective_risk_pct if controls.allowed else None,
+        effective_multiplier=point.effective_multiplier if controls.allowed else None,
+    )
