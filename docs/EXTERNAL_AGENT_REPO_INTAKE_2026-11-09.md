@@ -50,6 +50,60 @@ The following current default-branch heads were resolved through GitHub and reco
 
 `Infisical/agent-vault` was not added as an adoption candidate because its own README says this repository is no longer the recommended setup path and directs new users to the current Infisical Agent Vault product documentation. `kristianvast/hermes-claude-auth` remains rejected because it describes an OAuth bypass. Neither is approved for installation.
 
+## Additional immutable reference pins — 2026-11-09
+
+A further 45 submitted repositories have been pinned in `config/external_repo_federation.json` at the exact default-branch commits below. They are all `REFERENCE_ONLY`; this adds provenance and repeatable review identity, not trust, installation, code execution, or approval. In combination with the earlier selected pins and previously registered sources, 60 of the 62 submitted URLs are represented in the machine-readable registry. The two excluded sources are documented above (`kristianvast/hermes-claude-auth`, rejected authentication bypass; `Infisical/agent-vault`, deprecated repository path).
+
+| Repository | Pinned commit | Mode |
+|---|---|---|
+| `thewaltero/mythos-router` | `32d26a3c615b805770f4653980547b48c675742b` | REFERENCE_ONLY |
+| `jungjin0003/Claude-Mythos-5.1-System-Prompt` | `58d7f598bda30f7853ef1bab798890a562e0915e` | REFERENCE_ONLY |
+| `kyegomez/OpenMythos` | `155430a88d2a98322fc4c79b2a067792c3c9579a` | REFERENCE_ONLY |
+| `tszdanger/RealMythos` | `7c3d75c5cf930fccfa89131adddabee21fa6ba78` | REFERENCE_ONLY |
+| `KinetiNode/claude-fable-5-system-prompt-clean` | `c2624b5fa0f3e5d03ded01a8d6f66e6f661f016b` | REFERENCE_ONLY |
+| `flaw0-security/mythosharness` | `fb7efacd6399f0de7ac214461472ec6ce6b84ad4` | REFERENCE_ONLY |
+| `AJ-comp/Mythosia.AI` | `fe8b4d37c5afd2a4279fd8fa47f2dd0e2b9ab3ba` | REFERENCE_ONLY |
+| `Abhi24384/Anthropic-Mythos-Desktop-Studio` | `42b405812b4c0277bcd0d1ce02c4ae1fab856712` | REFERENCE_ONLY |
+| `nub3Ar/MythosTown` | `088942dea89cd8da82a6c8cfbd82a0fba48ff7d3` | REFERENCE_ONLY |
+| `garrytan/gbrain` | `d253ec0ff12ed370ed3a846cb7da0191639c4a9e` | REFERENCE_ONLY |
+| `nesquena/hermes-webui` | `7655adca16f94b5154f4a049abdd47caeef1b828` | REFERENCE_ONLY |
+| `outsourc-e/hermes-workspace` | `c631425d8baa933f8c61d8447040f4ec8b5f571c` | REFERENCE_ONLY |
+| `unifapi-agent/agents` | `fb532478a0a33b6a345ce3aad9d2632164397ebc` | REFERENCE_ONLY |
+| `Waishnav/devspace` | `559781284677e5b128aa44a2c95f8bdb0c72b7c0` | REFERENCE_ONLY |
+| `rlaope/oh-my-hermes` | `b0f4b94759c418207054332bc8420d4d1c866902` | REFERENCE_ONLY |
+| `NousResearch/hermes-agent-self-evolution` | `0a929e3aa20e15cf04dc7c28492a7d41a5139125` | REFERENCE_ONLY |
+| `alchaincyf/hermes-agent-orange-book` | `b6e53a8e11e00c8b14b2f72d6b4f1ce71fef6692` | REFERENCE_ONLY |
+| `abundantbeing/hermes-browser-extension` | `771be44d8a637008f683c94343da8af9f1121aed` | REFERENCE_ONLY |
+| `Eynzof/Hermes-CN-Desktop` | `06e15d0e5d3c27f1fd37f09579f26f91c020036e` | REFERENCE_ONLY |
+| `cclank/Hermes-Wiki` | `e3034c54e5b59547f08a3cfd43ed3d102a16aa0d` | REFERENCE_ONLY |
+| `Zyrexnn/Cybermes` | `961a0dd3d2d2f66a07a416ade3b1d4473b64802e` | REFERENCE_ONLY |
+| `paperclipai/paperclip` | `fd2e7482c0c73174941db8d4817d713594e0624e` | REFERENCE_ONLY |
+| `briancaffey/hermes-otel` | `8c7fdcbd0195d27dd0bac087759cb085742ac9e0` | REFERENCE_ONLY |
+| `wk42worldworld/cybercode` | `a43863b90a4ccba6e6f8b6406cf0e2c4df44bc0c` | REFERENCE_ONLY |
+| `MemTensor/memmy-agent` | `72bb3415252b6ba4ffee556817622cf8f075af0d` | REFERENCE_ONLY |
+| `ksimback/hermes-ecosystem` | `9c04282ef4fd34d8a4f119558ba4ae17c68c5b5a` | REFERENCE_ONLY |
+| `marshallrichards/ClawPhone` | `b224a589b06ee8de27bc57dde3f3695359d1f60c` | REFERENCE_ONLY |
+| `anysearch-ai/anysearch-skill` | `9b91ee215164de60d61c7d63789c891a1948b039` | REFERENCE_ONLY |
+| `praveen-ks-2001/hermes-agent-template` | `c35500cc979128b920ec50b0c1369147ed34bf57` | REFERENCE_ONLY |
+| `freestylefly/wesight` | `00fce466168b926f9d1a0b8611858a1ef62267b5` | REFERENCE_ONLY |
+| `colbymchenry/codegraph` | `f72c9d2efb14454ff4f9fd7b8460abd82f19a287` | REFERENCE_ONLY |
+| `hermes-hq/hermes-ide` | `5f4be9646762229dba570341198da48b2de5ba5c` | REFERENCE_ONLY |
+| `Yuan-lab-LLM/ClawManager` | `cd7b74abdf47afee9fee7b93cd4c44246ae10acc` | REFERENCE_ONLY |
+| `0xNyk/awesome-hermes-agent` | `9c87ae281f7291702dc6eeb85305ec369578f24e` | REFERENCE_ONLY |
+| `MobiusQuant/OpenMobius-skill` | `4c1cffc2ef03221c25f87ef6ee7feeb4a3852e86` | REFERENCE_ONLY |
+| `Giton22/kyllene` | `15c4933512029bcf245efcf3a821131a65afaba8` | REFERENCE_ONLY |
+| `homarr-labs/dashboard-icons` | `d767d7327db7f8ebd3715b552523f61889eea41c` | REFERENCE_ONLY |
+| `rohitg00/agentmemory` | `28ffc538b81b265e2f649354ed9f88b0c12ae414` | REFERENCE_ONLY |
+| `chandra447/pi-hermes-memory` | `40d852161b992d5c35ddc87ef7445528a50fe9f5` | REFERENCE_ONLY |
+| `cogwheel0/conduit` | `1fdeb04bed75c3a68733b4675ec7a0f5aa6c09d1` | REFERENCE_ONLY |
+| `ruvnet/ruflo` | `29be054e85636b61788f3955d0bd4d0bcbcfe3f6` | REFERENCE_ONLY |
+| `AaronWong1999/hermesclaw` | `a20ca00c3ceedd387d313ad9e1cdfe0697ed53d6` | REFERENCE_ONLY |
+| `stephenschoettler/hermes-lcm` | `a13e709c25476fa9dc145c61f733f1f4a0443a05` | REFERENCE_ONLY |
+| `joeynyc/hermes-hudui` | `be83208f48b7a1c67b7816837c8df71a61ef7edf` | REFERENCE_ONLY |
+| `ZiChuanLan/agent-purge` | `3d33c8f74f0d232c607807dd84233d03e18209c8` | REFERENCE_ONLY |
+
+These pins were resolved on 2026-11-09 using each repository's default-branch commit listing. They must be refreshed and reviewed before any later adoption. Mythos/Fable-branded prompt and project sources are untrusted community materials, not official model prompts or evidence of access to an unreleased model.
+
 ## Review queue
 
 | Priority | Candidates | Review objective | Initial disposition |
