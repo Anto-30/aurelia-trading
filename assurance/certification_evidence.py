@@ -269,6 +269,18 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
         return ok, "valid" if ok else "genuine 3600-second soak evidence incomplete"
 
     if name == "prospective_oos.json":
+        coverage_fraction = record.get("data_coverage_fraction")
+        max_gap = record.get("max_observation_gap_seconds")
+        collection_windows = record.get("collection_window_count")
+        coverage_valid = (
+            record.get("data_coverage_valid") is True
+            and _finite_number(coverage_fraction)
+            and 0.50 <= float(coverage_fraction) <= 1.0
+            and _finite_number(max_gap)
+            and 0 <= float(max_gap) <= 1800
+            and _exact_int(collection_windows)
+            and collection_windows >= 24
+        )
         ok = (
             record.get("sealed_prospective_data") is True
             and record.get("retuning_after_seal") is False
@@ -278,8 +290,9 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
             and _non_empty_string(record, "oos_window")
             and _exact_int(record.get("min_trades_per_strategy_symbol_regime"))
             and record["min_trades_per_strategy_symbol_regime"] >= 100
+            and coverage_valid
         )
-        return ok, "valid" if ok else "prospective OOS evidence incomplete"
+        return ok, "valid" if ok else "prospective OOS evidence or observed collection coverage incomplete"
 
     if name == "calibration.json":
         buckets = record.get("reliability_buckets")

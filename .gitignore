@@ -27,3 +27,6 @@ env/
 Thumbs.db
 .idea/
 .vscode/
+
+# Generated certification evidence is uploaded as workflow artifacts, not committed
+/evidence/*.json
