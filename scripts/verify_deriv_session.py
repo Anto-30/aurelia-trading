@@ -144,6 +144,8 @@ async def run() -> int:
 
         adapter = DerivAdapter(
             ws_url=bootstrap.websocket.url,
+            # OTP URL already authenticates this account-specific websocket.
+            auth_token="",
             expected_loginid=expected_loginid,
             expected_currency=expected_currency,
             environment=expected_environment,

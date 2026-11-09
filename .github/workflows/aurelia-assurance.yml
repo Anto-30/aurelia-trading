@@ -31,6 +31,55 @@ jobs:
           bash -n scripts/provision_deriv_github_secrets.sh
       - name: Run research-plane tests
         run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
+      - name: Smoke-test public R100 M1 and M15 historical candles
+        id: historical_public_smoke
+        if: github.event_name == 'push' && github.ref == 'refs/heads/research/369-msnr-wfo-20261108'
+        continue-on-error: true
+        run: |
+          python -m research.labs.deriv_historical_candle_collector \
+            --symbol R_100 \
+            --start-epoch 1666310400 \
+            --end-epoch 1666314000 \
+            --timeframes 60,900 \
+            --output-dir artifacts/r100-historical-smoke
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("artifacts/r100-historical-smoke/manifest.json").read_text())
+          assert data["authentication_used"] is False
+          assert data["capital_authority"] is False
+          assert data["order_submission_permitted"] is False
+          assert [(row["timeframe"], row["bar_count"]) for row in data["datasets"]] == [("M1", 60), ("M15", 4)]
+          print("R100_HISTORICAL_PUBLIC_SMOKE=PASS")
+          PY
+      - name: Upload public R100 historical smoke evidence
+        if: always() && hashFiles('artifacts/r100-historical-smoke/manifest.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-r100-historical-smoke-${{ github.run_id }}
+          path: artifacts/r100-historical-smoke/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Compare legacy public R100 historical M1 and M15 candles
+        id: historical_legacy_smoke
+        if: github.event_name == 'push' && github.ref == 'refs/heads/research/369-msnr-wfo-20261108'
+        continue-on-error: true
+        run: |
+          python -m research.labs.deriv_historical_candle_collector \
+            --symbol R_100 \
+            --start-epoch 1666310400 \
+            --end-epoch 1666314000 \
+            --timeframes 60,900 \
+            --api-variant legacy \
+            --output-dir artifacts/r100-historical-legacy-smoke
+      - name: Upload legacy public R100 historical evidence
+        if: always() && hashFiles('artifacts/r100-historical-legacy-smoke/manifest.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-r100-legacy-history-smoke-${{ github.run_id }}
+          path: artifacts/r100-historical-legacy-smoke/
+          if-no-files-found: error
+          retention-days: 30
       - name: Run assurance tests
         run: python -m unittest discover -s assurance -p 'test_*.py' -v
       - name: Run runtime tests
@@ -104,3 +153,15 @@ jobs:
           test "$status" -eq 2
           echo "$output" | grep -q "LIVE_RELEASE_GATE=BLOCKED"
           echo "$output" | grep -q "REASON="
+
+      - name: Enforce historical dataset smoke result
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/research/369-msnr-wfo-20261108'
+        env:
+          PUBLIC_SMOKE_OUTCOME: ${{ steps.historical_public_smoke.outcome }}
+        run: |
+          if [ "$PUBLIC_SMOKE_OUTCOME" != "success" ]; then
+            echo "R100_HISTORICAL_DATASET_GATE=BLOCKED"
+            echo "The exact historical M1/M15 source window was not verified; a green unit-test suite is not historical-data evidence."
+            exit 1
+          fi
+          echo "R100_HISTORICAL_DATASET_GATE=PASS"
