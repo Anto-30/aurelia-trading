@@ -507,6 +507,18 @@ def test_c_session_edge(
         }
     if normalized != "financial":
         raise ValueError("ASSET_CLASS_MUST_BE_FINANCIAL_OR_SYNTHETIC")
+    for name, value, lower in (
+        ("replications", replications, 500),
+        ("minimum_trades", minimum_trades, 1),
+        ("minimum_days", minimum_days, 2),
+        ("minimum_active_days", minimum_active_days, 1),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value < lower:
+            raise ValueError(f"SESSION_{name.upper()}_INVALID")
+    if not isinstance(day_ids, Sequence) or isinstance(day_ids, (str, bytes)):
+        raise ValueError("SESSION_DAY_IDS_INVALID")
+    if not isinstance(daily_trade_r, dict):
+        raise ValueError("SESSION_DAILY_TRADE_DATA_INVALID")
     valid_days = True
     try:
         parsed_days = [datetime.fromisoformat(str(day)).date() for day in day_ids]
@@ -525,14 +537,6 @@ def test_c_session_edge(
             "capital_authority": False,
             "live_execution": "BLOCKED",
         }
-    for name, value, lower in (
-        ("replications", replications, 500),
-        ("minimum_trades", minimum_trades, 1),
-        ("minimum_days", minimum_days, 2),
-        ("minimum_active_days", minimum_active_days, 1),
-    ):
-        if isinstance(value, bool) or not isinstance(value, int) or value < lower:
-            raise ValueError(f"SESSION_{name.upper()}_INVALID")
     if isinstance(seed, bool) or not isinstance(seed, int):
         raise ValueError("SESSION_BOOTSTRAP_SEED_INVALID")
     if isinstance(block_days, bool) or not isinstance(block_days, int) or not 1 <= block_days <= len(day_ids):
@@ -545,14 +549,7 @@ def test_c_session_edge(
         if not isinstance(day_map, dict):
             return {
                 "verdict": "FAIL",
-                "reason": f"SESSION_EDGE_DATA_MISSING:{session}",
-                "capital_authority": False,
-                "live_execution": "BLOCKED",
-            }
-        if not isinstance(day_map, dict):
-            return {
-                "verdict": "FAIL",
-                "reason": f"SESSION_EDGE_DATA_INVALID:{session}",
+                "reason": f"SESSION_EDGE_DATA_MISSING_OR_INVALID:{session}",
                 "capital_authority": False,
                 "live_execution": "BLOCKED",
             }
