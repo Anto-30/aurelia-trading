@@ -246,6 +246,35 @@ class DerivIngestionTests(unittest.TestCase):
         self.assertEqual(result.audit.source_sha256, hashlib.sha256(raw).hexdigest())
         self.assertTrue(result.eligible_for_research)
 
+    def test_json_file_candle_response_is_dispatched_to_candle_parser(self):
+        payload = {
+            "echo_req": {"ticks_history": "R_100", "style": "candles", "granularity": 60},
+            "candles": [
+                {"epoch": 1767225600, "open": 100, "high": 102, "low": 99, "close": 101}
+            ],
+        }
+        temp = tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False)
+        temp.write(json.dumps(payload, separators=(",", ":")))
+        temp.close()
+        path = Path(temp.name)
+        self.addCleanup(path.unlink, missing_ok=True)
+        import hashlib
+        raw = path.read_bytes()
+        result = ingest_deriv_json_file(
+            path, symbol="R_100", asset_class="synthetic", granularity_seconds=60,
+        )
+        self.assertEqual(result.audit.source_type, "DERIV_CANDLES_HISTORY_RESPONSE")
+        self.assertEqual(result.audit.source_sha256, hashlib.sha256(raw).hexdigest())
+        self.assertTrue(result.eligible_for_research)
+
+    def test_empty_standard_csv_is_quarantined_with_explicit_reason(self):
+        path = self._csv("datetime,open,high,low,close\\n")
+        result = ingest_standard_csv(
+            path, symbol="R_100", asset_class="synthetic", granularity_seconds=60,
+        )
+        self.assertFalse(result.eligible_for_research)
+        self.assertIn("NO_VALID_ROWS", result.audit.issue_codes)
+
     def test_out_of_order_ticks_quarantine_resampled_output(self):
         payload = [
             {"epoch": 1767225610, "quote": 100.0},
