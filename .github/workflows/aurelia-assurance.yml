@@ -33,6 +33,19 @@ jobs:
         run: python -m unittest discover -s research/labs/tests -p 'test_*.py' -v
       - name: Run assurance tests
         run: python -m unittest discover -s assurance -p 'test_*.py' -v
+      - name: Run offline persistent-state fault injection
+        run: python -m scripts.run_persistent_fault_injection
+
+      - name: Upload scoped offline recovery evidence
+        if: always() && hashFiles('evidence/recovery_matrix.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-offline-recovery-fault-injection
+          path: |
+            evidence/recovery_matrix.json
+            artifacts/persistent-state-fault-injection.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Run runtime tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
       - name: Run secret presence report tests

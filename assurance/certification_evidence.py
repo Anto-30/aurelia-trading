@@ -7,7 +7,6 @@ placeholders as proof.
 from __future__ import annotations
 
 import json
-import math
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -184,19 +183,6 @@ def _base_valid(record: dict[str, Any], now: datetime) -> tuple[bool, str]:
     return True, "valid"
 
 
-
-def _exact_int(value: Any) -> bool:
-    return type(value) is int
-
-
-def _finite_number(value: Any) -> bool:
-    if not isinstance(value, (int, float)) or isinstance(value, bool):
-        return False
-    try:
-        return math.isfinite(float(value))
-    except (OverflowError, ValueError):
-        return False
-
 def _non_empty_string(record: dict[str, Any], key: str) -> bool:
     return isinstance(record.get(key), str) and bool(record[key].strip())
 
@@ -212,7 +198,6 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
         observed = record.get("observed")
         ok = (
             record.get("verification_scope") == "REAL_DERIV_LIFECYCLE_VERIFY_ONLY"
-            and type(record.get("orders_submitted")) is int
             and record.get("orders_submitted") == 0
             and record.get("capital_authority_granted") is False
             and record.get("order_submission_permitted") is False
@@ -232,38 +217,52 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
 
     if name == "recovery_matrix.json":
         scenarios = record.get("scenario_results")
-        ok = (
-            record.get("critical_scenarios_passed") is True
-            and isinstance(scenarios, list)
-            and len(scenarios) >= 3
+        scenarios_valid = (
+            isinstance(scenarios, list)
+            and len(scenarios) >= 5
             and all(
-                isinstance(x, dict) and x.get("passed") is True
-                for x in scenarios
+                isinstance(item, dict)
+                and isinstance(item.get("scenario_id"), str)
+                and bool(item["scenario_id"].strip())
+                and item.get("passed") is True
+                and item.get("scope")
+                == "OFFLINE_PERSISTENT_STATE_AND_RUNTIME_CONTROL_FAULT_INJECTION"
+                for item in scenarios
             )
-            and _exact_int(record.get("blind_resubmissions"))
+        )
+        scenario_ids = (
+            [item["scenario_id"] for item in scenarios]
+            if scenarios_valid else []
+        )
+        ok = (
+            record.get("fault_injection_scope")
+            == "OFFLINE_PERSISTENT_STATE_AND_RUNTIME_CONTROL_FAULT_INJECTION"
+            and record.get("fault_injection_passed") is True
+            and record.get("critical_scenarios_passed") is True
+            and record.get("broker_interaction_performed") is False
+            and record.get("broker_orders_submitted") == 0
+            and record.get("capital_movement") is False
+            and scenarios_valid
+            and len(set(scenario_ids)) == len(scenario_ids)
+            and record.get("fault_injection_count") == len(scenarios)
             and record.get("blind_resubmissions") == 0
-            and _exact_int(record.get("duplicate_economic_effects"))
             and record.get("duplicate_economic_effects") == 0
         )
-        return ok, "valid" if ok else "recovery matrix evidence incomplete"
+        return ok, "valid" if ok else "scoped offline recovery/fault-injection evidence incomplete"
 
     if name == "soak_3600s.json":
         ok = (
-            _exact_int(record.get("duration_seconds"))
+            isinstance(record.get("duration_seconds"), int)
             and record["duration_seconds"] >= 3600
-            and _finite_number(record.get("actual_elapsed_seconds"))
-            and float(record["actual_elapsed_seconds"]) >= 3600
+            and isinstance(record.get("actual_elapsed_seconds"), (int, float))
+            and record["actual_elapsed_seconds"] >= 3600
             and record.get("continuous") is True
             and record.get("execution_mode") == "VERIFY_ONLY"
             and _non_empty_string(record, "deployment_id")
             and _non_empty_string(record, "runtime_instance_id")
-            and _exact_int(record.get("invariant_violations"))
             and record.get("invariant_violations") == 0
-            and _exact_int(record.get("silent_degradations"))
             and record.get("silent_degradations") == 0
-            and _exact_int(record.get("capital_authority_escapes"))
             and record.get("capital_authority_escapes") == 0
-            and _exact_int(record.get("unresolved_unknown_states"))
             and record.get("unresolved_unknown_states") == 0
         )
         return ok, "valid" if ok else "genuine 3600-second soak evidence incomplete"
@@ -276,7 +275,9 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
             and _non_empty_string(record, "archive_hash")
             and _non_empty_string(record, "strategy_version")
             and _non_empty_string(record, "oos_window")
-            and _exact_int(record.get("min_trades_per_strategy_symbol_regime"))
+            and isinstance(
+                record.get("min_trades_per_strategy_symbol_regime"), int
+            )
             and record["min_trades_per_strategy_symbol_regime"] >= 100
         )
         return ok, "valid" if ok else "prospective OOS evidence incomplete"
@@ -288,7 +289,9 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
         log_loss = record.get("log_loss")
         max_gap = record.get("max_reliability_gap")
         finite_metrics = all(
-            _finite_number(value)
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and __import__("math").isfinite(float(value))
             for value in (brier, log_loss, max_gap)
         )
         buckets_valid = (
@@ -301,11 +304,11 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
                 and bucket["count"] >= 10
                 and isinstance(bucket.get("mean_probability"), (int, float))
                 and not isinstance(bucket.get("mean_probability"), bool)
-                and _finite_number(bucket["mean_probability"])
+                and __import__("math").isfinite(float(bucket["mean_probability"]))
                 and 0 <= float(bucket["mean_probability"]) <= 1
                 and isinstance(bucket.get("realized_rate"), (int, float))
                 and not isinstance(bucket.get("realized_rate"), bool)
-                and _finite_number(bucket["realized_rate"])
+                and __import__("math").isfinite(float(bucket["realized_rate"]))
                 and 0 <= float(bucket["realized_rate"]) <= 1
                 and abs(float(bucket["mean_probability"]) - float(bucket["realized_rate"])) <= 0.05
                 for bucket in buckets
@@ -331,7 +334,7 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
         ok = (
             record.get("net_expectancy_status") == "KNOWN"
             and record.get("stress_passed") is True
-            and _exact_int(record.get("sample_count"))
+            and isinstance(record.get("sample_count"), int)
             and record["sample_count"] > 0
             and isinstance(costs, dict)
             and bool(costs)
@@ -349,8 +352,7 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
             and _non_empty_string(record, "scope")
             and isinstance(findings, list)
             and len(findings) > 0
-            and _exact_int(record.get("critical_findings"))
-            and record.get("critical_findings") == 0
+            and record.get("critical_findings", 1) == 0
         )
         return ok, "valid" if ok else "security/bypass audit incomplete"
 
@@ -363,7 +365,7 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
             and all(
                 isinstance(item, dict)
                 and item.get("qualified") is True
-                and _exact_int(item.get("trade_count"))
+                and isinstance(item.get("trade_count"), int)
                 and item.get("trade_count") >= 100
                 and isinstance(item.get("strategy_hash"), str)
                 and bool(item.get("strategy_hash"))

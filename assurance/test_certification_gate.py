@@ -54,11 +54,20 @@ class CertificationEvidenceTest(unittest.TestCase):
                 "broker_submission_performed": False,
                 "capital_movement": False,
             },
+            "fault_injection_scope": "OFFLINE_PERSISTENT_STATE_AND_RUNTIME_CONTROL_FAULT_INJECTION",
+            "fault_injection_passed": True,
             "critical_scenarios_passed": True,
+            "broker_interaction_performed": False,
+            "broker_orders_submitted": 0,
+            "capital_movement": False,
+            "fault_injection_count": 6,
             "scenario_results": [
-                {"scenario_id": "UNKNOWN", "passed": True},
-                {"scenario_id": "CRASH", "passed": True},
-                {"scenario_id": "CONCURRENCY", "passed": True},
+                {"scenario_id": "CORRUPT_FENCE_GENERATION", "passed": True, "scope": "OFFLINE_PERSISTENT_STATE_AND_RUNTIME_CONTROL_FAULT_INJECTION"},
+                {"scenario_id": "STALE_FENCE_TOKEN_AFTER_RESTART", "passed": True, "scope": "OFFLINE_PERSISTENT_STATE_AND_RUNTIME_CONTROL_FAULT_INJECTION"},
+                {"scenario_id": "CORRUPT_IDEMPOTENCY_SCHEMA", "passed": True, "scope": "OFFLINE_PERSISTENT_STATE_AND_RUNTIME_CONTROL_FAULT_INJECTION"},
+                {"scenario_id": "UNKNOWN_OUTCOME_RESTART_AND_REPLAY", "passed": True, "scope": "OFFLINE_PERSISTENT_STATE_AND_RUNTIME_CONTROL_FAULT_INJECTION"},
+                {"scenario_id": "PERSISTENCE_WRITE_FAILURE", "passed": True, "scope": "OFFLINE_PERSISTENT_STATE_AND_RUNTIME_CONTROL_FAULT_INJECTION"},
+                {"scenario_id": "DUPLICATE_LEDGER_EVENT_REPLAY", "passed": True, "scope": "OFFLINE_PERSISTENT_STATE_AND_RUNTIME_CONTROL_FAULT_INJECTION"},
             ],
             "blind_resubmissions": 0,
             "duplicate_economic_effects": 0,
@@ -150,6 +159,37 @@ class CertificationEvidenceTest(unittest.TestCase):
             status, detail = validate_evidence_bundle(root)
             self.assertEqual(status, "BLOCKED")
             self.assertIn("repository-tracked", detail)
+
+    def test_recovery_matrix_rejects_broker_scope_claim_from_offline_faults(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            path = root / "evidence/recovery_matrix.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record["broker_interaction_performed"] = True
+            record["record_hash"] = payload_sha256(
+                {key: value for key, value in record.items() if key != "record_hash"}
+            )
+            path.write_text(json.dumps(record), encoding="utf-8")
+            status, detail = validate_evidence_bundle(root)
+            self.assertEqual(status, "BLOCKED")
+            self.assertIn("recovery", detail)
+
+    def test_recovery_matrix_requires_five_unique_passed_scenarios(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            path = root / "evidence/recovery_matrix.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record["scenario_results"] = record["scenario_results"][:3]
+            record["fault_injection_count"] = 3
+            record["record_hash"] = payload_sha256(
+                {key: value for key, value in record.items() if key != "record_hash"}
+            )
+            path.write_text(json.dumps(record), encoding="utf-8")
+            status, detail = validate_evidence_bundle(root)
+            self.assertEqual(status, "BLOCKED")
+            self.assertIn("recovery", detail)
 
     def test_incomplete_domain_proof_blocks(self):
         with tempfile.TemporaryDirectory() as d:
