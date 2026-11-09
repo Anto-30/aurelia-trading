@@ -299,7 +299,7 @@ class ResearchCandidateIntegrationTests(unittest.TestCase):
     def test_candidate_adapter_bypasses_financial_session_for_synthetics(self):
         result = prepare_candidate_for_research_simulation(
             self.Candidate(),
-            signal_timestamp="2026-01-15T23:30:00Z",
+            signal_timestamp="2026-01-15T07:30:00Z",
             asset_class="synthetic",
             volatility_schedule=self._schedule(),
             entry_bar_index=20,
