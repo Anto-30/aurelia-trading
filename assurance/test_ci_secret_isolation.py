@@ -144,6 +144,11 @@ class ProductionSecretIsolationTests(unittest.TestCase):
     def test_verify_only_runtime_never_loads_legacy_trade_scoped_readonly_file(self):
         source = (ROOT / "scripts" / "deploy" / "bootstrap_and_deploy.sh").read_text(encoding="utf-8")
         self.assertIn('sudo rm -f "$READONLY_SECRET_FILE"', source)
+        self.assertIn('sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true', source)
+        self.assertLess(
+            source.index('sudo rm -f "$READONLY_SECRET_FILE"'),
+            source.index('if [ ! -d "$RELEASE_DIR" ]'),
+        )
         self.assertNotIn('ENV_FILES+=("$READONLY_SECRET_FILE")', source)
         self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', source)
         self.assertNotIn('VERIFY_DERIV_AUTH="$AUTH_CONFIGURED"', source)
