@@ -69,6 +69,11 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn('CAPITAL_AUTHORITY_GRANTED=false', provisioner)
         self.assertIn('READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"', deploy)
         self.assertIn('sudo rm -f "$READONLY_SECRET_FILE"', deploy)
+        self.assertIn('sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true', deploy)
+        self.assertLess(
+            deploy.index('sudo rm -f "$READONLY_SECRET_FILE"'),
+            deploy.index('if [ ! -d "$RELEASE_DIR" ]'),
+        )
         self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', deploy)
         self.assertNotIn('ENV_FILES+=("$READONLY_SECRET_FILE")', deploy)
         self.assertNotIn('SECRET_ENV_ARGS+=(--env-file "$READONLY_SECRET_FILE")', deploy)
