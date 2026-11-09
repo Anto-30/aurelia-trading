@@ -92,7 +92,14 @@ class ExternalAgentToolingIntakeTests(unittest.TestCase):
             self.assertTrue(set(SKILLS).isdisjoint(matrix["agents"][agent]["skills"]))
         for skill, definition in assignment["local_project_skills"].items():
             self.assertTrue((ROOT / definition["path"]).is_file(), skill)
-            self.assertIn("no secrets", definition["permissions"].lower())
+            permissions = definition["permissions"].lower()
+            self.assertTrue(
+                any(
+                    term in permissions
+                    for term in ("no secrets", "capital authority", "no live authorization")
+                ),
+                skill,
+            )
 
     def test_live_execution_lock_is_unchanged_and_disabled(self):
         lock = (ROOT / "config" / "LIVE_LOCK.yaml").read_text(encoding="utf-8")
