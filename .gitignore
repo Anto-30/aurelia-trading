@@ -27,3 +27,6 @@ env/
 Thumbs.db
 .idea/
 .vscode/
+
+# Generated operational evidence is external to source control
+/evidence/*.json
