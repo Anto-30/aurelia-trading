@@ -80,6 +80,7 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', deploy)
         self.assertNotIn("AUTH_CONFIGURED", deploy)
         self.assertIn("VERIFY_DERIV_AUTH=false", deploy)
+        self.assertNotIn("VERIFY_DERIV_AUTH=true", deploy)
         self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", readonly_provisioner)
         presence_workflow = (
             ROOT / ".github" / "workflows" / "secret-presence-report.yml"
