@@ -214,7 +214,7 @@ class EntryControlTests(unittest.TestCase):
     def test_synthetic_entry_bypasses_session_but_keeps_volatility_gate(self):
         point = self._ready_point()
         decision = evaluate_research_entry_controls(
-            signal_timestamp="2026-01-15T23:30:00Z",
+            signal_timestamp="2026-01-15T07:30:00Z",
             asset_class="synthetic",
             volatility_point=point,
             required_session="LONDON",
@@ -241,6 +241,7 @@ class ResearchCandidateIntegrationTests(unittest.TestCase):
         research_only = True
         capital_authority = False
         order_submission_permitted = False
+        signal_timestamp_utc = "2026-01-15T07:30:00Z"
 
     def _schedule(self):
         returns = [0.01 if i % 2 == 0 else -0.01 for i in range(25)]
@@ -268,7 +269,7 @@ class ResearchCandidateIntegrationTests(unittest.TestCase):
             strategy_id="MSNR_LIQUIDITY_SWEEP",
             version="1.0.0",
             direction="LONG",
-            signal_timestamp_utc="2026-01-15T07:29:00Z",
+            signal_timestamp_utc="2026-01-15T07:30:00Z",
             entry_timing="NEXT_BAR_OPEN_AFTER_SIGNAL",
             stop_reference_price=99.0,
             target_reference_price=102.0,
@@ -299,11 +300,25 @@ class ResearchCandidateIntegrationTests(unittest.TestCase):
         self.assertTrue(result.decision.allowed)
         self.assertEqual(result.decision.session_label, "SYNTHETIC_BYPASS")
 
+    def test_candidate_adapter_rejects_timestamp_not_bound_to_candidate(self):
+        candidate = self.Candidate()
+        result = prepare_candidate_for_research_simulation
+        with self.assertRaisesRegex(ValueError, "CANDIDATE_SIGNAL_TIMESTAMP_MISMATCH"):
+            result(
+                candidate,
+                signal_timestamp="2026-01-15T07:31:00Z",
+                asset_class="financial",
+                volatility_schedule=self._schedule(),
+                entry_bar_index=20,
+                required_session="LONDON",
+            )
+
     def test_candidate_adapter_rejects_non_research_or_authoritative_candidate(self):
         class UnsafeCandidate:
             research_only = True
             capital_authority = True
             order_submission_permitted = False
+            signal_timestamp_utc = "2026-01-15T07:30:00Z"
 
         with self.assertRaisesRegex(ValueError, "CAPITAL_AUTHORITY_FORBIDDEN"):
             prepare_candidate_for_research_simulation(
