@@ -417,12 +417,12 @@ def evaluate_research_entry_controls(
     return EntryControlDecision(True, normalized, label, volatility_point, "SESSION_AND_VOLATILITY_CONTROLS_PASS")
 
 
-def _profit_factor(trades: Sequence[float]) -> float | None:
+def _profit_factor(trades: Sequence[float]) -> tuple[float | None, str]:
     gains = sum(value for value in trades if value > 0)
     losses = -sum(value for value in trades if value < 0)
     if losses == 0:
-        return math.inf if gains > 0 else None
-    return gains / losses
+        return None, "NO_LOSSES_OBSERVED" if gains > 0 else "NO_NONZERO_RETURNS"
+    return gains / losses, "DEFINED"
 
 
 def _moving_block_bootstrap_mean_ci(
@@ -436,7 +436,13 @@ def _moving_block_bootstrap_mean_ci(
     import random
 
     day_count = len(daily_trades)
-    if day_count < 2 or block_days < 1 or block_days > day_count:
+    if (
+        isinstance(block_days, bool)
+        or not isinstance(block_days, int)
+        or day_count < 2
+        or block_days < 1
+        or block_days > day_count
+    ):
         raise ValueError("SESSION_BOOTSTRAP_DAY_BLOCK_INVALID")
     rng = random.Random(seed)
 
@@ -479,6 +485,7 @@ def test_c_session_edge(
     block_days: int = 5,
     minimum_trades: int = 100,
     minimum_days: int = 30,
+    minimum_active_days: int = 10,
     seed: int = 369,
 ) -> dict[str, Any]:
     """Falsify the London-session hypothesis using chronological daily blocks.
@@ -500,7 +507,17 @@ def test_c_session_edge(
         }
     if normalized != "financial":
         raise ValueError("ASSET_CLASS_MUST_BE_FINANCIAL_OR_SYNTHETIC")
-    if len(day_ids) < minimum_days or list(day_ids) != sorted(set(day_ids)):
+    valid_days = True
+    try:
+        parsed_days = [datetime.fromisoformat(str(day)).date() for day in day_ids]
+        valid_days = all(parsed.isoformat() == str(day) for parsed, day in zip(parsed_days, day_ids))
+    except (TypeError, ValueError):
+        valid_days = False
+    if (
+        not valid_days
+        or len(day_ids) < minimum_days
+        or list(day_ids) != sorted(set(day_ids))
+    ):
         return {
             "verdict": "FAIL",
             "reason": "SESSION_EDGE_DAILY_SAMPLE_INSUFFICIENT_OR_UNORDERED",
@@ -508,10 +525,18 @@ def test_c_session_edge(
             "capital_authority": False,
             "live_execution": "BLOCKED",
         }
-    if isinstance(replications, bool) or replications < 500:
-        raise ValueError("SESSION_BOOTSTRAP_REPLICATIONS_MUST_BE_AT_LEAST_500")
-    if isinstance(minimum_trades, bool) or minimum_trades < 1:
-        raise ValueError("SESSION_MINIMUM_TRADES_INVALID")
+    for name, value, lower in (
+        ("replications", replications, 500),
+        ("minimum_trades", minimum_trades, 1),
+        ("minimum_days", minimum_days, 2),
+        ("minimum_active_days", minimum_active_days, 1),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value < lower:
+            raise ValueError(f"SESSION_{name.upper()}_INVALID")
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        raise ValueError("SESSION_BOOTSTRAP_SEED_INVALID")
+    if isinstance(block_days, bool) or not isinstance(block_days, int) or not 1 <= block_days <= len(day_ids):
+        raise ValueError("SESSION_BOOTSTRAP_DAY_BLOCK_INVALID")
 
     required = ("LONDON", "NY_AM", "ASIAN", "BASELINE")
     results: dict[str, dict[str, Any]] = {}
@@ -524,16 +549,37 @@ def test_c_session_edge(
                 "capital_authority": False,
                 "live_execution": "BLOCKED",
             }
-        daily = [list(day_map.get(day, ())) for day in day_ids]
-        trades = [float(value) for day in daily for value in day]
-        if any(not math.isfinite(value) for value in trades):
-            raise ValueError(f"SESSION_EDGE_NONFINITE_R:{session}")
-        if len(trades) < minimum_trades:
+        if not isinstance(day_map, dict):
             return {
                 "verdict": "FAIL",
-                "reason": f"SESSION_EDGE_TRADE_COUNT_INSUFFICIENT:{session}",
+                "reason": f"SESSION_EDGE_DATA_INVALID:{session}",
+                "capital_authority": False,
+                "live_execution": "BLOCKED",
+            }
+        daily = []
+        for day in day_ids:
+            values = day_map.get(day, ())
+            if not isinstance(values, Sequence) or isinstance(values, (str, bytes)):
+                raise ValueError(f"SESSION_EDGE_DAILY_VALUES_INVALID:{session}:{day}")
+            converted = []
+            for value in values:
+                if isinstance(value, bool) or not isinstance(value, (int, float)):
+                    raise ValueError(f"SESSION_EDGE_RETURN_INVALID:{session}:{day}")
+                numeric = float(value)
+                if not math.isfinite(numeric):
+                    raise ValueError(f"SESSION_EDGE_NONFINITE_R:{session}:{day}")
+                converted.append(numeric)
+            daily.append(converted)
+        trades = [value for day in daily for value in day]
+        active_day_count = sum(bool(day) for day in daily)
+        if len(trades) < minimum_trades or active_day_count < minimum_active_days:
+            return {
+                "verdict": "FAIL",
+                "reason": f"SESSION_EDGE_SAMPLE_INSUFFICIENT:{session}",
                 "trade_count": len(trades),
+                "active_day_count": active_day_count,
                 "minimum_trades": minimum_trades,
+                "minimum_active_days": minimum_active_days,
                 "capital_authority": False,
                 "live_execution": "BLOCKED",
             }
@@ -543,13 +589,15 @@ def test_c_session_edge(
             block_days=block_days,
             seed=seed + required.index(session),
         )
+        profit_factor, profit_factor_status = _profit_factor(trades)
         results[session] = {
             "trade_count": len(trades),
-            "active_day_count": sum(bool(day) for day in daily),
+            "active_day_count": active_day_count,
             "expectancy_r": observed,
             "expectancy_ci95_lower": lower,
             "expectancy_ci95_upper": upper,
-            "profit_factor": _profit_factor(trades),
+            "profit_factor": profit_factor,
+            "profit_factor_status": profit_factor_status,
         }
 
     london = results["LONDON"]
