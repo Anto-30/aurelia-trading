@@ -74,9 +74,15 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
             ROOT / ".github" / "workflows" / "secret-presence-report.yml"
         ).read_text(encoding="utf-8")
         self.assertIn(
-            "DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || vars.DERIV_EXPECTED_CURRENCY }}",
+            "DERIV_EXPECTED_CURRENCY_PRESENT: ${{ secrets.DERIV_EXPECTED_CURRENCY != '' || vars.DERIV_EXPECTED_CURRENCY != '' }}",
             presence_workflow,
         )
+        self.assertIn(
+            "DERIV_EXPECTED_CURRENCY_SUPPORTED: ${{ secrets.DERIV_EXPECTED_CURRENCY == 'USD' || vars.DERIV_EXPECTED_CURRENCY == 'USD' }}",
+            presence_workflow,
+        )
+        self.assertNotIn("DERIV_EXPECTED_CURRENCY: ${{ secrets.", presence_workflow)
+        self.assertNotIn("AURELIA_OPERATOR_RESET_SIGNING_KEY: ${{ secrets.", presence_workflow)
         self.assertNotIn("secrets.DERIV_EXPECTED_CURRENCY || 'USD'", presence_workflow)
         self.assertNotIn("DERIV_EXPECTED_CURRENCY: 'USD'", presence_workflow)
 
