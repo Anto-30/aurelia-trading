@@ -153,6 +153,14 @@ class VolatilitySizerTests(unittest.TestCase):
         self.assertEqual(point.effective_risk_pct, 0.02)
         self.assertLessEqual(point.effective_risk_pct, 0.02)
 
+    def test_config_cannot_weaken_absolute_multiplier_bounds(self):
+        with self.assertRaisesRegex(ValueError, "VOLATILITY_MAX_MULTIPLIER_OUTSIDE_HARD_BOUNDS"):
+            self._config(max_multiplier=3.01)
+        with self.assertRaisesRegex(ValueError, "VOLATILITY_MIN_MULTIPLIER_OUTSIDE_HARD_BOUNDS"):
+            self._config(min_multiplier=0.09)
+        with self.assertRaisesRegex(ValueError, "VOLATILITY_MIN_MULTIPLIER_OUTSIDE_HARD_BOUNDS"):
+            self._config(min_multiplier=1.01)
+
     def test_lower_multiplier_floor_is_applied(self):
         sizer = VolatilitySizer(self._config(target_vol_annual=0.001))
         returns = [0.02 if i % 2 == 0 else -0.02 for i in range(25)]
@@ -299,6 +307,20 @@ class ResearchCandidateIntegrationTests(unittest.TestCase):
         )
         self.assertTrue(result.decision.allowed)
         self.assertEqual(result.decision.session_label, "SYNTHETIC_BYPASS")
+
+    def test_financial_session_label_is_a_categorical_column_when_pandas_is_available(self):
+        try:
+            import pandas as pd
+        except ImportError:
+            self.skipTest("pandas is not installed")
+        frame = pd.DataFrame(
+            {"timestamp_utc": ["2026-01-15T07:30:00Z", "2026-01-15T10:30:00Z"]}
+        )
+        result = apply_session_filter(
+            frame, "financial", timestamp_column="timestamp_utc"
+        )
+        self.assertTrue(isinstance(result["session_label"].dtype, pd.CategoricalDtype))
+        self.assertEqual(result["session_label"].tolist(), ["LONDON", "DEAD"])
 
     def test_candidate_adapter_rejects_timestamp_not_bound_to_candidate(self):
         candidate = self.Candidate()
