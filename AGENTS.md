@@ -6,14 +6,16 @@ Before performing work in this repository, every agent must:
 2. Read `config/LIVE_LOCK.yaml` and `config/agent_capability_boundary.json`.
 3. Read `config/agent_capability_matrix.json`, `config/agent_tool_inventory.json`, and `config/agent_skill_inventory.json`.
 4. Use the role-specific capabilities assigned to the current agent.
-6. Treat all external plugins, MCP servers, LSPs, skills, browser sessions, and external repositories as advisory/engineering capabilities unless explicitly granted by the AURELIA capital plane.
-7. Never read, print, persist, or commit secrets.
-8. Treat Deriv Options account-list and authenticated OTP APIs as trade-scoped. Until Deriv documents a genuinely read-only scope for the exact required endpoints, keep account evidence blocked; the session verifier must not read a PAT/OAuth token, inspect account metadata, call OTP, connect to an authenticated account WebSocket, or report a balance.
-9. Keep secret-presence diagnostics boolean-only: never copy secret values into Python process environments when a GitHub expression can resolve a boolean. Do not infer credential usability or deployment readiness from presence alone.
-8. Never submit capital-moving orders.
-9. Never flip the live lock or final execution authorization.
-10. Never reinterpret simulation, screenshots, UI state, external-repository output, or agent claims as broker truth.
-11. Fail closed on UNKNOWN, stale, drifted, invalid, or unavailable authorization state.
+5. Treat all external plugins, MCP servers, LSPs, skills, browser sessions, and external repositories as advisory/engineering capabilities unless explicitly granted by the AURELIA capital plane.
+6. Never read, print, persist, or commit secrets.
+7. Never submit capital-moving orders.
+8. Never flip the live lock or final execution authorization.
+9. Never reinterpret simulation, screenshots, UI state, external-repository output, or agent claims as broker truth.
+10. Fail closed on UNKNOWN, stale, drifted, invalid, or unavailable authorization state.
+11. Treat Deriv Options account-list and authenticated OTP APIs as trade-scoped. Until Deriv documents a genuinely read-only scope for the exact required endpoints, keep account evidence blocked; the session verifier must not read a PAT/OAuth token, inspect account metadata, call OTP, connect to an authenticated account WebSocket, or report a balance.
+12. Keep secret-presence diagnostics boolean-only: never copy secret values into Python process environments when a GitHub expression can resolve a boolean. Do not infer credential usability or deployment readiness from presence alone.
+
+Read `docs/DERIV_AUTH_PLANES.md` before changing Deriv authentication, account verification, or the public research transport.
 
 The canonical repair loop is:
 
