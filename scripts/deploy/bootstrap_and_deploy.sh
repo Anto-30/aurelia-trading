@@ -41,6 +41,8 @@ case "$DEPLOYMENT_MODE" in
     grep -Eq "^FINAL_EXECUTION_AUTHORIZATION:[[:space:]]*true[[:space:]]*$" "$LOCK_FILE"
     grep -Eq "^LIVE_EXECUTION:[[:space:]]*ENABLED[[:space:]]*$" "$LOCK_FILE"
     grep -Eq "^capital_plane_mode:[[:space:]]*LIVE[[:space:]]*$" "$LOCK_FILE"
+    echo "AURELIA_HOST_BLOCKED=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
+    exit 2
     ;;
   *)
     echo "AURELIA_HOST_BLOCKED=INVALID_DEPLOYMENT_MODE"
@@ -72,6 +74,8 @@ sudo systemctl enable --now docker
 sudo install -d -m 700 "$ENV_DIR"
 sudo install -d -m 700 "$DATA_DIR"
 sudo install -d -m 755 "$RELEASE_ROOT"
+# Remove the retired credential-bearing VERIFY_ONLY store from existing hosts.
+sudo rm -f "$READONLY_SECRET_FILE"
 
 if [ -f "$ENV_FILE" ]; then
   sudo chmod 600 "$ENV_FILE"
@@ -145,10 +149,6 @@ if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   ENV_FILES=("$LIVE_SECRET_FILE")
 else
   ENV_FILES=("$ENV_FILE")
-  if [ -f "$READONLY_SECRET_FILE" ]; then
-    sudo chmod 600 "$READONLY_SECRET_FILE"
-    ENV_FILES+=("$READONLY_SECRET_FILE")
-  fi
 fi
 
 RUNTIME_ID="$(grep -h -E '^AURELIA_RUNTIME_ID=' "${ENV_FILES[@]}" | tail -n 1 | sed 's/^[^=]*=//')"
@@ -209,7 +209,7 @@ if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   LIVE_EXECUTION=ENABLED
 else
   AUTONOMOUS_LOOP=false
-  VERIFY_DERIV_AUTH="$AUTH_CONFIGURED"
+  VERIFY_DERIV_AUTH=false
   VERIFY_DERIV_PUBLIC=true
   FINAL_AUTH=false
   LIVE_EXECUTION=BLOCKED
@@ -237,8 +237,6 @@ sudo systemctl enable aurelia-runtime-watchdog.service
 SECRET_ENV_ARGS=()
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   SECRET_ENV_ARGS+=(--env-file "$LIVE_SECRET_FILE")
-elif [ -f "$READONLY_SECRET_FILE" ]; then
-  SECRET_ENV_ARGS+=(--env-file "$READONLY_SECRET_FILE")
 fi
 
 sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"
