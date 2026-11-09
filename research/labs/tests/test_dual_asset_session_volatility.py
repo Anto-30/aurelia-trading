@@ -4,7 +4,8 @@ import unittest
 import warnings
 from datetime import datetime, timezone
 
-from research.labs.deterministic_intraday_strategies import StrategyCandidate\nfrom research.labs.dual_asset_session_volatility import (
+from research.labs.deterministic_intraday_strategies import StrategyCandidate
+from research.labs.dual_asset_session_volatility import (
     VolatilitySizer,
     VolatilitySizingConfig,
     apply_session_filter,
