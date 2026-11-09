@@ -22,7 +22,7 @@ The classifier uses local IANA time zones, not permanently fixed UTC offsets:
 
 The Tokyo window corresponds to 00:00–07:00 UTC. London and New York windows shift in UTC when their respective daylight-saving rules change. Timestamps must be timezone-aware. During the Tokyo/London overlap, LONDON takes precedence so every financial timestamp receives one exclusive label.
 
-The 2:33 AM and 4:15 AM times from the supplied cheat sheets are not encoded. Neither is treated as a trading trigger. The London window remains a hypothesis and must pass Test C on sealed, source-verified FX data.
+The 2:33 AM and 4:15 AM times from the supplied cheat sheets are not encoded. Neither is treated as a trading trigger. The London window remains a hypothesis and must pass Test C on sealed, source-verified FX data. The is_kill_zone helper expands the selected local session window by 15 minutes by default; use buffer_minutes=0 for exact-window falsification. Test C's statistical grouping remains based on the registered session classifier, not this helper's display mask.
 
 ### Deriv synthetic indices
 
