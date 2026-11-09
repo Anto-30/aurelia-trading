@@ -145,7 +145,7 @@ async def main() -> int:
     evidence["record_hash"] = _canonical_hash(evidence)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temp = args.output.with_name(args.output.name + ".tmp")
-    temp.write_text(json.dumps(evidence, sort_keys=True, indent=2, allow_nan=False) + "\\n", encoding="utf-8")
+    temp.write_text(json.dumps(evidence, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     temp.replace(args.output)
     print(json.dumps({
         "probe": "DERIV_PUBLIC_TICK_STREAM",
