@@ -10,6 +10,30 @@ from assurance.evidence_writer import payload_sha256
 
 
 class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
+    def test_safe_deriv_error_codes_are_reported(self):
+        from scripts.verify_deriv_session import safe_deriv_auth_failure_reason
+
+        self.assertEqual(
+            safe_deriv_auth_failure_reason(ValueError("ACCOUNT_ENVIRONMENT_MISMATCH")),
+            "ACCOUNT_ENVIRONMENT_MISMATCH",
+        )
+        self.assertEqual(
+            safe_deriv_auth_failure_reason(RuntimeError("NO_EXACT_DERIV_ACCOUNT_MATCH")),
+            "NO_EXACT_DERIV_ACCOUNT_MATCH",
+        )
+
+    def test_unrecognized_exception_messages_are_not_reported(self):
+        from scripts.verify_deriv_session import safe_deriv_auth_failure_reason
+
+        self.assertEqual(
+            safe_deriv_auth_failure_reason(ValueError("token=do-not-log-this")),
+            "ValueError",
+        )
+        self.assertEqual(
+            safe_deriv_auth_failure_reason(RuntimeError("account_id=CR123")),
+            "RuntimeError",
+        )
+
     async def test_missing_token_is_not_verified(self):
         with patch.dict(
             os.environ,
