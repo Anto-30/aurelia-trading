@@ -1,7 +1,6 @@
 """Regression tests for production credential isolation on untrusted refs."""
 from __future__ import annotations
 
-import re
 import unittest
 from pathlib import Path
 
@@ -21,7 +20,8 @@ def _job_block(workflow_name: str, job_name: str) -> str:
         raise AssertionError(f"Required job {job_name!r} missing from {workflow_name}") from exc
     end = len(lines)
     for index in range(start + 1, len(lines)):
-        if re.match(r"^  [A-Za-z0-9_-]+:\\s*$", lines[index]):
+        line = lines[index]
+        if line.startswith("  ") and not line.startswith("    ") and line.endswith(":"):
             end = index
             break
     return "\n".join(lines[start:end])
@@ -31,7 +31,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
     def test_general_assurance_has_no_production_environment_or_secrets(self):
         text = (WORKFLOWS / "aurelia-assurance.yml").read_text(encoding="utf-8")
         self.assertNotIn("environment: production", text)
-        self.assertNotRegex(text, r"\\$\\{\\{\\s*secrets\\.")
+        self.assertNotIn("${{ secrets.", text)
         self.assertNotIn("verify_deriv_session.py", text)
 
     def test_account_verification_is_blocked_without_trade_scoped_credentials(self):
@@ -41,7 +41,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", text)
         self.assertIn("DERIV_ACCOUNT_EVIDENCE=BLOCKED", text)
         self.assertNotIn("environment: production", text)
-        self.assertNotRegex(text, r"\\$\\{\\{\\s*secrets\\.")
+        self.assertNotIn("${{ secrets.", text)
         self.assertNotIn("DERIV_AUTH_TOKEN", text)
         self.assertNotIn("DERIV_PAT", text)
         self.assertNotIn("verify_deriv_session.py", text)
@@ -84,7 +84,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertIn("DERIV_SESSION_VERIFICATION=NOT_EXECUTED", text)
         self.assertIn("NEXT_STEP=MANUALLY_DISPATCH_DERIV_AUTH_EVIDENCE_ON_MAIN", text)
         self.assertNotIn("environment: production", text)
-        self.assertNotRegex(text, r"\\$\\{\\{\\s*secrets\\.")
+        self.assertNotIn("${{ secrets.", text)
         self.assertNotIn("DERIV_AUTH_TOKEN", text)
 
     def test_public_runtime_has_no_deriv_credentials_or_account_settings(self):
@@ -98,7 +98,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
     def test_transaction_lifecycle_workflow_remains_held(self):
         text = (WORKFLOWS / "deriv-verify-only-lifecycle.yml").read_text(encoding="utf-8")
         self.assertIn("VERIFY_ONLY_LIFECYCLE_REQUIRES_SEPARATE_NO_ORDER_ACTION_AUDIT", text)
-        self.assertNotRegex(text, r"\\$\\{\\{\\s*secrets\\.")
+        self.assertNotIn("${{ secrets.", text)
 
     def test_presence_report_is_manual_main_only_and_boolean_only(self):
         text = (WORKFLOWS / "secret-presence-report.yml").read_text(encoding="utf-8")
@@ -118,7 +118,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertIn("github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'", workflow)
         deploy_job = _job_block("self-hosted-runtime-deploy.yml", "deploy")
         job_env = deploy_job.split("steps:", 1)[0]
-        self.assertNotRegex(job_env, r"\\$\\{\\{\\s*secrets\\.")
+        self.assertNotIn("${{ secrets.", job_env)
         lock_gate = workflow.index("name: Verify source revision and deployment lock")
         first_deriv_secret = min(
             workflow.index(marker)
