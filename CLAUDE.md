@@ -20,7 +20,7 @@ Use `GOALS.md` as the goal and acceptance contract for the ChatGPT + Claude Code
 
 ## External agent repository intake
 
-Before adopting any user-supplied external agent, Hermes, memory, orchestration, browser, security, or quant-research repository, read `docs/EXTERNAL_AGENT_REPO_INTAKE_2026-11-09.md`. The document is an intake catalogue, not an installation manifest or trust approval. Review each candidate individually, pin an immutable commit, inspect its complete dependency and permission footprint, and test it in an isolated sandbox. Do not bulk-install skills or run upstream install scripts without review. Preserve the universal agent contract, secret isolation, and zero capital authority for Claude Code and all external agents.
+Before adopting any user-supplied external agent, Hermes, memory, orchestration, browser, security, or quant-research repository, read `docs/EXTERNAL_AGENT_REPO_INTAKE_2026-11-09.md` and use `.claude/skills/external-repo-federation/SKILL.md`. The canonical policy remains `skills/external-repo-federation/SKILL.md`; keep the Claude Code skill aligned with it. The intake catalogue and registry are reference records, not installation manifests or trust approvals. Review each candidate individually, pin an immutable commit, inspect its complete dependency and permission footprint, and test it in an isolated sandbox. Do not bulk-install skills or run upstream install scripts without review. Preserve the universal agent contract, secret isolation, and zero capital authority for Claude Code and all external agents.
 
 ## LiteLLM / agent-gateway federation
 
