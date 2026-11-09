@@ -573,9 +573,14 @@ def test_c_session_edge(
         trades = [value for day in daily for value in day]
         active_day_count = sum(bool(day) for day in daily)
         if len(trades) < minimum_trades or active_day_count < minimum_active_days:
+            sample_reason = (
+                "TRADE_COUNT_INSUFFICIENT"
+                if len(trades) < minimum_trades
+                else "ACTIVE_DAY_COUNT_INSUFFICIENT"
+            )
             return {
                 "verdict": "FAIL",
-                "reason": f"SESSION_EDGE_SAMPLE_INSUFFICIENT:{session}",
+                "reason": f"SESSION_EDGE_{sample_reason}:{session}",
                 "trade_count": len(trades),
                 "active_day_count": active_day_count,
                 "minimum_trades": minimum_trades,
