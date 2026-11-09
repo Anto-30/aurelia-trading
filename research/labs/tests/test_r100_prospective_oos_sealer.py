@@ -86,7 +86,7 @@ class R100ProspectiveSealerTest(unittest.TestCase):
             self.assertEqual(sealed_report["qualification_status"], "NOT_RECALCULATED_AFTER_EXPIRY")
             self.assertEqual(sealed_report["oos_mean_strategy_return"], 0.123)
             self.assertEqual(sealed_report["evaluation_snapshot_status"], "LAST_COLLECTION_SNAPSHOT_PRESERVED")
-            self.assertEqual(sealed_report["preseal_archive_integrity"], "VERIFIED")
+            self.assertEqual(sealed_report["preseal_archive_integrity"], "VERIFIED_SUPPORTED_HASH_SCHEMA")
             self.assertEqual(sealed_report["archive_hash"], result["archive_hash"])
 
     def test_post_expiry_exit_is_rejected_without_mutating_archive(self):
