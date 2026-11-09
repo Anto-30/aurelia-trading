@@ -5,7 +5,7 @@ import json
 import os
 import tempfile
 import unittest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -338,12 +338,14 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
                 self.connect,self.request,self.close=AsyncMock(),AsyncMock(),AsyncMock()
             def subscribe(self,key,payload): return stream
         transport=FakeTransport()
+        gate=Mock()
+        gate.get_client.return_value=transport
         state=initial_state()
         state["manifest"]["campaign_end_at_utc"]="2026-10-06T20:00:00Z"
         with (
             patch.object(collector,"utc_now",return_value=start),
             patch.object(collector,"COLLECTION_SECONDS",10.0),
-            patch.object(collector,"DerivWebSocketTransport",return_value=transport),
+            patch.object(collector,"DerivAuthenticationGate",return_value=gate),
             patch.object(collector,"AutonomousSignalHunter",return_value=FakeHunter()),
         ):
             asyncio.run(collector.collect_once(state))
@@ -352,6 +354,7 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertEqual(state["quote_observations"][0]["quote_status"],"UNAVAILABLE")
         self.assertEqual(state["quote_observations"][0]["error_code"],"R100_PUBLIC_PROPOSAL_QUOTES_DISABLED_BY_POLICY")
         transport.close.assert_awaited_once()
+        gate.assert_called_once_with(plane="research")
 
     def test_expired_campaign_censors_pending_signals_and_seals_without_connecting(self):
         import research.r100_prospective_oos_collector as collector
@@ -372,7 +375,7 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         }]
         with (
             patch.object(collector, "utc_now", return_value=now),
-            patch.object(collector, "DerivWebSocketTransport") as factory,
+            patch.object(collector, "DerivAuthenticationGate") as factory,
         ):
             asyncio.run(collector.collect_once(state))
             report = collector.evaluation(state)
@@ -440,15 +443,18 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         state = initial_state()
         state["manifest"]["campaign_end_at_utc"] = "2026-10-06T20:00:00Z"
         transport = FakeTransport()
+        gate = Mock()
+        gate.get_client.return_value = transport
         with (
             patch.object(collector,"utc_now",return_value=start),
             patch.object(collector,"COLLECTION_SECONDS",10.0),
-            patch.object(collector,"DerivWebSocketTransport",return_value=transport),
+            patch.object(collector,"DerivAuthenticationGate",return_value=gate),
             patch.object(collector,"AutonomousSignalHunter",return_value=NoSignalHunter()),
         ):
             with self.assertRaisesRegex(ValueError,"R100_TICK_ORDER_INVALID"):
                 asyncio.run(collector.collect_once(state))
         transport.close.assert_awaited_once()
+        gate.assert_called_once_with(plane="research")
 
 
 if __name__ == "__main__":
