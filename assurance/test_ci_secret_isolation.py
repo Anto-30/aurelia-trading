@@ -1,10 +1,9 @@
 """Regression tests for production credential isolation on untrusted refs."""
 from __future__ import annotations
 
-from pathlib import Path
 import re
 import unittest
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
