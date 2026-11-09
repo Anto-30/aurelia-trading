@@ -108,6 +108,38 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertNotIn("AURELIA_SSH_KEY: ${{ secrets.AURELIA_SSH_KEY }}", text)
         self.assertNotIn("AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}", text)
 
+    def test_live_account_verification_blocks_before_trade_token_mapping(self):
+        workflow = (WORKFLOWS / "self-hosted-runtime-deploy.yml").read_text(encoding="utf-8")
+        self.assertIn(
+            "Block LIVE deployment while Deriv read-only account scope is unavailable",
+            workflow,
+        )
+        self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", workflow)
+        blocked_at = workflow.index(
+            "Block LIVE deployment while Deriv read-only account scope is unavailable"
+        )
+        token_refs = [
+            match.start()
+            for match in re.finditer(r"secrets\\.(?:DERIV_AUTH_TOKEN|DERIV_PAT)", workflow)
+        ]
+        self.assertTrue(token_refs)
+        self.assertTrue(all(index > blocked_at for index in token_refs))
+        for step_name in (
+            "Require explicit Deriv account bindings for LIVE verification",
+            "Generate fresh authenticated real-account evidence without submitting orders",
+            "Refresh readiness from current evidence; remain fail-closed on any blocker",
+            "Require deterministic live release gate for LIVE deployment",
+        ):
+            self.assertNotIn(step_name, workflow)
+        token_blocks = [
+            block
+            for block in _job_block("self-hosted-runtime-deploy.yml", "deploy").split("      - name: ")[1:]
+            if "secrets.DERIV_AUTH_TOKEN" in block or "secrets.DERIV_PAT" in block
+        ]
+        self.assertEqual(len(token_blocks), 1)
+        self.assertIn("Provision LIVE runtime secrets to root-only host store", token_blocks[0])
+        self.assertIn("if: inputs.deployment_mode == 'LIVE'", token_blocks[0])
+
     def test_public_runtime_has_no_deriv_credentials_or_account_settings(self):
         text = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
         self.assertIn("python scripts/verify_deriv_public_transport.py", text)
