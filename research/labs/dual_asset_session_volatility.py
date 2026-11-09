@@ -17,7 +17,7 @@ import statistics
 import warnings
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
-from typing import Any, Iterable, Literal, Sequence
+from typing import Any, Literal, Sequence
 from zoneinfo import ZoneInfo
 
 RESEARCH_ONLY = True
@@ -500,7 +500,6 @@ def test_c_session_edge(
 
     required = ("LONDON", "NY_AM", "ASIAN", "BASELINE")
     results: dict[str, dict[str, Any]] = {}
-    daily_by_session: dict[str, list[list[float]]] = {}
     for session in required:
         day_map = daily_trade_r.get(session)
         if not isinstance(day_map, dict):
@@ -529,7 +528,6 @@ def test_c_session_edge(
             block_days=block_days,
             seed=seed + required.index(session),
         )
-        daily_by_session[session] = daily
         results[session] = {
             "trade_count": len(trades),
             "active_day_count": sum(bool(day) for day in daily),
