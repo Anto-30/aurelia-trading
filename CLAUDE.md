@@ -35,3 +35,15 @@ Treat `docs/engineering/EXTERNAL_TOOL_ADOPTION.md` and `config/external_tool_int
 All external executables and agents remain denied by default. Qwen Code and Open Interpreter are sandbox/developer references only; do not run them on a production host or against a signed-in broker/browser session. Keep paste-site OSINT collectors out of the project. Use Ruff only through the pinned development extra, never in the production image.
 
 Do not claim DeepSeek, Hermes, Qwen Code, Open Interpreter, or another agent has been installed, connected, or run unless the device/runtime identity and its attributable execution record are verified. The canonical agent matrix is in `config/agent_tool_skill_assignment.json`; this change adds repository-local task guidance, not external accounts or persistent workers.
+
+## Curated project-local agents and research skills
+
+Claude Code project agents are available under `.claude/agents/`:
+- `aurelia-security-auditor`
+- `aurelia-secrets-hygiene-engineer`
+- `aurelia-quantitative-researcher`
+- `aurelia-runtime-reliability-engineer`
+
+The `aurelia-curated-trading-research` skill pack is mirrored in `.claude/skills/`, `.agents/skills/`, and `.grok/skills/`. It contains financial statistics, risk-adjusted performance, return calculations, and operational risk.
+
+These are project-local advisory tools. They do not install into a hosted Claude account or user-global home, and do not create a connected DSH/Hermes runtime. No third-party installer or executable was run. External agents have zero capital authority, cannot read production secrets, cannot mutate LIVE_LOCK, and cannot submit broker orders.

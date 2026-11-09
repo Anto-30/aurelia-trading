@@ -67,7 +67,10 @@
         "lookahead-bias-audit",
         "ML-calibration",
         "evidence-reconciliation",
-        "security-review"
+        "security-review",
+        "research-statistics-fundamentals",
+        "research-performance-metrics",
+        "research-return-calculations"
       ],
       "plugins": [
         "data-analytics",
@@ -169,7 +172,8 @@
         "security-review",
         "external-repo-federation",
         "MCP-browser-security-review",
-        "external-tool-permission-review"
+        "external-tool-permission-review",
+        "security-operational-risk"
       ],
       "plugins": [
         "endor-labs-agent-kit",
@@ -410,7 +414,11 @@
         "security-review",
         "ci-diagnostics",
         "browser-e2e",
-        "trading-repository-audit"
+        "trading-repository-audit",
+        "research-statistics-fundamentals",
+        "research-performance-metrics",
+        "research-return-calculations",
+        "security-operational-risk"
       ],
       "plugins": [
         "superpowers",
@@ -418,7 +426,8 @@
         "mcp-precheck",
         "coderabbit",
         "supabase (conditional)",
-        "vercel (conditional)"
+        "vercel (conditional)",
+        "aurelia-curated-trading-research"
       ],
       "can_mutate_live_lock": false,
       "capital_authority": false
@@ -438,13 +447,18 @@
         "research-intelligence",
         "ci-diagnostics",
         "browser-e2e",
-        "external-trading-source-adversarial-review"
+        "external-trading-source-adversarial-review",
+        "research-statistics-fundamentals",
+        "research-performance-metrics",
+        "research-return-calculations",
+        "security-operational-risk"
       ],
       "plugins": [
         "data-analytics",
         "public-equity-investing (listed equities only)",
         "superpowers",
-        "hugging-face (conditional)"
+        "hugging-face (conditional)",
+        "aurelia-curated-trading-research"
       ],
       "can_mutate_live_lock": false,
       "capital_authority": false
@@ -464,12 +478,17 @@
         "candlestick-pattern-research",
         "crypto-strategy-research",
         "lookahead-bias-audit",
-        "ML-calibration"
+        "ML-calibration",
+        "research-statistics-fundamentals",
+        "research-performance-metrics",
+        "research-return-calculations",
+        "security-operational-risk"
       ],
       "plugins": [
         "data-analytics",
         "public-equity-investing (listed equities only)",
-        "hugging-face (conditional)"
+        "hugging-face (conditional)",
+        "aurelia-curated-trading-research"
       ],
       "can_mutate_live_lock": false,
       "capital_authority": false
@@ -490,12 +509,17 @@
         "security-review",
         "ci-diagnostics",
         "browser-e2e",
-        "browser-evidence-validation"
+        "browser-evidence-validation",
+        "research-statistics-fundamentals",
+        "research-performance-metrics",
+        "research-return-calculations",
+        "security-operational-risk"
       ],
       "plugins": [
         "coderabbit",
         "endor-labs-agent-kit",
-        "mcp-precheck"
+        "mcp-precheck",
+        "aurelia-curated-trading-research"
       ],
       "can_mutate_live_lock": false,
       "capital_authority": false
@@ -583,14 +607,19 @@
         "aurelia-evidence-reconciliation",
         "external-repo-federation",
         "research-intelligence",
-        "security-review"
+        "security-review",
+        "research-statistics-fundamentals",
+        "research-performance-metrics",
+        "research-return-calculations",
+        "security-operational-risk"
       ],
       "plugins": [
         "data-analytics",
         "superpowers",
         "mcp-precheck",
         "coderabbit",
-        "public-equity-investing only for listed-equity research"
+        "public-equity-investing only for listed-equity research",
+        "aurelia-curated-trading-research"
       ],
       "can_mutate_live_lock": false,
       "capital_authority": false

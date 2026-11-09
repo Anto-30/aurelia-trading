@@ -118,5 +118,18 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertIn("capital_plane_mode: VERIFY_ONLY", lock)
 
 
+    def test_whatsapp_smoke_remains_main_only_and_separate_from_deriv(self):
+        block = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
+        self.assertIn("if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}", block)
+        self.assertIn("    environment: production", block)
+        self.assertIn("persist-credentials: false", block)
+        self.assertIn("TWILIO_AUTH_TOKEN", block)
+        self.assertNotIn("DERIV_AUTH_TOKEN", block)
+
+    def test_pull_request_trigger_remains_credential_free(self):
+        text = (WORKFLOWS / "aurelia-assurance.yml").read_text(encoding="utf-8")
+        self.assertIn("pull_request:", text)
+        self.assertIn('branches: ["**"]', text)
+
 if __name__ == "__main__":
     unittest.main()
