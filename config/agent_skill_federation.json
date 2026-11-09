@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_skill_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-08",
   "purpose": "Research/engineering capability federation. No external agent, skill, plugin, MCP server, hook, or marketplace entry may obtain capital authority.",
   "default_policy": {
     "external_code_execution": "DENY_BY_DEFAULT",
@@ -2414,10 +2414,10 @@
       "name": "jnmetacode-agency-agents-zh",
       "owner": "jnMetaCode",
       "repo": "jnMetaCode/agency-agents-zh",
-      "pinned_commit": "e5a6c0a730878aaa871ec5b95859aec2c2728475",
+      "pinned_commit": "d160421bb2a4429f61c32a7d620c1bcdbdc01e12",
       "trust": "COMMUNITY_REFERENCE_ONLY",
       "capabilities": [
-        "architecture-reference",
+        "localized-agent-prompts",
         "source-provenance"
       ],
       "assigned_agents": [
@@ -2429,7 +2429,8 @@
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
       "security_review_status": "PENDING",
-      "source_url": "https://github.com/jnMetaCode/agency-agents-zh"
+      "source_url": "https://github.com/jnMetaCode/agency-agents-zh",
+      "license": "MIT"
     },
     {
       "name": "zhu1090093659-deepseek-pp",
@@ -2915,7 +2916,7 @@
       "name": "langgenius-dify",
       "owner": "langgenius",
       "repo": "langgenius/dify",
-      "pinned_commit": "2de5d891cbd5f59314f1813fc1db7c623ad762e3",
+      "pinned_commit": "30aa6fd15b5d308aa5043fe823eee8a562078be3",
       "trust": "COMMUNITY_SANDBOX_ONLY",
       "capabilities": [
         "agent-workflow-evaluation",
@@ -2931,7 +2932,8 @@
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
       "security_review_status": "PENDING",
-      "source_url": "https://github.com/langgenius/dify"
+      "source_url": "https://github.com/langgenius/dify",
+      "license": "NOASSERTION"
     },
     {
       "name": "aingdesk-aingdesk",
@@ -3044,11 +3046,11 @@
       "name": "michengai-dsh-agency-agents",
       "owner": "MichengAI",
       "repo": "MichengAI/dsh-agency-agents",
-      "pinned_commit": "416d2a675ad01c943b336dcc4232876e0a48200e",
+      "pinned_commit": "3612123844c66162e81084ec931d357398a79864",
       "trust": "COMMUNITY_SANDBOX_ONLY",
       "capabilities": [
-        "agent-workflow-evaluation",
-        "prompt-and-tool-boundary-review"
+        "deepseek-harness-agent-library",
+        "agent-workflow-evaluation"
       ],
       "assigned_agents": [
         "GrokBot",
@@ -3060,7 +3062,8 @@
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
       "security_review_status": "PENDING",
-      "source_url": "https://github.com/MichengAI/dsh-agency-agents"
+      "source_url": "https://github.com/MichengAI/dsh-agency-agents",
+      "license": "Apache-2.0"
     },
     {
       "name": "directorysurf-awesome-ai-agents-directories",
@@ -3366,6 +3369,410 @@
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
       "security_review_status": "PENDING",
       "source_url": "https://github.com/lessweb/deepcode-cli"
+    },
+    {
+      "name": "anomalyco-rune",
+      "owner": "anomalyco",
+      "repo": "anomalyco/rune",
+      "pinned_commit": "a7f276c3630f85a06a0230295da4d2bd172d8d3b",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "native-ui-framework-reference"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/anomalyco/rune",
+      "license": "MIT"
+    },
+    {
+      "name": "tanweai-pua",
+      "owner": "tanweai",
+      "repo": "tanweai/pua",
+      "pinned_commit": "e6e6cd237ad17750d179674bff52f8184abea8fd",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "prompt-style-reference"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/tanweai/pua",
+      "license": "UNDECLARED"
+    },
+    {
+      "name": "msitarzewski-agency-agents-app",
+      "owner": "msitarzewski",
+      "repo": "msitarzewski/agency-agents-app",
+      "pinned_commit": "dda50547cf7999820f8ed991800200488e237ec5",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "desktop-agent-installer-reference"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/msitarzewski/agency-agents-app",
+      "license": "MIT"
+    },
+    {
+      "name": "vrsen-agency-swarm",
+      "owner": "VRSEN",
+      "repo": "VRSEN/agency-swarm",
+      "pinned_commit": "1bec92f0fc6e8485e53847c6f4a943a847058bff",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "multi-agent-orchestration-reference"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/VRSEN/agency-swarm",
+      "license": "MIT"
+    },
+    {
+      "name": "anas-khan93-ai-agency-agents",
+      "owner": "Anas-Khan93",
+      "repo": "Anas-Khan93/ai-agency-agents",
+      "pinned_commit": "1c06454211dc5ba301f278fb8c884ea2664ddf46",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "agent-persona-reference"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/Anas-Khan93/ai-agency-agents",
+      "license": "MIT"
+    },
+    {
+      "name": "msitarzewski-agency-agents",
+      "owner": "msitarzewski",
+      "repo": "msitarzewski/agency-agents",
+      "pinned_commit": "b859c515d813efcfc4755d3471dd9e7686c7706d",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "claude-code-agents",
+        "dsh-skill-format-reference",
+        "hermes-router-reference",
+        "security-and-finance-personas"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "SELECTED_PROJECT_LOCAL_MARKDOWN_IMPORTED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "license": "MIT"
+    },
+    {
+      "name": "flutter-flutter",
+      "owner": "flutter",
+      "repo": "flutter/flutter",
+      "pinned_commit": "acade0f6b53278737d9af89df87afeffe040c3eb",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "mobile-ui-framework-reference"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/flutter/flutter",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "name": "jwangkun-claude-for-financial-services-cn",
+      "owner": "jwangkun",
+      "repo": "jwangkun/claude-for-financial-services-cn",
+      "pinned_commit": "d7585ca0033d0624e14e8c5a031b373c1216dd74",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "china-equity-research-skills",
+        "financial-modeling-reference"
+      ],
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/jwangkun/claude-for-financial-services-cn",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "joellewis-finance-skills",
+      "owner": "JoelLewis",
+      "repo": "JoelLewis/finance_skills",
+      "pinned_commit": "5c498eacf7057e31238c4c5a8012a1afe9ec7c8a",
+      "trust": "COMMUNITY_RESEARCH_ONLY",
+      "capabilities": [
+        "statistics-fundamentals",
+        "performance-metrics",
+        "return-calculations",
+        "operational-risk",
+        "trading-operations-reference"
+      ],
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "SELECTED_PROJECT_LOCAL_MARKDOWN_IMPORTED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/JoelLewis/finance_skills",
+      "license": "MIT"
+    },
+    {
+      "name": "iblai-financial-services-agents",
+      "owner": "iblai",
+      "repo": "iblai/financial-services-agents",
+      "pinned_commit": "6ea18f015b1efa60a040d4cd68c93ceaff23abb5",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "openclaw-nemoclaw-finance-agents"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "KimiK3",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/iblai/financial-services-agents",
+      "license": "MIT"
+    },
+    {
+      "name": "yand-codex-financial-services",
+      "owner": "yand",
+      "repo": "yand/codex-financial-services",
+      "pinned_commit": "da5b5e004c0aa110996f71b0a2b57cb7184d1bec",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "codex-financial-services-skill-adapter"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/yand/codex-financial-services",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "langgenius-dify-sandbox",
+      "owner": "langgenius",
+      "repo": "langgenius/dify-sandbox",
+      "pinned_commit": "95578774d74e7669775ad9204267c1849fc3f386",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "isolated-code-execution-reference"
+      ],
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/langgenius/dify-sandbox",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "junjiem-dify-plugin-repackaging",
+      "owner": "junjiem",
+      "repo": "junjiem/dify-plugin-repackaging",
+      "pinned_commit": "3ed1ddce2c3963adc32e2788c3e584a58d45bdeb",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "dify-offline-package-reference"
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/junjiem/dify-plugin-repackaging",
+      "license": "UNDECLARED"
+    },
+    {
+      "name": "langgenius-dify-official-plugins",
+      "owner": "langgenius",
+      "repo": "langgenius/dify-official-plugins",
+      "pinned_commit": "18663b9e723c345fed4c7450a3f925c583fa7064",
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "capabilities": [
+        "dify-plugin-catalogue",
+        "plugin-integration-reference"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/langgenius/dify-official-plugins",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "yfgaia-dify-plus",
+      "owner": "YFGaia",
+      "repo": "YFGaia/dify-plus",
+      "pinned_commit": "c48ecee4d7c31c64b7a8cee8633157f7eda801ca",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "enterprise-dify-fork-reference"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/YFGaia/dify-plus",
+      "license": "NOASSERTION"
+    },
+    {
+      "name": "wwwzhouhui-dify-for-dsl",
+      "owner": "wwwzhouhui",
+      "repo": "wwwzhouhui/dify-for-dsl",
+      "pinned_commit": "d2670fa8ab69df9882e7c8844a41f452caad9f00",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "dify-dsl-example-reference"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/wwwzhouhui/dify-for-dsl",
+      "license": "UNDECLARED"
+    },
+    {
+      "name": "langgenius-dify-plugins",
+      "owner": "langgenius",
+      "repo": "langgenius/dify-plugins",
+      "pinned_commit": "2c640c41e3ae108feb6da27969a99f21151ac0d0",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "dify-plugin-examples-reference"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/langgenius/dify-plugins",
+      "license": "UNDECLARED"
+    },
+    {
+      "name": "svcvit-awesome-dify-workflow",
+      "owner": "svcvit",
+      "repo": "svcvit/Awesome-Dify-Workflow",
+      "pinned_commit": "e730ed3627e5fa56fc1668d995b83178b6b1181c",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "dify-workflow-example-reference"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/svcvit/Awesome-Dify-Workflow",
+      "license": "MIT"
+    },
+    {
+      "name": "bannylon-difyaia",
+      "owner": "BannyLon",
+      "repo": "BannyLon/DifyAIA",
+      "pinned_commit": "d6a600c7e396fd844e7e5f66acbb971862af23dd",
+      "trust": "COMMUNITY_REFERENCE_ONLY",
+      "capabilities": [
+        "dify-dsl-example-reference"
+      ],
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
+      "security_review_status": "PENDING",
+      "source_url": "https://github.com/BannyLon/DifyAIA",
+      "license": "UNDECLARED"
     }
   ],
   "last_sync": {
@@ -3615,6 +4022,18 @@
     "security_review_status": "PENDING",
     "assigned_chatgpt_as_supervisory_reviewer": true,
     "runtime_install_status": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
-    "source_security_status": "PENDING"
+    "source_security_status": "PENDING",
+    "intake_2026_11_08": {
+      "date": "2026-11-08",
+      "added_or_refreshed": 22,
+      "imported_markdown_sources": [
+        "msitarzewski/agency-agents",
+        "JoelLewis/finance_skills"
+      ],
+      "install_status": "PROJECT_LOCAL_ONLY",
+      "physical_runtime_install": "NOT_CLAIMED_FOR_CLAUDE_HOST_OR_DSH_HOME",
+      "security_review_status": "SELECTED_MARKDOWN_ONLY; FULL_REPOSITORY_REVIEW_PENDING",
+      "capital_authority": false
+    }
   }
 }

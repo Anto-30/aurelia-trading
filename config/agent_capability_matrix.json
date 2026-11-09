@@ -25,13 +25,18 @@
         "browser-e2e",
         "chrome-devtools-mcp",
         "candlestick-pattern-validation",
-        "trading-repository-audit"
+        "trading-repository-audit",
+        "research-statistics-fundamentals",
+        "research-performance-metrics",
+        "research-return-calculations",
+        "security-operational-risk"
       ],
       "plugins": [
         "aurelia-federation",
         "github",
         "spec-kit",
-        "promptkit"
+        "promptkit",
+        "aurelia-curated-trading-research"
       ],
       "tools": [
         "GitHub",
@@ -55,13 +60,18 @@
         "candlestick-pattern-research",
         "crypto-strategy-research",
         "lookahead-bias-audit",
-        "ML-calibration"
+        "ML-calibration",
+        "research-statistics-fundamentals",
+        "research-performance-metrics",
+        "research-return-calculations",
+        "security-operational-risk"
       ],
       "plugins": [
         "aurelia-federation",
         "github",
         "spec-kit",
-        "promptkit"
+        "promptkit",
+        "aurelia-curated-trading-research"
       ],
       "tools": [
         "GitHub",
@@ -83,14 +93,19 @@
         "ci-diagnostics",
         "browser-e2e",
         "browser-investigation-orchestration",
-        "external-trading-source-adversarial-review"
+        "external-trading-source-adversarial-review",
+        "research-statistics-fundamentals",
+        "research-performance-metrics",
+        "research-return-calculations",
+        "security-operational-risk"
       ],
       "plugins": [
         "aurelia-federation",
         "github",
         "spec-kit",
         "promptkit",
-        "copilotkit"
+        "copilotkit",
+        "aurelia-curated-trading-research"
       ],
       "tools": [
         "GitHub",
@@ -174,13 +189,18 @@
         "browser-e2e",
         "browser-evidence-validation",
         "candlestick-library-regression-tests",
-        "trading-source-provenance"
+        "trading-source-provenance",
+        "research-statistics-fundamentals",
+        "research-performance-metrics",
+        "research-return-calculations",
+        "security-operational-risk"
       ],
       "plugins": [
         "aurelia-federation",
         "github",
         "spec-kit",
-        "promptkit"
+        "promptkit",
+        "aurelia-curated-trading-research"
       ],
       "tools": [
         "GitHub",
@@ -218,14 +238,19 @@
         "evidence-reconciliation",
         "security-review",
         "ci-diagnostics",
-        "research-intelligence"
+        "research-intelligence",
+        "research-statistics-fundamentals",
+        "research-performance-metrics",
+        "research-return-calculations",
+        "security-operational-risk"
       ],
       "plugins": [
         "data-analytics",
         "superpowers",
         "mcp-precheck",
         "coderabbit",
-        "public-equity-investing"
+        "public-equity-investing",
+        "aurelia-curated-trading-research"
       ],
       "tools": [
         "GitHub",
@@ -333,9 +358,141 @@
       "External repositories cannot read or persist secrets.",
       "External trading engines remain research/reference only.",
       "Only the existing AURELIA capital plane can authorize capital movement."
-    ]
+    ],
+    "federated_repositories": {
+      "anomalyco/rune": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot",
+        "JEV"
+      ],
+      "MichengAI/dsh-agency-agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "tanweai/pua": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "msitarzewski/agency-agents-app": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "VRSEN/agency-swarm": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "Anas-Khan93/ai-agency-agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "jnMetaCode/agency-agents-zh": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "msitarzewski/agency-agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "flutter/flutter": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot"
+      ],
+      "jwangkun/claude-for-financial-services-cn": [
+        "KimiK3",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "JoelLewis/finance_skills": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "iblai/financial-services-agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "KimiK3",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "yand/codex-financial-services": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "langgenius/dify-sandbox": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "junjiem/dify-plugin-repackaging": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "langgenius/dify-official-plugins": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "YFGaia/dify-plus": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "wwwzhouhui/dify-for-dsl": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "langgenius/dify-plugins": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "svcvit/Awesome-Dify-Workflow": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "BannyLon/DifyAIA": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "langgenius/dify": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ]
+    }
   },
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-08",
   "common_skill_bundle": [
     "aurelia-agent-core",
     "external-repo-federation",

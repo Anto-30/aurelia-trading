@@ -1,0 +1,401 @@
+{
+  "schema": "aurelia.external_repo_intake.v1",
+  "generated_date": "2026-11-08",
+  "provided_repository_count": 22,
+  "sources": [
+    {
+      "repo": "anomalyco/rune",
+      "source_url": "https://github.com/anomalyco/rune",
+      "branch": "dev",
+      "head_commit": "a7f276c3630f85a06a0230295da4d2bd172d8d3b",
+      "mode": "REFERENCE_ONLY",
+      "license": "MIT",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "Native UI framework; no AURELIA runtime need identified."
+    },
+    {
+      "repo": "MichengAI/dsh-agency-agents",
+      "source_url": "https://github.com/MichengAI/dsh-agency-agents",
+      "branch": "main",
+      "head_commit": "3612123844c66162e81084ec931d357398a79864",
+      "mode": "SANDBOX_ONLY",
+      "license": "Apache-2.0",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "Already registered; refresh pin only. Community DSH plugin, not an official DeepSeek product."
+    },
+    {
+      "repo": "tanweai/pua",
+      "source_url": "https://github.com/tanweai/pua",
+      "branch": "main",
+      "head_commit": "e6e6cd237ad17750d179674bff52f8184abea8fd",
+      "mode": "REFERENCE_ONLY",
+      "license": "UNDECLARED",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "No declared license; do not copy or install. High-pressure PIP-style prompt not adopted."
+    },
+    {
+      "repo": "msitarzewski/agency-agents-app",
+      "source_url": "https://github.com/msitarzewski/agency-agents-app",
+      "branch": "main",
+      "head_commit": "dda50547cf7999820f8ed991800200488e237ec5",
+      "mode": "REFERENCE_ONLY",
+      "license": "MIT",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "Desktop app only; no authorized end-user device connected, so not installed."
+    },
+    {
+      "repo": "VRSEN/agency-swarm",
+      "source_url": "https://github.com/VRSEN/agency-swarm",
+      "branch": "main",
+      "head_commit": "1bec92f0fc6e8485e53847c6f4a943a847058bff",
+      "mode": "SANDBOX_ONLY",
+      "license": "MIT",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "Second orchestration runtime would duplicate AURELIA federation; not installed."
+    },
+    {
+      "repo": "Anas-Khan93/ai-agency-agents",
+      "source_url": "https://github.com/Anas-Khan93/ai-agency-agents",
+      "branch": "main",
+      "head_commit": "1c06454211dc5ba301f278fb8c884ea2664ddf46",
+      "mode": "REFERENCE_ONLY",
+      "license": "MIT",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "Overlaps the larger canonical agency-agents library; no duplicate prompt import."
+    },
+    {
+      "repo": "jnMetaCode/agency-agents-zh",
+      "source_url": "https://github.com/jnMetaCode/agency-agents-zh",
+      "branch": "main",
+      "head_commit": "d160421bb2a4429f61c32a7d620c1bcdbdc01e12",
+      "mode": "REFERENCE_ONLY",
+      "license": "MIT",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "Already registered; refresh pin only. Chinese translations and China-specific roles are not required for Deriv runtime."
+    },
+    {
+      "repo": "msitarzewski/agency-agents",
+      "source_url": "https://github.com/msitarzewski/agency-agents",
+      "branch": "main",
+      "head_commit": "b859c515d813efcfc4755d3471dd9e7686c7706d",
+      "mode": "REFERENCE_ONLY",
+      "license": "MIT",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "PROJECT_LOCAL_MARKDOWN_ONLY",
+      "adoption_note": "Selected role prompts adapted to AURELIA-specific Claude subagents; upstream installers and full roster not run."
+    },
+    {
+      "repo": "flutter/flutter",
+      "source_url": "https://github.com/flutter/flutter",
+      "branch": "master",
+      "head_commit": "acade0f6b53278737d9af89df87afeffe040c3eb",
+      "mode": "REFERENCE_ONLY",
+      "license": "BSD-3-Clause",
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GrokBot"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "Full mobile SDK unrelated to current Python execution engine; not installed."
+    },
+    {
+      "repo": "jwangkun/claude-for-financial-services-cn",
+      "source_url": "https://github.com/jwangkun/claude-for-financial-services-cn",
+      "branch": "main",
+      "head_commit": "d7585ca0033d0624e14e8c5a031b373c1216dd74",
+      "mode": "REFERENCE_ONLY",
+      "license": "Apache-2.0",
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "China A-share accounting/data-source specialization; not adopted for synthetic-index trading."
+    },
+    {
+      "repo": "JoelLewis/finance_skills",
+      "source_url": "https://github.com/JoelLewis/finance_skills",
+      "branch": "main",
+      "head_commit": "5c498eacf7057e31238c4c5a8012a1afe9ec7c8a",
+      "mode": "RESEARCH_ONLY",
+      "license": "MIT",
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "PROJECT_LOCAL_MARKDOWN_ONLY",
+      "adoption_note": "Four Markdown-only skills imported into AURELIA/Claude/DSH project roots; upstream scripts excluded."
+    },
+    {
+      "repo": "iblai/financial-services-agents",
+      "source_url": "https://github.com/iblai/financial-services-agents",
+      "branch": "main",
+      "head_commit": "6ea18f015b1efa60a040d4cd68c93ceaff23abb5",
+      "mode": "SANDBOX_ONLY",
+      "license": "MIT",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "KimiK3",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "OpenClaw/NemoClaw orchestration config; not connected or installed."
+    },
+    {
+      "repo": "yand/codex-financial-services",
+      "source_url": "https://github.com/yand/codex-financial-services",
+      "branch": "codex-adapter",
+      "head_commit": "da5b5e004c0aa110996f71b0a2b57cb7184d1bec",
+      "mode": "REFERENCE_ONLY",
+      "license": "Apache-2.0",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "Codex adapter includes generated skill resources; no Codex runtime/connector was installed."
+    },
+    {
+      "repo": "langgenius/dify-sandbox",
+      "source_url": "https://github.com/langgenius/dify-sandbox",
+      "branch": "main",
+      "head_commit": "95578774d74e7669775ad9204267c1849fc3f386",
+      "mode": "SANDBOX_ONLY",
+      "license": "Apache-2.0",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "Not deployed; any future use requires separate container/network/filesystem threat review."
+    },
+    {
+      "repo": "junjiem/dify-plugin-repackaging",
+      "source_url": "https://github.com/junjiem/dify-plugin-repackaging",
+      "branch": "main",
+      "head_commit": "3ed1ddce2c3963adc32e2788c3e584a58d45bdeb",
+      "mode": "REFERENCE_ONLY",
+      "license": "UNDECLARED",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "No declared license; packaging scripts not copied or executed."
+    },
+    {
+      "repo": "langgenius/dify-official-plugins",
+      "source_url": "https://github.com/langgenius/dify-official-plugins",
+      "branch": "main",
+      "head_commit": "18663b9e723c345fed4c7450a3f925c583fa7064",
+      "mode": "SANDBOX_ONLY",
+      "license": "Apache-2.0",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "Large plugin catalogue; no plugins installed or activated."
+    },
+    {
+      "repo": "YFGaia/dify-plus",
+      "source_url": "https://github.com/YFGaia/dify-plus",
+      "branch": "main",
+      "head_commit": "c48ecee4d7c31c64b7a8cee8633157f7eda801ca",
+      "mode": "REFERENCE_ONLY",
+      "license": "NOASSERTION",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "License not resolved by GitHub metadata; no code copied."
+    },
+    {
+      "repo": "wwwzhouhui/dify-for-dsl",
+      "source_url": "https://github.com/wwwzhouhui/dify-for-dsl",
+      "branch": "main",
+      "head_commit": "d2670fa8ab69df9882e7c8844a41f452caad9f00",
+      "mode": "REFERENCE_ONLY",
+      "license": "UNDECLARED",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "No declared license; workflow files not copied."
+    },
+    {
+      "repo": "langgenius/dify-plugins",
+      "source_url": "https://github.com/langgenius/dify-plugins",
+      "branch": "main",
+      "head_commit": "2c640c41e3ae108feb6da27969a99f21151ac0d0",
+      "mode": "REFERENCE_ONLY",
+      "license": "UNDECLARED",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "No declared license; reference only."
+    },
+    {
+      "repo": "svcvit/Awesome-Dify-Workflow",
+      "source_url": "https://github.com/svcvit/Awesome-Dify-Workflow",
+      "branch": "main",
+      "head_commit": "e730ed3627e5fa56fc1668d995b83178b6b1181c",
+      "mode": "REFERENCE_ONLY",
+      "license": "MIT",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "MIT licensed but last pushed in March 2026; examples not ported to runtime."
+    },
+    {
+      "repo": "BannyLon/DifyAIA",
+      "source_url": "https://github.com/BannyLon/DifyAIA",
+      "branch": "main",
+      "head_commit": "d6a600c7e396fd844e7e5f66acbb971862af23dd",
+      "mode": "REFERENCE_ONLY",
+      "license": "UNDECLARED",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "No declared license; workflow files not copied."
+    },
+    {
+      "repo": "langgenius/dify",
+      "source_url": "https://github.com/langgenius/dify",
+      "branch": "main",
+      "head_commit": "30aa6fd15b5d308aa5043fe823eee8a562078be3",
+      "mode": "SANDBOX_ONLY",
+      "license": "NOASSERTION",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "security_review_status": "PENDING",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "adoption_note": "Already registered; refresh pin only. Full Dify platform is not installed in the trading runtime."
+    }
+  ]
+}

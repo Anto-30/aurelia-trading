@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.repo_agent_routing.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-08",
   "purpose": "Deterministically route every federated external repository to the agents best suited to consume its engineering, research, security, multimodal, browser, deployment, or orchestration capabilities. Includes security-first routing for LLM gateway and Freebuff-related reference sources.",
   "admission_policy": {
     "assignment_required": true,
@@ -269,6 +269,47 @@
       "rationale": "Agent orchestration and workflow sources are primarily intelligence/orchestration inputs, not capital-plane authorities."
     },
     {
+      "priority": 78,
+      "when": {
+        "category_contains_any": [
+          "agent-orchestration-framework",
+          "agent-team",
+          "agent-prompt-library",
+          "deepseek-harness"
+        ]
+      },
+      "primary_agent": "GrokBot",
+      "supporting_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode_default": "SANDBOX_ONLY",
+      "rationale": "Community agent libraries and orchestration frameworks are isolated references. Project-level prompt and skill files may be curated separately; upstream runtimes and installers are not executed."
+    },
+    {
+      "priority": 75,
+      "when": {
+        "category_contains_any": [
+          "financial-services-skills",
+          "finance",
+          "trading-research-skills",
+          "quantitative-research",
+          "trading-operations"
+        ]
+      },
+      "primary_agent": "KimiK3",
+      "supporting_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode_default": "RESEARCH_ONLY",
+      "rationale": "Financial and trading skill sources are used for advisory research only. Any jurisdiction-specific or instrument-mismatched content must be labeled and not treated as execution or regulatory authority."
+    },
+    {
       "priority": 70,
       "when": {
         "category_contains_any": [
@@ -286,6 +327,25 @@
       ],
       "mode_default": "TOOLCHAIN_ONLY",
       "rationale": "Deployment tooling is implemented by ClaudeCode and independently reviewed for orchestration and endpoint behavior."
+    },
+    {
+      "priority": 66,
+      "when": {
+        "category_contains_any": [
+          "dify",
+          "workflow-samples",
+          "dify-plugin-catalog",
+          "code-execution-sandbox"
+        ]
+      },
+      "primary_agent": "GrokBot",
+      "supporting_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode_default": "SANDBOX_ONLY",
+      "rationale": "Dify platform, plugins, workflow samples and sandboxes are separate agent-infrastructure references, not AURELIA runtime dependencies."
     },
     {
       "priority": 60,
