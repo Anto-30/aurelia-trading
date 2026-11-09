@@ -44,4 +44,4 @@ jobs:
             echo "No changed Python files; Ruff check is not applicable to this change."
             exit 0
           fi
-          python -m ruff check --output-format=github "${python_files[@]}"
+          python -m ruff check --fix --diff "${python_files[@]}"
