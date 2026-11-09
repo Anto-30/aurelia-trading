@@ -1,60 +1,27 @@
-name: AURELIA Deriv Account Identity Evidence
+name: AURELIA Deriv Account Evidence (Blocked — No Read-Only Scope)
 
 on:
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: aurelia-deriv-account-identity
   cancel-in-progress: false
 
 jobs:
-  verify:
+  blocked:
     if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: production
-    permissions:
-      contents: read
-    env:
-      DERIV_ENVIRONMENT: real
-      LIVE_EXECUTION: BLOCKED
-      FINAL_EXECUTION_AUTHORIZATION: "false"
-      AURELIA_AUTONOMOUS_LOOP: "false"
-      AURELIA_DEPLOYMENT_MODE: VERIFY_ONLY
+    timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-      - name: Install runtime dependencies
-        run: pip install -r requirements.txt
-      - name: Verify exact account identity and fresh balance (no orders)
-        id: account_verify
-        env:
-          # The Deriv bearer token is production-secret-only and scoped to this
-          # manual, main-only identity/balance verifier. Non-secret settings may
-          # be resolved from protected production environment variables.
-          DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
-          DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
-          DERIV_PAT: ""
-          DERIV_APP_ID: ${{ secrets.DERIV_APP_ID || vars.DERIV_APP_ID }}
-          DERIV_EXPECTED_LOGINID: ${{ secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID || vars.DERIV_EXPECTED_LOGINID || vars.DERIV_AUTHORIZED_ACCOUNT_ID }}
-          DERIV_AUTHORIZED_ACCOUNT_ID: ""
-          DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY || vars.DERIV_EXPECTED_CURRENCY }}
-          PYTHONUNBUFFERED: "1"
-        run: python scripts/verify_deriv_session.py
-      - name: Assert no execution authority
-        if: always()
+      - name: Report unavailable read-only account scope
+        shell: bash
         run: |
-          test "$LIVE_EXECUTION" = "BLOCKED"
-          test "$FINAL_EXECUTION_AUTHORIZATION" = "false"
-          test "$AURELIA_AUTONOMOUS_LOOP" = "false"
-          echo "VERIFIER_ACTIONS=ACCOUNT_LIST_OTP_BALANCE_ONLY"
+          set -euo pipefail
+          echo "DERIV_ACCOUNT_EVIDENCE=BLOCKED"
+          echo "DERIV_ACCOUNT_EVIDENCE_REASON=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
+          echo "DERIV_ACCOUNT_ENDPOINTS_REQUIRE_TRADE_SCOPE=true"
           echo "DERIV_ORDERS_SUBMITTED=0"
           echo "CAPITAL_AUTHORITY_GRANTED=false"
           echo "LIVE_EXECUTION=BLOCKED"
