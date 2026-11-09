@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-"""Deterministic AURELIA release-evidence gate.
+"""Deterministic research-evidence completeness gate.
 
-This gate never grants live authority. It proves whether the evidence required
-for a release decision is complete, current, internally consistent, and tied to
-the same source/config lineage. Missing evidence is a hard block.
+This gate is deliberately incapable of authorizing live execution. It evaluates
+research qualification, quoted economics, calibration, a verify-only broker
+lifecycle, and a protected deployment. A real-money transaction is NOT a
+prerequisite for evidence completeness and must never be required to pass this
+gate while LIVE_LOCK is blocked.
 """
 
 import argparse
@@ -14,7 +16,7 @@ from pathlib import Path
 
 
 REQUIRED_R100_STATUS = {"RESEARCH_QUALIFIED"}
-REQUIRED_LIFECYCLE_SCOPE = "REAL_DERIV_TRANSACTION_LIFECYCLE"
+REQUIRED_LIFECYCLE_SCOPE = "REAL_DERIV_LIFECYCLE_VERIFY_ONLY"
 
 
 def sha256_json(value: object) -> str:
@@ -57,21 +59,28 @@ def gate(r100: dict, lifecycle: dict, deployment: dict) -> tuple[str, list[str]]
     if not bool(r100.get("campaign_complete", False)):
         reasons.append("RESEARCH_CAMPAIGN_NOT_COMPLETE")
 
+    # This evidence scope proves authenticated broker controls and
+    # reconciliation without submitting an order or moving capital.
     if lifecycle.get("verification_scope") != REQUIRED_LIFECYCLE_SCOPE:
-        reasons.append("REAL_TRANSACTION_LIFECYCLE_EVIDENCE_MISSING")
-    if lifecycle.get("orders_submitted") != 1:
-        reasons.append("NO_VERIFIED_LIVE_TRANSACTION")
-    if lifecycle.get("capital_authority_granted") is not True:
-        reasons.append("LIVE_CAPITAL_AUTHORITY_NOT_PROVEN")
-    if lifecycle.get("observed", {}).get("reconciliation_healthy") is not True:
-        reasons.append("POST_TRADE_RECONCILIATION_NOT_PROVEN")
+        reasons.append("VERIFY_ONLY_LIFECYCLE_EVIDENCE_MISSING")
+    if lifecycle.get("orders_submitted") != 0:
+        reasons.append("VERIFY_ONLY_LIFECYCLE_SUBMITTED_ORDERS")
+    if lifecycle.get("capital_authority_granted") is not False:
+        reasons.append("VERIFY_ONLY_LIFECYCLE_GRANTED_CAPITAL_AUTHORITY")
+    observed = lifecycle.get("observed", {})
+    if not isinstance(observed, dict) or observed.get("reconciliation_healthy") is not True:
+        reasons.append("VERIFY_ONLY_RECONCILIATION_NOT_PROVEN")
+    if not isinstance(observed, dict) or observed.get("broker_submission_performed") is not False:
+        reasons.append("VERIFY_ONLY_BROKER_SUBMISSION_NOT_EXCLUDED")
+    if not isinstance(observed, dict) or observed.get("capital_movement") is not False:
+        reasons.append("VERIFY_ONLY_CAPITAL_MOVEMENT_NOT_EXCLUDED")
 
     if deployment.get("status") != "DEPLOYED_AND_HEALTHCHECKED":
-        reasons.append("PRODUCTION_WORKER_NOT_VERIFIED")
+        reasons.append("PROTECTED_DEPLOYMENT_NOT_VERIFIED")
     if deployment.get("capital_protection") is not True:
         reasons.append("DEPLOYMENT_CAPITAL_PROTECTION_NOT_PROVEN")
 
-    return ("RELEASE_EVIDENCE_COMPLETE" if not reasons else "NOT_READY"), reasons
+    return ("EVIDENCE_COMPLETE_VERIFY_ONLY" if not reasons else "NOT_READY"), reasons
 
 
 def main() -> int:
@@ -91,11 +100,14 @@ def main() -> int:
         status, reasons = "NOT_READY", [f"EVIDENCE_LOAD_ERROR:{type(exc).__name__}"]
 
     result = {
-        "schema": "aurelia.release.evidence.gate.v1",
+        "schema": "aurelia.release.evidence.gate.v2",
         "status": status,
         "reasons": reasons,
+        "evidence_scope": "RESEARCH_AND_VERIFY_ONLY",
         "final_execution_authorization": False,
         "live_execution": "BLOCKED",
+        "orders_submitted": 0,
+        "capital_authority_granted": False,
     }
     result["evidence_hash"] = sha256_json(result)
 
@@ -105,7 +117,7 @@ def main() -> int:
     print(f"RELEASE_EVIDENCE_GATE={status}")
     for reason in reasons:
         print(f"BLOCKER={reason}")
-    return 0 if status == "RELEASE_EVIDENCE_COMPLETE" else 2
+    return 0 if status == "EVIDENCE_COMPLETE_VERIFY_ONLY" else 2
 
 
 if __name__ == "__main__":
