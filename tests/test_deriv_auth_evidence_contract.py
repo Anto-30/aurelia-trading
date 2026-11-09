@@ -1,13 +1,24 @@
+import io
 import unittest
-from assurance.certification_evidence import _provenance_valid
+from contextlib import redirect_stdout
 
-from scripts.verify_deriv_session import OUTPUT
+from assurance.certification_evidence import _provenance_valid
+from scripts.verify_deriv_session import run
 from runtime.adapters.session_manager import derive_ws_environment, redact_ws_url
 
 
-class DerivAuthEvidenceContractTests(unittest.TestCase):
-    def test_output_path_is_not_secret_dependent(self):
-        self.assertTrue(str(OUTPUT).endswith("deriv_authenticated_session.json"))
+class DerivAuthEvidenceContractTests(unittest.IsolatedAsyncioTestCase):
+    async def test_session_evidence_is_blocked_without_documented_read_only_scope(self):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            result = run()
+        self.assertEqual(result, 3)
+        self.assertIn(
+            "DERIV_AUTH_SESSION_REASON=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
+            output.getvalue(),
+        )
+        self.assertIn("DERIV_ORDERS_SUBMITTED=0", output.getvalue())
+        self.assertIn("DERIV_CAPITAL_AUTHORITY_GRANTED=false", output.getvalue())
 
     def test_ci_environment_matches_certification_schema(self):
         record = {"environment": "ci", "provenance": {
