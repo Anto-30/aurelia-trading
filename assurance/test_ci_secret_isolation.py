@@ -87,6 +87,27 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertNotIn("${{ secrets.", text)
         self.assertNotIn("DERIV_AUTH_TOKEN", text)
 
+    def test_whatsapp_alert_secrets_are_manual_main_only_and_environment_protected(self):
+        text = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
+        alert_job = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
+        self.assertIn("github.event_name == 'workflow_dispatch'", alert_job)
+        self.assertIn("github.ref == 'refs/heads/main'", alert_job)
+        self.assertIn("environment: production", alert_job)
+        self.assertNotIn("pull_request:", text)
+        self.assertNotIn("pull_request_target:", text)
+        self.assertIn("secrets.TWILIO_ACCOUNT_SID", alert_job)
+        self.assertIn("secrets.TWILIO_AUTH_TOKEN", alert_job)
+        self.assertNotIn("secrets.TWILIO_ACCOUNT_SID", _job_block("aurelia-free-runtime.yml", "runtime-probe"))
+
+    def test_presence_report_secret_expressions_are_boolean_only(self):
+        text = (WORKFLOWS / "secret-presence-report.yml").read_text(encoding="utf-8")
+        for line in text.splitlines():
+            if "${{ secrets." in line:
+                self.assertTrue(" != '' }}" in line or " == 'USD' }}" in line, line)
+        self.assertNotIn("DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN ||", text)
+        self.assertNotIn("AURELIA_SSH_KEY: ${{ secrets.AURELIA_SSH_KEY }}", text)
+        self.assertNotIn("AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}", text)
+
     def test_public_runtime_has_no_deriv_credentials_or_account_settings(self):
         text = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
         self.assertIn("python scripts/verify_deriv_public_transport.py", text)
