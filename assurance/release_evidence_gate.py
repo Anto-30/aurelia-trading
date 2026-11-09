@@ -1,20 +1,23 @@
 from __future__ import annotations
 
-"""Deterministic AURELIA release-evidence gate.
+"""Deterministic research-evidence completeness gate.
 
-This gate never grants live authority. It proves whether the evidence required
-for a release decision is complete, current, internally consistent, and tied to
-the same source/config lineage. Missing evidence is a hard block.
+This gate is deliberately incapable of authorizing live execution. It evaluates
+research qualification, quoted economics, calibration, a verify-only broker
+lifecycle, and a protected deployment. A real-money transaction is NOT a
+prerequisite for evidence completeness and must never be required to pass this
+gate while LIVE_LOCK is blocked.
 """
 
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 
 
 REQUIRED_R100_STATUS = {"RESEARCH_QUALIFIED"}
-REQUIRED_LIFECYCLE_SCOPE = "REAL_DERIV_TRANSACTION_LIFECYCLE"
+REQUIRED_LIFECYCLE_SCOPE = "REAL_DERIV_LIFECYCLE_VERIFY_ONLY"
 
 
 def sha256_json(value: object) -> str:
@@ -31,48 +34,76 @@ def load(path: Path) -> dict:
     return value
 
 
+def _finite_number(value: object) -> bool:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except (OverflowError, ValueError):
+        return False
+
+
 def gate(r100: dict, lifecycle: dict, deployment: dict) -> tuple[str, list[str]]:
     reasons: list[str] = []
 
     if r100.get("qualification_status") not in REQUIRED_R100_STATUS:
         reasons.append(f"STRATEGY_NOT_QUALIFIED:{r100.get('qualification_status')}")
-    if int(r100.get("oos_observations", 0)) < 100:
+
+    oos_observations = r100.get("oos_observations")
+    if type(oos_observations) is not int or oos_observations < 100:
         reasons.append("OOS_SAMPLE_LT_100")
-    if (r100.get("oos_mean_strategy_return") is None or
-            float(r100["oos_mean_strategy_return"]) <= 0):
+    oos_return = r100.get("oos_mean_strategy_return")
+    if not _finite_number(oos_return) or float(oos_return) <= 0:
         reasons.append("OOS_EXPECTANCY_NOT_POSITIVE")
 
-    economics = r100.get("execution_economics", {})
-    quoted = economics.get("quoted_contract_economics", {})
-    if int(quoted.get("sample_count", 0)) < 100:
+    economics = r100.get("execution_economics")
+    if not isinstance(economics, dict):
+        economics = {}
+    quoted = economics.get("quoted_contract_economics")
+    if not isinstance(quoted, dict):
+        quoted = {}
+    quoted_count = quoted.get("sample_count")
+    if type(quoted_count) is not int or quoted_count < 100:
         reasons.append("QUOTED_ECONOMICS_SAMPLE_LT_100")
-    if quoted.get("mean_net_return_per_stake") is None or float(
-        quoted["mean_net_return_per_stake"]
-    ) <= 0:
+    net_return = quoted.get("mean_net_return_per_stake")
+    if not _finite_number(net_return) or float(net_return) <= 0:
         reasons.append("QUOTED_ECONOMICS_NOT_POSITIVE")
-    if r100.get("probability", {}).get("calibration_status") != "VALIDATED_RESEARCH":
+
+    probability = r100.get("probability")
+    if not isinstance(probability, dict):
+        probability = {}
+    if probability.get("calibration_status") != "VALIDATED_RESEARCH":
         reasons.append("PROBABILITY_CALIBRATION_INCOMPLETE")
-    if bool(r100.get("probability", {}).get("drift_detected", True)):
+    if probability.get("drift_detected") is not False:
         reasons.append("PROBABILITY_DRIFT_DETECTED")
-    if not bool(r100.get("campaign_complete", False)):
+    if r100.get("campaign_complete") is not True:
         reasons.append("RESEARCH_CAMPAIGN_NOT_COMPLETE")
 
+    # This evidence scope proves authenticated broker controls and
+    # reconciliation without submitting an order or moving capital.
     if lifecycle.get("verification_scope") != REQUIRED_LIFECYCLE_SCOPE:
-        reasons.append("REAL_TRANSACTION_LIFECYCLE_EVIDENCE_MISSING")
-    if lifecycle.get("orders_submitted") != 1:
-        reasons.append("NO_VERIFIED_LIVE_TRANSACTION")
-    if lifecycle.get("capital_authority_granted") is not True:
-        reasons.append("LIVE_CAPITAL_AUTHORITY_NOT_PROVEN")
-    if lifecycle.get("observed", {}).get("reconciliation_healthy") is not True:
-        reasons.append("POST_TRADE_RECONCILIATION_NOT_PROVEN")
+        reasons.append("VERIFY_ONLY_LIFECYCLE_EVIDENCE_MISSING")
+    # bool is a subclass of int in Python; False must not masquerade as an
+    # authoritative zero-order count in an evidence record.
+    submitted = lifecycle.get("orders_submitted")
+    if type(submitted) is not int or submitted != 0:
+        reasons.append("VERIFY_ONLY_LIFECYCLE_SUBMITTED_ORDERS")
+    if lifecycle.get("capital_authority_granted") is not False:
+        reasons.append("VERIFY_ONLY_LIFECYCLE_GRANTED_CAPITAL_AUTHORITY")
+    observed = lifecycle.get("observed", {})
+    if not isinstance(observed, dict) or observed.get("reconciliation_healthy") is not True:
+        reasons.append("VERIFY_ONLY_RECONCILIATION_NOT_PROVEN")
+    if not isinstance(observed, dict) or observed.get("broker_submission_performed") is not False:
+        reasons.append("VERIFY_ONLY_BROKER_SUBMISSION_NOT_EXCLUDED")
+    if not isinstance(observed, dict) or observed.get("capital_movement") is not False:
+        reasons.append("VERIFY_ONLY_CAPITAL_MOVEMENT_NOT_EXCLUDED")
 
     if deployment.get("status") != "DEPLOYED_AND_HEALTHCHECKED":
-        reasons.append("PRODUCTION_WORKER_NOT_VERIFIED")
+        reasons.append("PROTECTED_DEPLOYMENT_NOT_VERIFIED")
     if deployment.get("capital_protection") is not True:
         reasons.append("DEPLOYMENT_CAPITAL_PROTECTION_NOT_PROVEN")
 
-    return ("RELEASE_EVIDENCE_COMPLETE" if not reasons else "NOT_READY"), reasons
-
+    return ("EVIDENCE_COMPLETE_VERIFY_ONLY" if not reasons else "NOT_READY"), reasons
 
 def main() -> int:
     parser = argparse.ArgumentParser()
@@ -91,11 +122,14 @@ def main() -> int:
         status, reasons = "NOT_READY", [f"EVIDENCE_LOAD_ERROR:{type(exc).__name__}"]
 
     result = {
-        "schema": "aurelia.release.evidence.gate.v1",
+        "schema": "aurelia.release.evidence.gate.v2",
         "status": status,
         "reasons": reasons,
+        "evidence_scope": "RESEARCH_AND_VERIFY_ONLY",
         "final_execution_authorization": False,
         "live_execution": "BLOCKED",
+        "orders_submitted": 0,
+        "capital_authority_granted": False,
     }
     result["evidence_hash"] = sha256_json(result)
 
@@ -105,7 +139,7 @@ def main() -> int:
     print(f"RELEASE_EVIDENCE_GATE={status}")
     for reason in reasons:
         print(f"BLOCKER={reason}")
-    return 0 if status == "RELEASE_EVIDENCE_COMPLETE" else 2
+    return 0 if status == "EVIDENCE_COMPLETE_VERIFY_ONLY" else 2
 
 
 if __name__ == "__main__":
