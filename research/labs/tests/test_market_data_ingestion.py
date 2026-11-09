@@ -158,7 +158,7 @@ class StandardCSVIngestionTests(unittest.TestCase):
         self.assertGreater(result.audit.maximum_gap_seconds, 900)
 
     def test_empty_standard_csv_is_quarantined_with_explicit_reason(self):
-        path = self._csv("datetime,open,high,low,close\\n")
+        path = self._csv("datetime,open,high,low,close\n")
         result = ingest_standard_csv(
             path, symbol="R_100", asset_class="synthetic", granularity_seconds=60,
         )
