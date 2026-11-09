@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 import unittest
 from pathlib import Path
 
@@ -70,7 +69,10 @@ class ExternalAgentToolingIntakeTests(unittest.TestCase):
         assignment = load("config/agent_tool_skill_assignment.json")
         matrix = load("config/agent_capability_matrix.json")
         self.assertEqual(skills["total_skills"], len(skills["items"]))
-        self.assertEqual(plugins["total_skill_entries"], skills["total_skills"])
+        self.assertEqual(
+            plugins["total_skill_entries"],
+            sum(int(item["skill_count"]) for item in plugins["plugins"]),
+        )
         self.assertEqual(plugins["plugin_groups"], len(plugins["plugins"]))
         plugin = next(
             item for item in plugins["plugins"]
@@ -89,6 +91,9 @@ class ExternalAgentToolingIntakeTests(unittest.TestCase):
         for agent in ("AURELIA", "Dev"):
             self.assertTrue(set(SKILLS).isdisjoint(assignment["agents"][agent]["skills"]))
             self.assertTrue(set(SKILLS).isdisjoint(matrix["agents"][agent]["skills"]))
+        for skill, definition in assignment["local_project_skills"].items():
+            self.assertTrue((ROOT / definition["path"]).is_file(), skill)
+            self.assertIn("no secrets", definition["permissions"].lower())
 
     def test_live_execution_lock_is_unchanged_and_disabled(self):
         lock = (ROOT / "config" / "LIVE_LOCK.yaml").read_text(encoding="utf-8")

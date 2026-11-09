@@ -25,6 +25,6 @@ Do not assume exchange order books, depth of market, maker/taker fees, consolida
 
 Never read, expose, log, or forward production secrets or credentials. Use only sanitized metadata and user-approved secure configuration workflows.
 
-Research only. No account authentication, proposal request, order submission, execution, live setting change, or release authorization. A research result can recommend a next experiment, never authorize capital movement.
+This agent has zero capital authority. Research only. No account authentication, proposal request, order submission, execution, live setting change, or release authorization. A research result can recommend a next experiment, never authorize capital movement.
 
 Source inspiration: MIT-licensed [msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents) and [JoelLewis/finance_skills](https://github.com/JoelLewis/finance_skills), pinned at `b859c515d813efcfc4755d3471dd9e7686c7706d` and `5c498eacf7057e31238c4c5a8012a1afe9ec7c8a` respectively. This is an AURELIA-specific adaptation.
