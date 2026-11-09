@@ -657,5 +657,47 @@
     "Tool access is role-scoped; agent names in a registry do not grant connector authentication.",
     "The Dev role is registered logically but cannot run until a user-controlled device is connected.",
     "Only the existing AURELIA deterministic capital plane owns live trading authorization; all agent profiles have capital_authority=false except the AURELIA policy-owner label, which still cannot bypass gates."
-  ]
+  ],
+  "local_project_skills": {
+    "aurelia-systematic-debugging": {
+      "path": ".claude/skills/aurelia-systematic-debugging/SKILL.md",
+      "primary_agents": [
+        "ClaudeCode"
+      ],
+      "independent_reviewers": [
+        "JEV",
+        "ChatGPT",
+        "GrokBot"
+      ],
+      "task_scope": [
+        "CI failures",
+        "runtime debugging",
+        "state-machine defects",
+        "broker-adapter defects",
+        "root-cause repair"
+      ],
+      "permissions": "offline source/test work only; no secrets, production host, broker session, live order, capital authority, or LIVE_LOCK changes"
+    },
+    "aurelia-evidence-engineering": {
+      "path": ".claude/skills/aurelia-evidence-engineering/SKILL.md",
+      "primary_agents": [
+        "ClaudeCode"
+      ],
+      "independent_reviewers": [
+        "JEV",
+        "KimiK3",
+        "ChatGPT"
+      ],
+      "task_scope": [
+        "evidence schema alignment",
+        "sealed prospective OOS",
+        "calibration",
+        "recovery evidence",
+        "soak evidence",
+        "deployment lineage"
+      ],
+      "permissions": "evidence transformation only from genuine producer outputs; no fabricated values and no live authorization"
+    }
+  },
+  "external_tool_intake": "config/external_tool_intake_2026-11-09.json"
 }

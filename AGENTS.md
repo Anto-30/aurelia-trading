@@ -28,3 +28,12 @@ The LiteLLM/agent-control-plane repositories are pinned in `config/external_repo
 ## Tool, skill, plugin, and repository assignment contract
 
 Before selecting tools for a task, read `config/agent_tool_skill_assignment.json`. It defines the primary agent, reviewers, task-scoped tools, skill bundles, plugin activation conditions, and source modes. Tool/plugin registry membership is not proof of a live connection or installation. Use least privilege, verify the connector at execution time, and keep all external code outside capital/execution paths. The Dev profile is inactive until an authorized development device is connected and its runtime identity verified. ChatGPT is a supervisory role in the current conversation, not a persistent local daemon.
+
+
+## 2026-11-09 external-tool intake
+
+Read `docs/engineering/EXTERNAL_TOOL_ADOPTION.md` and `config/external_tool_intake_2026-11-09.json` before using any of the additional upstream repositories supplied on 2026-11-09. Repository registration or commit pinning is not installation, validation, or permission to execute.
+
+The only dependency adopted by this intake is Ruff as a development-only package in the `dev` optional dependency group. The project-local Claude Code skills are under `.claude/skills/`. Do not move these tools into the runtime/Docker image.
+
+Respect the canonical task routing in `config/agent_tool_skill_assignment.json`. Proposed assignments do not activate an agent. Qwen Code, Open Interpreter, QwenPaw, Playwriter, OSINT tools, and any other execution-capable source remain untrusted and must never receive production secrets or broker authority. An unavailable agent is `NOT_CONNECTED`, not a simulated reviewer.
