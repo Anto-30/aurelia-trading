@@ -194,3 +194,33 @@ class VerifyDerivSessionTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SafeDerivSessionDiagnosticTests(unittest.TestCase):
+    def test_allowlisted_internal_reason_is_preserved(self):
+        from scripts.verify_deriv_session import safe_deriv_error_reason
+
+        self.assertEqual(
+            safe_deriv_error_reason(ValueError("ACCOUNT_ENVIRONMENT_MISMATCH")),
+            "ACCOUNT_ENVIRONMENT_MISMATCH",
+        )
+
+    def test_unrecognized_exception_text_is_never_emitted(self):
+        from scripts.verify_deriv_session import safe_deriv_error_reason
+
+        private = "SYNTHETIC_SECRET_ACCOUNT_ID_OR_OTP"
+        self.assertEqual(
+            safe_deriv_error_reason(ValueError(private)),
+            "UNCLASSIFIED_VALUEERROR",
+        )
+        self.assertNotIn(private, safe_deriv_error_reason(ValueError(private)))
+
+    def test_multiple_exception_arguments_are_masked(self):
+        from scripts.verify_deriv_session import safe_deriv_error_reason
+
+        self.assertEqual(
+            safe_deriv_error_reason(
+                ValueError("ACCOUNT_ENVIRONMENT_MISMATCH", "PRIVATE_ACCOUNT_ID")
+            ),
+            "UNCLASSIFIED_VALUEERROR",
+        )
