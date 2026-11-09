@@ -21,6 +21,15 @@ if ! command -v sudo >/dev/null 2>&1; then
 fi
 sudo -n true
 
+# Revoke the retired credential-bearing VERIFY_ONLY store before any deploy
+# attempt. Stop an existing container first so it cannot retain those values.
+if [ -f "$READONLY_SECRET_FILE" ]; then
+  sudo rm -f "$READONLY_SECRET_FILE"
+  if command -v docker >/dev/null 2>&1; then
+    sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+  fi
+fi
+
 if [ ! -d "$RELEASE_DIR" ]; then
   echo "AURELIA_HOST_BLOCKED=MISSING_RELEASE_DIR"
   exit 2
@@ -74,8 +83,6 @@ sudo systemctl enable --now docker
 sudo install -d -m 700 "$ENV_DIR"
 sudo install -d -m 700 "$DATA_DIR"
 sudo install -d -m 755 "$RELEASE_ROOT"
-# Remove the retired credential-bearing VERIFY_ONLY store from existing hosts.
-sudo rm -f "$READONLY_SECRET_FILE"
 
 if [ -f "$ENV_FILE" ]; then
   sudo chmod 600 "$ENV_FILE"
