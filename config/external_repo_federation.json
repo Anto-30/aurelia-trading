@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-09",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -6321,6 +6321,244 @@
         "developer-experience-reference"
       ],
       "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "NousResearch/hermes-agent",
+      "category": "agent-runtime",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/NousResearch/hermes-agent",
+      "head_commit": "6cff782b8d081a0ed382eaf75c432d452cd452cc",
+      "pin_source": "github_default_branch_commit_checked_2026-11-09",
+      "capital_authority": false,
+      "capabilities": [
+        "agent-runtime",
+        "tool-use",
+        "memory",
+        "multi-provider"
+      ],
+      "integration_note": "Official NousResearch Hermes runtime. Pinned for source review only; no installation, runtime, tool execution, or permission grant. Evaluate in a disposable sandbox before any local adoption."
+    },
+    {
+      "repo": "NVIDIA/NemoClaw",
+      "category": "agent-sandbox",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/NVIDIA/NemoClaw",
+      "head_commit": "4d5d613f73b96d51a92e7ae88df5da5103836067",
+      "pin_source": "github_default_branch_commit_checked_2026-11-09",
+      "capital_authority": false,
+      "capabilities": [
+        "agent-sandboxing",
+        "network-policy",
+        "managed-inference",
+        "runtime-isolation"
+      ],
+      "integration_note": "Official NVIDIA sandbox reference stack for supported agents including Hermes. Host prerequisites and OpenShell availability are unverified; no installation or sandbox claim."
+    },
+    {
+      "repo": "kerpopule/hermes-jev-skills",
+      "category": "agent-skills",
+      "domain": "engineering",
+      "assigned_agents": [
+        "JEV",
+        "ClaudeCode",
+        "GrokBot",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/kerpopule/hermes-jev-skills",
+      "head_commit": "8316358bf60e98a21477582af829ef11c9cf52fb",
+      "pin_source": "github_default_branch_commit_checked_2026-11-09",
+      "capital_authority": false,
+      "capabilities": [
+        "model-routing",
+        "skill-selection",
+        "memory-screening",
+        "prompt-injection-screening"
+      ],
+      "integration_note": "Community skill pack. README describes routing, memory selection and prompt-injection screening; all skills remain untrusted until per-skill source, dependency, egress and permission review."
+    },
+    {
+      "repo": "ZeroPointRepo/awesome-hermes-skills",
+      "category": "skill-catalog",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/ZeroPointRepo/awesome-hermes-skills",
+      "head_commit": "9fb166c3548ca7befb579c525991255bb6daac83",
+      "pin_source": "github_default_branch_commit_checked_2026-11-09",
+      "capital_authority": false,
+      "capabilities": [
+        "skill-discovery",
+        "plugin-catalogue",
+        "memory-provider-discovery"
+      ],
+      "integration_note": "Discovery catalogue only. Do not install the catalogue or bulk-install listed skills; review one selected skill at a time."
+    },
+    {
+      "repo": "mnemosyne-oss/mnemosyne",
+      "category": "agent-memory",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/mnemosyne-oss/mnemosyne",
+      "head_commit": "e249583dddb29c198ba1b6cf38eabdfd4905ffdf",
+      "pin_source": "github_default_branch_commit_checked_2026-11-09",
+      "capital_authority": false,
+      "capabilities": [
+        "local-memory",
+        "sqlite-storage",
+        "mcp-integration"
+      ],
+      "integration_note": "Local SQLite memory candidate. Evaluate retention, encryption, deletion, prompt injection, and data classification using synthetic data only; no broker or production data."
+    },
+    {
+      "repo": "getpaseo/paseo",
+      "category": "agent-orchestration-ui",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/getpaseo/paseo",
+      "head_commit": "e0f545fed485d244fcd3e6308c36e5a6397eaa2e",
+      "pin_source": "github_default_branch_commit_checked_2026-11-09",
+      "capital_authority": false,
+      "capabilities": [
+        "multi-agent-worktrees",
+        "desktop-ui",
+        "mobile-ui",
+        "agent-orchestration"
+      ],
+      "integration_note": "Developer UX/orchestration candidate. GitHub license metadata returned NOASSERTION; verify licensing before copying or redistributing. No remote host or local runtime is connected."
+    },
+    {
+      "repo": "iOfficeAI/AionUi",
+      "category": "agent-orchestration-ui",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/iOfficeAI/AionUi",
+      "head_commit": "e108b6b56b1a6eb99a00904878d0582f657b2908",
+      "pin_source": "github_default_branch_commit_checked_2026-11-09",
+      "capital_authority": false,
+      "capabilities": [
+        "multi-agent-ui",
+        "desktop-workspace",
+        "agent-session-management"
+      ],
+      "integration_note": "Apache-2.0 desktop interface candidate for multiple CLI agents. No installation or local runtime verification."
+    },
+    {
+      "repo": "Hy4ri/hermes-mobile",
+      "category": "mobile-agent-client",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Hy4ri/hermes-mobile",
+      "head_commit": "93daabfbb66f4539862bb704f832a4a9d624056d",
+      "pin_source": "github_default_branch_commit_checked_2026-11-09",
+      "capital_authority": false,
+      "capabilities": [
+        "android-client",
+        "hermes-agent-ui"
+      ],
+      "integration_note": "Apache-2.0 Android client candidate. Requires independent review of pairing, authentication, session transport, device storage and remote access before use."
+    },
+    {
+      "repo": "thedotmack/claude-mem",
+      "category": "agent-memory",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/thedotmack/claude-mem",
+      "head_commit": "989a98a2fb7978354497df46c4e17101f54ba9a3",
+      "pin_source": "github_default_branch_commit_checked_2026-11-09",
+      "capital_authority": false,
+      "capabilities": [
+        "persistent-context",
+        "session-memory",
+        "retrieval"
+      ],
+      "integration_note": "Apache-2.0 memory plugin candidate. Local synthetic-data testing only; inspect hooks, retention, deletion, telemetry, encryption and prompt-injection handling before adoption."
+    },
+    {
+      "repo": "semgrep/mythos-bench",
+      "category": "security-benchmark",
+      "domain": "security",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/semgrep/mythos-bench",
+      "head_commit": "800cc53ab155a9059a69a3f7b1cec4785002b4cb",
+      "pin_source": "github_default_branch_commit_checked_2026-11-09",
+      "capital_authority": false,
+      "capabilities": [
+        "llm-vulnerability-benchmark",
+        "security-evaluation"
+      ],
+      "integration_note": "GitHub license metadata returned NOASSERTION. Security benchmark reference only; requires separate legal review and disposable repositories/API credentials; no AURELIA source is submitted to an external model."
+    },
+    {
+      "repo": "ZhuLinsen/daily_stock_analysis",
+      "category": "equity-research",
+      "domain": "research",
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/ZhuLinsen/daily_stock_analysis",
+      "head_commit": "15c7cdc0ca07bd71158e268fb8596f3ae356ad9b",
+      "pin_source": "github_default_branch_commit_checked_2026-11-09",
+      "capital_authority": false,
+      "capabilities": [
+        "daily-equity-analysis",
+        "market-data-research"
+      ],
+      "integration_note": "MIT research source for listed-equity workflows; not applicable to Deriv synthetic-index strategy validation without independent data and model adaptation."
     }
   ],
   "pin_policy": {
