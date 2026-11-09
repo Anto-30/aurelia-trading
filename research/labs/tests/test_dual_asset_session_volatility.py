@@ -4,7 +4,7 @@ import unittest
 import warnings
 from datetime import datetime, timedelta, timezone
 
-from research.labs.dual_asset_session_volatility import (
+from research.labs.deterministic_intraday_strategies import StrategyCandidate\nfrom research.labs.dual_asset_session_volatility import (
     VolatilitySizer,
     VolatilitySizingConfig,
     apply_session_filter,
@@ -261,6 +261,30 @@ class ResearchCandidateIntegrationTests(unittest.TestCase):
         self.assertEqual(result.decision.session_label, "LONDON")
         self.assertIsNotNone(result.effective_risk_pct)
         self.assertFalse(result.audit_record(candidate_id="candidate-1")["order_submission_permitted"])
+
+    def test_canonical_strategy_candidate_payload_is_accepted_as_research_only(self):
+        candidate = StrategyCandidate(
+            strategy_id="MSNR_LIQUIDITY_SWEEP",
+            version="1.0.0",
+            direction="LONG",
+            signal_timestamp_utc="2026-01-15T07:29:00Z",
+            entry_timing="NEXT_BAR_OPEN_AFTER_SIGNAL",
+            stop_reference_price=99.0,
+            target_reference_price=102.0,
+            target_mode="FIXED",
+            regime="TRENDING_LOW_VOL",
+            evidence_codes=("CLOSED_BAR_SIGNAL",),
+        )
+        result = prepare_candidate_for_research_simulation(
+            candidate,
+            signal_timestamp="2026-01-15T07:30:00Z",
+            asset_class="financial",
+            volatility_schedule=self._schedule(),
+            entry_bar_index=20,
+            required_session="LONDON",
+        )
+        self.assertTrue(result.decision.allowed)
+        self.assertIs(result.candidate, candidate)
 
     def test_candidate_adapter_bypasses_financial_session_for_synthetics(self):
         result = prepare_candidate_for_research_simulation(
