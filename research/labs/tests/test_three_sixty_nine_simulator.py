@@ -69,6 +69,7 @@ class ThreeSixtyNineSimulatorTests(unittest.TestCase):
             bars((1, 100.0, 107.0, 97.0, 103.0)),
             cost_profile=costs(),
             tick_size=0.1,
+            timeframe_seconds=60,
             now=NOW,
         )
         self.assertEqual(trade.exit_reason, "STOP_LOSS")
@@ -80,6 +81,7 @@ class ThreeSixtyNineSimulatorTests(unittest.TestCase):
             bars((1, 100.0, 107.0, 99.0, 105.0)),
             cost_profile=costs(),
             tick_size=0.1,
+            timeframe_seconds=60,
             now=NOW,
         )
         self.assertEqual(trade.exit_reason, "TAKE_PROFIT")
@@ -94,6 +96,7 @@ class ThreeSixtyNineSimulatorTests(unittest.TestCase):
             ),
             cost_profile=costs(),
             tick_size=0.1,
+            timeframe_seconds=60,
             now=NOW,
         )
         self.assertEqual(trade.exit_reason, "GAP_THROUGH_STOP")
@@ -105,6 +108,7 @@ class ThreeSixtyNineSimulatorTests(unittest.TestCase):
             bars((1, 100.0, 101.0, 99.0, 100.5)),
             cost_profile=costs(),
             tick_size=0.1,
+            timeframe_seconds=60,
             now=NOW,
         )
         self.assertAlmostEqual(trade.spread_cost_per_unit, 0.02)
@@ -122,6 +126,7 @@ class ThreeSixtyNineSimulatorTests(unittest.TestCase):
             bars((1, 100.0, 101.0, 99.0, 100.5)),
             cost_profile=costs(),
             tick_size=0.1,
+            timeframe_seconds=60,
             now=NOW,
         )
         self.assertEqual(trade.exit_reason, "END_OF_DATA")
@@ -139,6 +144,7 @@ class ThreeSixtyNineSimulatorTests(unittest.TestCase):
                         bars((1, 100.0, 101.0, 99.0, 100.5)),
                         cost_profile=profile,
                         tick_size=0.1,
+            timeframe_seconds=60,
                         now=NOW,
                     )
 
@@ -149,6 +155,7 @@ class ThreeSixtyNineSimulatorTests(unittest.TestCase):
                 bars((1, 100.0, 101.0, 99.0, 100.5)),
                 cost_profile=costs(observed_at_utc="2026-11-01T00:00:00+00:00"),
                 tick_size=0.1,
+            timeframe_seconds=60,
                 now=NOW,
             )
 
@@ -159,6 +166,7 @@ class ThreeSixtyNineSimulatorTests(unittest.TestCase):
                 bars((1, 100.2, 101.0, 99.0, 100.5)),
                 cost_profile=costs(),
                 tick_size=0.1,
+            timeframe_seconds=60,
                 now=NOW,
             )
 
@@ -170,7 +178,32 @@ class ThreeSixtyNineSimulatorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "NOT_STRICTLY_CHRONOLOGICAL"):
             simulate_candidate(
                 candidate(), duplicate, cost_profile=costs(),
-                tick_size=0.1, now=NOW,
+                tick_size=0.1,
+            timeframe_seconds=60, now=NOW,
+            )
+
+    def test_missing_bar_cadence_blocks_simulation(self):
+        discontinuous = bars(
+            (1, 100.0, 101.0, 99.0, 100.5),
+            (3, 100.5, 101.0, 100.0, 100.5),
+        )
+        with self.assertRaisesRegex(ValueError, "BAR_GAP_OR_CADENCE_MISMATCH"):
+            simulate_candidate(
+                candidate(), discontinuous, cost_profile=costs(),
+                tick_size=0.1, timeframe_seconds=60, now=NOW,
+            )
+
+    def test_entry_must_follow_signal_close(self):
+        from dataclasses import replace
+        invalid = replace(
+            candidate(),
+            entry_timestamp_utc="2026-11-10T10:00:00+00:00",
+        )
+        with self.assertRaisesRegex(ValueError, "ENTRY_NOT_AFTER_SIGNAL_CLOSE"):
+            simulate_candidate(
+                invalid, bars((0, 100.0, 101.0, 99.0, 100.5)),
+                cost_profile=costs(), tick_size=0.1,
+                timeframe_seconds=60, now=NOW,
             )
 
 
