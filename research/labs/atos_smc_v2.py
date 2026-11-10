@@ -623,8 +623,8 @@ def build_prior_session_liquidity(
     """Build prior completed Asia/London pools keyed by their NY session date.
 
     Conventions are configurable: Asia 19:00 previous NY date to 00:00 current
-    date; London 02:00–05:00 current NY date. The active research window defaults
-    to 00:00–08:50 NY, so both are complete before a signal can be evaluated.
+    date; London 02:00–05:00 on the prior NY date. Both windows are complete
+    before any signal on the current date, so current-session future data is not used.
     """
     if not isfinite(float(tick_size)) or tick_size <= 0:
         raise ValueError("INSTRUMENT_TICK_SIZE_REQUIRED")
