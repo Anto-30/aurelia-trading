@@ -26,16 +26,15 @@ class DerivHistoryError(RuntimeError):
     pass
 
 
-def _derive_display_increment(value: Any) -> tuple[int, float]:
-    """Convert Deriv pip_size decimal precision into a display increment proxy."""
+def _normalize_deriv_pip_size(value: Any) -> float:
+    """Validate active_symbols.pip_size as the provider-published price increment."""
     try:
-        precision = float(value)
+        pip_size = float(value)
     except (TypeError, ValueError) as exc:
-        raise DerivHistoryError("DERIV_PRICE_PRECISION_UNKNOWN") from exc
-    if not pd.notna(precision) or precision < 0 or not precision.is_integer() or precision > 12:
-        raise DerivHistoryError("DERIV_PRICE_PRECISION_INVALID")
-    places = int(precision)
-    return places, 10.0 ** (-places)
+        raise DerivHistoryError("DERIV_PIP_SIZE_UNKNOWN") from exc
+    if not pd.notna(pip_size) or pip_size <= 0 or not pd.api.types.is_number(pip_size):
+        raise DerivHistoryError("DERIV_PIP_SIZE_INVALID")
+    return pip_size
 
 
 def _epoch(value: datetime | pd.Timestamp) -> int:
@@ -90,17 +89,17 @@ async def fetch_deriv_symbol_metadata(
     if len(matches) != 1:
         raise DerivHistoryError("DERIV_SYMBOL_NOT_UNIQUELY_ACTIVE")
     row = matches[0]
-    precision_value = row.get("pip_size", row.get("pip"))
-    price_precision, display_increment = _derive_display_increment(precision_value)
+    pip_value = row.get("pip_size", row.get("pip"))
+    pip_size = _normalize_deriv_pip_size(pip_value)
     return {
         "symbol": str(row.get("underlying_symbol") or row.get("symbol")),
         "display_name": str(row.get("underlying_symbol_name") or row.get("display_name") or ""),
         "market": row.get("market"),
         "submarket": row.get("submarket"),
-        "price_precision": price_precision,
-        "display_increment_proxy": display_increment,
-        "tick_size_verified": False,
-        "tick_size_source_status": "DISPLAY_PRECISION_ONLY_NOT_VERIFIED_MINIMUM_TICK",
+        "pip_size": pip_size,
+        "price_increment": pip_size,
+        "price_increment_source": "Deriv active_symbols.pip_size",
+        "price_increment_status": "PROVIDER_PUBLISHED_PIP_SIZE",
         "tick_size_source_field": "pip_size" if "pip_size" in row else "pip",
         "metadata_observed_at_utc": datetime.now(timezone.utc).isoformat(),
         "metadata_source": "Deriv public active_symbols",
