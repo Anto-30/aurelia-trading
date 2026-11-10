@@ -47,10 +47,14 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--app-id", default=DEFAULT_DERIV_APP_ID)
     parser.add_argument("--input-csv", type=Path)
     parser.add_argument("--interval", default="1m")
-    parser.add_argument("--tick-size", type=float, help="Override active-symbol pip_size only with a documented instrument source")
+    parser.add_argument("--tick-size", type=float, help="Explicit minimum price increment backed by an instrument-specific source")
+    parser.add_argument("--tick-size-source", default="UNVERIFIED_USER_INPUT")
+    parser.add_argument("--use-display-increment-proxy", action="store_true",
+                        help="Use 10^-pip_size for research sensitivity only; this is not verified as the minimum tradeable tick")
     parser.add_argument("--point-value", type=float, default=1.0,
                         help="Cash P&L per normalized price-unit; default 1.0 is not a verified Deriv contract multiplier")
     parser.add_argument("--point-value-verified", action="store_true")
+    parser.add_argument("--point-value-source", default="UNVERIFIED_NORMALIZED_UNIT")
     parser.add_argument("--spread-ticks-round-trip", type=float, default=0.0)
     parser.add_argument("--slippage-ticks-round-trip", type=float, default=0.0)
     parser.add_argument("--commission-cash-per-unit-round-trip", type=float, default=0.0)
@@ -101,6 +105,12 @@ def main() -> int:
         raise SystemExit("--days must be between 1 and 365")
     if not 0 < args.minimum_coverage_pct <= 100:
         raise SystemExit("--minimum-coverage-pct must be in (0,100]")
+    if args.costs_verified and args.cost_source == "UNVERIFIED_USER_ASSUMPTION":
+        raise SystemExit("--costs-verified requires a documented --cost-source")
+    if args.point_value_verified and args.point_value_source == "UNVERIFIED_NORMALIZED_UNIT":
+        raise SystemExit("--point-value-verified requires a documented --point-value-source")
+    if args.tick_size is not None and args.tick_size_source == "UNVERIFIED_USER_INPUT":
+        raise SystemExit("--tick-size requires a documented --tick-size-source")
 
     end = args.end or (
         pd.Timestamp.now(tz="UTC").floor("min") - pd.Timedelta(minutes=1)
@@ -133,16 +143,22 @@ def main() -> int:
 
     data = validate_ohlc(data)
     data.attrs["symbol"] = args.symbol
-    tick_size = args.tick_size or metadata.get("tick_size")
+    tick_size: float | None = args.tick_size
+    tick_size_status = "VERIFIED_SOURCE_DECLARED" if args.tick_size is not None else "UNVERIFIED"
+    tick_size_source = args.tick_size_source if args.tick_size is not None else "UNVERIFIED"
+    if tick_size is None and args.use_display_increment_proxy:
+        tick_size = metadata.get("display_increment_proxy")
+        tick_size_status = "UNVERIFIED_DISPLAY_INCREMENT_PROXY"
+        tick_size_source = "10^-Deriv-pip_size; display precision only"
     if tick_size is None or float(tick_size) <= 0:
         raise SystemExit(
-            "INSTRUMENT_TICK_SIZE_UNKNOWN: no documented tick_size or Deriv pip_size; "
-            "supply --tick-size with an instrument-specification source"
+            "INSTRUMENT_TICK_SIZE_UNKNOWN: supply --tick-size with an instrument-specific "
+            "minimum-increment source, or explicitly opt into --use-display-increment-proxy"
         )
     quality = data_quality_report(
         data,
         start_utc=pd.Timestamp(start),
-        end_utc=pd.Timestamp(data.index[-1] + pd.Timedelta(minutes=1)),
+        end_utc=pd.Timestamp(end) + pd.Timedelta(minutes=1),
     )
     if quality["coverage_pct"] is None or quality["coverage_pct"] < args.minimum_coverage_pct:
         report = {
@@ -195,12 +211,13 @@ def main() -> int:
     }
     comparison["input_assumptions"] = {
         "tick_size": float(tick_size),
-        "tick_size_source": (
-            "explicit_cli_override" if args.tick_size is not None
-            else metadata.get("tick_size_source_field", "user_csv_or_provider_unknown")
-        ),
+        "tick_size_source": tick_size_source,
+        "tick_size_status": tick_size_status,
+        "display_precision": metadata.get("price_precision"),
+        "display_increment_proxy": metadata.get("display_increment_proxy"),
         "point_value": float(args.point_value),
         "point_value_verified": bool(args.point_value_verified),
+        "point_value_source": args.point_value_source,
         "costs_verified": bool(args.costs_verified),
         "cost_source": args.cost_source,
         "spread_ticks_round_trip": float(args.spread_ticks_round_trip),
@@ -227,6 +244,7 @@ def main() -> int:
         "strategy_2_metrics": comparison["strategy_2"]["metrics"],
         "costs_verified": args.costs_verified,
         "point_value_verified": args.point_value_verified,
+        "tick_size_status": tick_size_status,
         "live_execution": "BLOCKED",
     }, indent=2, default=_json_default))
     return 0
