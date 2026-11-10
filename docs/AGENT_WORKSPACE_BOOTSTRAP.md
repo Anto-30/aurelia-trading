@@ -47,6 +47,22 @@ No agent is allowed to:
 
 A later implementation worker must use a separate worktree/branch and must be independently reviewed. Do not give a Claude subagent shell or write tools to make path restrictions appear stronger than they are.
 
+## Attach the Codespace to ChatGPT through Desktop Commander
+
+After the Codespace has been created and its terminal is open:
+
+1. Open [Desktop Commander](https://mcp.desktopcommander.app/) and follow its **Add Device** instructions.
+2. In the Codespaces terminal, run:
+
+   ```bash
+   npx @wonderwhy-er/desktop-commander@latest remote
+   ```
+
+3. Keep that remote process running. Do not paste any pairing code, access token, or credential into chat.
+4. Confirm the device appears online in Desktop Commander.
+
+When it connects, the first remote action must inspect its configuration and restrict `allowedDirectories` to the Codespace's AURELIA workspace path. Never set `allowedDirectories` to an empty array; Desktop Commander documents that as full-filesystem access. Do not install tools or inspect sensitive paths until the restriction is verified.
+
 ## Installing agent runtimes
 
 Review each official install guide immediately before running an installer:
