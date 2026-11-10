@@ -28,6 +28,56 @@ on:
         required: true
         default: '99'
         type: string
+      tick_size:
+        description: Optional sourced minimum price increment; leave blank to use the explicit display-increment proxy
+        required: false
+        default: ''
+        type: string
+      tick_size_source:
+        description: Source reference for the explicit tick size
+        required: false
+        default: UNVERIFIED_USER_INPUT
+        type: string
+      point_value:
+        description: Normalized cash value per price unit; default is not a Deriv multiplier
+        required: true
+        default: 1
+        type: number
+      point_value_verified:
+        description: User attests point value has been independently sourced (the workflow does not verify it)
+        required: true
+        default: false
+        type: boolean
+      point_value_source:
+        description: Source reference for point value
+        required: false
+        default: UNVERIFIED_NORMALIZED_UNIT
+        type: string
+      spread_ticks_round_trip:
+        description: Total modeled round-trip spread in ticks
+        required: true
+        default: 0
+        type: number
+      slippage_ticks_round_trip:
+        description: Total modeled round-trip slippage in ticks
+        required: true
+        default: 0
+        type: number
+      commission_cash_per_unit_round_trip:
+        description: Modeled cash commission per normalized unit for both sides
+        required: true
+        default: 0
+        type: number
+      costs_verified:
+        description: User attests costs are sourced (the workflow does not independently verify)
+        required: true
+        default: false
+        type: boolean
+      cost_source:
+        description: Source reference for spread, slippage and commission assumptions
+        required: false
+        default: UNVERIFIED_USER_ASSUMPTION
+        type: string
 
 permissions:
   contents: read
@@ -73,10 +123,24 @@ jobs:
             --days "${{ inputs.days }}"
             --app-id "${{ inputs.app_id }}"
             --minimum-coverage-pct "${{ inputs.minimum_coverage_pct }}"
+            --point-value "${{ inputs.point_value }}"
+            --point-value-source "${{ inputs.point_value_source }}"
+            --spread-ticks-round-trip "${{ inputs.spread_ticks_round_trip }}"
+            --slippage-ticks-round-trip "${{ inputs.slippage_ticks_round_trip }}"
+            --commission-cash-per-unit-round-trip "${{ inputs.commission_cash_per_unit_round_trip }}"
+            --cost-source "${{ inputs.cost_source }}"
             --output-dir "reports/research/atos_smc_v2/run-${{ github.run_id }}"
           )
-          if [ "${{ inputs.use_display_increment_proxy }}" = 'true' ]; then
+          if [ -n "${{ inputs.tick_size }}" ]; then
+            args+=(--tick-size "${{ inputs.tick_size }}" --tick-size-source "${{ inputs.tick_size_source }}")
+          elif [ "${{ inputs.use_display_increment_proxy }}" = 'true' ]; then
             args+=(--use-display-increment-proxy)
+          fi
+          if [ "${{ inputs.point_value_verified }}" = 'true' ]; then
+            args+=(--point-value-verified)
+          fi
+          if [ "${{ inputs.costs_verified }}" = 'true' ]; then
+            args+=(--costs-verified)
           fi
           python -m research.labs.run_smc_baseline "${args[@]}"
       - name: Preserve research data and comparison report
@@ -97,6 +161,16 @@ jobs:
             echo "SYMBOL=${{ inputs.symbol }}"
             echo "DAYS=${{ inputs.days }}"
             echo "USE_DISPLAY_INCREMENT_PROXY=${{ inputs.use_display_increment_proxy }}"
+            echo "TICK_SIZE=${{ inputs.tick_size }}"
+            echo "TICK_SIZE_SOURCE=${{ inputs.tick_size_source }}"
+            echo "POINT_VALUE=${{ inputs.point_value }}"
+            echo "POINT_VALUE_USER_ASSERTED_VERIFIED=${{ inputs.point_value_verified }}"
+            echo "POINT_VALUE_SOURCE=${{ inputs.point_value_source }}"
+            echo "SPREAD_TICKS_ROUND_TRIP=${{ inputs.spread_ticks_round_trip }}"
+            echo "SLIPPAGE_TICKS_ROUND_TRIP=${{ inputs.slippage_ticks_round_trip }}"
+            echo "COMMISSION_CASH_PER_UNIT_ROUND_TRIP=${{ inputs.commission_cash_per_unit_round_trip }}"
+            echo "COSTS_USER_ASSERTED_VERIFIED=${{ inputs.costs_verified }}"
+            echo "COST_SOURCE=${{ inputs.cost_source }}"
             echo 'AUTHENTICATED=false'
             echo 'CAPITAL_AUTHORITY=false'
             echo 'ORDER_SUBMISSION_PERMITTED=false'
