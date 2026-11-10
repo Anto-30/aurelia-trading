@@ -17,8 +17,10 @@ from research.labs.atos_smc_v2 import (
     _atr_before_bar,
     _clustered_levels,
     _detect_sweep,
+    _fvg_first_mitigation_indices,
     _swing_context,
     _unmitigated_fvg_pools,
+    _unmitigated_fvg_pools_at,
     build_prior_session_liquidity,
     calculate_metrics,
     data_quality_report,
@@ -240,6 +242,52 @@ class ATOSSMCLiquidityTests(unittest.TestCase):
             source_time_utc=index[0].isoformat(),
         )
         self.assertEqual(_unmitigated_fvg_pools([fvg], data, 2), [fvg])
+
+    def test_precomputed_fvg_mitigation_map_uses_first_later_overlap(self):
+        index = pd.date_range("2026-11-10T13:00:00Z", periods=4, freq="min")
+        data = bars(
+            index,
+            opens=[98.0, 98.0, 100.0, 98.0],
+            highs=[98.5, 98.5, 100.5, 98.5],
+            lows=[97.5, 97.0, 99.5, 97.5],
+            closes=[98.2, 98.2, 100.1, 98.2],
+        )
+        fvg = LiquidityPool(
+            pool_id="FVG-CACHE", session_date="2026-11-10", session_name="ASIA",
+            kind="BULLISH_FVG", side="LOW", level=99.0, lower=99.0, upper=101.0,
+            source_time_utc=index[0].isoformat(),
+        )
+        mapping = _fvg_first_mitigation_indices({"D": [fvg]}, data)
+        self.assertEqual(mapping[fvg.pool_id], 2)
+        self.assertEqual(
+            _unmitigated_fvg_pools_at([fvg], mapping, 2, data_length=len(data)),
+            [fvg],
+        )
+        self.assertEqual(
+            _unmitigated_fvg_pools_at([fvg], mapping, 3, data_length=len(data)),
+            [],
+        )
+
+    def test_precomputed_fvg_mitigation_map_preserves_never_mitigated_pool(self):
+        index = pd.date_range("2026-11-10T13:00:00Z", periods=3, freq="min")
+        data = bars(
+            index,
+            opens=[98.0, 97.5, 97.7],
+            highs=[98.5, 98.0, 98.2],
+            lows=[97.5, 97.0, 97.2],
+            closes=[98.2, 97.7, 97.9],
+        )
+        fvg = LiquidityPool(
+            pool_id="FVG-CACHE-OPEN", session_date="2026-11-10", session_name="ASIA",
+            kind="BULLISH_FVG", side="LOW", level=99.0, lower=99.0, upper=101.0,
+            source_time_utc=index[0].isoformat(),
+        )
+        mapping = _fvg_first_mitigation_indices({"D": [fvg]}, data)
+        self.assertEqual(mapping[fvg.pool_id], len(data))
+        self.assertEqual(
+            _unmitigated_fvg_pools_at([fvg], mapping, 2, data_length=len(data)),
+            [fvg],
+        )
 
 
 class ATOSSMCBacktestTests(unittest.TestCase):
