@@ -9,6 +9,7 @@ from research.labs.deriv_history import (
     DerivHistoryError,
     _derive_display_increment,
     _epoch,
+    _validate_yfinance_window,
     fetch_yfinance_ohlc,
 )
 
@@ -43,9 +44,8 @@ class DerivHistoryContractTests(unittest.TestCase):
     def test_yfinance_accepts_up_to_sixty_day_intraday_request_contract(self):
         end = datetime(2026, 11, 10, tzinfo=timezone.utc)
         start = end - timedelta(days=60)
-        # Network/import is intentionally not attempted by a separate helper;
-        # this assertion documents the guard boundary itself.
-        self.assertLessEqual(end - start, pd.Timedelta(days=60))
+        start_ts, end_ts = _validate_yfinance_window(start, end, "1m")
+        self.assertEqual(end_ts - start_ts, pd.Timedelta(days=60))
 
 
 if __name__ == "__main__":
