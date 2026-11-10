@@ -11,15 +11,13 @@ import os
 from math import isfinite
 from datetime import datetime, timezone
 from typing import Any
-from urllib.parse import quote
 
 import pandas as pd
 import websockets
 
 from .atos_smc_v2 import ResearchDataError, validate_ohlc
 
-DEFAULT_DERIV_APP_ID = "1089"  # Deriv's documented test app id; override for a registered app.
-DERIV_WS_BASE = "wss://ws.derivws.com/websockets/v3?app_id="
+DERIV_PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
 DEFAULT_PAGE_SIZE = 5000
 
 
@@ -67,17 +65,13 @@ async def _request(ws: Any, payload: dict[str, Any], *, timeout_seconds: float =
 
 async def fetch_deriv_symbol_metadata(
     symbol: str,
-    *,
-    app_id: str = DEFAULT_DERIV_APP_ID,
 ) -> dict[str, Any]:
     """Resolve the exact active Deriv symbol and its published pip-size metadata."""
     if not symbol or not symbol.strip():
         raise ValueError("DERIV_SYMBOL_REQUIRED")
-    app = str(app_id or "").strip()
-    if not app.isdigit():
-        raise ValueError("DERIV_APP_ID_MUST_BE_NUMERIC")
-    uri = DERIV_WS_BASE + quote(app)
-    async with websockets.connect(uri, ping_interval=20, close_timeout=10, max_size=5_000_000) as ws:
+    async with websockets.connect(
+        DERIV_PUBLIC_WS_URL, ping_interval=20, close_timeout=10, max_size=5_000_000
+    ) as ws:
         response = await _request(ws, {"active_symbols": "brief", "req_id": 1})
     rows = response.get("active_symbols")
     if not isinstance(rows, list):
@@ -105,6 +99,7 @@ async def fetch_deriv_symbol_metadata(
         "metadata_observed_at_utc": datetime.now(timezone.utc).isoformat(),
         "metadata_source": "Deriv public active_symbols",
         "authenticated": False,
+        "endpoint": DERIV_PUBLIC_WS_URL,
     }
 
 
@@ -114,7 +109,6 @@ async def fetch_deriv_candles(
     end: datetime | pd.Timestamp,
     *,
     granularity_seconds: int = 60,
-    app_id: str = DEFAULT_DERIV_APP_ID,
     page_size: int = DEFAULT_PAGE_SIZE,
     max_pages: int = 100,
 ) -> pd.DataFrame:
@@ -134,15 +128,13 @@ async def fetch_deriv_candles(
     start_epoch, end_epoch = _epoch(start), _epoch(end)
     if end_epoch <= start_epoch:
         raise ValueError("DERIV_HISTORY_WINDOW_INVALID")
-    app = str(app_id or "").strip()
-    if not app.isdigit():
-        raise ValueError("DERIV_APP_ID_MUST_BE_NUMERIC")
-    uri = DERIV_WS_BASE + quote(app)
     rows: list[dict[str, Any]] = []
     cursor = end_epoch
     seen_oldest: set[int] = set()
 
-    async with websockets.connect(uri, ping_interval=20, close_timeout=10, max_size=10_000_000) as ws:
+    async with websockets.connect(
+        DERIV_PUBLIC_WS_URL, ping_interval=20, close_timeout=10, max_size=10_000_000
+    ) as ws:
         for page in range(max_pages):
             response = await _request(ws, {
                 "ticks_history": symbol,
@@ -194,7 +186,7 @@ async def fetch_deriv_candles(
     frame.attrs["provider"] = "Deriv public ticks_history"
     frame.attrs["authenticated"] = False
     frame.attrs["granularity_seconds"] = granularity_seconds
-    frame.attrs["app_id"] = app
+    frame.attrs["endpoint"] = DERIV_PUBLIC_WS_URL
     return frame
 
 
