@@ -7,6 +7,7 @@ import pandas as pd
 
 from research.labs.deriv_history import (
     DerivHistoryError,
+    _derive_display_increment,
     _epoch,
     fetch_yfinance_ohlc,
 )
@@ -20,6 +21,18 @@ class DerivHistoryContractTests(unittest.TestCase):
     def test_aware_boundaries_are_normalized_to_epoch(self):
         expected = int(datetime(2026, 11, 10, 12, 0, tzinfo=timezone.utc).timestamp())
         self.assertEqual(_epoch(datetime(2026, 11, 10, 12, 0, tzinfo=timezone.utc)), expected)
+
+    def test_deriv_pip_size_is_decimal_precision_not_price_increment(self):
+        precision, display_increment = _derive_display_increment(2)
+        self.assertEqual(precision, 2)
+        self.assertAlmostEqual(display_increment, 0.01)
+        self.assertNotEqual(display_increment, 2.0)
+
+    def test_deriv_display_precision_rejects_non_integer_or_invalid_values(self):
+        for value in (-1, 2.5, 13, None):
+            with self.subTest(value=value):
+                with self.assertRaises(DerivHistoryError):
+                    _derive_display_increment(value)
 
     def test_yfinance_rejects_ninety_day_intraday_request_before_network(self):
         end = datetime(2026, 11, 10, tzinfo=timezone.utc)
