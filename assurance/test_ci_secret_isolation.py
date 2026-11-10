@@ -167,8 +167,11 @@ class ProductionSecretIsolationTests(unittest.TestCase):
     def test_checkout_credentials_are_not_persisted_in_untrusted_read_only_workflows(self):
         assurance = (WORKFLOWS / "aurelia-assurance.yml").read_text(encoding="utf-8")
         runtime = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
-        self.assertIn("uses: actions/checkout@v7\\n        with:\\n          persist-credentials: false", assurance)
-        self.assertIn("uses: actions/checkout@v7\\n        with:\\n          persist-credentials: false", runtime)
+        runtime_probe = _job_block("aurelia-free-runtime.yml", "runtime-probe")
+        whatsapp = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
+        self.assertRegex(assurance, r"uses: actions/checkout@v7\n\s+with:\n\s+persist-credentials: false")
+        self.assertRegex(runtime_probe, r"uses: actions/checkout@v7\n\s+with:\n\s+persist-credentials: false")
+        self.assertRegex(whatsapp, r"uses: actions/checkout@v7\n\s+with:\n\s+persist-credentials: false")
 
     def test_whatsapp_raw_credentials_are_scoped_to_the_send_step(self):
         workflow = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
