@@ -18,8 +18,8 @@ Do not move these strategy detectors into production or connect them to an order
 The primary dataset is Deriv public 1-minute OHLC candles for the exact requested symbol, using the current no-auth WebSocket endpoint `wss://api.derivws.com/trading/v1/options/ws/public`. The downloader:
 - resolves the current symbol through public active_symbols;
 - retrieves ticks_history candles with granularity=60, explicit count, style=candles, and subscribe=0;
-- pages backward, deduplicates timestamps, validates OHLC, and does not forward-fill missing bars;
-- writes the raw normalized OHLC CSV and a JSON report with the coverage assessment.
+- pages backward with a 1.25-second request pace and bounded 15/30/60-second retry backoff on explicit rate-limit errors, deduplicates timestamps, validates OHLC, and does not forward-fill missing bars;
+- writes a normalized OHLC CSV and JSON comparison artifact only to the ephemeral GitHub Actions workspace, then uploads both with a one-day expiry. Deriv's API terms permit cached API content for up to 24 hours; do not copy candle CSVs or detailed price-level trade ledgers to durable repositories, cloud drives or long-lived artifacts. The workflow has no retention beyond one day.
 
 All candle indices represent the candle open time in UTC. The strategy engine computes close availability as open time + timeframe. 15-minute bars are formed only from 15 observed 1-minute bars and only become available at their 15-minute close. Fractals are confirmed only after the configured right-hand bars close.
 
@@ -102,7 +102,7 @@ No raw win-rate summary is used as a selection metric. No strategy is automatica
 7. Gaps, duplicates, invalid OHLC and naive timestamps are errors or explicit coverage deficits; no forward-fill.
 8. The 90-day baseline is exploratory/in-sample unless followed by a genuinely untouched time period or prospective run. Optimizing thresholds on the same 90 days and then reporting its PF is selection bias.
 
-Remaining risks include OHLC's inability to expose intrabar price path, data-provider revisions, quote gaps, latency, fill queue/limit non-fill, instrument specification changes, and session-window choice. Preserve the raw CSV and JSON result with run SHA, and use a separate holdout or prospective data collection before making an edge claim.
+Remaining risks include OHLC's inability to expose intrabar price path, data-provider revisions, quote gaps, latency, fill queue/limit non-fill, instrument specification changes, and session-window choice. Bind the one-day report and data artifact to the run SHA, then allow the market-data artifacts to expire within 24 hours. Do not retain the raw CSV or detailed price-level ledger longer than Deriv's permitted cache window. Use a separate licensed data source for durable long-term research storage. Use a separate holdout or prospective data collection before making an edge claim.
 
 ## Run
 
