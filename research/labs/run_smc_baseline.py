@@ -53,8 +53,6 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--interval", default="1m")
     parser.add_argument("--tick-size", type=float, help="Explicit minimum price increment backed by an instrument-specific source")
     parser.add_argument("--tick-size-source", default="UNVERIFIED_USER_INPUT")
-    parser.add_argument("--use-display-increment-proxy", action="store_true",
-                        help="Use 10^-pip_size for research sensitivity only; this is not verified as the minimum tradeable tick")
     parser.add_argument("--point-value", type=float, default=1.0,
                         help="Cash P&L per normalized price-unit; default 1.0 is not a verified Deriv contract multiplier")
     parser.add_argument("--point-value-verified", action="store_true")
@@ -166,16 +164,17 @@ def main() -> int:
         raise SystemExit("HISTORY_WINDOW_CONTAINS_NO_CANDLES")
     data.attrs["symbol"] = args.symbol
     tick_size: float | None = args.tick_size
-    tick_size_status = "USER_DECLARED_SOURCE_NOT_INDEPENDENTLY_VERIFIED" if args.tick_size is not None else "UNVERIFIED"
-    tick_size_source = args.tick_size_source if args.tick_size is not None else "UNVERIFIED"
-    if tick_size is None and args.use_display_increment_proxy:
-        tick_size = metadata.get("display_increment_proxy")
-        tick_size_status = "UNVERIFIED_DISPLAY_INCREMENT_PROXY"
-        tick_size_source = "10^-Deriv-pip_size; display precision only"
-    if tick_size is None or float(tick_size) <= 0:
+    if tick_size is not None:
+        tick_size_status = "USER_DECLARED_SOURCE_NOT_INDEPENDENTLY_VERIFIED"
+        tick_size_source = args.tick_size_source
+    else:
+        tick_size = metadata.get("price_increment")
+        tick_size_status = metadata.get("price_increment_status", "UNVERIFIED")
+        tick_size_source = metadata.get("price_increment_source", "UNVERIFIED")
+    if tick_size is None or not pd.notna(float(tick_size)) or float(tick_size) <= 0:
         raise SystemExit(
-            "INSTRUMENT_TICK_SIZE_UNKNOWN: supply --tick-size with an instrument-specific "
-            "minimum-increment source, or explicitly opt into --use-display-increment-proxy"
+            "INSTRUMENT_PRICE_INCREMENT_UNKNOWN: Deriv must provide active_symbols.pip_size, "
+            "or provide --tick-size with a source reference"
         )
     quality = data_quality_report(
         data,
@@ -247,8 +246,7 @@ def main() -> int:
         "tick_size": float(tick_size),
         "tick_size_source": tick_size_source,
         "tick_size_status": tick_size_status,
-        "display_precision": metadata.get("price_precision"),
-        "display_increment_proxy": metadata.get("display_increment_proxy"),
+        "provider_pip_size": metadata.get("pip_size"),
         "point_value": float(args.point_value),
         "point_value_user_asserted_verified": bool(args.point_value_verified),
         "point_value_source": args.point_value_source,
