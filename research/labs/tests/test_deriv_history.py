@@ -7,7 +7,7 @@ import pandas as pd
 
 from research.labs.deriv_history import (
     DerivHistoryError,
-    _derive_display_increment,
+    _normalize_deriv_pip_size,
     _epoch,
     _validate_yfinance_window,
     fetch_yfinance_ohlc,
@@ -23,17 +23,16 @@ class DerivHistoryContractTests(unittest.TestCase):
         expected = int(datetime(2026, 11, 10, 12, 0, tzinfo=timezone.utc).timestamp())
         self.assertEqual(_epoch(datetime(2026, 11, 10, 12, 0, tzinfo=timezone.utc)), expected)
 
-    def test_deriv_pip_size_is_decimal_precision_not_price_increment(self):
-        precision, display_increment = _derive_display_increment(2)
-        self.assertEqual(precision, 2)
-        self.assertAlmostEqual(display_increment, 0.01)
-        self.assertNotEqual(display_increment, 2.0)
+    def test_deriv_active_symbols_pip_size_is_preserved_as_provider_price_increment(self):
+        self.assertAlmostEqual(_normalize_deriv_pip_size(0.01), 0.01)
+        self.assertAlmostEqual(_normalize_deriv_pip_size(0.0001), 0.0001)
+        self.assertAlmostEqual(_normalize_deriv_pip_size(5), 5.0)
 
-    def test_deriv_display_precision_rejects_non_integer_or_invalid_values(self):
-        for value in (-1, 2.5, 13, None):
+    def test_deriv_pip_size_rejects_non_positive_non_finite_or_invalid_values(self):
+        for value in (-1, 0, float("inf"), None, "invalid"):
             with self.subTest(value=value):
                 with self.assertRaises(DerivHistoryError):
-                    _derive_display_increment(value)
+                    _normalize_deriv_pip_size(value)
 
     def test_yfinance_rejects_ninety_day_intraday_request_before_network(self):
         end = datetime(2026, 11, 10, tzinfo=timezone.utc)
