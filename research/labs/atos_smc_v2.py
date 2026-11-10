@@ -711,6 +711,58 @@ def build_prior_session_liquidity(
     return result
 
 
+def _fvg_first_mitigation_indices(
+    pools_by_day: dict[str, list[LiquidityPool]],
+    data: pd.DataFrame,
+) -> dict[str, int]:
+    """Precompute first later OHLC overlap for each prior-session FVG in O(P*N)."""
+    index = data.index
+    lows = data["low"].to_numpy(dtype=float)
+    highs = data["high"].to_numpy(dtype=float)
+    result: dict[str, int] = {}
+    seen: set[str] = set()
+    for pools in pools_by_day.values():
+        for pool in pools:
+            if (
+                pool.kind not in ("BULLISH_FVG", "BEARISH_FVG")
+                or pool.lower is None
+                or pool.upper is None
+                or pool.source_time_utc is None
+                or pool.pool_id in seen
+            ):
+                continue
+            seen.add(pool.pool_id)
+            formed_at = pd.Timestamp(pool.source_time_utc).tz_convert("UTC")
+            start_index = int(index.searchsorted(formed_at, side="right"))
+            overlap = (
+                (lows[start_index:] <= float(pool.upper))
+                & (highs[start_index:] >= float(pool.lower))
+            )
+            first = np.flatnonzero(overlap)
+            result[pool.pool_id] = (
+                start_index + int(first[0]) if len(first) else len(data)
+            )
+    return result
+
+
+def _unmitigated_fvg_pools_at(
+    pools: Sequence[LiquidityPool],
+    mitigation_indices: dict[str, int],
+    current_index: int,
+    *,
+    data_length: int,
+) -> list[LiquidityPool]:
+    """Keep pools until the first mitigation bar; that bar itself may be the sweep."""
+    eligible: list[LiquidityPool] = []
+    for pool in pools:
+        if pool.kind in ("BULLISH_FVG", "BEARISH_FVG"):
+            first_mitigation = mitigation_indices.get(pool.pool_id, data_length)
+            if first_mitigation < current_index:
+                continue
+        eligible.append(pool)
+    return eligible
+
+
 def _unmitigated_fvg_pools(
     pools: Sequence[LiquidityPool],
     data: pd.DataFrame,
@@ -848,6 +900,7 @@ def strategy2_fvg_sweep_displacement(
     atr = _atr_before_bar(data, config.atr_period).to_numpy(dtype=float)
     active = config.time_window.mask(data.index)
     pools_by_day = build_prior_session_liquidity(data, tick_size=tick_size, config=config)
+    fvg_mitigation_indices = _fvg_first_mitigation_indices(pools_by_day, data)
     local_close_dates = [
         stamp.date().isoformat()
         for stamp in (data.index + pd.Timedelta(minutes=1)).tz_convert(config.time_window.timezone)
@@ -864,8 +917,11 @@ def strategy2_fvg_sweep_displacement(
             # Once the entry window closes, no incomplete sweep can mature later.
             pending_sweeps.clear()
             continue
-        pools = _unmitigated_fvg_pools(
-            pools_by_day.get(local_close_dates[i], []), data, i
+        pools = _unmitigated_fvg_pools_at(
+            pools_by_day.get(local_close_dates[i], []),
+            fvg_mitigation_indices,
+            i,
+            data_length=len(data),
         )
         # Evaluate older sweeps before registering a sweep on the current candle.
         for sweep in list(reversed(pending_sweeps)):
