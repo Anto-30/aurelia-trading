@@ -21,15 +21,6 @@ if ! command -v sudo >/dev/null 2>&1; then
 fi
 sudo -n true
 
-# Revoke the retired credential-bearing VERIFY_ONLY store before any deploy
-# attempt. Stop an existing container first so it cannot retain those values.
-if [ -f "$READONLY_SECRET_FILE" ]; then
-  sudo rm -f "$READONLY_SECRET_FILE"
-  if command -v docker >/dev/null 2>&1; then
-    sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
-  fi
-fi
-
 if [ ! -d "$RELEASE_DIR" ]; then
   echo "AURELIA_HOST_BLOCKED=MISSING_RELEASE_DIR"
   exit 2
@@ -58,6 +49,16 @@ case "$DEPLOYMENT_MODE" in
     exit 2
     ;;
 esac
+
+# Revoke the retired credential-bearing VERIFY_ONLY store only after the
+# candidate release and its fail-closed LIVE_LOCK have been validated. This
+# prevents a missing or malformed candidate from stopping a healthy runtime.
+if [ -f "$READONLY_SECRET_FILE" ]; then
+  sudo rm -f "$READONLY_SECRET_FILE"
+  if command -v docker >/dev/null 2>&1; then
+    sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+  fi
+fi
 
 if ! command -v docker >/dev/null 2>&1; then
   if command -v apt-get >/dev/null 2>&1; then
