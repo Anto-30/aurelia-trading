@@ -16,6 +16,7 @@ from research.labs.atos_smc_v2 import (
     TimeWindow,
     _detect_sweep,
     _swing_context,
+    build_prior_session_liquidity,
     calculate_metrics,
     data_quality_report,
     resample_15m,
@@ -168,6 +169,23 @@ class ATOSSMCLiquidityTests(unittest.TestCase):
         self.assertIsNone(
             _detect_sweep(candle, [high, low], tick_size=0.01, minimum_sweep_ticks=1)
         )
+
+    def test_liquidity_uses_only_prior_completed_london_session(self):
+        index = pd.date_range("2026-11-09T07:00:00Z", "2026-11-10T10:00:00Z", freq="min")
+        opens = [100.0 + (i % 20) * 0.01 for i in range(len(index))]
+        highs = [value + 0.05 for value in opens]
+        lows = [value - 0.05 for value in opens]
+        closes = list(opens)
+        data = bars(index, opens=opens, highs=highs, lows=lows, closes=closes)
+        pools = build_prior_session_liquidity(data, tick_size=0.01)
+        current_day_london = [
+            pool for pool in pools["2026-11-10"] if pool.session_name == "LONDON"
+        ]
+        self.assertTrue(current_day_london)
+        # Nov 10 London is still forming during the requested morning window;
+        # levels must instead come from the already-completed Nov 9 session.
+        self.assertTrue(all(pd.Timestamp(pool.source_time_utc).date().isoformat() == "2026-11-09"
+                            for pool in current_day_london if pool.source_time_utc))
 
 
 class ATOSSMCBacktestTests(unittest.TestCase):
