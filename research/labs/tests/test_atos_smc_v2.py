@@ -16,6 +16,7 @@ from research.labs.atos_smc_v2 import (
     TimeWindow,
     _detect_sweep,
     _swing_context,
+    _unmitigated_fvg_pools,
     build_prior_session_liquidity,
     calculate_metrics,
     data_quality_report,
@@ -186,6 +187,38 @@ class ATOSSMCLiquidityTests(unittest.TestCase):
         # levels must instead come from the already-completed Nov 9 session.
         self.assertTrue(all(pd.Timestamp(pool.source_time_utc).date().isoformat() == "2026-11-09"
                             for pool in current_day_london if pool.source_time_utc))
+
+    def test_prior_session_fvg_is_removed_after_a_later_mitigation(self):
+        index = pd.date_range("2026-11-10T13:00:00Z", periods=3, freq="min")
+        data = bars(
+            index,
+            opens=[98.0, 100.2, 100.2],
+            highs=[98.5, 100.8, 101.0],
+            lows=[97.5, 100.0, 99.5],
+            closes=[98.2, 100.5, 100.2],
+        )
+        fvg = LiquidityPool(
+            pool_id="FVG-1", session_date="2026-11-10", session_name="ASIA",
+            kind="BULLISH_FVG", side="LOW", level=99.0, lower=99.0, upper=101.0,
+            source_time_utc=index[0].isoformat(),
+        )
+        self.assertEqual(_unmitigated_fvg_pools([fvg], data, 2), [])
+
+    def test_prior_session_fvg_remains_available_until_a_later_bar_mitigates_it(self):
+        index = pd.date_range("2026-11-10T13:00:00Z", periods=3, freq="min")
+        data = bars(
+            index,
+            opens=[98.0, 97.5, 97.7],
+            highs=[98.5, 98.0, 98.2],
+            lows=[97.5, 97.0, 97.2],
+            closes=[98.2, 97.7, 97.9],
+        )
+        fvg = LiquidityPool(
+            pool_id="FVG-2", session_date="2026-11-10", session_name="ASIA",
+            kind="BULLISH_FVG", side="LOW", level=99.0, lower=99.0, upper=101.0,
+            source_time_utc=index[0].isoformat(),
+        )
+        self.assertEqual(_unmitigated_fvg_pools([fvg], data, 2), [fvg])
 
 
 class ATOSSMCBacktestTests(unittest.TestCase):
