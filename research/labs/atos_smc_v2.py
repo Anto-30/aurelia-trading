@@ -298,7 +298,12 @@ def _mtf_bias(
         "_row": np.arange(len(frame_1m)),
     }).sort_values("signal_at")
     merged = pd.merge_asof(
-        left, right, left_on="signal_at", right_on="available_at", direction="backward"
+        left,
+        right,
+        left_on="signal_at",
+        right_on="available_at",
+        direction="backward",
+        tolerance=pd.Timedelta(minutes=15),
     ).sort_values("_row")
     bias = pd.Series(
         merged["bias"].fillna("UNKNOWN").to_numpy(),
@@ -1173,7 +1178,7 @@ def simulate(
     }
     active = config.time_window.mask(data.index)
     active_entry = config.time_window.open_mask(data.index)
-    local_close = (data.index + pd.Timedelta(minutes=1)).tz_convert(config.time_window.timezone)
+    local_open = data.index.tz_convert(config.time_window.timezone)
     cost_per_unit = config.round_trip_cost_per_unit
 
     def mark_to_market(close: float) -> float:
@@ -1217,7 +1222,7 @@ def simulate(
 
     for i in range(len(data)):
         row = data.iloc[i]
-        session_date = local_close[i].date().isoformat()
+        session_date = local_open[i].date().isoformat()
         current_mark = mark_to_market(float(row["close"]))
         if session_date != day_key:
             day_key = session_date
