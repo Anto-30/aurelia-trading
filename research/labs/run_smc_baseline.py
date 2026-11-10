@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
+import os
+import platform
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -209,6 +212,18 @@ def main() -> int:
         "days_requested": args.days,
         "bar_count": len(data),
     }
+    comparison["run_provenance"] = {
+        "source_commit": os.environ.get("GITHUB_SHA", "LOCAL_UNBOUND"),
+        "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "python_version": platform.python_version(),
+        "pandas_version": pd.__version__,
+        "dependencies": {
+            "numpy": __import__("numpy").__version__,
+            "websockets": __import__("importlib.metadata", fromlist=["version"]).version("websockets"),
+            "yfinance": __import__("importlib.metadata", fromlist=["version"]).version("yfinance"),
+        },
+    }
     comparison["input_assumptions"] = {
         "tick_size": float(tick_size),
         "tick_size_source": tick_size_source,
@@ -239,6 +254,11 @@ def main() -> int:
     report_path = args.output_dir / f"{args.symbol}_1m_{args.days}d_{stamp}.json"
     data_path = args.output_dir / f"{args.symbol}_1m_{args.days}d_{stamp}.csv"
     data.to_csv(data_path, index_label="timestamp_utc")
+    comparison["data_artifact"] = {
+        "filename": data_path.name,
+        "sha256": hashlib.sha256(data_path.read_bytes()).hexdigest(),
+        "rows": int(len(data)),
+    }
     report_path.write_text(
         json.dumps(comparison, indent=2, default=_json_default, allow_nan=False),
         encoding="utf-8",
