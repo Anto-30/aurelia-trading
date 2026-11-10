@@ -41,8 +41,6 @@ case "$DEPLOYMENT_MODE" in
     grep -Eq "^FINAL_EXECUTION_AUTHORIZATION:[[:space:]]*true[[:space:]]*$" "$LOCK_FILE"
     grep -Eq "^LIVE_EXECUTION:[[:space:]]*ENABLED[[:space:]]*$" "$LOCK_FILE"
     grep -Eq "^capital_plane_mode:[[:space:]]*LIVE[[:space:]]*$" "$LOCK_FILE"
-    echo "AURELIA_HOST_BLOCKED=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
-    exit 2
     ;;
   *)
     echo "AURELIA_HOST_BLOCKED=INVALID_DEPLOYMENT_MODE"
@@ -58,6 +56,11 @@ if [ -f "$READONLY_SECRET_FILE" ]; then
   if command -v docker >/dev/null 2>&1; then
     sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
   fi
+fi
+
+if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
+  echo "AURELIA_HOST_BLOCKED=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
+  exit 2
 fi
 
 if ! command -v docker >/dev/null 2>&1; then
