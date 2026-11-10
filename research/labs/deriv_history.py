@@ -78,19 +78,29 @@ async def fetch_deriv_symbol_metadata(
     if len(matches) != 1:
         raise DerivHistoryError("DERIV_SYMBOL_NOT_UNIQUELY_ACTIVE")
     row = matches[0]
-    pip_size = row.get("pip_size", row.get("pip"))
+    precision_value = row.get("pip_size", row.get("pip"))
     try:
-        tick_size = float(pip_size)
+        precision_float = float(precision_value)
     except (TypeError, ValueError) as exc:
-        raise DerivHistoryError("DERIV_PIP_SIZE_UNKNOWN") from exc
-    if not pd.notna(tick_size) or tick_size <= 0:
-        raise DerivHistoryError("DERIV_PIP_SIZE_INVALID")
+        raise DerivHistoryError("DERIV_PRICE_PRECISION_UNKNOWN") from exc
+    if (
+        not pd.notna(precision_float)
+        or precision_float < 0
+        or not precision_float.is_integer()
+        or precision_float > 12
+    ):
+        raise DerivHistoryError("DERIV_PRICE_PRECISION_INVALID")
+    price_precision = int(precision_float)
+    display_increment = 10.0 ** (-price_precision)
     return {
         "symbol": str(row.get("underlying_symbol") or row.get("symbol")),
         "display_name": str(row.get("underlying_symbol_name") or row.get("display_name") or ""),
         "market": row.get("market"),
         "submarket": row.get("submarket"),
-        "tick_size": tick_size,
+        "price_precision": price_precision,
+        "display_increment_proxy": display_increment,
+        "tick_size_verified": False,
+        "tick_size_source_status": "DISPLAY_PRECISION_ONLY_NOT_VERIFIED_MINIMUM_TICK",
         "tick_size_source_field": "pip_size" if "pip_size" in row else "pip",
         "metadata_observed_at_utc": datetime.now(timezone.utc).isoformat(),
         "metadata_source": "Deriv public active_symbols",
