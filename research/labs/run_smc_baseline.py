@@ -25,7 +25,6 @@ from research.labs.atos_smc_v2 import (
     validate_ohlc,
 )
 from research.labs.deriv_history import (
-    DEFAULT_DERIV_APP_ID,
     fetch_deriv_candles,
     fetch_deriv_symbol_metadata,
     fetch_yfinance_ohlc,
@@ -48,7 +47,6 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--days", type=int, default=90)
     parser.add_argument("--start", type=_aware_datetime)
     parser.add_argument("--end", type=_aware_datetime)
-    parser.add_argument("--app-id", default=DEFAULT_DERIV_APP_ID)
     parser.add_argument("--input-csv", type=Path)
     parser.add_argument("--interval", default="1m")
     parser.add_argument("--tick-size", type=float, help="Explicit minimum price increment backed by an instrument-specific source")
@@ -73,8 +71,8 @@ def _parser() -> argparse.ArgumentParser:
 
 
 async def _download_deriv(args: argparse.Namespace, start: datetime, end: datetime):
-    metadata = await fetch_deriv_symbol_metadata(args.symbol, app_id=args.app_id)
-    data = await fetch_deriv_candles(args.symbol, start, end, app_id=args.app_id)
+    metadata = await fetch_deriv_symbol_metadata(args.symbol)
+    data = await fetch_deriv_candles(args.symbol, start, end)
     return data, metadata
 
 
