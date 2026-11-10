@@ -19,6 +19,7 @@ from .atos_smc_v2 import ResearchDataError, validate_ohlc
 
 DERIV_PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
 DEFAULT_PAGE_SIZE = 5000
+DEFAULT_MAX_HISTORY_PAGES = 600
 
 
 class DerivHistoryError(RuntimeError):
@@ -110,7 +111,7 @@ async def fetch_deriv_candles(
     *,
     granularity_seconds: int = 60,
     page_size: int = DEFAULT_PAGE_SIZE,
-    max_pages: int = 100,
+    max_pages: int = DEFAULT_MAX_HISTORY_PAGES,
 ) -> pd.DataFrame:
     """Fetch candle history backwards in bounded pages; never synthesize missing bars.
 
@@ -123,8 +124,8 @@ async def fetch_deriv_candles(
         raise ValueError("ATOS_PRIMARY_HISTORY_GRANULARITY_MUST_BE_60_SECONDS")
     if not 100 <= page_size <= 5000:
         raise ValueError("DERIV_PAGE_SIZE_MUST_BE_100_TO_5000")
-    if max_pages < 1:
-        raise ValueError("DERIV_MAX_PAGES_INVALID")
+    if max_pages < 1 or max_pages > DEFAULT_MAX_HISTORY_PAGES:
+        raise ValueError("DERIV_MAX_PAGES_OUT_OF_RANGE")
     start_epoch, end_epoch = _epoch(start), _epoch(end)
     if end_epoch <= start_epoch:
         raise ValueError("DERIV_HISTORY_WINDOW_INVALID")
