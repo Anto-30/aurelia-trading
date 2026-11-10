@@ -14,6 +14,7 @@ from research.labs.atos_smc_v2 import (
     Strategy1Config,
     Strategy2Config,
     TimeWindow,
+    _clustered_levels,
     _detect_sweep,
     _swing_context,
     _unmitigated_fvg_pools,
@@ -131,6 +132,11 @@ class ATOSSMCStructureTests(unittest.TestCase):
 
 
 class ATOSSMCLiquidityTests(unittest.TestCase):
+    def test_equal_high_low_cluster_band_cannot_chain_beyond_two_ticks(self):
+        levels = [(0, 100.00), (1, 100.01), (2, 100.02), (3, 100.03)]
+        clusters = _clustered_levels(levels, tolerance=0.02)
+        self.assertEqual(len(clusters), 1)
+        self.assertAlmostEqual(clusters[0], 100.01)
     def test_high_sweep_requires_wick_pierce_and_close_reclaim(self):
         pool = LiquidityPool(
             pool_id="EQH-1", session_date="2026-11-10", session_name="LONDON",
