@@ -159,6 +159,11 @@ def main() -> int:
         }
 
     data = validate_ohlc(data)
+    start_utc = pd.Timestamp(start).tz_convert("UTC")
+    end_utc = pd.Timestamp(end).tz_convert("UTC")
+    data = data.loc[(data.index >= start_utc) & (data.index <= end_utc)].copy()
+    if data.empty:
+        raise SystemExit("HISTORY_WINDOW_CONTAINS_NO_CANDLES")
     data.attrs["symbol"] = args.symbol
     tick_size: float | None = args.tick_size
     tick_size_status = "USER_DECLARED_SOURCE_NOT_INDEPENDENTLY_VERIFIED" if args.tick_size is not None else "UNVERIFIED"
@@ -174,8 +179,8 @@ def main() -> int:
         )
     quality = data_quality_report(
         data,
-        start_utc=pd.Timestamp(start),
-        end_utc=pd.Timestamp(end) + pd.Timedelta(minutes=1),
+        start_utc=start_utc,
+        end_utc=end_utc + pd.Timedelta(minutes=1),
     )
     if quality["coverage_pct"] is None or quality["coverage_pct"] < args.minimum_coverage_pct:
         report = {
