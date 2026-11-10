@@ -1,0 +1,105 @@
+name: ATOS v2 SMC Research Baseline
+
+on:
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: Exact Deriv synthetic symbol
+        required: true
+        default: R_100
+        type: string
+      days:
+        description: History window (1-365 days)
+        required: true
+        default: 90
+        type: number
+      app_id:
+        description: Registered Deriv application ID (1089 is the public test default)
+        required: true
+        default: '1089'
+        type: string
+      use_display_increment_proxy:
+        description: Use 10^-pip_size as an unverified display-increment proxy
+        required: true
+        default: true
+        type: boolean
+      minimum_coverage_pct:
+        description: Minimum 1-minute candle coverage required
+        required: true
+        default: '99'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atos-v2-smc-baseline-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  research-baseline:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      PYTHONPATH: '.'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Checkout selected research branch without persisted credentials
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-research.txt
+      - name: Install isolated research dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-research.txt
+      - name: Run ATOS SMC comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            --provider deriv
+            --symbol "${{ inputs.symbol }}"
+            --days "${{ inputs.days }}"
+            --app-id "${{ inputs.app_id }}"
+            --minimum-coverage-pct "${{ inputs.minimum_coverage_pct }}"
+            --output-dir "reports/research/atos_smc_v2/run-${{ github.run_id }}"
+          )
+          if [ "${{ inputs.use_display_increment_proxy }}" = 'true' ]; then
+            args+=(--use-display-increment-proxy)
+          fi
+          python -m research.labs.run_smc_baseline "${args[@]}"
+      - name: Preserve research data and comparison report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atos-v2-smc-${{ inputs.symbol }}-${{ inputs.days }}d-${{ github.run_id }}
+          path: reports/research/atos_smc_v2/run-${{ github.run_id }}/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Write safety and provenance summary
+        if: always()
+        run: |
+          {
+            echo '## ATOS v2 SMC research run'
+            echo ''
+            echo "SOURCE_COMMIT=$GITHUB_SHA"
+            echo "SYMBOL=${{ inputs.symbol }}"
+            echo "DAYS=${{ inputs.days }}"
+            echo "USE_DISPLAY_INCREMENT_PROXY=${{ inputs.use_display_increment_proxy }}"
+            echo 'AUTHENTICATED=false'
+            echo 'CAPITAL_AUTHORITY=false'
+            echo 'ORDER_SUBMISSION_PERMITTED=false'
+            echo 'LIVE_EXECUTION=BLOCKED'
+            echo 'FINAL_EXECUTION_AUTHORIZATION=false'
+          } >> "$GITHUB_STEP_SUMMARY"
