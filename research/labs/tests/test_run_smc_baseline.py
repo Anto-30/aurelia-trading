@@ -51,8 +51,8 @@ class ATOSSMCBaselineCliTests(unittest.TestCase):
             self.assertFalse(report["capital_authority"])
             self.assertFalse(report["order_submission_permitted"])
             self.assertEqual(report["live_execution"], "BLOCKED")
-            self.assertFalse(report["input_assumptions"]["costs_verified"])
-            self.assertFalse(report["input_assumptions"]["point_value_verified"])
+            self.assertFalse(report["input_assumptions"]["costs_user_asserted_verified"])
+            self.assertFalse(report["input_assumptions"]["point_value_user_asserted_verified"])
 
 
 if __name__ == "__main__":
