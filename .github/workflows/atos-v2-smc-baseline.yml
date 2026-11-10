@@ -146,7 +146,8 @@ jobs:
           name: atos-v2-smc-${{ inputs.symbol || 'R_100' }}-${{ inputs.days || 90 }}d-${{ github.run_id }}
           path: reports/research/atos_smc_v2/run-${{ github.run_id }}/
           if-no-files-found: warn
-          retention-days: 30
+          # Deriv API terms allow cached feed content for up to 24 hours.
+          retention-days: 1
       - name: Write safety and provenance summary
         if: always()
         run: |
