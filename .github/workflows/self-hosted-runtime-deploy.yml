@@ -33,6 +33,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 1
+          persist-credentials: false
 
       - name: Verify source revision and deployment lock
         shell: bash
@@ -78,7 +79,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          assurance_json="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow aurelia-assurance.yml --commit "$GITHUB_SHA" --limit 20 --json status,conclusion,event,databaseId)"
+          assurance_json="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow aurelia-assurance.yml --commit "$GITHUB_SHA" --limit 20 --json status,conclusion,event,headBranch,headSha,databaseId)"
           export assurance_json
           python - <<'PY'
           import json
@@ -91,9 +92,11 @@ jobs:
               if run.get("status") == "completed"
               and run.get("conclusion") == "success"
               and run.get("event") == "push"
+              and run.get("headBranch") == "main"
+              and run.get("headSha") == os.environ["GITHUB_SHA"]
           ]
           if not eligible:
-              print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PUSH_RUN_FOR_EXACT_COMMIT")
+              print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PROTECTED_MAIN_PUSH_RUN_FOR_EXACT_COMMIT")
               sys.exit(2)
           print(f"ASSURANCE_GREEN_PUSH_RUNS={len(eligible)}")
           PY
