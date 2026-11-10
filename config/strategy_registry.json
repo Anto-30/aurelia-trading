@@ -403,6 +403,57 @@
         "Existing strategy identity retained; implementation not verified in canonical main checkout.",
         "No verified qualification evidence"
       ]
+    },
+    {
+      "strategy_id": "THREE_SIXTY_NINE_MSNR",
+      "version": "0.1.0",
+      "implementation_path": "research/labs/three_sixty_nine_msnr.py",
+      "implementation_entrypoint": "evaluate_369_msnr_candidate",
+      "simulator_path": "research/labs/three_sixty_nine_simulator.py",
+      "simulator_entrypoint": "simulate_candidate",
+      "implementation_status": "RESEARCH_ONLY",
+      "instrument_compatibility_status": "UNKNOWN",
+      "instrument_categories": [],
+      "verified_instrument_ids": [],
+      "timeframe_status": "CONFIGURATION_REQUIRED",
+      "timeframes": [],
+      "data_requirements": [
+        "closed_ohlc_bars",
+        "confirmed_protected_swing_provenance",
+        "verified_instrument_mapping",
+        "verified_tick_size",
+        "timezone_aware_timestamps",
+        "verified_fresh_instrument_cost_profile"
+      ],
+      "risk_profile": "Research-only; no capital authority, position sizing, broker access, or order submission.",
+      "execution_assumptions": [
+        "next_bar_open_after_signal",
+        "stop_first_when_ohlc_sequence_ambiguous",
+        "verified_itemized_round_trip_costs_required",
+        "explicit_end_of_data_exit"
+      ],
+      "qualification_status": "RESEARCH_ONLY_UNQUALIFIED",
+      "instrument_specification_status": "UNKNOWN",
+      "cost_profile_status": "UNKNOWN",
+      "out_of_sample_status": "NOT_RUN",
+      "walk_forward_status": "NOT_RUN",
+      "calibration_status": "NOT_RUN",
+      "net_economics_status": "NOT_RUN",
+      "robustness_status": "NOT_RUN",
+      "statistical_uncertainty_status": "NOT_RUN",
+      "forward_testing_status": "NOT_RUN",
+      "runtime_soak_status": "NOT_RUN",
+      "risk_governance_status": "UNKNOWN",
+      "qualification_evidence_ids": [],
+      "reviewer": null,
+      "qualified_source_revision": null,
+      "strategy_hash": null,
+      "rejection_reasons": [
+        "Instrument mapping, tick precision, and protected-swing source convention remain unverified.",
+        "No qualified historical dataset or sealed out-of-sample evidence is attached.",
+        "No current verified instrument-specific cost and latency profile is attached.",
+        "Simulator correctness and repository CI must pass before further evaluation."
+      ]
     }
   ]
 }
