@@ -905,10 +905,12 @@ def strategy2_fvg_sweep_displacement(
                 target, target_source = _opposing_pool_target(pools, "SHORT", entry, current_price=closes[i])
                 invalidation = zone_high
             if target is None or target_source is None:
+                pending_sweeps.remove(sweep)
                 continue
             risk = entry - stop if direction == "LONG" else stop - entry
             reward = target - entry if direction == "LONG" else entry - target
             if risk <= tick_size * 0.25 or reward <= 0:
+                pending_sweeps.remove(sweep)
                 continue
             signal_time = data.index[i] + pd.Timedelta(minutes=1)
             setups.append(Setup(
