@@ -568,7 +568,9 @@ def _clustered_levels(values: Sequence[tuple[int, float]], tolerance: float) -> 
     ordered = sorted(values, key=lambda item: item[1])
     clusters: list[list[float]] = []
     for _, price in ordered:
-        if not clusters or price - clusters[-1][-1] > tolerance:
+        # Every member must remain within the full two-tick band from the
+        # cluster's first price; chained near-neighbours cannot widen the band.
+        if not clusters or price - clusters[-1][0] > tolerance:
             clusters.append([price])
         else:
             clusters[-1].append(price)
