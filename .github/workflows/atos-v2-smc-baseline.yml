@@ -1,6 +1,15 @@
 name: ATOS v2 SMC Research Baseline
 
 on:
+  push:
+    branches: ["research/atos-v2-smc-backtests-20261110"]
+    paths:
+      - "research/labs/atos_smc_v2.py"
+      - "research/labs/deriv_history.py"
+      - "research/labs/run_smc_baseline.py"
+      - "research/labs/tests/**"
+      - "requirements-research.txt"
+      - ".github/workflows/atos-v2-smc-baseline.yml"
   workflow_dispatch:
     inputs:
       symbol:
@@ -83,7 +92,7 @@ concurrency:
 
 jobs:
   research-baseline:
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -114,25 +123,25 @@ jobs:
           set -euo pipefail
           args=(
             --provider deriv
-            --symbol "${{ inputs.symbol }}"
-            --days "${{ inputs.days }}"
-            --app-id "${{ inputs.app_id }}"
-            --minimum-coverage-pct "${{ inputs.minimum_coverage_pct }}"
-            --point-value "${{ inputs.point_value }}"
-            --point-value-source "${{ inputs.point_value_source }}"
-            --spread-ticks-round-trip "${{ inputs.spread_ticks_round_trip }}"
-            --slippage-ticks-round-trip "${{ inputs.slippage_ticks_round_trip }}"
-            --commission-cash-per-unit-round-trip "${{ inputs.commission_cash_per_unit_round_trip }}"
-            --cost-source "${{ inputs.cost_source }}"
+            --symbol "${{ inputs.symbol || 'R_100' }}"
+            --days "${{ inputs.days || 90 }}"
+            --app-id "${{ inputs.app_id || '1089' }}"
+            --minimum-coverage-pct "${{ inputs.minimum_coverage_pct || '99' }}"
+            --point-value "${{ inputs.point_value || 1 }}"
+            --point-value-source "${{ inputs.point_value_source || 'UNVERIFIED_NORMALIZED_UNIT' }}"
+            --spread-ticks-round-trip "${{ inputs.spread_ticks_round_trip || 0 }}"
+            --slippage-ticks-round-trip "${{ inputs.slippage_ticks_round_trip || 0 }}"
+            --commission-cash-per-unit-round-trip "${{ inputs.commission_cash_per_unit_round_trip || 0 }}"
+            --cost-source "${{ inputs.cost_source || 'UNVERIFIED_USER_ASSUMPTION' }}"
             --output-dir "reports/research/atos_smc_v2/run-${{ github.run_id }}"
           )
-          if [ -n "${{ inputs.tick_size }}" ]; then
-            args+=(--tick-size "${{ inputs.tick_size }}" --tick-size-source "${{ inputs.tick_size_source }}")
+          if [ -n "${{ inputs.tick_size || '' }}" ]; then
+            args+=(--tick-size "${{ inputs.tick_size || '' }}" --tick-size-source "${{ inputs.tick_size_source || 'UNVERIFIED_USER_INPUT' }}")
           fi
-          if [ "${{ inputs.point_value_verified }}" = 'true' ]; then
+          if [ "${{ inputs.point_value_verified || false }}" = 'true' ]; then
             args+=(--point-value-verified)
           fi
-          if [ "${{ inputs.costs_verified }}" = 'true' ]; then
+          if [ "${{ inputs.costs_verified || false }}" = 'true' ]; then
             args+=(--costs-verified)
           fi
           python -m research.labs.run_smc_baseline "${args[@]}"
@@ -140,7 +149,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: atos-v2-smc-${{ inputs.symbol }}-${{ inputs.days }}d-${{ github.run_id }}
+          name: atos-v2-smc-${{ inputs.symbol || 'R_100' }}-${{ inputs.days || 90 }}d-${{ github.run_id }}
           path: reports/research/atos_smc_v2/run-${{ github.run_id }}/
           if-no-files-found: warn
           retention-days: 30
@@ -151,19 +160,19 @@ jobs:
             echo '## ATOS v2 SMC research run'
             echo ''
             echo "SOURCE_COMMIT=$GITHUB_SHA"
-            echo "SYMBOL=${{ inputs.symbol }}"
-            echo "DAYS=${{ inputs.days }}"
-            echo "TICK_SIZE_SOURCE_MODE=$([ -n "${{ inputs.tick_size }}" ] && echo USER_OVERRIDE || echo DERIV_ACTIVE_SYMBOLS_PIP_SIZE)"
-            echo "TICK_SIZE=${{ inputs.tick_size }}"
-            echo "TICK_SIZE_SOURCE=${{ inputs.tick_size_source }}"
-            echo "POINT_VALUE=${{ inputs.point_value }}"
-            echo "POINT_VALUE_USER_ASSERTED_VERIFIED=${{ inputs.point_value_verified }}"
-            echo "POINT_VALUE_SOURCE=${{ inputs.point_value_source }}"
-            echo "SPREAD_TICKS_ROUND_TRIP=${{ inputs.spread_ticks_round_trip }}"
-            echo "SLIPPAGE_TICKS_ROUND_TRIP=${{ inputs.slippage_ticks_round_trip }}"
-            echo "COMMISSION_CASH_PER_UNIT_ROUND_TRIP=${{ inputs.commission_cash_per_unit_round_trip }}"
-            echo "COSTS_USER_ASSERTED_VERIFIED=${{ inputs.costs_verified }}"
-            echo "COST_SOURCE=${{ inputs.cost_source }}"
+            echo "SYMBOL=${{ inputs.symbol || 'R_100' }}"
+            echo "DAYS=${{ inputs.days || 90 }}"
+            echo "TICK_SIZE_SOURCE_MODE=$([ -n "${{ inputs.tick_size || '' }}" ] && echo USER_OVERRIDE || echo DERIV_ACTIVE_SYMBOLS_PIP_SIZE)"
+            echo "TICK_SIZE=${{ inputs.tick_size || '' }}"
+            echo "TICK_SIZE_SOURCE=${{ inputs.tick_size_source || 'UNVERIFIED_USER_INPUT' }}"
+            echo "POINT_VALUE=${{ inputs.point_value || 1 }}"
+            echo "POINT_VALUE_USER_ASSERTED_VERIFIED=${{ inputs.point_value_verified || false }}"
+            echo "POINT_VALUE_SOURCE=${{ inputs.point_value_source || 'UNVERIFIED_NORMALIZED_UNIT' }}"
+            echo "SPREAD_TICKS_ROUND_TRIP=${{ inputs.spread_ticks_round_trip || 0 }}"
+            echo "SLIPPAGE_TICKS_ROUND_TRIP=${{ inputs.slippage_ticks_round_trip || 0 }}"
+            echo "COMMISSION_CASH_PER_UNIT_ROUND_TRIP=${{ inputs.commission_cash_per_unit_round_trip || 0 }}"
+            echo "COSTS_USER_ASSERTED_VERIFIED=${{ inputs.costs_verified || false }}"
+            echo "COST_SOURCE=${{ inputs.cost_source || 'UNVERIFIED_USER_ASSUMPTION' }}"
             echo 'AUTHENTICATED=false'
             echo 'CAPITAL_AUTHORITY=false'
             echo 'ORDER_SUBMISSION_PERMITTED=false'
