@@ -84,6 +84,10 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
             cleanup_index,
         )
         self.assertIn("Revoke the retired credential-bearing VERIFY_ONLY store only after", deploy)
+        self.assertLess(
+            cleanup_index,
+            deploy.index('if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then'),
+        )
         self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', deploy)
         self.assertNotIn('ENV_FILES+=("$READONLY_SECRET_FILE")', deploy)
         self.assertNotIn('SECRET_ENV_ARGS+=(--env-file "$READONLY_SECRET_FILE")', deploy)
