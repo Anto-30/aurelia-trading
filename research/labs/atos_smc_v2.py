@@ -75,6 +75,19 @@ class TimeWindow:
             for stamp in close_times
         ], dtype=bool)
 
+    def open_mask(self, index_open_utc: pd.DatetimeIndex) -> np.ndarray:
+        """True for bar opens inside the window; used only for pending-order fills."""
+        local = index_open_utc.tz_convert(self.timezone)
+        start, cutoff = _parse_clock(self.start), _parse_clock(self.cutoff)
+        return np.asarray([
+            start <= stamp.timetz().replace(tzinfo=None) <= cutoff
+            for stamp in local
+        ], dtype=bool)
+
+    def is_cutoff_open(self, open_time_utc: pd.Timestamp) -> bool:
+        local = open_time_utc.tz_convert(self.timezone)
+        return local.timetz().replace(tzinfo=None) == _parse_clock(self.cutoff)
+
     def close_time(self, open_time: pd.Timestamp, bar_minutes: int = 1) -> pd.Timestamp:
         return (open_time + pd.Timedelta(minutes=bar_minutes)).tz_convert(self.timezone)
 
@@ -325,13 +338,17 @@ def _nearest_liquidity_target(
     high_events: Sequence[dict[str, Any]],
     low_events: Sequence[dict[str, Any]],
     signal_time: pd.Timestamp,
+    *,
+    current_price: float | None = None,
 ) -> tuple[float | None, str | None]:
+    # Target must still be ahead of the signal close, not merely ahead of entry.
+    reference = entry if current_price is None else float(current_price)
     if direction == "LONG":
         levels = _known_pivots(high_events, signal_time=signal_time, side="HIGH")
-        candidates = [level for level in levels if level > entry]
+        candidates = [level for level in levels if level > max(entry, reference)]
         return (min(candidates), "NEAREST_CONFIRMED_SWING_HIGH") if candidates else (None, None)
     levels = _known_pivots(low_events, signal_time=signal_time, side="LOW")
-    candidates = [level for level in levels if level < entry]
+    candidates = [level for level in levels if level < min(entry, reference)]
     return (max(candidates), "NEAREST_CONFIRMED_SWING_LOW") if candidates else (None, None)
 
 
@@ -496,7 +513,8 @@ def strategy1_supply_demand_choch(
             entry = proximal
         signal_time = data.index[i] + pd.Timedelta(minutes=1)
         target, target_source = _nearest_liquidity_target(
-            entry, direction, highs_all, lows_all, signal_time
+            entry, direction, highs_all, lows_all, signal_time,
+            current_price=closes[i],
         )
         if target is None or target_source is None:
             continue
@@ -514,8 +532,8 @@ def strategy1_supply_demand_choch(
             stop=stop,
             target=float(target),
             invalidation_price=distal,
-            zone_low=min(distal, proximal),
-            zone_high=max(distal, proximal),
+            zone_low=float(lows[origin]),
+            zone_high=float(highs[origin]),
             order_ttl_bars=config.order_ttl_bars,
             minimum_rr=config.minimum_rr,
             evidence=(
@@ -746,11 +764,14 @@ def _opposing_pool_target(
     pools: Sequence[LiquidityPool],
     direction: Literal["LONG", "SHORT"],
     entry: float,
+    *,
+    current_price: float | None = None,
 ) -> tuple[float | None, str | None]:
+    reference = entry if current_price is None else float(current_price)
     if direction == "LONG":
         candidates = [
             pool for pool in pools
-            if pool.side == "HIGH" and pool.level > entry
+            if pool.side == "HIGH" and pool.level > max(entry, reference)
             and pool.kind in ("SESSION_HIGH", "EQUAL_HIGHS")
         ]
         if not candidates:
@@ -759,7 +780,7 @@ def _opposing_pool_target(
     else:
         candidates = [
             pool for pool in pools
-            if pool.side == "LOW" and pool.level < entry
+            if pool.side == "LOW" and pool.level < min(entry, reference)
             and pool.kind in ("SESSION_LOW", "EQUAL_LOWS")
         ]
         if not candidates:
@@ -839,7 +860,7 @@ def strategy2_fvg_sweep_displacement(
                 zone_low, zone_high = float(highs[i - 2]), float(lows[i])
                 entry = (zone_low + zone_high) / 2.0
                 stop = float(sweep["wick"]) - config.stop_buffer_ticks * tick_size
-                target, target_source = _opposing_pool_target(pools, "LONG", entry)
+                target, target_source = _opposing_pool_target(pools, "LONG", entry, current_price=closes[i])
                 invalidation = zone_low
             else:
                 broken_level = float(state["last_low"].iloc[i])
@@ -850,7 +871,7 @@ def strategy2_fvg_sweep_displacement(
                 zone_low, zone_high = float(highs[i]), float(lows[i - 2])
                 entry = (zone_low + zone_high) / 2.0
                 stop = float(sweep["wick"]) + config.stop_buffer_ticks * tick_size
-                target, target_source = _opposing_pool_target(pools, "SHORT", entry)
+                target, target_source = _opposing_pool_target(pools, "SHORT", entry, current_price=closes[i])
                 invalidation = zone_high
             if target is None or target_source is None:
                 continue
@@ -1025,6 +1046,7 @@ def simulate(
         "END_OF_DATA_PENDING": 0,
     }
     active = config.time_window.mask(data.index)
+    active_entry = config.time_window.open_mask(data.index)
     local_close = (data.index + pd.Timedelta(minutes=1)).tz_convert(config.time_window.timezone)
     cost_per_unit = config.round_trip_cost_per_unit
 
@@ -1093,7 +1115,7 @@ def simulate(
             if i > pending.expires_index:
                 pending = None
                 rejections["ORDER_EXPIRED"] += 1
-            elif not active[i]:
+            elif not active_entry[i]:
                 pending = None
                 rejections["NO_FILL_BEFORE_CUTOFF"] += 1
             else:
@@ -1111,16 +1133,24 @@ def simulate(
                     rejections["ZONE_INVALIDATED_BEFORE_FILL"] += 1
                 else:
                     fill: float | None = None
+                    gap_fill = (
+                        float(row["open"]) <= setup.entry if long_side
+                        else float(row["open"]) >= setup.entry
+                    )
+                    cutoff_open = config.time_window.is_cutoff_open(data.index[i])
                     if long_side:
-                        if float(row["open"]) <= setup.entry:
+                        if gap_fill:
                             fill = float(row["open"])
-                        elif float(row["low"]) <= setup.entry:
+                        elif not cutoff_open and float(row["low"]) <= setup.entry:
                             fill = setup.entry
                     else:
-                        if float(row["open"]) >= setup.entry:
+                        if gap_fill:
                             fill = float(row["open"])
-                        elif float(row["high"]) >= setup.entry:
+                        elif not cutoff_open and float(row["high"]) >= setup.entry:
                             fill = setup.entry
+                    if cutoff_open and not gap_fill:
+                        pending = None
+                        rejections["NO_FILL_BEFORE_CUTOFF"] += 1
                     if fill is not None:
                         stop_distance = abs(fill - setup.stop)
                         risk_per_unit = stop_distance * config.point_value + cost_per_unit
