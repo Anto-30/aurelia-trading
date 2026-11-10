@@ -14,6 +14,7 @@ from research.labs.atos_smc_v2 import (
     Strategy1Config,
     Strategy2Config,
     TimeWindow,
+    _atr_before_bar,
     _clustered_levels,
     _detect_sweep,
     _swing_context,
@@ -106,6 +107,20 @@ class ATOSSMCTimeWindowTests(unittest.TestCase):
 
 
 class ATOSSMCStructureTests(unittest.TestCase):
+    def test_wilder_atr_is_seeded_and_shifted_before_signal_bar(self):
+        index = pd.date_range("2026-11-10T13:00:00Z", periods=16, freq="min")
+        ranges = list(range(1, 17))
+        data = bars(
+            index,
+            opens=[100.0] * 16,
+            highs=[100.0 + value / 2 for value in ranges],
+            lows=[100.0 - value / 2 for value in ranges],
+            closes=[100.0] * 16,
+        )
+        atr = _atr_before_bar(data, period=14)
+        self.assertTrue(np.isnan(atr.iloc[13]))
+        self.assertAlmostEqual(atr.iloc[14], 7.5)
+        self.assertAlmostEqual(atr.iloc[15], (7.5 * 13 + 15.0) / 14.0)
     def test_fractal_is_unavailable_until_right_hand_bars_close(self):
         index = pd.date_range("2026-11-10T13:00:00Z", periods=7, freq="min")
         data = bars(
