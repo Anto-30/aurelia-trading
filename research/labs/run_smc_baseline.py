@@ -144,7 +144,7 @@ def main() -> int:
     data = validate_ohlc(data)
     data.attrs["symbol"] = args.symbol
     tick_size: float | None = args.tick_size
-    tick_size_status = "VERIFIED_SOURCE_DECLARED" if args.tick_size is not None else "UNVERIFIED"
+    tick_size_status = "USER_DECLARED_SOURCE_NOT_INDEPENDENTLY_VERIFIED" if args.tick_size is not None else "UNVERIFIED"
     tick_size_source = args.tick_size_source if args.tick_size is not None else "UNVERIFIED"
     if tick_size is None and args.use_display_increment_proxy:
         tick_size = metadata.get("display_increment_proxy")
@@ -216,10 +216,19 @@ def main() -> int:
         "display_precision": metadata.get("price_precision"),
         "display_increment_proxy": metadata.get("display_increment_proxy"),
         "point_value": float(args.point_value),
-        "point_value_verified": bool(args.point_value_verified),
+        "point_value_user_asserted_verified": bool(args.point_value_verified),
         "point_value_source": args.point_value_source,
-        "costs_verified": bool(args.costs_verified),
+        "point_value_status": (
+            "USER_ASSERTED_NOT_INDEPENDENTLY_CHECKED" if args.point_value_verified
+            else "NORMALIZED_OR_UNVERIFIED"
+        ),
+        "costs_user_asserted_verified": bool(args.costs_verified),
         "cost_source": args.cost_source,
+        "cost_status": (
+            "USER_ASSERTED_NOT_INDEPENDENTLY_CHECKED" if args.costs_verified
+            else "UNVERIFIED_ASSUMPTION"
+        ),
+        "tick_size_source_status": metadata.get("tick_size_source_status", tick_size_status),
         "spread_ticks_round_trip": float(args.spread_ticks_round_trip),
         "slippage_ticks_round_trip": float(args.slippage_ticks_round_trip),
         "commission_cash_per_unit_round_trip": float(args.commission_cash_per_unit_round_trip),
@@ -242,8 +251,8 @@ def main() -> int:
         "quality": quality,
         "strategy_1_metrics": comparison["strategy_1"]["metrics"],
         "strategy_2_metrics": comparison["strategy_2"]["metrics"],
-        "costs_verified": args.costs_verified,
-        "point_value_verified": args.point_value_verified,
+        "costs_user_asserted_verified": args.costs_verified,
+        "point_value_user_asserted_verified": args.point_value_verified,
         "tick_size_status": tick_size_status,
         "live_execution": "BLOCKED",
     }, indent=2, default=_json_default))
