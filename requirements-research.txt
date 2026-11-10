@@ -1,4 +1,4 @@
 # Isolated ATOS research-plane dependencies; not installed into the live runtime image.
-numpy>=1.26,<3
-pandas>=2.2,<3
-yfinance>=0.2.66,<1
+numpy==2.2.6
+pandas==2.3.3
+yfinance==0.2.66
