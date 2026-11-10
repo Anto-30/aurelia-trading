@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from math import isfinite
 from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import quote
@@ -32,7 +33,7 @@ def _normalize_deriv_pip_size(value: Any) -> float:
         pip_size = float(value)
     except (TypeError, ValueError) as exc:
         raise DerivHistoryError("DERIV_PIP_SIZE_UNKNOWN") from exc
-    if not pd.notna(pip_size) or pip_size <= 0 or not pd.api.types.is_number(pip_size):
+    if not isfinite(pip_size) or pip_size <= 0:
         raise DerivHistoryError("DERIV_PIP_SIZE_INVALID")
     return pip_size
 
