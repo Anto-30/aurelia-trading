@@ -957,6 +957,30 @@ def strategy2_fvg_sweep_displacement(
 
 
 @dataclass(frozen=True)
+class SupplyDemandCHoCHStrategy:
+    """Independent Strategy 1 detector; it only emits research Setup records."""
+
+    config: Strategy1Config = Strategy1Config()
+
+    def generate_setups(self, frame_1m: pd.DataFrame, *, tick_size: float) -> list[Setup]:
+        return strategy1_supply_demand_choch(
+            frame_1m, tick_size=tick_size, config=self.config
+        )
+
+
+@dataclass(frozen=True)
+class FvgSweepDisplacementStrategy:
+    """Independent Strategy 2 detector; it only emits research Setup records."""
+
+    config: Strategy2Config = Strategy2Config()
+
+    def generate_setups(self, frame_1m: pd.DataFrame, *, tick_size: float) -> list[Setup]:
+        return strategy2_fvg_sweep_displacement(
+            frame_1m, tick_size=tick_size, config=self.config
+        )
+
+
+@dataclass(frozen=True)
 class BacktestConfig:
     starting_equity: float = 10_000.0
     risk_fraction: float = 0.01
@@ -1290,8 +1314,14 @@ def simulate(
         "assumptions": {
             **asdict(config),
             "round_trip_cost_per_unit_cash": config.round_trip_cost_per_unit,
-            "cost_status": "VERIFIED" if config.costs_verified else "UNVERIFIED_ASSUMPTION",
-            "point_value_status": "VERIFIED" if config.point_value_verified else "NORMALIZED_OR_UNVERIFIED",
+            "cost_status": (
+                "USER_ASSERTED_VERIFIED_NOT_INDEPENDENTLY_CHECKED"
+                if config.costs_verified else "UNVERIFIED_ASSUMPTION"
+            ),
+            "point_value_status": (
+                "USER_ASSERTED_VERIFIED_NOT_INDEPENDENTLY_CHECKED"
+                if config.point_value_verified else "NORMALIZED_OR_UNVERIFIED"
+            ),
             "max_positions": 1,
             "intrabar_collision_policy": "STOP_FIRST",
             "entry_execution": "NEXT_BAR_LIMIT",
@@ -1376,8 +1406,8 @@ def run_strategy_comparison(
     """Run the two models separately on the same validated 1m input."""
     data = validate_ohlc(frame_1m)
     q = data_quality_report(data)
-    s1 = strategy1_supply_demand_choch(data, tick_size=tick_size, config=strategy1)
-    s2 = strategy2_fvg_sweep_displacement(data, tick_size=tick_size, config=strategy2)
+    s1 = SupplyDemandCHoCHStrategy(strategy1).generate_setups(data, tick_size=tick_size)
+    s2 = FvgSweepDisplacementStrategy(strategy2).generate_setups(data, tick_size=tick_size)
     result1 = simulate(
         data, s1, config=backtest, strategy_id="ATOS_S1_SUPPLY_DEMAND_CHOCH"
     )
