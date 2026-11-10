@@ -697,6 +697,28 @@ def build_prior_session_liquidity(
     return result
 
 
+def _unmitigated_fvg_pools(
+    pools: Sequence[LiquidityPool],
+    data: pd.DataFrame,
+    current_index: int,
+) -> list[LiquidityPool]:
+    """Keep prior-session FVG pools only until the first later bar trades into them."""
+    eligible: list[LiquidityPool] = []
+    current_time = data.index[current_index]
+    for pool in pools:
+        if pool.lower is None or pool.upper is None or pool.source_time_utc is None:
+            eligible.append(pool)
+            continue
+        formed_at = pd.Timestamp(pool.source_time_utc)
+        later = data.loc[(data.index > formed_at) & (data.index < current_time)]
+        mitigated = (
+            (later["low"] <= pool.upper) & (later["high"] >= pool.lower)
+        ).any() if not later.empty else False
+        if not mitigated:
+            eligible.append(pool)
+    return eligible
+
+
 def _detect_sweep(
     bar: pd.Series,
     pools: Sequence[LiquidityPool],
@@ -828,7 +850,9 @@ def strategy2_fvg_sweep_displacement(
             # Once the entry window closes, no incomplete sweep can mature later.
             pending_sweeps.clear()
             continue
-        pools = pools_by_day.get(local_close_dates[i], [])
+        pools = _unmitigated_fvg_pools(
+            pools_by_day.get(local_close_dates[i], []), data, i
+        )
         # Evaluate older sweeps before registering a sweep on the current candle.
         for sweep in list(reversed(pending_sweeps)):
             age = i - int(sweep["index"])
@@ -855,7 +879,10 @@ def strategy2_fvg_sweep_displacement(
                 broken_level = float(state["last_high"].iloc[i])
                 bos = isfinite(broken_level) and closes[i] > broken_level and closes[i - 1] <= broken_level
                 fvg = i >= 2 and lows[i] > highs[i - 2]
-                if not (bos and fvg and bias15.iloc[i] == "UP"):
+                if not bos or not fvg or bias15.iloc[i] != "UP":
+                    # Once displacement occurs, a missing BOS/FVG/bias alignment
+                    # invalidates this sweep rather than allowing stale drift setups.
+                    pending_sweeps.remove(sweep)
                     continue
                 zone_low, zone_high = float(highs[i - 2]), float(lows[i])
                 entry = (zone_low + zone_high) / 2.0
@@ -866,7 +893,8 @@ def strategy2_fvg_sweep_displacement(
                 broken_level = float(state["last_low"].iloc[i])
                 bos = isfinite(broken_level) and closes[i] < broken_level and closes[i - 1] >= broken_level
                 fvg = i >= 2 and highs[i] < lows[i - 2]
-                if not (bos and fvg and bias15.iloc[i] == "DOWN"):
+                if not bos or not fvg or bias15.iloc[i] != "DOWN":
+                    pending_sweeps.remove(sweep)
                     continue
                 zone_low, zone_high = float(highs[i]), float(lows[i - 2])
                 entry = (zone_low + zone_high) / 2.0
@@ -985,6 +1013,8 @@ def _exit_price(
     bar: pd.Series,
     stop: float,
     target: float,
+    *,
+    allow_target: bool = True,
 ) -> tuple[float | None, str | None]:
     """Conservative OHLC execution: stop wins if both barriers trade."""
     open_price = float(bar["open"])
@@ -994,13 +1024,13 @@ def _exit_price(
         stop_hit, target_hit = low <= stop, high >= target
         if stop_hit:
             return (min(open_price, stop), "STOP")
-        if target_hit:
+        if target_hit and allow_target:
             return (max(open_price, target), "TARGET")
     else:
         stop_hit, target_hit = high >= stop, low <= target
         if stop_hit:
             return (max(open_price, stop), "STOP")
-        if target_hit:
+        if target_hit and allow_target:
             return (min(open_price, target), "TARGET")
     return None, None
 
@@ -1171,8 +1201,12 @@ def simulate(
                             pending = None
                             # If entry and stop/target occur in this same OHLC bar,
                             # stop-first is deliberately conservative.
+                            # Intrabar entry time is unknown from OHLC. On the
+                            # fill candle only a stop may be assumed; a target-only
+                            # touch is ignored until a later complete candle.
                             exit_price, reason = _exit_price(
-                                setup.direction, row, setup.stop, setup.target
+                                setup.direction, row, setup.stop, setup.target,
+                                allow_target=False,
                             )
                             if exit_price is not None:
                                 close_position(i, exit_price, str(reason))
