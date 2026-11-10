@@ -88,8 +88,14 @@ def _read_csv(path: Path) -> pd.DataFrame:
     )
     if timestamp_column is None:
         raise ResearchDataError("CSV_TIMESTAMP_COLUMN_REQUIRED")
-    index = pd.to_datetime(frame.pop(timestamp_column), utc=False, errors="raise")
-    if not isinstance(index, pd.DatetimeIndex) or index.tz is None:
+    parsed = pd.to_datetime(frame.pop(timestamp_column), utc=False, errors="raise")
+    if isinstance(parsed, pd.Series):
+        if not pd.api.types.is_datetime64_any_dtype(parsed.dtype) or parsed.dt.tz is None:
+            raise ResearchDataError("CSV_TIMESTAMP_MUST_INCLUDE_TIMEZONE")
+        index = pd.DatetimeIndex(parsed)
+    else:
+        index = pd.DatetimeIndex(parsed)
+    if index.tz is None:
         raise ResearchDataError("CSV_TIMESTAMP_MUST_INCLUDE_TIMEZONE")
     frame.index = index
     return validate_ohlc(frame)
