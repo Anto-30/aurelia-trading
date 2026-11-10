@@ -47,9 +47,9 @@ The user's CHoCH rule is operationalized as a directional close through the last
 
 Default prior liquidity windows (New York local time) are explicit assumptions:
 - Asia: 19:00 on the prior New York date through 00:00 on the current date.
-- London: 02:00 through 05:00 on the current date.
+- London: 02:00 through 05:00 on the prior NY date.
 
-Change these in Strategy2Config if the videos use different session definitions. The engine builds prior-session highs/lows, equal highs/lows using a two-display-increment tolerance, and unmitigated 3-candle FVG pools. It rechecks that a prior-session FVG has not been mitigated between its formation and the candidate sweep.
+Change these in Strategy2Config if the videos use different session definitions. The engine builds prior-session highs/lows, equal highs/lows using a two-display-increment tolerance, and unmitigated 3-candle FVG pools. For a signal on date D it uses the Asia session ending at 00:00 on D and the completed London session from 02:00-05:00 on D-1; it never uses the still-forming D London range. It rechecks that a prior-session FVG has not been mitigated between its formation and the candidate sweep.
 
 A sweep requires the wick to pierce the liquidity boundary by the configured minimum and the candle body to close back inside. A close through the swept boundary is not a valid sweep (inversion); it is rejected. Following a sweep, a later candle must have body size strictly greater than 1.5 times ATR(14) calculated only from prior candles, close through a confirmed swing BOS level, be aligned with 15-minute bias, and create a new three-candle FVG. If a displacement candle occurs without all BOS/FVG/MTF conditions, that sweep is discarded. The CE entry is the new FVG midpoint; stop is beyond the original sweep wick plus a tick buffer; target is the nearest prior-session opposing high/low pool beyond the displacement close.
 
