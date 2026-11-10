@@ -15,7 +15,7 @@ Do not move these strategy detectors into production or connect them to an order
 
 ## Data and timestamps
 
-The primary dataset is Deriv public 1-minute OHLC candles for the exact requested symbol. The downloader:
+The primary dataset is Deriv public 1-minute OHLC candles for the exact requested symbol, using the current no-auth WebSocket endpoint `wss://api.derivws.com/trading/v1/options/ws/public`. The downloader:
 - resolves the current symbol through public active_symbols;
 - retrieves ticks_history candles with granularity=60, explicit count, style=candles, and subscribe=0;
 - pages backward, deduplicates timestamps, validates OHLC, and does not forward-fill missing bars;
