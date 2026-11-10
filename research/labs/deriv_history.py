@@ -26,6 +26,18 @@ class DerivHistoryError(RuntimeError):
     pass
 
 
+def _derive_display_increment(value: Any) -> tuple[int, float]:
+    """Convert Deriv pip_size decimal precision into a display increment proxy."""
+    try:
+        precision = float(value)
+    except (TypeError, ValueError) as exc:
+        raise DerivHistoryError("DERIV_PRICE_PRECISION_UNKNOWN") from exc
+    if not pd.notna(precision) or precision < 0 or not precision.is_integer() or precision > 12:
+        raise DerivHistoryError("DERIV_PRICE_PRECISION_INVALID")
+    places = int(precision)
+    return places, 10.0 ** (-places)
+
+
 def _epoch(value: datetime | pd.Timestamp) -> int:
     stamp = pd.Timestamp(value)
     if stamp.tzinfo is None:
@@ -79,19 +91,7 @@ async def fetch_deriv_symbol_metadata(
         raise DerivHistoryError("DERIV_SYMBOL_NOT_UNIQUELY_ACTIVE")
     row = matches[0]
     precision_value = row.get("pip_size", row.get("pip"))
-    try:
-        precision_float = float(precision_value)
-    except (TypeError, ValueError) as exc:
-        raise DerivHistoryError("DERIV_PRICE_PRECISION_UNKNOWN") from exc
-    if (
-        not pd.notna(precision_float)
-        or precision_float < 0
-        or not precision_float.is_integer()
-        or precision_float > 12
-    ):
-        raise DerivHistoryError("DERIV_PRICE_PRECISION_INVALID")
-    price_precision = int(precision_float)
-    display_increment = 10.0 ** (-price_precision)
+    price_precision, display_increment = _derive_display_increment(precision_value)
     return {
         "symbol": str(row.get("underlying_symbol") or row.get("symbol")),
         "display_name": str(row.get("underlying_symbol_name") or row.get("display_name") or ""),
