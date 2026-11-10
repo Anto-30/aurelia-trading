@@ -112,6 +112,7 @@ async def fetch_deriv_candles(
     granularity_seconds: int = 60,
     page_size: int = DEFAULT_PAGE_SIZE,
     max_pages: int = DEFAULT_MAX_HISTORY_PAGES,
+    request_delay_seconds: float = 1.25,
 ) -> pd.DataFrame:
     """Fetch candle history backwards in bounded pages; never synthesize missing bars.
 
@@ -126,6 +127,8 @@ async def fetch_deriv_candles(
         raise ValueError("DERIV_PAGE_SIZE_MUST_BE_100_TO_5000")
     if max_pages < 1 or max_pages > DEFAULT_MAX_HISTORY_PAGES:
         raise ValueError("DERIV_MAX_PAGES_OUT_OF_RANGE")
+    if not isfinite(float(request_delay_seconds)) or not 0.0 <= request_delay_seconds <= 10.0:
+        raise ValueError("DERIV_REQUEST_DELAY_OUT_OF_RANGE")
     start_epoch, end_epoch = _epoch(start), _epoch(end)
     if end_epoch <= start_epoch:
         raise ValueError("DERIV_HISTORY_WINDOW_INVALID")
@@ -137,14 +140,29 @@ async def fetch_deriv_candles(
         DERIV_PUBLIC_WS_URL, ping_interval=20, close_timeout=10, max_size=10_000_000
     ) as ws:
         for page in range(max_pages):
-            response = await _request(ws, {
+            # The public history call has a dedicated expensive-request rate
+            # bucket. Pace pages evenly and back off on explicit RateLimit errors.
+            if page > 0 and request_delay_seconds:
+                await asyncio.sleep(request_delay_seconds)
+            request = {
                 "ticks_history": symbol,
                 "end": str(cursor),
                 "count": int(page_size),
                 "granularity": int(granularity_seconds),
                 "style": "candles",
                 "req_id": page + 1,
-            })
+            }
+            for attempt, backoff in enumerate((15.0, 30.0, 60.0, None)):
+                try:
+                    response = await _request(ws, request)
+                    break
+                except DerivHistoryError as exc:
+                    rate_limited = "RateLimit" in str(exc) or "rate limit" in str(exc).lower()
+                    if not rate_limited or backoff is None:
+                        raise
+                    await asyncio.sleep(backoff)
+            else:
+                raise DerivHistoryError("DERIV_HISTORY_RATE_LIMIT_RETRIES_EXHAUSTED")
             candles = response.get("candles")
             if not isinstance(candles, list):
                 raise DerivHistoryError("DERIV_CANDLES_ARRAY_MISSING")
@@ -187,6 +205,10 @@ async def fetch_deriv_candles(
     frame.attrs["authenticated"] = False
     frame.attrs["granularity_seconds"] = granularity_seconds
     frame.attrs["endpoint"] = DERIV_PUBLIC_WS_URL
+    frame.attrs["request_page_size"] = int(page_size)
+    frame.attrs["request_delay_seconds"] = float(request_delay_seconds)
+    frame.attrs["history_start_epoch"] = start_epoch
+    frame.attrs["history_end_epoch"] = end_epoch
     return frame
 
 
