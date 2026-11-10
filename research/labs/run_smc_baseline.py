@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import platform
+from importlib import metadata as importlib_metadata
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -92,6 +93,13 @@ def _read_csv(path: Path) -> pd.DataFrame:
         raise ResearchDataError("CSV_TIMESTAMP_MUST_INCLUDE_TIMEZONE")
     frame.index = index
     return validate_ohlc(frame)
+
+
+def _distribution_version(name: str) -> str | None:
+    try:
+        return importlib_metadata.version(name)
+    except importlib_metadata.PackageNotFoundError:
+        return None
 
 
 def _json_default(value: Any):
@@ -220,8 +228,8 @@ def main() -> int:
         "pandas_version": pd.__version__,
         "dependencies": {
             "numpy": __import__("numpy").__version__,
-            "websockets": __import__("importlib.metadata", fromlist=["version"]).version("websockets"),
-            "yfinance": __import__("importlib.metadata", fromlist=["version"]).version("yfinance"),
+            "websockets": _distribution_version("websockets"),
+            "yfinance": _distribution_version("yfinance"),
         },
     }
     comparison["input_assumptions"] = {
