@@ -16,6 +16,8 @@ jobs:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
