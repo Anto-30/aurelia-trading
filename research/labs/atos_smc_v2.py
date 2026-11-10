@@ -309,14 +309,23 @@ def _mtf_bias(
 
 
 def _atr_before_bar(frame: pd.DataFrame, period: int) -> pd.Series:
+    """Return Wilder ATR, shifted so bar i only sees information through i-1."""
+    if period < 1:
+        raise ValueError("ATR_PERIOD_MUST_BE_POSITIVE")
     previous_close = frame["close"].shift(1)
     tr = pd.concat([
         frame["high"] - frame["low"],
         (frame["high"] - previous_close).abs(),
         (frame["low"] - previous_close).abs(),
-    ], axis=1).max(axis=1)
-    # The threshold used on bar i is known before bar i starts.
-    return tr.rolling(period, min_periods=period).mean().shift(1)
+    ], axis=1).max(axis=1).to_numpy(dtype=float)
+    atr = np.full(len(frame), np.nan, dtype=float)
+    if len(frame) >= period:
+        # Seed Wilder's recursion with a simple mean of the first period TRs.
+        atr[period - 1] = float(np.mean(tr[:period]))
+        for i in range(period, len(frame)):
+            atr[i] = ((atr[i - 1] * (period - 1)) + tr[i]) / period
+    # At signal bar i, use only ATR from i-1 and earlier.
+    return pd.Series(atr, index=frame.index, dtype=float).shift(1)
 
 
 def _known_pivots(
