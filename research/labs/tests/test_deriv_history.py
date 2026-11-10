@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import unittest
 from datetime import datetime, timedelta, timezone
 
@@ -10,6 +11,7 @@ from research.labs.deriv_history import (
     _normalize_deriv_pip_size,
     _epoch,
     _validate_yfinance_window,
+    fetch_deriv_candles,
     fetch_yfinance_ohlc,
 )
 
@@ -33,6 +35,16 @@ class DerivHistoryContractTests(unittest.TestCase):
             with self.subTest(value=value):
                 with self.assertRaises(DerivHistoryError):
                     _normalize_deriv_pip_size(value)
+
+    def test_deriv_history_request_delay_rejects_unpaced_or_excessive_values_before_network(self):
+        start = datetime(2026, 11, 1, tzinfo=timezone.utc)
+        end = datetime(2026, 11, 2, tzinfo=timezone.utc)
+        for delay in (-0.1, 10.1, float("inf")):
+            with self.subTest(delay=delay):
+                with self.assertRaisesRegex(ValueError, "REQUEST_DELAY_OUT_OF_RANGE"):
+                    asyncio.run(fetch_deriv_candles(
+                        "R_100", start, end, request_delay_seconds=delay
+                    ))
 
     def test_yfinance_rejects_ninety_day_intraday_request_before_network(self):
         end = datetime(2026, 11, 10, tzinfo=timezone.utc)
