@@ -639,8 +639,11 @@ def build_prior_session_liquidity(
         windows = (
             ("ASIA", datetime.combine(prior_day, _parse_clock(config.asia_start), tzinfo=ZoneInfo(config.time_window.timezone)),
              datetime.combine(current_day, _parse_clock(config.asia_end), tzinfo=ZoneInfo(config.time_window.timezone))),
-            ("LONDON", datetime.combine(current_day, _parse_clock(config.london_start), tzinfo=ZoneInfo(config.time_window.timezone)),
-             datetime.combine(current_day, _parse_clock(config.london_end), tzinfo=ZoneInfo(config.time_window.timezone))),
+            # The previous completed London session is on the prior NY date.
+            # Never use the current day's still-forming London range for earlier
+            # 1-minute signals; that would introduce future-session look-ahead.
+            ("LONDON", datetime.combine(prior_day, _parse_clock(config.london_start), tzinfo=ZoneInfo(config.time_window.timezone)),
+             datetime.combine(prior_day, _parse_clock(config.london_end), tzinfo=ZoneInfo(config.time_window.timezone))),
         )
         pools: list[LiquidityPool] = []
         for session_name, start_local, end_local in windows:
@@ -1125,7 +1128,9 @@ def simulate(
         current_mark = mark_to_market(float(row["close"]))
         if session_date != day_key:
             day_key = session_date
-            day_start_equity = current_mark
+            # Mark the daily baseline at the first bar open, so movement during
+            # that first minute is counted in the new NY trading day.
+            day_start_equity = mark_to_market(float(row["open"]))
             daily_halted = False
 
         # Manage open position before looking for fresh entries.
