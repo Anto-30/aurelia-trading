@@ -146,8 +146,16 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertIn('sudo rm -f "$READONLY_SECRET_FILE"', source)
         self.assertIn('sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true', source)
         self.assertLess(
-            source.index('sudo rm -f "$READONLY_SECRET_FILE"'),
             source.index('if [ ! -d "$RELEASE_DIR" ]'),
+            source.index('sudo rm -f "$READONLY_SECRET_FILE"'),
+        )
+        self.assertLess(
+            source.index('test -f "$LOCK_FILE"'),
+            source.index('sudo rm -f "$READONLY_SECRET_FILE"'),
+        )
+        self.assertLess(
+            source.index('case "$DEPLOYMENT_MODE" in'),
+            source.index('sudo rm -f "$READONLY_SECRET_FILE"'),
         )
         self.assertNotIn('ENV_FILES+=("$READONLY_SECRET_FILE")', source)
         self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', source)
@@ -155,6 +163,33 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertNotIn("VERIFY_DERIV_AUTH=true", source)
         self.assertIn("VERIFY_DERIV_AUTH=false", source)
         self.assertNotIn("provision_deriv_readonly_secrets.py", source)
+
+    def test_checkout_credentials_are_not_persisted_in_untrusted_read_only_workflows(self):
+        assurance = (WORKFLOWS / "aurelia-assurance.yml").read_text(encoding="utf-8")
+        runtime = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
+        self.assertIn("uses: actions/checkout@v7\\n        with:\\n          persist-credentials: false", assurance)
+        self.assertIn("uses: actions/checkout@v7\\n        with:\\n          persist-credentials: false", runtime)
+
+    def test_whatsapp_raw_credentials_are_scoped_to_the_send_step(self):
+        workflow = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
+        alert_job = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
+        job_env = alert_job.split("steps:", 1)[0]
+        self.assertNotIn("TWILIO_ACCOUNT_SID: ${{ secrets.", job_env)
+        self.assertNotIn("TWILIO_AUTH_TOKEN: ${{ secrets.", job_env)
+        send_step = alert_job.split("      - name: Send WhatsApp smoke alert", 1)[1]
+        for name in (
+            "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_API_KEY",
+            "TWILIO_API_SECRET", "TWILIO_WHATSAPP_FROM",
+            "AURELIA_WHATSAPP_TO", "TWILIO_CONTENT_SID",
+        ):
+            self.assertIn(name + ": ${{ secrets.", send_step)
+
+    def test_deployment_assurance_gate_requires_successful_main_push_for_exact_sha(self):
+        workflow = (WORKFLOWS / "self-hosted-runtime-deploy.yml").read_text(encoding="utf-8")
+        self.assertIn("--json status,conclusion,event,headBranch,headSha,databaseId", workflow)
+        self.assertIn('run.get("headBranch") == "main"', workflow)
+        self.assertIn('run.get("headSha") == os.environ["GITHUB_SHA"]', workflow)
+        self.assertIn('run.get("event") == "push"', workflow)
 
     def test_public_runtime_has_no_deriv_credentials_or_account_settings(self):
         text = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
