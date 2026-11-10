@@ -142,7 +142,6 @@ async def fetch_deriv_candles(
                 "count": int(page_size),
                 "granularity": int(granularity_seconds),
                 "style": "candles",
-                "subscribe": 0,
                 "req_id": page + 1,
             })
             candles = response.get("candles")
