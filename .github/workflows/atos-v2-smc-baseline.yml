@@ -24,7 +24,7 @@ on:
         default: '99'
         type: string
       tick_size:
-        description: Optional sourced minimum price increment; leave blank to use the explicit display-increment proxy
+        description: Optional independently sourced price increment; leave blank to use Deriv active_symbols pip_size
         required: false
         default: ''
         type: string
