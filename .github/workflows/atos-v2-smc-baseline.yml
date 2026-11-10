@@ -22,11 +22,6 @@ on:
         required: true
         default: 90
         type: number
-      app_id:
-        description: Registered Deriv application ID (1089 is the public test default)
-        required: true
-        default: '1089'
-        type: string
       minimum_coverage_pct:
         description: Minimum 1-minute candle coverage required
         required: true
@@ -125,7 +120,6 @@ jobs:
             --provider deriv
             --symbol "${{ inputs.symbol || 'R_100' }}"
             --days "${{ inputs.days || 90 }}"
-            --app-id "${{ inputs.app_id || '1089' }}"
             --minimum-coverage-pct "${{ inputs.minimum_coverage_pct || '99' }}"
             --point-value "${{ inputs.point_value || 1 }}"
             --point-value-source "${{ inputs.point_value_source || 'UNVERIFIED_NORMALIZED_UNIT' }}"
