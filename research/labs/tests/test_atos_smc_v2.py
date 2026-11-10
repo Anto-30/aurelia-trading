@@ -219,14 +219,16 @@ class ATOSSMCBacktestTests(unittest.TestCase):
             lows=[99.5, 99.5, 99],
             closes=[100, 102.5, 100],
         )
-        # The first fill is marketable at the open only when open <= entry. For
-        # this long setup it is not; the bar touches 100 and then reaches target.
+        # The limit fills inside bar 1, whose high also reaches target. Since
+        # OHLC cannot establish whether the target preceded the fill, target-only
+        # same-bar profit is not credited. The position is marked at bar 2 close.
         result = simulate(
             data, [self.make_setup(0, index[0])],
             config=BacktestConfig(tick_size=0.01), strategy_id="TEST",
         )
-        self.assertEqual(result["trade_count"], 0)
-        self.assertEqual(result["rejections"]["END_OF_DATA_PENDING"], 1)
+        self.assertEqual(result["trade_count"], 1)
+        self.assertEqual(result["trades"][0]["exit_reason"], "END_OF_DATA_MARK_TO_MARK")
+        self.assertEqual(result["trades"][0]["exit_price"], 100.0)
 
     def test_one_percent_risk_and_three_percent_daily_drawdown_halt(self):
         index = pd.date_range("2026-11-10T13:00:00Z", periods=10, freq="min")
