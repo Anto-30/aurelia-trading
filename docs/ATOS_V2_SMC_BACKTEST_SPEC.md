@@ -77,7 +77,7 @@ risk_cash = current_equity * risk_fraction
 risk_per_unit = abs(entry - stop) * point_value + estimated_round_trip_cost_per_unit
 quantity = risk_cash / risk_per_unit
 
-The defaults point_value=1.0, zero spread, zero slippage and zero commission are unverified model assumptions. On Deriv, active_symbols.pip_size is the number of decimal places for display; it is not a verified minimum price increment nor a contract multiplier. The code therefore labels 10^-pip_size as a display-increment proxy and requires --use-display-increment-proxy to use it. A documented --tick-size can override it. Do not describe normalized quantity/cash output as actual stake or broker P&L until contract multiplier, minimum stake, stake increment, payout/payoff, spread/slippage/commission and exact pricing basis are separately sourced and verified.
+The defaults point_value=1.0, zero spread, zero slippage and zero commission are unverified model assumptions. On Deriv, active_symbols.pip_size is used as the provider-published price increment (for example, the current New API example shows R_100 pip_size=0.01). A sourced --tick-size can override it. This value does not provide a contract cash multiplier or payout function. Do not describe normalized quantity/cash output as actual stake or broker P&L until contract multiplier, minimum stake, stake increment, payout/payoff, spread/slippage/commission and exact pricing basis are separately sourced and verified.
 
 ## Metrics
 
@@ -109,7 +109,7 @@ Remaining risks include OHLC's inability to expose intrabar price path, data-pro
 Install research-only dependencies separately from the runtime:
 pip install -r requirements.txt -r requirements-research.txt
 
-Provisional 90-day V100 run using the display-increment proxy (still unverified):
-python -m research.labs.run_smc_baseline --provider deriv --symbol R_100 --days 90 --use-display-increment-proxy
+Provisional 90-day V100 run using the provider-published Deriv pip_size:
+python -m research.labs.run_smc_baseline --provider deriv --symbol R_100 --days 90
 
 This creates a JSON report and normalized OHLC CSV under reports/research/atos_smc_v2/. For a stronger test, supply sourced minimum tick size, verified contract point value, and sourced round-trip spread/slippage/commission inputs. The manual GitHub Actions workflow only downloads public candles and saves artifacts; it never receives user/broker secrets or submits trades.
