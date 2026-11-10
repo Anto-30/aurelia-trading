@@ -761,8 +761,8 @@ def _unmitigated_fvg_pools_at(
     eligible: list[LiquidityPool] = []
     for pool in pools:
         if pool.kind in ("BULLISH_FVG", "BEARISH_FVG"):
-            first_mitigation = mitigation_indices.get(pool.pool_id, data_length)
-            if first_mitigation < current_index:
+            first_mitigation = mitigation_indices.get(pool.pool_id)
+            if first_mitigation is None or first_mitigation < current_index:
                 continue
         eligible.append(pool)
     return eligible
@@ -777,6 +777,11 @@ def _unmitigated_fvg_pools(
     eligible: list[LiquidityPool] = []
     current_time = data.index[current_index]
     for pool in pools:
+        if pool.kind in ("BULLISH_FVG", "BEARISH_FVG") and (
+            pool.lower is None or pool.upper is None or pool.source_time_utc is None
+        ):
+            # An FVG without a bounded, timestamped zone is not admissible liquidity.
+            continue
         if pool.lower is None or pool.upper is None or pool.source_time_utc is None:
             eligible.append(pool)
             continue
