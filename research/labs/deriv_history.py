@@ -198,6 +198,24 @@ async def fetch_deriv_candles(
     return frame
 
 
+YFINANCE_INTRADAY_INTERVALS = {"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h"}
+
+
+def _validate_yfinance_window(
+    start: datetime | pd.Timestamp,
+    end: datetime | pd.Timestamp,
+    interval: str,
+) -> tuple[pd.Timestamp, pd.Timestamp]:
+    start_ts, end_ts = pd.Timestamp(start), pd.Timestamp(end)
+    if start_ts.tzinfo is None or end_ts.tzinfo is None:
+        raise ValueError("YFINANCE_BOUNDARIES_MUST_BE_TIMEZONE_AWARE")
+    if end_ts <= start_ts:
+        raise ValueError("YFINANCE_HISTORY_WINDOW_INVALID")
+    if interval in YFINANCE_INTRADAY_INTERVALS and (end_ts - start_ts) > pd.Timedelta(days=60):
+        raise ValueError("YFINANCE_INTRADAY_HISTORY_LIMIT_EXCEEDED_60_DAYS")
+    return start_ts, end_ts
+
+
 def fetch_yfinance_ohlc(
     symbol: str,
     start: datetime | pd.Timestamp,
@@ -210,14 +228,7 @@ def fetch_yfinance_ohlc(
     Yahoo documents a 60-day maximum for intraday intervals. A 90-day 1m request
     is rejected instead of silently returning a shorter sample.
     """
-    start_ts, end_ts = pd.Timestamp(start), pd.Timestamp(end)
-    if start_ts.tzinfo is None or end_ts.tzinfo is None:
-        raise ValueError("YFINANCE_BOUNDARIES_MUST_BE_TIMEZONE_AWARE")
-    if end_ts <= start_ts:
-        raise ValueError("YFINANCE_HISTORY_WINDOW_INVALID")
-    if interval in {"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h"}:
-        if (end_ts - start_ts) > pd.Timedelta(days=60):
-            raise ValueError("YFINANCE_INTRADAY_HISTORY_LIMIT_EXCEEDED_60_DAYS")
+    start_ts, end_ts = _validate_yfinance_window(start, end, interval)
     try:
         import yfinance as yf
     except ImportError as exc:
