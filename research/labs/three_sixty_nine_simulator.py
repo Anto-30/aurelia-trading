@@ -60,6 +60,7 @@ def simulate_candidate(
     *,
     cost_profile: InstrumentCostProfile,
     tick_size: float,
+    timeframe_seconds: int,
     now: datetime | None = None,
 ) -> SimulatedTrade | None:
     """Simulate one candidate using next-open entry and conservative OHLC rules.
@@ -77,6 +78,8 @@ def simulate_candidate(
         raise ValueError("SIMULATOR_COST_RETURN_BASIS_UNSUPPORTED")
     if not isfinite(float(tick_size)) or tick_size <= 0:
         raise ValueError("SIMULATOR_TICK_SIZE_INVALID")
+    if type(timeframe_seconds) is not int or timeframe_seconds <= 0:
+        raise ValueError("SIMULATOR_TIMEFRAME_SECONDS_INVALID")
     errors = cost_profile.validate(now=now, require_verified=True)
     if errors:
         raise ValueError("SIMULATOR_COST_PROFILE_INVALID:" + ",".join(errors))
@@ -87,6 +90,9 @@ def simulate_candidate(
     stamps = [_utc(bar.timestamp_utc) for bar in ordered]
     if any(right <= left for left, right in zip(stamps, stamps[1:])):
         raise ValueError("SIMULATOR_BARS_NOT_STRICTLY_CHRONOLOGICAL")
+    expected_delta = timeframe_seconds
+    if any((right - left).total_seconds() != expected_delta for left, right in zip(stamps, stamps[1:])):
+        raise ValueError("SIMULATOR_BAR_GAP_OR_CADENCE_MISMATCH")
     for bar in ordered:
         values = (bar.open, bar.high, bar.low, bar.close)
         if not all(isfinite(float(value)) for value in values):
@@ -94,7 +100,10 @@ def simulate_candidate(
         if bar.low > min(bar.open, bar.close) or bar.high < max(bar.open, bar.close) or bar.low > bar.high:
             raise ValueError("SIMULATOR_OHLC_INVARIANT_FAILED")
 
+    signal_close_time = _utc(candidate.signal_close_timestamp_utc)
     entry_time = _utc(candidate.entry_timestamp_utc)
+    if entry_time <= signal_close_time:
+        raise ValueError("SIMULATOR_ENTRY_NOT_AFTER_SIGNAL_CLOSE")
     entry_index = next((i for i, stamp in enumerate(stamps) if stamp == entry_time), None)
     if entry_index is None:
         return None
@@ -197,19 +206,22 @@ def simulate_candidates(
     *,
     cost_profiles: dict[str, InstrumentCostProfile],
     tick_sizes: dict[str, float],
+    timeframe_seconds_by_symbol: dict[str, int],
     now: datetime | None = None,
 ) -> tuple[SimulatedTrade, ...]:
     """Run candidates independently; missing symbol evidence is rejected."""
     results: list[SimulatedTrade] = []
     for candidate in candidates:
         symbol = candidate.instrument_id
-        if symbol not in bars_by_symbol or symbol not in cost_profiles or symbol not in tick_sizes:
+        if (symbol not in bars_by_symbol or symbol not in cost_profiles or
+                symbol not in tick_sizes or symbol not in timeframe_seconds_by_symbol):
             continue
         result = simulate_candidate(
             candidate,
             bars_by_symbol[symbol],
             cost_profile=cost_profiles[symbol],
             tick_size=tick_sizes[symbol],
+            timeframe_seconds=timeframe_seconds_by_symbol[symbol],
             now=now,
         )
         if result is not None:
