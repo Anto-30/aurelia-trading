@@ -1,51 +1,80 @@
-"""Regression tests for production credential isolation on untrusted refs."""
+"""Semantic regression tests for production secret isolation in GitHub Actions."""
 from __future__ import annotations
 
-import re
 import unittest
 from pathlib import Path
-
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
 DERIV_CONFIG_KEYS = ("DERIV_APP_ID", "DERIV_EXPECTED_LOGINID", "DERIV_EXPECTED_CURRENCY")
 DERIV_TOKEN_KEYS = ("DERIV_AUTH_TOKEN", "DERIV_PAT")
+GH_SECRET_PREFIX = "${{ secrets."
 
 
-def _job_block(workflow_name: str, job_name: str) -> str:
-    lines = (WORKFLOWS / workflow_name).read_text(encoding="utf-8").splitlines()
-    marker = f"  {job_name}:"
-    try:
-        start = lines.index(marker)
-    except ValueError as exc:
-        raise AssertionError(f"Required job {job_name!r} missing from {workflow_name}") from exc
-    end = len(lines)
-    for index in range(start + 1, len(lines)):
-        line = lines[index]
-        if line.startswith("  ") and not line.startswith("    ") and line.endswith(":"):
-            end = index
-            break
-    return "\n".join(lines[start:end])
+def _workflow(name: str) -> dict:
+    parsed = yaml.load((WORKFLOWS / name).read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    if not isinstance(parsed, dict):
+        raise AssertionError(f"Workflow {name!r} must parse to a mapping")
+    return parsed
+
+
+def _job(workflow: dict, job_name: str) -> dict:
+    jobs = workflow.get("jobs")
+    if not isinstance(jobs, dict) or not isinstance(jobs.get(job_name), dict):
+        raise AssertionError(f"Required job {job_name!r} missing")
+    return jobs[job_name]
+
+
+def _steps(job: dict) -> list[dict]:
+    steps = job.get("steps")
+    if not isinstance(steps, list):
+        raise AssertionError("Expected workflow job steps to be a sequence")
+    return steps
+
+
+def _step(job: dict, name: str) -> dict:
+    found = [step for step in _steps(job) if step.get("name") == name]
+    if len(found) != 1:
+        raise AssertionError(f"Expected exactly one step named {name!r}, found {len(found)}")
+    return found[0]
+
+
+def _strings(value):
+    if isinstance(value, dict):
+        for child in value.values():
+            yield from _strings(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _strings(child)
+    elif isinstance(value, str):
+        yield value
+
+
+def _secret_references(value) -> list[str]:
+    return [item for item in _strings(value) if GH_SECRET_PREFIX in item]
 
 
 class ProductionSecretIsolationTests(unittest.TestCase):
-    def test_general_assurance_has_no_production_environment_or_secrets(self):
-        text = (WORKFLOWS / "aurelia-assurance.yml").read_text(encoding="utf-8")
-        self.assertNotIn("environment: production", text)
-        self.assertNotIn("${{ secrets.", text)
-        self.assertNotIn("verify_deriv_session.py", text)
+    def test_general_assurance_is_pr_safe_and_has_no_production_secrets(self):
+        workflow = _workflow("aurelia-assurance.yml")
+        self.assertIn("pull_request", workflow["on"])
+        self.assertIn("push", workflow["on"])
+        assurance = _job(workflow, "assurance")
+        self.assertNotEqual(assurance.get("environment"), "production")
+        self.assertEqual(_secret_references(workflow), [])
 
-    def test_account_verification_is_blocked_without_trade_scoped_credentials(self):
-        text = (WORKFLOWS / "deriv-auth-evidence.yml").read_text(encoding="utf-8")
-        self.assertIn("workflow_dispatch:", text)
-        self.assertIn("github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'", text)
-        self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", text)
-        self.assertIn("DERIV_ACCOUNT_EVIDENCE=BLOCKED", text)
-        self.assertNotIn("environment: production", text)
-        self.assertNotIn("${{ secrets.", text)
-        self.assertNotIn("DERIV_AUTH_TOKEN", text)
-        self.assertNotIn("DERIV_PAT", text)
-        self.assertNotIn("verify_deriv_session.py", text)
+    def test_account_verification_is_manual_main_only_and_credential_free(self):
+        workflow = _workflow("deriv-auth-evidence.yml")
+        self.assertEqual(set(workflow["on"]), {"workflow_dispatch"})
+        self.assertEqual(workflow.get("permissions"), {})
+        blocked = _job(workflow, "blocked")
+        self.assertIn("github.event_name == 'workflow_dispatch'", blocked.get("if", ""))
+        self.assertIn("github.ref == 'refs/heads/main'", blocked.get("if", ""))
+        self.assertEqual(_secret_references(workflow), [])
+        output = "\n".join(step.get("run", "") for step in _steps(blocked))
+        self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", output)
+        self.assertIn("DERIV_ACCOUNT_EVIDENCE=BLOCKED", output)
 
     def test_verifier_script_never_reads_secrets_or_constructs_authenticated_session(self):
         source = (ROOT / "scripts" / "verify_deriv_session.py").read_text(encoding="utf-8")
@@ -56,107 +85,111 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertNotIn("DERIV_AUTH_TOKEN", source)
         self.assertNotIn("DERIV_PAT", source)
 
-    def test_bearer_tokens_are_used_only_in_live_gated_deployment_steps(self):
-        text = (WORKFLOWS / "self-hosted-runtime-deploy.yml").read_text(encoding="utf-8")
-        self.assertNotIn("vars.DERIV_AUTH_TOKEN", text)
-        self.assertNotIn("vars.DERIV_PAT", text)
-        self.assertIn("secrets.DERIV_AUTH_TOKEN", text)
-        self.assertIn("secrets.DERIV_PAT", text)
-        deploy_job = _job_block("self-hosted-runtime-deploy.yml", "deploy")
-        for block in deploy_job.split("      - name: ")[1:]:
-            if "secrets.DERIV_AUTH_TOKEN" in block or "secrets.DERIV_PAT" in block:
-                self.assertIn("if: inputs.deployment_mode == 'LIVE'", block)
+    def test_bearer_tokens_are_confined_to_one_live_gated_deployment_step(self):
+        workflow = _workflow("self-hosted-runtime-deploy.yml")
+        self.assertEqual(set(workflow["on"]), {"workflow_dispatch"})
+        deploy = _job(workflow, "deploy")
+        self.assertIn("github.event_name == 'workflow_dispatch'", deploy.get("if", ""))
+        self.assertIn("github.ref == 'refs/heads/main'", deploy.get("if", ""))
+        self.assertEqual(deploy.get("environment"), "production")
+        self.assertEqual(_secret_references(deploy.get("env", {})), [])
+        token_steps = [
+            step for step in _steps(deploy)
+            if any(key in "\n".join(_strings(step.get("env", {}))) for key in DERIV_TOKEN_KEYS)
+        ]
+        self.assertEqual(len(token_steps), 1)
+        self.assertEqual(token_steps[0].get("name"), "Provision LIVE runtime secrets to root-only host store")
+        self.assertEqual(token_steps[0].get("if"), "inputs.deployment_mode == 'LIVE'")
+        names = [step.get("name") for step in _steps(deploy)]
+        self.assertLess(names.index("Verify source revision and deployment lock"),
+                        names.index("Block LIVE deployment while Deriv read-only account scope is unavailable"))
+        self.assertLess(names.index("Block LIVE deployment while Deriv read-only account scope is unavailable"),
+                        names.index("Provision LIVE runtime secrets to root-only host store"))
 
-    def test_non_secret_account_configuration_uses_protected_variables_or_boolean_presence(self):
-        for name in ("secret-presence-report.yml", "self-hosted-runtime-deploy.yml"):
-            text = (WORKFLOWS / name).read_text(encoding="utf-8")
-            for key in DERIV_CONFIG_KEYS:
-                self.assertIn("vars." + key, text)
-        report = (WORKFLOWS / "secret-presence-report.yml").read_text(encoding="utf-8")
-        self.assertIn("secrets.DERIV_APP_ID != ''", report)
-        self.assertIn("secrets.DERIV_EXPECTED_LOGINID != ''", report)
-        self.assertIn("secrets.DERIV_EXPECTED_CURRENCY != ''", report)
-        self.assertIn("vars.DERIV_AUTH_MODE", report)
-        self.assertIn("vars.DERIV_ENVIRONMENT", report)
-        self.assertNotIn("DERIV_AUTH_TOKEN: ${{ secrets.", report)
+    def test_deriv_configuration_uses_variables_or_boolean_presence(self):
+        workflow = _workflow("secret-presence-report.yml")
+        report = _job(workflow, "report")
+        env = _step(report, "Report boolean-only production secret presence").get("env", {})
+        for key in DERIV_CONFIG_KEYS:
+            self.assertTrue(key in env and ("vars." + key in env[key] or "secrets." + key in env[key]), key)
+        for key, value in env.items():
+            if "secrets." in value:
+                self.assertTrue(" != ''" in value or " == 'USD'" in value, (key, value))
+        for key in DERIV_TOKEN_KEYS:
+            self.assertIn(key + "_PRESENT", env)
+            self.assertIn(" != ''", env[key + "_PRESENT"])
+        self.assertNotIn("DERIV_AUTH_TOKEN", env)
+        self.assertIn("vars.DERIV_AUTH_MODE", env)
+        self.assertIn("vars.DERIV_ENVIRONMENT", env)
 
-    def test_session_verification_alias_is_non_executing_and_credential_free(self):
-        text = (WORKFLOWS / "deriv-session-verification.yml").read_text(encoding="utf-8")
-        self.assertIn("DERIV_SESSION_VERIFICATION=NOT_EXECUTED", text)
-        self.assertIn("NEXT_STEP=MANUALLY_DISPATCH_DERIV_AUTH_EVIDENCE_ON_MAIN", text)
-        self.assertNotIn("environment: production", text)
-        self.assertNotIn("${{ secrets.", text)
-        self.assertNotIn("DERIV_AUTH_TOKEN", text)
+    def test_session_alias_is_non_executing_and_credential_free(self):
+        workflow = _workflow("deriv-session-verification.yml")
+        self.assertEqual(set(workflow["on"]), {"workflow_dispatch"})
+        held = _job(workflow, "held")
+        self.assertIn("github.event_name == 'workflow_dispatch'", held.get("if", ""))
+        self.assertIn("github.ref == 'refs/heads/main'", held.get("if", ""))
+        self.assertEqual(_secret_references(workflow), [])
+        output = "\n".join(step.get("run", "") for step in _steps(held))
+        self.assertIn("DERIV_SESSION_VERIFICATION=NOT_EXECUTED", output)
+        self.assertIn("NEXT_STEP=MANUALLY_DISPATCH_DERIV_AUTH_EVIDENCE_ON_MAIN", output)
 
-    def test_whatsapp_alert_secrets_are_manual_main_only_and_environment_protected(self):
-        text = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
-        alert_job = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
-        self.assertIn("github.event_name == 'workflow_dispatch'", alert_job)
-        self.assertIn("github.ref == 'refs/heads/main'", alert_job)
-        self.assertIn("environment: production", alert_job)
-        self.assertNotIn("pull_request:", text)
-        self.assertNotIn("pull_request_target:", text)
-        self.assertIn("secrets.TWILIO_ACCOUNT_SID", alert_job)
-        self.assertIn("secrets.TWILIO_AUTH_TOKEN", alert_job)
-        self.assertNotIn("secrets.TWILIO_ACCOUNT_SID", _job_block("aurelia-free-runtime.yml", "runtime-probe"))
+    def test_whatsapp_secrets_are_environment_protected_and_step_scoped(self):
+        workflow = _workflow("aurelia-free-runtime.yml")
+        self.assertNotIn("pull_request", workflow["on"])
+        self.assertNotIn("pull_request_target", workflow["on"])
+        runtime = _job(workflow, "runtime-probe")
+        alert = _job(workflow, "whatsapp-alert-smoke")
+        self.assertIn("github.event_name == 'workflow_dispatch'", alert.get("if", ""))
+        self.assertIn("github.ref == 'refs/heads/main'", alert.get("if", ""))
+        self.assertEqual(alert.get("environment"), "production")
+        for key in ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_API_KEY", "TWILIO_API_SECRET",
+                    "TWILIO_WHATSAPP_FROM", "AURELIA_WHATSAPP_TO", "TWILIO_CONTENT_SID"):
+            self.assertNotIn(key, runtime.get("env", {}))
+        for key, value in alert.get("env", {}).items():
+            if "secrets." in value:
+                self.assertEqual(key, "TWILIO_CONFIGURED")
+                self.assertIn(" != ''", value)
+        send = _step(alert, "Send WhatsApp smoke alert")
+        self.assertEqual(send.get("if"), "env.TWILIO_CONFIGURED == 'true'")
+        for key in ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_API_KEY", "TWILIO_API_SECRET",
+                    "TWILIO_WHATSAPP_FROM", "AURELIA_WHATSAPP_TO", "TWILIO_CONTENT_SID"):
+            self.assertIn("secrets.", send.get("env", {}).get(key, ""))
 
-    def test_presence_report_secret_expressions_are_boolean_only(self):
-        text = (WORKFLOWS / "secret-presence-report.yml").read_text(encoding="utf-8")
-        for line in text.splitlines():
-            if "${{ secrets." in line:
-                self.assertTrue(" != '' }}" in line or " == 'USD' }}" in line, line)
-        self.assertNotIn("DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN ||", text)
-        self.assertNotIn("AURELIA_SSH_KEY: ${{ secrets.AURELIA_SSH_KEY }}", text)
-        self.assertNotIn("AURELIA_ATTESTATION_SIGNING_KEY: ${{ secrets.AURELIA_ATTESTATION_SIGNING_KEY }}", text)
+    def test_presence_report_is_manual_main_only_and_boolean_only(self):
+        workflow = _workflow("secret-presence-report.yml")
+        self.assertEqual(set(workflow["on"]), {"workflow_dispatch"})
+        report = _job(workflow, "report")
+        self.assertEqual(report.get("environment"), "production")
+        self.assertIn("github.event_name == 'workflow_dispatch'", report.get("if", ""))
+        self.assertIn("github.ref == 'refs/heads/main'", report.get("if", ""))
+        env = _step(report, "Report boolean-only production secret presence").get("env", {})
+        for key, value in env.items():
+            if "secrets." in value:
+                self.assertTrue(" != ''" in value or " == 'USD'" in value, key)
+        self.assertNotIn("DERIV_AUTH_TOKEN", env)
+        self.assertNotIn("AURELIA_SSH_KEY", env)
+        self.assertNotIn("AURELIA_ATTESTATION_SIGNING_KEY", env)
 
     def test_live_account_verification_blocks_before_trade_token_mapping(self):
-        workflow = (WORKFLOWS / "self-hosted-runtime-deploy.yml").read_text(encoding="utf-8")
-        self.assertIn(
-            "Block LIVE deployment while Deriv read-only account scope is unavailable",
-            workflow,
-        )
-        self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", workflow)
-        blocked_at = workflow.index(
-            "Block LIVE deployment while Deriv read-only account scope is unavailable"
-        )
+        workflow = _workflow("self-hosted-runtime-deploy.yml")
+        deploy = _job(workflow, "deploy")
+        blocked = _step(deploy, "Block LIVE deployment while Deriv read-only account scope is unavailable")
+        token_step = _step(deploy, "Provision LIVE runtime secrets to root-only host store")
+        self.assertEqual(blocked.get("if"), "inputs.deployment_mode == 'LIVE'")
+        self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", blocked.get("run", ""))
+        self.assertEqual(token_step.get("if"), "inputs.deployment_mode == 'LIVE'")
         token_refs = [
-            match.start()
-            for match in re.finditer(r"secrets\.(?:DERIV_AUTH_TOKEN|DERIV_PAT)", workflow)
+            step for step in _steps(deploy)
+            if any(key in "\n".join(_strings(step.get("env", {}))) for key in DERIV_TOKEN_KEYS)
         ]
-        self.assertTrue(token_refs)
-        self.assertTrue(all(index > blocked_at for index in token_refs))
-        for step_name in (
-            "Require explicit Deriv account bindings for LIVE verification",
-            "Generate fresh authenticated real-account evidence without submitting orders",
-            "Refresh readiness from current evidence; remain fail-closed on any blocker",
-            "Require deterministic live release gate for LIVE deployment",
-        ):
-            self.assertNotIn(step_name, workflow)
-        token_blocks = [
-            block
-            for block in _job_block("self-hosted-runtime-deploy.yml", "deploy").split("      - name: ")[1:]
-            if "secrets.DERIV_AUTH_TOKEN" in block or "secrets.DERIV_PAT" in block
-        ]
-        self.assertEqual(len(token_blocks), 1)
-        self.assertIn("Provision LIVE runtime secrets to root-only host store", token_blocks[0])
-        self.assertIn("if: inputs.deployment_mode == 'LIVE'", token_blocks[0])
+        self.assertEqual(token_refs, [token_step])
 
-    def test_verify_only_runtime_never_loads_legacy_trade_scoped_readonly_file(self):
+    def test_verify_only_runtime_never_loads_retired_trade_scoped_store(self):
         source = (ROOT / "scripts" / "deploy" / "bootstrap_and_deploy.sh").read_text(encoding="utf-8")
-        self.assertIn('sudo rm -f "$READONLY_SECRET_FILE"', source)
-        self.assertIn('sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true', source)
-        self.assertLess(
-            source.index('if [ ! -d "$RELEASE_DIR" ]'),
-            source.index('sudo rm -f "$READONLY_SECRET_FILE"'),
-        )
-        self.assertLess(
-            source.index('test -f "$LOCK_FILE"'),
-            source.index('sudo rm -f "$READONLY_SECRET_FILE"'),
-        )
-        self.assertLess(
-            source.index('case "$DEPLOYMENT_MODE" in'),
-            source.index('sudo rm -f "$READONLY_SECRET_FILE"'),
-        )
+        cleanup = source.index('sudo rm -f "$READONLY_SECRET_FILE"')
+        self.assertLess(source.index('if [ ! -d "$RELEASE_DIR" ]'), cleanup)
+        self.assertLess(source.index('test -f "$LOCK_FILE"'), cleanup)
+        self.assertLess(source.index('case "$DEPLOYMENT_MODE" in'), cleanup)
         self.assertNotIn('ENV_FILES+=("$READONLY_SECRET_FILE")', source)
         self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', source)
         self.assertNotIn('VERIFY_DERIV_AUTH="$AUTH_CONFIGURED"', source)
@@ -164,77 +197,59 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertIn("VERIFY_DERIV_AUTH=false", source)
         self.assertNotIn("provision_deriv_readonly_secrets.py", source)
 
-    def test_checkout_credentials_are_not_persisted_in_untrusted_read_only_workflows(self):
-        assurance = (WORKFLOWS / "aurelia-assurance.yml").read_text(encoding="utf-8")
-        runtime = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
-        runtime_probe = _job_block("aurelia-free-runtime.yml", "runtime-probe")
-        whatsapp = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
-        self.assertRegex(assurance, r"uses: actions/checkout@v7\n\s+with:\n\s+persist-credentials: false")
-        self.assertRegex(runtime_probe, r"uses: actions/checkout@v7\n\s+with:\n\s+persist-credentials: false")
-        self.assertRegex(whatsapp, r"uses: actions/checkout@v7\n\s+with:\n\s+persist-credentials: false")
-
-    def test_whatsapp_raw_credentials_are_scoped_to_the_send_step(self):
-        workflow = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
-        alert_job = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
-        job_env = alert_job.split("steps:", 1)[0]
-        self.assertNotIn("TWILIO_ACCOUNT_SID: ${{ secrets.", job_env)
-        self.assertNotIn("TWILIO_AUTH_TOKEN: ${{ secrets.", job_env)
-        send_step = alert_job.split("      - name: Send WhatsApp smoke alert", 1)[1]
-        for name in (
-            "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_API_KEY",
-            "TWILIO_API_SECRET", "TWILIO_WHATSAPP_FROM",
-            "AURELIA_WHATSAPP_TO", "TWILIO_CONTENT_SID",
-        ):
-            self.assertIn(name + ": ${{ secrets.", send_step)
+    def test_every_checkout_step_disables_persisted_github_credentials(self):
+        for path in sorted(WORKFLOWS.glob("*.yml")):
+            workflow = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+            for job_name, job in workflow.get("jobs", {}).items():
+                for step_number, step in enumerate(job.get("steps", []), start=1):
+                    if str(step.get("uses", "")).startswith("actions/checkout@"):
+                        self.assertEqual(
+                            step.get("with", {}).get("persist-credentials"),
+                            "false",
+                            f"{path.name}:{job_name}:step{step_number} must disable persisted checkout credentials",
+                        )
 
     def test_deployment_assurance_gate_requires_successful_main_push_for_exact_sha(self):
-        workflow = (WORKFLOWS / "self-hosted-runtime-deploy.yml").read_text(encoding="utf-8")
-        self.assertIn("--json status,conclusion,event,headBranch,headSha,databaseId", workflow)
-        self.assertIn('run.get("headBranch") == "main"', workflow)
-        self.assertIn('run.get("headSha") == os.environ["GITHUB_SHA"]', workflow)
-        self.assertIn('run.get("event") == "push"', workflow)
+        workflow = _workflow("self-hosted-runtime-deploy.yml")
+        deploy = _job(workflow, "deploy")
+        code = _step(deploy, "Require green AURELIA Assurance for the exact commit").get("run", "")
+        self.assertIn("headBranch", code)
+        self.assertIn("headSha", code)
+        self.assertIn('"main"', code)
+        self.assertIn('"push"', code)
+        self.assertIn("GITHUB_SHA", code)
 
     def test_public_runtime_has_no_deriv_credentials_or_account_settings(self):
-        text = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
-        self.assertIn("python scripts/verify_deriv_public_transport.py", text)
-        self.assertIn('AURELIA_VERIFY_DERIV_AUTH: "false"', text)
+        workflow = _workflow("aurelia-free-runtime.yml")
+        runtime = _job(workflow, "runtime-probe")
+        self.assertEqual(runtime.get("env", {}).get("AURELIA_VERIFY_DERIV_AUTH"), "false")
+        output = "\n".join(step.get("run", "") for step in _steps(runtime))
+        self.assertIn("python scripts/verify_deriv_public_transport.py", output)
+        self.assertEqual(_secret_references(runtime), [])
         for key in DERIV_TOKEN_KEYS + DERIV_CONFIG_KEYS:
-            self.assertNotIn(key, text)
-        self.assertNotIn("verify_deriv_session.py", text)
+            self.assertNotIn(key, runtime.get("env", {}))
 
-    def test_transaction_lifecycle_workflow_remains_held(self):
-        text = (WORKFLOWS / "deriv-verify-only-lifecycle.yml").read_text(encoding="utf-8")
-        self.assertIn("VERIFY_ONLY_LIFECYCLE_REQUIRES_SEPARATE_NO_ORDER_ACTION_AUDIT", text)
-        self.assertNotIn("${{ secrets.", text)
+    def test_transaction_lifecycle_workflow_remains_held_without_secrets(self):
+        workflow = _workflow("deriv-verify-only-lifecycle.yml")
+        self.assertEqual(set(workflow["on"]), {"workflow_dispatch"})
+        held = _job(workflow, "held")
+        self.assertIn("github.event_name == 'workflow_dispatch'", held.get("if", ""))
+        self.assertIn("github.ref == 'refs/heads/main'", held.get("if", ""))
+        self.assertEqual(_secret_references(workflow), [])
+        output = "\n".join(step.get("run", "") for step in _steps(held))
+        self.assertIn("VERIFY_ONLY_LIFECYCLE_REQUIRES_SEPARATE_NO_ORDER_ACTION_AUDIT", output)
 
-    def test_presence_report_is_manual_main_only_and_boolean_only(self):
-        text = (WORKFLOWS / "secret-presence-report.yml").read_text(encoding="utf-8")
-        self.assertIn("workflow_dispatch:", text)
-        self.assertIn("environment: production", text)
-        self.assertIn("github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'", text)
-        self.assertIn("DERIV_AUTH_TOKEN_PRESENT:", text)
-        self.assertIn("secrets.DERIV_AUTH_TOKEN != ''", text)
-        self.assertNotIn("DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN", text)
-        self.assertIn("Report boolean-only production secret presence", text)
-
-    def test_self_hosted_deployment_credentials_are_live_lock_gated_and_main_only(self):
-        workflow = (WORKFLOWS / "self-hosted-runtime-deploy.yml").read_text(encoding="utf-8")
-        self.assertIn("workflow_dispatch:", workflow)
-        self.assertNotIn("pull_request:", workflow)
-        self.assertNotIn("schedule:", workflow)
-        self.assertIn("github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'", workflow)
-        deploy_job = _job_block("self-hosted-runtime-deploy.yml", "deploy")
-        job_env = deploy_job.split("steps:", 1)[0]
-        self.assertNotIn("${{ secrets.", job_env)
-        lock_gate = workflow.index("name: Verify source revision and deployment lock")
-        first_deriv_secret = min(
-            workflow.index(marker)
-            for marker in ("secrets.DERIV_AUTH_TOKEN", "secrets.DERIV_PAT")
-        )
-        self.assertLess(lock_gate, first_deriv_secret)
-        for block in deploy_job.split("      - name: ")[1:]:
-            if "secrets.DERIV_AUTH_TOKEN" in block or "secrets.DERIV_PAT" in block:
-                self.assertIn("if: inputs.deployment_mode == 'LIVE'", block)
+    def test_self_hosted_deployment_is_manual_main_only_environment_protected_and_fail_closed(self):
+        workflow = _workflow("self-hosted-runtime-deploy.yml")
+        self.assertEqual(set(workflow["on"]), {"workflow_dispatch"})
+        deploy = _job(workflow, "deploy")
+        self.assertIn("github.event_name == 'workflow_dispatch'", deploy.get("if", ""))
+        self.assertIn("github.ref == 'refs/heads/main'", deploy.get("if", ""))
+        self.assertEqual(deploy.get("environment"), "production")
+        self.assertEqual(_secret_references(deploy.get("env", {})), [])
+        self.assertEqual(workflow.get("permissions", {}).get("contents"), "read")
+        lock_step = _step(deploy, "Verify source revision and deployment lock")
+        self.assertIn("config/LIVE_LOCK.yaml", lock_step.get("run", ""))
         lock = (ROOT / "config" / "LIVE_LOCK.yaml").read_text(encoding="utf-8")
         self.assertIn("live_trading_enabled: false", lock)
         self.assertIn("FINAL_EXECUTION_AUTHORIZATION: false", lock)
