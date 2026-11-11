@@ -205,13 +205,11 @@ def load_state(path: Path) -> dict[str, Any]:
     return state
 
 def save_state(path: Path, state: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_suffix(path.suffix + ".tmp")
-    temp.write_text(
-        json.dumps(state, sort_keys=True, separators=(",", ":"), allow_nan=False),
-        encoding="utf-8",
+    """Refuse any new durable R_100 collector state or quote archive."""
+    del path, state
+    raise RuntimeError(
+        "R100_ARCHIVE_QUARANTINED: durable Deriv synthetic-index state writes are disabled"
     )
-    temp.replace(path)
 
 def build_signal_id(timestamp_utc: str, quote: float, direction: str) -> str:
     return "r100-signal:" + canonical_hash(
@@ -525,6 +523,14 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 async def collect_once(state: dict[str, Any]) -> None:
+    """Fail closed: no new R_100 market-data collection is permitted."""
+    del state
+    raise RuntimeError(
+        "R100_RESEARCH_QUARANTINED: Deriv synthetic-index collection is disabled by ATOS v2.0 §4"
+    )
+
+
+async def _legacy_collect_once_disabled(state: dict[str, Any]) -> None:
     start = utc_now()
     state["last_run_started_at_utc"] = iso(start)
 
@@ -598,6 +604,10 @@ async def collect_once(state: dict[str, Any]) -> None:
     state["last_run_completed_at_utc"] = iso(utc_now())
 
 async def main() -> int:
+    """CLI entry point intentionally disabled by the ATOS v2.0 synthetic-index quarantine."""
+    raise RuntimeError(
+        "R100_RESEARCH_QUARANTINED: direct collection and durable output are disabled by ATOS v2.0 §4"
+    )
     state = load_state(STATE_PATH)
     report_path = STATE_PATH.with_name("aurelia_r100_report.json")
     try:
