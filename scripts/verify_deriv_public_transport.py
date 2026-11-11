@@ -47,13 +47,14 @@ async def probe(
         or "LOCAL_UNPINNED"
     )
     evidence: dict[str, Any] = {
-        "schema": "aurelia.deriv_public_transport.v2",
+        "schema": "aurelia.deriv_public_transport.v3",
         "source_sha": source_sha,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "endpoint": PUBLIC_WS_URL,
         "symbol": symbol,
         "requested_tick_count": tick_count,
-        "ticks": [],
+        "tick_count": 0,
+        "tick_sequence_verified": False,
         "active_symbol_count": 0,
         "authentication_used": False,
         "capital_authority_granted": False,
@@ -100,12 +101,10 @@ async def probe(
             if previous_epoch is not None and epoch <= previous_epoch:
                 raise RuntimeError("PUBLIC_TICK_EPOCH_NOT_INCREASING")
             previous_epoch = epoch
-            evidence["ticks"].append({
-                "symbol": tick_symbol,
-                "quote": format(quote, ".15g"),
-                "epoch": epoch,
-            })
-        evidence["tick_stream_verified"] = len(evidence["ticks"]) == tick_count
+            # Raw quotes and epochs are deliberately never persisted.
+        evidence["tick_count"] = tick_count
+        evidence["tick_sequence_verified"] = True
+        evidence["tick_stream_verified"] = evidence["tick_sequence_verified"]
         evidence["status"] = (
             "PUBLIC_TICK_STREAM_VERIFIED"
             if evidence["tick_stream_verified"]
@@ -151,7 +150,7 @@ async def main() -> int:
         "probe": "DERIV_PUBLIC_TICK_STREAM",
         "status": evidence["status"],
         "symbol": evidence["symbol"],
-        "tick_count": len(evidence["ticks"]),
+        "tick_count": evidence["tick_count"],
         "active_symbol_count": evidence["active_symbol_count"],
         "source_sha": evidence["source_sha"],
         "record_hash": evidence["record_hash"],
