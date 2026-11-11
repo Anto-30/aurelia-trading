@@ -701,5 +701,7 @@
   },
   "external_tool_intake": "config/external_tool_intake_2026-11-09.json",
   "external_repository_intake_2026_11_11": "config/external_tool_intake_2026-11-11.json",
-  "external_repository_assignments_2026_11_11": "config/external_repository_agent_assignments_2026-11-11.json"
+  "external_repository_assignments_2026_11_11": "config/external_repository_agent_assignments_2026-11-11.json",
+  "external_repository_intake_addendum_02_2026_11_11": "config/external_tool_intake_2026-11-11_addendum_02.json",
+  "external_repository_assignments_addendum_02_2026_11_11": "config/external_repository_agent_assignments_2026-11-11_addendum_02.json"
 }
