@@ -117,9 +117,10 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         for key, value in env.items():
             if "secrets." in value:
                 self.assertTrue(" != ''" in value or " == 'USD'" in value, (key, value))
-        for key in DERIV_TOKEN_KEYS:
-            self.assertIn(key + "_PRESENT", env)
-            self.assertIn(" != ''", env[key + "_PRESENT"])
+        self.assertIn("DERIV_AUTH_TOKEN_PRESENT", env)
+        self.assertIn("secrets.DERIV_AUTH_TOKEN", env["DERIV_AUTH_TOKEN_PRESENT"])
+        self.assertIn("secrets.DERIV_PAT", env["DERIV_AUTH_TOKEN_PRESENT"])
+        self.assertIn(" != ''", env["DERIV_AUTH_TOKEN_PRESENT"])
         self.assertNotIn("DERIV_AUTH_TOKEN", env)
         self.assertIn("vars.DERIV_AUTH_MODE", env)
         self.assertIn("vars.DERIV_ENVIRONMENT", env)
