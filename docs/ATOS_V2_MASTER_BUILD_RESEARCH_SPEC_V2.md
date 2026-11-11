@@ -91,7 +91,7 @@ Require gap, stale-tick, duplicate, and outlier detection; weekend/holiday filte
 
 ### 5.5 Provider limits
 
-Provider limits must be verified at run time. Owner-specified working limits include: yfinance intraday 1m approximately up to 7 days per request and approximately 30 days total; 5m/15m approximately up to 60 days; 1h approximately up to 730 days. Deriv API rate limits and history count defaults may vary between API generations; use explicit history counts, pace requests, reuse a connection, respect rate-limit responses, and back off. Do not assume historical limits are permanent.
+Provider limits must be verified at run time. Owner-specified working limits include: yfinance intraday 1m approximately up to 7 days per request and approximately 30 days total; 5m/15m approximately up to 60 days; 1h approximately up to 730 days. Owner-specified Deriv ceilings are 220/minute and 14,400/hour for WebSocket `ticks_history` under the all-other-calls budget; REST ceilings are 300/minute/IP, 1,000/10 minutes/IP, and 80/minute/logged-in user. The new API `ticks_history` default count is 1,000 (legacy 5,000); pass `count` explicitly. Treat these values as operational hints, not immutable guarantees: confirm current provider limits at run time, pace requests, reuse a connection, honor rate-limit rejections, and back off.
 
 ### 5.6 Reproducibility
 
@@ -132,11 +132,11 @@ Quarantined; no live use. 08:49:55 New York is an unverified hypothesis only. Te
 
 ### 6.5 Mandatory baselines
 
-For every strategy: random-entry/same-exit, matched placebo zones (same size/distance/direction), shuffled-signal permutation, and buy-and-hold where appropriate. Credit a setup only for incremental edge above the relevant placebo baseline. Barrier-hit baselines are not assumed to equal 50%; use matched controls rather than win-rate intuition.
+For every strategy: random-entry/same-exit, matched placebo zones (same size/distance/direction), shuffled-signal permutation, and buy-and-hold where appropriate. Credit a setup only for incremental edge above the relevant placebo baseline. Barrier-hit baselines are not assumed to equal 50%. The owner-supplied prior measurements are approximately 47.3%-52.3% overall and 43.3%-54.6% by direction; treat them as empirical context, not universal constants. Use matched controls for each experiment rather than win-rate intuition.
 
 ### 6.6 Evidence prior
 
-The owner-supplied evidence prior reports no reliable OB edge versus matched placebo across 31 runs/~1,854 zones; displacement/body-only filters did not improve results beyond noise; reversal-as-taught SMC claims are unsupported in the cited experiments; and a separate 10-year GBPUSD OB backtest reported PF 0.83 / 38% win under a different exit. These are research priors, not proof about every variant. The burden of proof remains on the proposed setup. The core asset is the validation machine, not any particular strategy.
+The owner-supplied evidence prior reports no reliable OB edge versus matched placebo across 31 runs/~1,854 zones; displacement/body-only filters did not improve results beyond noise; reversal-as-taught SMC claims are unsupported in the cited experiments (sweeps were reported as predicting continuation); and a separate 10-year GBPUSD OB backtest reported PF 0.83 / 38% win under a different exit. That GBPUSD result is illustrative only, not directly comparable. These are research priors, not proof about every variant. The burden of proof remains on the proposed setup. The core asset is the validation machine, not any particular strategy.
 
 ## 7. Validation gates
 
@@ -150,7 +150,7 @@ L6 owns the state machine: `LIVE_LOCK → SHADOW → CANARY → LIVE`; any breac
 - **G5 — CANARY:** proposed risk no greater than 0.1% per trade; at least 50 trades; metrics consistent with G3 within bootstrap noise; explicit logged Risk Authority sign-off.
 - LIVE only after G0-G5 are logged and signed. Re-run G3 quarterly or on drift alert.
 
-Use stationary-bootstrap confidence intervals; HAC/Newey-West Sharpe standard errors; DSR/PBO/SPA with documented assumptions/trial counts. Maintain a trial-count ledger (every backtest run is a trial for DSR), enforce power/minimum-detectable-effect requirements, reject underpowered samples, and maintain a negative-results registry. A proposed threshold is not a fact merely because it appears in this specification.
+Use stationary-bootstrap confidence intervals; HAC/Newey-West Sharpe standard errors; DSR/PBO/SPA with documented assumptions/trial counts; and sequential evidence methods (e-values/confidence sequences) only with stated assumptions. Maintain a trial-count ledger (every backtest run is a trial for DSR), enforce statistical power and minimum-detectable-effect requirements, reject underpowered samples, and maintain a negative-results registry. A proposed threshold is not a fact merely because it appears in this specification. The PBO <0.2 and G4/G5 sample/uptime values are proposed thresholds requiring owner/risk ratification.
 
 ## 8. Risk Authority research defaults
 
@@ -166,7 +166,7 @@ P0 before any research rerun:
 
 - Disable/fix command injection in `.github/workflows/atos-v2-smc-baseline.yml` caused by workflow_dispatch inputs interpolated into shell. Inputs must not be interpolated into `run:` source; if a future workflow requires inputs, pass them through step-scoped environment variables, validate strict formats, and add regression tests.
 - Resolve PR #292 so production credentials are not exposed to untrusted CI refs.
-- Treat workflow injection as blocking.
+- Treat workflow injection as blocking. Deriv API Terms §8.2 is identified by the owner as allowing suspension of apps with security vulnerabilities; verify the current clause before relying on it.
 - Pin dependencies, apply least privilege, and prohibit secrets in logs/artifacts.
 - Verify Deriv product/jurisdiction terms and applicable local requirements. Verify current SEBI/NSE requirements before any Indian-market automation. Jurisdiction is an open owner input and must not be inferred from location metadata. This is not legal advice.
 
@@ -176,7 +176,7 @@ Frame filters as meta-labeling: triple-barrier labels are primary; secondary mod
 
 ## 12. Monitoring and model-risk governance
 
-Research design includes sequential tests using e-values/confidence sequences; CUSUM/Page-Hinkley and ADWIN drift detection; auto-degrade to SHADOW on breaches under L6 authority; uptime/latency/alerting; incident log and postmortems. Maintain SR 11-7-style model-risk governance: model inventory, independent validation, challenger models, assumptions, and limitations.
+Research design includes sequential tests using e-values/confidence sequences; CUSUM/Page-Hinkley and ADWIN drift detection; auto-degrade to SHADOW on breaches only through L6 authority; uptime/latency/alerting; incident log and postmortems. Maintain SR 11-7-style model-risk governance: model inventory, independent validation, challenger models, documented assumptions/limitations, and challenger-model outcomes.
 
 ## 13. Reporting contract
 
@@ -192,6 +192,25 @@ Pre-register primary endpoints; one primary hypothesis per experiment; log every
 - **P1:** TrueFX registration and history/coverage/schema verification; L1 ingestion and quality gates; cross-source calibration gate; G0 pre-registration and G1 detector tests/chart audit for OB+FVG v0.1 on EURUSD.
 - **P2:** placebo/matched-control framework; G2; Track-B contract/payoff mapping research.
 - **P3:** XAUUSD archive via approved Dukascopy permission/JForex route; meta-labeling filters; regime gating; sequential monitor; portfolio allocation; Indian-options data/regulatory feasibility.
+
+## 18. Owner-delegated design selections
+
+These selections are research/architecture authority only and do not unlock capital or change LIVE_LOCK:
+
+| Decision | Selection | Boundary |
+|---|---|---|
+| D1 Governance | Canonical AURELIA map on main is implementation authority; this specification governs Layer-9 research; architecture changes require ADRs | No new production layer model |
+| D2 Data | TrueFX candidate for persistent EURUSD research; Deriv ephemeral ≤24h; Dukascopy gold conditional; HistData held | Verify registered-account coverage/schema before ingestion |
+| D3 Sequence | EURUSD → XAUUSD → NQ/India secondary research | No symbol-code guessing or jurisdiction inference |
+| D4 Strategy | OB+FVG Track A linear research plus Track B fixed-payout mapping; MSNR remains owner-rules placeholder | Track A is not executable on options plane; Track B remains research-only |
+| D5 Validation | Placebo/matched controls, CPCV, DSR/PBO/SPA, bootstrap, trial ledger, power/MDE | No promotion absent G0-G5 and independent gate authority |
+| D6 Risk envelope | Research simulation proposals: ≤0.5%/trade, ≤0.25 Kelly after haircut, −2R daily, −5R weekly, −10% DD breaker | Not approved live limits; L6 remains authoritative |
+| D7 Security | Fix/disable workflow injection and resolve PR #292 before research reruns | Do not expose production credentials to untrusted refs |
+| D8 AI boundary | LLMs/agents research, review and reporting only, with read-only results | Zero capital, execution, secrets, release or risk authority |
+
+## 19. Key references — verify bibliographic details before use
+
+The following are research references to verify and cite accurately when relevant. Their inclusion is not evidence that any ATOS strategy works: López de Prado (2018), *Advances in Financial Machine Learning*; Bailey and López de Prado (2014), Deflated Sharpe Ratio; Bailey et al. (2015), Probability of Backtest Overfitting; White (2000), Reality Check; Hansen (2005), Superior Predictive Ability; Newey and West (1987), HAC covariance estimation; Politis and Romano (1994), stationary bootstrap; Lo (2002), Sharpe ratio statistics; Howard et al. (2021) and Ramdas et al. (2023) on confidence sequences/e-values; Torrence and Compo (1998) and Mann and Lees (1996) on spectral significance/red-noise testing; Kelly (1956); Rockafellar and Uryasev (2000); Artzner et al. (1999); Ledoit and Wolf (2004); Bifet and Gavaldà (2007); Angelopoulos and Bates (2021); and Federal Reserve SR 11-7 (2011).
 
 ## 16. Interaction protocol
 
