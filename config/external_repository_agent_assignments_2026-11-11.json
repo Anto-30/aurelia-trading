@@ -1,0 +1,91 @@
+{
+  "schema": "aurelia.external_repository_agent_assignments.v1",
+  "reviewed_date": "2026-11-11",
+  "source_registry": "config/external_tool_intake_2026-11-11.json",
+  "policy": "Assignments route work only; they do not install, connect, authorize or grant credentials.",
+  "assignments": [
+    {
+      "repository": "janestreet/agent_skills",
+      "primary": "7",
+      "reviewers": "c6715c29548a3b39d4a9545c698ee4fd17a7213",
+      "task": "One Socratic tutor skill; not an AURELIA engineering capability."
+    },
+    {
+      "repository": "openinterpreter/openinterpreter",
+      "primary": "8",
+      "reviewers": "0d8f55385452457a625dbabc032f3003b9545b4",
+      "task": "Command-execution agent harness with MCP/ACP and browser/native QA."
+    },
+    {
+      "repository": "mvanhorn/last30days-skill",
+      "primary": "c",
+      "reviewers": "58041cc415ee5bc3ac3ed0da73cd925330f81ba",
+      "task": "Multi-source recent research skill; Bash/Read/Write/WebSearch and optional API/browser tokens."
+    },
+    {
+      "repository": "huamidev/GestaltX",
+      "primary": "1",
+      "reviewers": "44c0c44a762db616089faddfbc0581929ae1a0a",
+      "task": "iOS MobileGestalt editor and device feature-flag modifier; unrelated to trading."
+    },
+    {
+      "repository": "lxlynx/ops-toolkit",
+      "primary": "3",
+      "reviewers": "9bb8ec47b2a367b644002cc5d38b5bf9216841f",
+      "task": "Three standalone Bash/Python host-operation scripts."
+    },
+    {
+      "repository": "lxlynx/model-router",
+      "primary": "8",
+      "reviewers": "0ba22fb777e0aaf4092942bfc7e8e5bf598ee8c",
+      "task": "Python standard-library ordered first-match model router with explainable decisions."
+    },
+    {
+      "repository": "rndinfosecguy/Scavenger",
+      "primary": "e",
+      "reviewers": "25fee79f46451d71bc8e1a65b0a939e260c88c5",
+      "task": "Paste-site crawler explicitly collects email/password pairs and exposed API secrets; prior rejection reaffirmed."
+    },
+    {
+      "repository": "opensandbox-group/OpenSandbox",
+      "primary": "b",
+      "reviewers": "ea3992e260cb866408c4b59ff8f89c0fdacf8ee",
+      "task": "Docker/Kubernetes sandbox API, SDKs, MCP, egress controls and Credential Vault."
+    },
+    {
+      "repository": "bhavsec/reconspider",
+      "primary": "5",
+      "reviewers": "dae8c16b2845b5ccb73aba93e333fe308b0754a",
+      "task": "Legacy broad OSINT utility; privileged setup.py installer and multiple API keys; last surfaced commit 2021-08-19."
+    },
+    {
+      "repository": "affaan-m/ECC",
+      "primary": "d",
+      "reviewers": "2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+      "task": "Large agent harness; README claims 71 agents, 314 skills, hooks, memory and commands."
+    },
+    {
+      "repository": "lxlynx/eval-harness",
+      "primary": "2",
+      "reviewers": "a73972c6af2cb2b302e7571d0bed91ab2c97fd5",
+      "task": "Deterministic Python output scoring; README diff claim conflicts with TODO roadmap."
+    }
+  ],
+  "agent_status_constraints": {
+    "Dev": "NOT_CONNECTED",
+    "DeepSeekHarness": "NOT_CONNECTED",
+    "Hermes": "NOT_CONNECTED",
+    "ChatGPT": "CURRENT_SESSION_ONLY",
+    "AURELIA": "CANONICAL_POLICY_AND_CAPITAL_AUTHORITY"
+  },
+  "universal_denials": {
+    "production_secrets": false,
+    "deriv_credentials": false,
+    "broker_access": false,
+    "order_submission": false,
+    "capital_authority": false,
+    "live_lock_mutation": false,
+    "production_deployment": false,
+    "agent_self_approval": false
+  }
+}
