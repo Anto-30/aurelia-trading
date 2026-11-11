@@ -63,7 +63,7 @@ async def probe(
     }
     try:
         await transport.connect()
-        active_response = await transport.request({"active_symbols": "brief"})
+        active_response = await transport.request({"active_symbols": "full"})
         if "error" in active_response:
             raise RuntimeError("PUBLIC_ACTIVE_SYMBOLS_REJECTED")
         rows = active_response.get("active_symbols")
@@ -76,6 +76,33 @@ async def probe(
         }
         evidence["active_symbol_count"] = len(rows)
         evidence["active_symbols_sha256"] = _canonical_hash(active_response)
+        eurusd_candidates = []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            fields = [
+                row.get("symbol"),
+                row.get("underlying_symbol"),
+                row.get("display_name"),
+                row.get("market"),
+                row.get("submarket"),
+                row.get("market_display_name"),
+                row.get("submarket_display_name"),
+            ]
+            searchable = " ".join(value for value in fields if isinstance(value, str)).upper()
+            compact = "".join(ch for ch in searchable if ch.isalnum())
+            if "EURUSD" in compact or ("EURO" in compact and "USDOLLAR" in compact):
+                eurusd_candidates.append({
+                    key: row[key]
+                    for key in ("symbol", "underlying_symbol", "display_name", "market", "submarket")
+                    if isinstance(row.get(key), str)
+                })
+        evidence["eurusd_candidates"] = eurusd_candidates
+        evidence["eurusd_resolution"] = (
+            "RESOLVED_UNIQUE" if len(eurusd_candidates) == 1
+            else "AMBIGUOUS" if len(eurusd_candidates) > 1
+            else "NOT_FOUND_IN_OPTIONS_ACTIVE_SYMBOLS"
+        )
         if symbol not in active_symbols:
             raise RuntimeError("PUBLIC_PROBE_SYMBOL_NOT_ACTIVE")
 
@@ -152,6 +179,8 @@ async def main() -> int:
         "symbol": evidence["symbol"],
         "tick_count": evidence["tick_count"],
         "active_symbol_count": evidence["active_symbol_count"],
+        "eurusd_resolution": evidence.get("eurusd_resolution", "UNAVAILABLE"),
+        "eurusd_candidates": evidence.get("eurusd_candidates", []),
         "source_sha": evidence["source_sha"],
         "record_hash": evidence["record_hash"],
         "authentication_used": False,
