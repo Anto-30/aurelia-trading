@@ -2,7 +2,7 @@ name: ATOS v2 SMC Research Baseline (QUARANTINED)
 
 # This historical runner is disabled pending a v2.0-compliant research pipeline.
 # The former workflow accepted untrusted shell-interpolated inputs and defaulted
-# to R_100. No data download, backtest, or artifact upload is permitted here.
+# to a synthetic index. No data download, backtest, or artifact upload is permitted here.
 on:
   workflow_dispatch:
 
