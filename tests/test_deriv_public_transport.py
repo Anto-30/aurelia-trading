@@ -37,7 +37,11 @@ class PublicTransportProbeTests(unittest.TestCase):
     def test_requires_two_ordered_public_ticks(self) -> None:
         evidence = asyncio.run(probe(transport_factory=FakeTransport))
         self.assertEqual(evidence["status"], "PUBLIC_TICK_STREAM_VERIFIED")
-        self.assertEqual(len(evidence["ticks"]), 2)
+        self.assertEqual(evidence["tick_count"], 2)
+        self.assertTrue(evidence["tick_sequence_verified"])
+        self.assertNotIn("ticks", evidence)
+        self.assertNotIn("quote", evidence)
+        self.assertNotIn("epoch", evidence)
         self.assertFalse(evidence["authentication_used"])
         self.assertFalse(evidence["capital_authority_granted"])
         self.assertFalse(evidence["order_submission_permitted"])
