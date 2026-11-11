@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Install runtime dependencies
-        run: pip install -r requirements.txt pytest
+        run: pip install -r requirements.txt pytest PyYAML==6.0.3
       - name: Compile runtime and tests
         run: python -m compileall -q runtime research tests assurance
       - name: Run static production acceptance audit
