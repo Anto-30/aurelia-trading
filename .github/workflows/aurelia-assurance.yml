@@ -48,13 +48,19 @@ jobs:
           DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT: artifacts/deriv_public_transport.json
         run: python scripts/verify_deriv_public_transport.py
 
-      - name: Upload public Deriv transport evidence
+      - name: Verify public Deriv transport evidence is aggregate-only
         if: always() && hashFiles('artifacts/deriv_public_transport.json') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: deriv-public-transport-evidence
-          path: artifacts/deriv_public_transport.json
-          if-no-files-found: error
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path("artifacts/deriv_public_transport.json").read_text())
+          forbidden = {"ticks", "quote", "epoch", "prices", "candles"}
+          present = forbidden.intersection(payload)
+          if present:
+              raise SystemExit("DERIV_RAW_MARKET_DATA_PERSISTENCE_BLOCKED")
+          print("DERIV_PUBLIC_EVIDENCE=AGGREGATE_ONLY")
+          PY
       - name: Generate current readiness report
         if: always()
         env:
