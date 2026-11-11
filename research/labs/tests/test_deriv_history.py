@@ -46,6 +46,13 @@ class DerivHistoryContractTests(unittest.TestCase):
                         "R_100", start, end, request_delay_seconds=delay
                     ))
 
+
+    def test_deriv_historical_candle_ingestion_is_quarantined_before_network(self):
+        start = datetime(2026, 11, 1, tzinfo=timezone.utc)
+        end = datetime(2026, 11, 2, tzinfo=timezone.utc)
+        with self.assertRaisesRegex(DerivHistoryError, "DERIV_HISTORICAL_INGESTION_QUARANTINED"):
+            asyncio.run(fetch_deriv_candles("frxEURUSD", start, end))
+
     def test_yfinance_rejects_ninety_day_intraday_request_before_network(self):
         end = datetime(2026, 11, 10, tzinfo=timezone.utc)
         start = end - timedelta(days=90)
