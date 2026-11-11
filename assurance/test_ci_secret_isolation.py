@@ -122,8 +122,8 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertIn("secrets.DERIV_PAT", env["DERIV_AUTH_TOKEN_PRESENT"])
         self.assertIn(" != ''", env["DERIV_AUTH_TOKEN_PRESENT"])
         self.assertNotIn("DERIV_AUTH_TOKEN", env)
-        self.assertIn("vars.DERIV_AUTH_MODE", env)
-        self.assertIn("vars.DERIV_ENVIRONMENT", env)
+        self.assertIn("vars.DERIV_AUTH_MODE", env["DERIV_AUTH_MODE"])
+        self.assertIn("vars.DERIV_ENVIRONMENT", env["DERIV_ENVIRONMENT"])
 
     def test_session_alias_is_non_executing_and_credential_free(self):
         workflow = _workflow("deriv-session-verification.yml")
