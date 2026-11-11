@@ -111,7 +111,9 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         report = _job(workflow, "report")
         env = _step(report, "Report boolean-only production secret presence").get("env", {})
         for key in DERIV_CONFIG_KEYS:
-            self.assertTrue(key in env and ("vars." + key in env[key] or "secrets." + key in env[key]), key)
+            presence_key = key + "_PRESENT"
+            self.assertIn(presence_key, env)
+            self.assertTrue("vars." + key in env[presence_key] or "secrets." + key in env[presence_key], key)
         for key, value in env.items():
             if "secrets." in value:
                 self.assertTrue(" != ''" in value or " == 'USD'" in value, (key, value))
