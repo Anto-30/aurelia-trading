@@ -18,7 +18,7 @@ if str(ROOT) not in sys.path:
 from runtime.adapters.deriv_ws import DerivWebSocketTransport
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
-DEFAULT_SYMBOL = "1HZ100V"
+DEFAULT_SYMBOL = "frxEURUSD"
 
 
 def _canonical_hash(value: Any) -> str:
