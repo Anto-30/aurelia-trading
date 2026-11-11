@@ -111,7 +111,7 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
                 path = Path(tmp) / "state.json"
                 state = initial_state()
                 state["manifest"]["config_hash"] = legacy_research_config_hash()
-                save_state(path, state)
+                path.write_text(json.dumps(state, sort_keys=True), encoding="utf-8")
                 os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = state["manifest"]["code_commit"]
                 restored = load_state(path)
                 self.assertEqual(restored["manifest"]["config_hash"], research_config_hash())
