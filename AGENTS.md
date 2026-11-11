@@ -37,3 +37,8 @@ Read `docs/engineering/EXTERNAL_TOOL_ADOPTION.md` and `config/external_tool_inta
 The only dependency adopted by this intake is Ruff as a development-only package in the `dev` optional dependency group. The project-local Claude Code skills are under `.claude/skills/`. Do not move these tools into the runtime/Docker image.
 
 Respect the canonical task routing in `config/agent_tool_skill_assignment.json`. Proposed assignments do not activate an agent. Qwen Code, Open Interpreter, QwenPaw, Playwriter, OSINT tools, and any other execution-capable source remain untrusted and must never receive production secrets or broker authority. An unavailable agent is `NOT_CONNECTED`, not a simulated reviewer.
+
+
+## 2026-11-11 external repository intake
+
+Incremental review: docs/engineering/EXTERNAL_TOOL_ADOPTION_2026-11-11.md and config/external_tool_intake_2026-11-11.json. Role routing: config/external_repository_agent_assignments_2026-11-11.json. Assignments do not prove agent connection or installation. Preserve no-secrets/no-broker/no-capital/no-LIVE_LOCK-mutation controls and require independent review before installation.
