@@ -1,0 +1,254 @@
+{
+  "schema": "aurelia.external_tool_intake_addendum.v1",
+  "reviewed_date": "2026-11-11",
+  "parent_intake": "config/external_tool_intake_2026-11-11.json",
+  "requested_items": 9,
+  "requested_repository_urls": 8,
+  "duplicated_workflow_action_references": 2,
+  "deduplicated_workflow_action_count": 1,
+  "source_head_policy": "Latest commit returned by GitHub commit search during this review. A commit pin proves provenance only, not safety.",
+  "global_controls": {
+    "external_code_execution": "DENY_BY_DEFAULT",
+    "production_secret_access": false,
+    "penv_secret_delivery_authorized": false,
+    "broker_access": false,
+    "live_order_authority": false,
+    "capital_authority": false,
+    "live_lock_mutation": false,
+    "production_deployment_authority": false,
+    "agent_self_approval": false
+  },
+  "repositories": [
+    {
+      "repo": "anandanand84/technicalindicators",
+      "url": "https://github.com/anandanand84/technicalindicators",
+      "default_branch": "master",
+      "head_commit": "7740f17cf681a2b1ace3009f5f396c14cbadf1f1",
+      "license_observed": "MIT",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "RESEARCH_REFERENCE_ONLY_LEGACY_DEPENDENCY_REVIEW_REQUIRED",
+      "use": "TypeScript/JavaScript technical-indicator implementations for independent formula comparison only.",
+      "risks": [
+        "Latest repository commit surfaced is 2020-03-16; npm 3.1.0 was published years ago.",
+        "Legacy TypeScript 2.x and older build/test dependencies require compatibility and supply-chain review.",
+        "Indicator names such as VWAP/OBV/volume profile do not establish valid traded volume for Deriv synthetic indices."
+      ],
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "whchien/ai-trader",
+      "url": "https://github.com/whchien/ai-trader",
+      "default_branch": "main",
+      "head_commit": "7681fe331fb638beab1ae20d3552c802bbaa9174",
+      "license_observed": "GPL-3.0",
+      "mode": "RESEARCH_ONLY",
+      "disposition": "DEFER_IMPORT_LICENSE_AND_BACKTEST_AUDIT_REQUIRED",
+      "use": "Backtrader-based research/backtesting framework with strategies, market-data fetchers, CLI and MCP server; evaluate architecture and test methodology only.",
+      "risks": [
+        "GPL-3.0 compatibility must be resolved before any code reuse or distribution.",
+        "Broad dependencies include data-provider, numerical, plotting and MCP packages.",
+        "No evidence yet of Deriv synthetic-index data fidelity, contract/cost modelling, no-lookahead validation or reproducible out-of-sample results."
+      ],
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "meta/astryx",
+      "url": "https://github.com/meta/astryx",
+      "default_branch": "main",
+      "head_commit": "c1a1ea82b4cbd0a6b668cc9ce5c75f0cd2647850",
+      "license_observed": "MIT",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "REJECT_AURELIA_TRADING_RUNTIME_ADOPTION",
+      "use": "React 19+/StyleX design system; potentially useful only as a separate UI design reference.",
+      "risks": [
+        "Not a trading, risk, execution or research capability.",
+        "Repository is very large; no reason to clone or import it into the trading runtime."
+      ],
+      "assigned_agents": [
+        "GLM",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "vercel-labs/agent-browser",
+      "url": "https://github.com/vercel-labs/agent-browser",
+      "default_branch": "main",
+      "head_commit": "2f1649cefb82f417abbb2712f5397439d010698e",
+      "license_observed": "Apache-2.0",
+      "mode": "SANDBOX_ONLY",
+      "disposition": "DEFER_INSTALL_ISOLATED_BROWSER_QA_EVALUATION",
+      "use": "Native Rust CLI for AI-driven browser automation and accessibility-tree interaction.",
+      "risks": [
+        "Node.js 22+ and native binary/browser installation are required.",
+        "Browser control can reach authenticated sessions if misconfigured; use disposable profiles and synthetic logins only.",
+        "Review launcher, postinstall, browser permissions, downloads, network egress and credential storage before execution."
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "PlaywrightCLI",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "shadcn/improve",
+      "url": "https://github.com/shadcn/improve",
+      "default_branch": "main",
+      "head_commit": "cac56e1ebd3c279aa9153616cfeac7b174ab90f9",
+      "license_observed": "No LICENSE file found at repository root during this review",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "DEFER_INSTALL_SOURCE_AND_PERMISSION_REVIEW",
+      "use": "Agent skill that audits a codebase and writes implementation plans; README describes optional dispatch/execution of plans by other agents.",
+      "risks": [
+        "No root LICENSE or package.json was found in the inspected paths; clarify licensing and complete tree contents.",
+        "Execution/dispatch modes and optional GitHub issue publishing expand agent write permissions.",
+        "Review the complete skill prompt and subagent/worktree controls before any installation."
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "addyosmani/agent-skills",
+      "url": "https://github.com/addyosmani/agent-skills",
+      "default_branch": "main",
+      "head_commit": "301b02b12bff98e4688e6984af6556802322bbde",
+      "license_observed": "MIT",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "SELECTIVE_SKILL_REVIEW_NO_BULK_INSTALL",
+      "use": "Engineering lifecycle skills for spec, plan, build, test, review, web performance, simplify and ship workflows.",
+      "risks": [
+        "Commands such as /build auto and /ship can trigger multi-step implementation or release work.",
+        "Review each skill's tools, hooks, file/network access and approval boundaries before enabling it.",
+        "Do not allow skill instructions to override AURELIA release authority or independent review."
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GrokBot"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "openai/codex-security",
+      "url": "https://github.com/openai/codex-security",
+      "default_branch": "main",
+      "head_commit": "4aa9acc5ce459ae0f525c88f727713694597a7ad",
+      "license_observed": "Apache-2.0",
+      "mode": "SANDBOX_ONLY",
+      "disposition": "PRIORITY_SECURITY_TOOL_EVALUATION_NO_CI_INSTALL",
+      "use": "Codex Security CLI, TypeScript SDK and GitHub Action for source scanning, finding validation, patch proposals and reports.",
+      "risks": [
+        "CLI/CI usage requires an API key or Codex Security credential; do not expose production secrets to scanner jobs.",
+        "Review source upload, cloud processing, retention, telemetry, report publishing and permissions before scanning proprietary AURELIA code.",
+        "Security findings require human/independent validation; scanner output cannot approve its own patches or releases."
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "TheAlgorithms/Java",
+      "url": "https://github.com/TheAlgorithms/Java",
+      "default_branch": "master",
+      "head_commit": "b2af1db6dcae46521e97a6331eae8cea61933080",
+      "license_observed": "MIT",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "EDUCATIONAL_REFERENCE_ONLY",
+      "use": "Educational Java algorithm and data-structure implementations; consult for concepts only.",
+      "risks": [
+        "Not a trading strategy library or validated quantitative implementation.",
+        "Do not port algorithms into production without independent mathematical specification, tests and performance review.",
+        "Repository targets Java 21 and includes test/build dependencies; no runtime need established."
+      ],
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "penvhq/penv-run",
+      "url": "https://github.com/penvhq/penv-run",
+      "default_branch": "main",
+      "head_commit": "b3067cabb2a758108a9a4b9406bdd555d78d46ee",
+      "license_observed": "MIT",
+      "mode": "SANDBOX_ONLY",
+      "disposition": "DEFER_NO_WORKFLOW_CHANGE_SECURITY_REVIEW_REQUIRED",
+      "use": "GitHub JavaScript Action that obtains penv-cloud secrets through GitHub OIDC and supplies them only to a specified command process.",
+      "requested_yaml_references": 2,
+      "deduplicated_action_reference": 1,
+      "requested_ref": "penvhq/penv-run@v1.0.0",
+      "recommended_ref_policy": "Pin full 40-character commit SHA only after complete source review; upstream README explicitly rejects mutable tags.",
+      "required_workflow_permission": "id-token: write",
+      "risks": [
+        "Action executes a command with external secrets in its process environment.",
+        "Upstream action.yml/README explicitly state it does not protect against a malicious step in the same job; revocation is best-effort and short server TTL is a separate control.",
+        "Only README, action.yml, package.json, main.mjs and post.mjs were inspected; api/delivery/revocation implementation and complete tests remain unaudited.",
+        "Do not add duplicate action steps; do not add to AURELIA production CI or deliver Deriv/broker/production credentials."
+      ],
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    }
+  ],
+  "acceptance": {
+    "repositories_registered_in_this_addendum": 9,
+    "commit_pins_recorded": true,
+    "licences_checked_where_available": true,
+    "full_source_audit": false,
+    "sbom": false,
+    "vulnerability_scan": false,
+    "secret_scan": false,
+    "malware_scan": false,
+    "isolated_execution_tests": false,
+    "physical_installation": false,
+    "workflow_modified": false,
+    "production_dependency_changes": false,
+    "capital_boundary_changes": false
+  },
+  "limitations": [
+    "This is a metadata/README/licence and selected-entrypoint first-pass review, not a complete source or security audit.",
+    "No repository code or action was executed; no SBOM, vulnerability, malware, secret or dynamic sandbox test was produced.",
+    "The penv-run action's api/deliver/revoke implementation and complete test suite remain to be inspected.",
+    "Assignments route future review only; they do not prove agent runtimes are connected or participated."
+  ]
+}
