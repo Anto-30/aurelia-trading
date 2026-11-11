@@ -1,0 +1,140 @@
+# EXP-0001 — OB+FVG v0.1 Track A — EURUSD
+# STATUS: DRAFT_BLOCKED_G0_NOT_REGISTERED
+# This file is a readiness worksheet only. It is NOT a frozen preregistration,
+# trial authorization, backtest command, or promotion record.
+
+schema: atos.experiment_preregistration.v1
+hypothesis_id: EXP-0001
+registration_status: DRAFT_BLOCKED_G0_NOT_REGISTERED
+run_permitted: false
+backtest_executed: false
+trial_count: 0
+created_date: "2026-11-11"
+spec_version: ATOS-MASTER-v2.0
+strategy:
+  name: OB+FVG
+  version: "0.1"
+  track: A
+  research_type: linear_price_signal
+  execution_eligibility: NON_EXECUTABLE_ON_FIXED_PAYOUT_CAPITAL_PLANE
+instrument:
+  primary: EURUSD
+  provider_symbol_resolution: PENDING
+  deriv_symbol_resolution_method: active_symbols
+  synthetic_indices_allowed: false
+timeframes:
+  context: 1h
+  trigger: null
+  trigger_candidates: [15m, 5m]
+  selection_status: NOT_FROZEN
+session:
+  timezone: null
+  killzones: []
+  status: BLOCKED_UNTIL_OWNER_SESSION_SELECTION
+  note: "No session window is assumed or frozen in this draft."
+data:
+  persistent_archive:
+    provider: TrueFX_Integral
+    registration: REQUIRED
+    instrument_list: UNVERIFIED
+    history_depth: UNVERIFIED
+    export_format: UNVERIFIED
+    csv_header: UNVERIFIED
+    snapshot_sha256: null
+    license_scope: INTERNAL_ANALYSIS_ONLY_NO_REDISTRIBUTION
+  cross_source_calibration:
+    required: true
+    deriv_exact_symbol: PENDING_ACTIVE_SYMBOLS
+    overlapping_window: null
+    timestamp_alignment: NOT_TESTED
+    bid_ask_mid_basis: NOT_DOCUMENTED
+    price_spread_divergence: NOT_MEASURED
+    signal_feed_artifact_gate: BLOCKED
+  deriv_retention:
+    raw_content_persistence: PROHIBITED
+    cache_ttl_hours_max: 24
+    aggregate_outputs_only: true
+cost_model:
+  status: INCOMPLETE
+  spread: UNVERIFIED
+  slippage: UNVERIFIED
+  commissions_fees: UNVERIFIED
+  adverse_selection: NOT_MODELED
+  partial_fills: NOT_MODELED
+  limit_non_fill: NOT_MODELED
+  sensitivity_grid: NOT_DEFINED
+  zero_cost_assumption_permitted: false
+baselines:
+  required:
+    - random_entry_same_exit
+    - matched_placebo_zones_same_size_distance_direction
+    - shuffled_signal_permutation
+    - buy_and_hold_where_appropriate
+  status: NOT_IMPLEMENTED
+hypothesis:
+  statement: "To be written and frozen after the trigger timeframe, session, data basis, and execution assumptions are specified."
+  primary_endpoint: null
+  success_criteria: null
+  status: NOT_FROZEN
+candidate_parameters:
+  status: OWNER_SPEC_PROPOSALS_ONLY_NOT_FROZEN
+  atr_length: 14
+  displacement_multiple_atr: 1.5
+  minimum_displacement_candles: 3
+  order_block_zone: candle_body_only
+  entry: 50_percent_order_block_body
+  passive_fill: trade_through_not_touch
+  cancel_after_bars: 12
+  stop_buffer_atr: 0.1
+  exit: entry_timeframe_body_close_beyond_midpoint
+  take_profit: untouched_opposing_liquidity
+  owner_risk_ratification: PENDING
+statistical_design:
+  alpha: null
+  beta_power: null
+  minimum_detectable_effect: null
+  variance_estimate: null
+  minimum_sample_size: null
+  bootstrap_method: stationary_bootstrap
+  confidence_interval: 95_percent
+  trial_count_ledger_entry: 0
+  variants_pre_registered: []
+  power_status: BLOCKED
+negative_results_registry:
+  destination: research/registry/negative-results/
+  ready: false
+source_provenance:
+  code_commit: null
+  environment_lock_hash: null
+  random_seed: null
+  status: TO_BE_FROZEN_AT_G0
+gates:
+  G0:
+    status: BLOCKED
+    missing:
+      - owner-selected trigger timeframe
+      - owner-approved killzone and IANA timezone
+      - TrueFX registration, symbol list, history depth, export format and CSV header
+      - licensed archive snapshot and SHA-256
+      - current Deriv EURUSD active_symbols result and exact symbol
+      - overlapping cross-source calibration window and feed-basis report
+      - explicit spread, slippage, fees, adverse-selection and fill assumptions
+      - single primary endpoint and success criteria
+      - alpha, beta, MDE and defensible sample-size/power calculation
+      - frozen source commit, environment hash and random seed
+      - owner/risk ratification of proposed numeric parameters
+  G1:
+    status: NOT_STARTED
+  G2:
+    status: NOT_STARTED
+  G3:
+    status: NOT_STARTED
+  G4:
+    status: NOT_STARTED
+  G5:
+    status: NOT_STARTED
+decision:
+  verdict: DO_NOT_RUN
+  reason: "G0 is incomplete. No historical fetch, backtest, parameter search, or evidence claim is authorized by this draft."
+  live_execution: BLOCKED
+  final_execution_authorization: false
