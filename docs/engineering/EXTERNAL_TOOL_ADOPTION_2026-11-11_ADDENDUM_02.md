@@ -56,3 +56,8 @@ Machine-readable records:
 - `config/external_repository_agent_assignments_2026-11-11_addendum_02.json`
 
 This is registration and first-pass triage, not installation, certification or authorization.
+
+
+## Routing integrity correction
+
+During this batch, the earlier 2026-11-11 assignment file was found to contain truncated commit-hash fragments in its `primary` and `reviewers` fields instead of agent role names. It has been repaired to use named primary agents and reviewer arrays for all 11 earlier sources. The corrected batch-1 routing file and this batch-2 routing file are now both referenced by the canonical `config/agent_tool_skill_assignment.json`. This repair corrects metadata only; it does not activate any disconnected agent.
