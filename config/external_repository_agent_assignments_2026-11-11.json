@@ -6,69 +6,109 @@
   "assignments": [
     {
       "repository": "janestreet/agent_skills",
-      "primary": "7",
-      "reviewers": "c6715c29548a3b39d4a9545c698ee4fd17a7213",
-      "task": "One Socratic tutor skill; not an AURELIA engineering capability."
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "ChatGPT",
+        "GLM"
+      ],
+      "task": "Review the single Socratic tutor skill as reference material; no engineering capability or install required."
     },
     {
       "repository": "openinterpreter/openinterpreter",
-      "primary": "8",
-      "reviewers": "0d8f55385452457a625dbabc032f3003b9545b4",
-      "task": "Command-execution agent harness with MCP/ACP and browser/native QA."
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "GoogleAgentSkills",
+        "JEV",
+        "PlaywrightCLI"
+      ],
+      "task": "Evaluate command-execution harness in a disposable sandbox; inspect MCP/ACP and browser/native QA boundaries."
     },
     {
       "repository": "mvanhorn/last30days-skill",
-      "primary": "c",
-      "reviewers": "58041cc415ee5bc3ac3ed0da73cd925330f81ba",
-      "task": "Multi-source recent research skill; Bash/Read/Write/WebSearch and optional API/browser tokens."
+      "primary": "GrokBot",
+      "reviewers": [
+        "ChatGPT",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "task": "Review multi-source research provenance, shell/file permissions, optional API/browser tokens and egress."
     },
     {
       "repository": "huamidev/GestaltX",
-      "primary": "1",
-      "reviewers": "44c0c44a762db616089faddfbc0581929ae1a0a",
-      "task": "iOS MobileGestalt editor and device feature-flag modifier; unrelated to trading."
+      "primary": "GoogleAgentSkills",
+      "reviewers": [
+        "JEV",
+        "GLM"
+      ],
+      "task": "Confirm iOS MobileGestalt/device feature-flag scope is unrelated to AURELIA and reject adoption."
     },
     {
       "repository": "lxlynx/ops-toolkit",
-      "primary": "3",
-      "reviewers": "9bb8ec47b2a367b644002cc5d38b5bf9216841f",
-      "task": "Three standalone Bash/Python host-operation scripts."
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "Dev",
+        "JEV",
+        "GoogleAgentSkills"
+      ],
+      "task": "Inspect Bash/Python host-operation scripts offline; no sudo, remote execution or host mutation by default."
     },
     {
       "repository": "lxlynx/model-router",
-      "primary": "8",
-      "reviewers": "0ba22fb777e0aaf4092942bfc7e8e5bf598ee8c",
-      "task": "Python standard-library ordered first-match model router with explainable decisions."
+      "primary": "GrokBot",
+      "reviewers": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "task": "Compare deterministic first-match model routing against the existing gateway; no credentials or duplicated capital authority."
     },
     {
       "repository": "rndinfosecguy/Scavenger",
-      "primary": "e",
-      "reviewers": "25fee79f46451d71bc8e1a65b0a939e260c88c5",
-      "task": "Paste-site crawler explicitly collects email/password pairs and exposed API secrets; prior rejection reaffirmed."
+      "primary": "GoogleAgentSkills",
+      "reviewers": [
+        "JEV"
+      ],
+      "task": "Maintain rejection; do not clone/run paste-site credential harvesting or ingest exposed credentials."
     },
     {
       "repository": "opensandbox-group/OpenSandbox",
-      "primary": "b",
-      "reviewers": "ea3992e260cb866408c4b59ff8f89c0fdacf8ee",
-      "task": "Docker/Kubernetes sandbox API, SDKs, MCP, egress controls and Credential Vault."
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "GoogleAgentSkills",
+        "JEV",
+        "Dev",
+        "PlaywrightCLI"
+      ],
+      "task": "Evaluate sandbox architecture, egress, image provenance, Credential Vault, privilege boundaries and escape risks; no deployment."
     },
     {
       "repository": "bhavsec/reconspider",
-      "primary": "5",
-      "reviewers": "dae8c16b2845b5ccb73aba93e333fe308b0754a",
-      "task": "Legacy broad OSINT utility; privileged setup.py installer and multiple API keys; last surfaced commit 2021-08-19."
+      "primary": "GoogleAgentSkills",
+      "reviewers": [
+        "JEV"
+      ],
+      "task": "Maintain install rejection; review privileged installer and broad OSINT/API-key risks without execution."
     },
     {
       "repository": "affaan-m/ECC",
-      "primary": "d",
-      "reviewers": "2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
-      "task": "Large agent harness; README claims 71 agents, 314 skills, hooks, memory and commands."
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "GoogleAgentSkills",
+        "JEV",
+        "GrokBot"
+      ],
+      "task": "Review individual skills/hooks only; no bulk installation of agents, memory or commands."
     },
     {
       "repository": "lxlynx/eval-harness",
-      "primary": "2",
-      "reviewers": "a73972c6af2cb2b302e7571d0bed91ab2c97fd5",
-      "task": "Deterministic Python output scoring; README diff claim conflicts with TODO roadmap."
+      "primary": "KimiK3",
+      "reviewers": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "task": "Evaluate deterministic agent-output scoring on synthetic cases only; not a financial backtester."
     }
   ],
   "agent_status_constraints": {
