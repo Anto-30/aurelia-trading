@@ -18,7 +18,7 @@ if str(ROOT) not in sys.path:
 from runtime.adapters.deriv_ws import DerivWebSocketTransport
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
-DEFAULT_SYMBOL = "1HZ100V"
+DEFAULT_SYMBOL = "frxEURUSD"
 
 
 def _canonical_hash(value: Any) -> str:
@@ -47,13 +47,14 @@ async def probe(
         or "LOCAL_UNPINNED"
     )
     evidence: dict[str, Any] = {
-        "schema": "aurelia.deriv_public_transport.v2",
+        "schema": "aurelia.deriv_public_transport.v3",
         "source_sha": source_sha,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "endpoint": PUBLIC_WS_URL,
         "symbol": symbol,
         "requested_tick_count": tick_count,
-        "ticks": [],
+        "tick_count": 0,
+        "tick_sequence_verified": False,
         "active_symbol_count": 0,
         "authentication_used": False,
         "capital_authority_granted": False,
@@ -62,7 +63,7 @@ async def probe(
     }
     try:
         await transport.connect()
-        active_response = await transport.request({"active_symbols": "brief"})
+        active_response = await transport.request({"active_symbols": "full"})
         if "error" in active_response:
             raise RuntimeError("PUBLIC_ACTIVE_SYMBOLS_REJECTED")
         rows = active_response.get("active_symbols")
@@ -75,6 +76,33 @@ async def probe(
         }
         evidence["active_symbol_count"] = len(rows)
         evidence["active_symbols_sha256"] = _canonical_hash(active_response)
+        eurusd_candidates = []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            fields = [
+                row.get("symbol"),
+                row.get("underlying_symbol"),
+                row.get("display_name"),
+                row.get("market"),
+                row.get("submarket"),
+                row.get("market_display_name"),
+                row.get("submarket_display_name"),
+            ]
+            searchable = " ".join(value for value in fields if isinstance(value, str)).upper()
+            compact = "".join(ch for ch in searchable if ch.isalnum())
+            if "EURUSD" in compact or ("EURO" in compact and "USDOLLAR" in compact):
+                eurusd_candidates.append({
+                    key: row[key]
+                    for key in ("symbol", "underlying_symbol", "display_name", "market", "submarket")
+                    if isinstance(row.get(key), str)
+                })
+        evidence["eurusd_candidates"] = eurusd_candidates
+        evidence["eurusd_resolution"] = (
+            "RESOLVED_UNIQUE" if len(eurusd_candidates) == 1
+            else "AMBIGUOUS" if len(eurusd_candidates) > 1
+            else "NOT_FOUND_IN_OPTIONS_ACTIVE_SYMBOLS"
+        )
         if symbol not in active_symbols:
             raise RuntimeError("PUBLIC_PROBE_SYMBOL_NOT_ACTIVE")
 
@@ -100,12 +128,10 @@ async def probe(
             if previous_epoch is not None and epoch <= previous_epoch:
                 raise RuntimeError("PUBLIC_TICK_EPOCH_NOT_INCREASING")
             previous_epoch = epoch
-            evidence["ticks"].append({
-                "symbol": tick_symbol,
-                "quote": format(quote, ".15g"),
-                "epoch": epoch,
-            })
-        evidence["tick_stream_verified"] = len(evidence["ticks"]) == tick_count
+            # Raw quotes and epochs are deliberately never persisted.
+        evidence["tick_count"] = tick_count
+        evidence["tick_sequence_verified"] = True
+        evidence["tick_stream_verified"] = evidence["tick_sequence_verified"]
         evidence["status"] = (
             "PUBLIC_TICK_STREAM_VERIFIED"
             if evidence["tick_stream_verified"]
@@ -151,8 +177,10 @@ async def main() -> int:
         "probe": "DERIV_PUBLIC_TICK_STREAM",
         "status": evidence["status"],
         "symbol": evidence["symbol"],
-        "tick_count": len(evidence["ticks"]),
+        "tick_count": evidence["tick_count"],
         "active_symbol_count": evidence["active_symbol_count"],
+        "eurusd_resolution": evidence.get("eurusd_resolution", "UNAVAILABLE"),
+        "eurusd_candidates": evidence.get("eurusd_candidates", []),
         "source_sha": evidence["source_sha"],
         "record_hash": evidence["record_hash"],
         "authentication_used": False,

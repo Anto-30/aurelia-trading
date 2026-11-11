@@ -70,9 +70,23 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn('READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"', deploy)
         self.assertIn('sudo rm -f "$READONLY_SECRET_FILE"', deploy)
         self.assertIn('sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true', deploy)
+        cleanup_index = deploy.index('sudo rm -f "$READONLY_SECRET_FILE"')
         self.assertLess(
-            deploy.index('sudo rm -f "$READONLY_SECRET_FILE"'),
             deploy.index('if [ ! -d "$RELEASE_DIR" ]'),
+            cleanup_index,
+        )
+        self.assertLess(
+            deploy.index('test -f "$LOCK_FILE"'),
+            cleanup_index,
+        )
+        self.assertLess(
+            deploy.index('case "$DEPLOYMENT_MODE" in'),
+            cleanup_index,
+        )
+        self.assertIn("Revoke the retired credential-bearing VERIFY_ONLY store only after", deploy)
+        self.assertLess(
+            cleanup_index,
+            deploy.index('if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then'),
         )
         self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', deploy)
         self.assertNotIn('ENV_FILES+=("$READONLY_SECRET_FILE")', deploy)
