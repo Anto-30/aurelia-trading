@@ -19,10 +19,11 @@ The current Deriv API Users Terms are Version R26|03, last updated 16 October 20
 
 1. Remove automatic push and scheduled triggers from the R_100 workflow.
 2. Retain only a manual, non-collecting quarantine-status workflow. It performs no checkout, network request, market-data collection, or artifact upload.
-3. Make `seal_r100_archive` fail closed so new durable R_100 archives cannot be created through the legacy archiver.
-4. Retain `verify_sealed_archive` solely as a read-only integrity check for previously created archives. A successful hash check is not evidence eligibility.
-5. Mark all historical R_100 observations, reports, and archives as quarantined. They are not evidence for EURUSD/XAUUSD FX research, OB+FVG Track A, Track B, or strategy promotion.
-6. Preserve `config/LIVE_LOCK.yaml` and all capital, execution, release, and risk-authority files unchanged.
+3. Disable the callable R_100 collector module itself: `collect_once` and the CLI `main` fail closed before any network request or output write; remove the Deriv transport dependency from that module.
+4. Make `save_state` and `seal_r100_archive` fail closed so new durable R_100 collector state or archives cannot be created through either legacy writer.
+5. Retain `load_state` and `verify_sealed_archive` only as read-only historical inspection/integrity helpers. A successful hash check is not evidence eligibility.
+6. Mark all historical R_100 observations, reports, and archives as quarantined. They are not evidence for EURUSD/XAUUSD FX research, OB+FVG Track A, Track B, or strategy promotion.
+7. Preserve `config/LIVE_LOCK.yaml` and all capital, execution, release, and risk-authority files unchanged.
 
 ## Alternatives considered
 
@@ -34,6 +35,7 @@ The current Deriv API Users Terms are Version R26|03, last updated 16 October 20
 
 - After this change is merged, the mainline R_100 workflow will no longer collect, recover, or upload new observations.
 - This change does **not** delete historical GitHub Actions artifacts created by earlier runs. Those artifacts require separate authorized deletion by a repository administrator; they must not be downloaded, reused, or cited as FX/SMC evidence in the meantime.
+- The legacy R_100 collector remains in the repository only for compatibility with historical analytical helpers and tests. Its direct collection and persistence entry points now fail closed.
 - No baseline or R_100 collection rerun is permitted.
 - The change does not modify production architecture, broker authentication, live execution, capital sizing, or `LIVE_LOCK`.
 - Merge sequencing: this branch is based on the hardened head of PR #292. PR #292 must first complete independent security review and merge to `main`; this quarantine change then requires its own review against the updated `main`.
