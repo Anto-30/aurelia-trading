@@ -16,7 +16,6 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from runtime.adapters.deriv_ws import DerivWebSocketTransport
 from runtime.strategy.autonomous_signal_engine import AutonomousSignalHunter
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
@@ -205,13 +204,11 @@ def load_state(path: Path) -> dict[str, Any]:
     return state
 
 def save_state(path: Path, state: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_suffix(path.suffix + ".tmp")
-    temp.write_text(
-        json.dumps(state, sort_keys=True, separators=(",", ":"), allow_nan=False),
-        encoding="utf-8",
+    """Refuse any new durable R_100 collector state or quote archive."""
+    del path, state
+    raise RuntimeError(
+        "R100_ARCHIVE_QUARANTINED: durable Deriv synthetic-index state writes are disabled"
     )
-    temp.replace(path)
 
 def build_signal_id(timestamp_utc: str, quote: float, direction: str) -> str:
     return "r100-signal:" + canonical_hash(
@@ -525,125 +522,19 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 async def collect_once(state: dict[str, Any]) -> None:
-    start = utc_now()
-    state["last_run_started_at_utc"] = iso(start)
+    """Fail closed: no new R_100 market-data collection is permitted."""
+    del state
+    raise RuntimeError(
+        "R100_RESEARCH_QUARANTINED: Deriv synthetic-index collection is disabled by ATOS v2.0 §4"
+    )
 
-    transport = DerivWebSocketTransport(PUBLIC_WS_URL, timeout_seconds=10.0)
-    campaign_end = datetime.fromisoformat(
-        state["manifest"]["campaign_end_at_utc"].replace("Z", "+00:00")
-    )
-    hunter = AutonomousSignalHunter(
-        window=64,
-        min_observations=20,
-        threshold=1.5,
-        cooldown_seconds=30.0,
-    )
-    await transport.connect()
-    stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
-    iterator = stream.__aiter__()
-    deadline = asyncio.get_running_loop().time() + COLLECTION_SECONDS
-    try:
-        while asyncio.get_running_loop().time() < deadline:
-            remaining = deadline - asyncio.get_running_loop().time()
-            try:
-                message = await asyncio.wait_for(iterator.__anext__(), timeout=max(1.0, remaining))
-            except asyncio.TimeoutError:
-                break
-            tick = message.get("tick") or {}
-            try:
-                quote = float(tick["quote"])
-                epoch = int(tick["epoch"])
-            except (KeyError, TypeError, ValueError):
-                continue
-            received_at = datetime.fromtimestamp(epoch, tz=timezone.utc)
-            prior_pending = len(state["pending"])
-            observe_tick(
-                hunter=hunter,
-                state=state,
-                quote=quote,
-                received_at=received_at,
-                emit_candidate=received_at < campaign_end,
-            )
-            if len(state["pending"]) > prior_pending:
-                new_signal = state["pending"][-1]
-                try:
-                    proposal = await transport.request({
-                        "proposal": 1,
-                        "amount": 1.0,
-                        "basis": "stake",
-                        "contract_type": new_signal["direction"],
-                        "currency": CURRENCY,
-                        "duration": HORIZON_TICKS,
-                        "duration_unit": "t",
-                        "underlying_symbol": SYMBOL,
-                    })
-                    proposal_payload = proposal.get("proposal") or {}
-                    state["quote_observations"].append({
-                        "signal_id": new_signal["signal_id"],
-                        "captured_at_utc": iso(received_at),
-                        "ask_price": proposal_payload.get("ask_price"),
-                        "payout": proposal_payload.get("payout"),
-                        "proposal_id": proposal_payload.get("id"),
-                        "quote_status": "OBSERVED",
-                    })
-                except Exception as exc:
-                    state["quote_observations"].append({
-                        "signal_id": new_signal["signal_id"],
-                        "captured_at_utc": iso(received_at),
-                        "quote_status": "UNAVAILABLE",
-                        "error_type": type(exc).__name__,
-                    })
-    finally:
-        await transport.close()
-    state["last_run_completed_at_utc"] = iso(utc_now())
 
 async def main() -> int:
-    state = load_state(STATE_PATH)
-    report_path = STATE_PATH.with_name("aurelia_r100_report.json")
-    try:
-        await collect_once(state)
-    except Exception as exc:
-        # Persist all observations already collected before a transport/API
-        # failure so a scheduled retry can resume the frozen campaign.
-        state["last_run_error_type"] = type(exc).__name__
-        state["last_run_error_at_utc"] = iso(utc_now())
-        save_state(STATE_PATH, state)
-        report = evaluation(state)
-        report["collection_status"] = "FAILED_RETRYABLE"
-        report["collection_error_type"] = type(exc).__name__
-        report_path.write_text(
-            json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
-            encoding="utf-8",
-        )
-        print(json.dumps({
-            "R100_PROSPECTIVE_COLLECTION": "RETRYABLE_FAILURE",
-            "ERROR_TYPE": type(exc).__name__,
-            "OBSERVATIONS_PRESERVED": report["observations_total"],
-            "EXECUTION_AUTHORIZED": False,
-            "CAPITAL_AUTHORITY": False,
-        }, sort_keys=True))
-        raise
-
-    state.pop("last_run_error_type", None)
-    state.pop("last_run_error_at_utc", None)
-    report = evaluation(state)
-    report["collection_status"] = "PASS"
-    save_state(STATE_PATH, state)
-    report_path.write_text(
-        json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
-        encoding="utf-8",
+    """CLI entry point intentionally disabled by the ATOS v2.0 synthetic-index quarantine."""
+    raise RuntimeError(
+        "R100_RESEARCH_QUARANTINED: direct collection and durable output are disabled by ATOS v2.0 §4"
     )
-    print(json.dumps({
-        "R100_PROSPECTIVE_COLLECTION": "PASS",
-        "OBSERVATIONS_TOTAL": report["observations_total"],
-        "OOS_OBSERVATIONS": report["oos_observations"],
-        "OOS_WIN_RATE": report["oos_win_rate"],
-        "QUALIFICATION_STATUS": report["qualification_status"],
-        "EXECUTION_ECONOMICS": report["execution_economics"]["status"],
-        "EXECUTION_AUTHORIZED": False,
-        "CAPITAL_AUTHORITY": False,
-    }, sort_keys=True))
-    return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(asyncio.run(main()))
