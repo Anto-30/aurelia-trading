@@ -11,10 +11,16 @@ class FakeTransport:
         self.url = url
         self.timeout_seconds = timeout_seconds
         self.closed = False
-        self.active_symbols = [{"underlying_symbol": "1HZ100V"}]
+        self.active_symbols = [{
+            "symbol": "frxEURUSD",
+            "underlying_symbol": "frxEURUSD",
+            "display_name": "EUR/USD",
+            "market": "forex",
+            "submarket": "major_pairs",
+        }]
         self.ticks = [
-            {"tick": {"symbol": "1HZ100V", "quote": 1000.1, "epoch": 100}},
-            {"tick": {"symbol": "1HZ100V", "quote": 1000.2, "epoch": 101}},
+            {"tick": {"symbol": "frxEURUSD", "quote": 1.1001, "epoch": 100}},
+            {"tick": {"symbol": "frxEURUSD", "quote": 1.1002, "epoch": 101}},
         ]
 
     async def connect(self) -> None:
@@ -47,18 +53,7 @@ class PublicTransportProbeTests(unittest.TestCase):
         self.assertFalse(evidence["order_submission_permitted"])
 
     def test_reports_eurusd_symbol_resolution_without_market_prices(self) -> None:
-        class EURUSDTransport(FakeTransport):
-            def __init__(self, url: str, *, timeout_seconds: float = 10.0):
-                super().__init__(url, timeout_seconds=timeout_seconds)
-                self.active_symbols.append({
-                    "symbol": "frxEURUSD",
-                    "underlying_symbol": "frxEURUSD",
-                    "display_name": "EUR/USD",
-                    "market": "forex",
-                    "submarket": "major_pairs",
-                })
-
-        evidence = asyncio.run(probe(transport_factory=EURUSDTransport))
+        evidence = asyncio.run(probe(transport_factory=FakeTransport))
         self.assertEqual(evidence["eurusd_resolution"], "RESOLVED_UNIQUE")
         self.assertEqual(evidence["eurusd_candidates"][0]["symbol"], "frxEURUSD")
         self.assertNotIn("ticks", evidence)
