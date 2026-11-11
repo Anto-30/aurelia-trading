@@ -1,11 +1,13 @@
 """Regression coverage for the ATOS v2.0 R_100 research quarantine."""
 from __future__ import annotations
 
+import asyncio
 import tempfile
 import unittest
 from pathlib import Path
 
 from research.r100_prospective_oos_archiver import seal_r100_archive
+from research.r100_prospective_oos_collector import collect_once, main, save_state
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +32,22 @@ class R100ResearchQuarantineTests(unittest.TestCase):
         self.assertIn("LEGACY_ARTIFACT_PURGE_REQUIRED=true", workflow)
         self.assertIn("LIVE_EXECUTION=BLOCKED", workflow)
         self.assertIn("FINAL_EXECUTION_AUTHORIZATION=false", workflow)
+
+
+    def test_collector_module_disables_direct_collection_and_persistent_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target = Path(temp_dir) / "collector-state.json"
+            with self.assertRaisesRegex(RuntimeError, "R100_ARCHIVE_QUARANTINED"):
+                save_state(target, {"observations": []})
+            self.assertFalse(target.exists())
+
+            async def verify_entrypoints() -> None:
+                with self.assertRaisesRegex(RuntimeError, "R100_RESEARCH_QUARANTINED"):
+                    await collect_once({})
+                with self.assertRaisesRegex(RuntimeError, "R100_RESEARCH_QUARANTINED"):
+                    await main()
+
+            asyncio.run(verify_entrypoints())
 
     def test_archiver_refuses_to_create_new_persistent_r100_files(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
