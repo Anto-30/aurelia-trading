@@ -46,6 +46,25 @@ class PublicTransportProbeTests(unittest.TestCase):
         self.assertFalse(evidence["capital_authority_granted"])
         self.assertFalse(evidence["order_submission_permitted"])
 
+    def test_reports_eurusd_symbol_resolution_without_market_prices(self) -> None:
+        class EURUSDTransport(FakeTransport):
+            def __init__(self, url: str, *, timeout_seconds: float = 10.0):
+                super().__init__(url, timeout_seconds=timeout_seconds)
+                self.active_symbols.append({
+                    "symbol": "frxEURUSD",
+                    "underlying_symbol": "frxEURUSD",
+                    "display_name": "EUR/USD",
+                    "market": "forex",
+                    "submarket": "major_pairs",
+                })
+
+        evidence = asyncio.run(probe(transport_factory=EURUSDTransport))
+        self.assertEqual(evidence["eurusd_resolution"], "RESOLVED_UNIQUE")
+        self.assertEqual(evidence["eurusd_candidates"][0]["symbol"], "frxEURUSD")
+        self.assertNotIn("ticks", evidence)
+        self.assertNotIn("quote", evidence)
+        self.assertNotIn("epoch", evidence)
+
     def test_rejects_non_increasing_tick_epochs(self) -> None:
         class DuplicateEpochTransport(FakeTransport):
             def __init__(self, url: str, *, timeout_seconds: float = 10.0):
