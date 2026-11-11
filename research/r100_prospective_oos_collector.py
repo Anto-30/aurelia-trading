@@ -535,52 +535,7 @@ async def main() -> int:
     raise RuntimeError(
         "R100_RESEARCH_QUARANTINED: direct collection and durable output are disabled by ATOS v2.0 §4"
     )
-    state = load_state(STATE_PATH)
-    report_path = STATE_PATH.with_name("aurelia_r100_report.json")
-    try:
-        await collect_once(state)
-    except Exception as exc:
-        # Persist all observations already collected before a transport/API
-        # failure so a scheduled retry can resume the frozen campaign.
-        state["last_run_error_type"] = type(exc).__name__
-        state["last_run_error_at_utc"] = iso(utc_now())
-        save_state(STATE_PATH, state)
-        report = evaluation(state)
-        report["collection_status"] = "FAILED_RETRYABLE"
-        report["collection_error_type"] = type(exc).__name__
-        report_path.write_text(
-            json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
-            encoding="utf-8",
-        )
-        print(json.dumps({
-            "R100_PROSPECTIVE_COLLECTION": "RETRYABLE_FAILURE",
-            "ERROR_TYPE": type(exc).__name__,
-            "OBSERVATIONS_PRESERVED": report["observations_total"],
-            "EXECUTION_AUTHORIZED": False,
-            "CAPITAL_AUTHORITY": False,
-        }, sort_keys=True))
-        raise
 
-    state.pop("last_run_error_type", None)
-    state.pop("last_run_error_at_utc", None)
-    report = evaluation(state)
-    report["collection_status"] = "PASS"
-    save_state(STATE_PATH, state)
-    report_path.write_text(
-        json.dumps(report, sort_keys=True, separators=(",", ":"), allow_nan=False),
-        encoding="utf-8",
-    )
-    print(json.dumps({
-        "R100_PROSPECTIVE_COLLECTION": "PASS",
-        "OBSERVATIONS_TOTAL": report["observations_total"],
-        "OOS_OBSERVATIONS": report["oos_observations"],
-        "OOS_WIN_RATE": report["oos_win_rate"],
-        "QUALIFICATION_STATUS": report["qualification_status"],
-        "EXECUTION_ECONOMICS": report["execution_economics"]["status"],
-        "EXECUTION_AUTHORIZED": False,
-        "CAPITAL_AUTHORITY": False,
-    }, sort_keys=True))
-    return 0
 
 if __name__ == "__main__":
     raise SystemExit(asyncio.run(main()))
