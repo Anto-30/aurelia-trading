@@ -21,6 +21,9 @@ DERIV_PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
 DEFAULT_PAGE_SIZE = 5000
 DEFAULT_MAX_HISTORY_PAGES = 600
 
+# Yahoo Finance intraday interval identifiers used by the retained window validator.
+YFINANCE_INTRADAY_INTERVALS = {"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h"}
+
 
 class DerivHistoryError(RuntimeError):
     pass
