@@ -1,176 +1,37 @@
-name: ATOS v2 SMC Research Baseline
+name: ATOS v2 SMC Research Baseline (QUARANTINED)
 
+# This historical runner is disabled pending a v2.0-compliant research pipeline.
+# The former workflow accepted untrusted shell-interpolated inputs and defaulted
+# to R_100. No data download, backtest, or artifact upload is permitted here.
 on:
-  push:
-    branches: ["research/atos-v2-smc-backtests-20261110"]
-    paths:
-      - "research/labs/atos_smc_v2.py"
-      - "research/labs/deriv_history.py"
-      - "research/labs/run_smc_baseline.py"
-      - "research/labs/tests/**"
-      - "requirements-research.txt"
-      - ".github/workflows/atos-v2-smc-baseline.yml"
   workflow_dispatch:
-    inputs:
-      symbol:
-        description: Exact Deriv synthetic symbol
-        required: true
-        default: R_100
-        type: string
-      days:
-        description: History window (1-365 days)
-        required: true
-        default: 90
-        type: number
-      minimum_coverage_pct:
-        description: Minimum 1-minute candle coverage required
-        required: true
-        default: '99'
-        type: string
-      tick_size:
-        description: Optional independently sourced price increment; leave blank to use Deriv active_symbols pip_size
-        required: false
-        default: ''
-        type: string
-      tick_size_source:
-        description: Source reference for the explicit tick size
-        required: false
-        default: UNVERIFIED_USER_INPUT
-        type: string
-      point_value:
-        description: Normalized cash value per price unit; default is not a Deriv multiplier
-        required: true
-        default: 1
-        type: number
-      point_value_verified:
-        description: User attests point value has been independently sourced (the workflow does not verify it)
-        required: true
-        default: false
-        type: boolean
-      point_value_source:
-        description: Source reference for point value
-        required: false
-        default: UNVERIFIED_NORMALIZED_UNIT
-        type: string
-      spread_ticks_round_trip:
-        description: Total modeled round-trip spread in ticks
-        required: true
-        default: 0
-        type: number
-      slippage_ticks_round_trip:
-        description: Total modeled round-trip slippage in ticks
-        required: true
-        default: 0
-        type: number
-      commission_cash_per_unit_round_trip:
-        description: Modeled cash commission per normalized unit for both sides
-        required: true
-        default: 0
-        type: number
-      costs_verified:
-        description: User attests costs are sourced (the workflow does not independently verify)
-        required: true
-        default: false
-        type: boolean
-      cost_source:
-        description: Source reference for spread, slippage and commission assumptions
-        required: false
-        default: UNVERIFIED_USER_ASSUMPTION
-        type: string
 
-permissions:
-  contents: read
-
-concurrency:
-  group: atos-v2-smc-baseline-${{ github.ref }}
-  cancel-in-progress: false
+permissions: {}
 
 jobs:
-  research-baseline:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
+  quarantine:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-    permissions:
-      contents: read
-    env:
-      PYTHONPATH: '.'
-      PYTHONDONTWRITEBYTECODE: '1'
+    timeout-minutes: 2
+    permissions: {}
     steps:
-      - name: Checkout selected research branch without persisted credentials
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.13'
-          cache: pip
-          cache-dependency-path: |
-            requirements.txt
-            requirements-research.txt
-      - name: Install isolated research dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-research.txt
-      - name: Run ATOS SMC comparison
+      - name: Record legacy baseline quarantine
         shell: bash
         run: |
           set -euo pipefail
-          args=(
-            --provider deriv
-            --symbol "${{ inputs.symbol || 'R_100' }}"
-            --days "${{ inputs.days || 90 }}"
-            --minimum-coverage-pct "${{ inputs.minimum_coverage_pct || '99' }}"
-            --point-value "${{ inputs.point_value || 1 }}"
-            --point-value-source "${{ inputs.point_value_source || 'UNVERIFIED_NORMALIZED_UNIT' }}"
-            --spread-ticks-round-trip "${{ inputs.spread_ticks_round_trip || 0 }}"
-            --slippage-ticks-round-trip "${{ inputs.slippage_ticks_round_trip || 0 }}"
-            --commission-cash-per-unit-round-trip "${{ inputs.commission_cash_per_unit_round_trip || 0 }}"
-            --cost-source "${{ inputs.cost_source || 'UNVERIFIED_USER_ASSUMPTION' }}"
-            --output-dir "reports/research/atos_smc_v2/run-${{ github.run_id }}"
-          )
-          if [ -n "${{ inputs.tick_size || '' }}" ]; then
-            args+=(--tick-size "${{ inputs.tick_size || '' }}" --tick-size-source "${{ inputs.tick_size_source || 'UNVERIFIED_USER_INPUT' }}")
-          fi
-          if [ "${{ inputs.point_value_verified || false }}" = 'true' ]; then
-            args+=(--point-value-verified)
-          fi
-          if [ "${{ inputs.costs_verified || false }}" = 'true' ]; then
-            args+=(--costs-verified)
-          fi
-          python -m research.labs.run_smc_baseline "${args[@]}"
-      - name: Preserve research data and comparison report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: atos-v2-smc-${{ inputs.symbol || 'R_100' }}-${{ inputs.days || 90 }}d-${{ github.run_id }}
-          path: reports/research/atos_smc_v2/run-${{ github.run_id }}/
-          if-no-files-found: warn
-          # Deriv API terms allow cached feed content for up to 24 hours.
-          retention-days: 1
-      - name: Write safety and provenance summary
-        if: always()
-        run: |
           {
-            echo '## ATOS v2 SMC research run'
-            echo ''
-            echo "SOURCE_COMMIT=$GITHUB_SHA"
-            echo "SYMBOL=${{ inputs.symbol || 'R_100' }}"
-            echo "DAYS=${{ inputs.days || 90 }}"
-            echo "TICK_SIZE_SOURCE_MODE=$([ -n "${{ inputs.tick_size || '' }}" ] && echo USER_OVERRIDE || echo DERIV_ACTIVE_SYMBOLS_PIP_SIZE)"
-            echo "TICK_SIZE=${{ inputs.tick_size || '' }}"
-            echo "TICK_SIZE_SOURCE=${{ inputs.tick_size_source || 'UNVERIFIED_USER_INPUT' }}"
-            echo "POINT_VALUE=${{ inputs.point_value || 1 }}"
-            echo "POINT_VALUE_USER_ASSERTED_VERIFIED=${{ inputs.point_value_verified || false }}"
-            echo "POINT_VALUE_SOURCE=${{ inputs.point_value_source || 'UNVERIFIED_NORMALIZED_UNIT' }}"
-            echo "SPREAD_TICKS_ROUND_TRIP=${{ inputs.spread_ticks_round_trip || 0 }}"
-            echo "SLIPPAGE_TICKS_ROUND_TRIP=${{ inputs.slippage_ticks_round_trip || 0 }}"
-            echo "COMMISSION_CASH_PER_UNIT_ROUND_TRIP=${{ inputs.commission_cash_per_unit_round_trip || 0 }}"
-            echo "COSTS_USER_ASSERTED_VERIFIED=${{ inputs.costs_verified || false }}"
-            echo "COST_SOURCE=${{ inputs.cost_source || 'UNVERIFIED_USER_ASSUMPTION' }}"
-            echo 'AUTHENTICATED=false'
-            echo 'CAPITAL_AUTHORITY=false'
-            echo 'ORDER_SUBMISSION_PERMITTED=false'
-            echo 'LIVE_EXECUTION=BLOCKED'
-            echo 'FINAL_EXECUTION_AUTHORIZATION=false'
+            echo "## ATOS SMC legacy baseline quarantine"
+            echo ""
+            echo "LEGACY_ATOS_SMC_BASELINE_STATUS=DISABLED_PENDING_V2_IMPLEMENTATION"
+            echo "WORKFLOW_INPUT_SHELL_INTERPOLATION=REMOVED"
+            echo "AUTOMATIC_PUSH_TRIGGER=DISABLED"
+            echo "SYNTHETIC_INDEX_RESEARCH=QUARANTINED"
+            echo "DATA_DOWNLOAD_PERMITTED=false"
+            echo "BACKTEST_EXECUTION_PERMITTED=false"
+            echo "ARTIFACT_UPLOAD_PERMITTED=false"
+            echo "LIVE_EXECUTION=BLOCKED"
+            echo "FINAL_EXECUTION_AUTHORIZATION=false"
+            echo ""
+            echo "This workflow performs no checkout, network request, data download, simulation, or artifact upload."
+            echo "A replacement must implement ATOS v2.0 data licensing, preregistration, placebo controls, and validation gates."
           } >> "$GITHUB_STEP_SUMMARY"
