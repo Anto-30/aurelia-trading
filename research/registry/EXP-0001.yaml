@@ -61,7 +61,8 @@ data:
       submarket: major_pairs
       public_tick_stream: VERIFIED
       evidence_run_id: 43022953014
-      evidence_source_commit: cb65a05fdf071821fa130ef07f70934215f03346
+      evidence_pr_head: 78f4ba218378ecb8687aa2fb3edbbba62272b16b
+      evidence_workflow_sha: cb65a05fdf071821fa130ef07f70934215f03346
       evidence_record_hash: 91851b9dbc3c89d5779c81b0d654dfafd53534598b57a9780baeae6008310f89
       raw_market_data_persisted: false
     overlapping_window: null
