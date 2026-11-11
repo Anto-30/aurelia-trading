@@ -13,7 +13,7 @@ from research.labs.run_smc_baseline import main
 
 
 class ATOSSMCBaselineCliTests(unittest.TestCase):
-    def test_csv_baseline_writes_json_and_ohlc_evidence_without_live_authority(self):
+    def test_legacy_baseline_cli_is_quarantined_without_writing_artifacts(self):
         index = pd.date_range("2026-11-10T13:00:00Z", periods=60, freq="min")
         prices = [100.0] * len(index)
         source = pd.DataFrame({
@@ -40,19 +40,9 @@ class ATOSSMCBaselineCliTests(unittest.TestCase):
                 "--output-dir", str(output_dir),
             ]
             with patch.object(sys, "argv", args):
-                self.assertEqual(main(), 0)
-            reports = list(output_dir.glob("*.json"))
-            candles = list(output_dir.glob("*.csv"))
-            self.assertEqual(len(reports), 1)
-            self.assertEqual(len(candles), 1)
-            report = json.loads(reports[0].read_text(encoding="utf-8"))
-            self.assertEqual(report["symbol"], "R_100")
-            self.assertEqual(report["data_quality"]["coverage_pct"], 100.0)
-            self.assertFalse(report["capital_authority"])
-            self.assertFalse(report["order_submission_permitted"])
-            self.assertEqual(report["live_execution"], "BLOCKED")
-            self.assertFalse(report["input_assumptions"]["costs_user_asserted_verified"])
-            self.assertFalse(report["input_assumptions"]["point_value_user_asserted_verified"])
+                with self.assertRaisesRegex(RuntimeError, "LEGACY_ATOS_SMC_BASELINE_QUARANTINED"):
+                    main()
+            self.assertFalse(output_dir.exists())
 
 
 if __name__ == "__main__":
