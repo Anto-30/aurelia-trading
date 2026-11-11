@@ -114,11 +114,7 @@ async def fetch_deriv_candles(
     max_pages: int = DEFAULT_MAX_HISTORY_PAGES,
     request_delay_seconds: float = 1.25,
 ) -> pd.DataFrame:
-    """Fetch candle history backwards in bounded pages; never synthesize missing bars.
-
-    Deriv's current ticks_history API defaults count to 1,000; this caller sends
-    count explicitly. The API documents a 60-second granularity and candle OHLC.
-    """
+    """Refuse legacy historical candle ingestion under ATOS v2.0 data controls."""
     if not symbol or not symbol.strip():
         raise ValueError("DERIV_SYMBOL_REQUIRED")
     if granularity_seconds != 60:
@@ -132,87 +128,10 @@ async def fetch_deriv_candles(
     start_epoch, end_epoch = _epoch(start), _epoch(end)
     if end_epoch <= start_epoch:
         raise ValueError("DERIV_HISTORY_WINDOW_INVALID")
-    rows: list[dict[str, Any]] = []
-    cursor = end_epoch
-    seen_oldest: set[int] = set()
-
-    async with websockets.connect(
-        DERIV_PUBLIC_WS_URL, ping_interval=20, close_timeout=10, max_size=10_000_000
-    ) as ws:
-        for page in range(max_pages):
-            # The public history call has a dedicated expensive-request rate
-            # bucket. Pace pages evenly and back off on explicit RateLimit errors.
-            if page > 0 and request_delay_seconds:
-                await asyncio.sleep(request_delay_seconds)
-            request = {
-                "ticks_history": symbol,
-                "end": str(cursor),
-                "count": int(page_size),
-                "granularity": int(granularity_seconds),
-                "style": "candles",
-                "req_id": page + 1,
-            }
-            for attempt, backoff in enumerate((15.0, 30.0, 60.0, None)):
-                try:
-                    response = await _request(ws, request)
-                    break
-                except DerivHistoryError as exc:
-                    rate_limited = "RateLimit" in str(exc) or "rate limit" in str(exc).lower()
-                    if not rate_limited or backoff is None:
-                        raise
-                    await asyncio.sleep(backoff)
-            else:
-                raise DerivHistoryError("DERIV_HISTORY_RATE_LIMIT_RETRIES_EXHAUSTED")
-            candles = response.get("candles")
-            if not isinstance(candles, list):
-                raise DerivHistoryError("DERIV_CANDLES_ARRAY_MISSING")
-            if not candles:
-                break
-            page_rows: list[dict[str, Any]] = []
-            for candle in candles:
-                if not isinstance(candle, dict):
-                    raise DerivHistoryError("DERIV_CANDLE_INVALID")
-                try:
-                    epoch = int(candle["epoch"])
-                    values = {name: float(candle[name]) for name in ("open", "high", "low", "close")}
-                except (KeyError, TypeError, ValueError) as exc:
-                    raise DerivHistoryError("DERIV_CANDLE_FIELDS_INVALID") from exc
-                if start_epoch <= epoch <= end_epoch:
-                    page_rows.append({"timestamp_utc": pd.to_datetime(epoch, unit="s", utc=True), **values})
-            if not page_rows:
-                break
-            rows.extend(page_rows)
-            oldest = min(int(pd.Timestamp(item["timestamp_utc"]).timestamp()) for item in page_rows)
-            if oldest <= start_epoch:
-                break
-            if oldest in seen_oldest or oldest >= cursor:
-                raise DerivHistoryError("DERIV_HISTORY_PAGINATION_DID_NOT_ADVANCE")
-            seen_oldest.add(oldest)
-            cursor = oldest - 1
-        else:
-            raise DerivHistoryError("DERIV_HISTORY_MAX_PAGES_REACHED")
-
-    if not rows:
-        raise DerivHistoryError("DERIV_HISTORY_EMPTY")
-    frame = pd.DataFrame(rows).set_index("timestamp_utc").sort_index()
-    frame = frame.loc[~frame.index.duplicated(keep="last")]
-    try:
-        frame = validate_ohlc(frame, expected_minutes=1)
-    except ResearchDataError as exc:
-        raise DerivHistoryError(f"DERIV_HISTORY_QUALITY_FAILURE:{exc}") from exc
-    frame.attrs["symbol"] = symbol
-    frame.attrs["provider"] = "Deriv public ticks_history"
-    frame.attrs["authenticated"] = False
-    frame.attrs["granularity_seconds"] = granularity_seconds
-    frame.attrs["endpoint"] = DERIV_PUBLIC_WS_URL
-    frame.attrs["request_page_size"] = int(page_size)
-    frame.attrs["request_delay_seconds"] = float(request_delay_seconds)
-    frame.attrs["history_start_epoch"] = start_epoch
-    frame.attrs["history_end_epoch"] = end_epoch
-    return frame
-
-
-YFINANCE_INTRADAY_INTERVALS = {"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h"}
+    raise DerivHistoryError(
+        "DERIV_HISTORICAL_INGESTION_QUARANTINED: current legacy downloader is not an "
+        "approved ephemeral cross-source calibrator and must not persist raw API content"
+    )
 
 
 def _validate_yfinance_window(
