@@ -77,5 +77,72 @@ class ExternalToolIntakeTest(unittest.TestCase):
         self.assertIn("ruff==0.17.4", dev_section)
 
 
+
+    def test_2026_11_11_batch2_registry_has_valid_pins_and_deny_controls(self):
+        data = _read_json("config", "external_tool_intake_2026-11-11_addendum_02.json")
+        repositories = data["repositories"]
+        names = [item["repo"] for item in repositories]
+
+        self.assertEqual(data["requested_items"], 9)
+        self.assertEqual(len(repositories), 9)
+        self.assertEqual(len(set(names)), 9)
+        for item in repositories:
+            self.assertRegex(item["head_commit"], r"^[0-9a-f]{40}$")
+            self.assertTrue(item["url"].startswith("https://github.com/"))
+            self.assertIn(
+                item["mode"],
+                {"REFERENCE_ONLY", "RESEARCH_ONLY", "SANDBOX_ONLY", "TOOLCHAIN_ONLY"},
+            )
+            self.assertFalse(item["capital_authority"])
+            self.assertFalse(item["production_secret_access"])
+
+        controls = data["global_controls"]
+        self.assertFalse(controls["penv_secret_delivery_authorized"])
+        self.assertFalse(controls["broker_access"])
+        self.assertFalse(controls["live_order_authority"])
+        self.assertFalse(controls["capital_authority"])
+        self.assertFalse(controls["live_lock_mutation"])
+        self.assertFalse(controls["production_deployment_authority"])
+
+    def test_2026_11_11_agent_assignment_files_use_named_roles(self):
+        for filename, expected_count in (
+            ("external_repository_agent_assignments_2026-11-11.json", 11),
+            ("external_repository_agent_assignments_2026-11-11_addendum_02.json", 9),
+        ):
+            data = _read_json("config", filename)
+            assignments = data["assignments"]
+            self.assertEqual(len(assignments), expected_count)
+            for item in assignments:
+                self.assertTrue(item["repository"])
+                self.assertTrue(item["primary"])
+                self.assertIsInstance(item["reviewers"], list)
+                self.assertTrue(all(isinstance(role, str) for role in item["reviewers"]))
+                self.assertTrue(item["task"])
+
+    def test_2026_11_11_canonical_routing_links_both_intakes_and_audit(self):
+        data = _read_json("config", "agent_tool_skill_assignment.json")
+        self.assertEqual(
+            data["external_repository_intake_addendum_02_2026_11_11"],
+            "config/external_tool_intake_2026-11-11_addendum_02.json",
+        )
+        self.assertEqual(
+            data["external_repository_assignments_addendum_02_2026_11_11"],
+            "config/external_repository_agent_assignments_2026-11-11_addendum_02.json",
+        )
+        self.assertEqual(
+            data["external_repository_audit_status_2026_11_11"],
+            "docs/engineering/EXTERNAL_TOOL_AUDIT_STATUS_2026-11-11.md",
+        )
+
+    def test_improve_license_and_penv_secret_delivery_remain_blocked(self):
+        data = _read_json("config", "external_tool_intake_2026-11-11_addendum_02.json")
+        improve = next(item for item in data["repositories"] if item["repo"] == "shadcn/improve")
+        penv = next(item for item in data["repositories"] if item["repo"] == "penvhq/penv-run")
+        self.assertIn("MIT", improve["license_observed"])
+        self.assertEqual(penv["requested_yaml_references"], 2)
+        self.assertEqual(penv["deduplicated_action_reference"], 1)
+        self.assertFalse(data["global_controls"]["penv_secret_delivery_authorized"])
+        self.assertEqual(data["acceptance"]["physical_installation"], False)
+
 if __name__ == "__main__":
     unittest.main()
