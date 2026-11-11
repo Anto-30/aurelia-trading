@@ -1,0 +1,37 @@
+name: ATOS v2 SMC Research Baseline (QUARANTINED)
+
+# This historical runner is disabled pending a v2.0-compliant research pipeline.
+# The former workflow accepted untrusted shell-interpolated inputs and defaulted
+# to a synthetic index. No data download, backtest, or artifact upload is permitted here.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  quarantine:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Record legacy baseline quarantine
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "## ATOS SMC legacy baseline quarantine"
+            echo ""
+            echo "LEGACY_ATOS_SMC_BASELINE_STATUS=DISABLED_PENDING_V2_IMPLEMENTATION"
+            echo "WORKFLOW_INPUT_SHELL_INTERPOLATION=REMOVED"
+            echo "AUTOMATIC_PUSH_TRIGGER=DISABLED"
+            echo "SYNTHETIC_INDEX_RESEARCH=QUARANTINED"
+            echo "DATA_DOWNLOAD_PERMITTED=false"
+            echo "BACKTEST_EXECUTION_PERMITTED=false"
+            echo "ARTIFACT_UPLOAD_PERMITTED=false"
+            echo "LIVE_EXECUTION=BLOCKED"
+            echo "FINAL_EXECUTION_AUTHORIZATION=false"
+            echo ""
+            echo "This workflow performs no checkout, network request, data download, simulation, or artifact upload."
+            echo "A replacement must implement ATOS v2.0 data licensing, preregistration, placebo controls, and validation gates."
+          } >> "$GITHUB_STEP_SUMMARY"
