@@ -250,6 +250,7 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertEqual(deploy.get("environment"), "production")
         self.assertEqual(_secret_references(deploy.get("env", {})), [])
         self.assertEqual(workflow.get("permissions", {}).get("contents"), "read")
+        self.assertEqual(workflow.get("permissions", {}).get("actions"), "read")
         lock_step = _step(deploy, "Verify source revision and deployment lock")
         self.assertIn("config/LIVE_LOCK.yaml", lock_step.get("run", ""))
         lock = (ROOT / "config" / "LIVE_LOCK.yaml").read_text(encoding="utf-8")
