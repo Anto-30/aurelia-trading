@@ -21,8 +21,8 @@ strategy:
 
 instrument:
   primary: EURUSD
-  provider_symbol_resolution: PENDING
-  deriv_symbol_resolution_method: active_symbols
+  provider_symbol_resolution: RESOLVED_PUBLIC_ACTIVE_SYMBOLS
+  deriv_symbol_resolution_method: active_symbols_full
   synthetic_indices_allowed: false
 
 timeframes:
@@ -54,7 +54,16 @@ data:
     license_scope: INTERNAL_ANALYSIS_ONLY_NO_REDISTRIBUTION
   cross_source_calibration:
     required: true
-    deriv_exact_symbol: PENDING_ACTIVE_SYMBOLS
+    deriv_exact_symbol: frxEURUSD
+    deriv_symbol_resolution:
+      status: RESOLVED_UNIQUE
+      market: forex
+      submarket: major_pairs
+      public_tick_stream: VERIFIED
+      evidence_run_id: 43022953014
+      evidence_source_commit: cb65a05fdf071821fa130ef07f70934215f03346
+      evidence_record_hash: 91851b9dbc3c89d5779c81b0d654dfafd53534598b57a9780baeae6008310f89
+      raw_market_data_persisted: false
     overlapping_window: null
     timestamp_alignment: NOT_TESTED
     bid_ask_mid_basis: NOT_DOCUMENTED
@@ -143,7 +152,6 @@ gates:
     status: BLOCKED
     missing:
       - TrueFX registration, instrument list, history depth, export format, CSV header and licensed archive SHA-256
-      - current Deriv EURUSD active_symbols result and exact symbol
       - overlapping cross-source window and feed-basis calibration report
       - measured spread, slippage, commission and adverse-selection cost numbers
       - pilot R-standard-deviation and defensible MDE/N calculation
