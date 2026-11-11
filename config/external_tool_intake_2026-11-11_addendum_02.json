@@ -252,13 +252,13 @@
     "The audit is a targeted source review of selected high-risk entrypoints and complete source tree for shadcn/improve, not a complete line-by-line audit of all repositories.",
     "No upstream code or action was executed; no SBOM, dependency vulnerability scan, secret scan, malware scan or dynamic sandbox test was produced.",
     "No external runtime (ClaudeCode, JEV, Dev, DeepSeek Harness, Hermes or PlaywrightCLI) was proven connected or executed during this audit.",
-    "The penv-run action's same-job threat boundary is not suitable for secrets in workflows that also run untrusted steps.",
+    "The Penv action's same-job threat boundary is not suitable for secrets in workflows that also run untrusted steps; its principal source files and unit tests were inspected but not executed.",
     "Codex Security was not run against AURELIA source because provider credentials, source processing and retention approvals were not established.",
     "TheAlgorithms/Java and the large Astryx repository were not line-by-line audited because their initial fit is reference-only or unrelated."
   ],
   "audit_status": {
     "source_tree_manifests_and_selected_entrypoints_reviewed": true,
-    "source_tree_complete_for_shadcn_improve": true,
+    "source_tree_complete_for_shadcn_improve": false,
     "selected_source_files_reviewed": [
       "penvhq/penv-run: action.yml, main.mjs, api.mjs, deliver.mjs, revoke.mjs, mask.mjs, names.mjs, api.test.mjs, deliver.test.mjs, revoke.test.mjs, package.json",
       "vercel-labs/agent-browser: package.json, scripts/postinstall.js, bin/agent-browser.js, cli/src/browser_security.rs, cli/src/native/browser.rs, cli/src/mcp.rs, packages/@agent-browser/sandbox/src/mcp.ts, packages/@agent-browser/sandbox/src/vercel.ts",
@@ -330,6 +330,7 @@
         "finding": "Educational algorithm implementations; no direct AURELIA trading capability established.",
         "decision": "Educational reference only."
       }
-    ]
+    ],
+    "tree_inventory_complete_for_shadcn_improve": true
   }
 }
