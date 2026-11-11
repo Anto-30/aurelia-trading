@@ -115,14 +115,15 @@
       "url": "https://github.com/shadcn/improve",
       "default_branch": "main",
       "head_commit": "cac56e1ebd3c279aa9153616cfeac7b174ab90f9",
-      "license_observed": "No LICENSE file found at repository root during this review",
+      "license_observed": "MIT (LICENSE.md; SKILL.md frontmatter also declares MIT)",
       "mode": "REFERENCE_ONLY",
-      "disposition": "DEFER_INSTALL_SOURCE_AND_PERMISSION_REVIEW",
-      "use": "Agent skill that audits a codebase and writes implementation plans; README describes optional dispatch/execution of plans by other agents.",
+      "disposition": "SELECTIVE_SKILL_REVIEW_NO_INSTALL",
+      "use": "Read-only codebase audit and self-contained implementation-plan skill; optional dispatch to a separate executor worktree. Potential project-local Claude skill after isolation and permission review.",
       "risks": [
-        "No root LICENSE or package.json was found in the inspected paths; clarify licensing and complete tree contents.",
-        "Execution/dispatch modes and optional GitHub issue publishing expand agent write permissions.",
-        "Review the complete skill prompt and subagent/worktree controls before any installation."
+        "The inspected skill is explicitly read-only on source code and may create or modify plan files only under plans/ or advisor-plans/.",
+        "Its execute variant dispatches a separate executor subagent in an isolated git worktree; the skill says it does not merge, push or commit. Verify the host's actual worktree isolation before enabling dispatch.",
+        "The optional --issues mode publishes GitHub issues and therefore requires explicit user approval; do not enable it by default.",
+        "The repository has a small 16-blob tree; inspected README, LICENSE.md, SKILL.md, audit playbook and plan template. No full runtime/security testing was needed because no executable is installed."
       ],
       "assigned_agents": [
         "ClaudeCode",
@@ -243,12 +244,92 @@
     "physical_installation": false,
     "workflow_modified": false,
     "production_dependency_changes": false,
-    "capital_boundary_changes": false
+    "capital_boundary_changes": false,
+    "selected_source_review": true,
+    "shadcn_improve_license_verified": true
   },
   "limitations": [
-    "This is a metadata/README/licence and selected-entrypoint first-pass review, not a complete source or security audit.",
-    "No repository code or action was executed; no SBOM, vulnerability, malware, secret or dynamic sandbox test was produced.",
-    "The penv-run action's api/deliver/revoke implementation and complete test suite remain to be inspected.",
-    "Assignments route future review only; they do not prove agent runtimes are connected or participated."
-  ]
+    "The audit is a targeted source review of selected high-risk entrypoints and complete source tree for shadcn/improve, not a complete line-by-line audit of all repositories.",
+    "No upstream code or action was executed; no SBOM, dependency vulnerability scan, secret scan, malware scan or dynamic sandbox test was produced.",
+    "No external runtime (ClaudeCode, JEV, Dev, DeepSeek Harness, Hermes or PlaywrightCLI) was proven connected or executed during this audit.",
+    "The penv-run action's same-job threat boundary is not suitable for secrets in workflows that also run untrusted steps.",
+    "Codex Security was not run against AURELIA source because provider credentials, source processing and retention approvals were not established.",
+    "TheAlgorithms/Java and the large Astryx repository were not line-by-line audited because their initial fit is reference-only or unrelated."
+  ],
+  "audit_status": {
+    "source_tree_manifests_and_selected_entrypoints_reviewed": true,
+    "source_tree_complete_for_shadcn_improve": true,
+    "selected_source_files_reviewed": [
+      "penvhq/penv-run: action.yml, main.mjs, api.mjs, deliver.mjs, revoke.mjs, mask.mjs, names.mjs, api.test.mjs, deliver.test.mjs, revoke.test.mjs, package.json",
+      "vercel-labs/agent-browser: package.json, scripts/postinstall.js, bin/agent-browser.js, cli/src/browser_security.rs, cli/src/native/browser.rs, cli/src/mcp.rs, packages/@agent-browser/sandbox/src/mcp.ts, packages/@agent-browser/sandbox/src/vercel.ts",
+      "openai/codex-security: action.yml, github-action/package.json, github-action/src/main.ts, github-action/src/inputs.ts, github-action/src/runtime.ts, github-action/src/artifacts.ts, Dockerfile, SECURITY.md",
+      "whchien/ai-trader: ai_trader/mcp/server.py, ai_trader/mcp/tools/backtest.py, ai_trader/mcp/tools/data.py, ai_trader/mcp/tools/strategies.py",
+      "shadcn/improve: README.md, LICENSE.md, skills/improve/SKILL.md, skills/improve/references/audit-playbook.md, skills/improve/references/plan-template.md",
+      "addyosmani/agent-skills: LICENSE, skills/security-and-hardening/SKILL.md, skills/shipping-and-launch/SKILL.md, hooks/session-start.sh, scripts/validate-commands.js"
+    ],
+    "full_source_audit": false,
+    "sbom": false,
+    "vulnerability_scan": false,
+    "secret_scan": false,
+    "malware_scan": false,
+    "dynamic_sandbox_test": false,
+    "upstream_tests_executed": false,
+    "install_or_workflow_changes": false,
+    "findings": [
+      {
+        "repo": "penvhq/penv-run",
+        "severity": "HIGH",
+        "finding": "Same-job secret exposure is explicitly out of scope. It uses GitHub OIDC, obtains a penv credential, and runs the caller command with secret values in that child process environment. Revocation is best-effort; security depends on server-side short TTL. The action itself explicitly warns a malicious same-job step can read runner process memory and steal secrets.",
+        "decision": "Do not use in AURELIA CI or any job containing untrusted steps; never deliver Deriv/broker/production secrets."
+      },
+      {
+        "repo": "vercel-labs/agent-browser",
+        "severity": "MEDIUM",
+        "finding": "Postinstall may download a native binary from a GitHub release URL and follows redirects; no checksum/signature verification was observed in the inspected postinstall path. Browser tooling exposes powerful page interaction, JavaScript evaluation, upload and network inspection capabilities.",
+        "decision": "Sandbox-only; require immutable package/binary provenance verification, isolated browser profile, synthetic data and restricted egress."
+      },
+      {
+        "repo": "openai/codex-security",
+        "severity": "MEDIUM",
+        "finding": "GitHub Action passes selected provider credentials to the scanner runtime, supports deep repository scans, and can upload validated findings artifacts. Its runtime constructs a restricted environment and uses Codex sandbox preflight; on eligible GitHub-hosted Ubuntu runners it may use sudo to install bubblewrap/AppArmor when sandbox setup is unavailable.",
+        "decision": "Do not scan proprietary AURELIA source until source-processing, data retention, provider, permission, artifact and cost policies are approved. Test only a synthetic repository first."
+      },
+      {
+        "repo": "whchien/ai-trader",
+        "severity": "HIGH",
+        "finding": "MCP exposes backtest and data-fetch tools accepting caller-supplied local configuration/data/output paths and performs filesystem reads/writes and network data fetches. It is not a multi-tenant isolated execution boundary; the codebase is GPL-3.0 and the inspected workflow targets stocks/crypto/forex/VIX rather than Deriv synthetic indices.",
+        "decision": "Research-only; do not expose its MCP server to untrusted clients or AURELIA runtime. No import before GPL compatibility, path-confinement, dependency, data/cost and no-lookahead audits."
+      },
+      {
+        "repo": "shadcn/improve",
+        "severity": "LOW",
+        "finding": "MIT-licensed read-only advisor skill; writes plans only. Optional execute dispatches a separate executor worktree and --issues can create GitHub issues.",
+        "decision": "Selective skill candidate only after confirming actual host worktree isolation and keeping issue creation disabled without explicit approval."
+      },
+      {
+        "repo": "addyosmani/agent-skills",
+        "severity": "MEDIUM",
+        "finding": "MIT collection includes optional hooks and workflow skills. Session-start hook injects skill text only when wired; shipping skill is operational guidance and should not itself be treated as release approval.",
+        "decision": "Selective reference use; no hooks or bulk skill install. AURELIA release authority remains separate."
+      },
+      {
+        "repo": "anandanand84/technicalindicators",
+        "severity": "LOW",
+        "finding": "Old TypeScript indicator library; package/toolchain age and indicator semantics require parity checks.",
+        "decision": "Formula reference only; no dependency adoption."
+      },
+      {
+        "repo": "meta/astryx",
+        "severity": "LOW",
+        "finding": "Large React/StyleX design-system repository with no AURELIA trading-system fit.",
+        "decision": "No trading-runtime adoption; no full source audit justified."
+      },
+      {
+        "repo": "TheAlgorithms/Java",
+        "severity": "LOW",
+        "finding": "Educational algorithm implementations; no direct AURELIA trading capability established.",
+        "decision": "Educational reference only."
+      }
+    ]
+  }
 }
