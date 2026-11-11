@@ -40,3 +40,8 @@ Do not claim DeepSeek, Hermes, Qwen Code, Open Interpreter, or another agent has
 ## 2026-11-11 external repository intake
 
 Before using repositories supplied on 2026-11-11, read docs/engineering/EXTERNAL_TOOL_ADOPTION_2026-11-11.md, config/external_tool_intake_2026-11-11.json and config/external_repository_agent_assignments_2026-11-11.json. Use the existing AURELIA debugging/evidence skills. No upstream package, agent, hook, plugin or executable is installed by this intake. Follow each disposition and installation gate. No secrets, broker access, order/capital authority, LIVE_LOCK mutation or production deployment.
+
+
+## 2026-11-11 external repository intake — batch 2
+
+Before using sources in the second 2026-11-11 batch, read `docs/engineering/EXTERNAL_TOOL_ADOPTION_2026-11-11_ADDENDUM_02.md`, `config/external_tool_intake_2026-11-11_addendum_02.json` and `config/external_repository_agent_assignments_2026-11-11_addendum_02.json`. The duplicate `penvhq/penv-run` workflow reference is one logical candidate and is not approved for workflow use. Follow pinned commit and per-source disposition; do not install, execute or grant secrets until the complete source audit and independent gates pass. No Penv, Deriv, broker, production secret, order, capital, LIVE_LOCK or deployment authority is granted.
