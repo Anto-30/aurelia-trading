@@ -45,3 +45,8 @@ Before using repositories supplied on 2026-11-11, read docs/engineering/EXTERNAL
 ## 2026-11-11 external repository intake — batch 2
 
 Before using sources in the second 2026-11-11 batch, read `docs/engineering/EXTERNAL_TOOL_ADOPTION_2026-11-11_ADDENDUM_02.md`, `config/external_tool_intake_2026-11-11_addendum_02.json` and `config/external_repository_agent_assignments_2026-11-11_addendum_02.json`. The duplicate `penvhq/penv-run` workflow reference is one logical candidate and is not approved for workflow use. Follow pinned commit and per-source disposition; do not install, execute or grant secrets until the complete source audit and independent gates pass. No Penv, Deriv, broker, production secret, order, capital, LIVE_LOCK or deployment authority is granted.
+
+
+## 2026-11-11 targeted source audit
+
+Consult `docs/engineering/EXTERNAL_TOOL_AUDIT_STATUS_2026-11-11.md` and the `audit_status` section of `config/external_tool_intake_2026-11-11_addendum_02.json` before enabling any second-batch source. This is a targeted review, not security certification: no SBOM or dynamic sandbox tests have been produced. Penv is rejected for AURELIA CI secret delivery; Codex Security requires approved data-processing policy; browser automation remains isolated-profile-only. Keep all AURELIA capital, broker, secret, LIVE_LOCK and release boundaries unchanged.
