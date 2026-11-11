@@ -42,3 +42,8 @@ Respect the canonical task routing in `config/agent_tool_skill_assignment.json`.
 ## 2026-11-11 external repository intake
 
 Incremental review: docs/engineering/EXTERNAL_TOOL_ADOPTION_2026-11-11.md and config/external_tool_intake_2026-11-11.json. Role routing: config/external_repository_agent_assignments_2026-11-11.json. Assignments do not prove agent connection or installation. Preserve no-secrets/no-broker/no-capital/no-LIVE_LOCK-mutation controls and require independent review before installation.
+
+
+## 2026-11-11 external repository intake — batch 2
+
+Before using the second 2026-11-11 source batch, read `docs/engineering/EXTERNAL_TOOL_ADOPTION_2026-11-11_ADDENDUM_02.md`, `config/external_tool_intake_2026-11-11_addendum_02.json` and `config/external_repository_agent_assignments_2026-11-11_addendum_02.json`. The two identical `penvhq/penv-run` lines are deduplicated to one candidate; the action is not approved for workflow use. Registry and assignments do not imply installation, execution or agent connection. Preserve no-secrets/no-broker/no-capital/no-LIVE_LOCK-mutation controls and require independent security evidence before any installation PR.
