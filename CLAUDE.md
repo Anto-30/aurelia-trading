@@ -35,3 +35,8 @@ Treat `docs/engineering/EXTERNAL_TOOL_ADOPTION.md` and `config/external_tool_int
 All external executables and agents remain denied by default. Qwen Code and Open Interpreter are sandbox/developer references only; do not run them on a production host or against a signed-in broker/browser session. Keep paste-site OSINT collectors out of the project. Use Ruff only through the pinned development extra, never in the production image.
 
 Do not claim DeepSeek, Hermes, Qwen Code, Open Interpreter, or another agent has been installed, connected, or run unless the device/runtime identity and its attributable execution record are verified. The canonical agent matrix is in `config/agent_tool_skill_assignment.json`; this change adds repository-local task guidance, not external accounts or persistent workers.
+
+
+## 2026-11-11 external repository intake
+
+Before using repositories supplied on 2026-11-11, read docs/engineering/EXTERNAL_TOOL_ADOPTION_2026-11-11.md, config/external_tool_intake_2026-11-11.json and config/external_repository_agent_assignments_2026-11-11.json. Use the existing AURELIA debugging/evidence skills. No upstream package, agent, hook, plugin or executable is installed by this intake. Follow each disposition and installation gate. No secrets, broker access, order/capital authority, LIVE_LOCK mutation or production deployment.
