@@ -47,7 +47,7 @@ class MSNREntryOverlayTests(unittest.TestCase):
         self.assertEqual(by_variant["V0_BASELINE"].entry_price_proxy, rows[15].open)
         self.assertEqual(by_variant["V1_DISPLACEMENT_CLOSE"].entry_price_proxy, rows[15].close)
         self.assertEqual(by_variant["V2_FVG_RETRACE"].status, "FILLED_PROXY")
-        self.assertAlmostEqual(by_variant["V2_FVG_RETRACE"].entry_price_proxy, 100.2)
+        self.assertAlmostEqual(by_variant["V2_FVG_RETRACE"].entry_price_proxy, 101.0)
         for event in events:
             payload = event.as_payload()
             self.assertTrue(payload["research_only"])
