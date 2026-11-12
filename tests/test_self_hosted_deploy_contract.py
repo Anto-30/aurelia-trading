@@ -89,6 +89,7 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         )
         build_index = deploy.index('sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"')
         container_stop_index = deploy.index('sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true')
+        self.assertLess(live_block_index, build_index)
         self.assertLess(live_block_index, cleanup_index)
         self.assertLess(build_index, cleanup_index)
         self.assertLess(cleanup_index, container_stop_index)
