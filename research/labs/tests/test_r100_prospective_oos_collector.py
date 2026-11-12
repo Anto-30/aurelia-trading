@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, AsyncIterator
 
 import asyncio
 import json
@@ -372,6 +372,56 @@ class R100PublicTransportRecoveryTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(transport.reconnect_calls, 2)
         self.assertEqual(transport.subscribe_calls, 3)
+
+    async def test_stalled_reconnect_is_cancelled_at_collection_deadline(self):
+        from runtime.adapters.deriv_ws import DerivTransportError
+        from research.r100_prospective_oos_collector import iter_public_r100_ticks
+
+        class HangingReconnectTransport:
+            def __init__(self):
+                self.reconnect_calls = 0
+                self.reconnect_cancelled = False
+
+            def subscribe(self, key, payload):
+                async def stream():
+                    raise DerivTransportError(
+                        "{'code': 'TRANSPORT_READER_FAILED'}"
+                    )
+                    yield {}
+
+                return stream()
+
+            async def reconnect(self):
+                self.reconnect_calls += 1
+                try:
+                    await asyncio.Event().wait()
+                finally:
+                    self.reconnect_cancelled = True
+
+        transport = HangingReconnectTransport()
+        deadline = asyncio.get_running_loop().time() + 0.03
+        with self.assertRaisesRegex(
+            DerivTransportError,
+            "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED",
+        ):
+            async for _ in iter_public_r100_ticks(
+                transport,
+                deadline=deadline,
+                max_reconnects=3,
+                backoff_seconds=0,
+            ):
+                pass
+
+        self.assertEqual(transport.reconnect_calls, 1)
+        self.assertTrue(transport.reconnect_cancelled)
+
+    async def test_return_annotation_resolves_async_iterator_type(self):
+        from typing import get_type_hints
+        from research.r100_prospective_oos_collector import iter_public_r100_ticks
+
+        resolved = get_type_hints(iter_public_r100_ticks)
+        self.assertIn("return", resolved)
+        self.assertEqual(getattr(resolved["return"], "__origin__", None), AsyncIterator)
 
     async def test_non_transport_errors_are_not_retried(self):
         from runtime.adapters.deriv_ws import DerivTransportError
