@@ -1,0 +1,26 @@
+# Research-only entry overlays applied to canonical MSNR signal timestamps.
+# This file does not configure the canonical detector or any execution component.
+schema: aurelia.msnr_entry_overlays.v1
+research_only: true
+capital_authority: false
+order_submission_permitted: false
+price_is_executable: false
+baseline:
+  variant: V0_BASELINE
+  entry: next_bar_open_after_canonical_signal
+confirmation:
+  displacement_atr_period: 14
+  displacement_body_atr: 1.0
+  maximum_bars_after_signal: 20
+  fvg_retrace_maximum_bars_after_displacement: 5
+variants:
+  - V0_BASELINE
+  - V1_DISPLACEMENT_CLOSE
+  - V2_FVG_RETRACE
+notes:
+  - Canonical MSNR detector remains unchanged and is the only source of setup events.
+  - MSS/structure confirmation is already part of the canonical MSNR signal definition.
+  - V1 therefore adds post-signal displacement-close confirmation, not a duplicate MSS test.
+  - V2 requires a directional three-candle FVG created by post-signal displacement and a later retrace.
+  - OHLC entry prices are proxies, not executable quotes or broker fills.
+  - Missing retraces and gap-throughs are explicit outcomes, never silently discarded.
