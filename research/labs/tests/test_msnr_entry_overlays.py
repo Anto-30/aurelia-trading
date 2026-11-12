@@ -28,7 +28,7 @@ class MSNREntryOverlayTests(unittest.TestCase):
         rows = [bar(i, 100.0, 100.2, 99.8, 100.0) for i in range(15)]
         # V1 displacement at 15; bullish FVG between bar 13 high (100.2)
         # and bar 15 low (101.0). Retrace touches the upper FVG boundary.
-        rows.append(bar(15, 100.3, 102.0, 101.0, 101.8))
+        rows.append(bar(15, 101.2, 102.0, 101.0, 101.8))
         rows.append(bar(16, 101.5, 101.7, 100.8, 101.0))
         return rows
 
@@ -85,7 +85,7 @@ class MSNREntryOverlayTests(unittest.TestCase):
 
     def test_missing_retrace_is_explicit_not_silently_dropped(self):
         rows = [bar(i, 100, 100.2, 99.8, 100) for i in range(15)]
-        rows.append(bar(15, 100.3, 102, 101, 101.8))
+        rows.append(bar(15, 101.2, 102, 101, 101.8))
         candidate = signal(rows[14].timestamp_utc)
         events = build_msnr_entry_overlays(
             rows, [candidate],
@@ -99,7 +99,7 @@ class MSNREntryOverlayTests(unittest.TestCase):
     def test_invalid_timestamp_and_config_fail_closed(self):
         with self.assertRaisesRegex(ValueError, "OVERLAY_ATR_PERIOD_INVALID"):
             EntryOverlayConfig(atr_period=1)
-        with self.assertRaisesRegex(ValueError, "OVERLAY_TIMESTAMP_MUST_BE_TIMEZONE_AWARE"):
+        with self.assertRaisesRegex(ValueError, "BAR_TIMESTAMP_MUST_BE_TIMEZONE_AWARE"):
             bad = StrategyBar("2026-11-01T00:00:00", 100, 101, 99, 100)
             build_msnr_entry_overlays([bad], [])
 
