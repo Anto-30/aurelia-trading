@@ -14,7 +14,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, AsyncIterator
 
 from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
 from runtime.strategy.autonomous_signal_engine import AutonomousSignalHunter
@@ -133,10 +133,26 @@ async def iter_public_r100_ticks(
                             "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED"
                         )
                     try:
-                        await transport.reconnect()
+                        # A reconnect handshake must not extend the frozen
+                        # collection window. wait_for cancels a stalled attempt.
+                        reconnect_remaining = deadline - asyncio.get_running_loop().time()
+                        if reconnect_remaining <= 0:
+                            raise DerivTransportError(
+                                "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED"
+                            )
+                        await asyncio.wait_for(
+                            transport.reconnect(),
+                            timeout=reconnect_remaining,
+                        )
                         stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
                         iterator = stream.__aiter__()
                         recovered = True
+                    except asyncio.TimeoutError as reconnect_timeout:
+                        raise DerivTransportError(
+                            "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED"
+                        ) from reconnect_timeout
+                    except DerivTransportError:
+                        raise
                     except Exception as reconnect_exc:
                         if reconnects >= max_reconnects:
                             raise DerivTransportError(
