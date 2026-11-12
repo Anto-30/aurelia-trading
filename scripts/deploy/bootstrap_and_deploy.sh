@@ -48,16 +48,9 @@ case "$DEPLOYMENT_MODE" in
     ;;
 esac
 
-# Revoke the retired credential-bearing VERIFY_ONLY store only after the
-# candidate release and its fail-closed LIVE_LOCK have been validated. This
-# prevents a missing or malformed candidate from stopping a healthy runtime.
-if [ -f "$READONLY_SECRET_FILE" ]; then
-  sudo rm -f "$READONLY_SECRET_FILE"
-  if command -v docker >/dev/null 2>&1; then
-    sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
-  fi
-fi
-
+# LIVE remains blocked until an independently supported account-scope
+# verification path exists. Exit before touching the existing runtime or any
+# retained credential material, even if a future LIVE_LOCK is changed.
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   echo "AURELIA_HOST_BLOCKED=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
   exit 2
@@ -208,6 +201,15 @@ if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
 fi
 
 sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"
+
+# Remove the retired credential-bearing VERIFY_ONLY store only after the
+# candidate image built successfully. Never stop the running container while
+# validating or building a candidate; the replacement happens exactly once
+# below, immediately before the new container is started.
+if [ -f "$READONLY_SECRET_FILE" ]; then
+  sudo rm -f "$READONLY_SECRET_FILE"
+fi
+
 sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 
 sudo docker run --detach \
