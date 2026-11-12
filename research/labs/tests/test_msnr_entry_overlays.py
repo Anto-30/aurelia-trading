@@ -59,6 +59,7 @@ class MSNREntryOverlayTests(unittest.TestCase):
         cfg = EntryOverlayConfig(atr_period=5, displacement_body_atr=1.0,
                                  max_bars_after_signal=5, max_retrace_bars_after_displacement=3)
         prefix_events = build_msnr_entry_overlays(rows[:17], [candidate], config=cfg)
+        rows.append(bar(17, 101.2, 101.4, 100.9, 101.1))
         full_events = build_msnr_entry_overlays(rows, [candidate], config=cfg)
         # Every event emitted by the shorter prefix remains byte-for-byte equal
         # in the full history. Appending future bars cannot revise past entries.
