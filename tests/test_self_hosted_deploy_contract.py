@@ -69,7 +69,20 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn('CAPITAL_AUTHORITY_GRANTED=false', provisioner)
         self.assertIn('READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"', deploy)
         self.assertIn('sudo rm -f "$READONLY_SECRET_FILE"', deploy)
-        self.assertIn('sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true', deploy)
+        container_helper = (
+            ROOT / "scripts" / "deploy" / "remove_previous_container.sh"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            'bash "$RELEASE_DIR/scripts/deploy/remove_previous_container.sh" "$CONTAINER"',
+            deploy,
+        )
+        self.assertIn("sudo docker info >/dev/null", container_helper)
+        self.assertIn(
+            'sudo docker ps --all --quiet --filter "name=^/$CONTAINER$"',
+            container_helper,
+        )
+        self.assertIn('sudo docker rm -f "$container_id"', container_helper)
+        self.assertNotIn("|| true", container_helper)
         cleanup_index = deploy.index('sudo rm -f "$READONLY_SECRET_FILE"')
         self.assertLess(
             deploy.index('if [ ! -d "$RELEASE_DIR" ]'),
@@ -88,12 +101,14 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
             'if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then\n  echo "AURELIA_HOST_BLOCKED=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"'
         )
         build_index = deploy.index('sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"')
-        container_stop_index = deploy.index('sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true')
+        container_helper_index = deploy.index(
+            'bash "$RELEASE_DIR/scripts/deploy/remove_previous_container.sh" "$CONTAINER"'
+        )
+        docker_run_index = deploy.index('sudo docker run --detach')
         self.assertLess(live_block_index, build_index)
-        self.assertLess(live_block_index, cleanup_index)
-        self.assertLess(build_index, cleanup_index)
-        self.assertLess(cleanup_index, container_stop_index)
-        self.assertNotIn('docker rm -f "$CONTAINER"', deploy[cleanup_index:container_stop_index])
+        self.assertLess(build_index, container_helper_index)
+        self.assertLess(container_helper_index, cleanup_index)
+        self.assertLess(cleanup_index, docker_run_index)
         self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', deploy)
         self.assertNotIn('ENV_FILES+=("$READONLY_SECRET_FILE")', deploy)
         self.assertNotIn('SECRET_ENV_ARGS+=(--env-file "$READONLY_SECRET_FILE")', deploy)

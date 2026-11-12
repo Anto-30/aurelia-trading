@@ -202,15 +202,15 @@ fi
 
 sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"
 
+# Stop/remove the exact existing runtime via a separately testable,
+# fail-closed helper. A daemon/listing/removal failure aborts before cleanup.
+bash "$RELEASE_DIR/scripts/deploy/remove_previous_container.sh" "$CONTAINER"
+
 # Revoke the retired credential-bearing VERIFY_ONLY store only after the
-# candidate image built successfully. Never stop the running container while
-# validating or building a candidate; the replacement happens exactly once
-# below, immediately before the new container is started.
+# candidate image has built and the previous container has been removed.
 if [ -f "$READONLY_SECRET_FILE" ]; then
   sudo rm -f "$READONLY_SECRET_FILE"
 fi
-
-sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 
 sudo docker run --detach \
   --name "$CONTAINER" \
