@@ -97,8 +97,35 @@ class MSNREntryOverlayTests(unittest.TestCase):
                                       max_bars_after_signal=5, max_retrace_bars_after_displacement=2),
         )
         v2 = next(e for e in events if e.variant == "V2_FVG_RETRACE")
+        self.assertEqual(v2.status, "PENDING_RETRACE_WINDOW")
+        self.assertIsNone(v2.entry_price_proxy)
+
+    def test_completed_retrace_window_records_a_miss(self):
+        rows = [bar(i, 100, 100.2, 99.8, 100) for i in range(15)]
+        rows.append(bar(15, 101.2, 102, 101, 101.8))
+        rows.append(bar(16, 101.5, 102, 101.1, 101.6))
+        rows.append(bar(17, 101.6, 102.1, 101.2, 101.7))
+        candidate = signal(rows[14].timestamp_utc)
+        events = build_msnr_entry_overlays(
+            rows, [candidate],
+            config=EntryOverlayConfig(atr_period=5, displacement_body_atr=1.0,
+                                      max_bars_after_signal=5, max_retrace_bars_after_displacement=2),
+        )
+        v2 = next(e for e in events if e.variant == "V2_FVG_RETRACE")
         self.assertEqual(v2.status, "NO_RETRACE_WITHIN_WINDOW")
         self.assertIsNone(v2.entry_price_proxy)
+
+    def test_incomplete_displacement_window_is_pending_not_a_negative(self):
+        rows = [bar(i, 100, 100.2, 99.8, 100) for i in range(16)]
+        candidate = signal(rows[14].timestamp_utc)
+        events = build_msnr_entry_overlays(
+            rows, [candidate],
+            config=EntryOverlayConfig(atr_period=5, displacement_body_atr=1.0,
+                                      max_bars_after_signal=5, max_retrace_bars_after_displacement=2),
+        )
+        for variant in ("V1_DISPLACEMENT_CLOSE", "V2_FVG_RETRACE"):
+            self.assertEqual(next(e for e in events if e.variant == variant).status,
+                             "PENDING_DISPLACEMENT_WINDOW")
 
     def test_invalid_timestamp_and_config_fail_closed(self):
         with self.assertRaisesRegex(ValueError, "OVERLAY_ATR_PERIOD_INVALID"):
