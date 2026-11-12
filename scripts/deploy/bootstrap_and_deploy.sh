@@ -202,7 +202,7 @@ fi
 
 sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"
 
-# Remove the retired credential-bearing VERIFY_ONLY store only after the
+# Revoke the retired credential-bearing VERIFY_ONLY store only after the
 # candidate image built successfully. Never stop the running container while
 # validating or building a candidate; the replacement happens exactly once
 # below, immediately before the new container is started.
