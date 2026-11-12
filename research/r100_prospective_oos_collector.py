@@ -111,17 +111,27 @@ async def iter_public_r100_ticks(
                         diagnostics["last_run_reconnect_attempts"] = (
                             int(diagnostics.get("last_run_reconnect_attempts", 0)) + 1
                         )
-                        diagnostics["total_reconnect_attempts"] = (
-                            int(diagnostics.get("total_reconnect_attempts", 0)) + 1
+                        diagnostics["reconnect_attempts_total"] = (
+                            int(diagnostics.get("reconnect_attempts_total", 0)) + 1
                         )
                         diagnostics["last_retryable_error_code"] = retry_code
 
+                    remaining = deadline - asyncio.get_running_loop().time()
+                    if remaining <= 0:
+                        raise DerivTransportError(
+                            "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED"
+                        )
                     delay = min(
                         float(backoff_seconds) * (2 ** (reconnects - 1)),
                         30.0,
+                        remaining,
                     )
                     if delay > 0:
                         await asyncio.sleep(delay)
+                    if asyncio.get_running_loop().time() >= deadline:
+                        raise DerivTransportError(
+                            "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED"
+                        )
                     try:
                         await transport.reconnect()
                         stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
