@@ -84,10 +84,16 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
             cleanup_index,
         )
         self.assertIn("Revoke the retired credential-bearing VERIFY_ONLY store only after", deploy)
-        self.assertLess(
-            cleanup_index,
-            deploy.index('if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then'),
+        live_block_index = deploy.index(
+            'if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then\n  echo "AURELIA_HOST_BLOCKED=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"'
         )
+        build_index = deploy.index('sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"')
+        container_stop_index = deploy.index('sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true')
+        self.assertLess(live_block_index, build_index)
+        self.assertLess(live_block_index, cleanup_index)
+        self.assertLess(build_index, cleanup_index)
+        self.assertLess(cleanup_index, container_stop_index)
+        self.assertNotIn('docker rm -f "$CONTAINER"', deploy[cleanup_index:container_stop_index])
         self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', deploy)
         self.assertNotIn('ENV_FILES+=("$READONLY_SECRET_FILE")', deploy)
         self.assertNotIn('SECRET_ENV_ARGS+=(--env-file "$READONLY_SECRET_FILE")', deploy)
