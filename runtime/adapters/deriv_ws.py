@@ -88,7 +88,10 @@ class DerivWebSocketTransport:
             raise
         except Exception as exc:
             self._keepalive_error_class = type(exc).__name__
-            self._notify_subscriptions("TRANSPORT_KEEPALIVE_FAILED")
+            self._notify_subscriptions(
+                "TRANSPORT_KEEPALIVE_FAILED",
+                error_class=self._keepalive_error_class,
+            )
 
     async def _reader_loop(self) -> None:
         socket = self.ws
@@ -118,15 +121,33 @@ class DerivWebSocketTransport:
         except Exception as exc:
             self._reader_error_class = type(exc).__name__
             self._fail_pending(DerivTransportError("TRANSPORT_READER_FAILED"))
-            self._notify_subscriptions("TRANSPORT_READER_FAILED")
+            self._notify_subscriptions(
+                "TRANSPORT_READER_FAILED",
+                error_class=self._reader_error_class,
+            )
         finally:
             if self.ws is socket:
                 self.ws = None
 
-    def _notify_subscriptions(self, code: str) -> None:
-        for subscription in tuple(self._subscriptions.values()):
-            subscription.queue.put_nowait({"error": {"code": code}})
+    def _notify_subscriptions(
+        self,
+        code: str,
+        *,
+        error_class: str | None = None,
+    ) -> None:
+        """Notify consumers with a bounded error code and exception class only.
 
+        Provider messages, URLs, and exception text are intentionally excluded.
+        """
+        detail: dict[str, str] = {"code": code}
+        if (
+            isinstance(error_class, str)
+            and error_class.isidentifier()
+            and len(error_class) <= 64
+        ):
+            detail["transport_error_class"] = error_class
+        for subscription in tuple(self._subscriptions.values()):
+            subscription.queue.put_nowait({"error": detail.copy()})
 
     def _fail_pending(self, exc: Exception) -> None:
         for future in self._pending.values():
