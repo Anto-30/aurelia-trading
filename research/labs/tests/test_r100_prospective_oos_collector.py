@@ -94,7 +94,7 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
                 path = Path(tmp) / "state.json"
                 state = initial_state()
                 state["manifest"]["code_commit"] = "commit-A"
-                save_state(path, state)
+                path.write_text(json.dumps(state, sort_keys=True), encoding="utf-8")
                 os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = "commit-B"
                 with self.assertRaisesRegex(ValueError, "R100_SOURCE_COMMIT_MISMATCH"):
                     load_state(path)
@@ -111,7 +111,7 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
                 path = Path(tmp) / "state.json"
                 state = initial_state()
                 state["manifest"]["config_hash"] = legacy_research_config_hash()
-                save_state(path, state)
+                path.write_text(json.dumps(state, sort_keys=True), encoding="utf-8")
                 os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = state["manifest"]["code_commit"]
                 restored = load_state(path)
                 self.assertEqual(restored["manifest"]["config_hash"], research_config_hash())
@@ -125,15 +125,13 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
             else:
                 os.environ["AURELIA_RESEARCH_CODE_COMMIT"] = previous
 
-    def test_state_round_trip_and_schema(self):
+    def test_new_persistent_r100_state_write_is_blocked(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "state.json"
             state = initial_state()
-            save_state(path, state)
-            restored = load_state(path)
-            self.assertEqual(restored["schema"], "aurelia.r100.prospective_oos.v1")
-            self.assertEqual(restored["manifest"]["strategy_version"], "0.2.0")
-            self.assertEqual(restored["observations"], [])
+            with self.assertRaisesRegex(RuntimeError, "R100_ARCHIVE_QUARANTINED"):
+                save_state(path, state)
+            self.assertFalse(path.exists())
 
 
     def test_quoted_binary_contract_economics(self):
@@ -244,32 +242,27 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
         self.assertEqual(len(state["pending"]), 0)
         self.assertEqual(len(state["observations"]), 1)
 
-    def test_failed_collection_preserves_state_and_emits_non_authorizing_report(self):
+    def test_cli_collection_entry_point_is_blocked_without_creating_files(self):
         import research.r100_prospective_oos_collector as collector
 
         with tempfile.TemporaryDirectory() as tmp:
             state_path = Path(tmp) / "aurelia_r100_state.json"
-            with (
-                patch.object(collector, "STATE_PATH", state_path),
-                patch.object(
-                    collector,
-                    "collect_once",
-                    new=AsyncMock(side_effect=RuntimeError("simulated feed outage")),
-                ),
-            ):
-                with self.assertRaisesRegex(RuntimeError, "simulated feed outage"):
+            with patch.object(collector, "STATE_PATH", state_path):
+                with self.assertRaisesRegex(RuntimeError, "R100_RESEARCH_QUARANTINED"):
                     asyncio.run(collector.main())
-
-            persisted = json.loads(state_path.read_text(encoding="utf-8"))
-            report = json.loads(
-                state_path.with_name("aurelia_r100_report.json").read_text(encoding="utf-8")
+            self.assertFalse(state_path.exists())
+            self.assertFalse(
+                state_path.with_name("aurelia_r100_report.json").exists()
             )
-            self.assertEqual(persisted["last_run_error_type"], "RuntimeError")
-            self.assertTrue(persisted["last_run_error_at_utc"])
-            self.assertEqual(report["collection_status"], "FAILED_RETRYABLE")
-            self.assertEqual(report["collection_error_type"], "RuntimeError")
-            self.assertFalse(report["execution_authorized"])
-            self.assertFalse(report["capital_authority"])
+
+    def test_direct_collection_entry_point_is_blocked_before_network(self):
+        import research.r100_prospective_oos_collector as collector
+
+        async def run() -> None:
+            with self.assertRaisesRegex(RuntimeError, "R100_RESEARCH_QUARANTINED"):
+                await collector.collect_once({})
+
+        asyncio.run(run())
 
     def test_horizon_is_positive(self):
         self.assertGreater(HORIZON_TICKS, 0)
