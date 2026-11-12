@@ -14,9 +14,9 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, AsyncIterator
 
-from runtime.adapters.deriv_ws import DerivWebSocketTransport
+from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
 from runtime.strategy.autonomous_signal_engine import AutonomousSignalHunter
 
 PUBLIC_WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public"
@@ -34,6 +34,12 @@ CALIBRATION_MIN_BUCKETS = 3
 CALIBRATION_MIN_BUCKET_SAMPLES = 10
 CALIBRATION_MAX_RELIABILITY_GAP = 0.05
 LEGACY_DEFAULT_COLLECTION_SECONDS = 540
+MAX_PUBLIC_TRANSPORT_RECONNECTS = 3
+PUBLIC_TRANSPORT_RECONNECT_BACKOFF_SECONDS = 5.0
+RETRYABLE_PUBLIC_TRANSPORT_CODES = (
+    "TRANSPORT_READER_FAILED",
+    "TRANSPORT_KEEPALIVE_FAILED",
+)
 
 @dataclass(frozen=True)
 class PendingSignal:
@@ -44,6 +50,125 @@ class PendingSignal:
     probability: float
     score: float
     age_ticks: int = 0
+
+
+async def iter_public_r100_ticks(
+    transport: DerivWebSocketTransport,
+    *,
+    deadline: float,
+    diagnostics: dict[str, Any] | None = None,
+    max_reconnects: int = MAX_PUBLIC_TRANSPORT_RECONNECTS,
+    backoff_seconds: float = PUBLIC_TRANSPORT_RECONNECT_BACKOFF_SECONDS,
+) -> AsyncIterator[dict[str, Any]]:
+    """Yield public R100 ticks with bounded reconnects on transport failures.
+
+    Only explicit reader/keepalive transport failures are retried. The helper
+    never authenticates, requests account data, or submits contract actions.
+    """
+    if type(max_reconnects) is not int or max_reconnects < 0:
+        raise ValueError("R100_PUBLIC_RECONNECT_LIMIT_INVALID")
+    if (
+        isinstance(backoff_seconds, bool)
+        or not isinstance(backoff_seconds, (int, float))
+        or not math.isfinite(float(backoff_seconds))
+        or backoff_seconds < 0
+    ):
+        raise ValueError("R100_PUBLIC_RECONNECT_BACKOFF_INVALID")
+
+    stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
+    iterator = stream.__aiter__()
+    reconnects = 0
+    try:
+        while True:
+            remaining = deadline - asyncio.get_running_loop().time()
+            if remaining <= 0:
+                return
+            try:
+                yield await asyncio.wait_for(
+                    iterator.__anext__(),
+                    timeout=remaining,
+                )
+            except asyncio.TimeoutError:
+                return
+            except DerivTransportError as exc:
+                error_text = str(exc)
+                retry_code = next(
+                    (
+                        code
+                        for code in RETRYABLE_PUBLIC_TRANSPORT_CODES
+                        if code in error_text
+                    ),
+                    None,
+                )
+                if retry_code is None or reconnects >= max_reconnects:
+                    raise
+
+                await stream.aclose()
+                recovered = False
+                while reconnects < max_reconnects and not recovered:
+                    reconnects += 1
+                    if diagnostics is not None:
+                        diagnostics["last_run_reconnect_attempts"] = (
+                            int(diagnostics.get("last_run_reconnect_attempts", 0)) + 1
+                        )
+                        diagnostics["reconnect_attempts_total"] = (
+                            int(diagnostics.get("reconnect_attempts_total", 0)) + 1
+                        )
+                        diagnostics["last_retryable_error_code"] = retry_code
+
+                    remaining = deadline - asyncio.get_running_loop().time()
+                    if remaining <= 0:
+                        raise DerivTransportError(
+                            "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED"
+                        )
+                    delay = min(
+                        float(backoff_seconds) * (2 ** (reconnects - 1)),
+                        30.0,
+                        remaining,
+                    )
+                    if delay > 0:
+                        await asyncio.sleep(delay)
+                    if asyncio.get_running_loop().time() >= deadline:
+                        raise DerivTransportError(
+                            "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED"
+                        )
+                    try:
+                        # A reconnect handshake must not extend the frozen
+                        # collection window. wait_for cancels a stalled attempt.
+                        reconnect_remaining = deadline - asyncio.get_running_loop().time()
+                        if reconnect_remaining <= 0:
+                            raise DerivTransportError(
+                                "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED"
+                            )
+                        await asyncio.wait_for(
+                            transport.reconnect(),
+                            timeout=reconnect_remaining,
+                        )
+                        stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
+                        iterator = stream.__aiter__()
+                        recovered = True
+                    except asyncio.TimeoutError as reconnect_timeout:
+                        raise DerivTransportError(
+                            "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED"
+                        ) from reconnect_timeout
+                    except DerivTransportError as reconnect_exc:
+                        if "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED" in str(reconnect_exc):
+                            raise
+                        if reconnects >= max_reconnects:
+                            raise DerivTransportError(
+                                "R100_PUBLIC_TRANSPORT_RECONNECT_EXHAUSTED"
+                            ) from reconnect_exc
+                    except Exception as reconnect_exc:
+                        if reconnects >= max_reconnects:
+                            raise DerivTransportError(
+                                "R100_PUBLIC_TRANSPORT_RECONNECT_EXHAUSTED"
+                            ) from reconnect_exc
+                if not recovered:
+                    raise DerivTransportError(
+                        "R100_PUBLIC_TRANSPORT_RECONNECT_EXHAUSTED"
+                    )
+    finally:
+        await stream.aclose()
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
@@ -153,6 +278,11 @@ def initial_state() -> dict[str, Any]:
         "last_run_started_at_utc": None,
         "last_run_completed_at_utc": None,
         "last_price": None,
+        "transport_diagnostics": {
+            "reconnect_attempts_total": 0,
+            "last_run_reconnect_attempts": 0,
+            "last_retryable_error_code": None,
+        },
     }
 
 def load_state(path: Path) -> dict[str, Any]:
@@ -486,6 +616,7 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         "manifest": state["manifest"],
         "observations": rows,
         "quote_observations": state["quote_observations"],
+        "transport_diagnostics": state.get("transport_diagnostics", {}),
     })
     return {
         "schema": "aurelia.r100.prospective_oos.report.v1",
@@ -520,6 +651,7 @@ def evaluation(state: dict[str, Any]) -> dict[str, Any]:
         "capital_authority": False,
         "live_execution": False,
         "archive_hash": archive_hash,
+        "transport_diagnostics": state.get("transport_diagnostics", {}),
         "campaign_complete": campaign_complete,
         "retuning_after_seal": False,
     }
@@ -538,17 +670,27 @@ async def collect_once(state: dict[str, Any]) -> None:
         threshold=1.5,
         cooldown_seconds=30.0,
     )
+    diagnostics = state.setdefault(
+        "transport_diagnostics",
+        {
+            "reconnect_attempts_total": 0,
+            "last_run_reconnect_attempts": 0,
+            "last_retryable_error_code": None,
+        },
+    )
+    if not isinstance(diagnostics, dict):
+        raise ValueError("R100_TRANSPORT_DIAGNOSTICS_INVALID")
+    diagnostics["last_run_reconnect_attempts"] = 0
+    diagnostics["last_retryable_error_code"] = None
+
     await transport.connect()
-    stream = transport.subscribe("ticks:R_100", {"ticks": SYMBOL})
-    iterator = stream.__aiter__()
     deadline = asyncio.get_running_loop().time() + COLLECTION_SECONDS
     try:
-        while asyncio.get_running_loop().time() < deadline:
-            remaining = deadline - asyncio.get_running_loop().time()
-            try:
-                message = await asyncio.wait_for(iterator.__anext__(), timeout=max(1.0, remaining))
-            except asyncio.TimeoutError:
-                break
+        async for message in iter_public_r100_ticks(
+            transport,
+            deadline=deadline,
+            diagnostics=diagnostics,
+        ):
             tick = message.get("tick") or {}
             try:
                 quote = float(tick["quote"])

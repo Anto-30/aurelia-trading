@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterator as AsyncIteratorABC
+from typing import Any, AsyncIterator, get_origin
+
 import asyncio
 import json
 import os
@@ -273,6 +276,182 @@ class R100ProspectiveCollectorTest(unittest.TestCase):
 
     def test_horizon_is_positive(self):
         self.assertGreater(HORIZON_TICKS, 0)
+
+
+
+
+
+class R100PublicTransportRecoveryTests(unittest.IsolatedAsyncioTestCase):
+    @staticmethod
+    def tick(quote: float, epoch: int) -> dict[str, Any]:
+        return {"tick": {"quote": quote, "epoch": epoch}}
+
+    async def test_reader_failure_reconnects_and_resumes_public_tick_stream(self):
+        from runtime.adapters.deriv_ws import DerivTransportError
+        from research.r100_prospective_oos_collector import iter_public_r100_ticks
+
+        class FakeTransport:
+            def __init__(self):
+                self.subscribe_calls = 0
+                self.reconnect_calls = 0
+
+            def subscribe(self, key, payload):
+                self.subscribe_calls += 1
+                call = self.subscribe_calls
+
+                async def stream():
+                    if call == 1:
+                        yield R100PublicTransportRecoveryTests.tick(100.0, 1)
+                        raise DerivTransportError(
+                            "{'code': 'TRANSPORT_READER_FAILED', "
+                            "'transport_error_class': 'ConnectionResetError'}"
+                        )
+                    yield R100PublicTransportRecoveryTests.tick(100.1, 2)
+                    await asyncio.sleep(1)
+
+                return stream()
+
+            async def reconnect(self):
+                self.reconnect_calls += 1
+
+        transport = FakeTransport()
+        diagnostics = {"reconnect_attempts_total": 0}
+        deadline = asyncio.get_running_loop().time() + 0.05
+        messages = [
+            message
+            async for message in iter_public_r100_ticks(
+                transport,
+                deadline=deadline,
+                diagnostics=diagnostics,
+                max_reconnects=2,
+                backoff_seconds=0,
+            )
+        ]
+
+        self.assertEqual(len(messages), 2)
+        self.assertEqual(transport.subscribe_calls, 2)
+        self.assertEqual(transport.reconnect_calls, 1)
+        self.assertEqual(diagnostics["last_run_reconnect_attempts"], 1)
+        self.assertEqual(diagnostics["reconnect_attempts_total"], 1)
+        self.assertEqual(
+            diagnostics["last_retryable_error_code"],
+            "TRANSPORT_READER_FAILED",
+        )
+
+    async def test_reconnect_attempts_are_bounded_when_reader_keeps_failing(self):
+        from runtime.adapters.deriv_ws import DerivTransportError
+        from research.r100_prospective_oos_collector import iter_public_r100_ticks
+
+        class FailingTransport:
+            def __init__(self):
+                self.subscribe_calls = 0
+                self.reconnect_calls = 0
+
+            def subscribe(self, key, payload):
+                self.subscribe_calls += 1
+
+                async def stream():
+                    raise DerivTransportError(
+                        "{'code': 'TRANSPORT_READER_FAILED'}"
+                    )
+                    yield {}
+
+                return stream()
+
+            async def reconnect(self):
+                self.reconnect_calls += 1
+
+        transport = FailingTransport()
+        with self.assertRaisesRegex(DerivTransportError, "TRANSPORT_READER_FAILED"):
+            async for _ in iter_public_r100_ticks(
+                transport,
+                deadline=asyncio.get_running_loop().time() + 1.0,
+                max_reconnects=2,
+                backoff_seconds=0,
+            ):
+                pass
+
+        self.assertEqual(transport.reconnect_calls, 2)
+        self.assertEqual(transport.subscribe_calls, 3)
+
+    async def test_stalled_reconnect_is_cancelled_at_collection_deadline(self):
+        from runtime.adapters.deriv_ws import DerivTransportError
+        from research.r100_prospective_oos_collector import iter_public_r100_ticks
+
+        class HangingReconnectTransport:
+            def __init__(self):
+                self.reconnect_calls = 0
+                self.reconnect_cancelled = False
+
+            def subscribe(self, key, payload):
+                async def stream():
+                    raise DerivTransportError(
+                        "{'code': 'TRANSPORT_READER_FAILED'}"
+                    )
+                    yield {}
+
+                return stream()
+
+            async def reconnect(self):
+                self.reconnect_calls += 1
+                try:
+                    await asyncio.Event().wait()
+                finally:
+                    self.reconnect_cancelled = True
+
+        transport = HangingReconnectTransport()
+        deadline = asyncio.get_running_loop().time() + 0.03
+        with self.assertRaisesRegex(
+            DerivTransportError,
+            "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED",
+        ):
+            async for _ in iter_public_r100_ticks(
+                transport,
+                deadline=deadline,
+                max_reconnects=3,
+                backoff_seconds=0,
+            ):
+                pass
+
+        self.assertEqual(transport.reconnect_calls, 1)
+        self.assertTrue(transport.reconnect_cancelled)
+
+    async def test_return_annotation_resolves_async_iterator_type(self):
+        from typing import get_type_hints
+        from research.r100_prospective_oos_collector import iter_public_r100_ticks
+
+        resolved = get_type_hints(iter_public_r100_ticks)
+        self.assertIn("return", resolved)
+        self.assertIs(get_origin(resolved["return"]), AsyncIteratorABC)
+
+    async def test_non_transport_errors_are_not_retried(self):
+        from runtime.adapters.deriv_ws import DerivTransportError
+        from research.r100_prospective_oos_collector import iter_public_r100_ticks
+
+        class NonRetryableTransport:
+            def __init__(self):
+                self.reconnect_calls = 0
+
+            def subscribe(self, key, payload):
+                async def stream():
+                    raise DerivTransportError("DERIV_API_REQUEST_REJECTED")
+                    yield {}
+
+                return stream()
+
+            async def reconnect(self):
+                self.reconnect_calls += 1
+
+        transport = NonRetryableTransport()
+        with self.assertRaisesRegex(DerivTransportError, "DERIV_API_REQUEST_REJECTED"):
+            async for _ in iter_public_r100_ticks(
+                transport,
+                deadline=asyncio.get_running_loop().time() + 1.0,
+                max_reconnects=3,
+                backoff_seconds=0,
+            ):
+                pass
+        self.assertEqual(transport.reconnect_calls, 0)
 
 
 if __name__ == "__main__":
