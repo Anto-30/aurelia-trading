@@ -18,9 +18,10 @@ class FakeWebSocket:
     async def send(self, raw):
         payload = json.loads(raw)
         self.sent.append(payload)
-        await self.incoming.put(
-            json.dumps({"req_id": payload["req_id"], "msg_type": "ping"})
-        )
+        if payload.get("ping") == 1:
+            await self.incoming.put(
+                json.dumps({"req_id": payload["req_id"], "msg_type": "ping"})
+            )
 
     async def recv(self):
         if self.reader_error.is_set():
