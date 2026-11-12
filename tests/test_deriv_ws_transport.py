@@ -86,6 +86,38 @@ class DerivWebSocketKeepaliveTests(unittest.IsolatedAsyncioTestCase):
             )
             await transport.close()
 
+    async def test_reader_failure_notifies_subscriber_with_safe_exception_class(self):
+        socket = FakeWebSocket()
+        with patch(
+            "runtime.adapters.deriv_ws.connect",
+            new=AsyncMock(return_value=socket),
+        ):
+            transport = DerivWebSocketTransport(
+                "wss://api.derivws.com/trading/v1/options/ws/public",
+            )
+            await transport.connect()
+            stream = transport.subscribe("ticks:R_100", {"ticks": "R_100"})
+            pending = asyncio.create_task(stream.__anext__())
+            try:
+                await asyncio.sleep(0.01)
+                socket.break_reader()
+                with self.assertRaises(DerivTransportError) as caught:
+                    await asyncio.wait_for(pending, timeout=0.5)
+
+                message = str(caught.exception)
+                self.assertIn("TRANSPORT_READER_FAILED", message)
+                self.assertIn("ConnectionResetError", message)
+                self.assertNotIn("SYNTHETIC_PRIVATE_TRANSPORT_DETAIL", message)
+            finally:
+                if not pending.done():
+                    pending.cancel()
+                    try:
+                        await pending
+                    except asyncio.CancelledError:
+                        pass
+                await stream.aclose()
+                await transport.close()
+
     async def test_request_ids_reject_booleans(self):
         transport = DerivWebSocketTransport(
             "wss://api.derivws.com/trading/v1/options/ws/public"
