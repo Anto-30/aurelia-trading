@@ -202,15 +202,22 @@ fi
 
 sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"
 
+# Confirm the Docker daemon is responsive before deciding whether the
+# existing container is absent. A failed inspect alone is ambiguous when the
+# daemon is unavailable; fail closed rather than masking that condition.
+sudo docker info >/dev/null
+
+if sudo docker inspect "$CONTAINER" >/dev/null 2>&1; then
+  # Do not suppress removal errors. Under set -e, a failed stop/removal aborts
+  # deployment and preserves the retired credential file for safe recovery.
+  sudo docker rm -f "$CONTAINER"
+fi
+
 # Revoke the retired credential-bearing VERIFY_ONLY store only after the
-# candidate image built successfully. Never stop the running container while
-# validating or building a candidate; the replacement happens exactly once
-# below, immediately before the new container is started.
+# candidate image has built and the previous container has been removed.
 if [ -f "$READONLY_SECRET_FILE" ]; then
   sudo rm -f "$READONLY_SECRET_FILE"
 fi
-
-sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 
 sudo docker run --detach \
   --name "$CONTAINER" \
