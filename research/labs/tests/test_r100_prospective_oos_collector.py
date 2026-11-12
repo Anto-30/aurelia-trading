@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import asyncio
 import json
 import os
@@ -329,7 +331,7 @@ class R100PublicTransportRecoveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(transport.subscribe_calls, 2)
         self.assertEqual(transport.reconnect_calls, 1)
         self.assertEqual(diagnostics["last_run_reconnect_attempts"], 1)
-        self.assertEqual(diagnostics["total_reconnect_attempts"], 1)
+        self.assertEqual(diagnostics["reconnect_attempts_total"], 1)
         self.assertEqual(
             diagnostics["last_retryable_error_code"],
             "TRANSPORT_READER_FAILED",
