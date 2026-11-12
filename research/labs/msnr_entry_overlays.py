@@ -22,7 +22,8 @@ from research.labs.deterministic_intraday_strategies import (
 OverlayVariant = Literal["V0_BASELINE", "V1_DISPLACEMENT_CLOSE", "V2_FVG_RETRACE"]
 OverlayStatus = Literal[
     "FILLED_PROXY", "NO_POST_SIGNAL_BAR", "NO_DISPLACEMENT",
-    "NO_FVG", "NO_RETRACE_WITHIN_WINDOW", "GAP_THROUGH_ZONE", "PENDING_RETRACE",
+    "NO_FVG", "PENDING_DISPLACEMENT_WINDOW", "PENDING_RETRACE_WINDOW",
+    "NO_RETRACE_WITHIN_WINDOW", "GAP_THROUGH_ZONE", "PENDING_RETRACE",
 ]
 
 
@@ -226,15 +227,17 @@ def build_msnr_entry_overlays(
 
         displacement_index = _displacement(bars, signal_index, config, direction)
         if displacement_index is None:
+            window_complete = len(bars) >= signal_index + 1 + config.max_bars_after_signal
+            status: OverlayStatus = "NO_DISPLACEMENT" if window_complete else "PENDING_DISPLACEMENT_WINDOW"
+            reason = ("NO_ALIGNED_BODY_THRESHOLD_WITHIN_COMPLETE_SEARCH_WINDOW"
+                      if window_complete else "INSUFFICIENT_FUTURE_BARS_TO_CLOSE_DISPLACEMENT_WINDOW")
             output.append(EntryOverlayEvent(
-                **common, variant="V1_DISPLACEMENT_CLOSE", status="NO_DISPLACEMENT",
-                entry_timestamp_utc=None, entry_price_proxy=None,
-                reason="NO_ALIGNED_BODY_THRESHOLD_WITHIN_SEARCH_WINDOW",
+                **common, variant="V1_DISPLACEMENT_CLOSE", status=status,
+                entry_timestamp_utc=None, entry_price_proxy=None, reason=reason,
             ))
             output.append(EntryOverlayEvent(
-                **common, variant="V2_FVG_RETRACE", status="NO_DISPLACEMENT",
-                entry_timestamp_utc=None, entry_price_proxy=None,
-                reason="NO_ALIGNED_BODY_THRESHOLD_WITHIN_SEARCH_WINDOW",
+                **common, variant="V2_FVG_RETRACE", status=status,
+                entry_timestamp_utc=None, entry_price_proxy=None, reason=reason,
             ))
             continue
 
