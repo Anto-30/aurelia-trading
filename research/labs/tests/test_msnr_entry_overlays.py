@@ -97,7 +97,7 @@ class MSNREntryOverlayTests(unittest.TestCase):
                                       max_bars_after_signal=5, max_retrace_bars_after_displacement=2),
         )
         v2 = next(e for e in events if e.variant == "V2_FVG_RETRACE")
-        self.assertEqual(v2.status, "PENDING_RETRACE_WINDOW")
+        self.assertEqual(v2.status, "PENDING_RETRACE")
         self.assertIsNone(v2.entry_price_proxy)
 
     def test_completed_retrace_window_records_a_miss(self):

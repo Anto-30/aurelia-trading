@@ -22,7 +22,7 @@ from research.labs.deterministic_intraday_strategies import (
 OverlayVariant = Literal["V0_BASELINE", "V1_DISPLACEMENT_CLOSE", "V2_FVG_RETRACE"]
 OverlayStatus = Literal[
     "FILLED_PROXY", "NO_POST_SIGNAL_BAR", "NO_DISPLACEMENT",
-    "NO_FVG", "PENDING_DISPLACEMENT_WINDOW", "PENDING_RETRACE_WINDOW",
+    "NO_FVG", "PENDING_DISPLACEMENT_WINDOW",
     "NO_RETRACE_WITHIN_WINDOW", "GAP_THROUGH_ZONE", "PENDING_RETRACE",
 ]
 
