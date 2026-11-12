@@ -1,0 +1,114 @@
+{
+  "schema": "aurelia.external_repository_agent_assignments_addendum.v1",
+  "reviewed_date": "2026-11-11",
+  "source_registry": "config/external_tool_intake_2026-11-11_addendum_02.json",
+  "policy": "Assignments route review work only. They do not install/connect agents, grant credentials, authorize code execution, or confer capital/release authority.",
+  "assignments": [
+    {
+      "repository": "anandanand84/technicalindicators",
+      "primary": "KimiK3",
+      "reviewers": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "task": "Compare indicator formulas against independently specified AURELIA research definitions; explicitly test volume assumptions and legacy dependency compatibility."
+    },
+    {
+      "repository": "whchien/ai-trader",
+      "primary": "KimiK3",
+      "reviewers": [
+        "ClaudeCode",
+        "GrokBot",
+        "JEV",
+        "ChatGPT"
+      ],
+      "task": "Review GPL-3.0 implications, data provenance, Backtrader assumptions, no-lookahead controls, cost modelling and MCP permissions; research only."
+    },
+    {
+      "repository": "meta/astryx",
+      "primary": "GLM",
+      "reviewers": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "task": "Document design-system scope and confirm no AURELIA trading-runtime adoption is justified."
+    },
+    {
+      "repository": "vercel-labs/agent-browser",
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "PlaywrightCLI",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "task": "Audit native launcher, postinstall/browser downloads, filesystem/network access and auth-vault boundaries; test only in disposable browser sandbox."
+    },
+    {
+      "repository": "shadcn/improve",
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "task": "Inspect complete skill prompt, licensing, agent dispatch, worktree and GitHub issue write paths before deciding whether to adopt."
+    },
+    {
+      "repository": "addyosmani/agent-skills",
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "GoogleAgentSkills",
+        "JEV",
+        "GrokBot"
+      ],
+      "task": "Selectively review skill prompts, command hooks and /build auto or /ship execution/release boundaries; no bulk install."
+    },
+    {
+      "repository": "openai/codex-security",
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "GoogleAgentSkills",
+        "JEV",
+        "ChatGPT"
+      ],
+      "task": "Evaluate scanner source, CLI/SDK/GitHub Action permissions, API-key handling, source upload/retention and report integrity in a controlled test repository."
+    },
+    {
+      "repository": "TheAlgorithms/Java",
+      "primary": "KimiK3",
+      "reviewers": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "task": "Use as educational reference only; mathematically specify and independently test any algorithm concept before considering implementation."
+    },
+    {
+      "repository": "penvhq/penv-run",
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "task": "Complete source audit of OIDC acquisition, secret delivery, child process environment, file delivery, revocation, same-job threat model and tests; do not modify workflows."
+    }
+  ],
+  "agent_status_constraints": {
+    "Dev": "NOT_CONNECTED",
+    "DeepSeekHarness": "NOT_CONNECTED",
+    "Hermes": "NOT_CONNECTED",
+    "ChatGPT": "CURRENT_SESSION_ONLY",
+    "AURELIA": "SOLE_CANONICAL_POLICY_RISK_CAPITAL_AND_EXECUTION_AUTHORITY"
+  },
+  "universal_denials": {
+    "production_secrets": false,
+    "penv_secret_delivery": false,
+    "deriv_credentials": false,
+    "broker_access": false,
+    "order_submission": false,
+    "capital_authority": false,
+    "live_lock_mutation": false,
+    "production_deployment": false,
+    "agent_self_approval": false
+  }
+}

@@ -1,0 +1,293 @@
+{
+  "schema": "aurelia.external_tool_intake.v1",
+  "duplicate_url_count": 3,
+  "unique_repository_count": 17,
+  "source_head_policy": "The SHA is a snapshot of the default-branch latest commit returned by GitHub at review time. A SHA pin is provenance, not a safety endorsement.",
+  "installation_policy": "No upstream source is copied into the capital or execution plane. Only the explicit Ruff development dependency and AURELIA-authored Claude Code skills are added by this PR.",
+  "global_controls": {
+    "external_code_execution": "DENY_BY_DEFAULT",
+    "production_secret_access": false,
+    "broker_access": false,
+    "live_order_authority": false,
+    "capital_authority": false,
+    "live_lock_mutation": false,
+    "production_deployment_authority": false,
+    "agent_self_approval": false
+  },
+  "canonical_assignment_source": "config/agent_tool_skill_assignment.json",
+  "canonical_capability_source": "config/agent_capability_matrix.json",
+  "canonical_repository_federation": "config/external_repo_federation.json",
+  "claude_skill_paths": [
+    ".claude/skills/aurelia-systematic-debugging/SKILL.md",
+    ".claude/skills/aurelia-evidence-engineering/SKILL.md"
+  ],
+  "runtimes": {
+    "ClaudeCode": "PRIMARY_IMPLEMENTATION; uses repository-local CLAUDE.md and .claude/skills when this repository is opened. This PR does not install Claude Code on another device.",
+    "QwenCode": "SECONDARY_DEVELOPER_REVIEW; optional isolated workstation/sandbox only; not connected by this change.",
+    "OpenInterpreter": "SANDBOX_EVALUATION_ONLY; not connected or installed.",
+    "DeepSeekHarness": "PROPOSED_ADVERSARIAL_TEST_DESIGN; NOT_CONNECTED_IN_CURRENT_SESSION.",
+    "Hermes": "PROPOSED_READ_ONLY_OPERATIONS_AND_COORDINATION; NOT_CONNECTED_IN_CURRENT_SESSION.",
+    "ChatGPT": "CURRENT_SESSION_SUPERVISORY_REVIEW; no persistent worker is created."
+  },
+  "repositories": [
+    {
+      "repo": "anthropics/skills",
+      "url": "https://github.com/anthropics/skills",
+      "head_commit": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "category": "official-agent-skills-reference",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "ADOPT_PATTERN",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "use": "AURELIA-authored skills are saved under .claude/skills; review Anthropic's skill format and documentation.",
+      "controls": [
+        "No bulk install",
+        "No unreviewed scripts",
+        "No production secrets in skill context"
+      ]
+    },
+    {
+      "repo": "wddadk/Offensive-OSINT-Tools",
+      "url": "https://github.com/wddadk/Offensive-OSINT-Tools",
+      "head_commit": "2097cdcfa56862530b8efc5b800b35a552988a9a",
+      "category": "offensive-osint-tool-catalogue",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "REJECT_RUNTIME_INSTALL",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "use": "Catalogue review only; any security use requires explicit authorization and asset scope."
+    },
+    {
+      "repo": "openinterpreter/openinterpreter",
+      "url": "https://github.com/openinterpreter/openinterpreter",
+      "head_commit": "d4ede77b15f664dc9fa71cc2b122add793f40523",
+      "category": "computer-use-and-code-execution-agent",
+      "mode": "SANDBOX_ONLY",
+      "disposition": "NO_INSTALL_EVALUATE_ONLY",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "use": "Optional isolated developer experiment; do not run on production host or with authenticated browser/broker context.",
+      "license_observed": "Apache-2.0"
+    },
+    {
+      "repo": "ivopetiz/algotrading",
+      "url": "https://github.com/ivopetiz/algotrading",
+      "head_commit": "73ce60420bd1266c61ab4d25ae260100bd20e0c7",
+      "category": "crypto-exchange-trading-framework",
+      "mode": "RESEARCH_ONLY",
+      "disposition": "REJECT_ENGINE_INTEGRATION",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "use": "Methodology reference only; crypto-exchange semantics do not establish Deriv synthetic-index/options compatibility.",
+      "license_observed": "MIT"
+    },
+    {
+      "repo": "QwenLM/qwen-code",
+      "url": "https://github.com/QwenLM/qwen-code",
+      "head_commit": "37e29fd65681595d6dc66fe629bdb4b3f0bb5073",
+      "category": "coding-agent-cli",
+      "mode": "SANDBOX_ONLY",
+      "disposition": "OPTIONAL_SECONDARY_DEVELOPER_HARNESS",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "GoogleAgentSkills"
+      ],
+      "use": "Secondary code-review and test-generation harness on an isolated workstation. Existing federation record is older; this intake records the current snapshot. No production credentials, autonomous main writes, or capital access.",
+      "license_observed": "Apache-2.0",
+      "duplicate_supplied_url_occurrences": 4
+    },
+    {
+      "repo": "rndinfosecguy/Scavenger",
+      "url": "https://github.com/rndinfosecguy/Scavenger",
+      "head_commit": "50c5096708fff3ca4cfc28b4ffeb8f0c94ba8f4b",
+      "category": "paste-site-credential-osint-scraper",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "REJECT_EXECUTION",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "use": "Do not execute: its described collection includes exposed passwords, tokens, and other secrets. Use authorized secret scanning against owned repositories/assets instead.",
+      "license_observed": "MIT"
+    },
+    {
+      "repo": "agentscope-ai/QwenPaw",
+      "url": "https://github.com/agentscope-ai/QwenPaw",
+      "head_commit": "14b02c597aee1b314f9bd12f8813e01543c3c328",
+      "category": "personal-multi-agent-assistant-runtime",
+      "mode": "SANDBOX_ONLY",
+      "disposition": "NO_PRODUCTION_INSTALL",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "use": "Reference/evaluate in a disposable sandbox only. Duplicates orchestration and tool execution. Skills share the host process trust boundary; no production secrets or broker session.",
+      "license_observed": "Apache-2.0"
+    },
+    {
+      "repo": "Alishahryar1/free-claude-code",
+      "url": "https://github.com/Alishahryar1/free-claude-code",
+      "head_commit": "6f5283a3946e9abcf96487e8cd732db012e41d2f",
+      "category": "multi-harness-provider-router",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "REJECT_INSTALL",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "use": "Do not install or route credentials through it. Current pyproject.toml and LICENSE declare AGPL-3.0-only, and the described architecture adds a multi-provider key/proxy layer."
+    },
+    {
+      "repo": "remorses/playwriter",
+      "url": "https://github.com/remorses/playwriter",
+      "head_commit": "2cae912a9c1e68ae2b74fcaef9efd79b6d7d432f",
+      "category": "authenticated-browser-control",
+      "mode": "SANDBOX_ONLY",
+      "disposition": "NO_AUTHENTICATED_PROFILE",
+      "assigned_agents": [
+        "PlaywrightCLI",
+        "GoogleAgentSkills",
+        "ClaudeCode"
+      ],
+      "use": "Only evaluate with an isolated disposable browser profile and synthetic logins. Never connect a profile holding GitHub, cloud, email, or Deriv production sessions."
+    },
+    {
+      "repo": "sham00n/buster",
+      "url": "https://github.com/sham00n/buster",
+      "head_commit": "131437e6128b6ad85fa2a9f17ad51311c885b8c2",
+      "category": "email-and-social-osint-tool",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "REJECT_RUNTIME_INSTALL",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "use": "Not relevant to AURELIA trading evidence; privacy-sensitive third-party lookups and API keys provide no justified operational capability."
+    },
+    {
+      "repo": "astral-sh/ruff",
+      "url": "https://github.com/astral-sh/ruff",
+      "head_commit": "9511127d1fc510cf0241e98d254577c66bce54ac",
+      "category": "python-lint-and-format",
+      "mode": "TOOLCHAIN_ONLY",
+      "disposition": "ADOPT_DEV_EXTRA",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "Dev"
+      ],
+      "use": "Pinned development extra only: ruff==0.17.4. Do not include in production Docker image.",
+      "license_observed": "MIT"
+    },
+    {
+      "repo": "astral-sh/ruff-vscode",
+      "url": "https://github.com/astral-sh/ruff-vscode",
+      "head_commit": "fea5b4a7930217289dadb7c02e38cf088108551c",
+      "category": "vscode-python-lint-extension",
+      "mode": "TOOLCHAIN_ONLY",
+      "disposition": "OPTIONAL_WORKSTATION_EXTENSION",
+      "assigned_agents": [
+        "ClaudeCode",
+        "Dev"
+      ],
+      "use": "Optional IDE extension on a developer workstation; no runtime dependency.",
+      "license_observed": "MIT"
+    },
+    {
+      "repo": "ruffle-rs/ruffle-android",
+      "url": "https://github.com/ruffle-rs/ruffle-android",
+      "head_commit": "17a0ad21b21ee966485e4438161c32d13516d9e4",
+      "category": "android-flash-emulator-frontend",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "REJECT_NAME_COLLISION",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV"
+      ],
+      "use": "Unrelated to Astral Ruff or AURELIA Python tooling."
+    },
+    {
+      "repo": "astral-sh/ruff-action",
+      "url": "https://github.com/astral-sh/ruff-action",
+      "head_commit": "cad90505e97e3a2df722b6e87ba8ae976b267c32",
+      "category": "github-action-wrapper-for-ruff",
+      "mode": "TOOLCHAIN_ONLY",
+      "disposition": "DEFER_ACTION_ADOPTION",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "use": "Ruff CLI is adopted first. Before action usage, independently review and pin the immutable full commit SHA in the workflow."
+    },
+    {
+      "repo": "ghostty-org/ghostty",
+      "url": "https://github.com/ghostty-org/ghostty",
+      "head_commit": "393a3a7c7d6a00e34072d3936e0373451408ca6f",
+      "category": "terminal-emulator",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "OPTIONAL_WORKSTATION_ONLY",
+      "assigned_agents": [
+        "Dev",
+        "ClaudeCode"
+      ],
+      "use": "Optional developer desktop terminal; do not install on AURELIA runtime hosts.",
+      "license_observed": "MIT"
+    },
+    {
+      "repo": "ghostfolio/ghostfolio",
+      "url": "https://github.com/ghostfolio/ghostfolio",
+      "head_commit": "7bf71c641a44852e00954f09747955267853a416",
+      "category": "portfolio-tracking-application",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "REJECT_EMBEDDING",
+      "assigned_agents": [
+        "KimiK3",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "use": "Separate portfolio product; not a Deriv execution or risk component. Current repository files declare AGPL-3.0-only.",
+      "license_observed": "AGPL-3.0-only"
+    },
+    {
+      "repo": "HowToFind-bot/osint-tools",
+      "url": "https://github.com/HowToFind-bot/osint-tools",
+      "head_commit": "9a0a0db8d67b42207fb5ea1fbc0d34d491aa6daa",
+      "category": "osint-repository-catalogue",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "REJECT_RUNTIME_INSTALL",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "use": "Directory of third-party tools, not a single auditable dependency. Review and license any individual tool separately if a legitimate, scoped need arises."
+    }
+  ],
+  "acceptance": {
+    "ruff_dev_dependency_added": true,
+    "anthropic_skill_pattern_applied_as_local_skills": true,
+    "claude_project_instructions_updated": true,
+    "agent_contract_updated": true,
+    "external_agent_runtime_installation": false,
+    "production_dependency_changes": false,
+    "capital_boundary_changes": false
+  },
+  "reviewed_date": "2026-11-09"
+}

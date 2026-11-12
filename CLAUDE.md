@@ -22,3 +22,31 @@ Use `GOALS.md` as the goal and acceptance contract for the ChatGPT + Claude Code
 ## LiteLLM / agent-gateway federation
 
 Before using any LiteLLM-related source, consult `docs/AURELIA_LLM_GATEWAY_INTEGRATION_GUIDE.md`, `config/external_repo_federation.json`, and `config/agent_skill_federation.json`. These sources are pinned references, not proof of installation. Review the upstream security advisories before any deployment. Do not route Deriv tokens, account credentials, production-host secrets, or any capital-plane context through a third-party LLM gateway. Do not change `config/LIVE_LOCK.yaml` or execution gates.
+
+
+## AURELIA evidence and system-debugging guardrails
+
+For system remediation, use the repository-local skills:
+- `.claude/skills/aurelia-systematic-debugging/SKILL.md`
+- `.claude/skills/aurelia-evidence-engineering/SKILL.md`
+
+Treat `docs/engineering/EXTERNAL_TOOL_ADOPTION.md` and `config/external_tool_intake_2026-11-09.json` as the reviewed intake record for the additional repositories supplied on 2026-11-09. The intake does not install or authorize every source. Follow each entry's adoption status and assigned roles.
+
+All external executables and agents remain denied by default. Qwen Code and Open Interpreter are sandbox/developer references only; do not run them on a production host or against a signed-in broker/browser session. Keep paste-site OSINT collectors out of the project. Use Ruff only through the pinned development extra, never in the production image.
+
+Do not claim DeepSeek, Hermes, Qwen Code, Open Interpreter, or another agent has been installed, connected, or run unless the device/runtime identity and its attributable execution record are verified. The canonical agent matrix is in `config/agent_tool_skill_assignment.json`; this change adds repository-local task guidance, not external accounts or persistent workers.
+
+
+## 2026-11-11 external repository intake
+
+Before using repositories supplied on 2026-11-11, read docs/engineering/EXTERNAL_TOOL_ADOPTION_2026-11-11.md, config/external_tool_intake_2026-11-11.json and config/external_repository_agent_assignments_2026-11-11.json. Use the existing AURELIA debugging/evidence skills. No upstream package, agent, hook, plugin or executable is installed by this intake. Follow each disposition and installation gate. No secrets, broker access, order/capital authority, LIVE_LOCK mutation or production deployment.
+
+
+## 2026-11-11 external repository intake — batch 2
+
+Before using sources in the second 2026-11-11 batch, read `docs/engineering/EXTERNAL_TOOL_ADOPTION_2026-11-11_ADDENDUM_02.md`, `config/external_tool_intake_2026-11-11_addendum_02.json` and `config/external_repository_agent_assignments_2026-11-11_addendum_02.json`. The duplicate `penvhq/penv-run` workflow reference is one logical candidate and is not approved for workflow use. Follow pinned commit and per-source disposition; do not install, execute or grant secrets until the complete source audit and independent gates pass. No Penv, Deriv, broker, production secret, order, capital, LIVE_LOCK or deployment authority is granted.
+
+
+## 2026-11-11 targeted source audit
+
+Consult `docs/engineering/EXTERNAL_TOOL_AUDIT_STATUS_2026-11-11.md` and the `audit_status` section of `config/external_tool_intake_2026-11-11_addendum_02.json` before enabling any second-batch source. This is a targeted review, not security certification: no SBOM or dynamic sandbox tests have been produced. Penv is rejected for AURELIA CI secret delivery; Codex Security requires approved data-processing policy; browser automation remains isolated-profile-only. Keep all AURELIA capital, broker, secret, LIVE_LOCK and release boundaries unchanged.

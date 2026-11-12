@@ -1,0 +1,131 @@
+{
+  "schema": "aurelia.external_repository_agent_assignments.v1",
+  "reviewed_date": "2026-11-11",
+  "source_registry": "config/external_tool_intake_2026-11-11.json",
+  "policy": "Assignments route work only; they do not install, connect, authorize or grant credentials.",
+  "assignments": [
+    {
+      "repository": "janestreet/agent_skills",
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "ChatGPT",
+        "GLM"
+      ],
+      "task": "Review the single Socratic tutor skill as reference material; no engineering capability or install required."
+    },
+    {
+      "repository": "openinterpreter/openinterpreter",
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "GoogleAgentSkills",
+        "JEV",
+        "PlaywrightCLI"
+      ],
+      "task": "Evaluate command-execution harness in a disposable sandbox; inspect MCP/ACP and browser/native QA boundaries."
+    },
+    {
+      "repository": "mvanhorn/last30days-skill",
+      "primary": "GrokBot",
+      "reviewers": [
+        "ChatGPT",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "task": "Review multi-source research provenance, shell/file permissions, optional API/browser tokens and egress."
+    },
+    {
+      "repository": "huamidev/GestaltX",
+      "primary": "GoogleAgentSkills",
+      "reviewers": [
+        "JEV",
+        "GLM"
+      ],
+      "task": "Confirm iOS MobileGestalt/device feature-flag scope is unrelated to AURELIA and reject adoption."
+    },
+    {
+      "repository": "lxlynx/ops-toolkit",
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "Dev",
+        "JEV",
+        "GoogleAgentSkills"
+      ],
+      "task": "Inspect Bash/Python host-operation scripts offline; no sudo, remote execution or host mutation by default."
+    },
+    {
+      "repository": "lxlynx/model-router",
+      "primary": "GrokBot",
+      "reviewers": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "task": "Compare deterministic first-match model routing against the existing gateway; no credentials or duplicated capital authority."
+    },
+    {
+      "repository": "rndinfosecguy/Scavenger",
+      "primary": "GoogleAgentSkills",
+      "reviewers": [
+        "JEV"
+      ],
+      "task": "Maintain rejection; do not clone/run paste-site credential harvesting or ingest exposed credentials."
+    },
+    {
+      "repository": "opensandbox-group/OpenSandbox",
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "GoogleAgentSkills",
+        "JEV",
+        "Dev",
+        "PlaywrightCLI"
+      ],
+      "task": "Evaluate sandbox architecture, egress, image provenance, Credential Vault, privilege boundaries and escape risks; no deployment."
+    },
+    {
+      "repository": "bhavsec/reconspider",
+      "primary": "GoogleAgentSkills",
+      "reviewers": [
+        "JEV"
+      ],
+      "task": "Maintain install rejection; review privileged installer and broad OSINT/API-key risks without execution."
+    },
+    {
+      "repository": "affaan-m/ECC",
+      "primary": "ClaudeCode",
+      "reviewers": [
+        "GoogleAgentSkills",
+        "JEV",
+        "GrokBot"
+      ],
+      "task": "Review individual skills/hooks only; no bulk installation of agents, memory or commands."
+    },
+    {
+      "repository": "lxlynx/eval-harness",
+      "primary": "KimiK3",
+      "reviewers": [
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "task": "Evaluate deterministic agent-output scoring on synthetic cases only; not a financial backtester."
+    }
+  ],
+  "agent_status_constraints": {
+    "Dev": "NOT_CONNECTED",
+    "DeepSeekHarness": "NOT_CONNECTED",
+    "Hermes": "NOT_CONNECTED",
+    "ChatGPT": "CURRENT_SESSION_ONLY",
+    "AURELIA": "CANONICAL_POLICY_AND_CAPITAL_AUTHORITY"
+  },
+  "universal_denials": {
+    "production_secrets": false,
+    "deriv_credentials": false,
+    "broker_access": false,
+    "order_submission": false,
+    "capital_authority": false,
+    "live_lock_mutation": false,
+    "production_deployment": false,
+    "agent_self_approval": false
+  }
+}

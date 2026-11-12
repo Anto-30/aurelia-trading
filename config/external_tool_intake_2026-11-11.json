@@ -1,0 +1,223 @@
+{
+  "schema": "aurelia.external_tool_intake_increment.v1",
+  "reviewed_date": "2026-11-11",
+  "parent_intake": "config/external_tool_intake_2026-11-09.json",
+  "requested_repository_count": 11,
+  "new_unique_repository_count": 9,
+  "duplicates_existing": [
+    "openinterpreter/openinterpreter",
+    "rndinfosecguy/Scavenger"
+  ],
+  "source_head_policy": "Most recent commit returned by GitHub commit search at review time; a SHA pin is provenance, not a safety attestation.",
+  "global_controls": {
+    "external_code_execution": "DENY_BY_DEFAULT",
+    "production_secret_access": false,
+    "broker_access": false,
+    "live_order_authority": false,
+    "capital_authority": false,
+    "live_lock_mutation": false,
+    "production_deployment_authority": false,
+    "agent_self_approval": false
+  },
+  "canonical_assignment_source": "config/agent_tool_skill_assignment.json",
+  "repositories": [
+    {
+      "repo": "janestreet/agent_skills",
+      "url": "https://github.com/janestreet/agent_skills",
+      "head_commit": "7c6715c29548a3b39d4a9545c698ee4fd17a7213",
+      "license_observed": "MIT reported by metadata; LICENSE file not found",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "DO_NOT_INSTALL",
+      "use": "One Socratic tutor skill; not an AURELIA engineering capability.",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "GLM"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "openinterpreter/openinterpreter",
+      "url": "https://github.com/openinterpreter/openinterpreter",
+      "head_commit": "80d8f55385452457a625dbabc032f3003b9545b4",
+      "license_observed": "Apache-2.0",
+      "mode": "SANDBOX_ONLY",
+      "disposition": "DEFER_INSTALL_EVALUATE_ONLY",
+      "use": "Command-execution agent harness with MCP/ACP and browser/native QA.",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "PlaywrightCLI"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "mvanhorn/last30days-skill",
+      "url": "https://github.com/mvanhorn/last30days-skill",
+      "head_commit": "c58041cc415ee5bc3ac3ed0da73cd925330f81ba",
+      "license_observed": "MIT",
+      "mode": "SANDBOX_ONLY",
+      "disposition": "DEFER_INSTALL_RESEARCH_ONLY",
+      "use": "Multi-source recent research skill; Bash/Read/Write/WebSearch and optional API/browser tokens.",
+      "assigned_agents": [
+        "GrokBot",
+        "ChatGPT",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "huamidev/GestaltX",
+      "url": "https://github.com/huamidev/GestaltX",
+      "head_commit": "144c0c44a762db616089faddfbc0581929ae1a0a",
+      "license_observed": "GPL-3.0",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "REJECT_AURELIA_ADOPTION",
+      "use": "iOS MobileGestalt editor and device feature-flag modifier; unrelated to trading.",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "JEV",
+        "GLM"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "lxlynx/ops-toolkit",
+      "url": "https://github.com/lxlynx/ops-toolkit",
+      "head_commit": "39bb8ec47b2a367b644002cc5d38b5bf9216841f",
+      "license_observed": "MIT",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "CANDIDATE_AFTER_SCRIPT_AUDIT",
+      "use": "Three standalone Bash/Python host-operation scripts.",
+      "assigned_agents": [
+        "ClaudeCode",
+        "Dev",
+        "JEV",
+        "GoogleAgentSkills"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "lxlynx/model-router",
+      "url": "https://github.com/lxlynx/model-router",
+      "head_commit": "80ba22fb777e0aaf4092942bfc7e8e5bf598ee8c",
+      "license_observed": "MIT",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "RESEARCH_CANDIDATE_NO_GATEWAY_INSTALL",
+      "use": "Python standard-library ordered first-match model router with explainable decisions.",
+      "assigned_agents": [
+        "GrokBot",
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "rndinfosecguy/Scavenger",
+      "url": "https://github.com/rndinfosecguy/Scavenger",
+      "head_commit": "e25fee79f46451d71bc8e1a65b0a939e260c88c5",
+      "license_observed": "MIT",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "REJECT_EXECUTION_PRIOR_REJECTION_RECONFIRMED",
+      "use": "Paste-site crawler explicitly collects email/password pairs and exposed API secrets; prior rejection reaffirmed.",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "opensandbox-group/OpenSandbox",
+      "url": "https://github.com/opensandbox-group/OpenSandbox",
+      "head_commit": "bea3992e260cb866408c4b59ff8f89c0fdacf8ee",
+      "license_observed": "Apache-2.0",
+      "mode": "SANDBOX_ONLY",
+      "disposition": "PRIORITY_ARCHITECTURE_EVALUATION_NO_DEPLOYMENT",
+      "use": "Docker/Kubernetes sandbox API, SDKs, MCP, egress controls and Credential Vault.",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "Dev",
+        "PlaywrightCLI"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "bhavsec/reconspider",
+      "url": "https://github.com/bhavsec/reconspider",
+      "head_commit": "5dae8c16b2845b5ccb73aba93e333fe308b0754a",
+      "license_observed": "GPL-3.0",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "REJECT_INSTALL",
+      "use": "Legacy broad OSINT utility; privileged setup.py installer and multiple API keys; last surfaced commit 2021-08-19.",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "affaan-m/ECC",
+      "url": "https://github.com/affaan-m/ECC",
+      "head_commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+      "license_observed": "MIT",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "SELECTIVE_SKILL_REVIEW_NO_BULK_INSTALL",
+      "use": "Large agent harness; README claims 71 agents, 314 skills, hooks, memory and commands.",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV",
+        "GrokBot"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    },
+    {
+      "repo": "lxlynx/eval-harness",
+      "url": "https://github.com/lxlynx/eval-harness",
+      "head_commit": "2a73972c6af2cb2b302e7571d0bed91ab2c97fd5",
+      "license_observed": "MIT",
+      "mode": "REFERENCE_ONLY",
+      "disposition": "CANDIDATE_OFFLINE_AGENT_EVALUATION",
+      "use": "Deterministic Python output scoring; README diff claim conflicts with TODO roadmap.",
+      "assigned_agents": [
+        "KimiK3",
+        "GrokBot",
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "production_secret_access": false
+    }
+  ],
+  "acceptance": {
+    "all_requested_registered": true,
+    "source_heads_pinned": true,
+    "licences_checked_where_available": true,
+    "physical_installation": false,
+    "source_execution": false,
+    "SBOM_or_dynamic_scan": false,
+    "production_dependency_changes": false,
+    "capital_boundary_changes": false
+  },
+  "limitations": [
+    "README/metadata/licence triage only; not a full source audit, SBOM, malware scan, escape test or compatibility test.",
+    "No local Claude Code runtime/device was available to verify physical installation; project instructions are updated in AURELIA.",
+    "OpenInterpreter and OpenSandbox are candidates, not a deployed secure sandbox."
+  ]
+}

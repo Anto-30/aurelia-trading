@@ -1,7 +1,7 @@
 {
   "schema": "aurelia.agent_skill_inventory.v1",
   "generated": "2026-10-04",
-  "total_skills": 497,
+  "total_skills": 499,
   "global_rule": "Every installed skill is catalogued and role-assigned; skills never grant capital authority.",
   "items": [
     {
@@ -5431,6 +5431,32 @@
         "GLM"
       ],
       "capital_authority": false
+    },
+    {
+      "uri": "repo://.claude/skills/aurelia-systematic-debugging/SKILL.md",
+      "description": "AURELIA evidence-first root-cause debugging for runtime, CI, state-machine, adapter, and deployment defects.",
+      "plugin": "local-project",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "ChatGPT",
+        "GrokBot"
+      ],
+      "capital_authority": false,
+      "physical_install": "PROJECT_REPOSITORY_SKILL"
+    },
+    {
+      "uri": "repo://.claude/skills/aurelia-evidence-engineering/SKILL.md",
+      "description": "AURELIA provenance-bound release evidence generation and validation from real research, runtime, soak, recovery, deployment, and security records.",
+      "plugin": "local-project",
+      "assigned_agents": [
+        "ClaudeCode",
+        "JEV",
+        "KimiK3",
+        "ChatGPT"
+      ],
+      "capital_authority": false,
+      "physical_install": "PROJECT_REPOSITORY_SKILL"
     }
   ]
 }
