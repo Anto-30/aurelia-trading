@@ -88,8 +88,6 @@ class MSNREntryOverlayTests(unittest.TestCase):
     def test_missing_retrace_is_explicit_not_silently_dropped(self):
         rows = [bar(i, 100, 100.2, 99.8, 100) for i in range(15)]
         rows.append(bar(15, 101.2, 102, 101, 101.8))
-        rows.append(bar(16, 102.0, 102.2, 101.5, 101.8))
-        rows.append(bar(17, 101.8, 102.1, 101.4, 101.7))
         candidate = signal(rows[14].timestamp_utc)
         events = build_msnr_entry_overlays(
             rows, [candidate],
