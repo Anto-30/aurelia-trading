@@ -22,7 +22,7 @@ from research.labs.deterministic_intraday_strategies import (
 OverlayVariant = Literal["V0_BASELINE", "V1_DISPLACEMENT_CLOSE", "V2_FVG_RETRACE"]
 OverlayStatus = Literal[
     "FILLED_PROXY", "NO_POST_SIGNAL_BAR", "NO_DISPLACEMENT",
-    "NO_FVG", "NO_RETRACE_WITHIN_WINDOW", "GAP_THROUGH_ZONE",
+    "NO_FVG", "NO_RETRACE_WITHIN_WINDOW", "GAP_THROUGH_ZONE", "PENDING_RETRACE",
 ]
 
 
@@ -266,9 +266,14 @@ def build_msnr_entry_overlays(
             entry_index, entry_price = None, None
             reason = "PRICE_GAPPED_THROUGH_FVG_WITHOUT_CONSERVATIVE_TOUCH_FILL"
         elif retrace is None:
-            status = "NO_RETRACE_WITHIN_WINDOW"
             entry_index, entry_price = None, None
-            reason = "NO_FVG_RETRACE_WITHIN_CONFIGURED_WINDOW"
+            observed = len(bars) - displacement_index - 1
+            if observed < config.max_retrace_bars_after_displacement:
+                status = "PENDING_RETRACE"
+                reason = "RETRACE_WINDOW_INCOMPLETE;MORE_FUTURE_BARS_REQUIRED"
+            else:
+                status = "NO_RETRACE_WITHIN_WINDOW"
+                reason = "NO_FVG_RETRACE_WITHIN_COMPLETE_CONFIGURED_WINDOW"
         else:
             entry_index, entry_price = retrace
             status = "FILLED_PROXY"
