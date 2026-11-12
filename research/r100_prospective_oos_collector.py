@@ -151,8 +151,13 @@ async def iter_public_r100_ticks(
                         raise DerivTransportError(
                             "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED"
                         ) from reconnect_timeout
-                    except DerivTransportError:
-                        raise
+                    except DerivTransportError as reconnect_exc:
+                        if "R100_PUBLIC_COLLECTION_DEADLINE_EXHAUSTED" in str(reconnect_exc):
+                            raise
+                        if reconnects >= max_reconnects:
+                            raise DerivTransportError(
+                                "R100_PUBLIC_TRANSPORT_RECONNECT_EXHAUSTED"
+                            ) from reconnect_exc
                     except Exception as reconnect_exc:
                         if reconnects >= max_reconnects:
                             raise DerivTransportError(
