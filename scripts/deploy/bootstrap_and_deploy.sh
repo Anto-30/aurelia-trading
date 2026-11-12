@@ -202,16 +202,9 @@ fi
 
 sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"
 
-# Confirm the Docker daemon is responsive before deciding whether the
-# existing container is absent. A failed inspect alone is ambiguous when the
-# daemon is unavailable; fail closed rather than masking that condition.
-sudo docker info >/dev/null
-
-if sudo docker inspect "$CONTAINER" >/dev/null 2>&1; then
-  # Do not suppress removal errors. Under set -e, a failed stop/removal aborts
-  # deployment and preserves the retired credential file for safe recovery.
-  sudo docker rm -f "$CONTAINER"
-fi
+# Stop/remove the exact existing runtime via a separately testable,
+# fail-closed helper. A daemon/listing/removal failure aborts before cleanup.
+bash "$RELEASE_DIR/scripts/deploy/remove_previous_container.sh" "$CONTAINER"
 
 # Revoke the retired credential-bearing VERIFY_ONLY store only after the
 # candidate image has built and the previous container has been removed.
