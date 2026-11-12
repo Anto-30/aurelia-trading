@@ -30,7 +30,7 @@ class MSNREntryOverlayTests(unittest.TestCase):
         # and bar 15 low (101.0). Retrace touches the upper FVG boundary.
         rows.append(bar(15, 101.2, 102.0, 101.0, 101.8))
         rows.append(bar(16, 101.5, 101.7, 100.8, 101.0))
-        rows.append(bar(19, 101.2, 101.4, 100.9, 101.1))
+        rows.append(bar(17, 101.2, 101.4, 100.9, 101.1))
         rows.append(bar(18, 101.1, 101.3, 100.8, 101.0))
         return rows
 
@@ -61,7 +61,7 @@ class MSNREntryOverlayTests(unittest.TestCase):
         cfg = EntryOverlayConfig(atr_period=5, displacement_body_atr=1.0,
                                  max_bars_after_signal=5, max_retrace_bars_after_displacement=3)
         prefix_events = build_msnr_entry_overlays(rows[:19], [candidate], config=cfg)
-        rows.append(bar(17, 101.2, 101.4, 100.9, 101.1))
+        rows.append(bar(19, 101.2, 101.4, 100.9, 101.1))
         full_events = build_msnr_entry_overlays(rows, [candidate], config=cfg)
         # Every event emitted by the shorter prefix remains byte-for-byte equal
         # in the full history. Appending future bars cannot revise past entries.
