@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator as AsyncIteratorABC
+from typing import Any, AsyncIterator, get_origin
 
 import asyncio
 import json
@@ -421,7 +422,7 @@ class R100PublicTransportRecoveryTests(unittest.IsolatedAsyncioTestCase):
 
         resolved = get_type_hints(iter_public_r100_ticks)
         self.assertIn("return", resolved)
-        self.assertEqual(getattr(resolved["return"], "__origin__", None), AsyncIterator)
+        self.assertIs(get_origin(resolved["return"]), AsyncIteratorABC)
 
     async def test_non_transport_errors_are_not_retried(self):
         from runtime.adapters.deriv_ws import DerivTransportError
