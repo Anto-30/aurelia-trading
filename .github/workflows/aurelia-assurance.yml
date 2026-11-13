@@ -90,7 +90,7 @@ jobs:
           python scripts/verify_deriv_session.py
 
       - name: Verify authenticated Deriv broker account evidence (read-only)
-        if: env.DERIV_AUTH_CONFIGURED == 'true'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.DERIV_AUTH_CONFIGURED == 'true'
         env:
           DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
@@ -102,7 +102,7 @@ jobs:
         run: python scripts/verify_deriv_broker_evidence.py
 
       - name: Verify authenticated Deriv verify-only transaction lifecycle
-        if: env.DERIV_AUTH_CONFIGURED == 'true'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.DERIV_AUTH_CONFIGURED == 'true'
         env:
           DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT }}
           DERIV_APP_ID: ${{ secrets.DERIV_APP_ID }}
