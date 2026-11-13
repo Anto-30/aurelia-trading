@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_skill_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-13",
   "purpose": "Research/engineering capability federation. No external agent, skill, plugin, MCP server, hook, or marketplace entry may obtain capital authority.",
   "default_policy": {
     "external_code_execution": "DENY_BY_DEFAULT",
@@ -45,7 +45,7 @@
       "name": "kimi-code",
       "owner": "MoonshotAI",
       "repo": "MoonshotAI/kimi-code",
-      "pinned_commit": "21406fb4c805cc8c715e6d1f16ad3fb5f25f4fe3",
+      "pinned_commit": "f082f04a093a3e71a2263c5461d52507dc31f83a",
       "trust": "OFFICIAL",
       "capabilities": [
         "plugins",
@@ -54,7 +54,9 @@
         "session-start",
         "MCP"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "last_head_check": "2026-11-13",
+      "status": "PIN_REFRESHED_SANDBOX_ONLY"
     },
     {
       "name": "kimi-cli",
@@ -66,7 +68,10 @@
         "agent-skills-format",
         "skill-discovery"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "status": "ARCHIVED_DO_NOT_INSTALL",
+      "reason": "MoonshotAI archived this repository on 2026-09-23; it will receive no further releases, bug fixes, or security updates. Use MoonshotAI/kimi-code instead.",
+      "last_verified": "2026-11-13"
     },
     {
       "name": "grok-plugin-marketplace",
@@ -531,7 +536,7 @@
       "name": "leepokai-codync",
       "owner": "leepokai",
       "repo": "leepokai/Codync",
-      "pinned_commit": "02e00ad0b5b3a891c29cc49f34886328c6d86267",
+      "pinned_commit": "9de648192320eabea121ba8a24e44937cdaa24f7",
       "trust": "COMMUNITY_SANDBOX_ONLY",
       "capabilities": [
         "multi-agent-bot-and-sync",
@@ -547,7 +552,9 @@
         "JEV",
         "KimiK3",
         "PlaywrightCLI"
-      ]
+      ],
+      "last_head_check": "2026-11-13",
+      "status": "ALIGNED_WITH_CANONICAL_REPOSITORY_REGISTRY"
     },
     {
       "name": "tjiuce-opendots",
@@ -1652,7 +1659,7 @@
       "name": "chrome-devtools-mcp",
       "owner": "ChromeDevTools",
       "repo": "ChromeDevTools/chrome-devtools-mcp",
-      "pinned_commit": "f08dbe152502d66e75fa07fb2588dc0feb42bc20",
+      "pinned_commit": "8ba2ac945ebaf1adb92208c29f3a30e73a920956",
       "trust": "OFFICIAL",
       "capabilities": [
         "browser-automation",
@@ -1668,7 +1675,8 @@
         "ClaudeCode",
         "GrokBot",
         "JEV"
-      ]
+      ],
+      "last_head_check": "2026-11-13"
     },
     {
       "name": "ai-scalpel-trading-bot",
@@ -3153,7 +3161,7 @@
       "name": "mindsdb-mindshub",
       "owner": "mindsdb",
       "repo": "mindsdb/mindshub",
-      "pinned_commit": "780bbcbb8b9367c667e9b6af2aecc8277f24c0ad",
+      "pinned_commit": "3f7d3c690295c52b64f512333c59465d20bce0b9",
       "trust": "COMMUNITY_SANDBOX_ONLY",
       "capabilities": [
         "memory-architecture-review",
@@ -3169,7 +3177,8 @@
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
       "security_review_status": "PENDING",
-      "source_url": "https://github.com/mindsdb/mindshub"
+      "source_url": "https://github.com/mindsdb/mindshub",
+      "last_head_check": "2026-11-13"
     },
     {
       "name": "sandbaseai-deepseek-harness-handbook",
@@ -3366,6 +3375,23 @@
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
       "security_review_status": "PENDING",
       "source_url": "https://github.com/lessweb/deepcode-cli"
+    },
+    {
+      "name": "modern-web-guidance",
+      "owner": "GoogleChrome",
+      "repo": "GoogleChrome/modern-web-guidance",
+      "pinned_commit": "4dd968349e54ca45a05dd5c818fb035c9054b022",
+      "trust": "OFFICIAL_STEWARD_GROUP",
+      "capabilities": [
+        "modern-web-platform-guidance",
+        "browser-compatibility",
+        "performance",
+        "accessibility",
+        "agent-skill"
+      ],
+      "capital_authority": false,
+      "license": "Apache-2.0",
+      "status": "PROJECT_SKILL_STAGED_NOT_GLOBALLY_INSTALLED"
     }
   ],
   "last_sync": {

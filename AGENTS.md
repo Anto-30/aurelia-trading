@@ -28,3 +28,8 @@ The LiteLLM/agent-control-plane repositories are pinned in `config/external_repo
 ## Tool, skill, plugin, and repository assignment contract
 
 Before selecting tools for a task, read `config/agent_tool_skill_assignment.json`. It defines the primary agent, reviewers, task-scoped tools, skill bundles, plugin activation conditions, and source modes. Tool/plugin registry membership is not proof of a live connection or installation. Use least privilege, verify the connector at execution time, and keep all external code outside capital/execution paths. The Dev profile is inactive until an authorized development device is connected and its runtime identity verified. ChatGPT is a supervisory role in the current conversation, not a persistent local daemon.
+
+
+## External skill-source registry
+
+Before using any repository-sourced skill, plugin, MCP server, or agent package, read `config/agent_skill_federation.json`. Registry membership is provenance only; it does not prove installation or authorize execution.
