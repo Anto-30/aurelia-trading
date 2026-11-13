@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-13",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -930,8 +930,9 @@
       ],
       "mode": "TOOLCHAIN_ONLY",
       "source_url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
-      "head_commit": "f08dbe152502d66e75fa07fb2588dc0feb42bc20",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09"
+      "head_commit": "8ba2ac945ebaf1adb92208c29f3a30e73a920956",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-13",
+      "last_head_check": "2026-11-13"
     },
     {
       "repo": "hackingthemarkets/binance-tutorials",
@@ -2857,11 +2858,12 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/QwenLM/qwen-code",
-      "head_commit": "4360b003a087fe9e57f6ffbe7ba48795980b59c3",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09",
+      "head_commit": "c865e869f6613d8a9713532c8dfaead8947f33a5",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-13",
       "physical_runtime_install": "NOT_CLAIMED",
       "integration_note": "Large repository; clone only after disk-space and dependency checks. No production-secret access or capital authority.",
-      "capital_authority": false
+      "capital_authority": false,
+      "last_head_check": "2026-11-13"
     },
     {
       "repo": "QuantConnect/Tutorials",
@@ -2955,12 +2957,13 @@
       ],
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/openinterpreter/openinterpreter",
-      "head_commit": "ac1fcc8fe57aba51fcc3c79afd57a0883237fe87",
-      "pin_source": "github_api_commits_HEAD_checked_2026-10-11",
+      "head_commit": "80d8f55385452457a625dbabc032f3003b9545b4",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-13",
       "physical_runtime_install": "NOT_CLAIMED",
       "integration_note": "Sandbox-only computer-use/automation evaluation; deny access to broker sessions, secrets, and production hosts.",
       "capital_authority": false,
-      "security_review_status": "PENDING"
+      "security_review_status": "PENDING",
+      "last_head_check": "2026-11-13"
     },
     {
       "repo": "anomalyco/opencode",
@@ -4968,8 +4971,8 @@
         "ChatGPT"
       ],
       "source_url": "https://github.com/yetone/magpie",
-      "head_commit": "8902ec2179ddaa6b6b252e00b8161be1c514f40b",
-      "pin_source": "github_api_commits_HEAD_checked_2026-10-11",
+      "head_commit": "82512bb64052e816a5003df67a795636d8c4f31e",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-13",
       "capital_authority": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
@@ -4977,7 +4980,8 @@
         "toolchain-evaluation",
         "isolated-test-integration"
       ],
-      "trust": "COMMUNITY_TOOLCHAIN_ONLY"
+      "trust": "COMMUNITY_TOOLCHAIN_ONLY",
+      "last_head_check": "2026-11-13"
     },
     {
       "repo": "he-yufeng/CoreCoder",
@@ -5889,8 +5893,8 @@
         "ChatGPT"
       ],
       "source_url": "https://github.com/mindsdb/mindshub",
-      "head_commit": "780bbcbb8b9367c667e9b6af2aecc8277f24c0ad",
-      "pin_source": "github_api_commits_HEAD_checked_2026-10-11",
+      "head_commit": "3f7d3c690295c52b64f512333c59465d20bce0b9",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-13",
       "capital_authority": false,
       "physical_runtime_install": "NOT_CLAIMED",
       "security_review_status": "PENDING",
@@ -5898,7 +5902,8 @@
         "memory-architecture-review",
         "data-isolation-evaluation"
       ],
-      "trust": "COMMUNITY_SANDBOX_ONLY"
+      "trust": "COMMUNITY_SANDBOX_ONLY",
+      "last_head_check": "2026-11-13"
     },
     {
       "repo": "sandbaseai/deepseek-harness-handbook",
@@ -6321,6 +6326,118 @@
         "developer-experience-reference"
       ],
       "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "GoogleChrome/modern-web-guidance",
+      "category": "web-platform-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/GoogleChrome/modern-web-guidance",
+      "head_commit": "4dd968349e54ca45a05dd5c818fb035c9054b022",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-13",
+      "last_head_check": "2026-11-13",
+      "license": "Apache-2.0",
+      "trust": "OFFICIAL_STEWARD_GROUP",
+      "capabilities": [
+        "modern-web-platform-guidance",
+        "browser-compatibility",
+        "performance",
+        "accessibility",
+        "agent-skill"
+      ],
+      "security_review_status": "PARTIAL_SOURCE_REVIEW",
+      "physical_runtime_install": "PROJECT_SKILL_STAGED_IN_DRAFT_PR_NOT_ACTIVE",
+      "capital_authority": false,
+      "integration_note": "Official cross-browser web-platform guidance. Project-scoped Claude skill staged separately. Upstream CLI is not installed or executed; never use @latest."
+    },
+    {
+      "repo": "opensandbox-group/OpenSandbox",
+      "category": "agent-security-sandbox-infrastructure",
+      "domain": "engineering",
+      "assigned_agents": [
+        "GoogleAgentSkills",
+        "ClaudeCode",
+        "JEV",
+        "GrokBot"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/opensandbox-group/OpenSandbox",
+      "head_commit": "e564cd1896ffa0d53a4ae09a7c610e30c26bb5f5",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-13",
+      "last_head_check": "2026-11-13",
+      "license": "Apache-2.0",
+      "capabilities": [
+        "isolated-code-execution",
+        "sandbox-lifecycle",
+        "network-egress-policy",
+        "credential-vault-design",
+        "Docker",
+        "Kubernetes"
+      ],
+      "security_review_status": "PENDING_FULL_RUNTIME_AUDIT",
+      "physical_runtime_install": "NOT_CLAIMED_NO_AUTHORIZED_DEV_HOST_CONNECTED",
+      "capital_authority": false,
+      "integration_note": "Candidate isolated sandbox substrate only. Require host/container/Kubernetes threat review, network-deny policy, image pinning, audit logging and credential-boundary tests before execution. Never mount AURELIA secrets or capital-plane context."
+    },
+    {
+      "repo": "microsoft/playwright-mcp",
+      "category": "browser-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "PlaywrightCLI",
+        "ClaudeCode",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/microsoft/playwright-mcp",
+      "head_commit": "78eca85361efb545a4c0f59b6140aef0721c5412",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-13",
+      "last_head_check": "2026-11-13",
+      "license": "Apache-2.0",
+      "trust": "OFFICIAL_MICROSOFT",
+      "capabilities": [
+        "browser-automation-MCP",
+        "accessibility-snapshots",
+        "network-controls",
+        "browser-session-inspection"
+      ],
+      "security_review_status": "REFERENCE_ONLY_NO_RUNTIME_CONFIGURATION",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Reference-only comparison. AURELIA already registers Chrome DevTools MCP and Playwright CLI workflows. Do not configure a second browser MCP or expose authenticated Deriv sessions."
+    },
+    {
+      "repo": "MoonshotAI/kimi-code",
+      "category": "coding-agent-toolchain",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "GoogleAgentSkills",
+        "JEV"
+      ],
+      "mode": "SANDBOX_ONLY",
+      "source_url": "https://github.com/MoonshotAI/kimi-code",
+      "head_commit": "f082f04a093a3e71a2263c5461d52507dc31f83a",
+      "pin_source": "github_api_commits_HEAD_checked_2026-11-13",
+      "last_head_check": "2026-11-13",
+      "trust": "OFFICIAL_MOONSHOTAI",
+      "capabilities": [
+        "coding-agent-cli",
+        "skills",
+        "plugins",
+        "agents",
+        "MCP"
+      ],
+      "security_review_status": "PENDING_RUNTIME_AND_PERMISSION_REVIEW",
+      "physical_runtime_install": "NOT_CLAIMED",
+      "capital_authority": false,
+      "integration_note": "Official Kimi Code source pin refreshed. Shell-capable coding agent remains sandbox-only; no AURELIA repository-write, production secret, broker, capital, or deployment permissions."
     }
   ],
   "pin_policy": {
@@ -6746,5 +6863,33 @@
       "security_review_status": "PENDING",
       "date": "2026-10-11"
     }
+  },
+  "latest_intake": {
+    "date": "2026-11-13",
+    "submitted_unique_repository_count": 99,
+    "already_registered_count": 5,
+    "newly_registered_count": 4,
+    "newly_registered": [
+      "GoogleChrome/modern-web-guidance",
+      "opensandbox-group/OpenSandbox",
+      "microsoft/playwright-mcp",
+      "MoonshotAI/kimi-code"
+    ],
+    "existing_source_pins_refreshed": [
+      "QwenLM/qwen-code",
+      "ChromeDevTools/chrome-devtools-mcp",
+      "openinterpreter/openinterpreter",
+      "yetone/magpie",
+      "mindsdb/mindshub"
+    ],
+    "source_pin_method": "GitHub REST commits endpoint on each repository default branch",
+    "full_registry_sync_workflow": "NOT_RUN",
+    "runtime_clones": "NOT_PERFORMED",
+    "dependency_installation": "NOT_PERFORMED",
+    "physical_agent_installation": "NOT_CLAIMED",
+    "independent_security_review": "PENDING_FOR_EXECUTION_CAPABLE_CANDIDATES",
+    "deployment": "NOT_PERFORMED",
+    "capital_authority": false,
+    "note": "Partial source/provenance triage only. No upstream code was cloned or executed. External execution remains DENY_BY_DEFAULT."
   }
 }
