@@ -11,8 +11,10 @@ concurrency:
   cancel-in-progress: true
 jobs:
   assurance:
-    # Load production-scoped Actions secrets for authenticated verification.
-    environment: production
+    # Never expose production-scoped secrets to pull-request or feature-branch code.
+    # Only protected main pushes receive the production environment; all other runs
+    # use a separate CI-only environment with no Deriv credentials provisioned.
+    environment: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'production' || 'ci-verify-only' }}
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
