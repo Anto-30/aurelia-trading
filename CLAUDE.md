@@ -22,3 +22,10 @@ Use `GOALS.md` as the goal and acceptance contract for the ChatGPT + Claude Code
 ## LiteLLM / agent-gateway federation
 
 Before using any LiteLLM-related source, consult `docs/AURELIA_LLM_GATEWAY_INTEGRATION_GUIDE.md`, `config/external_repo_federation.json`, and `config/agent_skill_federation.json`. These sources are pinned references, not proof of installation. Review the upstream security advisories before any deployment. Do not route Deriv tokens, account credentials, production-host secrets, or any capital-plane context through a third-party LLM gateway. Do not change `config/LIVE_LOCK.yaml` or execution gates.
+
+
+## Project-scoped modern web guidance
+
+For HTML, CSS, accessibility, browser API, and client-side JavaScript work, consult `.claude/skills/modern-web-guidance/SKILL.md` before implementation. Its upstream source is pinned to `GoogleChrome/modern-web-guidance@4dd968349e54ca45a05dd5c818fb035c9054b022` (Apache-2.0). Use it only for frontend work; it does not apply to trading logic, broker adapters, CI, or backend infrastructure.
+
+This is a project-scoped Claude Code skill, not a global Claude installation. Do not run the upstream installer or an unpinned `@latest` command. The skill requires read-only source consultation unless a separate reviewed change explicitly authorizes a pinned CLI execution in an isolated environment. It grants no repository, secret, deployment, capital, or live-execution permissions.
