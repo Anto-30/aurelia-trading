@@ -6438,6 +6438,57 @@
       "physical_runtime_install": "NOT_CLAIMED",
       "capital_authority": false,
       "integration_note": "Official Kimi Code source pin refreshed. Shell-capable coding agent remains sandbox-only; no AURELIA repository-write, production secret, broker, capital, or deployment permissions."
+    },
+    {
+      "repo": "devmuaz/CoreDeck",
+      "category": "android-sdk-desktop-tool",
+      "domain": "engineering",
+      "assigned_agents": [],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/devmuaz/CoreDeck",
+      "head_commit": "384ea0c806203648ca1e0ba4ccccb82b9846ce78",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-13",
+      "last_head_check": "2026-11-13",
+      "license": "MIT",
+      "capabilities": [
+        "android-sdk-management",
+        "android-virtual-device-management",
+        "adb-device-control",
+        "apk-analysis",
+        "apk-signing",
+        "jdk-keystore-management"
+      ],
+      "security_review_status": "INITIAL_METADATA_AND_README_REVIEW_NO_SECURITY_POLICY_FILE",
+      "physical_runtime_install": "NOT_INSTALLED",
+      "capital_authority": false,
+      "integration_note": "C++20 desktop GUI for Android SDK/AVD/ADB/APK tooling. Not relevant to AURELIA's Python/Deriv trading runtime. Its ADB shell, file-transfer, port-forwarding, SDK download, and APK signing functions are host/device-impacting; retain as reference only. No AURELIA runtime integration or agent permissions."
+    },
+    {
+      "repo": "marp-team/marp-core",
+      "category": "markdown-presentation-renderer",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "KimiK3",
+        "JEV"
+      ],
+      "mode": "TOOLCHAIN_ONLY",
+      "source_url": "https://github.com/marp-team/marp-core",
+      "head_commit": "01ef3a4ef0888403097e2c8f7988ea71c460cf97",
+      "pin_source": "github_api_commits_default_branch_checked_2026-11-13",
+      "last_head_check": "2026-11-13",
+      "license": "MIT",
+      "capabilities": [
+        "markdown-to-html-css-slides",
+        "presentation-themes",
+        "optional-syntax-highlighting",
+        "optional-mermaid",
+        "optional-math-rendering"
+      ],
+      "security_review_status": "INITIAL_SOURCE_REVIEW_KNOWN_XSS_ADVISORY_AND_V5_RC_STATUS",
+      "physical_runtime_install": "NOT_INSTALLED",
+      "capital_authority": false,
+      "integration_note": "Useful optional documentation/presentation build tool, not trading runtime. Upstream main README documents v5 as a release candidate and recommends the v4 branch for stable v4 docs; npm stable 4.x and v5 @next are distinct. Do not install @next or full optional plugin set by default. If later adopted, use a pinned stable v4 release in a separate docs-only build environment, sanitize untrusted Markdown/HTML, and verify GHSA-x52f-h5g4-8qv5/CVE-2024-56510 remediation in the exact package version."
     }
   ],
   "pin_policy": {
@@ -6890,6 +6941,13 @@
     "independent_security_review": "PENDING_FOR_EXECUTION_CAPABLE_CANDIDATES",
     "deployment": "NOT_PERFORMED",
     "capital_authority": false,
-    "note": "Partial source/provenance triage only. No upstream code was cloned or executed. External execution remains DENY_BY_DEFAULT."
+    "note": "Partial source/provenance triage only. No upstream code was cloned or executed. External execution remains DENY_BY_DEFAULT.",
+    "additional_intake_date": "2026-11-13",
+    "additional_candidates": [
+      "devmuaz/CoreDeck",
+      "marp-team/marp-core"
+    ],
+    "additional_candidates_registered": 2,
+    "additional_note": "CoreDeck retained reference-only because Android/ADB desktop management is outside AURELIA scope and no SECURITY.md was present. Marp Core retained toolchain-only for optional docs/presentation rendering; v5 main is an RC and known HTML sanitization/XSS history requires version-specific verification."
   }
 }
