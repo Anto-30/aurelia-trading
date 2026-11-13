@@ -6443,7 +6443,9 @@
       "repo": "devmuaz/CoreDeck",
       "category": "android-sdk-desktop-tool",
       "domain": "engineering",
-      "assigned_agents": [],
+      "assigned_agents": [
+        "ClaudeCode"
+      ],
       "mode": "REFERENCE_ONLY",
       "source_url": "https://github.com/devmuaz/CoreDeck",
       "head_commit": "384ea0c806203648ca1e0ba4ccccb82b9846ce78",
@@ -6461,7 +6463,7 @@
       "security_review_status": "INITIAL_METADATA_AND_README_REVIEW_NO_SECURITY_POLICY_FILE",
       "physical_runtime_install": "NOT_INSTALLED",
       "capital_authority": false,
-      "integration_note": "C++20 desktop GUI for Android SDK/AVD/ADB/APK tooling. Not relevant to AURELIA's Python/Deriv trading runtime. Its ADB shell, file-transfer, port-forwarding, SDK download, and APK signing functions are host/device-impacting; retain as reference only. No AURELIA runtime integration or agent permissions."
+      "integration_note": "C++20 desktop GUI for Android SDK/AVD/ADB/APK tooling. Not relevant to AURELIA's Python/Deriv trading runtime. Its ADB shell, file-transfer, port-forwarding, SDK download, and APK signing functions are host/device-impacting; retain as reference only. No AURELIA runtime integration or agent permissions. ClaudeCode is assigned only for read-only documentation/source review; no install or device-control invocation."
     },
     {
       "repo": "marp-team/marp-core",
