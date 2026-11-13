@@ -14,13 +14,13 @@ jobs:
     # Never expose production-scoped secrets to pull-request or feature-branch code.
     # Only protected main pushes receive the production environment; all other runs
     # use a separate CI-only environment with no Deriv credentials provisioned.
-    environment: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'production' || 'ci-verify-only' }}
+    environment: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'production' || 'ci-verify-only-no-secrets' }}
     runs-on: ubuntu-latest
     env:
       AURELIA_AGENT_PERFORMANCE_PATH: /tmp/aurelia/agent-performance.json
       DERIV_AUTH_CONFIGURED: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && ((secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT) != '' && (secrets.DERIV_EXPECTED_LOGINID || secrets.DERIV_AUTHORIZED_ACCOUNT_ID) != '' && (secrets.DERIV_EXPECTED_CURRENCY || '') == 'USD' && ((vars.DERIV_AUTH_MODE || 'pat') == 'pat' || (vars.DERIV_AUTH_MODE || 'pat') == 'oauth') && ((vars.DERIV_AUTH_MODE || 'pat') != 'pat' || (secrets.DERIV_APP_ID || '') != '') ) }}
       DERIV_AUTH_MODE: ${{ vars.DERIV_AUTH_MODE || 'pat' }}
-      DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}
+      DERIV_EXPECTED_CURRENCY: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.DERIV_EXPECTED_CURRENCY || '' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
