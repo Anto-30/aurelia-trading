@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.agent_skill_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-13",
   "purpose": "Research/engineering capability federation. No external agent, skill, plugin, MCP server, hook, or marketplace entry may obtain capital authority.",
   "default_policy": {
     "external_code_execution": "DENY_BY_DEFAULT",
@@ -45,7 +45,7 @@
       "name": "kimi-code",
       "owner": "MoonshotAI",
       "repo": "MoonshotAI/kimi-code",
-      "pinned_commit": "21406fb4c805cc8c715e6d1f16ad3fb5f25f4fe3",
+      "pinned_commit": "f082f04a093a3e71a2263c5461d52507dc31f83a",
       "trust": "OFFICIAL",
       "capabilities": [
         "plugins",
@@ -54,7 +54,9 @@
         "session-start",
         "MCP"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "last_head_check": "2026-11-13",
+      "status": "PIN_REFRESHED_SANDBOX_ONLY"
     },
     {
       "name": "kimi-cli",
@@ -66,7 +68,10 @@
         "agent-skills-format",
         "skill-discovery"
       ],
-      "capital_authority": false
+      "capital_authority": false,
+      "status": "ARCHIVED_DO_NOT_INSTALL",
+      "reason": "MoonshotAI archived this repository on 2026-09-23; it will receive no further releases, bug fixes, or security updates. Use MoonshotAI/kimi-code instead.",
+      "last_verified": "2026-11-13"
     },
     {
       "name": "grok-plugin-marketplace",
@@ -3366,6 +3371,23 @@
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
       "security_review_status": "PENDING",
       "source_url": "https://github.com/lessweb/deepcode-cli"
+    },
+    {
+      "name": "modern-web-guidance",
+      "owner": "GoogleChrome",
+      "repo": "GoogleChrome/modern-web-guidance",
+      "pinned_commit": "4dd968349e54ca45a05dd5c818fb035c9054b022",
+      "trust": "OFFICIAL_STEWARD_GROUP",
+      "capabilities": [
+        "modern-web-platform-guidance",
+        "browser-compatibility",
+        "performance",
+        "accessibility",
+        "agent-skill"
+      ],
+      "capital_authority": false,
+      "license": "Apache-2.0",
+      "status": "PROJECT_SKILL_STAGED_NOT_GLOBALLY_INSTALLED"
     }
   ],
   "last_sync": {
