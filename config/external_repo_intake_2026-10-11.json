@@ -647,7 +647,7 @@
     {
       "repo": "mindsdb/mindshub",
       "source_url": "https://github.com/mindsdb/mindshub",
-      "head_commit": "780bbcbb8b9367c667e9b6af2aecc8277f24c0ad",
+      "head_commit": "3f7d3c690295c52b64f512333c59465d20bce0b9",
       "category": "memory-knowledge-toolchain",
       "domain": "memory",
       "assigned_agents": [
@@ -824,7 +824,7 @@
     {
       "repo": "openinterpreter/openinterpreter",
       "source_url": "https://github.com/openinterpreter/openinterpreter",
-      "head_commit": "ac1fcc8fe57aba51fcc3c79afd57a0883237fe87",
+      "head_commit": "80d8f55385452457a625dbabc032f3003b9545b4",
       "category": "desktop-computer-use-agent",
       "domain": "engineering",
       "assigned_agents": [
@@ -1378,7 +1378,7 @@
     {
       "repo": "yetone/magpie",
       "source_url": "https://github.com/yetone/magpie",
-      "head_commit": "8902ec2179ddaa6b6b252e00b8161be1c514f40b",
+      "head_commit": "82512bb64052e816a5003df67a795636d8c4f31e",
       "category": "coding-agent-toolchain",
       "domain": "engineering",
       "assigned_agents": [
@@ -1499,5 +1499,7 @@
       "security_review_status": "PENDING",
       "physical_runtime_install": "NOT_CLAIMED"
     }
-  ]
+  ],
+  "generated_date": "2026-11-13",
+  "pin_refresh_note": "Three intake-manifest source pins were refreshed from GitHub default-branch commit endpoints on 2026-11-13 to remain consistent with config/external_repo_federation.json. Historical intake membership, mode, agent routing, pending-review state, and no-install state are unchanged."
 }
