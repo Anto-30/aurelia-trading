@@ -46,3 +46,12 @@ The remaining user-supplied candidates have not been promoted to the active fede
 ## Review status
 
 This is a partial source/provenance triage, not a full code-level security certification. OpenSandbox, Kimi Code, Open Interpreter, Qwen Code, Chrome DevTools MCP, Magpie, and Mindshub still require designated security/dependency/runtime reviews before installation or execution.
+
+## Additional candidates — 2026-11-13
+
+| Source | AURELIA mode | Assessment |
+|---|---|---|
+| `devmuaz/CoreDeck` | `REFERENCE_ONLY` | MIT-licensed C++20 desktop GUI for Android SDK, AVD, ADB, APK inspection/signing and JDK keystore workflows. This does not solve an AURELIA trading/runtime requirement. ADB shell, file transfer, port forwarding, SDK downloads and signing are host/device-impacting capabilities. No `SECURITY.md` was found during this review. Not installed or assigned to an agent. |
+| `marp-team/marp-core` | `TOOLCHAIN_ONLY` | MIT-licensed Markdown-to-slide HTML/CSS renderer. Useful for optional technical documentation and presentation generation, not trading runtime. Upstream main documents v5.0.2 as a release candidate; use the v4 branch / stable 4.x line for any future production documentation pipeline, not `@next`. Known XSS/sanitization advisory history requires version-specific dependency verification and strict sanitization of untrusted Markdown/HTML. No package installed. |
+
+Source pins were read from the GitHub default-branch commits endpoints on 2026-11-13: CoreDeck `384ea0c806203648ca1e0ba4ccccb82b9846ce78`; Marp Core `01ef3a4ef0888403097e2c8f7988ea71c460cf97`. CoreDeck's latest README describes device and ADB operations; Marp Core's README explicitly identifies v5 as a release candidate and documents optional plugins. The GitHub security page did not expose a SECURITY.md for either repository; Marp Core has a published moderate XSS advisory history. These are triage findings, not full code audits.
