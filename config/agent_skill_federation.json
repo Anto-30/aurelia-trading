@@ -1657,7 +1657,7 @@
       "name": "chrome-devtools-mcp",
       "owner": "ChromeDevTools",
       "repo": "ChromeDevTools/chrome-devtools-mcp",
-      "pinned_commit": "f08dbe152502d66e75fa07fb2588dc0feb42bc20",
+      "pinned_commit": "8ba2ac945ebaf1adb92208c29f3a30e73a920956",
       "trust": "OFFICIAL",
       "capabilities": [
         "browser-automation",
@@ -1673,7 +1673,8 @@
         "ClaudeCode",
         "GrokBot",
         "JEV"
-      ]
+      ],
+      "last_head_check": "2026-11-13"
     },
     {
       "name": "ai-scalpel-trading-bot",
@@ -3158,7 +3159,7 @@
       "name": "mindsdb-mindshub",
       "owner": "mindsdb",
       "repo": "mindsdb/mindshub",
-      "pinned_commit": "780bbcbb8b9367c667e9b6af2aecc8277f24c0ad",
+      "pinned_commit": "3f7d3c690295c52b64f512333c59465d20bce0b9",
       "trust": "COMMUNITY_SANDBOX_ONLY",
       "capabilities": [
         "memory-architecture-review",
@@ -3174,7 +3175,8 @@
       "capital_authority": false,
       "install_status": "PINNED_REFERENCE_NOT_INSTALLED",
       "security_review_status": "PENDING",
-      "source_url": "https://github.com/mindsdb/mindshub"
+      "source_url": "https://github.com/mindsdb/mindshub",
+      "last_head_check": "2026-11-13"
     },
     {
       "name": "sandbaseai-deepseek-harness-handbook",
