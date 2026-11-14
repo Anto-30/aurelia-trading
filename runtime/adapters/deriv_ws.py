@@ -49,6 +49,8 @@ class DerivWebSocketTransport:
         self._reader_task: asyncio.Task[None] | None = None
         self._keepalive_task: asyncio.Task[None] | None = None
         self._terminal_error_code: str | None = None
+        self.keepalive_attempts = 0
+        self.keepalive_successes = 0
         self._request_id = 0
         self._pending: dict[int, asyncio.Future[dict[str, Any]]] = {}
         self._subscriptions: dict[str, Subscription] = {}
@@ -104,8 +106,10 @@ class DerivWebSocketTransport:
             await asyncio.sleep(self.keepalive_interval)
             if self.ws is None:
                 return
+            self.keepalive_attempts += 1
             try:
                 await self.request({"ping": 1})
+                self.keepalive_successes += 1
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
