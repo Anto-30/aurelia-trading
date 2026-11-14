@@ -22,3 +22,8 @@ Use `GOALS.md` as the goal and acceptance contract for the ChatGPT + Claude Code
 ## LiteLLM / agent-gateway federation
 
 Before using any LiteLLM-related source, consult `docs/AURELIA_LLM_GATEWAY_INTEGRATION_GUIDE.md`, `config/external_repo_federation.json`, and `config/agent_skill_federation.json`. These sources are pinned references, not proof of installation. Review the upstream security advisories before any deployment. Do not route Deriv tokens, account credentials, production-host secrets, or any capital-plane context through a third-party LLM gateway. Do not change `config/LIVE_LOCK.yaml` or execution gates.
+
+
+## User-supplied external repository intake
+
+Before using repositories from the 2026-11-14 user-supplied batch, read `docs/research/EXTERNAL_REPOSITORY_INTAKE_2026-11-14.md` and verify the pinned entry in `config/external_repo_federation.json`. Registration is reference/research only, not installation approval. Do not activate external trading MCPs, hooks, workflows, agents, or broker clients; do not copy them into capital/execution paths or grant secret access. Keep external code execution denied by default and preserve `config/LIVE_LOCK.yaml`.
