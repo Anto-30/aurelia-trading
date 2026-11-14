@@ -67,7 +67,8 @@ class DerivWebSocketKeepaliveTests(unittest.IsolatedAsyncioTestCase):
     async def test_reader_failure_exposes_exception_class_not_raw_message(self) -> None:
         transport = DerivWebSocketTransport("wss://example.invalid")
         queue: asyncio.Queue[dict] = asyncio.Queue()
-        transport.ws = FailingSocket()
+        socket = FailingSocket()
+        transport.ws = socket
         transport._subscriptions["ticks"] = SimpleNamespace(queue=queue)
 
         await transport._reader_loop()
@@ -80,6 +81,8 @@ class DerivWebSocketKeepaliveTests(unittest.IsolatedAsyncioTestCase):
             str(message),
         )
         self.assertIsNone(transport.ws)
+        self.assertTrue(transport._terminal_error_code == "TRANSPORT_READER_FAILED")
+        self.assertTrue(socket.closed)
 
 
 if __name__ == "__main__":
