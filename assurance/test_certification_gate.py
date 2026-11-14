@@ -205,6 +205,144 @@ class CertificationEvidenceTest(unittest.TestCase):
             self.assertEqual(status, "BLOCKED")
             self.assertIn("record_hash mismatch", detail)
 
+
+    def _rewrite_record(self, root: Path, relative: str, mutate) -> tuple[str, str]:
+        path = root / relative
+        record = json.loads(path.read_text(encoding="utf-8"))
+        mutate(record)
+        record["record_hash"] = payload_sha256(
+            {key: value for key, value in record.items() if key != "record_hash"}
+        )
+        path.write_text(json.dumps(record), encoding="utf-8")
+        from assurance.certification_evidence import validate_evidence_file
+        return validate_evidence_file(root, relative)
+
+    def test_ci_stub_cannot_certify_real_broker_lifecycle(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/broker_lifecycle.json",
+                lambda record: (
+                    record.update({"environment": "ci", "broker_truth_observed": False}),
+                    record["provenance"].update({"origin": "ci"}),
+                ),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("broker", detail.lower())
+
+    def test_ci_health_soak_cannot_certify_adversarial_runtime_soak(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/soak_3600s.json",
+                lambda record: (
+                    record.update({"environment": "ci"}),
+                    record["provenance"].update({"origin": "ci"}),
+                ),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("soak", detail.lower())
+
+    def test_ci_deployment_assertion_cannot_certify_production_deployment(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/deployment.json",
+                lambda record: (
+                    record.update({"environment": "ci"}),
+                    record["provenance"].update({"origin": "ci"}),
+                ),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("deployment", detail.lower())
+
+    def test_ci_generated_oos_data_is_not_prospective_research_evidence(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/prospective_oos.json",
+                lambda record: (
+                    record.update({"environment": "ci"}),
+                    record["provenance"].update({"origin": "ci"}),
+                ),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("prospective", detail.lower())
+
+    def test_ci_generated_calibration_is_not_research_calibration_evidence(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/calibration.json",
+                lambda record: (
+                    record.update({"environment": "ci"}),
+                    record["provenance"].update({"origin": "ci"}),
+                ),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("calibration", detail.lower())
+
+    def test_quoted_economics_without_realized_execution_costs_are_not_proven(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/execution_economics.json",
+                lambda record: record.update({
+                    "realized_execution_status": "NOT_MEASURED",
+                    "net_expectancy": None,
+                }),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("economics", detail.lower())
+
+    def test_security_audit_requires_independent_review_reference(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/security_audit.json",
+                lambda record: record.pop("independent_review_reference", None),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("security", detail.lower())
+
+    def test_evidence_source_commit_must_match_provenance_commit(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/recovery_matrix.json",
+                lambda record: record["provenance"].update({"source_commit": "DIFFERENT"}),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("source", detail.lower())
+
+    def test_evidence_must_have_expiry(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/recovery_matrix.json",
+                lambda record: record.pop("valid_until_utc", None),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("valid_until_utc", detail)
+
     def test_live_execution_block_is_not_repository_failure(self):
         result = [
             {"name": "ASSURANCE_DOCUMENTS", "status": "PASS", "detail": ""},
