@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 import subprocess
 from datetime import datetime, timezone
@@ -62,6 +63,30 @@ def _load(path: Path) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise ValueError("evidence root must be an object")
     return raw
+
+
+def current_source_sha(root: Path) -> str:
+    """Resolve the exact candidate commit that the certification gate is evaluating."""
+    for name in ("GITHUB_SHA", "AURELIA_SOURCE_SHA"):
+        value = os.getenv(name, "").strip()
+        if value:
+            return value if re.fullmatch(r"[0-9a-f]{40}", value) else ""
+
+    if not (root / ".git").exists():
+        return ""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    value = result.stdout.strip()
+    return value if re.fullmatch(r"[0-9a-f]{40}", value) else ""
 
 
 def runtime_source_status(root: Path) -> tuple[str, list[str]]:
@@ -431,12 +456,21 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
         findings = record.get("findings")
         reviewer = record.get("independent_reviewer")
         auditor = record.get("auditor")
+        review_reference = record.get("independent_review_reference")
+        review_reference_valid = (
+            isinstance(review_reference, str)
+            and re.fullmatch(
+                r"https://github\\.com/[^/\\s]+/[^/\\s]+/pull/[1-9][0-9]*#pullrequestreview-[1-9][0-9]*",
+                review_reference,
+            ) is not None
+        )
         independent_review_ok = (
-            _non_empty_string(record, "independent_review_reference")
+            review_reference_valid
             and _non_empty_string(record, "independent_review_approval")
             and record.get("independent_review_approval") == "APPROVED"
             and isinstance(reviewer, str)
             and reviewer.strip()
+            and not reviewer.strip().lower().endswith("[bot]")
             and isinstance(auditor, str)
             and auditor.strip()
             and reviewer.strip().casefold() != auditor.strip().casefold()
@@ -444,8 +478,8 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
         )
         source_ok = _source_matches(
             record,
-            environments={"ci", "staging", "production"},
-            origins={"ci", "runtime"},
+            environments={"staging", "production"},
+            origins={"runtime"},
         )
         ok = (
             source_ok
@@ -524,6 +558,7 @@ def validate_evidence_file(
     relative: str,
     *,
     now: datetime | None = None,
+    expected_source_sha: str | None = None,
 ) -> tuple[str, str]:
     path = root / relative
     if not path.exists():
@@ -542,6 +577,12 @@ def validate_evidence_file(
     if not ok:
         return "BLOCKED", f"{relative}: {detail}"
 
+    if expected_source_sha is not None:
+        if not re.fullmatch(r"[0-9a-f]{40}", expected_source_sha):
+            return "BLOCKED", "candidate source SHA is invalid"
+        if record.get("source_hash") != expected_source_sha:
+            return "BLOCKED", f"{relative}: evidence source hash does not match candidate commit"
+
     ok, detail = _domain_valid(Path(relative).name, record)
     if not ok:
         return "BLOCKED", f"{relative}: {detail}"
@@ -549,9 +590,20 @@ def validate_evidence_file(
     return "PASS", "valid"
 
 
-def validate_evidence_bundle(root: Path) -> tuple[str, str]:
+def validate_evidence_bundle(
+    root: Path,
+    *,
+    expected_source_sha: str | None = None,
+) -> tuple[str, str]:
     results = [
-        (relative, validate_evidence_file(root, relative))
+        (
+            relative,
+            validate_evidence_file(
+                root,
+                relative,
+                expected_source_sha=expected_source_sha,
+            ),
+        )
         for relative in REQUIRED_EVIDENCE_FILES
     ]
     errors = [
