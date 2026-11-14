@@ -39,6 +39,18 @@ jobs:
         run: python -m pytest -q tests/test_secret_presence_report.py
       - name: Run hardening tests
         run: python -m unittest assurance.test_hardening_controls -v
+      - name: Emit deterministic CI recovery matrix evidence
+        env:
+          AURELIA_RECOVERY_MATRIX_EVIDENCE_OUT: evidence/recovery_matrix.json
+        run: python scripts/emit_recovery_matrix_evidence.py
+      - name: Upload deterministic CI recovery matrix evidence
+        if: always() && hashFiles('evidence/recovery_matrix.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurelia-recovery-matrix-ci-${{ github.run_id }}
+          path: evidence/recovery_matrix.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Build clean runtime container
         run: docker build --pull -t aurelia-runtime:ci .
       - name: Verify public Deriv market-data WebSocket
