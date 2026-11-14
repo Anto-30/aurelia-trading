@@ -52,6 +52,8 @@ class RecoveryMatrixEvidenceTests(unittest.TestCase):
         self.assertEqual(record["evidence_classification"], "CI_SIMULATION_ONLY")
         self.assertFalse(record["broker_truth_observed"])
         self.assertFalse(record["capital_authority_granted"])
+        self.assertFalse(record["order_submission_permitted"])
+        self.assertEqual(record["live_execution"], "BLOCKED")
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
