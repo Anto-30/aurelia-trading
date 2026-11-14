@@ -228,6 +228,12 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
         recovered = 0
         rejected = 0
         accepted = 0
+        stale_authorization_blocked = 0
+        kill_switch_blocked = 0
+        concurrent_duplicate_checks = 0
+        blind_resubmission_checks = 0
+        reconciliation_mismatch_checks = 0
+        reconciliation_mismatch_failures = 0
         for second in range(iterations):
             if second and second % 211 == 0:
                 executor = _executor(lock, broker, journal, idempotency, ledger, fence)
@@ -284,6 +290,7 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 before_calls = broker.calls
                 result = await executor.execute(stale_intent, stale, token)
                 blocked += int(not result.allowed)
+                stale_authorization_blocked += int(not result.allowed)
                 if result.allowed or broker.calls != before_calls:
                     return {"passed": False, "reason": "STALE_AUTH_ESCAPED"}
 
@@ -295,6 +302,7 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 before_calls = broker.calls
                 result = await executor.execute(killed_intent, auth, executor.fence.acquire(f"kill-{second}"))
                 blocked += int(not result.allowed)
+                kill_switch_blocked += int(not result.allowed)
                 if result.allowed or broker.calls != before_calls:
                     return {"passed": False, "reason": "KILL_SWITCH_ESCAPED"}
                 executor._kill_switch_activated_at = datetime.now(UTC) - timedelta(seconds=2)
@@ -337,6 +345,7 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                         "fence_valid": executor.fence.valid(token),
                         "auth_current": auth.is_current(),
                     }
+                concurrent_duplicate_checks += 1
                 accepted += int(first.status == "ACCEPTED") + int(second_result.status == "ACCEPTED")
                 recovered += int(first.status == "RECOVERY_REQUIRED") + int(second_result.status == "RECOVERY_REQUIRED")
                 rejected += int(first.status == "REJECTED") + int(second_result.status == "REJECTED")
@@ -367,6 +376,7 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                 retry = await executor.execute(intent, auth, token)
                 if retry.status != "RECOVERY_REQUIRED" or broker.calls != before_calls:
                     return {"passed": False, "reason": "UNKNOWN_RETRY_ESCAPED"}
+                blind_resubmission_checks += 1
 
             if second and second % 181 == 0:
                 mismatch = _capital()
@@ -378,12 +388,14 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
                     source="soak-mismatch",
                     account=mismatch.account,
                 )
+                reconciliation_mismatch_checks += 1
                 reconciliation: ReconciliationResult = await executor.reconcile(
                     broker_capital=mismatch,
                     prior_authoritative_balance=200.0,
                 )
                 if reconciliation.healthy:
                     return {"passed": False, "reason": "RECONCILIATION_FAILURE_ACCEPTED"}
+                reconciliation_mismatch_failures += 1
 
             # This local stub knows that UNKNOWN/timeout responses above had
             # no economic effect. Exercise explicit reconciliation before the
@@ -426,6 +438,14 @@ async def run_control_path_soak(iterations: int = 3600) -> dict[str, int | bool]
             "recovered": recovered,
             "rejected": rejected,
             "accepted": accepted,
+            "stale_authorization_blocked": stale_authorization_blocked,
+            "kill_switch_blocked": kill_switch_blocked,
+            "concurrent_duplicate_checks": concurrent_duplicate_checks,
+            "blind_resubmission_checks": blind_resubmission_checks,
+            "blind_resubmissions": 0,
+            "reconciliation_mismatch_checks": reconciliation_mismatch_checks,
+            "reconciliation_mismatch_failures": reconciliation_mismatch_failures,
+            "duplicate_economic_effects": max(0, total_effects - broker.economic_effects),
         }
         if not passed:
             result["effect_records"] = sorted(
