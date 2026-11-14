@@ -9,7 +9,11 @@ import argparse
 import json
 from pathlib import Path
 
-from .certification_evidence import runtime_source_status, validate_evidence_bundle
+from .certification_evidence import (
+    current_source_sha,
+    runtime_source_status,
+    validate_evidence_bundle,
+)
 
 MANDATORY_DOCUMENTS = (
     "docs/AURELIA_PRODUCTION_STANDARD.yaml",
@@ -65,7 +69,17 @@ def evaluate_repository(root: Path) -> list[dict]:
         detail = "Neither authoritative historical runtime nor complete new baseline is synced; missing baseline markers: " + ", ".join(source_missing)
     results.append({"name": "AURELIA_SOURCE_SYNC", "status": source_status, "detail": detail})
 
-    evidence_status, evidence_detail = validate_evidence_bundle(root)
+    candidate_sha = current_source_sha(root)
+    if not candidate_sha:
+        evidence_status, evidence_detail = (
+            "BLOCKED",
+            "Current candidate commit SHA is unavailable; evidence cannot be bound to this build.",
+        )
+    else:
+        evidence_status, evidence_detail = validate_evidence_bundle(
+            root,
+            expected_source_sha=candidate_sha,
+        )
     results.append({"name": "PRODUCTION_EVIDENCE", "status": evidence_status, "detail": evidence_detail})
 
     results.append({
