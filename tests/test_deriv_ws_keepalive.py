@@ -22,6 +22,10 @@ class FailingSocket(FakeSocket):
 
 
 class DerivWebSocketKeepaliveTests(unittest.IsolatedAsyncioTestCase):
+    async def test_application_keepalive_defaults_to_30_seconds(self) -> None:
+        transport = DerivWebSocketTransport("wss://example.invalid")
+        self.assertEqual(transport.keepalive_interval, 30.0)
+
     async def test_application_keepalive_sends_json_ping_requests(self) -> None:
         transport = DerivWebSocketTransport("wss://example.invalid")
         transport.ws = FakeSocket()
