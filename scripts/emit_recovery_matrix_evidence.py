@@ -4,9 +4,14 @@ import asyncio
 import json
 import os
 import re
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from assurance.control_path_soak import run_control_path_soak
 from assurance.evidence_writer import build_evidence, payload_sha256, write_evidence
