@@ -13,7 +13,7 @@ from assurance.certification_evidence import (
     current_source_sha,
     validate_evidence_bundle,
 )
-from assurance.certification_gate import _overall_status
+from assurance.certification_gate import _overall_status, evaluate_repository
 from assurance.evidence_writer import payload_sha256
 
 
@@ -495,6 +495,59 @@ class CertificationEvidenceTest(unittest.TestCase):
             )
             self.assertEqual(status, "BLOCKED", detail)
             self.assertIn("valid_until_utc", detail)
+
+    def test_certification_gate_requires_github_verified_security_review(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            security_path = root / "evidence" / "security_audit.json"
+            security_path.parent.mkdir(parents=True)
+            security_path.write_text(
+                json.dumps({"independent_review_reference": "synthetic"}),
+                encoding="utf-8",
+            )
+            with (
+                unittest.mock.patch(
+                    "assurance.certification_gate.current_source_sha",
+                    return_value="a" * 40,
+                ),
+                unittest.mock.patch(
+                    "assurance.certification_gate.validate_evidence_bundle",
+                    return_value=("PASS", "structural evidence valid"),
+                ),
+                unittest.mock.patch(
+                    "assurance.certification_gate.verify_independent_security_review",
+                    return_value=(False, "GITHUB_REVIEW_NOT_APPROVED"),
+                ),
+            ):
+                result = evaluate_repository(root)
+            production = next(x for x in result if x["name"] == "PRODUCTION_EVIDENCE")
+            self.assertEqual(production["status"], "BLOCKED")
+            self.assertIn("GITHUB_REVIEW_NOT_APPROVED", production["detail"])
+
+    def test_certification_gate_accepts_only_api_verified_security_review(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            security_path = root / "evidence" / "security_audit.json"
+            security_path.parent.mkdir(parents=True)
+            security_path.write_text("{}", encoding="utf-8")
+            with (
+                unittest.mock.patch(
+                    "assurance.certification_gate.current_source_sha",
+                    return_value="a" * 40,
+                ),
+                unittest.mock.patch(
+                    "assurance.certification_gate.validate_evidence_bundle",
+                    return_value=("PASS", "structural evidence valid"),
+                ),
+                unittest.mock.patch(
+                    "assurance.certification_gate.verify_independent_security_review",
+                    return_value=(True, "GITHUB_INDEPENDENT_REVIEW_VERIFIED"),
+                ),
+            ):
+                result = evaluate_repository(root)
+            production = next(x for x in result if x["name"] == "PRODUCTION_EVIDENCE")
+            self.assertEqual(production["status"], "PASS")
+            self.assertEqual(production["detail"], "structural evidence valid")
 
     def test_live_execution_block_is_not_repository_failure(self):
         result = [
