@@ -9,7 +9,12 @@ import argparse
 import json
 from pathlib import Path
 
-from .certification_evidence import runtime_source_status, validate_evidence_bundle
+from .certification_evidence import (
+    current_source_sha,
+    runtime_source_status,
+    validate_evidence_bundle,
+)
+from .github_review_verifier import verify_independent_security_review
 
 MANDATORY_DOCUMENTS = (
     "docs/AURELIA_PRODUCTION_STANDARD.yaml",
@@ -65,7 +70,35 @@ def evaluate_repository(root: Path) -> list[dict]:
         detail = "Neither authoritative historical runtime nor complete new baseline is synced; missing baseline markers: " + ", ".join(source_missing)
     results.append({"name": "AURELIA_SOURCE_SYNC", "status": source_status, "detail": detail})
 
-    evidence_status, evidence_detail = validate_evidence_bundle(root)
+    candidate_sha = current_source_sha(root)
+    if not candidate_sha:
+        evidence_status, evidence_detail = (
+            "BLOCKED",
+            "Current candidate commit SHA is unavailable; evidence cannot be bound to this build.",
+        )
+    else:
+        evidence_status, evidence_detail = validate_evidence_bundle(
+            root,
+            expected_source_sha=candidate_sha,
+        )
+        security_audit_path = root / "evidence" / "security_audit.json"
+        if evidence_status == "PASS" and security_audit_path.is_file():
+            try:
+                security_audit = json.loads(
+                    security_audit_path.read_text(encoding="utf-8")
+                )
+                review_ok, review_detail = verify_independent_security_review(
+                    security_audit,
+                    expected_source_sha=candidate_sha,
+                )
+            except (OSError, json.JSONDecodeError, TypeError) as exc:
+                review_ok, review_detail = False, f"SECURITY_REVIEW_EVIDENCE_READ_FAILED:{type(exc).__name__}"
+            if not review_ok:
+                evidence_status = "BLOCKED"
+                evidence_detail = (
+                    "Independent security review could not be verified against GitHub: "
+                    + review_detail
+                )
     results.append({"name": "PRODUCTION_EVIDENCE", "status": evidence_status, "detail": evidence_detail})
 
     results.append({
