@@ -71,10 +71,11 @@ def validate_secrets_at_startup() -> None:
             raise SecretsError(
                 "VERIFY_ONLY_RUNTIME_NOT_SEALED: " + ",".join(failed)
             )
-        # Permit a credential-free locked worker to run, but if read-only broker
-        # verification was requested, validate its credentials before startup.
-        if os.getenv("AURELIA_VERIFY_DERIV_AUTH", "").strip().lower() != "true":
-            return
+        # Deriv account-list and OTP endpoints require trade scope. Keep
+        # VERIFY_ONLY credential-free until a genuinely read-only scope exists.
+        if os.getenv("AURELIA_VERIFY_DERIV_AUTH", "").strip().lower() == "true":
+            raise SecretsError("VERIFY_ONLY_AUTHENTICATION_FORBIDDEN")
+        return
 
     auth_mode = os.getenv("DERIV_AUTH_MODE", "pat").strip().lower() or "pat"
     token = os.getenv("DERIV_AUTH_TOKEN", "").strip() or os.getenv("DERIV_PAT", "").strip()
