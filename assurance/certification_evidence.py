@@ -66,11 +66,26 @@ def _load(path: Path) -> dict[str, Any]:
 
 
 def current_source_sha(root: Path) -> str:
-    """Resolve the exact candidate commit that the certification gate is evaluating."""
-    for name in ("GITHUB_SHA", "AURELIA_SOURCE_SHA"):
-        value = os.getenv(name, "").strip()
-        if value:
-            return value if re.fullmatch(r"[0-9a-f]{40}", value) else ""
+    """Resolve the reviewed candidate commit, not a pull-request merge commit."""
+    explicit = os.getenv("AURELIA_SOURCE_SHA", "").strip()
+    if explicit:
+        return explicit if re.fullmatch(r"[0-9a-f]{40}", explicit) else ""
+
+    if os.getenv("GITHUB_EVENT_NAME", "").strip() == "pull_request":
+        event_path = os.getenv("GITHUB_EVENT_PATH", "").strip()
+        if not event_path:
+            return ""
+        try:
+            event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return ""
+        head = event.get("pull_request", {}).get("head", {})
+        value = head.get("sha", "") if isinstance(head, dict) else ""
+        return value if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{40}", value) else ""
+
+    value = os.getenv("GITHUB_SHA", "").strip()
+    if value:
+        return value if re.fullmatch(r"[0-9a-f]{40}", value) else ""
 
     if not (root / ".git").exists():
         return ""
