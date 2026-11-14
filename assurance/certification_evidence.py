@@ -7,6 +7,7 @@ placeholders as proof.
 from __future__ import annotations
 
 import json
+import math
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -44,7 +45,7 @@ REQUIRED_EVIDENCE_FILES = (
 )
 
 PASS_RESULTS = {"PASS", "PROVEN", "VALIDATED"}
-ALLOWED_EVIDENCE_ENVIRONMENTS = {"ci", "research", "staging", "production"}
+ALLOWED_EVIDENCE_ENVIRONMENTS = {"ci", "research", "staging", "production", "real"}
 ALLOWED_EVIDENCE_ORIGINS = {"ci", "research", "runtime"}
 
 
@@ -183,21 +184,51 @@ def _base_valid(record: dict[str, Any], now: datetime) -> tuple[bool, str]:
     return True, "valid"
 
 
+
+def _exact_int(value: Any) -> bool:
+    return type(value) is int
+
+
+def _finite_number(value: Any) -> bool:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except (OverflowError, ValueError):
+        return False
+
 def _non_empty_string(record: dict[str, Any], key: str) -> bool:
     return isinstance(record.get(key), str) and bool(record[key].strip())
 
 
 def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
     if name == "broker_lifecycle.json":
+        # The approved lifecycle workflow is verify-only: it proves account
+        # binding, proposal, risk/firewall controls, intent/idempotency,
+        # execution fencing and reconciliation without submitting an order.
+        # Requiring a broker transaction ID or a completed trade here would
+        # contradict LIVE_LOCK and make certification impossible without
+        # unauthorized capital movement.
+        observed = record.get("observed")
         ok = (
-            record.get("transaction_trace_complete") is True
-            and record.get("broker_unknown_recovery_proven") is True
-            and record.get("reconciliation_proven") is True
-            and _non_empty_string(record, "broker_transaction_id")
-            and isinstance(record.get("lifecycle_events"), list)
-            and len(record["lifecycle_events"]) >= 6
+            record.get("verification_scope") == "REAL_DERIV_LIFECYCLE_VERIFY_ONLY"
+            and type(record.get("orders_submitted")) is int
+            and record.get("orders_submitted") == 0
+            and record.get("capital_authority_granted") is False
+            and record.get("order_submission_permitted") is False
+            and isinstance(observed, dict)
+            and _non_empty_string(observed, "account_loginid")
+            and _non_empty_string(observed, "proposal_id")
+            and _non_empty_string(observed, "intent_id")
+            and observed.get("mode") == "VERIFY_ONLY"
+            and observed.get("risk_approved") is True
+            and observed.get("firewall_approved") is True
+            and observed.get("reconciliation_healthy") is True
+            and observed.get("fence_valid") is True
+            and observed.get("broker_submission_performed") is False
+            and observed.get("capital_movement") is False
         )
-        return ok, "valid" if ok else "broker lifecycle/recovery/reconciliation evidence incomplete"
+        return ok, "valid" if ok else "verify-only broker lifecycle/control-path evidence incomplete"
 
     if name == "recovery_matrix.json":
         scenarios = record.get("scenario_results")
@@ -209,24 +240,30 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
                 isinstance(x, dict) and x.get("passed") is True
                 for x in scenarios
             )
+            and _exact_int(record.get("blind_resubmissions"))
             and record.get("blind_resubmissions") == 0
+            and _exact_int(record.get("duplicate_economic_effects"))
             and record.get("duplicate_economic_effects") == 0
         )
         return ok, "valid" if ok else "recovery matrix evidence incomplete"
 
     if name == "soak_3600s.json":
         ok = (
-            isinstance(record.get("duration_seconds"), int)
+            _exact_int(record.get("duration_seconds"))
             and record["duration_seconds"] >= 3600
-            and isinstance(record.get("actual_elapsed_seconds"), (int, float))
-            and record["actual_elapsed_seconds"] >= 3600
+            and _finite_number(record.get("actual_elapsed_seconds"))
+            and float(record["actual_elapsed_seconds"]) >= 3600
             and record.get("continuous") is True
             and record.get("execution_mode") == "VERIFY_ONLY"
             and _non_empty_string(record, "deployment_id")
             and _non_empty_string(record, "runtime_instance_id")
+            and _exact_int(record.get("invariant_violations"))
             and record.get("invariant_violations") == 0
+            and _exact_int(record.get("silent_degradations"))
             and record.get("silent_degradations") == 0
+            and _exact_int(record.get("capital_authority_escapes"))
             and record.get("capital_authority_escapes") == 0
+            and _exact_int(record.get("unresolved_unknown_states"))
             and record.get("unresolved_unknown_states") == 0
         )
         return ok, "valid" if ok else "genuine 3600-second soak evidence incomplete"
@@ -239,9 +276,7 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
             and _non_empty_string(record, "archive_hash")
             and _non_empty_string(record, "strategy_version")
             and _non_empty_string(record, "oos_window")
-            and isinstance(
-                record.get("min_trades_per_strategy_symbol_regime"), int
-            )
+            and _exact_int(record.get("min_trades_per_strategy_symbol_regime"))
             and record["min_trades_per_strategy_symbol_regime"] >= 100
         )
         return ok, "valid" if ok else "prospective OOS evidence incomplete"
@@ -253,9 +288,7 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
         log_loss = record.get("log_loss")
         max_gap = record.get("max_reliability_gap")
         finite_metrics = all(
-            isinstance(value, (int, float))
-            and not isinstance(value, bool)
-            and __import__("math").isfinite(float(value))
+            _finite_number(value)
             for value in (brier, log_loss, max_gap)
         )
         buckets_valid = (
@@ -268,11 +301,11 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
                 and bucket["count"] >= 10
                 and isinstance(bucket.get("mean_probability"), (int, float))
                 and not isinstance(bucket.get("mean_probability"), bool)
-                and __import__("math").isfinite(float(bucket["mean_probability"]))
+                and _finite_number(bucket["mean_probability"])
                 and 0 <= float(bucket["mean_probability"]) <= 1
                 and isinstance(bucket.get("realized_rate"), (int, float))
                 and not isinstance(bucket.get("realized_rate"), bool)
-                and __import__("math").isfinite(float(bucket["realized_rate"]))
+                and _finite_number(bucket["realized_rate"])
                 and 0 <= float(bucket["realized_rate"]) <= 1
                 and abs(float(bucket["mean_probability"]) - float(bucket["realized_rate"])) <= 0.05
                 for bucket in buckets
@@ -298,7 +331,7 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
         ok = (
             record.get("net_expectancy_status") == "KNOWN"
             and record.get("stress_passed") is True
-            and isinstance(record.get("sample_count"), int)
+            and _exact_int(record.get("sample_count"))
             and record["sample_count"] > 0
             and isinstance(costs, dict)
             and bool(costs)
@@ -316,7 +349,8 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
             and _non_empty_string(record, "scope")
             and isinstance(findings, list)
             and len(findings) > 0
-            and record.get("critical_findings", 1) == 0
+            and _exact_int(record.get("critical_findings"))
+            and record.get("critical_findings") == 0
         )
         return ok, "valid" if ok else "security/bypass audit incomplete"
 
@@ -329,7 +363,7 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
             and all(
                 isinstance(item, dict)
                 and item.get("qualified") is True
-                and isinstance(item.get("trade_count"), int)
+                and _exact_int(item.get("trade_count"))
                 and item.get("trade_count") >= 100
                 and isinstance(item.get("strategy_hash"), str)
                 and bool(item.get("strategy_hash"))

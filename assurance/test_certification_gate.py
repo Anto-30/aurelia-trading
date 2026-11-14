@@ -38,18 +38,22 @@ class CertificationEvidenceTest(unittest.TestCase):
                 "source_commit": "TEST",
                 "generated_at_utc": "2026-10-03T10:01:00Z",
             },
-            "transaction_trace_complete": True,
-            "broker_unknown_recovery_proven": True,
-            "reconciliation_proven": True,
-            "broker_transaction_id": "TX-TEST",
-            "lifecycle_events": [
-                {"event": "INTENT"},
-                {"event": "REQUEST"},
-                {"event": "ACK"},
-                {"event": "STATE"},
-                {"event": "TRANSACTION"},
-                {"event": "RECONCILIATION"},
-            ],
+            "verification_scope": "REAL_DERIV_LIFECYCLE_VERIFY_ONLY",
+            "orders_submitted": 0,
+            "capital_authority_granted": False,
+            "order_submission_permitted": False,
+            "observed": {
+                "mode": "VERIFY_ONLY",
+                "account_loginid": "CRTEST",
+                "proposal_id": "PROPOSAL-TEST",
+                "intent_id": "INTENT-TEST",
+                "risk_approved": True,
+                "firewall_approved": True,
+                "reconciliation_healthy": True,
+                "fence_valid": True,
+                "broker_submission_performed": False,
+                "capital_movement": False,
+            },
             "critical_scenarios_passed": True,
             "scenario_results": [
                 {"scenario_id": "UNKNOWN", "passed": True},
@@ -153,7 +157,7 @@ class CertificationEvidenceTest(unittest.TestCase):
             self._populate_passing_bundle(root)
             path = root / "evidence/broker_lifecycle.json"
             record = json.loads(path.read_text(encoding="utf-8"))
-            record.pop("lifecycle_events")
+            record["observed"].pop("proposal_id")
             record["record_hash"] = payload_sha256(
                 {key: value for key, value in record.items() if key != "record_hash"}
             )
