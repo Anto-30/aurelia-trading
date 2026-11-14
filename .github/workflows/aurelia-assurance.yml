@@ -46,6 +46,21 @@ jobs:
           DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT: artifacts/deriv_public_transport.json
         run: python scripts/verify_deriv_public_transport.py
 
+      - name: Verify sustained public Deriv JSON ping keepalive
+        env:
+          AURELIA_PUBLIC_KEEPALIVE_DURATION_SECONDS: "65"
+          DERIV_PUBLIC_KEEPALIVE_EVIDENCE_OUT: artifacts/deriv_public_keepalive.json
+        run: python scripts/verify_deriv_public_keepalive.py
+
+      - name: Upload public Deriv keepalive evidence
+        if: always() && hashFiles('artifacts/deriv_public_keepalive.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: deriv-public-keepalive-${{ github.run_id }}
+          path: artifacts/deriv_public_keepalive.json
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Upload public Deriv transport evidence
         if: always() && hashFiles('artifacts/deriv_public_transport.json') != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

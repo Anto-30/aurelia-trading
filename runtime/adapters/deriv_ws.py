@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 from dataclasses import dataclass
 from typing import Any, AsyncIterator
+
 from websockets.asyncio.client import ClientConnection, connect
 
 
@@ -33,14 +35,22 @@ class DerivWebSocketTransport:
         *,
         timeout_seconds: float = 10.0,
         ping_interval: float = 20.0,
+        keepalive_interval: float = 30.0,
     ):
         if not url:
             raise DerivTransportError("DERIV_WS_URL_MISSING")
+        if not math.isfinite(float(keepalive_interval)) or keepalive_interval <= 0:
+            raise ValueError("DERIV_KEEPALIVE_INTERVAL_MUST_BE_POSITIVE")
         self.url = url
         self.timeout_seconds = timeout_seconds
         self.ping_interval = ping_interval
+        self.keepalive_interval = float(keepalive_interval)
         self.ws: ClientConnection | None = None
         self._reader_task: asyncio.Task[None] | None = None
+        self._keepalive_task: asyncio.Task[None] | None = None
+        self._terminal_error_code: str | None = None
+        self.keepalive_attempts = 0
+        self.keepalive_successes = 0
         self._request_id = 0
         self._pending: dict[int, asyncio.Future[dict[str, Any]]] = {}
         self._subscriptions: dict[str, Subscription] = {}
@@ -50,6 +60,7 @@ class DerivWebSocketTransport:
     async def connect(self) -> None:
         if self.ws is not None:
             return
+        self._terminal_error_code = None
         self.ws = await connect(
             self.url,
             ping_interval=self.ping_interval,
@@ -58,12 +69,73 @@ class DerivWebSocketTransport:
             max_size=2_000_000,
         )
         self._reader_task = asyncio.create_task(self._reader_loop())
+        self._keepalive_task = asyncio.create_task(self._keepalive_loop())
+
+    def _notify_subscribers(
+        self,
+        code: str,
+        *,
+        cause_type: str | None = None,
+    ) -> None:
+        error: dict[str, str] = {"code": code}
+        if cause_type:
+            error["cause_type"] = cause_type
+        for subscription in self._subscriptions.values():
+            subscription.queue.put_nowait({"error": dict(error)})
+
+    async def _cancel_task(
+        self,
+        task: asyncio.Task[None] | None,
+    ) -> None:
+        if task is None or task is asyncio.current_task():
+            return
+        if not task.done():
+            task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+    async def _keepalive_loop(self) -> None:
+        """Maintain the Deriv application session with JSON ping requests.
+
+        WebSocket protocol-level ping frames are retained separately; Deriv's
+        application protocol also expects a JSON {"ping": 1} request.
+        """
+        while self.ws is not None:
+            await asyncio.sleep(self.keepalive_interval)
+            if self.ws is None:
+                return
+            self.keepalive_attempts += 1
+            try:
+                await self.request({"ping": 1})
+                self.keepalive_successes += 1
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                if self.ws is None or self._terminal_error_code is not None:
+                    return
+                self._terminal_error_code = "BROKER_KEEPALIVE_FAILED"
+                self._fail_pending(exc)
+                self._notify_subscribers(
+                    "BROKER_KEEPALIVE_FAILED",
+                    cause_type=type(exc).__name__,
+                )
+                socket = self.ws
+                self.ws = None
+                if socket is not None:
+                    try:
+                        await socket.close()
+                    except Exception:
+                        pass
+                return
 
     async def _reader_loop(self) -> None:
-        assert self.ws is not None
+        socket = self.ws
+        assert socket is not None
         try:
             while True:
-                raw = await self.ws.recv()
+                raw = await socket.recv()
                 message = json.loads(raw)
                 request_id = message.get("req_id")
                 if isinstance(request_id, int) and request_id in self._pending:
@@ -85,11 +157,20 @@ class DerivWebSocketTransport:
             raise
         except Exception as exc:
             self._fail_pending(exc)
-            for subscription in self._subscriptions.values():
-                subscription.queue.put_nowait(
-                    {"error": {"code": "TRANSPORT_READER_FAILED"}}
+            if self._terminal_error_code is None:
+                self._terminal_error_code = "TRANSPORT_READER_FAILED"
+                self._notify_subscribers(
+                    "TRANSPORT_READER_FAILED",
+                    cause_type=type(exc).__name__,
                 )
         finally:
+            await self._cancel_task(self._keepalive_task)
+            self._keepalive_task = None
+            if self._terminal_error_code == "TRANSPORT_READER_FAILED":
+                try:
+                    await socket.close()
+                except Exception:
+                    pass
             self.ws = None
 
     def _fail_pending(self, exc: Exception) -> None:
@@ -211,18 +292,22 @@ class DerivWebSocketTransport:
             )
 
     async def close(self) -> None:
+        socket = self.ws
+        keepalive = self._keepalive_task
+        self._keepalive_task = None
+        await self._cancel_task(keepalive)
+
         reader = self._reader_task
         self._reader_task = None
-        if reader is not None:
-            reader.cancel()
-            try:
-                await reader
-            except asyncio.CancelledError:
-                pass
+        await self._cancel_task(reader)
 
-        if self.ws is not None:
-            await self.ws.close()
+        if socket is not None:
+            try:
+                await socket.close()
+            except Exception:
+                pass
         self.ws = None
+        self._terminal_error_code = "BROKER_SESSION_CLOSED"
         self._fail_pending(DerivTransportError("BROKER_SESSION_CLOSED"))
 
         self._subscription_by_request_id.clear()
