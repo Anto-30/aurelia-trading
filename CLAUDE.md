@@ -18,6 +18,9 @@ Claude Code has zero capital authority.
 
 Use `GOALS.md` as the goal and acceptance contract for the ChatGPT + Claude Code supervisory model. Work through its immediate execution order and report evidence for each acceptance state. Prioritize continuously progressing research and a verified persistent runtime; do not claim that scheduled jobs equal an always-on daemon. Keep Claude Code at zero capital authority. Never flip `config/LIVE_LOCK.yaml`, bypass a failed release gate, or submit capital-moving orders. Escalate missing account authentication or protected secrets for configuration through the secure provider UI, without printing or committing them. Live authorization must remain blocked until the existing deterministic policy and independent release authority approve it.
 
+## External agent repository intake
+
+Before adopting any user-supplied external agent, Hermes, memory, orchestration, browser, security, or quant-research repository, read `docs/EXTERNAL_AGENT_REPO_INTAKE_2026-11-09.md` and use `.claude/skills/external-repo-federation/SKILL.md`. The canonical policy remains `skills/external-repo-federation/SKILL.md`; keep the Claude Code skill aligned with it. The intake catalogue and registry are reference records, not installation manifests or trust approvals. Review each candidate individually, pin an immutable commit, inspect its complete dependency and permission footprint, and test it in an isolated sandbox. Do not bulk-install skills or run upstream install scripts without review. Preserve the universal agent contract, secret isolation, and zero capital authority for Claude Code and all external agents.
 
 ## LiteLLM / agent-gateway federation
 
