@@ -64,34 +64,18 @@ jobs:
 
   whatsapp-alert-smoke:
     if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
-    environment: production
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 2
     permissions:
       contents: read
-    env:
-      TWILIO_CONFIGURED: ${{ secrets.TWILIO_ACCOUNT_SID != '' && (secrets.TWILIO_AUTH_TOKEN != '' || (secrets.TWILIO_API_KEY != '' && secrets.TWILIO_API_SECRET != '')) && secrets.TWILIO_WHATSAPP_FROM != '' && secrets.AURELIA_WHATSAPP_TO != '' && secrets.TWILIO_CONTENT_SID != '' }}
-      AURELIA_WHATSAPP_ALERTS: "true"
-      TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-      TWILIO_API_KEY: ${{ secrets.TWILIO_API_KEY }}
-      TWILIO_API_SECRET: ${{ secrets.TWILIO_API_SECRET }}
-      TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
-      AURELIA_WHATSAPP_TO: ${{ secrets.AURELIA_WHATSAPP_TO }}
-      TWILIO_CONTENT_SID: ${{ secrets.TWILIO_CONTENT_SID }}
-      TWILIO_HTTP_TIMEOUT_SECONDS: "8"
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
-        with:
-          python-version: "3.13"
-      - run: pip install -r requirements.txt
-      - name: Report WhatsApp prerequisite state
-        if: env.TWILIO_CONFIGURED != 'true'
-        run: echo "WHATSAPP_ALERTS=OPTIONAL_NOT_CONFIGURED"
-      - name: Send WhatsApp smoke alert
-        if: env.TWILIO_CONFIGURED == 'true'
-        run: python scripts/test_whatsapp_alert.py
-
+      - name: Report WhatsApp smoke is held until production review is configured
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "WHATSAPP_ALERT_SMOKE=BLOCKED"
+          echo "REASON=PRODUCTION_ENVIRONMENT_REVIEW_REQUIRED"
+          echo "TWILIO_CREDENTIALS_READ=false"
+          echo "WHATSAPP_MESSAGE_SENT=false"
+          echo "LIVE_EXECUTION=BLOCKED"
+          echo "FINAL_EXECUTION_AUTHORIZATION=false"
