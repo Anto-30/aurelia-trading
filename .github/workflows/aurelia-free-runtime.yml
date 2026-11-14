@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   runtime-probe:
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -63,6 +64,7 @@ jobs:
           retention-days: 7
 
   authenticated-deriv-evidence:
+    if: ${{ github.ref == 'refs/heads/main' }}
     # Load production-scoped Actions secrets for authenticated verification only.
     environment: production
     runs-on: ubuntu-latest
@@ -114,6 +116,7 @@ jobs:
           retention-days: 7
 
   deriv-lifecycle-verify-only:
+    if: ${{ github.ref == 'refs/heads/main' }}
     # Authenticated broker lifecycle verification: proposal + control-chain only.
     # This job must never submit a buy transaction or grant capital authority.
     environment:
@@ -163,6 +166,7 @@ jobs:
           retention-days: 7
 
   whatsapp-alert-smoke:
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
