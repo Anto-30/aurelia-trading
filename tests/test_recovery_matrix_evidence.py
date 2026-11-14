@@ -19,11 +19,16 @@ def passing_result() -> dict[str, int | bool]:
         "iterations": 3600,
         "unknown_outcomes_observed": 24,
         "unknown_records": 0,
+        "recovered": 20,
         "stale_authorization_blocked": 28,
         "kill_switch_blocked": 24,
         "concurrent_duplicate_checks": 31,
         "reconciliation_mismatch_checks": 19,
+        "reconciliation_mismatch_failures": 19,
+        "idempotent_effects_recorded": 1000,
+        "economic_effects": 1000,
         "duplicate_economic_effects": 0,
+        "blind_resubmission_checks": 12,
         "blind_resubmissions": 0,
     }
 
