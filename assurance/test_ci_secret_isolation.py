@@ -88,6 +88,14 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertNotIn("${{ secrets.", text)
         self.assertNotIn("DERIV_AUTH_TOKEN", text)
 
+    def test_whatsapp_alert_smoke_is_held_without_environment_approval(self):
+        alert_job = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
+        self.assertNotIn("environment: production", alert_job)
+        self.assertNotIn("${{ secrets.", alert_job)
+        self.assertNotIn("test_whatsapp_alert.py", alert_job)
+        self.assertIn("WHATSAPP_ALERT_SMOKE=BLOCKED", alert_job)
+        self.assertIn("PRODUCTION_ENVIRONMENT_REVIEW_REQUIRED", alert_job)
+
     def test_whatsapp_alert_secrets_are_manual_main_only_and_environment_protected(self):
         text = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
         alert_job = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
