@@ -1,15 +1,11 @@
 from __future__ import annotations
 
-import asyncio
-import tempfile
-from pathlib import Path
+# This CI check is deliberately inventory-only. A temporary supervisor can
+# create local test leases; those leases do not prove that Claude, Grok, Kimi,
+# JEV, or any other external provider is installed, authenticated, or running.
+# A provider may be reported CONNECTED only from a separately verified runtime
+# identity, provider-authentication health check, and attributable task result.
 
-from runtime.agent_federation import PersistentAgentFederation
-from runtime.agent_workers import AgentWorkerSupervisor
-
-# AURELIA is the deterministic capital-plane authority, not an advisory
-# provider worker. The worker supervisor intentionally skips it. All other
-# registered agents are advisory/engineering workers and must obtain leases.
 ADVISORY_WORKERS = (
     "ClaudeCode",
     "KimiK3",
@@ -22,37 +18,19 @@ ADVISORY_WORKERS = (
 CAPITAL_AUTHORITY = "AURELIA"
 
 
-async def main() -> int:
-    with tempfile.TemporaryDirectory(prefix="aurelia-agent-probe-") as tmp:
-        root = Path(tmp)
-        federation = PersistentAgentFederation(
-            journal_path=root / "journal.ndjson",
-            lease_path=root / "leases.json",
-            task_path=root / "tasks.json",
-            config_hash="probe",
-            source_hash="probe",
-            lease_seconds=45,
-        )
-        workers = AgentWorkerSupervisor(
-            federation, agents=(*ADVISORY_WORKERS, CAPITAL_AUTHORITY), interval_seconds=2
-        )
-        workers.start()
-        try:
-            await asyncio.sleep(2.5)
-            active = set(federation.active_agents())
-            missing = sorted(set(ADVISORY_WORKERS) - active)
-            unexpected = sorted(active - set(ADVISORY_WORKERS))
-            capital_heartbeat = CAPITAL_AUTHORITY in active
-            print("AGENT_WORKER_ACTIVE=" + ",".join(sorted(active)))
-            print("AGENT_WORKER_MISSING=" + ",".join(missing))
-            print("AGENT_WORKER_UNEXPECTED=" + ",".join(unexpected))
-            print("CAPITAL_AUTHORITY_WORKER=INTENTIONALLY_DISABLED")
-            print("CAPITAL_AUTHORITY_RUNTIME=DETERMINISTIC_CONTROL_PLANE")
-            print("CAPITAL_AUTHORITY_HEARTBEAT=" + ("UNEXPECTED" if capital_heartbeat else "NOT_A_WORKER"))
-            return 1 if missing or unexpected or capital_heartbeat else 0
-        finally:
-            await workers.stop()
+def main() -> int:
+    not_verified = ",".join(sorted(ADVISORY_WORKERS))
+    print("AGENT_PROVIDER_CONNECTIVITY=NOT_VERIFIED")
+    print("AGENT_PROVIDER_CONNECTED=NONE_CONFIRMED")
+    print("AGENT_PROVIDER_NOT_VERIFIED=" + not_verified)
+    print("AGENT_WORKER_PROCESS_LEASES=NOT_PROBED_IN_CI")
+    print("AGENT_WORKER_TASK_EVIDENCE=NOT_VERIFIED")
+    print("AGENT_WORKER_PROBE_MODE=INVENTORY_ONLY")
+    print("CAPITAL_AUTHORITY_WORKER=INTENTIONALLY_DISABLED")
+    print("CAPITAL_AUTHORITY_RUNTIME=DETERMINISTIC_CONTROL_PLANE")
+    print("CAPITAL_AUTHORITY_HEARTBEAT=NOT_A_WORKER")
+    return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(asyncio.run(main()))
+    raise SystemExit(main())
