@@ -1,0 +1,176 @@
+# EXP-0001 — OB+FVG v0.1 Track A — EURUSD
+# STATUS: DRAFT_BLOCKED_G0_NOT_REGISTERED
+# Owner-delegated design fields are frozen for preregistration, subject to the
+# explicit ratification note below. This is not permission to download data or run.
+
+schema: atos.experiment_preregistration.v1
+hypothesis_id: EXP-0001
+registration_status: DRAFT_BLOCKED_G0_NOT_REGISTERED
+run_permitted: false
+backtest_executed: false
+trial_count: 0
+created_date: "2026-11-11"
+spec_version: ATOS-MASTER-v2.0
+
+strategy:
+  name: OB+FVG
+  version: "0.1"
+  track: A
+  research_type: linear_price_signal
+  execution_eligibility: NON_EXECUTABLE_ON_FIXED_PAYOUT_CAPITAL_PLANE
+
+instrument:
+  primary: EURUSD
+  provider_symbol_resolution: RESOLVED_PUBLIC_ACTIVE_SYMBOLS
+  deriv_symbol_resolution_method: active_symbols_full
+  synthetic_indices_allowed: false
+
+timeframes:
+  context: 1h
+  trigger: 15m
+  status: OWNER_DELEGATED_DESIGN_FROZEN
+
+session:
+  timezone: America/New_York
+  windows_ny:
+    - "02:00-05:00"
+    - "08:30-11:00"
+  windows_status: HYPOTHESIS_NOT_FACT
+  primary_variant: configured_session_windows
+  sensitivity_variant: no_filter
+  sensitivity_variant_count: 1
+  status: OWNER_DELEGATED_DESIGN_FROZEN_PENDING_DATA
+  note: "The two NY windows are hypotheses to test, not established market facts. The no-filter sensitivity is one pre-registered additional variant."
+
+data:
+  persistent_archive:
+    provider: TrueFX_Integral
+    registration: REQUIRED
+    instrument_list: UNVERIFIED
+    history_depth: UNVERIFIED
+    export_format: UNVERIFIED
+    csv_header: UNVERIFIED
+    snapshot_sha256: null
+    license_scope: INTERNAL_ANALYSIS_ONLY_NO_REDISTRIBUTION
+  cross_source_calibration:
+    required: true
+    deriv_exact_symbol: frxEURUSD
+    deriv_symbol_resolution:
+      status: RESOLVED_UNIQUE
+      market: forex
+      submarket: major_pairs
+      public_tick_stream: VERIFIED
+      evidence_run_id: 43022953014
+      evidence_pr_head: 78f4ba218378ecb8687aa2fb3edbbba62272b16b
+      evidence_workflow_sha: cb65a05fdf071821fa130ef07f70934215f03346
+      evidence_record_hash: 91851b9dbc3c89d5779c81b0d654dfafd53534598b57a9780baeae6008310f89
+      raw_market_data_persisted: false
+    overlapping_window: null
+    timestamp_alignment: NOT_TESTED
+    bid_ask_mid_basis: NOT_DOCUMENTED
+    price_spread_divergence: NOT_MEASURED
+    feed_basis_calibration_report: PENDING
+    signal_feed_artifact_gate: BLOCKED
+  deriv_retention:
+    raw_content_persistence: PROHIBITED
+    cache_ttl_hours_max: 24
+    aggregate_outputs_only: true
+
+cost_model:
+  status: STRUCTURE_PREREGISTERED_VALUES_PENDING_MEASUREMENT
+  spread: "measured TrueFX bid/ask at entry plus measured Deriv feed-basis adjustment"
+  slippage_sensitivity_ticks: [0, 0.5, 1.0]
+  commissions:
+    value: 0
+    status: TRACK_A_PROVISIONAL_ASSUMPTION_NOT_VERIFIED
+  adverse_selection:
+    method: "Measure post-fill adverse movement conditional on trade-through fills"
+    status: PROXY_ONLY_PENDING_CALIBRATION
+  partial_fills: NOT_MODELED_SEPARATELY
+  passive_fill: trade_through
+  non_fill:
+    rule: "No fill unless price trades through the entry level"
+    status: PREREGISTERED_RULE_PENDING_VALIDATION
+  cost_numbers: PENDING
+  sensitivity_grid: [0, 0.5, 1.0]
+  zero_cost_assumption_permitted: false
+
+baselines:
+  required:
+    - random_entry_same_exit
+    - matched_placebo_zones_same_size_distance_direction
+    - shuffled_signal_permutation
+    - buy_and_hold_where_appropriate
+  status: NOT_IMPLEMENTED
+
+hypothesis:
+  statement: "For EURUSD, OB+FVG v0.1 has positive after-cost expectancy_R improvement versus matched placebo zones."
+  primary_endpoint: "expectancy_R delta versus matched placebo zones after costs"
+  success_criteria: "95% stationary-bootstrap confidence interval lower bound greater than 0 after costs"
+  status: DESIGN_FROZEN_PENDING_DATA
+
+candidate_parameters:
+  status: OWNER_DELEGATED_DESIGN_FROZEN_PENDING_RATIFICATION
+  atr_length: 14
+  displacement_multiple_atr: 1.5
+  minimum_displacement_candles: 3
+  order_block_zone: candle_body_only
+  entry: 50_percent_order_block_body
+  passive_fill: trade_through
+  cancel_after_bars: 12
+  stop_buffer_atr: 0.1
+  exit: entry_timeframe_body_close_beyond_midpoint
+  take_profit: untouched_opposing_liquidity
+  owner_risk_ratification: PENDING_NOT_BLOCKING_DESIGN_FREEZE
+
+statistical_design:
+  alpha: 0.05
+  beta_power: 0.80
+  minimum_detectable_effect_R: 0.10
+  variance_estimate: null
+  minimum_sample_size: null
+  sample_size_method: "Derive required N from pilot R-standard-deviation using stationary bootstrap"
+  underpowered_verdict: INCONCLUSIVE_NOT_NEGATIVE
+  bootstrap_method: stationary_bootstrap
+  confidence_interval: 95_percent
+  trial_count_ledger_entry: 0
+  variants_pre_registered:
+    - session_sensitivity_no_filter
+  power_status: BLOCKED_PENDING_PILOT_R_STD_AND_MDE_N
+
+negative_results_registry:
+  destination: research/registry/negative-results/
+  ready: false
+
+source_provenance:
+  code_commit: null
+  environment_lock_hash: null
+  random_seed: null
+  status: TO_BE_FROZEN_AT_G0
+
+gates:
+  G0:
+    status: BLOCKED
+    missing:
+      - TrueFX registration, instrument list, history depth, export format, CSV header and licensed archive SHA-256
+      - overlapping cross-source window and feed-basis calibration report
+      - measured spread, slippage, commission and adverse-selection cost numbers
+      - pilot R-standard-deviation and defensible MDE/N calculation
+      - implementation of required random, placebo, shuffled-signal and buy-and-hold baselines
+      - frozen source commit, environment hash and random seed
+  G1:
+    status: NOT_STARTED
+  G2:
+    status: NOT_STARTED
+  G3:
+    status: NOT_STARTED
+  G4:
+    status: NOT_STARTED
+  G5:
+    status: NOT_STARTED
+
+decision:
+  verdict: DO_NOT_RUN
+  reason: "G0 remains incomplete. No historical fetch, backtest, parameter search, or evidence claim is authorized by this worksheet."
+  live_execution: BLOCKED
+  final_execution_authorization: false
