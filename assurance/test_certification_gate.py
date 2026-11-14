@@ -185,8 +185,8 @@ class CertificationEvidenceTest(unittest.TestCase):
                 })
                 provenance["origin"] = "runtime"
             elif name == "security_audit.json":
-                record.update({"environment": "ci"})
-                provenance["origin"] = "ci"
+                record.update({"environment": "staging"})
+                provenance["origin"] = "runtime"
             elif name == "deployment.json":
                 record.update({"environment": "production"})
                 provenance["origin"] = "runtime"
@@ -387,7 +387,10 @@ class CertificationEvidenceTest(unittest.TestCase):
             status, detail = self._rewrite_record(
                 root,
                 "evidence/security_audit.json",
-                lambda record: None,
+                lambda record: (
+                    record.update({"environment": "ci"}),
+                    record["provenance"].update({"origin": "ci"}),
+                ),
             )
             self.assertEqual(status, "BLOCKED", detail)
             self.assertIn("independent", detail.lower())
