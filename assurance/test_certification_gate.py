@@ -2,6 +2,7 @@ import json
 import subprocess
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from assurance.certification_evidence import (
@@ -20,27 +21,31 @@ class CertificationEvidenceTest(unittest.TestCase):
         path.write_text(content, encoding="utf-8")
 
     def _passing_record(self) -> dict:
+        now = datetime.now(timezone.utc)
+        source_commit = "a" * 40
         record = {
             "evidence_id": "E-TEST",
-            "source_hash": "s",
-            "artifact_hash": "a",
-            "config_hash": "c",
-            "data_hash": "d",
+            "source_hash": source_commit,
+            "artifact_hash": "b" * 64,
+            "config_hash": "c" * 64,
+            "data_hash": "d" * 64,
             "environment": "ci",
-            "started_at_utc": "2026-10-03T10:00:00Z",
-            "ended_at_utc": "2026-10-03T10:01:00Z",
+            "started_at_utc": (now - timedelta(minutes=1)).isoformat(),
+            "ended_at_utc": now.isoformat(),
+            "valid_until_utc": (now + timedelta(days=7)).isoformat(),
             "status": "CURRENT",
             "result": "PROVEN",
             "invariants_failed": [],
             "provenance": {
                 "origin": "ci",
                 "issuer": "test-suite",
-                "source_commit": "TEST",
-                "generated_at_utc": "2026-10-03T10:01:00Z",
+                "source_commit": source_commit,
+                "generated_at_utc": now.isoformat(),
             },
             "transaction_trace_complete": True,
             "broker_unknown_recovery_proven": True,
             "reconciliation_proven": True,
+            "broker_truth_observed": True,
             "broker_transaction_id": "TX-TEST",
             "lifecycle_events": [
                 {"event": "INTENT"},
@@ -55,6 +60,8 @@ class CertificationEvidenceTest(unittest.TestCase):
                 {"scenario_id": "UNKNOWN", "passed": True},
                 {"scenario_id": "CRASH", "passed": True},
                 {"scenario_id": "CONCURRENCY", "passed": True},
+                {"scenario_id": "KILL_SWITCH", "passed": True},
+                {"scenario_id": "RECONCILIATION", "passed": True},
             ],
             "blind_resubmissions": 0,
             "duplicate_economic_effects": 0,
@@ -68,15 +75,34 @@ class CertificationEvidenceTest(unittest.TestCase):
             "silent_degradations": 0,
             "capital_authority_escapes": 0,
             "unresolved_unknown_states": 0,
+            "evidence_classification": "ADVERSARIAL_RUNTIME_SOAK",
+            "fault_matrix": {
+                "stale_and_duplicate_market_data": True,
+                "out_of_order_events": True,
+                "websocket_interruption": True,
+                "request_timeout": True,
+                "response_loss_after_economic_effect": True,
+                "unknown_broker_state": True,
+                "duplicate_and_concurrent_intent": True,
+                "crash_at_lifecycle_transitions": True,
+                "restart_with_kill_switch": True,
+                "stale_authorization": True,
+                "configuration_and_account_mismatch": True,
+                "ledger_reconciliation_mismatch": True,
+                "backup_restore": True,
+                "credential_boundary_violation": True,
+                "shadow_path_divergence": True,
+            },
             "sealed_prospective_data": True,
             "retuning_after_seal": False,
             "multiple_testing_accounted": True,
-            "archive_hash": "ARCHIVE",
+            "archive_hash": "f" * 64,
             "strategy_version": "S-TEST",
             "oos_window": "2026-01-01/2026-01-31",
             "min_trades_per_strategy_symbol_regime": 100,
             "calibration_validated": True,
             "drift_monitoring": True,
+            "drift_detected": False,
             "sample_count": 1000,
             "reliability_buckets": [
                 {"bucket": "0.55-0.60", "count": 100, "mean_probability": 0.575, "realized_rate": 0.57},
@@ -84,20 +110,31 @@ class CertificationEvidenceTest(unittest.TestCase):
                 {"bucket": "0.65-0.70", "count": 100, "mean_probability": 0.675, "realized_rate": 0.67},
             ],
             "max_reliability_gap": 0.005,
-            "drift_detected": False,
             "brier_score": 0.2,
             "log_loss": 0.6,
             "net_expectancy_status": "KNOWN",
+            "net_expectancy": 0.12,
+            "realized_execution_status": "MEASURED",
             "stress_passed": True,
             "cost_components": {"spread": 0.01, "slippage": 0.01, "fees": 0.0},
             "execution_model": "DERIV_OPTIONS_MEASURED",
             "credential_isolation_passed": True,
             "capital_bypass_audit_passed": True,
             "audit_id": "AUDIT-TEST",
-            "auditor": "test-suite",
+            "auditor": "auditor@example.test",
+            "independent_reviewer": "reviewer@example.test",
+            "independent_review_reference": "https://github.com/example/review/123",
+            "independent_review_approval": "APPROVED",
+            "reviewed_commit": source_commit,
             "scope": "capital-boundary",
             "findings": [{"severity": "info", "count": 0}],
             "critical_findings": 0,
+            "source_commit": source_commit,
+            "build_hash": "e" * 64,
+            "artifact_hash": "b" * 64,
+            "deployment_id": "DEPLOY-TEST",
+            "runtime_hash": "f" * 64,
+            "config_hash": "c" * 64,
             "runtime_matches_artifact": True,
             "qualification_passed": True,
             "strategies": [
@@ -105,15 +142,11 @@ class CertificationEvidenceTest(unittest.TestCase):
                     "strategy_id": "S-TEST",
                     "qualified": True,
                     "trade_count": 100,
-                    "strategy_hash": "strategy-hash",
+                    "strategy_hash": "1" * 64,
                 }
             ],
             "edge_removed": True,
         }
-        record["source_commit"] = "commit"
-        record["build_hash"] = "build"
-        record["deployment_id"] = "deploy"
-        record["runtime_hash"] = "runtime"
         record["record_hash"] = payload_sha256(record)
         return record
 
@@ -121,7 +154,45 @@ class CertificationEvidenceTest(unittest.TestCase):
         for marker in REQUIRED_RUNTIME_MARKERS:
             self._write(root, marker, "runtime")
         for relative in REQUIRED_EVIDENCE_FILES:
-            self._write(root, relative, json.dumps(self._passing_record()))
+            record = self._passing_record()
+            name = Path(relative).name
+            provenance = record["provenance"]
+            if name == "broker_lifecycle.json":
+                record.update({"environment": "staging", "broker_truth_observed": True})
+                provenance["origin"] = "runtime"
+            elif name == "recovery_matrix.json":
+                record.update({
+                    "environment": "ci",
+                    "evidence_classification": "CI_SIMULATION_ONLY",
+                    "execution_mode": "DETERMINISTIC_BROKER_STUB",
+                    "broker_truth_observed": False,
+                    "capital_authority_granted": False,
+                })
+                provenance["origin"] = "ci"
+            elif name == "soak_3600s.json":
+                record.update({"environment": "staging"})
+                provenance["origin"] = "runtime"
+            elif name in {"prospective_oos.json", "calibration.json", "strategy_eligibility.json"}:
+                record.update({"environment": "research"})
+                provenance["origin"] = "research"
+            elif name == "execution_economics.json":
+                record.update({
+                    "environment": "staging",
+                    "realized_execution_status": "MEASURED",
+                    "net_expectancy": 0.12,
+                })
+                provenance["origin"] = "runtime"
+            elif name == "security_audit.json":
+                record.update({"environment": "ci"})
+                provenance["origin"] = "ci"
+            elif name == "deployment.json":
+                record.update({"environment": "production"})
+                provenance["origin"] = "runtime"
+                provenance["deployment_id"] = record["deployment_id"]
+            record["record_hash"] = payload_sha256(
+                {key: value for key, value in record.items() if key != "record_hash"}
+            )
+            self._write(root, relative, json.dumps(record))
 
     def test_missing_bundle_blocks(self):
         with tempfile.TemporaryDirectory() as d:
