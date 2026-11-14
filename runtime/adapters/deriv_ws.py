@@ -131,10 +131,11 @@ class DerivWebSocketTransport:
                 return
 
     async def _reader_loop(self) -> None:
-        assert self.ws is not None
+        socket = self.ws
+        assert socket is not None
         try:
             while True:
-                raw = await self.ws.recv()
+                raw = await socket.recv()
                 message = json.loads(raw)
                 request_id = message.get("req_id")
                 if isinstance(request_id, int) and request_id in self._pending:
@@ -165,6 +166,11 @@ class DerivWebSocketTransport:
         finally:
             await self._cancel_task(self._keepalive_task)
             self._keepalive_task = None
+            if self._terminal_error_code == "TRANSPORT_READER_FAILED":
+                try:
+                    await socket.close()
+                except Exception:
+                    pass
             self.ws = None
 
     def _fail_pending(self, exc: Exception) -> None:
