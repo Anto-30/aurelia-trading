@@ -5,6 +5,7 @@ on:
   pull_request:
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: aurelia-assurance-${{ github.ref }}
@@ -96,6 +97,8 @@ jobs:
       - name: Run repository certification gate
         id: certification
         continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: python -m assurance.certification_gate
       - name: Preserve fail-closed certification semantics
         if: always()
