@@ -43,6 +43,8 @@ class DerivWebSocketKeepaliveTests(unittest.IsolatedAsyncioTestCase):
         self.assertGreaterEqual(transport.request.await_count, 2)
         for call in transport.request.await_args_list:
             self.assertEqual(call.args[0], {"ping": 1})
+        self.assertEqual(transport.keepalive_attempts, transport.request.await_count)
+        self.assertEqual(transport.keepalive_successes, transport.request.await_count)
 
     async def test_keepalive_failure_notifies_subscribers_and_closes_socket(self) -> None:
         transport = DerivWebSocketTransport("wss://example.invalid")
