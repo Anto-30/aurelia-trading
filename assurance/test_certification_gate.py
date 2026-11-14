@@ -384,9 +384,10 @@ class CertificationEvidenceTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
             self._populate_passing_bundle(root)
-            status, detail = validate_evidence_file(
+            status, detail = self._rewrite_record(
                 root,
                 "evidence/security_audit.json",
+                lambda record: None,
             )
             self.assertEqual(status, "BLOCKED", detail)
             self.assertIn("independent", detail.lower())
