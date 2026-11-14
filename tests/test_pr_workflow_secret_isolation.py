@@ -112,8 +112,8 @@ def test_whatsapp_credentials_are_step_scoped_not_job_scoped() -> None:
         "AURELIA_WHATSAPP_TO",
         "TWILIO_CONTENT_SID",
     ):
-        assert f"          {key}: ${{ secrets.{key} }}" in block
-        assert f"      {key}: ${{ secrets.{key} }}" not in job_env
+        assert f"          {key}: ${{{{ secrets.{key} }}}}" in block
+        assert f"      {key}: ${{{{ secrets.{key} }}}}" not in job_env
 
 
 def test_deploy_requires_green_assurance_from_main_for_exact_commit() -> None:
