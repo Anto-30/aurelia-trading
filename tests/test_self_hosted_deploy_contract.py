@@ -68,27 +68,63 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("os.replace(temporary, destination)", provisioner)
         self.assertIn('CAPITAL_AUTHORITY_GRANTED=false', provisioner)
         self.assertIn('READONLY_SECRET_FILE="$ENV_DIR/aurelia-deriv-readonly-secrets.env"', deploy)
-        self.assertIn('elif [ -f "$READONLY_SECRET_FILE" ]', deploy)
-        self.assertIn('CAPITAL_AUTHORITY_GRANTED=false', readonly_provisioner)
+        self.assertIn('sudo rm -f "$READONLY_SECRET_FILE"', deploy)
+        self.assertIn('sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true', deploy)
+        self.assertLess(
+            deploy.index('sudo rm -f "$READONLY_SECRET_FILE"'),
+            deploy.index('if [ ! -d "$RELEASE_DIR" ]'),
+        )
+        self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', deploy)
+        self.assertNotIn('ENV_FILES+=("$READONLY_SECRET_FILE")', deploy)
+        self.assertNotIn('SECRET_ENV_ARGS+=(--env-file "$READONLY_SECRET_FILE")', deploy)
+        self.assertNotIn('elif [ -f "$READONLY_SECRET_FILE" ]', deploy)
+        self.assertNotIn("AUTH_CONFIGURED", deploy)
+        self.assertIn("VERIFY_DERIV_AUTH=false", deploy)
+        self.assertNotIn("VERIFY_DERIV_AUTH=true", deploy)
+        self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", readonly_provisioner)
         presence_workflow = (
             ROOT / ".github" / "workflows" / "secret-presence-report.yml"
         ).read_text(encoding="utf-8")
         self.assertIn(
-            "DERIV_EXPECTED_CURRENCY: ${{ secrets.DERIV_EXPECTED_CURRENCY }}",
+            "DERIV_EXPECTED_CURRENCY_PRESENT: ${{ secrets.DERIV_EXPECTED_CURRENCY != '' || vars.DERIV_EXPECTED_CURRENCY != '' }}",
             presence_workflow,
         )
+        self.assertIn(
+            "DERIV_EXPECTED_CURRENCY_SUPPORTED: ${{ secrets.DERIV_EXPECTED_CURRENCY == 'USD' || vars.DERIV_EXPECTED_CURRENCY == 'USD' }}",
+            presence_workflow,
+        )
+        self.assertNotIn("DERIV_EXPECTED_CURRENCY: ${{ secrets.", presence_workflow)
+        self.assertNotIn("AURELIA_OPERATOR_RESET_SIGNING_KEY: ${{ secrets.", presence_workflow)
         self.assertNotIn("secrets.DERIV_EXPECTED_CURRENCY || 'USD'", presence_workflow)
+        self.assertNotIn("DERIV_EXPECTED_CURRENCY: 'USD'", presence_workflow)
 
-    def test_live_deployment_requires_release_gate(self):
+    def test_live_deployment_is_blocked_without_read_only_account_scope(self):
         workflow = (ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml").read_text(
             encoding="utf-8"
         )
-        self.assertIn("python scripts/live_release_gate.py", workflow)
-        self.assertIn("if: inputs.deployment_mode == 'LIVE'", workflow)
-        self.assertIn("AURELIA_READINESS_OUT: artifacts/AURELIA_READINESS.current.json", workflow)
-        self.assertIn("AURELIA_READINESS_PATH: artifacts/AURELIA_READINESS.current.json", workflow)
-        self.assertIn("DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT: artifacts/deriv_public_transport.json", workflow)
-        self.assertIn("python scripts/verify_deriv_public_transport.py", workflow)
+        deploy = (ROOT / "scripts" / "deploy" / "bootstrap_and_deploy.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("github.ref == 'refs/heads/main'", workflow)
+        self.assertIn(
+            "Block LIVE deployment while Deriv read-only account scope is unavailable",
+            workflow,
+        )
+        self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", workflow)
+        self.assertIn(
+            "AURELIA_HOST_BLOCKED=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE",
+            deploy,
+        )
+        self.assertNotIn("Require explicit Deriv account bindings for LIVE verification", workflow)
+        self.assertNotIn("Generate fresh authenticated real-account evidence without submitting orders", workflow)
+        self.assertNotIn("Refresh readiness from current evidence; remain fail-closed on any blocker", workflow)
+        self.assertNotIn("Require deterministic live release gate for LIVE deployment", workflow)
+        gate_index = workflow.index(
+            "Block LIVE deployment while Deriv read-only account scope is unavailable"
+        )
+        token_index = workflow.index("secrets.DERIV_AUTH_TOKEN")
+        self.assertLess(gate_index, token_index)
 
 
 if __name__ == "__main__":

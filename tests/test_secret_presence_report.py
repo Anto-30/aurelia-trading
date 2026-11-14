@@ -1,18 +1,16 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "report_secret_presence.py"
 
 
 def run_report(**env_overrides: str) -> subprocess.CompletedProcess[str]:
-    import os
-
-    env = os.environ.copy()
+    env = {"PATH": os.environ.get("PATH", "")}
     env.update(env_overrides)
     return subprocess.run(
         [sys.executable, str(SCRIPT)],
@@ -24,34 +22,33 @@ def run_report(**env_overrides: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_report_is_boolean_only_and_preserves_capital_lock() -> None:
-    fake_token = "FAKE_DERIV_TOKEN_SHOULD_NEVER_APPEAR"
-    fake_login = "CR123456_SHOULD_NEVER_APPEAR"
-
+def test_report_accepts_only_boolean_presence_flags_and_preserves_capital_lock() -> None:
     result = run_report(
-        DERIV_AUTH_TOKEN=fake_token,
-        DERIV_APP_ID="12345",
-        DERIV_EXPECTED_LOGINID=fake_login,
-        DERIV_EXPECTED_CURRENCY="USD",
+        DERIV_AUTH_TOKEN_PRESENT="true",
+        DERIV_APP_ID_PRESENT="true",
+        DERIV_EXPECTED_LOGINID_PRESENT="true",
+        DERIV_EXPECTED_CURRENCY_PRESENT="true",
+        DERIV_EXPECTED_CURRENCY_SUPPORTED="true",
         DERIV_AUTH_MODE="pat",
-        AURELIA_HOST="host.example.invalid",
-        AURELIA_USER="runtime-user",
-        AURELIA_SSH_KEY="PRIVATE_KEY_SENTINEL_DO_NOT_PRINT",
-        AURELIA_KNOWN_HOSTS="HOST_KEY_SENTINEL_DO_NOT_PRINT",
-        AURELIA_ATTESTATION_SIGNING_KEY="SIGNING_KEY_SENTINEL_DO_NOT_PRINT",
-        AURELIA_OPERATOR_RESET_SIGNING_KEY="OPERATOR_RESET_KEY_SENTINEL_DO_NOT_PRINT_32_CHARS",
-        AURELIA_RUNTIME_ID="aurelia-production-worker",
+        DERIV_ENVIRONMENT="real",
+        AURELIA_HOST_PRESENT="true",
+        AURELIA_USER_PRESENT="true",
+        AURELIA_SSH_KEY_PRESENT="true",
+        AURELIA_KNOWN_HOSTS_PRESENT="true",
+        AURELIA_ATTESTATION_SIGNING_KEY_PRESENT="true",
+        AURELIA_OPERATOR_RESET_SIGNING_KEY_PRESENT="true",
     )
 
     assert result.returncode == 0
-    assert fake_token not in result.stdout
-    assert fake_login not in result.stdout
     assert "DERIV_AUTH_TOKEN_PRESENT=true" in result.stdout
     assert "DERIV_APP_ID_PRESENT=true" in result.stdout
     assert "DERIV_EXPECTED_LOGINID_PRESENT=true" in result.stdout
     assert "DERIV_EXPECTED_CURRENCY_PRESENT=true" in result.stdout
     assert "DERIV_EXPECTED_CURRENCY_SUPPORTED=true" in result.stdout
-    assert "DERIV_AUTH_CONFIGURED=true" in result.stdout
+    assert "DERIV_AUTH_CONFIGURED=false" in result.stdout
+    assert "DERIV_READ_ONLY_ACCOUNT_SCOPE_AVAILABLE=false" in result.stdout
+    assert "DERIV_ENVIRONMENT_VALID=true" in result.stdout
+    assert "DERIV_ENVIRONMENT_EFFECTIVE=REAL" in result.stdout
     assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
     assert "LIVE_EXECUTION=BLOCKED" in result.stdout
     assert "CAPITAL_MOVEMENT_PERMITTED=false" in result.stdout
@@ -61,139 +58,82 @@ def test_report_is_boolean_only_and_preserves_capital_lock() -> None:
     assert "AURELIA_KNOWN_HOSTS_PRESENT=true" in result.stdout
     assert "AURELIA_ATTESTATION_SIGNING_KEY_PRESENT=true" in result.stdout
     assert "AURELIA_OPERATOR_RESET_SIGNING_KEY_PRESENT=true" in result.stdout
-    assert "AURELIA_OPERATOR_RESET_SIGNING_KEY_LENGTH_VALID=true" in result.stdout
-    assert "AURELIA_DEPLOYMENT_SECRET_STORE_CONFIGURED=true" in result.stdout
-    assert "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=true" in result.stdout
-    assert "PRIVATE_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
-    assert "HOST_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
-    assert "SIGNING_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
-    assert "OPERATOR_RESET_KEY_SENTINEL_DO_NOT_PRINT_32_CHARS" not in result.stdout
+    assert "AURELIA_OPERATOR_RESET_SIGNING_KEY_LENGTH_VALID=UNVERIFIED" in result.stdout
+    assert "AURELIA_DEPLOYMENT_SECRET_STORE_CONFIGURED=false" in result.stdout
+    assert "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=false" in result.stdout
 
 
-def test_invalid_auth_mode_is_rejected_and_not_echoed() -> None:
-    invalid_mode = "deriv_auth_token"
+def test_unknown_auth_mode_is_rejected_without_echoing_input() -> None:
+    marker = "private-invalid-auth-mode"
     result = run_report(
-        DERIV_AUTH_TOKEN="FAKE_TOKEN",
-        DERIV_APP_ID="12345",
-        DERIV_EXPECTED_LOGINID="CRTEST",
-        DERIV_EXPECTED_CURRENCY="USD",
-        DERIV_AUTH_MODE=invalid_mode,
+        DERIV_AUTH_TOKEN_PRESENT="true",
+        DERIV_AUTH_MODE=marker,
     )
-
     assert result.returncode == 0
-    assert invalid_mode not in result.stdout
+    assert marker not in result.stdout
     assert "DERIV_AUTH_MODE_VALID=false" in result.stdout
     assert "DERIV_AUTH_MODE_EFFECTIVE=INVALID" in result.stdout
     assert "DERIV_AUTH_CONFIGURED=false" in result.stdout
-    assert "AURELIA_DEPLOYMENT_SECRET_STORE_CONFIGURED=false" in result.stdout
-    assert "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=false" in result.stdout
-    assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
-    assert "LIVE_EXECUTION=BLOCKED" in result.stdout
 
 
-def test_missing_bindings_report_false_without_defaults() -> None:
-    result = run_report(
-        DERIV_AUTH_TOKEN="",
-        DERIV_APP_ID="",
-        DERIV_EXPECTED_LOGINID="",
-        DERIV_EXPECTED_CURRENCY="",
-        DERIV_AUTH_MODE="pat",
-        AURELIA_HOST="",
-        AURELIA_USER="",
-        AURELIA_SSH_KEY="",
-        AURELIA_KNOWN_HOSTS="",
-        AURELIA_ATTESTATION_SIGNING_KEY="",
-    )
-
+def test_missing_presence_flags_default_to_false() -> None:
+    result = run_report()
     assert result.returncode == 0
-    assert "DERIV_AUTH_TOKEN_PRESENT=false" in result.stdout
-    assert "DERIV_APP_ID_PRESENT=false" in result.stdout
-    assert "DERIV_EXPECTED_LOGINID_PRESENT=false" in result.stdout
-    assert "DERIV_EXPECTED_CURRENCY_PRESENT=false" in result.stdout
+    for name in (
+        "DERIV_AUTH_TOKEN",
+        "DERIV_APP_ID",
+        "DERIV_EXPECTED_LOGINID",
+        "DERIV_EXPECTED_CURRENCY",
+        "AURELIA_HOST",
+        "AURELIA_SSH_KEY",
+        "AURELIA_OPERATOR_RESET_SIGNING_KEY",
+    ):
+        assert f"{name}_PRESENT=false" in result.stdout
     assert "DERIV_AUTH_CONFIGURED=false" in result.stdout
+    assert "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=false" in result.stdout
 
 
-def test_unsupported_currency_is_not_configured_and_is_not_echoed() -> None:
-    marker = "CURRENCY_PRIVATE_MARKER"
+def test_unsupported_currency_flag_does_not_configure_account_access() -> None:
     result = run_report(
-        DERIV_AUTH_TOKEN="FAKE_TOKEN",
-        DERIV_APP_ID="12345",
-        DERIV_EXPECTED_LOGINID="CRTEST",
-        DERIV_EXPECTED_CURRENCY=marker,
-        DERIV_AUTH_MODE="pat",
-        AURELIA_HOST="host.example.invalid",
-        AURELIA_USER="runtime-user",
-        AURELIA_SSH_KEY="PRIVATE_KEY_SENTINEL_DO_NOT_PRINT",
-        AURELIA_KNOWN_HOSTS="HOST_KEY_SENTINEL_DO_NOT_PRINT",
-        AURELIA_ATTESTATION_SIGNING_KEY="SIGNING_KEY_SENTINEL_DO_NOT_PRINT",
+        DERIV_AUTH_TOKEN_PRESENT="true",
+        DERIV_APP_ID_PRESENT="true",
+        DERIV_EXPECTED_LOGINID_PRESENT="true",
+        DERIV_EXPECTED_CURRENCY_PRESENT="true",
+        DERIV_EXPECTED_CURRENCY_SUPPORTED="false",
     )
-
     assert result.returncode == 0
-    assert marker not in result.stdout
-    assert "DERIV_EXPECTED_CURRENCY_PRESENT=true" in result.stdout
     assert "DERIV_EXPECTED_CURRENCY_SUPPORTED=false" in result.stdout
     assert "DERIV_AUTH_CONFIGURED=false" in result.stdout
-    assert "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=false" in result.stdout
-    assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
-    assert "LIVE_EXECUTION=BLOCKED" in result.stdout
+    assert "DERIV_READ_ONLY_ACCOUNT_SCOPE_AVAILABLE=false" in result.stdout
 
 
-
-def test_missing_operator_reset_signing_key_blocks_deployment_prerequisites() -> None:
+def test_environment_and_boolean_flags_are_normalized() -> None:
     result = run_report(
-        DERIV_AUTH_TOKEN="FAKE_TOKEN",
-        DERIV_APP_ID="12345",
-        DERIV_EXPECTED_LOGINID="CRTEST",
-        DERIV_EXPECTED_CURRENCY="USD",
-        DERIV_AUTH_MODE="pat",
-        AURELIA_HOST="host.example.invalid",
-        AURELIA_USER="runtime-user",
-        AURELIA_SSH_KEY="PRIVATE_KEY_SENTINEL_DO_NOT_PRINT",
-        AURELIA_KNOWN_HOSTS="HOST_KEY_SENTINEL_DO_NOT_PRINT",
-        AURELIA_ATTESTATION_SIGNING_KEY="SIGNING_KEY_SENTINEL_DO_NOT_PRINT",
-        AURELIA_OPERATOR_RESET_SIGNING_KEY="",
+        DERIV_ENVIRONMENT="invalid-environment",
+        DERIV_AUTH_TOKEN_PRESENT="TRUE",
+        AURELIA_HOST_PRESENT="yes",
     )
-
     assert result.returncode == 0
-    assert "AURELIA_OPERATOR_RESET_SIGNING_KEY_PRESENT=false" in result.stdout
-    assert "AURELIA_OPERATOR_RESET_SIGNING_KEY_LENGTH_VALID=false" in result.stdout
-    assert "AURELIA_DEPLOYMENT_SECRET_STORE_CONFIGURED=false" in result.stdout
-    assert "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=false" in result.stdout
-    assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
-    assert "LIVE_EXECUTION=BLOCKED" in result.stdout
-    assert "PRIVATE_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
-    assert "SIGNING_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
+    assert "DERIV_AUTH_TOKEN_PRESENT=true" in result.stdout
+    assert "AURELIA_HOST_PRESENT=false" in result.stdout
+    assert "DERIV_ENVIRONMENT_VALID=false" in result.stdout
+    assert "DERIV_ENVIRONMENT_EFFECTIVE=INVALID" in result.stdout
 
 
-def test_secret_presence_workflow_binds_operator_reset_key_from_production_environment() -> None:
+def test_workflow_passes_boolean_results_not_secret_values() -> None:
     workflow = (ROOT / ".github" / "workflows" / "secret-presence-report.yml").read_text(
         encoding="utf-8"
     )
-    assert "AURELIA_OPERATOR_RESET_SIGNING_KEY: ${{ secrets.AURELIA_OPERATOR_RESET_SIGNING_KEY }}" in workflow
-
-
-
-def test_short_operator_reset_signing_key_blocks_deployment_prerequisites() -> None:
-    result = run_report(
-        DERIV_AUTH_TOKEN="FAKE_TOKEN",
-        DERIV_APP_ID="12345",
-        DERIV_EXPECTED_LOGINID="CRTEST",
-        DERIV_EXPECTED_CURRENCY="USD",
-        DERIV_AUTH_MODE="pat",
-        AURELIA_HOST="host.example.invalid",
-        AURELIA_USER="runtime-user",
-        AURELIA_SSH_KEY="PRIVATE_KEY_SENTINEL_DO_NOT_PRINT",
-        AURELIA_KNOWN_HOSTS="HOST_KEY_SENTINEL_DO_NOT_PRINT",
-        AURELIA_ATTESTATION_SIGNING_KEY="SIGNING_KEY_SENTINEL_DO_NOT_PRINT",
-        AURELIA_OPERATOR_RESET_SIGNING_KEY="short-key",
-    )
-
-    assert result.returncode == 0
-    assert "AURELIA_OPERATOR_RESET_SIGNING_KEY_PRESENT=true" in result.stdout
-    assert "AURELIA_OPERATOR_RESET_SIGNING_KEY_LENGTH_VALID=false" in result.stdout
-    assert "AURELIA_DEPLOYMENT_SECRET_STORE_CONFIGURED=false" in result.stdout
-    assert "AURELIA_PRODUCTION_PREREQUISITES_CONFIGURED=false" in result.stdout
-    assert "FINAL_EXECUTION_AUTHORIZATION=false" in result.stdout
-    assert "LIVE_EXECUTION=BLOCKED" in result.stdout
-    assert "PRIVATE_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
-    assert "SIGNING_KEY_SENTINEL_DO_NOT_PRINT" not in result.stdout
+    assert "workflow_dispatch:" in workflow
+    assert "environment: production" in workflow
+    assert "github.ref == 'refs/heads/main'" in workflow
+    assert "DERIV_AUTH_TOKEN_PRESENT:" in workflow
+    assert "secrets.DERIV_AUTH_TOKEN != ''" in workflow
+    assert "secrets.DERIV_PAT != ''" in workflow
+    assert "AURELIA_SSH_KEY_PRESENT:" in workflow
+    assert "secrets.AURELIA_SSH_KEY != ''" in workflow
+    assert "DERIV_AUTH_TOKEN: ${{ secrets.DERIV_AUTH_TOKEN" not in workflow
+    assert "AURELIA_SSH_KEY: ${{ secrets.AURELIA_SSH_KEY }}" not in workflow
+    assert "secrets.DERIV_AUTH_TOKEN || secrets.DERIV_PAT" not in workflow
+    assert "vars.DERIV_AUTH_MODE" in workflow
+    assert "vars.DERIV_ENVIRONMENT" in workflow

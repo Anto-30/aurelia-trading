@@ -4,7 +4,6 @@ import asyncio
 import json
 from dataclasses import dataclass
 from typing import Any, AsyncIterator
-
 from websockets.asyncio.client import ClientConnection, connect
 
 

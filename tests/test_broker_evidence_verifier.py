@@ -7,37 +7,39 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class BrokerEvidenceVerifierContractTests(unittest.TestCase):
-    def test_verifier_is_read_only_and_account_scoped(self):
-        source = (ROOT / "scripts" / "verify_deriv_broker_evidence.py").read_text(
-            encoding="utf-8"
-        )
+    def test_broker_evidence_verifier_is_blocked_before_any_secret_or_transport_access(self):
+        path = ROOT / "scripts" / "verify_deriv_broker_evidence.py"
+        source = path.read_text(encoding="utf-8")
         tree = ast.parse(source)
+        run = next(
+            node for node in tree.body
+            if isinstance(node, ast.AsyncFunctionDef) and node.name == "run"
+        )
+        self.assertTrue(ast.get_docstring(run))
+        executable = next(
+            node for node in run.body
+            if not (
+                isinstance(node, ast.Expr)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            )
+        )
+        self.assertIsInstance(executable, ast.Return)
+        self.assertIn("DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE", source)
+        self.assertNotIn("get_optional_secret", source)
+        self.assertNotIn("DerivSessionManager", source)
+        self.assertNotIn("DerivAdapter", source)
+        self.assertNotIn("DERIV_AUTH_TOKEN", source)
+        self.assertNotIn("DERIV_PAT", source)
 
-        called = {
-            node.func.attr
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-        }
-
-        self.assertIn("statement", called)
-        self.assertIn("portfolio", called)
-        self.assertIn("get_balance", called)
-        self.assertNotIn("submit_authorized_order", called)
-        self.assertNotIn("buy", called)
-
-    def test_verifier_requires_explicit_currency_before_broker_calls(self):
-        source = (ROOT / "scripts" / "verify_deriv_broker_evidence.py").read_text(encoding="utf-8")
-        self.assertIn("EXPECTED_ACCOUNT_CURRENCY_MISSING", source)
-        self.assertIn("DERIV_EXPECTED_CURRENCY", source)
-
-    def test_verifier_declares_no_capital_authority(self):
+    def test_blocked_broker_evidence_never_claims_read_only_account_proof(self):
         source = (ROOT / "scripts" / "verify_deriv_broker_evidence.py").read_text(
             encoding="utf-8"
         )
-        self.assertIn('enriched["capital_authority_granted"] = False', source)
-        self.assertIn('enriched["orders_submitted"] = 0', source)
-        self.assertIn('enriched["verification_scope"] = "REAL_DERIV_BROKER_ACCOUNT_READ_ONLY"', source)
+        self.assertNotIn("REAL_DERIV_BROKER_ACCOUNT_READ_ONLY", source)
+        self.assertNotIn("available_balance", source)
+        self.assertNotIn("statement(", source)
+        self.assertNotIn("portfolio(", source)
 
 
 if __name__ == "__main__":

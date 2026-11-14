@@ -4,7 +4,11 @@ import os
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
-from runtime.adapters.deriv_session import DerivSessionError, get_authenticated_ws_url, validate_modern_options_ws_url
+from runtime.adapters.deriv_session import (
+    DerivSessionError,
+    get_authenticated_ws_url,
+    validate_modern_options_ws_url,
+)
 from runtime.adapters.deriv_ws import DerivTransportError, DerivWebSocketTransport
 from runtime.core.circuit import CircuitBreaker
 from runtime.core.events import sha256

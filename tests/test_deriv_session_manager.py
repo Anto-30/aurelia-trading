@@ -59,6 +59,24 @@ class SessionManagerContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             manager.validate_binding(loginid="CRREAL", environment="demo")
 
+    def test_list_accounts_uses_explicit_credentials_and_returns_account_rows(self):
+        from unittest.mock import patch
+
+        manager = DerivSessionManager(
+            expected_loginid="CRREAL",
+            expected_environment="real",
+            expected_currency="USD",
+        )
+        payload = {"data": [
+            {"account_id": "CRREAL", "account_type": "real", "currency": "USD"}
+        ]}
+        with patch.object(manager, "_request_json", return_value=payload) as request:
+            rows = manager.list_accounts(bearer_token="TEST-TOKEN", app_id="TEST-APP")
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["account_id"], "CRREAL")
+        self.assertEqual(request.call_args.kwargs["method"], "GET")
+        self.assertEqual(request.call_args.kwargs["bearer_token"], "TEST-TOKEN")
+
 
 if __name__ == "__main__":
     unittest.main()
