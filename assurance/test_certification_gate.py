@@ -506,15 +506,15 @@ class CertificationEvidenceTest(unittest.TestCase):
                 encoding="utf-8",
             )
             with (
-                unittest.mock.patch(
+                patch(
                     "assurance.certification_gate.current_source_sha",
                     return_value="a" * 40,
                 ),
-                unittest.mock.patch(
+                patch(
                     "assurance.certification_gate.validate_evidence_bundle",
                     return_value=("PASS", "structural evidence valid"),
                 ),
-                unittest.mock.patch(
+                patch(
                     "assurance.certification_gate.verify_independent_security_review",
                     return_value=(False, "GITHUB_REVIEW_NOT_APPROVED"),
                 ),
@@ -531,15 +531,15 @@ class CertificationEvidenceTest(unittest.TestCase):
             security_path.parent.mkdir(parents=True)
             security_path.write_text("{}", encoding="utf-8")
             with (
-                unittest.mock.patch(
+                patch(
                     "assurance.certification_gate.current_source_sha",
                     return_value="a" * 40,
                 ),
-                unittest.mock.patch(
+                patch(
                     "assurance.certification_gate.validate_evidence_bundle",
                     return_value=("PASS", "structural evidence valid"),
                 ),
-                unittest.mock.patch(
+                patch(
                     "assurance.certification_gate.verify_independent_security_review",
                     return_value=(True, "GITHUB_INDEPENDENT_REVIEW_VERIFIED"),
                 ),
