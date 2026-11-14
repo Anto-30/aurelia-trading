@@ -93,3 +93,12 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+    def test_live_deployment_requires_main_assurance_for_exact_commit(self):
+        workflow = (ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("--json status,conclusion,event,headBranch,headSha,databaseId", workflow)
+        self.assertIn('run.get("headBranch") == "main"', workflow)
+        self.assertIn('run.get("headSha") == os.environ["GITHUB_SHA"]', workflow)
