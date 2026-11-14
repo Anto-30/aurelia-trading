@@ -21,6 +21,15 @@ if ! command -v sudo >/dev/null 2>&1; then
 fi
 sudo -n true
 
+# Revoke the retired credential-bearing VERIFY_ONLY store before any deploy
+# attempt. Stop an existing container first so it cannot retain those values.
+if [ -f "$READONLY_SECRET_FILE" ]; then
+  sudo rm -f "$READONLY_SECRET_FILE"
+  if command -v docker >/dev/null 2>&1; then
+    sudo docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+  fi
+fi
+
 if [ ! -d "$RELEASE_DIR" ]; then
   echo "AURELIA_HOST_BLOCKED=MISSING_RELEASE_DIR"
   exit 2
@@ -41,6 +50,8 @@ case "$DEPLOYMENT_MODE" in
     grep -Eq "^FINAL_EXECUTION_AUTHORIZATION:[[:space:]]*true[[:space:]]*$" "$LOCK_FILE"
     grep -Eq "^LIVE_EXECUTION:[[:space:]]*ENABLED[[:space:]]*$" "$LOCK_FILE"
     grep -Eq "^capital_plane_mode:[[:space:]]*LIVE[[:space:]]*$" "$LOCK_FILE"
+    echo "AURELIA_HOST_BLOCKED=DERIV_READ_ONLY_ACCOUNT_SCOPE_UNAVAILABLE"
+    exit 2
     ;;
   *)
     echo "AURELIA_HOST_BLOCKED=INVALID_DEPLOYMENT_MODE"
@@ -85,7 +96,7 @@ PORT=8080
 AURELIA_CONTINUOUS_RUNTIME=true
 AURELIA_AUTONOMOUS_LOOP=false
 AURELIA_VERIFY_DERIV_PUBLIC=true
-AURELIA_VERIFY_DERIV_AUTH=true
+AURELIA_VERIFY_DERIV_AUTH=false
 AURELIA_RUN_ONCE=false
 AURELIA_DEPLOYMENT_MODE=LIVE
 AURELIA_PERSISTENT_WORKER_HEALTHY=true
@@ -145,57 +156,10 @@ if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   ENV_FILES=("$LIVE_SECRET_FILE")
 else
   ENV_FILES=("$ENV_FILE")
-  if [ -f "$READONLY_SECRET_FILE" ]; then
-    sudo chmod 600 "$READONLY_SECRET_FILE"
-    ENV_FILES+=("$READONLY_SECRET_FILE")
-  fi
 fi
 
 RUNTIME_ID="$(grep -h -E '^AURELIA_RUNTIME_ID=' "${ENV_FILES[@]}" | tail -n 1 | sed 's/^[^=]*=//')"
 RUNTIME_ID="${RUNTIME_ID:-aurelia-production-worker}"
-
-AUTH_CONFIGURED=false
-if grep -Eq "^(DERIV_AUTH_TOKEN|DERIV_PAT)=.+$" "${ENV_FILES[@]}" \
-  && grep -Eq "^(DERIV_EXPECTED_LOGINID|DERIV_AUTHORIZED_ACCOUNT_ID)=.+$" "${ENV_FILES[@]}" \
-  && grep -Eq "^DERIV_EXPECTED_CURRENCY=.+$" "${ENV_FILES[@]}" \
-  && grep -Eq "^DERIV_ENVIRONMENT=real$" "${ENV_FILES[@]}" \
-  && grep -Eq "^DERIV_AUTH_MODE=(pat|oauth)$" "${ENV_FILES[@]}"; then
-  if ! grep -Eq "^DERIV_AUTH_MODE=pat$" "${ENV_FILES[@]}" \
-    || grep -Eq "^DERIV_APP_ID=.+$" "${ENV_FILES[@]}"; then
-    AUTH_CONFIGURED=true
-  fi
-fi
-
-if [ "$DEPLOYMENT_MODE" = "LIVE" ] && [ "$AUTH_CONFIGURED" != "true" ]; then
-  grep -Eq "^(DERIV_AUTH_TOKEN|DERIV_PAT)=.+$" "${ENV_FILES[@]}" || {
-    echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_AUTH_TOKEN_OR_DERIV_PAT"
-    exit 2
-  }
-  grep -Eq "^(DERIV_EXPECTED_LOGINID|DERIV_AUTHORIZED_ACCOUNT_ID)=.+$" "${ENV_FILES[@]}" || {
-    echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_EXPECTED_LOGINID_OR_DERIV_AUTHORIZED_ACCOUNT_ID"
-    exit 2
-  }
-  grep -Eq "^DERIV_EXPECTED_CURRENCY=.+$" "${ENV_FILES[@]}" || {
-    echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_CONFIG:DERIV_EXPECTED_CURRENCY"
-    exit 2
-  }
-  grep -Eq "^DERIV_ENVIRONMENT=real$" "${ENV_FILES[@]}" || {
-    echo "AURELIA_HOST_BLOCKED=LIVE_RUNTIME_REQUIRES_DERIV_ENVIRONMENT_REAL"
-    exit 2
-  }
-  grep -Eq "^DERIV_AUTH_MODE=(pat|oauth)$" "${ENV_FILES[@]}" || {
-    echo "AURELIA_HOST_BLOCKED=DERIV_AUTH_MODE_INVALID_OR_MISSING"
-    exit 2
-  }
-  if grep -Eq "^DERIV_AUTH_MODE=pat$" "${ENV_FILES[@]}"; then
-    grep -Eq "^DERIV_APP_ID=.+$" "${ENV_FILES[@]}" || {
-      echo "AURELIA_HOST_BLOCKED=MISSING_DERIV_APP_ID"
-      exit 2
-    }
-  fi
-  echo "AURELIA_HOST_BLOCKED=DERIV_AUTH_CONFIGURATION_INVALID"
-  exit 2
-fi
 
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   grep -Fxq 'AURELIA_KILL_SWITCH_STATE_PATH=/tmp/aurelia/kill-switch-state.json' "$ENV_FILE" || {
@@ -203,13 +167,13 @@ if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
     exit 2
   }
   AUTONOMOUS_LOOP=true
-  VERIFY_DERIV_AUTH=true
+  VERIFY_DERIV_AUTH=false
   VERIFY_DERIV_PUBLIC=true
   FINAL_AUTH=true
   LIVE_EXECUTION=ENABLED
 else
   AUTONOMOUS_LOOP=false
-  VERIFY_DERIV_AUTH="$AUTH_CONFIGURED"
+  VERIFY_DERIV_AUTH=false
   VERIFY_DERIV_PUBLIC=true
   FINAL_AUTH=false
   LIVE_EXECUTION=BLOCKED
@@ -237,8 +201,6 @@ sudo systemctl enable aurelia-runtime-watchdog.service
 SECRET_ENV_ARGS=()
 if [ "$DEPLOYMENT_MODE" = "LIVE" ]; then
   SECRET_ENV_ARGS+=(--env-file "$LIVE_SECRET_FILE")
-elif [ -f "$READONLY_SECRET_FILE" ]; then
-  SECRET_ENV_ARGS+=(--env-file "$READONLY_SECRET_FILE")
 fi
 
 sudo docker build --pull --tag "$IMAGE" "$RELEASE_DIR"
