@@ -14,6 +14,7 @@ from .certification_evidence import (
     runtime_source_status,
     validate_evidence_bundle,
 )
+from .github_review_verifier import verify_independent_security_review
 
 MANDATORY_DOCUMENTS = (
     "docs/AURELIA_PRODUCTION_STANDARD.yaml",
@@ -80,6 +81,24 @@ def evaluate_repository(root: Path) -> list[dict]:
             root,
             expected_source_sha=candidate_sha,
         )
+        security_audit_path = root / "evidence" / "security_audit.json"
+        if evidence_status == "PASS" and security_audit_path.is_file():
+            try:
+                security_audit = json.loads(
+                    security_audit_path.read_text(encoding="utf-8")
+                )
+                review_ok, review_detail = verify_independent_security_review(
+                    security_audit,
+                    expected_source_sha=candidate_sha,
+                )
+            except (OSError, json.JSONDecodeError, TypeError) as exc:
+                review_ok, review_detail = False, f"SECURITY_REVIEW_EVIDENCE_READ_FAILED:{type(exc).__name__}"
+            if not review_ok:
+                evidence_status = "BLOCKED"
+                evidence_detail = (
+                    "Independent security review could not be verified against GitHub: "
+                    + review_detail
+                )
     results.append({"name": "PRODUCTION_EVIDENCE", "status": evidence_status, "detail": evidence_detail})
 
     results.append({
