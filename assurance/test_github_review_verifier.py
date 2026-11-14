@@ -84,13 +84,16 @@ class GitHubReviewVerifierTests(unittest.TestCase):
         self.assertEqual(detail, "GITHUB_REVIEW_NOT_APPROVED")
 
     def test_pr_author_cannot_supply_independent_approval(self):
+        candidate = record()
+        candidate["independent_reviewer"] = "Anto-30"
+        candidate["auditor"] = "separate-auditor"
         ok, detail = self._verify(
-            record(),
+            candidate,
             pull_payload(),
             review_payload(reviewer="Anto-30"),
         )
         self.assertFalse(ok)
-        self.assertEqual(detail, "GITHUB_REVIEWER_IDENTITY_MISMATCH")
+        self.assertEqual(detail, "PULL_REQUEST_AUTHOR_CANNOT_SELF_APPROVE")
 
     def test_approval_on_stale_commit_is_rejected(self):
         ok, detail = self._verify(
