@@ -457,13 +457,25 @@ def _domain_valid(name: str, record: dict[str, Any]) -> tuple[bool, str]:
         reviewer = record.get("independent_reviewer")
         auditor = record.get("auditor")
         review_reference = record.get("independent_review_reference")
-        review_reference_valid = (
-            isinstance(review_reference, str)
-            and re.fullmatch(
-                r"https://github\\.com/[^/\\s]+/[^/\\s]+/pull/[1-9][0-9]*#pullrequestreview-[1-9][0-9]*",
-                review_reference,
-            ) is not None
-        )
+        review_reference_valid = False
+        if isinstance(review_reference, str) and review_reference.startswith(
+            "https://github.com/"
+        ):
+            review_path, marker, review_id = review_reference.partition(
+                "#pullrequestreview-"
+            )
+            path_parts = review_path.removeprefix("https://github.com/").split("/")
+            review_reference_valid = (
+                marker == "#pullrequestreview-"
+                and len(path_parts) == 4
+                and bool(path_parts[0])
+                and bool(path_parts[1])
+                and path_parts[2] == "pull"
+                and path_parts[3].isdigit()
+                and review_id.isdigit()
+                and int(review_id) > 0
+                and int(path_parts[3]) > 0
+            )
         independent_review_ok = (
             review_reference_valid
             and _non_empty_string(record, "independent_review_approval")
