@@ -1,13 +1,16 @@
 import json
+import os
 import subprocess
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from assurance.certification_evidence import (
     REQUIRED_EVIDENCE_FILES,
     REQUIRED_RUNTIME_MARKERS,
+    current_source_sha,
     validate_evidence_bundle,
 )
 from assurance.certification_gate import _overall_status
@@ -418,6 +421,57 @@ class CertificationEvidenceTest(unittest.TestCase):
             )
             self.assertEqual(status, "BLOCKED", detail)
             self.assertIn("source", detail.lower())
+
+    def test_pull_request_source_sha_uses_reviewed_head_not_merge_sha(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            event_path = root / "event.json"
+            head_sha = "a" * 40
+            merge_sha = "b" * 40
+            event_path.write_text(
+                json.dumps({"pull_request": {"head": {"sha": head_sha}}}),
+                encoding="utf-8",
+            )
+            with patch.dict(
+                os.environ,
+                {
+                    "GITHUB_EVENT_NAME": "pull_request",
+                    "GITHUB_EVENT_PATH": str(event_path),
+                    "GITHUB_SHA": merge_sha,
+                },
+                clear=True,
+            ):
+                self.assertEqual(current_source_sha(root), head_sha)
+
+    def test_pull_request_source_sha_fails_closed_without_event_head(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            event_path = root / "event.json"
+            event_path.write_text("{}", encoding="utf-8")
+            with patch.dict(
+                os.environ,
+                {
+                    "GITHUB_EVENT_NAME": "pull_request",
+                    "GITHUB_EVENT_PATH": str(event_path),
+                    "GITHUB_SHA": "b" * 40,
+                },
+                clear=True,
+            ):
+                self.assertEqual(current_source_sha(root), "")
+
+    def test_explicit_candidate_source_sha_overrides_event_payload(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            with patch.dict(
+                os.environ,
+                {
+                    "AURELIA_SOURCE_SHA": "c" * 40,
+                    "GITHUB_EVENT_NAME": "pull_request",
+                    "GITHUB_SHA": "b" * 40,
+                },
+                clear=True,
+            ):
+                self.assertEqual(current_source_sha(root), "c" * 40)
 
     def test_evidence_source_hash_must_match_candidate_commit(self):
         with tempfile.TemporaryDirectory() as d:
