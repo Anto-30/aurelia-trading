@@ -88,18 +88,17 @@ class ProductionSecretIsolationTests(unittest.TestCase):
         self.assertNotIn("${{ secrets.", text)
         self.assertNotIn("DERIV_AUTH_TOKEN", text)
 
-    def test_whatsapp_alert_secrets_are_manual_main_only_and_environment_protected(self):
-        text = (WORKFLOWS / "aurelia-free-runtime.yml").read_text(encoding="utf-8")
+    def test_whatsapp_alert_smoke_is_held_without_environment_approval(self):
         alert_job = _job_block("aurelia-free-runtime.yml", "whatsapp-alert-smoke")
         self.assertIn("github.event_name == 'workflow_dispatch'", alert_job)
         self.assertIn("github.ref == 'refs/heads/main'", alert_job)
-        self.assertIn("environment: production", alert_job)
-        self.assertNotIn("pull_request:", text)
-        self.assertNotIn("pull_request_target:", text)
-        self.assertIn("secrets.TWILIO_ACCOUNT_SID", alert_job)
-        self.assertIn("secrets.TWILIO_AUTH_TOKEN", alert_job)
-        self.assertNotIn("secrets.TWILIO_ACCOUNT_SID", _job_block("aurelia-free-runtime.yml", "runtime-probe"))
-
+        self.assertNotIn("environment: production", alert_job)
+        self.assertNotIn("${{ secrets.", alert_job)
+        self.assertNotIn("test_whatsapp_alert.py", alert_job)
+        self.assertIn("WHATSAPP_ALERT_SMOKE=BLOCKED", alert_job)
+        self.assertIn("PRODUCTION_ENVIRONMENT_REVIEW_REQUIRED", alert_job)
+        self.assertIn("TWILIO_CREDENTIALS_READ=false", alert_job)
+        self.assertIn("WHATSAPP_MESSAGE_SENT=false", alert_job)
     def test_presence_report_secret_expressions_are_boolean_only(self):
         text = (WORKFLOWS / "secret-presence-report.yml").read_text(encoding="utf-8")
         for line in text.splitlines():
