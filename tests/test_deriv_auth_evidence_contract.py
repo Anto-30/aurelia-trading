@@ -21,10 +21,20 @@ class DerivAuthEvidenceContractTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("DERIV_CAPITAL_AUTHORITY_GRANTED=false", output.getvalue())
 
     def test_ci_environment_matches_certification_schema(self):
-        record = {"environment": "ci", "provenance": {
-            "origin": "ci", "issuer": "test", "source_commit": "TEST",
-            "generated_at_utc": "2026-10-03T10:00:00Z",
-        }}
+        source_commit = "a" * 40
+        record = {
+            "environment": "ci",
+            "source_hash": source_commit,
+            "artifact_hash": "b" * 64,
+            "config_hash": "c" * 64,
+            "data_hash": "d" * 64,
+            "provenance": {
+                "origin": "ci",
+                "issuer": "test",
+                "source_commit": source_commit,
+                "generated_at_utc": "2026-10-03T10:00:00Z",
+            },
+        }
         self.assertTrue(_provenance_valid(record)[0])
         record["environment"] = "ci-real"
         self.assertFalse(_provenance_valid(record)[0])

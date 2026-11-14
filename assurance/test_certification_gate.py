@@ -1,15 +1,19 @@
 import json
+import os
 import subprocess
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from assurance.certification_evidence import (
     REQUIRED_EVIDENCE_FILES,
     REQUIRED_RUNTIME_MARKERS,
+    current_source_sha,
     validate_evidence_bundle,
 )
-from assurance.certification_gate import _overall_status
+from assurance.certification_gate import _overall_status, evaluate_repository
 from assurance.evidence_writer import payload_sha256
 
 
@@ -20,27 +24,31 @@ class CertificationEvidenceTest(unittest.TestCase):
         path.write_text(content, encoding="utf-8")
 
     def _passing_record(self) -> dict:
+        now = datetime.now(timezone.utc)
+        source_commit = "a" * 40
         record = {
             "evidence_id": "E-TEST",
-            "source_hash": "s",
-            "artifact_hash": "a",
-            "config_hash": "c",
-            "data_hash": "d",
+            "source_hash": source_commit,
+            "artifact_hash": "b" * 64,
+            "config_hash": "c" * 64,
+            "data_hash": "d" * 64,
             "environment": "ci",
-            "started_at_utc": "2026-10-03T10:00:00Z",
-            "ended_at_utc": "2026-10-03T10:01:00Z",
+            "started_at_utc": (now - timedelta(minutes=1)).isoformat(),
+            "ended_at_utc": now.isoformat(),
+            "valid_until_utc": (now + timedelta(days=7)).isoformat(),
             "status": "CURRENT",
             "result": "PROVEN",
             "invariants_failed": [],
             "provenance": {
                 "origin": "ci",
                 "issuer": "test-suite",
-                "source_commit": "TEST",
-                "generated_at_utc": "2026-10-03T10:01:00Z",
+                "source_commit": source_commit,
+                "generated_at_utc": now.isoformat(),
             },
             "transaction_trace_complete": True,
             "broker_unknown_recovery_proven": True,
             "reconciliation_proven": True,
+            "broker_truth_observed": True,
             "broker_transaction_id": "TX-TEST",
             "lifecycle_events": [
                 {"event": "INTENT"},
@@ -55,6 +63,8 @@ class CertificationEvidenceTest(unittest.TestCase):
                 {"scenario_id": "UNKNOWN", "passed": True},
                 {"scenario_id": "CRASH", "passed": True},
                 {"scenario_id": "CONCURRENCY", "passed": True},
+                {"scenario_id": "KILL_SWITCH", "passed": True},
+                {"scenario_id": "RECONCILIATION", "passed": True},
             ],
             "blind_resubmissions": 0,
             "duplicate_economic_effects": 0,
@@ -68,15 +78,34 @@ class CertificationEvidenceTest(unittest.TestCase):
             "silent_degradations": 0,
             "capital_authority_escapes": 0,
             "unresolved_unknown_states": 0,
+            "evidence_classification": "ADVERSARIAL_RUNTIME_SOAK",
+            "fault_matrix": {
+                "stale_and_duplicate_market_data": True,
+                "out_of_order_events": True,
+                "websocket_interruption": True,
+                "request_timeout": True,
+                "response_loss_after_economic_effect": True,
+                "unknown_broker_state": True,
+                "duplicate_and_concurrent_intent": True,
+                "crash_at_lifecycle_transitions": True,
+                "restart_with_kill_switch": True,
+                "stale_authorization": True,
+                "configuration_and_account_mismatch": True,
+                "ledger_reconciliation_mismatch": True,
+                "backup_restore": True,
+                "credential_boundary_violation": True,
+                "shadow_path_divergence": True,
+            },
             "sealed_prospective_data": True,
             "retuning_after_seal": False,
             "multiple_testing_accounted": True,
-            "archive_hash": "ARCHIVE",
+            "archive_hash": "f" * 64,
             "strategy_version": "S-TEST",
             "oos_window": "2026-01-01/2026-01-31",
             "min_trades_per_strategy_symbol_regime": 100,
             "calibration_validated": True,
             "drift_monitoring": True,
+            "drift_detected": False,
             "sample_count": 1000,
             "reliability_buckets": [
                 {"bucket": "0.55-0.60", "count": 100, "mean_probability": 0.575, "realized_rate": 0.57},
@@ -84,20 +113,31 @@ class CertificationEvidenceTest(unittest.TestCase):
                 {"bucket": "0.65-0.70", "count": 100, "mean_probability": 0.675, "realized_rate": 0.67},
             ],
             "max_reliability_gap": 0.005,
-            "drift_detected": False,
             "brier_score": 0.2,
             "log_loss": 0.6,
             "net_expectancy_status": "KNOWN",
+            "net_expectancy": 0.12,
+            "realized_execution_status": "MEASURED",
             "stress_passed": True,
             "cost_components": {"spread": 0.01, "slippage": 0.01, "fees": 0.0},
             "execution_model": "DERIV_OPTIONS_MEASURED",
             "credential_isolation_passed": True,
             "capital_bypass_audit_passed": True,
             "audit_id": "AUDIT-TEST",
-            "auditor": "test-suite",
+            "auditor": "auditor@example.test",
+            "independent_reviewer": "reviewer@example.test",
+            "independent_review_reference": "https://github.com/example/repo/pull/123#pullrequestreview-456",
+            "independent_review_approval": "APPROVED",
+            "reviewed_commit": source_commit,
             "scope": "capital-boundary",
             "findings": [{"severity": "info", "count": 0}],
             "critical_findings": 0,
+            "source_commit": source_commit,
+            "build_hash": "e" * 64,
+            "artifact_hash": "b" * 64,
+            "deployment_id": "DEPLOY-TEST",
+            "runtime_hash": "f" * 64,
+            "config_hash": "c" * 64,
             "runtime_matches_artifact": True,
             "qualification_passed": True,
             "strategies": [
@@ -105,15 +145,11 @@ class CertificationEvidenceTest(unittest.TestCase):
                     "strategy_id": "S-TEST",
                     "qualified": True,
                     "trade_count": 100,
-                    "strategy_hash": "strategy-hash",
+                    "strategy_hash": "1" * 64,
                 }
             ],
             "edge_removed": True,
         }
-        record["source_commit"] = "commit"
-        record["build_hash"] = "build"
-        record["deployment_id"] = "deploy"
-        record["runtime_hash"] = "runtime"
         record["record_hash"] = payload_sha256(record)
         return record
 
@@ -121,7 +157,47 @@ class CertificationEvidenceTest(unittest.TestCase):
         for marker in REQUIRED_RUNTIME_MARKERS:
             self._write(root, marker, "runtime")
         for relative in REQUIRED_EVIDENCE_FILES:
-            self._write(root, relative, json.dumps(self._passing_record()))
+            record = self._passing_record()
+            name = Path(relative).name
+            provenance = record["provenance"]
+            if name == "broker_lifecycle.json":
+                record.update({"environment": "staging", "broker_truth_observed": True})
+                provenance["origin"] = "runtime"
+            elif name == "recovery_matrix.json":
+                record.update({
+                    "environment": "ci",
+                    "evidence_classification": "CI_SIMULATION_ONLY",
+                    "execution_mode": "DETERMINISTIC_BROKER_STUB",
+                    "broker_truth_observed": False,
+                    "capital_authority_granted": False,
+                    "order_submission_permitted": False,
+                    "live_execution": "BLOCKED",
+                })
+                provenance["origin"] = "ci"
+            elif name == "soak_3600s.json":
+                record.update({"environment": "staging"})
+                provenance["origin"] = "runtime"
+            elif name in {"prospective_oos.json", "calibration.json", "strategy_eligibility.json"}:
+                record.update({"environment": "research"})
+                provenance["origin"] = "research"
+            elif name == "execution_economics.json":
+                record.update({
+                    "environment": "staging",
+                    "realized_execution_status": "MEASURED",
+                    "net_expectancy": 0.12,
+                })
+                provenance["origin"] = "runtime"
+            elif name == "security_audit.json":
+                record.update({"environment": "staging"})
+                provenance["origin"] = "runtime"
+            elif name == "deployment.json":
+                record.update({"environment": "production"})
+                provenance["origin"] = "runtime"
+                provenance["deployment_id"] = record["deployment_id"]
+            record["record_hash"] = payload_sha256(
+                {key: value for key, value in record.items() if key != "record_hash"}
+            )
+            self._write(root, relative, json.dumps(record))
 
     def test_missing_bundle_blocks(self):
         with tempfile.TemporaryDirectory() as d:
@@ -204,6 +280,274 @@ class CertificationEvidenceTest(unittest.TestCase):
             status, detail = validate_evidence_bundle(root)
             self.assertEqual(status, "BLOCKED")
             self.assertIn("record_hash mismatch", detail)
+
+
+    def _rewrite_record(self, root: Path, relative: str, mutate) -> tuple[str, str]:
+        path = root / relative
+        record = json.loads(path.read_text(encoding="utf-8"))
+        mutate(record)
+        record["record_hash"] = payload_sha256(
+            {key: value for key, value in record.items() if key != "record_hash"}
+        )
+        path.write_text(json.dumps(record), encoding="utf-8")
+        from assurance.certification_evidence import validate_evidence_file
+        return validate_evidence_file(root, relative)
+
+    def test_ci_stub_cannot_certify_real_broker_lifecycle(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/broker_lifecycle.json",
+                lambda record: (
+                    record.update({"environment": "ci", "broker_truth_observed": False}),
+                    record["provenance"].update({"origin": "ci"}),
+                ),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("broker", detail.lower())
+
+    def test_ci_health_soak_cannot_certify_adversarial_runtime_soak(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/soak_3600s.json",
+                lambda record: (
+                    record.update({"environment": "ci"}),
+                    record["provenance"].update({"origin": "ci"}),
+                ),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("soak", detail.lower())
+
+    def test_ci_deployment_assertion_cannot_certify_production_deployment(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/deployment.json",
+                lambda record: (
+                    record.update({"environment": "ci"}),
+                    record["provenance"].update({"origin": "ci"}),
+                ),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("deployment", detail.lower())
+
+    def test_ci_generated_oos_data_is_not_prospective_research_evidence(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/prospective_oos.json",
+                lambda record: (
+                    record.update({"environment": "ci"}),
+                    record["provenance"].update({"origin": "ci"}),
+                ),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("prospective", detail.lower())
+
+    def test_ci_generated_calibration_is_not_research_calibration_evidence(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/calibration.json",
+                lambda record: (
+                    record.update({"environment": "ci"}),
+                    record["provenance"].update({"origin": "ci"}),
+                ),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("calibration", detail.lower())
+
+    def test_quoted_economics_without_realized_execution_costs_are_not_proven(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/execution_economics.json",
+                lambda record: record.update({
+                    "realized_execution_status": "NOT_MEASURED",
+                    "net_expectancy": None,
+                }),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("economics", detail.lower())
+
+    def test_ci_cannot_self_certify_independent_security_audit(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/security_audit.json",
+                lambda record: (
+                    record.update({"environment": "ci"}),
+                    record["provenance"].update({"origin": "ci"}),
+                ),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("independent", detail.lower())
+
+    def test_security_audit_requires_independent_review_reference(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/security_audit.json",
+                lambda record: record.pop("independent_review_reference", None),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("security", detail.lower())
+
+    def test_evidence_source_commit_must_match_provenance_commit(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/recovery_matrix.json",
+                lambda record: record["provenance"].update({"source_commit": "DIFFERENT"}),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("source", detail.lower())
+
+    def test_pull_request_source_sha_uses_reviewed_head_not_merge_sha(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            event_path = root / "event.json"
+            head_sha = "a" * 40
+            merge_sha = "b" * 40
+            event_path.write_text(
+                json.dumps({"pull_request": {"head": {"sha": head_sha}}}),
+                encoding="utf-8",
+            )
+            with patch.dict(
+                os.environ,
+                {
+                    "GITHUB_EVENT_NAME": "pull_request",
+                    "GITHUB_EVENT_PATH": str(event_path),
+                    "GITHUB_SHA": merge_sha,
+                },
+                clear=True,
+            ):
+                self.assertEqual(current_source_sha(root), head_sha)
+
+    def test_pull_request_source_sha_fails_closed_without_event_head(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            event_path = root / "event.json"
+            event_path.write_text("{}", encoding="utf-8")
+            with patch.dict(
+                os.environ,
+                {
+                    "GITHUB_EVENT_NAME": "pull_request",
+                    "GITHUB_EVENT_PATH": str(event_path),
+                    "GITHUB_SHA": "b" * 40,
+                },
+                clear=True,
+            ):
+                self.assertEqual(current_source_sha(root), "")
+
+    def test_explicit_candidate_source_sha_overrides_event_payload(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            with patch.dict(
+                os.environ,
+                {
+                    "AURELIA_SOURCE_SHA": "c" * 40,
+                    "GITHUB_EVENT_NAME": "pull_request",
+                    "GITHUB_SHA": "b" * 40,
+                },
+                clear=True,
+            ):
+                self.assertEqual(current_source_sha(root), "c" * 40)
+
+    def test_evidence_source_hash_must_match_candidate_commit(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = validate_evidence_bundle(
+                root,
+                expected_source_sha="b" * 40,
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("source", detail.lower())
+
+    def test_evidence_must_have_expiry(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = self._rewrite_record(
+                root,
+                "evidence/recovery_matrix.json",
+                lambda record: record.pop("valid_until_utc", None),
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("valid_until_utc", detail)
+
+    def test_certification_gate_requires_github_verified_security_review(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            security_path = root / "evidence" / "security_audit.json"
+            security_path.parent.mkdir(parents=True)
+            security_path.write_text(
+                json.dumps({"independent_review_reference": "synthetic"}),
+                encoding="utf-8",
+            )
+            with (
+                patch(
+                    "assurance.certification_gate.current_source_sha",
+                    return_value="a" * 40,
+                ),
+                patch(
+                    "assurance.certification_gate.validate_evidence_bundle",
+                    return_value=("PASS", "structural evidence valid"),
+                ),
+                patch(
+                    "assurance.certification_gate.verify_independent_security_review",
+                    return_value=(False, "GITHUB_REVIEW_NOT_APPROVED"),
+                ),
+            ):
+                result = evaluate_repository(root)
+            production = next(x for x in result if x["name"] == "PRODUCTION_EVIDENCE")
+            self.assertEqual(production["status"], "BLOCKED")
+            self.assertIn("GITHUB_REVIEW_NOT_APPROVED", production["detail"])
+
+    def test_certification_gate_accepts_only_api_verified_security_review(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            security_path = root / "evidence" / "security_audit.json"
+            security_path.parent.mkdir(parents=True)
+            security_path.write_text("{}", encoding="utf-8")
+            with (
+                patch(
+                    "assurance.certification_gate.current_source_sha",
+                    return_value="a" * 40,
+                ),
+                patch(
+                    "assurance.certification_gate.validate_evidence_bundle",
+                    return_value=("PASS", "structural evidence valid"),
+                ),
+                patch(
+                    "assurance.certification_gate.verify_independent_security_review",
+                    return_value=(True, "GITHUB_INDEPENDENT_REVIEW_VERIFIED"),
+                ),
+            ):
+                result = evaluate_repository(root)
+            production = next(x for x in result if x["name"] == "PRODUCTION_EVIDENCE")
+            self.assertEqual(production["status"], "PASS")
+            self.assertEqual(production["detail"], "structural evidence valid")
 
     def test_live_execution_block_is_not_repository_failure(self):
         result = [
