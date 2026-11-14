@@ -90,11 +90,6 @@ class SelfHostedDeploymentContractTests(unittest.TestCase):
         self.assertIn("DERIV_PUBLIC_TRANSPORT_EVIDENCE_OUT: artifacts/deriv_public_transport.json", workflow)
         self.assertIn("python scripts/verify_deriv_public_transport.py", workflow)
 
-
-if __name__ == "__main__":
-    unittest.main()
-
-
     def test_live_deployment_requires_main_assurance_for_exact_commit(self):
         workflow = (ROOT / ".github" / "workflows" / "self-hosted-runtime-deploy.yml").read_text(
             encoding="utf-8"
@@ -102,3 +97,7 @@ if __name__ == "__main__":
         self.assertIn("--json status,conclusion,event,headBranch,headSha,databaseId", workflow)
         self.assertIn('run.get("headBranch") == "main"', workflow)
         self.assertIn('run.get("headSha") == os.environ["GITHUB_SHA"]', workflow)
+
+
+if __name__ == "__main__":
+    unittest.main()
