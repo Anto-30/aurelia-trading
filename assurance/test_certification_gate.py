@@ -380,6 +380,17 @@ class CertificationEvidenceTest(unittest.TestCase):
             self.assertEqual(status, "BLOCKED", detail)
             self.assertIn("economics", detail.lower())
 
+    def test_ci_cannot_self_certify_independent_security_audit(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = validate_evidence_file(
+                root,
+                "evidence/security_audit.json",
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("independent", detail.lower())
+
     def test_security_audit_requires_independent_review_reference(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
