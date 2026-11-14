@@ -123,7 +123,7 @@ class CertificationEvidenceTest(unittest.TestCase):
             "audit_id": "AUDIT-TEST",
             "auditor": "auditor@example.test",
             "independent_reviewer": "reviewer@example.test",
-            "independent_review_reference": "https://github.com/example/review/123",
+            "independent_review_reference": "https://github.com/example/repo/pull/123#pullrequestreview-456",
             "independent_review_approval": "APPROVED",
             "reviewed_commit": source_commit,
             "scope": "capital-boundary",
