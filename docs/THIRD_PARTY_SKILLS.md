@@ -33,3 +33,8 @@ No install script, package manager, MCP server, plugin, hook, or external agent 
 - No agent or skill may alter `config/LIVE_LOCK.yaml`, bypass the deterministic risk engine, or authorize live execution.
 - Preserve the current live lock and VERIFY_ONLY posture. This intake does not change execution settings.
 - Pin every source revision. Re-review on upstream updates; never auto-update unreviewed skill content.
+
+
+## Related intake work
+
+The broader user-supplied repository registry and intake record are proposed separately in [PR #329](https://github.com/Anto-30/aurelia-trading/pull/329). That PR is still open and currently mixes registry/documentation changes with security-sensitive workflow edits. Its head is not based on the current PR #292 security branch (the refs diverge). Do not treat the registry as merged or synchronized to `main`, and do not merge PR #329 in its current form. The skill files in this PR are independently limited to advisory text and do not depend on merging #329.
