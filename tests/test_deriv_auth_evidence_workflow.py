@@ -33,3 +33,9 @@ def test_scheduled_deriv_verifier_keeps_capital_authority_blocked() -> None:
     assert 'FINAL_EXECUTION_AUTHORIZATION: "false"' in workflow
     assert 'LIVE_EXECUTION: "BLOCKED"' in workflow
     assert 'echo "DERIV_ORDERS_SUBMITTED=0"' in workflow
+
+
+
+def test_protected_deriv_workflow_is_main_branch_only() -> None:
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+    assert "  verify:\n    if: ${{ github.ref == 'refs/heads/main' }}" in workflow

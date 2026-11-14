@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   runtime-probe:
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -28,6 +29,8 @@ jobs:
       DERIV_ENVIRONMENT: "real"
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
@@ -63,6 +66,7 @@ jobs:
           retention-days: 7
 
   authenticated-deriv-evidence:
+    if: ${{ github.ref == 'refs/heads/main' }}
     # Load production-scoped Actions secrets for authenticated verification only.
     environment: production
     runs-on: ubuntu-latest
@@ -114,6 +118,7 @@ jobs:
           retention-days: 7
 
   deriv-lifecycle-verify-only:
+    if: ${{ github.ref == 'refs/heads/main' }}
     # Authenticated broker lifecycle verification: proposal + control-chain only.
     # This job must never submit a buy transaction or grant capital authority.
     environment:
@@ -163,6 +168,7 @@ jobs:
           retention-days: 7
 
   whatsapp-alert-smoke:
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -170,16 +176,11 @@ jobs:
     env:
       TWILIO_CONFIGURED: ${{ secrets.TWILIO_ACCOUNT_SID != '' && (secrets.TWILIO_AUTH_TOKEN != '' || (secrets.TWILIO_API_KEY != '' && secrets.TWILIO_API_SECRET != '')) && secrets.TWILIO_WHATSAPP_FROM != '' && secrets.AURELIA_WHATSAPP_TO != '' && secrets.TWILIO_CONTENT_SID != '' }}
       AURELIA_WHATSAPP_ALERTS: "true"
-      TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-      TWILIO_API_KEY: ${{ secrets.TWILIO_API_KEY }}
-      TWILIO_API_SECRET: ${{ secrets.TWILIO_API_SECRET }}
-      TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
-      AURELIA_WHATSAPP_TO: ${{ secrets.AURELIA_WHATSAPP_TO }}
-      TWILIO_CONTENT_SID: ${{ secrets.TWILIO_CONTENT_SID }}
       TWILIO_HTTP_TIMEOUT_SECONDS: "8"
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
@@ -189,4 +190,12 @@ jobs:
         run: echo "WHATSAPP_ALERTS=OPTIONAL_NOT_CONFIGURED"
       - name: Send WhatsApp smoke alert
         if: env.TWILIO_CONFIGURED == 'true'
+        env:
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_API_KEY: ${{ secrets.TWILIO_API_KEY }}
+          TWILIO_API_SECRET: ${{ secrets.TWILIO_API_SECRET }}
+          TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
+          AURELIA_WHATSAPP_TO: ${{ secrets.AURELIA_WHATSAPP_TO }}
+          TWILIO_CONTENT_SID: ${{ secrets.TWILIO_CONTENT_SID }}
         run: python scripts/test_whatsapp_alert.py

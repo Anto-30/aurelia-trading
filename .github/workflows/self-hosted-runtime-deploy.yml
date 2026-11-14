@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ github.ref == 'refs/heads/main' }}
     environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -186,7 +187,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          assurance_json="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow aurelia-assurance.yml --commit "$GITHUB_SHA" --limit 20 --json status,conclusion,event,databaseId)"
+          assurance_json="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow aurelia-assurance.yml --commit "$GITHUB_SHA" --limit 20 --json status,conclusion,event,headBranch,headSha,databaseId)"
           export assurance_json
           python - <<'PY'
           import json
@@ -199,6 +200,8 @@ jobs:
               if run.get("status") == "completed"
               and run.get("conclusion") == "success"
               and run.get("event") == "push"
+              and run.get("headBranch") == "main"
+              and run.get("headSha") == os.environ["GITHUB_SHA"]
           ]
           if not eligible:
               print("ASSURANCE_BLOCKED=NO_COMPLETED_GREEN_PUSH_RUN_FOR_EXACT_COMMIT")

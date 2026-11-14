@@ -1,6 +1,6 @@
 {
   "schema": "aurelia.external_repo_federation.v1",
-  "generated_date": "2026-10-11",
+  "generated_date": "2026-11-14",
   "purpose": "Govern external repositories as research or tooling sources without granting capital authority or vendoring code into execution.",
   "install_policy": "Do not copy external source into capital or execution paths. Use isolated shallow checkouts or source browsing.",
   "sync_policy": "External sources are pinned and non-authoritative. They may improve engineering/research workflows but cannot authorize capital activity, mutate LIVE_LOCK, access production secrets, or submit broker transactions.",
@@ -1246,7 +1246,7 @@
       "mode": "SANDBOX_ONLY",
       "source_url": "https://github.com/affaan-m/agentshield",
       "head_commit": "b0891303bdcd6037376a94263d45cfd2ff3dfb98",
-      "pin_source": "github_default_branch_ref_checked_2026-10-09"
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
     },
     {
       "repo": "AEON-7/Ornith-1.0-35B-AEON-Ultimate-Uncensored",
@@ -6321,6 +6321,356 @@
         "developer-experience-reference"
       ],
       "trust": "COMMUNITY_REFERENCE_ONLY"
+    },
+    {
+      "repo": "jamesmawm/High-Frequency-Trading-Model-with-IB",
+      "category": "legacy-ib-trading-example",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/jamesmawm/High-Frequency-Trading-Model-with-IB",
+      "head_commit": "8e96ade54a8e3eb94ead04827a846225ae122864",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "zadescoxp/calibrain-harness",
+      "category": "crypto-forward-testing-harness",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/zadescoxp/calibrain-harness",
+      "head_commit": "d9a3a62d1e64bfd28514e07ce6d300ec44654ddb",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "calibrain/calibrain",
+      "category": "github-profile-config",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/calibrain/calibrain",
+      "head_commit": "1f7ec11c5984905a4c1eb321a1b973fd703ba985",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "can1357/oh-my-pi",
+      "category": "coding-agent-runtime",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/can1357/oh-my-pi",
+      "head_commit": "af8e4c142b2bf3a72167ce1178e592988a23cafa",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "four-meme-community/four-meme-ai",
+      "category": "meme-token-trading-cli",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/four-meme-community/four-meme-ai",
+      "head_commit": "0a07b65468caa73f552dd6a13013ef5071065996",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "Artillex-Studios/AxTrade",
+      "category": "minecraft-trading-plugin",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/Artillex-Studios/AxTrade",
+      "head_commit": "99260b7de23a8fa3bef1009fdd2e81dcbe69dc4b",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "EternaHybridExchange/mcp-trading-agent",
+      "category": "mcp-perpetual-trading-agent",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/EternaHybridExchange/mcp-trading-agent",
+      "head_commit": "c048e928e66898492d559585cc3c58cfe290af2c",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "LenWilliamson/chapaty-template",
+      "category": "rust-quant-research-template",
+      "domain": "research",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "RESEARCH_ONLY",
+      "source_url": "https://github.com/LenWilliamson/chapaty-template",
+      "head_commit": "065238a44a7e3ff9ae00434500eb3971d7df3f58",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "lneufinck67/Trading-Automation-Experience",
+      "category": "trading-automation-profile",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/lneufinck67/Trading-Automation-Experience",
+      "head_commit": "1f9fe99a745d745244219c545d891231ad8dbd2d",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "kubernetes/org",
+      "category": "github-org-meta-config",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/kubernetes/org",
+      "head_commit": "d863f450590ff2db062e6f1be5fcf3866015f996",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "github/awesome-copilot",
+      "category": "copilot-agent-skill-catalog",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/github/awesome-copilot",
+      "head_commit": "8ecd5b17f02fe5fbebf35eccd1867265eded811f",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "jenkinsci/.github",
+      "category": "github-org-config",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/jenkinsci/.github",
+      "head_commit": "bfd0c12af711be6df34e1b7e3942ed2c1e88269b",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "editorconfig/editorconfig.github.com",
+      "category": "editorconfig-website",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/editorconfig/editorconfig.github.com",
+      "head_commit": "fb12e8af5d81cff16d8a24f24e68aa54452f6342",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "eBUS/ebus.github.io",
+      "category": "ebus-config-site",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/eBUS/ebus.github.io",
+      "head_commit": "8f6e45a67c9e02ffb21be0479d2c71dddf4f1143",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "ChrisWiles/claude-code-showcase",
+      "category": "claude-code-showcase",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/ChrisWiles/claude-code-showcase",
+      "head_commit": "a95518f0cb67e86230119da40429169bc4c35a6f",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "shivammathur/setup-php",
+      "category": "github-setup-php-action",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/shivammathur/setup-php",
+      "head_commit": "9a96576163ad88ed6f6f2cbf381c5229baf95677",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "dolmen/github-keygen",
+      "category": "github-ssh-keygen",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/dolmen/github-keygen",
+      "head_commit": "37e312549a9a98de018dc76a9ae34ed4a04b8a09",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "debezium/debezium-examples",
+      "category": "cdc-examples",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/debezium/debezium-examples",
+      "head_commit": "c90f5448e426e50870652918c5614cf9ae8259c9",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "keploy/.github",
+      "category": "github-org-profile-config",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/keploy/.github",
+      "head_commit": "ec3b0b7f536aa014ebbec04902f8fe88faddc1da",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "paketo-buildpacks/github-config",
+      "category": "github-common-config",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/paketo-buildpacks/github-config",
+      "head_commit": "5779d4b1778b949750da3c4d7c273e4df3439b71",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "bahmutov/npm-install",
+      "category": "npm-install-github-action",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/bahmutov/npm-install",
+      "head_commit": "20216767ca67f0f7b4d095dc5859c5700a6581cb",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "w3c/github-notify-ml-config",
+      "category": "mailing-list-notify-config",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/w3c/github-notify-ml-config",
+      "head_commit": "024f6cd80058cdf7d3fc3aae090332bc29cc2b28",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "bytebase/clabot-config",
+      "category": "cla-bot-config",
+      "domain": "reference",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/bytebase/clabot-config",
+      "head_commit": "f2d63ed39b29546b43ad18c4c411b0c067770a74",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "ipdxco/github-as-code",
+      "category": "github-as-code",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/ipdxco/github-as-code",
+      "head_commit": "eaa899daff9336aba205ab0c4652418d0bca3ec5",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
+    },
+    {
+      "repo": "renovatebot/.github",
+      "category": "renovate-github-config",
+      "domain": "engineering",
+      "assigned_agents": [
+        "ClaudeCode",
+        "ChatGPT",
+        "JEV"
+      ],
+      "mode": "REFERENCE_ONLY",
+      "source_url": "https://github.com/renovatebot/.github",
+      "head_commit": "3f317d18df3a83769ed874e6d6fe57bbd7e31c45",
+      "pin_source": "github_default_branch_ref_checked_2026-11-14"
     }
   ],
   "pin_policy": {
@@ -6329,8 +6679,8 @@
     "automatic_upstream_execution": false
   },
   "last_sync": {
-    "completed_at": "2026-10-11",
-    "source": "User-supplied GitHub repository batch; current default HEAD commit pins queried through GitHub API",
+    "completed_at": "2026-11-14",
+    "source": "user-supplied GitHub repository batch; immutable default-branch HEADs checked through GitHub API",
     "unique_repositories_added_or_refreshed": [
       "ychampion/melete",
       "yxq953/MuseLite",
@@ -6492,14 +6842,9 @@
       }
     ],
     "targets": [
-      "GrokBot",
       "ClaudeCode",
-      "JEV",
-      "AURELIA",
-      "KimiK3",
-      "GLM",
-      "GoogleAgentSkills",
-      "PlaywrightCLI"
+      "ChatGPT",
+      "JEV"
     ],
     "requested_batch": [
       {
@@ -6648,7 +6993,7 @@
         "physical_runtime_install": "NOT_CLAIMED"
       }
     ],
-    "physical_runtime_install": "NOT_CLAIMED",
+    "physical_runtime_install": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
     "note": "Pinned registry sync only; no external source copied into execution paths.",
     "latest_batch": [
       {
@@ -6745,6 +7090,13 @@
       "physical_runtime_install": "NOT_CLAIMED_NO_DESKTOP_COMMANDER_DEVICE_CONNECTED",
       "security_review_status": "PENDING",
       "date": "2026-10-11"
-    }
+    },
+    "intake_batch": "2026-11-14-user-supplied-26-repositories",
+    "supplied_repositories": 26,
+    "new_registry_entries": 25,
+    "already_registered": [
+      "affaan-m/agentshield"
+    ],
+    "preliminary_review": "metadata and selected high-risk files inspected; full source security audit remains pending"
   }
 }

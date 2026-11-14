@@ -42,7 +42,7 @@ The federation is an engineering/research capability layer. It has zero capital 
 
 ## Tool and plugin trust
 
-Prefer official upstream sources and pin them to immutable commits in `config/agent_skill_federation.json`.
+Prefer official upstream sources and pin repository sources to immutable commits in `config/external_repo_federation.json`; use `config/agent_skill_federation.json` for skill-source pins.
 
 Community catalogs are discovery-only until independently reviewed.
 
@@ -61,3 +61,8 @@ Never:
 ## Completion criterion
 
 A repair is complete only when the exact defect is reproduced or its absence is demonstrated, the targeted fix is test-backed, evidence lineage is preserved, stale state is corrected, and all unrelated certification gates remain unchanged.
+
+
+## User-supplied repository intake — 2026-11-14
+
+Before using any source from this batch, read `docs/research/EXTERNAL_REPOSITORY_INTAKE_2026-11-14.md` and re-check its exact pin in `config/external_repo_federation.json`. These entries are reference/research registrations, not permission to install or execute code. Preserve the global `external_code_execution: DENY_BY_DEFAULT` policy. Do not add the Eterna MCP server, four-meme trading CLI, upstream hooks, MCP configurations, agents, or workflows to AURELIA/Claude runtime. No external source may access credentials, capital state, execution, or `LIVE_LOCK`.
