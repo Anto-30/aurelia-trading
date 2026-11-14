@@ -416,6 +416,17 @@ class CertificationEvidenceTest(unittest.TestCase):
             self.assertEqual(status, "BLOCKED", detail)
             self.assertIn("source", detail.lower())
 
+    def test_evidence_source_hash_must_match_candidate_commit(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            self._populate_passing_bundle(root)
+            status, detail = validate_evidence_bundle(
+                root,
+                expected_source_sha="b" * 40,
+            )
+            self.assertEqual(status, "BLOCKED", detail)
+            self.assertIn("source", detail.lower())
+
     def test_evidence_must_have_expiry(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
