@@ -167,6 +167,8 @@ class CertificationEvidenceTest(unittest.TestCase):
                     "execution_mode": "DETERMINISTIC_BROKER_STUB",
                     "broker_truth_observed": False,
                     "capital_authority_granted": False,
+                    "order_submission_permitted": False,
+                    "live_execution": "BLOCKED",
                 })
                 provenance["origin"] = "ci"
             elif name == "soak_3600s.json":
